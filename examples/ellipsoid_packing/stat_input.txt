@@ -1,0 +1,23 @@
+@ Equivalent diameter
+std = 0.531055
+mean = 2.76736
+cutoff_min = 2.0
+cutoff_max = 10.0
+
+@ Aspect ratio
+mean = 3.0
+
+@ Orientation
+sigma = 28.8774
+mean = 87.4178
+
+@ RVE 
+side_length = 40.9 
+voxel_per_side = 50   
+
+@ Simulation
+nsteps = 1000
+periodicity = True                                         
+                               
+
+
