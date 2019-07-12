@@ -2,15 +2,20 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*~
+*#
+*.nfs*
+*.egg*
 
 # C extensions
-*.so
+#*.so
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
 dist/
+build/
 downloads/
 eggs/
 .eggs/
@@ -50,25 +55,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
 # Sphinx documentation
-docs/_build/
 
 # PyBuilder
 target/
@@ -90,12 +77,6 @@ ipython_config.py
 #   install all needed dependencies.
 #Pipfile.lock
 
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
 # Environments
 .env
 .venv
@@ -105,20 +86,3 @@ ENV/
 env.bak/
 venv.bak/
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/

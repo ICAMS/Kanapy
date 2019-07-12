@@ -3,10 +3,10 @@ import sys
 sys.path.append('../..')
 
 import kanapy
-from kanapy.input_output import particleStatGenerator 
-from kanapy.packing import packingRoutine
-from kanapy.voxelization import voxelizationRoutine
-from kanapy.input_output import write_abaqus_inp, write_output_stat
+from src.kanapy.input_output import particleStatGenerator 
+from src.kanapy.packing import packingRoutine
+from src.kanapy.voxelization import voxelizationRoutine
+from src.kanapy.input_output import write_abaqus_inp, write_output_stat
 
 def main():
     """

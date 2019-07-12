@@ -1,0 +1,393 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>src.kanapy.packing &mdash; kanapy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> kanapy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../method.html">Modeling approach</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kanapy.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">kanapy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>src.kanapy.packing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for src.kanapy.packing</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">src.kanapy.input_output</span> <span class="k">import</span> <span class="n">write_dump</span><span class="p">,</span> <span class="n">printProgressBar</span>
+<span class="kn">from</span> <span class="nn">src.kanapy.entities</span> <span class="k">import</span> <span class="n">Ellipsoid</span><span class="p">,</span> <span class="n">Cuboid</span><span class="p">,</span> <span class="n">Octree</span><span class="p">,</span> <span class="n">Simulation_Box</span>
+
+
+<div class="viewcode-block" id="particle_generator"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.packing.particle_generator">[docs]</a><span class="k">def</span> <span class="nf">particle_generator</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initializes ellipsoids by assigning them random positions and speeds within the simulation box.</span>
+
+<span class="sd">    :param particle_data: Ellipsoid information such as such as Major, Minor, Equivalent diameters and its tilt angle. </span>
+<span class="sd">    :type particle_data: Python dictionary </span>
+<span class="sd">    :param sim_box: Simulation box representing RVE.</span>
+<span class="sd">    :type sim_box: :class:`entities.Simulation_Box`</span>
+<span class="sd">    </span>
+<span class="sd">    :returns: Ellipsoids for the packing routine</span>
+<span class="sd">    :rtype: list       </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">num_particles</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">]</span>                      <span class="c1"># Total number of ellipsoids</span>
+    <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_particles</span><span class="p">):</span>
+
+        <span class="n">iden</span> <span class="o">=</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span>                                                <span class="c1"># ellipsoid &#39;id&#39;</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Major_diameter&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.</span>               <span class="c1"># Semi-major length</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.</span>              <span class="c1"># Semi-minor length 1</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.</span>              <span class="c1"># Semi-minor length 2</span>
+
+        <span class="c1"># Random placement for ellipsoids</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">w</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">h</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">d</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
+
+        <span class="c1"># Angle represents inclination of Major axis w.r.t positive x-axis</span>
+        
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Orientation&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">])</span>         <span class="c1"># Extract the angle        </span>
+        <span class="n">vec_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">a</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">])</span>   <span class="c1"># Tilt vector wrt (+ve) x axis        </span>
+        <span class="n">cross_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">vec_a</span><span class="p">)</span>              <span class="c1"># Do the cross product to find the quaternion axis        </span>
+        <span class="n">norm_cross_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cross_a</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>                   <span class="c1"># norm of the vector (Magnitude)        </span>
+        <span class="n">quat_axis</span> <span class="o">=</span> <span class="n">cross_a</span><span class="o">/</span><span class="n">norm_cross_a</span>                            <span class="c1"># normalize the quaternion axis</span>
+
+        <span class="c1"># Find the quaternion components</span>
+        <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span> <span class="o">=</span> <span class="n">quat_axis</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">qw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">quat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">qw</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">])</span>
+
+        <span class="c1"># instance of Ellipsoid class</span>
+        <span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">Ellipsoid</span><span class="p">(</span><span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">)</span>
+        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+
+        <span class="c1"># Define random speed values along the 3 axes x, y &amp; z</span>
+        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">)</span>
+        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">)</span>
+        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">)</span>
+        
+        <span class="n">Ellipsoids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ellipsoid</span><span class="p">)</span>                               <span class="c1"># adds ellipsoid to list</span>
+
+    <span class="k">return</span> <span class="n">Ellipsoids</span></div>
+
+
+<div class="viewcode-block" id="particle_grow"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.packing.particle_grow">[docs]</a><span class="k">def</span> <span class="nf">particle_grow</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initializes the :class:`entities.Octree` class and performs recursive subdivision with </span>
+<span class="sd">    collision checks and response for the ellipsoids. At each time step of the simulation it </span>
+<span class="sd">    increases the size of the ellipsoid by a factor which depends on the user defined value for total number of time steps. </span>
+
+<span class="sd">    :param sim_box: Simulation box representing RVE.</span>
+<span class="sd">    :type sim_box: :obj:`entities.Simulation_Box`  </span>
+<span class="sd">    :param Ellipsoids: Ellipsoids for the packing routine.</span>
+<span class="sd">    :type Ellipsoids: list    </span>
+<span class="sd">    :param periodicity: Status of periodicity.</span>
+<span class="sd">    :type periodicity: boolean </span>
+<span class="sd">    :param nsteps:  Total simulation steps.</span>
+<span class="sd">    :type nsteps: int       </span>
+
+<span class="sd">    .. note:: :meth:`src.kanapy.input_output.write_dump` function is called at each time step of the simulation to</span>
+<span class="sd">              write output (.dump) files. By default periodic images are written to the output file, </span>
+<span class="sd">              but this option can be disabled within the function.         </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initial call to print 0% progress</span>
+    <span class="n">printProgressBar</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;    Progress:&#39;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+    <span class="c1"># Reduce the size of the particles to (1/nsteps)th of its original size</span>
+    <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
+        <span class="n">ell</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">oria</span><span class="o">/</span><span class="n">nsteps</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">orib</span><span class="o">/</span><span class="n">nsteps</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">oric</span><span class="o">/</span><span class="n">nsteps</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+
+        <span class="c1"># Initialize Octree and test for collision between ellipsoids</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">Octree</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Cuboid</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">top</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
+                                <span class="n">sim_box</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">front</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">back</span><span class="p">),</span> <span class="n">Ellipsoids</span><span class="p">)</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+        <span class="c1"># Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)</span>
+        <span class="n">write_dump</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">))</span>
+
+        <span class="c1"># Delete duplicates if existing (Active only if periodicity is True)</span>
+        <span class="c1"># find all the items which are not duplicates</span>
+        <span class="n">inter_ell</span> <span class="o">=</span> <span class="p">[</span><span class="n">ell</span> <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="n">Ellipsoids</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ell</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)]</span>
+        <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="n">inter_ell</span>
+
+        <span class="c1"># Dump the ellipsoid information to be read by OVITO (Doesn&#39;t include duplicates at periodic boundaries)</span>
+        <span class="c1">#write_dump(Ellipsoids, sim_box, len(Ellipsoids))</span>
+
+        <span class="n">dups</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Loop over the ellipsoids: move, set Bbox, &amp; check for wall collision / PBC</span>
+        <span class="k">for</span> <span class="n">ellipsoid</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
+            <span class="c1"># Move the ellipsoid according to collision status</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">move</span><span class="p">()</span>
+            <span class="c1"># grow the ellipsoid</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">growth</span><span class="p">(</span><span class="n">nsteps</span><span class="p">)</span>
+            <span class="c1"># Check for wall collision or create duplicates</span>
+            <span class="n">ell_dups</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">wallCollision</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">)</span>
+            <span class="n">dups</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ell_dups</span><span class="p">)</span>
+            <span class="c1"># Update the BBox of the ellipsoid</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">set_cub</span><span class="p">()</span>
+
+        <span class="c1"># Update the actual list with duplicates</span>
+        <span class="n">Ellipsoids</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dups</span><span class="p">)</span>
+
+        <span class="c1"># Update Progress Bar</span>
+        <span class="n">printProgressBar</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">sim_ts</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">,</span>
+                         <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;    Progress:&#39;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+        <span class="c1"># IF simulation reaches the defined number of time steps - Exit packing, ELSE continue</span>
+        <span class="k">if</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">sim_ts</span> <span class="o">==</span> <span class="n">nsteps</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sim_box</span><span class="o">.</span><span class="n">sim_ts</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="packingRoutine"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.packing.packingRoutine">[docs]</a><span class="k">def</span> <span class="nf">packingRoutine</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main function that controls the particle packing routine using: :meth:`particle_grow` &amp; :meth:`particle_generator`</span>
+
+<span class="sd">    .. note:: Particle, RVE and simulation data are read from the JSON files generated by :meth:`src.kanapy.input_output.particleStatGenerator`.</span>
+<span class="sd">              They contain the following information:</span>
+
+<span class="sd">              * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. </span>
+<span class="sd">              * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
+<span class="sd">              * Simulation attribute such as total number of timesteps and periodicity.                         </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting particle simulation&#39;</span><span class="p">)</span>
+
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Load the dictionaries from json files</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">particle_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">RVE_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">simulation_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json files not found, make sure particle_Stat_Generator() function is executed first!&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating simulation box of required dimensions&#39;</span><span class="p">)</span>
+        <span class="c1"># Create an instance of simulation box</span>
+        <span class="n">sim_box</span> <span class="o">=</span> <span class="n">Simulation_Box</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_size&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_size&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_size&#39;</span><span class="p">])</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating particles from distribution statistics&#39;</span><span class="p">)</span>
+        <span class="c1"># Create instances for particles</span>
+        <span class="n">Particles</span> <span class="o">=</span> <span class="n">particle_generator</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">)</span>
+
+        <span class="c1"># Growth of particle at each time step</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Particle packing by growth simulation&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">:</span>
+            <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;False&#39;</span><span class="p">:</span>
+            <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>        
+            
+        <span class="n">particle_grow</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">Particles</span><span class="p">,</span> <span class="n">periodic_status</span><span class="p">,</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Time steps&#39;</span><span class="p">])</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Completed particle packing&#39;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mahesh R.G Prasad
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

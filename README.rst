@@ -6,9 +6,12 @@ Overview
 
 
 .. image:: https://img.shields.io/travis/mrgprasad/kanapy.svg
-        :target: https://travis-ci.org/mrgprasad/kanapy
+    :target: https://travis-ci.org/mrgprasad/kanapy
+    :width: 20 %
 
-
+.. image:: https://img.shields.io/badge/License-MIT-blue.svg
+   :target: https://lbesson.mit-license.org/
+   :width: 17 %
 
 kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in Python_ with performance critical part implemented in C++. Python bindings for the code written in C++ is generated using the lightweight header-only library pybind11_. The C++ part of the implementation utilizes the Eigen_ library for efficient linear algebra calculations.
 
@@ -32,6 +35,12 @@ Features
 .. _Neper: http://neper.sourceforge.net/
 .. _Abaqus: https://www.3ds.com/products-services/simulia/products/abaqus/
 
+Documentation
+-------------
+
+Online documentation can be found here_. 
+
+.. _here: https://mrgprasad.github.io/kanapy
 
 Installation
 ------------
@@ -46,7 +55,7 @@ Once done, create a virtual environment for installing python specific packages 
 
 .. code-block:: console
 
-    $ conda create -n myenv python=3.6
+    $ conda create -n myenv python=3.6 pip
     
 
 .. note:: 1. ``myenv`` can be replaced with any name for your environment.
@@ -90,7 +99,7 @@ and kanapy using:
 
     (myenv) $ cd kanapy-master/
     (myenv) $ conda install --file requirements.txt
-    (myenv) $ pip install .
+    (myenv) $ pip install -e .
     
 .. note:: The ``requirements.txt`` file contains all the dependencies of kanapy.
 
@@ -98,18 +107,16 @@ and kanapy using:
 Dependencies
 -------------
 
-kanapy requires a working C/C++ compiler on your machine. On Linux/OS X
+kanapy requires a working C/C++ compiler on your machine. On Linux/Mac OS
 the gcc toolchain will work well. The lightweight header-only library pybind11 
 is used to create Python bindings for the code written in C++.
-The C++ function `overlapDetect.collideDetect()` can be complied by linking the 
-Eigen library (present in the directory ``/kanapy-master/libs/``) using this command. 
-From the kanapy main directory (``kanapy-master``):
+The C++ function will be complied by linking the Eigen library 
+(present in the directory ``/kanapy-master/libs/``). 
+CMake must be installed to build this extension, follow this `CMake documentation`_ 
+to install it.
 
-.. code-block:: console
-
-    (myenv) $ cd kanapy/
-    (myenv) $ g++ -O3 -Wall -shared -std=c++11 -fPIC `python3 -m pybind11 --includes` -I ../libs/eigen_cpp/ overlapDetect.cpp -o overlapDetect`python3-config --extension-suffix`
-            
+.. _CMake documentation: https://cgold.readthedocs.io/en/latest/first-step/installation.html
+         
 ^^^^^^^^^^^^^^^^^^
 Core dependencies
 ^^^^^^^^^^^^^^^^^^
@@ -148,11 +155,11 @@ kanapy uses ``pytest`` to perform all its unit testing. From the kanapy main dir
 
 .. code-block:: console
     
-    (myenv) $ py.test -v
+    (myenv) $ pytest tests/ -v
    
    
-Documentation
--------------
+Documentation build
+-------------------
 Documentation for kanapy is generated using ``Sphinx``. The following command generates HTML-based reference documentation; 
 for other formats please refer to the Sphinx manual. From the kanapy main directory (``kanapy-master``):
 
@@ -161,7 +168,7 @@ for other formats please refer to the Sphinx manual. From the kanapy main direct
     (myenv) $ cd docs/
     (myenv) $ make html
 
-.. note:: The HTML documentation can be found at ``/kanapy-master/docs/_build/html/index.html``
+.. note:: The HTML documentation can be found at ``/kanapy-master/docs/builds/html/index.html``
 
 License
 --------
@@ -170,6 +177,6 @@ kanapy is made available under the MIT license
 
 About
 -------
-The name kanapy is derived from the sanskrit word káṇa_ meaning particle. It is primarily developed at the `Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany <http://www.icams.de/content/>`__. Our goal is to build a complete synthetic microstructure generation tool for reasearch and industry use. 
+The name kanapy is derived from the sanskrit word káṇa_ meaning particle. It is primarily developed at the `Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany <http://www.icams.de/content/>`__. Our goal is to build a complete synthetic microstructure generation tool for research and industry use. 
 
 .. _káṇa: https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3

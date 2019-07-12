@@ -87,7 +87,7 @@ Ready to contribute? Here's how to set up `kanapy` for local development.
 
 .. code-block:: console
     
-    (myenv) $ py.test -v
+    (myenv) $ pytest tests/ -v
 
    
 6. Commit your changes and push your branch to GitHub:

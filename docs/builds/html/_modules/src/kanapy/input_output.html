@@ -1,0 +1,982 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>src.kanapy.input_output &mdash; kanapy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> kanapy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../method.html">Modeling approach</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kanapy.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">kanapy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>src.kanapy.input_output</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for src.kanapy.input_output</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">erfc</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">cKDTree</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">ConvexHull</span> 
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="k">import</span> <span class="n">euclidean</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">src.kanapy.entities</span> <span class="k">import</span> <span class="n">Ellipsoid</span><span class="p">,</span> <span class="n">Cuboid</span>
+
+
+<div class="viewcode-block" id="particleStatGenerator"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.input_output.particleStatGenerator">[docs]</a><span class="k">def</span> <span class="nf">particleStatGenerator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates ellipsoid size distribution (Log-normal) based on user defined statistics</span>
+
+<span class="sd">    :param inputFile: User defined statistics file for ellipsoid generation.</span>
+<span class="sd">    :type inputFile: document</span>
+
+<span class="sd">    .. note:: 1. Input parameters provided by the user in the input file are:</span>
+
+<span class="sd">                * Standard deviation for ellipsoid equivalent diameter (Log-normal distribution)</span>
+<span class="sd">                * Mean value of ellipsoid equivalent diameter (Log-normal distribution)</span>
+<span class="sd">                * Minimum and Maximum cut offs for ellipsoid equivalent diameters </span>
+<span class="sd">                * Mean value for aspect ratio</span>
+<span class="sd">                * Mean value for ellipsoid tilt angles (Normal distribution)</span>
+<span class="sd">                * Standard deviation for ellipsoid tilt angles (Normal distribution)</span>
+<span class="sd">                * Side dimension of the RVE </span>
+<span class="sd">                * Discretization along the RVE side          </span>
+
+<span class="sd">              2. Particle, RVE and simulation data are written as JSON files in a folder in the current </span>
+<span class="sd">                 working directory for later access.</span>
+
+<span class="sd">                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. </span>
+<span class="sd">                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
+<span class="sd">                * Simulation attribute such as total number of timesteps and periodicity.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating particle distribution based on user defined statistics&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Open the user input statistics file and read the data</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">inputFile</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">lookup</span> <span class="o">=</span> <span class="s2">&quot;@ Equivalent diameter&quot;</span>
+            <span class="n">lookup2</span> <span class="o">=</span> <span class="s2">&quot;@ Aspect ratio&quot;</span>
+            <span class="n">lookup3</span> <span class="o">=</span> <span class="s2">&quot;@ Orientation&quot;</span>
+            <span class="n">lookup4</span> <span class="o">=</span> <span class="s2">&quot;@ RVE&quot;</span>
+            <span class="n">lookup5</span> <span class="o">=</span> <span class="s2">&quot;@ Simulation&quot;</span>
+
+            <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">lookup</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">sd_lognormal</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">mean_lognormal</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">dia_cutoff_min</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">dia_cutoff_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">lookup2</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">mean_AR</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">lookup3</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">sigma_Ori</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">mean_Ori</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">lookup4</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">RVEsize</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">voxel_per_side</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">lookup5</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">nsteps</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+                    <span class="n">content</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                    <span class="n">periodicity</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">voxel_per_side</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Number of voxel per RVE side can only take integer values!&#39;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Input file not found, make sure &quot;stat_input.txt&quot; file is present in the working directory!&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Generate the x-gaussian</span>
+    <span class="n">exp_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="o">+</span><span class="mi">5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">x_lognormal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">exp_array</span><span class="p">)</span>
+    <span class="n">x_lognormal_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">x_lognormal</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">x_lognormal</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="c1"># Mean, variance for normal distribution (For back verification)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mean_lognormal</span> <span class="o">+</span> <span class="p">(</span><span class="n">sd_lognormal</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>                            
+    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">sd_lognormal</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">mean_lognormal</span><span class="o">*</span><span class="p">(</span><span class="n">sd_lognormal</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Mean and variance for corresponding normal ditribution: mean = &#39;</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="s1">&#39;variance = &#39;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="c1"># From wikipedia page for Log-normal distribution</span>
+    <span class="c1"># Calculate the CDF using the error function    </span>
+    <span class="n">erfInput</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x_lognormal</span><span class="p">)</span> <span class="o">-</span> <span class="n">mean_lognormal</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span><span class="o">*</span><span class="n">sd_lognormal</span><span class="p">)</span>
+    <span class="n">y_CDF</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">erfc</span><span class="p">(</span><span class="n">erfInput</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the number fraction</span>
+    <span class="n">number_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ediff1d</span><span class="p">(</span><span class="n">y_CDF</span><span class="p">)</span>
+
+    <span class="c1"># Based on the cutoff specified, get the restricted distribution</span>
+    <span class="n">index_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">x_lognormal_mean</span> <span class="o">&gt;=</span> <span class="n">dia_cutoff_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x_lognormal_mean</span> <span class="o">&lt;=</span> <span class="n">dia_cutoff_max</span><span class="p">))</span>
+    <span class="c1"># Selected diameters within the cutoff</span>
+    <span class="n">eq_Dia</span> <span class="o">=</span> <span class="n">x_lognormal_mean</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span>
+    <span class="c1"># corresponding number fractions</span>
+    <span class="n">numFra_Dia</span> <span class="o">=</span> <span class="n">number_fraction</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span>
+
+    <span class="c1"># Volume of each ellipsoid</span>
+    <span class="n">volume_array</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">eq_Dia</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">)</span>
+
+    <span class="c1"># Volume fraction for each ellipsoid</span>
+    <span class="n">individualK</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">numFra_Dia</span><span class="p">,</span> <span class="n">volume_array</span><span class="p">)</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">individualK</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">individualK</span><span class="p">)</span>
+
+    <span class="c1"># Total number of ellipsoids</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">K</span><span class="o">*</span><span class="p">(</span><span class="n">RVEsize</span><span class="o">**</span><span class="mi">3</span><span class="p">),</span> <span class="n">volume_array</span><span class="p">)</span>
+    <span class="c1"># Round to the nearest integer</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">num</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="c1"># Total number of ellipsoids</span>
+    <span class="n">totalEllipsoids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+
+    <span class="c1"># Duplicate the diameter values</span>
+    <span class="n">eq_Dia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+
+    <span class="c1"># Ellipsoid tilt angles</span>
+    <span class="n">ori_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mean_Ori</span><span class="p">,</span> <span class="n">sigma_Ori</span><span class="p">,</span> <span class="n">totalEllipsoids</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) &amp; b=c &amp; a=AR*b</span>
+    <span class="c1"># Minor axis length</span>
+    <span class="n">minDia</span> <span class="o">=</span> <span class="n">eq_Dia</span> <span class="o">/</span> <span class="p">(</span><span class="n">mean_AR</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">majDia</span> <span class="o">=</span> <span class="n">minDia</span> <span class="o">*</span> <span class="n">mean_AR</span>                                   <span class="c1"># Major axis length</span>
+    <span class="c1"># Minor2 axis length (assuming spheroid)</span>
+    <span class="n">minDia2</span> <span class="o">=</span> <span class="n">minDia</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 2 voxels</span>
+    <span class="n">voxel_size</span> <span class="o">=</span> <span class="n">RVEsize</span> <span class="o">/</span> <span class="n">voxel_per_side</span>
+
+    <span class="k">if</span> <span class="n">voxel_size</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">minDia</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;Grains will not be voxelated well, please increase the number of voxels per RVE side (or) decrease the RVE side length!&#39;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of ellipsoids = &#39;</span><span class="p">,</span> <span class="n">totalEllipsoids</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    RVE side length = &#39;</span><span class="p">,</span> <span class="n">RVEsize</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Voxel resolution = &#39;</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of hexahedral elements (C3D8) = &#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">voxel_per_side</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="c1"># Create dictionaries to store the data generated</span>
+    <span class="n">particle_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">),</span> <span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">),</span> <span class="s1">&#39;Major_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">majDia</span><span class="p">),</span>
+                     <span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia</span><span class="p">),</span> <span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia2</span><span class="p">),</span> <span class="s1">&#39;Orientation&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">ori_array</span><span class="p">)}</span>
+
+    <span class="n">RVE_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;RVE_size&#39;</span><span class="p">:</span> <span class="n">RVEsize</span><span class="p">,</span> <span class="s1">&#39;Voxel_number_per_side&#39;</span><span class="p">:</span> <span class="n">voxel_per_side</span><span class="p">,</span>
+                <span class="s1">&#39;Voxel_resolution&#39;</span><span class="p">:</span> <span class="n">voxel_size</span><span class="p">}</span>
+
+    <span class="n">simulation_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Time steps&#39;</span><span class="p">:</span> <span class="n">nsteps</span><span class="p">,</span> <span class="s1">&#39;Periodicity&#39;</span><span class="p">:</span> <span class="n">periodicity</span><span class="p">}</span>
+
+    <span class="c1"># Dump the Dictionaries as json files</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">json_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">json_dir</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">simulation_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="write_dump"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.input_output.write_dump">[docs]</a><span class="k">def</span> <span class="nf">write_dump</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">num_particles</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Writes the (.dump) file which can be read by visualization software OVITO.  </span>
+
+<span class="sd">    :param Ellipsoids: Contains information of ellipsoids such as its position, axes lengths and orientation </span>
+<span class="sd">    :type Ellipsoids: list    </span>
+<span class="sd">    :param sim_box: Contains information of the dimensions of the simulation box</span>
+<span class="sd">    :type sim_box: :obj:`Cuboid`    </span>
+<span class="sd">    :param num_particles: Total number of ellipsoids in the simulation box </span>
+<span class="sd">    :type num_particles: int    </span>
+
+<span class="sd">    .. note:: This function writes (.dump) files containing simulation domain and ellipsoid attribute information. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files&#39;</span>    <span class="c1"># output directory</span>
+    <span class="n">dump_outfile</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle&#39;</span>	    <span class="c1"># output dump file</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_outfile</span> <span class="o">+</span> <span class="s2">&quot;.</span><span class="si">{0}</span><span class="s2">.dump&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">sim_ts</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;ITEM: TIMESTEP</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">sim_ts</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;ITEM: NUMBER OF ATOMS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_particles</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;ITEM: BOX BOUNDS ff ff ff</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">right</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">top</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">back</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">front</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;ITEM: ATOMS id x y z AsphericalShapeX AsphericalShapeY AsphericalShapeZ OrientationX OrientationY OrientationZ OrientationW</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
+            <span class="n">qw</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">quat</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1"> </span><span class="si">{2}</span><span class="s1"> </span><span class="si">{3}</span><span class="s1"> </span><span class="si">{4}</span><span class="s1"> </span><span class="si">{5}</span><span class="s1"> </span><span class="si">{6}</span><span class="s1"> </span><span class="si">{7}</span><span class="s1"> </span><span class="si">{8}</span><span class="s1"> </span><span class="si">{9}</span><span class="s1"> </span><span class="si">{10}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">ell</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">,</span> <span class="n">qw</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="read_dump"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.input_output.read_dump">[docs]</a><span class="k">def</span> <span class="nf">read_dump</span><span class="p">(</span><span class="n">dump_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads the (.dump) file to extract information for voxelization (meshing) routine    </span>
+
+<span class="sd">    :param dump_file: Contains information of ellipsoids generated in the packing routine.</span>
+<span class="sd">    :type dump_file: document</span>
+
+<span class="sd">    :returns: * Cuboid object that represents the RVE.</span>
+<span class="sd">              * Ellipsoid object that represents the grains.</span>
+<span class="sd">              * Coordinates of ellipsoid centers. </span>
+<span class="sd">              * Scipy&#39;s cKDTree object representing ellipsoid centers.</span>
+<span class="sd">    :rtype: Tuple of python objects (:obj:`Cuboid`, :obj:`Ellipsoid`, dictionary, :obj:`cKDTree`)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Reading the .dump file for particle information</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Read the Simulation box dimensions</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">lookup</span> <span class="o">=</span> <span class="s2">&quot;ITEM: NUMBER OF ATOMS&quot;</span>
+            <span class="n">lookup2</span> <span class="o">=</span> <span class="s2">&quot;ITEM: BOX BOUNDS ff ff ff&quot;</span>
+            <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">lookup</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">number_particles</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">))</span>
+                    <span class="n">par_line_num</span> <span class="o">=</span> <span class="n">num</span> <span class="o">+</span> <span class="mi">7</span>
+
+                <span class="k">if</span> <span class="n">lookup2</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">values</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">))</span>
+                    <span class="n">RVE_min</span><span class="p">,</span> <span class="n">RVE_max</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    .dump file not found, make sure &quot;packingRoutine()&quot; function is executed first!&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Create an instance of simulation box</span>
+    <span class="n">sim_box</span> <span class="o">=</span> <span class="n">Cuboid</span><span class="p">(</span><span class="n">RVE_min</span><span class="p">,</span> <span class="n">RVE_min</span><span class="p">,</span> <span class="n">RVE_max</span><span class="p">,</span> <span class="n">RVE_max</span><span class="p">,</span> <span class="n">RVE_min</span><span class="p">,</span> <span class="n">RVE_max</span><span class="p">)</span>
+
+    <span class="c1"># Read the particle shape &amp; position information</span>
+    <span class="c1"># Create instances for ellipsoids &amp; assign values from dump files</span>
+    <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ell_centers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># create a dictionary for ellipsoid centers</span>
+    <span class="n">ell_centerDict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;=</span> <span class="n">par_line_num</span><span class="p">:</span>
+
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span>
+                <span class="n">int_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">int_values</span>
+
+                <span class="n">iden</span> <span class="o">=</span> <span class="n">count</span>                                        <span class="c1"># ellipsoid &#39;id&#39;                </span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>           <span class="c1"># Semi-major length, Semi-minor length 1 &amp; 2</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">,</span> <span class="n">qw</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+                <span class="n">quat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">qw</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">])</span>                
+                <span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">Ellipsoid</span><span class="p">(</span><span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">)</span> <span class="c1"># instance of Ellipsoid class</span>
+
+                <span class="c1"># Find the original particle if the current is duplicate</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+                        <span class="n">split_str</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+                        <span class="n">original_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">split_str</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">duplicate</span> <span class="o">=</span> <span class="n">original_id</span>
+                        <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">continue</span>
+
+                <span class="n">Ellipsoids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ellipsoid</span><span class="p">)</span>
+
+                <span class="n">ell_centers</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+                <span class="n">ell_centerDict</span><span class="p">[</span><span class="n">iden</span><span class="p">]</span> <span class="o">=</span> <span class="n">ellipsoid</span>
+                
+        <span class="c1"># Create a ckDTree for ellipsoid centers</span>
+        <span class="n">ell_centerTree</span> <span class="o">=</span> <span class="n">cKDTree</span><span class="p">(</span><span class="n">ell_centers</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">ell_centerDict</span><span class="p">,</span> <span class="n">ell_centerTree</span></div>
+
+
+<div class="viewcode-block" id="write_position_weights"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.input_output.write_position_weights">[docs]</a><span class="k">def</span> <span class="nf">write_position_weights</span><span class="p">(</span><span class="n">file_num</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads the (.dump) file to extract information and ouputs the position and weight files for tessellation.</span>
+
+<span class="sd">    :param file_num: Simulation time step for which position and weights output. </span>
+<span class="sd">    :type file_num: int</span>
+<span class="sd">    </span>
+<span class="sd">    .. note:: 1. Applicable only to spherical particles.         </span>
+<span class="sd">              2. The generated &#39;sphere_positions.txt&#39; and &#39;sphere_weights.txt&#39; files can be inputted </span>
+<span class="sd">                 into NEPER for tessellation and meshing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing position and weights files</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">dump_file</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_num</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">lookup</span> <span class="o">=</span> <span class="s2">&quot;ITEM: NUMBER OF ATOMS&quot;</span>
+            <span class="n">lookup2</span> <span class="o">=</span> <span class="s2">&quot;ITEM: BOX BOUNDS ff ff ff&quot;</span>
+            <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">lookup</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">number_particles</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">))</span>
+                    <span class="n">par_line_num</span> <span class="o">=</span> <span class="n">num</span> <span class="o">+</span> <span class="mi">7</span>
+
+                <span class="k">if</span> <span class="n">lookup2</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">values</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">))</span>
+                    <span class="n">RVE_min</span><span class="p">,</span> <span class="n">RVE_max</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    .dump file not found, make sure &quot;packingRoutine()&quot; function is executed first!&#39;</span><span class="p">)</span>
+
+    <span class="n">par_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;=</span> <span class="n">par_line_num</span><span class="p">:</span>
+
+                <span class="n">values</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span>
+                <span class="n">int_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">int_values</span>
+
+                <span class="k">if</span> <span class="s1">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="c1"># Duplicates exists (ignore them when writing position and weight files)</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">iden</span> <span class="o">=</span> <span class="n">count</span>
+                    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+                    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+                    <span class="n">par_dict</span><span class="p">[</span><span class="n">iden</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;sphere_positions.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">par_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1"> </span><span class="si">{2}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;sphere_weights.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">par_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="write_abaqus_inp"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.input_output.write_abaqus_inp">[docs]</a><span class="k">def</span> <span class="nf">write_abaqus_inp</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates an ABAQUS input file with microstructure morphology information</span>
+<span class="sd">    in the form of nodes, elements and element sets.</span>
+
+<span class="sd">    .. note:: 1. JSON files generated by :meth:`src.kanapy.voxelization.voxelizationRoutine` are read to generate the ABAQUS (.inp) file.</span>
+<span class="sd">                 The json files contain:</span>
+
+<span class="sd">                 * Node ID and its corresponding coordinates</span>
+<span class="sd">                 * Element ID with its nodal connectivities</span>
+<span class="sd">                 * Element sets representing grains (Assembly of elements) </span>
+<span class="sd">                 </span>
+<span class="sd">              2. The nodal coordinates are written out in &#39;mm&#39; scale.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing ABAQUS (.inp) file</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/nodeDict.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">nodeDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtDict.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">elmtDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtSetDict.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;voxelizationRoutine()&quot; function is executed first!&#39;</span><span class="p">)</span>
+
+    <span class="n">abaqus_file</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/kanapy.inp&#39;</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">abaqus_file</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">abaqus_file</span><span class="p">)</span>                  <span class="c1"># remove old file if it exists</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">abaqus_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** Input file generated by kanapy</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*HEADING</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*PREPRINT,ECHO=NO,HISTORY=NO,MODEL=NO,CONTACT=NO</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** PARTS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Part, name=PART-1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Node,NSET=NALL</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Create nodes</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodeDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Write out coordinates in &#39;mm&#39;</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">, </span><span class="si">{3}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">1000</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">1000</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="mi">1000</span><span class="p">))</span>
+
+        <span class="c1"># Create Elements</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*ELEMENT, TYPE=C3D8</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">, </span><span class="si">{3}</span><span class="s1">, </span><span class="si">{4}</span><span class="s1">, </span><span class="si">{5}</span><span class="s1">, </span><span class="si">{6}</span><span class="s1">, </span><span class="si">{7}</span><span class="s1">, </span><span class="si">{8}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">7</span><span class="p">]))</span>
+
+        <span class="c1"># Create element sets</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*ELSET, ELSET=Grain</span><span class="si">{0}</span><span class="s1">_set</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">enum</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">enum</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">, &#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">enum</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
+
+        <span class="c1"># Create sections</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="s1">&#39;*Solid Section, elset=Grain</span><span class="si">{0}</span><span class="s1">_set, material=Grain</span><span class="si">{1}</span><span class="s1">_mat</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*End Part</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** ASSEMBLY</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Assembly, name=Assembly</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Instance, name=PART-1-1, part=PART-1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*End Instance</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*End Assembly</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+
+        
+<div class="viewcode-block" id="write_output_stat"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.input_output.write_output_stat">[docs]</a><span class="k">def</span> <span class="nf">write_output_stat</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates particle and output RVE grain statistics with respect to Major, Minor &amp; Equivalent diameters for comparison.</span>
+
+<span class="sd">    .. note:: Particle information is read from (.json) file generated by :meth:`src.kanapy.input_output.particleStatGenerator`.</span>
+<span class="sd">              And RVE grain information is read from the (.json) files generated by :meth:`src.kanapy.voxelization.voxelizationRoutine`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>  
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Comparing input &amp; output statistics</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/nodeDict.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">nodeDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtDict.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">elmtDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtSetDict.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+            <span class="n">particle_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+            <span class="n">RVE_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+            <span class="n">simulation_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>    
+          
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;particleStatGenerator(), packingRoutine(), voxelizationRoutine()&quot; function is executed first!&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Extract from dictionaries</span>
+    <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">]</span>
+    <span class="n">par_majDia</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Major_diameter&#39;</span><span class="p">]</span>
+    <span class="n">par_minDia</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">]</span>
+    <span class="n">voxel_size</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_resolution&#39;</span><span class="p">]</span>
+    <span class="n">RVEsize</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_size&#39;</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">:</span>
+        <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;False&#39;</span><span class="p">:</span>
+        <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">False</span>
+            
+    <span class="c1"># Check if Equiaxed or elongated particles</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">par_majDia</span><span class="p">,</span> <span class="n">par_minDia</span><span class="p">):</span>          <span class="c1"># Equiaxed grains (spherical particles)    </span>
+        
+        <span class="c1"># Find each grain&#39;s equivalent diameter</span>
+        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="p">[]</span>    
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">num_voxels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">grain_vol</span> <span class="o">=</span> <span class="n">num_voxels</span> <span class="o">*</span> <span class="p">(</span><span class="n">voxel_size</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span>
+            <span class="n">grain_dia</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">grain_vol</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">grain_eqDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grain_dia</span><span class="p">)</span>
+        
+        <span class="c1"># Plot the statistics                       </span>
+        <span class="c1"># plot Log-normal distribution ---&gt; For Equivalent diameter length</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#2300A8&#39;</span><span class="p">,</span> <span class="s1">&#39;#00A658&#39;</span><span class="p">,</span> <span class="s1">&#39;#DC143C&#39;</span><span class="p">,</span> <span class="s1">&#39;#000000&#39;</span><span class="p">]</span>  
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span> 
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">colors</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Sphere packing&#39;</span><span class="p">,</span> <span class="s1">&#39;RVE grains&#39;</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Equivalent diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;EqDia_comp.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+        <span class="c1">#plt.show()</span>
+    
+    <span class="k">else</span><span class="p">:</span>                                               <span class="c1"># Elongated grains (ellipsoidal particles)</span>
+    
+        <span class="k">if</span> <span class="n">periodic_status</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>                    <span class="c1"># Non-periodic microstructure</span>
+            
+            <span class="c1"># Find each grain&#39;s equivalent, major and minor diameters</span>
+            <span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">grain_majDia</span><span class="p">,</span> <span class="n">grain_minDia</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span> 
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">num_voxels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">grain_vol</span> <span class="o">=</span> <span class="n">num_voxels</span> <span class="o">*</span> <span class="p">(</span><span class="n">voxel_size</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span>
+                <span class="n">grain_dia</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">grain_vol</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+                <span class="n">grain_eqDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grain_dia</span><span class="p">)</span>            
+                
+                <span class="c1"># Find all the node id&#39;s belonging to the grain</span>
+                <span class="n">nodeset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="n">nodes</span> <span class="o">=</span> <span class="n">elmtDict</span><span class="p">[</span><span class="n">el</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodeset</span><span class="p">:</span>
+                            <span class="n">nodeset</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                
+                <span class="c1"># Get the coordinates as an array </span>
+                <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodeset</span><span class="p">:</span>
+                    <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodeDict</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>    
+
+                <span class="c1"># create the convex hull and find the vertex points</span>
+                <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>             
+                <span class="n">hull_pts</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">hull</span><span class="o">.</span><span class="n">vertices</span><span class="p">]</span>
+                
+                <span class="c1"># Find the approximate center of the grain using extreme surface points</span>
+                <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+                <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span>             
+                <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">xmax</span><span class="o">-</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">+</span> <span class="p">(</span><span class="n">ymax</span><span class="o">-</span><span class="n">ymin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">zmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">zmax</span><span class="o">-</span><span class="n">zmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">])</span>
+                
+                <span class="c1"># Find the euclidean distance to all surface points from the center</span>
+                <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span><span class="n">euclidean</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span> <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="n">hull_pts</span><span class="p">]</span>
+                <span class="n">a2</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+                <span class="n">b2</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+                           
+                <span class="n">grain_majDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>                 <span class="c1"># update the major diameter list</span>
+                <span class="n">grain_minDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>                 <span class="c1"># update the minor diameter list</span>
+            
+            <span class="c1"># Plot the statistics                       </span>
+            <span class="c1"># plot Log-normal distribution ---&gt; For Equivalent diameter length</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#2300A8&#39;</span><span class="p">,</span> <span class="s1">&#39;#00A658&#39;</span><span class="p">,</span> <span class="s1">&#39;#DC143C&#39;</span><span class="p">,</span> <span class="s1">&#39;#000000&#39;</span><span class="p">]</span>  
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span> 
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">colors</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ellipsoid packing&#39;</span><span class="p">,</span> <span class="s1">&#39;RVE grains&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Equivalent diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;EqDia_comp.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+            <span class="c1">#plt.show()</span>
+
+            <span class="c1"># plot Log-normal distribution ---&gt; For Major Axis length</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span> 
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">par_majDia</span><span class="p">,</span> <span class="n">grain_majDia</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">colors</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ellipsoid packing&#39;</span><span class="p">,</span> <span class="s1">&#39;RVE grains&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Major diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;MajorDia_comp.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+            <span class="c1">#plt.show()</span>
+
+            <span class="c1"># plot Log-normal distribution ---&gt; For Minor Axis</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span> 
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">par_minDia</span><span class="p">,</span> <span class="n">grain_minDia</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">colors</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ellipsoid packing&#39;</span><span class="p">,</span> <span class="s1">&#39;RVE grains&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Minor diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;MinorDia_compare.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+            <span class="c1">#plt.show()   </span>
+                                
+        <span class="k">else</span><span class="p">:</span>                                           <span class="c1"># Periodic microstructure       </span>
+            
+            <span class="c1"># Find all the nodal coordinates belonging to the grain</span>
+            <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">grain_node</span> <span class="o">=</span> <span class="p">{}</span>    
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>   
+                
+                <span class="c1"># Grain&#39;s equivalent diameter</span>
+                <span class="n">num_voxels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">grain_vol</span> <span class="o">=</span> <span class="n">num_voxels</span> <span class="o">*</span> <span class="p">(</span><span class="n">voxel_size</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span>
+                <span class="n">grain_dia</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">grain_vol</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+                <span class="n">grain_eqDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grain_dia</span><span class="p">)</span>  
+                
+                <span class="c1"># All nodes belonging to grain                                     </span>
+                <span class="n">nodeset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="n">nodes</span> <span class="o">=</span> <span class="n">elmtDict</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">el</span><span class="p">)]</span>
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodeset</span><span class="p">:</span>
+                            <span class="n">nodeset</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                
+                <span class="c1"># Get the coordinates as an array </span>
+                <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">nodeDict</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodeset</span><span class="p">]</span>
+                <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>                  
+                <span class="n">grain_node</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span>
+
+            <span class="c1"># Find the grains whose perodic halves have to be shifted</span>
+            <span class="n">shiftRight</span><span class="p">,</span> <span class="n">shiftTop</span><span class="p">,</span> <span class="n">shiftBack</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span> 
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">grain_node</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>                             
+                
+                <span class="c1"># Find all nodes on left, Right, Top, Bottom, Front &amp; Back faces</span>
+                <span class="n">nodeLS</span><span class="p">,</span> <span class="n">nodeRS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">nodeTS</span><span class="p">,</span> <span class="n">nodeBS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">nodeFS</span><span class="p">,</span> <span class="n">nodeBaS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>        
+                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>        
+                        
+                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="mf">0.0000</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>       <span class="c1"># nodes on Left face</span>
+                        <span class="n">nodeLS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">RVEsize</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>    <span class="c1"># nodes on Right face</span>
+                        <span class="n">nodeRS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+                    
+                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="mf">0.0000</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>       <span class="c1"># nodes on Bottom face</span>
+                        <span class="n">nodeBS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">RVEsize</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>    <span class="c1"># nodes on Top face</span>
+                        <span class="n">nodeTS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="mf">0.0000</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>       <span class="c1"># nodes on Front face</span>
+                        <span class="n">nodeFS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">RVEsize</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>    <span class="c1"># nodes on Back face</span>
+                        <span class="n">nodeBaS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>                
+                                                                                                                                                                
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeLS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeRS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>   <span class="c1"># grain is periodic, has faces on both Left &amp; Right sides</span>
+                    <span class="n">shiftRight</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>                  <span class="c1"># left set has to be moved to right side </span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeBS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeTS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>   <span class="c1"># grain is periodic, has faces on both Top &amp; Bottom sides</span>
+                    <span class="n">shiftTop</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>                    <span class="c1"># left set has to be moved to Top side </span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeFS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeBaS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># grain is periodic, has faces on both Front &amp; Back sides</span>
+                    <span class="n">shiftBack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>                  <span class="c1"># left set has to be moved to Back side                         </span>
+                                  
+            <span class="c1"># For each grain that has to be shifted, pad along x, y, z respectively</span>
+            <span class="k">for</span> <span class="n">grain</span> <span class="ow">in</span> <span class="n">shiftRight</span><span class="p">:</span>
+                <span class="n">pts</span> <span class="o">=</span> <span class="n">grain_node</span><span class="p">[</span><span class="n">grain</span><span class="p">]</span>                     
+                <span class="c1"># Pad the nodes on the left side by RVE x-dimension</span>
+                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pts</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="n">val</span><span class="o">&gt;=</span><span class="mf">0.0</span> <span class="ow">and</span> <span class="n">val</span><span class="o">&lt;=</span><span class="n">RVEsize</span><span class="o">/</span><span class="mf">2.</span><span class="p">:</span>
+                        <span class="n">pts</span><span class="p">[</span><span class="n">enum</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RVEsize</span>
+
+            <span class="k">for</span> <span class="n">grain</span> <span class="ow">in</span> <span class="n">shiftBack</span><span class="p">:</span>
+                <span class="n">pts</span> <span class="o">=</span> <span class="n">grain_node</span><span class="p">[</span><span class="n">grain</span><span class="p">]</span>        
+                <span class="c1"># Pad the nodes on the front side by RVE z-dimension</span>
+                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pts</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="n">val</span><span class="o">&gt;=</span><span class="mf">0.0</span> <span class="ow">and</span> <span class="n">val</span><span class="o">&lt;=</span><span class="n">RVEsize</span><span class="o">/</span><span class="mf">2.</span><span class="p">:</span>
+                        <span class="n">pts</span><span class="p">[</span><span class="n">enum</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RVEsize</span>
+
+            <span class="k">for</span> <span class="n">grain</span> <span class="ow">in</span> <span class="n">shiftTop</span><span class="p">:</span>
+                <span class="n">pts</span> <span class="o">=</span> <span class="n">grain_node</span><span class="p">[</span><span class="n">grain</span><span class="p">]</span>        
+                <span class="c1"># Pad the nodes on the bottom side by RVE y-dimension</span>
+                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="n">val</span><span class="o">&gt;=</span><span class="mf">0.0</span> <span class="ow">and</span> <span class="n">val</span><span class="o">&lt;=</span><span class="n">RVEsize</span><span class="o">/</span><span class="mf">2.</span><span class="p">:</span>
+                        <span class="n">pts</span><span class="p">[</span><span class="n">enum</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RVEsize</span>                                
+                        
+
+            <span class="c1"># create the convex hull and find the major &amp; minor diameters</span>
+            <span class="n">grain_majDia</span><span class="p">,</span> <span class="n">grain_minDia</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">grain</span><span class="p">,</span> <span class="n">points</span> <span class="ow">in</span> <span class="n">grain_node</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>   
+                
+                <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>             
+                <span class="n">hull_pts</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">hull</span><span class="o">.</span><span class="n">vertices</span><span class="p">]</span>
+                
+                <span class="c1"># Find the approximate center of the grain using extreme surface points</span>
+                <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+                <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span>             
+                <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">xmax</span><span class="o">-</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">+</span> <span class="p">(</span><span class="n">ymax</span><span class="o">-</span><span class="n">ymin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">zmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">zmax</span><span class="o">-</span><span class="n">zmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">])</span>
+                
+                <span class="c1"># Find the euclidean distance to all surface points from the center</span>
+                <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span><span class="n">euclidean</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span> <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="n">hull_pts</span><span class="p">]</span>
+                <span class="n">a2</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+                <span class="n">b2</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+
+                <span class="n">grain_majDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>                 <span class="c1"># update the major diameter list</span>
+                <span class="n">grain_minDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>                 <span class="c1"># update the minor diameter list</span>
+
+            <span class="c1"># Plot the statistics                       </span>
+            <span class="c1"># plot Log-normal distribution ---&gt; For Equivalent diameter length</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#2300A8&#39;</span><span class="p">,</span> <span class="s1">&#39;#00A658&#39;</span><span class="p">,</span> <span class="s1">&#39;#DC143C&#39;</span><span class="p">,</span> <span class="s1">&#39;#000000&#39;</span><span class="p">]</span>  
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span> 
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">colors</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ellipsoid packing&#39;</span><span class="p">,</span> <span class="s1">&#39;RVE grains&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Equivalent diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;EqDia_comp.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+            <span class="c1">#plt.show()</span>
+                                    
+            <span class="c1"># plot Log-normal distribution ---&gt; For Major Axis length</span>
+            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#2300A8&#39;</span><span class="p">,</span> <span class="s1">&#39;#00A658&#39;</span><span class="p">,</span> <span class="s1">&#39;#DC143C&#39;</span><span class="p">,</span> <span class="s1">&#39;#000000&#39;</span><span class="p">]</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span> 
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">par_majDia</span><span class="p">,</span> <span class="n">grain_majDia</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">colors</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ellipsoid packing&#39;</span><span class="p">,</span> <span class="s1">&#39;RVE grains&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Major diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;MajorDia_comp.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+            <span class="c1">#plt.show()</span>
+
+            <span class="c1"># plot Log-normal distribution ---&gt; For Minor Axis</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span> 
+            <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">par_minDia</span><span class="p">,</span> <span class="n">grain_minDia</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">colors</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ellipsoid packing&#39;</span><span class="p">,</span> <span class="s1">&#39;RVE grains&#39;</span><span class="p">])</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Minor diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">26</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;MinorDia_compare.png&#39;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+            <span class="c1">#plt.show()   </span>
+                    
+     
+    <span class="k">return</span></div>
+    
+    
+<div class="viewcode-block" id="printProgressBar"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.input_output.printProgressBar">[docs]</a><span class="k">def</span> <span class="nf">printProgressBar</span><span class="p">(</span><span class="n">iteration</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s1">&#39;█&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints the progress bar in the terminal for a given loop</span>
+
+<span class="sd">    :param iteration: current iteration</span>
+<span class="sd">    :type iteration: int</span>
+<span class="sd">    :param total: total iterations</span>
+<span class="sd">    :type total: int</span>
+<span class="sd">    :param prefix: prefix string</span>
+<span class="sd">    :type prefix: str</span>
+<span class="sd">    :param suffix: suffix string</span>
+<span class="sd">    :type suffix: str</span>
+<span class="sd">    :param decimals: positive number of decimals in percent complete</span>
+<span class="sd">    :type decimals: int</span>
+<span class="sd">    :param length: character length of bar</span>
+<span class="sd">    :type length: int</span>
+<span class="sd">    :param fill: bar fill character</span>
+<span class="sd">    :type fill: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">percent</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;{0:.&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;f}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span>
+                                                     <span class="p">(</span><span class="n">iteration</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">total</span><span class="p">)))</span>
+    <span class="n">filledLength</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">length</span> <span class="o">*</span> <span class="n">iteration</span> <span class="o">//</span> <span class="n">total</span><span class="p">)</span>
+    <span class="n">bar</span> <span class="o">=</span> <span class="n">fill</span> <span class="o">*</span> <span class="n">filledLength</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="n">filledLength</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="si">%s</span><span class="s1"> |</span><span class="si">%s</span><span class="s1">| </span><span class="si">%s%%</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">bar</span><span class="p">,</span> <span class="n">percent</span><span class="p">,</span> <span class="n">suffix</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># Print New Line on Complete</span>
+    <span class="k">if</span> <span class="n">iteration</span> <span class="o">==</span> <span class="n">total</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">()</span>
+    <span class="k">return</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mahesh R.G Prasad
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

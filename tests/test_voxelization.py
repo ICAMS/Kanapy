@@ -3,8 +3,8 @@ import numpy as np
 from scipy.spatial import ConvexHull, cKDTree
 
 import kanapy
-from kanapy.voxelization import *
-from kanapy.entities import Ellipsoid
+from src.kanapy.voxelization import *
+from src.kanapy.entities import Ellipsoid
 
 
 def test_points_in_convexHull():

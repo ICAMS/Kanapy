@@ -6,7 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
 SPHINXPROJ    = kanapy
 SOURCEDIR     = .
-BUILDDIR      = _build
+BUILDDIR      = builds
 
 # Put it first so that "make" without argument is like "make help".
 help:

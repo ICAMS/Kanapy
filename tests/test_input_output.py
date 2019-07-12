@@ -6,8 +6,8 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 import kanapy
-from kanapy.input_output import *
-from kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
+from src.kanapy.input_output import *
+from src.kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
 
 
 def test_particleStatGenerator():

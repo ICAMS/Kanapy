@@ -4,5 +4,4 @@ pytest
 pytest-mock
 sphinx
 sphinx_rtd_theme
-pybind11
 matplotlib

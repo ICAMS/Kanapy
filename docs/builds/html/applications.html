@@ -1,0 +1,237 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Applications &mdash; kanapy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Usage" href="usage.html" />
+    <link rel="prev" title="Overview" href="readme.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> kanapy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Applications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#microstructure-with-equiaxed-grains">Microstructure with equiaxed grains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#microstructure-with-elongated-grains">Microstructure with elongated grains</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="method.html">Modeling approach</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kanapy.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">kanapy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Applications</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/applications.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="applications">
+<h1>Applications<a class="headerlink" href="#applications" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="microstructure-with-equiaxed-grains">
+<h2>Microstructure with equiaxed grains<a class="headerlink" href="#microstructure-with-equiaxed-grains" title="Permalink to this headline">¶</a></h2>
+<p>Voronoi and Laguerre tessellations are some of the popular methods for generating polycrystalline microstructures. These approaches require positions and weights as input parameters for generating tessellation cells that resemble grains of a polycrystal. In this regard, the proposed particle packing approach can be used to generate the required information. Microstructure with equiaxed grains are best approximated by spheres and after obtaining the necessary packing fraction, positions and radii can be outputted.</p>
+<div class="figure align-center" id="id1">
+<img alt="_images/sphere_app.png" src="_images/sphere_app.png" />
+<p class="caption"><span class="caption-text"><strong>Figure</strong>: An example of sphere packing (left), radical voronoi tesselation (center) and FE tetrahedral mesh (right).</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>In this example, to obtain high packing fraction the box size is set as the volume sum of all the spheres. This definition of the box size will inevitably result in overlap of spheres at the final stages of the simulation. This is because packing fraction of <span class="math notranslate nohighlight">\(100\%\)</span> is unachievable without the occurrence of overlaps. Reasonable amount of overlap is accepted, as the input data obtained from microstructure characterization techniques (like EBSD) are also approximations. Hence for further post-processing, it is suggested to choose the time step at which the spheres are tightly packed and there is least amount of overlap. The remaining empty spaces will get assigned to the closest sphere when it is sent to the tessellation and meshing routine. Complete freedom in selecting the desired time step of the simulation to be sent for further processing is one of the highlights of this approach.</p>
+<p>Using the information obtained from sphere packing, radical Voronoi tessellation can be performed by Neper. And FE discretization of the tessellation cells by tetrahedral elements can also be done within Neper - <a class="reference external" href="https://doi.org/10.1016/j.cma.2011.01.002">Quey (2011)</a> with assistance from FE mesh generating software Gmsh - <a class="reference external" href="https://doi.org/10.1002/nme.2579">Geuzaine (2009)</a>.</p>
+</div>
+<div class="section" id="microstructure-with-elongated-grains">
+<h2>Microstructure with elongated grains<a class="headerlink" href="#microstructure-with-elongated-grains" title="Permalink to this headline">¶</a></h2>
+<p>Microstructures generated through conventional manufacturing processes like rolling and state of the art processes like additively manufacturing (AM) consists of both elongated and equiaxed grains. In the context of AM, this is due to the complex solidification process, which occurs as a result of constant re-heating and re-cooling of previously melted layers during the manufacturing. The morphology of the grains along with texture plays an important role in the resulting mechanical behavior. Hence, modeling such complex microstructures is vital and in this regard the proposed approach of random ellipsoid packing is used.</p>
+<div class="figure align-center" id="id2">
+<img alt="_images/ellipsoid_app.png" src="_images/ellipsoid_app.png" />
+<p class="caption"><span class="caption-text"><strong>Figure</strong>: An example of ellipsoidal packing (left), Voxelization - Initial assignment (center) and Final assignment (right).</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<p>The ellipsoid packing process is similar to that of sphere packing described earlier. Once the ellipsoids are tightly packed with minimal acceptable overlaps, they are processed further for meshing. Since Voronoi tessellations cannot be applied to anisotropic particles such as ellipsoids, a voxel based mesh generating routine that utilizes spatial partitioning data structure <span class="math notranslate nohighlight">\(k\)</span>-d tree for discretizing the RVE is employed. The voxelization (meshing) routine is made up of 2 stages. The number of voxels in the RVE has a direct influence on the FE solution and the FE simulation time, hence it must be meticulously chosen. The choice is not arbitrary, as it is constrained by how well the grains of the RVE are represented with respect to their geometry and the FEM simulation time.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="readme.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Mahesh R.G Prasad
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
