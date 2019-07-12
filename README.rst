@@ -106,6 +106,29 @@ and kanapy using:
 .. note:: The ``requirements.txt`` file contains all the dependencies of kanapy.
 
 
+Running tests
+--------------
+
+kanapy uses ``pytest`` to perform all its unit testing. From the kanapy main directory (``kanapy-master``) run the tests using ``pytest``:
+
+.. code-block:: console
+    
+    (myenv) $ pytest tests/ -v
+   
+   
+Documentation build
+-------------------
+Documentation for kanapy is generated using ``Sphinx``. The following command generates HTML-based reference documentation; 
+for other formats please refer to the Sphinx manual. From the kanapy main directory (``kanapy-master``):
+
+.. code-block:: console
+
+    (myenv) $ cd docs/
+    (myenv) $ make html
+
+.. note:: The HTML documentation can be found at ``/kanapy-master/docs/builds/html/index.html``
+
+
 Dependencies
 -------------
 
@@ -145,28 +168,6 @@ Optional dependencies
 .. _Matplotlib: https://matplotlib.org/
 .. _OVITO: https://ovito.org/
 
-
-Running tests
---------------
-
-kanapy uses ``pytest`` to perform all its unit testing. From the kanapy main directory (``kanapy-master``) run the tests using ``pytest``:
-
-.. code-block:: console
-    
-    (myenv) $ pytest tests/ -v
-   
-   
-Documentation build
--------------------
-Documentation for kanapy is generated using ``Sphinx``. The following command generates HTML-based reference documentation; 
-for other formats please refer to the Sphinx manual. From the kanapy main directory (``kanapy-master``):
-
-.. code-block:: console
-
-    (myenv) $ cd docs/
-    (myenv) $ make html
-
-.. note:: The HTML documentation can be found at ``/kanapy-master/docs/builds/html/index.html``
 
 License
 --------
