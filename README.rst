@@ -38,9 +38,7 @@ Features
 Documentation
 -------------
 
-Online documentation can be found here_. 
-
-.. _here: https://mrgprasad.github.io/kanapy
+Online documentation can be found `here <https://mrgprasad.github.io/kanapy/index.html>`_.  
 
 Installation
 ------------
