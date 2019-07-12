@@ -90,6 +90,11 @@ If git is not available in your machine, you can install it by following this
 .. note:: The cloned/downloaded source directory can be renamed as `kanapy-master` and will be
           referred to so from here on.
 
+If CMake is not installed on your machine, follow this `CMake documentation`_ 
+to install it.
+
+.. _CMake documentation: https://cgold.readthedocs.io/en/latest/first-step/installation.html
+
 Once you have a copy of the source, move into the local repository and install the dependencies
 and kanapy using:
 
@@ -109,11 +114,7 @@ kanapy requires a working C/C++ compiler on your machine. On Linux/Mac OS
 the gcc toolchain will work well. The lightweight header-only library pybind11 
 is used to create Python bindings for the code written in C++.
 The C++ function will be complied by linking the Eigen library 
-(present in the directory ``/kanapy-master/libs/``). 
-CMake must be installed to build this extension, follow this `CMake documentation`_ 
-to install it.
-
-.. _CMake documentation: https://cgold.readthedocs.io/en/latest/first-step/installation.html
+(present in the directory ``/kanapy-master/libs/``). CMake builds this extension.
          
 ^^^^^^^^^^^^^^^^^^
 Core dependencies
