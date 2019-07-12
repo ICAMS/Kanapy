@@ -42,10 +42,14 @@ Online documentation can be found `here <https://mrgprasad.github.io/kanapy/inde
 
 Installation
 ------------
-The preferred method to install kanapy is through Anaconda or Miniconda python distributions. 
-Follow the anaconda_ or the miniconda_ documentation to install it. 
+CMake is used for building extensions, if it is not installed on your machine follow this 
+`CMake documentation`_ to install it.
 
-.. _anaconda: https://docs.anaconda.com/anaconda/install/
+.. _CMake documentation: https://cgold.readthedocs.io/en/latest/first-step/installation.html
+
+The preferred method to install kanapy is through Anaconda or Miniconda python distributions. 
+If you do not have any we suggest installing miniconda_. 
+
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 
 
@@ -57,7 +61,7 @@ Once done, create a virtual environment for installing python specific packages 
     
 
 .. note:: 1. ``myenv`` can be replaced with any name for your environment.
-          2. This will install python 3.6 as the default python interpretor within this environment.
+          2. This will install python3.6 as the default python interpretor within this environment.
           
 .. tip:: To learn more on managing environments see Anaconda documentation_.
 
@@ -89,11 +93,6 @@ If git is not available in your machine, you can install it by following this
 
 .. note:: The cloned/downloaded source directory can be renamed as `kanapy-master` and will be
           referred to so from here on.
-
-If CMake is not installed on your machine, follow this `CMake documentation`_ 
-to install it.
-
-.. _CMake documentation: https://cgold.readthedocs.io/en/latest/first-step/installation.html
 
 Once you have a copy of the source, move into the local repository and install the dependencies
 and kanapy using:
