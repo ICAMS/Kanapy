@@ -90,13 +90,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#documentation">Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-tests">Running tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#documentation-build">Documentation build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#core-dependencies">Core dependencies</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#optional-dependencies">Optional dependencies</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#running-tests">Running tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#documentation-build">Documentation build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#license">License</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#about">About</a></li>
 </ul>
@@ -192,60 +192,59 @@
 </div>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
-<p>Online documentation can be found <a class="reference external" href="https://mrgprasad.github.io/kanapy">here</a>.</p>
+<p>Online documentation can be found <a class="reference external" href="https://mrgprasad.github.io/kanapy/index.html">here</a>.</p>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>CMake is used for building extensions, if it is not installed on your machine follow this
+<a class="reference external" href="https://cgold.readthedocs.io/en/latest/first-step/installation.html">CMake documentation</a> to install it.</p>
 <p>The preferred method to install kanapy is through Anaconda or Miniconda python distributions.
-Follow the <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">anaconda</a> or the <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a> documentation to install it.</p>
-<p>Once done, create a virtual environment for installing python specific packages required for kanapy.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -n myenv <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6 pip
+If you do not have any we suggest installing <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.</p>
+<p>Once done, create a virtual environment for installing python specific packages required for kanapy and
+activate it.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -n myenv <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6 pip git
+<span class="gp">$</span> conda activate myenv
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">myenv</span></code> can be replaced with any name for your environment.</p></li>
-<li><p>This will install python 3.6 as the default python interpretor within this environment.</p></li>
+<li><p>For older versions of anaconda/miniconda use: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">activate</span> <span class="pre">myenv</span></code></p></li>
 </ol>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>To learn more on managing environments see Anaconda <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">documentation</a>.</p>
 </div>
-<p>Activate the environment using:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">myenv</span></code> can be replaced with the name of your environment.</p></li>
-<li><p>For older versions of anaconda/miniconda use: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">activate</span> <span class="pre">myenv</span></code></p></li>
-</ol>
-</div>
 <p>You can either clone the kanapy public repository using git or
 download the kanapy source code from the <a class="reference external" href="https://github.com/mrgprasad/kanapy">Github repo</a> to a desired location.</p>
-<p>If git is not available in your machine, you can install it by following this
-<a class="reference external" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">git documentation</a>.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The cloned/downloaded source directory can be renamed as <cite>kanapy-master</cite> and will be
-referred to so from here on.</p>
-</div>
-<p>Once you have a copy of the source, move into the local repository and install the dependencies
-and kanapy using:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/
 <span class="gp">(myenv) $</span> conda install --file requirements.txt
 <span class="gp">(myenv) $</span> pip install -e .
 </pre></div>
 </div>
+<p>kanapy is now installed along with all its dependencies.</p>
+</div>
+<div class="section" id="running-tests">
+<h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
+<p>kanapy uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> to perform all its unit testing. From the kanapy main directory (<code class="docutils literal notranslate"><span class="pre">kanapy-master</span></code>) run the tests using <code class="docutils literal notranslate"><span class="pre">pytest</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> pytest tests/ -v
+</pre></div>
+</div>
+</div>
+<div class="section" id="documentation-build">
+<h2>Documentation build<a class="headerlink" href="#documentation-build" title="Permalink to this headline">¶</a></h2>
+<p>Documentation for kanapy is generated using <code class="docutils literal notranslate"><span class="pre">Sphinx</span></code>. The following command generates HTML-based reference documentation;
+for other formats please refer to the Sphinx manual. From the kanapy main directory (<code class="docutils literal notranslate"><span class="pre">kanapy-master</span></code>):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> <span class="nb">cd</span> docs/
+<span class="gp">(myenv) $</span> make html
+</pre></div>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file contains all the dependencies of kanapy.</p>
+<p>The HTML documentation can be found at <code class="docutils literal notranslate"><span class="pre">/kanapy-master/docs/index.html</span></code></p>
 </div>
 </div>
 <div class="section" id="dependencies">
@@ -254,9 +253,7 @@ and kanapy using:</p>
 the gcc toolchain will work well. The lightweight header-only library pybind11
 is used to create Python bindings for the code written in C++.
 The C++ function will be complied by linking the Eigen library
-(present in the directory <code class="docutils literal notranslate"><span class="pre">/kanapy-master/libs/</span></code>).
-CMake must be installed to build this extension, follow this <a class="reference external" href="https://cgold.readthedocs.io/en/latest/first-step/installation.html">CMake documentation</a>
-to install it.</p>
+(present in the directory <code class="docutils literal notranslate"><span class="pre">/kanapy-master/libs/</span></code>). CMake builds this extension.</p>
 <div class="section" id="core-dependencies">
 <h3>Core dependencies<a class="headerlink" href="#core-dependencies" title="Permalink to this headline">¶</a></h3>
 <p>Below are the listed dependencies for running kanapy:</p>
@@ -279,26 +276,6 @@ to install it.</p>
 <li><p><a class="reference external" href="https://ovito.org/">OVITO</a> for visualizing simulation data.</p></li>
 </ul>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="running-tests">
-<h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
-<p>kanapy uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> to perform all its unit testing. From the kanapy main directory (<code class="docutils literal notranslate"><span class="pre">kanapy-master</span></code>) run the tests using <code class="docutils literal notranslate"><span class="pre">pytest</span></code>:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> pytest tests/ -v
-</pre></div>
-</div>
-</div>
-<div class="section" id="documentation-build">
-<h2>Documentation build<a class="headerlink" href="#documentation-build" title="Permalink to this headline">¶</a></h2>
-<p>Documentation for kanapy is generated using <code class="docutils literal notranslate"><span class="pre">Sphinx</span></code>. The following command generates HTML-based reference documentation;
-for other formats please refer to the Sphinx manual. From the kanapy main directory (<code class="docutils literal notranslate"><span class="pre">kanapy-master</span></code>):</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> <span class="nb">cd</span> docs/
-<span class="gp">(myenv) $</span> make html
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The HTML documentation can be found at <code class="docutils literal notranslate"><span class="pre">/kanapy-master/docs/builds/html/index.html</span></code></p>
 </div>
 </div>
 <div class="section" id="license">

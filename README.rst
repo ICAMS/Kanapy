@@ -48,7 +48,7 @@ CMake is used for building extensions, if it is not installed on your machine fo
 .. _CMake documentation: https://cgold.readthedocs.io/en/latest/first-step/installation.html
 
 The preferred method to install kanapy is through Anaconda or Miniconda python distributions. 
-If you do not have any we suggest installing miniconda_. 
+If you do not have any, we suggest installing miniconda_. 
 
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 
@@ -85,7 +85,7 @@ kanapy is now installed along with all its dependencies.
 Running tests
 --------------
 
-kanapy uses ``pytest`` to perform all its unit testing. From the kanapy main directory (``kanapy-master``) run the tests using ``pytest``:
+kanapy uses ``pytest`` to perform all its unit testing. From the kanapy main directory (``kanapy-master``) run the tests:
 
 .. code-block:: console
     
@@ -100,9 +100,9 @@ for other formats please refer to the Sphinx manual. From the kanapy main direct
 .. code-block:: console
 
     (myenv) $ cd docs/
-    (myenv) $ make html
+    (myenv) $ make clean && make html
 
-.. note:: The HTML documentation can be found at ``/kanapy-master/docs/builds/html/index.html``
+The HTML documentation can be found at ``/kanapy-master/docs/index.html``
 
 
 Dependencies
