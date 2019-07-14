@@ -73,25 +73,15 @@ download the kanapy source code from the `Github repo`_ to a desired location.
 
 .. code-block:: console
 
-    (myenv) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>
-
-.. _Github repo: https://github.com/mrgprasad/kanapy
-
-.. note:: The cloned/downloaded source directory can be renamed as `kanapy-master` and will be
-          referred to so from here on.
-
-Once you have a copy of the source, move into the local repository and install the dependencies
-and kanapy using:
-
-.. code-block:: console
-
+    (myenv) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
     (myenv) $ cd kanapy-master/
     (myenv) $ conda install --file requirements.txt
     (myenv) $ pip install -e .
-    
-.. note:: The ``requirements.txt`` file contains all the dependencies of kanapy.
 
+kanapy is now installed along with all its dependencies.
 
+.. _Github repo: https://github.com/mrgprasad/kanapy
+          
 Running tests
 --------------
 
