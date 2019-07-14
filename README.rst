@@ -53,43 +53,29 @@ If you do not have any we suggest installing miniconda_.
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 
 
-Once done, create a virtual environment for installing python specific packages required for kanapy.
+Once done, create a virtual environment for installing python specific packages required for kanapy and 
+activate it.
 
 .. code-block:: console
 
-    $ conda create -n myenv python=3.6 pip
-    
+    $ conda create -n myenv python=3.6 pip git
+    $ conda activate myenv    
 
 .. note:: 1. ``myenv`` can be replaced with any name for your environment.
-          2. This will install python3.6 as the default python interpretor within this environment.
-          
+          2. For older versions of anaconda/miniconda use: ``source activate myenv``
+                    
 .. tip:: To learn more on managing environments see Anaconda documentation_.
 
-.. _documentation: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html       
-
-
-Activate the environment using:
-
-.. code-block:: console
-
-    $ conda activate myenv
-    
-.. note:: 1. ``myenv`` can be replaced with the name of your environment.
-          2. For older versions of anaconda/miniconda use: ``source activate myenv``
+.. _documentation: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html           
 
 You can either clone the kanapy public repository using git or 
 download the kanapy source code from the `Github repo`_ to a desired location. 
-
-If git is not available in your machine, you can install it by following this
-`git documentation`_.
 
 .. code-block:: console
 
     (myenv) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>
 
-
 .. _Github repo: https://github.com/mrgprasad/kanapy
-.. _git documentation: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git    
 
 .. note:: The cloned/downloaded source directory can be renamed as `kanapy-master` and will be
           referred to so from here on.
