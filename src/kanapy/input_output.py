@@ -410,7 +410,7 @@ def write_abaqus_inp():
         f.write('** PARTS\n')
         f.write('**\n')
         f.write('*Part, name=PART-1\n')
-        f.write('*Node,NSET=NALL\n')
+        f.write('*Node\n')
 
         # Create nodes
         for k, v in nodeDict.items():

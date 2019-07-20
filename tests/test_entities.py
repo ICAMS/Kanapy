@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import pytest
 import numpy as np
 
@@ -369,9 +372,3 @@ class TestOctree():
         assert self.tree.collisionsTest.call_count == 1
 
 
-if __name__ == "__main__":
-    test_cub_oct_split()
-    test_Simulation_Box_init()
-    TestCuboid()
-    TestEllipsoid()
-    TestOctree()

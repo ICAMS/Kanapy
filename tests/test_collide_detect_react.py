@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import pytest
 import numpy as np
 from unittest import mock
@@ -137,10 +140,5 @@ def test_collision_routine_ellipsoid(ellip):
     with mock.patch('src.kanapy.collision_detect_react.collision_react') as mocked_method:
         collision_routine(ellip[0], ellip[1])
         assert mocked_method.call_count == 2
-
-
-if __name__ == "__main__":
-    test_collideDetect()
-    test_collision_react()
-    test_collision_routine_sphere()
-    test_collision_routine_ellipsoid()
+        
+        

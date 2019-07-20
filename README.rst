@@ -7,11 +7,9 @@ Overview
 
 .. image:: https://img.shields.io/travis/mrgprasad/kanapy.svg
     :target: https://travis-ci.org/mrgprasad/kanapy
-    :width: 20 %
 
 .. image:: https://img.shields.io/badge/License-MIT-blue.svg
    :target: https://lbesson.mit-license.org/
-   :width: 17 %
 
 kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in Python_ with performance critical part implemented in C++. Python bindings for the code written in C++ is generated using the lightweight header-only library pybind11_. The C++ part of the implementation utilizes the Eigen_ library for efficient linear algebra calculations.
 
@@ -75,7 +73,7 @@ download the kanapy source code from the `Github repo`_ to a desired location.
 
     (myenv) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
     (myenv) $ cd kanapy-master/
-    (myenv) $ conda install --file requirements.txt
+    (myenv) $ conda install -y -c conda-forge --file requirements.txt
     (myenv) $ pip install -e .
 
 kanapy is now installed along with all its dependencies.

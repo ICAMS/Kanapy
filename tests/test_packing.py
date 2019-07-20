@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os
 import json
 import shutil
@@ -152,7 +155,3 @@ def test_packingRoutine():
     shutil.rmtree(cwd + '/dump_files')
 
 
-if __name__ == "__main__":
-    test_particle_generator()
-    test_particle_grow()
-    test_packingRoutine()

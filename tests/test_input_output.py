@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os
 import shutil
 
@@ -194,9 +197,3 @@ def test_write_abaqus_inp():
     os.remove(cwd + '/kanapy.inp')
 
 
-if __name__ == "__main__":
-    test_particleStatGenerator()
-    test_write_dump()
-    test_read_dump()
-    test_write_position_weights()
-    test_write_abaqus_inp()

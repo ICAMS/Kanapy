@@ -2,6 +2,8 @@ numpy
 scipy
 pytest
 pytest-mock
+pytest-cov
+codecov
 sphinx
 sphinx_rtd_theme
 matplotlib

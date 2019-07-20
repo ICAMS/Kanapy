@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import pytest
 import numpy as np
 from scipy.spatial import ConvexHull, cKDTree
@@ -221,8 +224,3 @@ def test_reassign_shared_voxels(dec_info, CuboidBox):
     assert set(ref2) == set(ell2.inside_voxels)
 
 
-if __name__ == "__main__":
-    test_points_in_convexHull()
-    test_create_voxels()
-    test_assign_voxels_to_ellipsoid()
-    test_reassign_shared_voxels()

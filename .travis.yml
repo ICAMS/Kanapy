@@ -28,12 +28,15 @@ before_install:
 install:
 - |
   if [ -n "$CONDA" ]; then
-    conda install --file requirements.txt
+    conda install -c conda-forge --file requirements.txt
     pip install -e .
   fi
 
 script:
-- pytest tests/ -v
+- pytest --cov-report term-missing --cov=src/kanapy tests/
+
+after_success:
+- codecov
 
 notifications:
   email: false
