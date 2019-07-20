@@ -8,6 +8,9 @@ Overview
 .. image:: https://img.shields.io/travis/mrgprasad/kanapy.svg
     :target: https://travis-ci.org/mrgprasad/kanapy
 
+.. image:: https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/mrgprasad/kanapy
+  
 .. image:: https://img.shields.io/badge/License-MIT-blue.svg
    :target: https://lbesson.mit-license.org/
 
