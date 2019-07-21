@@ -308,7 +308,8 @@ def voxelizationRoutine(file_num):
 
         except FileNotFoundError:
             print('Json file not found, make sure "RVE_data.txt" file exists!')
-
+            raise FileNotFoundError
+            
         filename = cwd + '/dump_files/particle.{0}.dump'.format(file_num)
 
         # Read the required dump file

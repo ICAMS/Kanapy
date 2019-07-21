@@ -15,10 +15,27 @@ from src.kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
 
 def test_particleStatGenerator():
 
+    # Test if FileNotFoundError is raised
+    with pytest.raises(FileNotFoundError):
+        particleStatGenerator('stat_inp')
+            
     # create an temporary input file for user defined statistics
     cwd = os.getcwd()
-    stat_inp = cwd + '/stat_input.txt'
+    stat_inp = cwd + '/stat_input.txt'   
+            
+    # Test if ValueError is raised
+    to_write = ['@ Equivalent diameter', 'std = 0.531055', 'mean = 2.76736', 'cutoff_min = 2.0', 'cutoff_max = 4.0',
+                ' ', '@ Aspect ratio', 'mean = 2.5', ' ', '@ Orientation', 'sigma = 28.8', 'mean = 87.4', ' ',
+                '@ RVE', 'side_length = 8', 'voxel_per_side = 5', ' ', '@ Simulation', 'nsteps = 1000', 'periodicity = True']
 
+    with open(stat_inp, 'w') as fd:
+        for text in to_write:
+            fd.write('{0}\n'.format(text))
+
+    with pytest.raises(ValueError):    
+        particleStatGenerator(stat_inp)
+        
+    # Test the remaining code
     to_write = ['@ Equivalent diameter', 'std = 0.531055', 'mean = 2.76736', 'cutoff_min = 2.0', 'cutoff_max = 4.0',
                 ' ', '@ Aspect ratio', 'mean = 2.5', ' ', '@ Orientation', 'sigma = 28.8', 'mean = 87.4', ' ',
                 '@ RVE', 'side_length = 8', 'voxel_per_side = 15', ' ', '@ Simulation', 'nsteps = 1000', 'periodicity = True']
@@ -95,7 +112,7 @@ def test_particleStatGenerator():
 
     os.remove(stat_inp)
     shutil.rmtree(json_dir)
-
+    
 
 @pytest.fixture
 def temp_dump():
@@ -123,6 +140,12 @@ def test_write_dump(temp_dump):
 def test_read_dump(temp_dump):
 
     cwd = os.getcwd()
+    
+    # Test if FileNotFoundError is raised
+    with pytest.raises(FileNotFoundError):
+        read_dump(cwd + '/dump_files/nonExistingFile.dump')
+    
+    # test the remainder of the code
     gen_sbox, genEll, gen_centerDict, gen_centerTree = read_dump(
         cwd + '/dump_files/particle.{0}.dump'.format(temp_dump.sim_ts))
 
@@ -136,6 +159,11 @@ def test_read_dump(temp_dump):
 
 def test_write_position_weights(temp_dump):
 
+    # Test if FileNotFoundError is raised
+    with pytest.raises(FileNotFoundError):
+        write_position_weights(26957845264856)
+        
+    # Test the remainder of the code    
     write_position_weights(0)
     cwd = os.getcwd()
     assert os.path.isfile(cwd + '/sphere_positions.txt')
@@ -180,6 +208,11 @@ def test_write_abaqus_inp():
     cwd = os.getcwd()
     json_dir = cwd + '/json_files'
 
+    # Test if FileNotFoundError is raised
+    with pytest.raises(FileNotFoundError):
+        write_abaqus_inp()
+    
+    # Test the remainder of the code
     if not os.path.exists(json_dir):
         os.makedirs(json_dir)
 

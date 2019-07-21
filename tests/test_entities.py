@@ -163,7 +163,12 @@ class TestEllipsoid():
         assert np.array_equal(self.ell.surface_points, rot_surf[2])
         assert len(self.ell.inside_voxels) == 0
         assert isinstance(self.ell.cub, Cuboid)
+        
+        # Test for Identity property of rotation matrix
+        self.ell = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5, np.array([1.49e-08, 0.0, 0.0, 0.0]))
+        assert np.array_equal(self.ell.rotation_matrix, np.eye(3))
 
+        
     def test_get(self, rot_surf):
 
         # Initialize the Ellipsoid
@@ -224,23 +229,41 @@ class TestEllipsoid():
         assert self.ell.y == 0.5 - (0.6)
         assert self.ell.z == 0.75
 
-    @pytest.mark.parametrize("position, duplicates", [(np.array([0.2, 0.5, 0.75]), 7), (np.array([0.2, 5.0, 0.75]), 3), (np.array([0.2, 5.0, 5.0]), 1), (np.array([5.0, 5.0, 5.0]), 0)])
+
+    @pytest.mark.parametrize("position, duplicates", 
+                              [([0.0, 10.0, 10.0], 7), ([10.0, 10.0, 10.0], 7), 
+                               ([10.0, 0.0, 10.0], 7), ([0.0, 0.0, 10.0], 7),
+                               ([0.0, 10.0, 0.0], 7), ([10.0, 10.0, 0.0], 7), 
+                               ([10.0, 0.0, 0.0], 7), ([0.0, 0.0, 0.0], 7),
+
+                               ([0.0, 10.0, 5.0], 3), ([10.0, 10.0, 5.0], 3),
+                               ([0.0, 0.0, 5.0], 3), ([10.0, 0.0, 5.0], 3),
+                               ([5.0, 10.0, 10.0], 3), ([5.0, 0.0, 10.0], 3),
+                               ([5.0, 10.0, 0.0], 3), ([5.0, 0.0, 0.0], 3),
+                               ([10.0, 5.0, 10.0], 3), ([0.0, 5.0, 10.0], 3),
+                               ([10.0, 5.0, 0.0], 3), ([0.0, 5.0, 0.0], 3),
+
+                               ([-0.5, 5.0, 5.0], 1), ([10.5, 5.0, 5.0], 1),
+                               ([5.0, -0.5, 5.0], 1), ([5.0, 10.5, 5.0], 1),
+                               ([5.0, 5.0, 10.5], 1), ([5.0, 5.0, -0.5], 1),
+
+                               ([5.0, 5.0, 5.0], 0)])
     def test_wallCollision_Periodic(self, rot_surf, position, duplicates):
 
         sbox = Simulation_Box(10, 10, 10)
-        self.ell = Ellipsoid(
-            1, position[0], position[1], position[2], 2.0, 1.5, 1.5, rot_surf[0])
+        self.ell = Ellipsoid(1, position[0], position[1], position[2], 2.0, 1.5, 1.5, rot_surf[0])
 
         # Test for periodicity == TRUE
         dups = self.ell.wallCollision(sbox, True)
         assert len(dups) == duplicates
-
-    @pytest.mark.parametrize("position, speeds", [(np.array([0.2, 0.5, 0.75]), [0.02, -0.075, 0.05]), (np.array([9.8, 9.5, 9.25]), [0.02, -0.075, 0.05])])
+                                                          
+                
+    @pytest.mark.parametrize("position, speeds", [(np.array([0.2, 0.5, 0.75]), [0.02, -0.075, 0.05]), 
+                                                  (np.array([9.8, 9.5, 9.25]), [0.02, -0.075, 0.05])])
     def test_wallCollision_Regular(self, rot_surf, position, speeds):
 
         sbox = Simulation_Box(10, 10, 10)
-        self.ell = Ellipsoid(
-            1, position[0], position[1], position[2], 2.0, 1.5, 1.5, rot_surf[0])
+        self.ell = Ellipsoid(1, position[0], position[1], position[2], 2.0, 1.5, 1.5, rot_surf[0])
         self.ell.speedx, self.ell.speedy, self.ell.speedz = -0.02, 0.075, -0.05
 
         # Test for periodicity == FALSE

@@ -167,7 +167,8 @@ def packingRoutine():
 
         except FileNotFoundError:
             print('Json files not found, make sure particle_Stat_Generator() function is executed first!')
-
+            raise FileNotFoundError
+            
         print('    Creating simulation box of required dimensions')
         # Create an instance of simulation box
         sim_box = Simulation_Box(RVE_data['RVE_size'], RVE_data['RVE_size'], RVE_data['RVE_size'])

@@ -1,14 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+import shutil
+import json
+
 import pytest
 import numpy as np
 from scipy.spatial import ConvexHull, cKDTree
 
 import kanapy
 from src.kanapy.voxelization import *
-from src.kanapy.entities import Ellipsoid
-
+from src.kanapy.entities import Ellipsoid, Simulation_Box
+from src.kanapy.input_output import particleStatGenerator
+from src.kanapy.input_output import write_dump
+from src.kanapy.packing import particle_generator
 
 def test_points_in_convexHull():
     outer_points = np.array([[0.3215426810286406, 0.1678336189760208, -0.2203710966001927],
@@ -224,3 +230,47 @@ def test_reassign_shared_voxels(dec_info, CuboidBox):
     assert set(ref2) == set(ell2.inside_voxels)
 
 
+def test_voxelizationRoutine():
+    
+    # Test if FileNotFoundError is raised
+    with pytest.raises(FileNotFoundError):
+        voxelizationRoutine(12597856985475)
+
+    # create an temporary input file for user defined statistics
+    cwd = os.getcwd()    
+    json_dir = cwd + '/json_files'
+    dump_dir = cwd + '/dump_files'
+    stat_inp = cwd + '/stat_input.txt'
+            
+    # create an temporary 'json' directory for reading files from
+    to_write = ['@ Equivalent diameter', 'std = 0.531055', 'mean = 2.76736', 'cutoff_min = 1.0', 'cutoff_max = 2.0',
+                ' ', '@ Aspect ratio', 'mean = 2.5', ' ', '@ Orientation', 'sigma = 28.8', 'mean = 87.4', ' ',
+                '@ RVE', 'side_length = 3', 'voxel_per_side = 10', ' ', '@ Simulation', 'nsteps = 1000', 'periodicity = True']
+
+    with open(stat_inp, 'w') as fd:
+        for text in to_write:
+            fd.write('{0}\n'.format(text))
+
+    particleStatGenerator(stat_inp)   
+
+    # create an temporary 'dump' directory for reading files from
+    with open(json_dir + '/RVE_data.txt') as json_file:
+        RVE_data = json.load(json_file)
+        
+    with open(json_dir + '/particle_data.txt') as json_file:
+        particle_data = json.load(json_file)
+                                    
+    sim_box = Simulation_Box(RVE_data['RVE_size'], RVE_data['RVE_size'], RVE_data['RVE_size'])
+    Particles = particle_generator(particle_data, sim_box)
+    
+    write_dump(Particles, sim_box, len(Particles))
+    
+    voxelizationRoutine(0)
+
+    assert os.path.isfile(json_dir + '/nodeDict.txt')
+    assert os.path.isfile(json_dir + '/elmtDict.txt')
+    assert os.path.isfile(json_dir + '/elmtSetDict.txt')
+
+    os.remove(stat_inp)    
+    shutil.rmtree(json_dir)
+    shutil.rmtree(dump_dir)

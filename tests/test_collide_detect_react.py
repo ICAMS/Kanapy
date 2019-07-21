@@ -103,19 +103,149 @@ def test_collideDetect(ellip):
     assert status == True
 
 
-def test_collision_react(ellip):
+def test_collision_react():
 
-    collision_react(ellip[0], ellip[1])         # For 1st ellipsoid
-    collision_react(ellip[1], ellip[0])         # For 2nd ellipsoid
+    # Initialize the Ellipsoids
+    el1 = Ellipsoid(1, 5, 5, 5, 2.0, 2.0, 2.0, np.array(
+        [0.52532199, 0., -0., 0.85090352]))
+    el2 = Ellipsoid(2, 5.5, 5.5, 5.5, 2.0, 2.0, 2.0,
+                    np.array([0.52532199, 0., -0., 0.85090352]))
 
-    assert round(ellip[0].speedx, 6) == -0.035037
-    assert round(ellip[0].speedy, 6) == -0.045938
-    assert round(ellip[0].speedz, 6) == -0.072021
+    el1.speedx, el1.speedy, el1.speedz = 0.1, 0.075, -0.05
+    el2.speedx, el2.speedy, el2.speedz = -0.1, -0.025, -0.36
+        
+    # Test different conditions
+    # Condition: xdiff > 0 && zdiff > 0          
+    collision_react(el1, el2)
+    collision_react(el2, el1)
+    
+    assert round(el1.speedx, 6) == -0.077728
+    assert round(el1.speedy, 6) == -0.077728
+    assert round(el1.speedz, 6) == -0.077728
+    
+    assert round(el2.speedx, 6) == 0.216198
+    assert round(el2.speedy, 6) == 0.216198
+    assert round(el2.speedz, 6) == 0.216198    
 
-    assert round(ellip[1].speedx, 6) == 0.233994
-    assert round(ellip[1].speedy, 6) == 0.306793
-    assert round(ellip[1].speedz, 6) == 0.480988
+    # Condition: xdiff > 0 && zdiff < 0
+    el2.z = 4.5   
+    collision_react(el1, el2)
+    collision_react(el2, el1)   
 
+    assert round(el1.speedx, 6) == -0.077728
+    assert round(el1.speedy, 6) == -0.077728
+    assert round(el1.speedz, 6) == 0.077728
+    
+    assert round(el2.speedx, 6) == 0.216198
+    assert round(el2.speedy, 6) == 0.216198
+    assert round(el2.speedz, 6) == -0.216198          
+
+    # Condition: xdiff < 0 && zdiff > 0
+    el2.x = 4.5
+    el2.z  = 5.5  
+
+    collision_react(el1, el2)
+    collision_react(el2, el1)   
+
+    assert round(el1.speedx, 6) == 0.077728
+    assert round(el1.speedy, 6) == -0.077728
+    assert round(el1.speedz, 6) == -0.077728
+    
+    assert round(el2.speedx, 6) == -0.216198
+    assert round(el2.speedy, 6) == 0.216198
+    assert round(el2.speedz, 6) == 0.216198          
+
+    # Condition: xdiff < 0 && zdiff < 0
+    el2.x = 4.5
+    el2.z  = 4.5  
+
+    collision_react(el1, el2)
+    collision_react(el2, el1)   
+
+    assert round(el1.speedx, 6) == 0.077728
+    assert round(el1.speedy, 6) == -0.077728
+    assert round(el1.speedz, 6) == 0.077728
+    
+    assert round(el2.speedx, 6) == -0.216198
+    assert round(el2.speedy, 6) == 0.216198
+    assert round(el2.speedz, 6) == -0.216198          
+
+    # Condition: xdiff = 0 && zdiff = 0
+    el2.x = 5.0
+    el2.z  = 5.0  
+
+    collision_react(el1, el2)
+    collision_react(el2, el1)   
+
+    assert round(el1.speedx, 6) == 0.000038
+    assert round(el1.speedy, 6) == 0.134629
+    assert round(el1.speedz, 6) == 0.0
+    
+    assert round(el2.speedx, 6) == 0.000106
+    assert round(el2.speedy, 6) == -0.374466
+    assert round(el2.speedz, 6) == 0.0          
+
+    # Condition: xdiff = 0 && zdiff > 0
+    el2.x = 5.0
+    el2.z  = 5.5  
+
+    collision_react(el1, el2)
+    collision_react(el2, el1)   
+
+    assert round(el1.speedx, 6) == 0.0
+    assert round(el1.speedy, 6) == 0.095197
+    assert round(el1.speedz, 6) == -0.095197
+    
+    assert round(el2.speedx, 6) == 0.0
+    assert round(el2.speedy, 6) == -0.264788
+    assert round(el2.speedz, 6) == 0.264788          
+
+    # Condition: xdiff = 0 && zdiff < 0    
+    el2.x = 5.0
+    el2.z  = 4.5  
+
+    collision_react(el1, el2)
+    collision_react(el2, el1)   
+
+    assert round(el1.speedx, 6) == 0.0
+    assert round(el1.speedy, 6) == 0.095197
+    assert round(el1.speedz, 6) == 0.095197
+    
+    assert round(el2.speedx, 6) == 0.0
+    assert round(el2.speedy, 6) == -0.264788
+    assert round(el2.speedz, 6) == -0.264788          
+
+    # Condition: xdiff < 0 && zdiff = 0    
+    el2.x = 4.5
+    el2.z  = 5.0  
+
+    collision_react(el1, el2)
+    collision_react(el2, el1)   
+    
+    assert round(el1.speedx, 6) == 0.095197
+    assert round(el1.speedy, 6) == 0.095197
+    assert round(el1.speedz, 6) == 0.0
+    
+    assert round(el2.speedx, 6) == -0.264788
+    assert round(el2.speedy, 6) == -0.264788
+    assert round(el2.speedz, 6) == 0.0          
+
+
+    # Condition: xdiff > 0 && zdiff = 0    
+    el2.x = 5.5
+    el2.z  = 5.0  
+
+    collision_react(el1, el2)
+    collision_react(el2, el1)   
+
+    assert round(el1.speedx, 6) == -0.095197
+    assert round(el1.speedy, 6) == 0.095197
+    assert round(el1.speedz, 6) == 0.0
+    
+    assert round(el2.speedx, 6) == 0.264788
+    assert round(el2.speedy, 6) == -0.264788
+    assert round(el2.speedz, 6) == 0.0          
+                            
 
 def test_collision_routine_sphere():
 

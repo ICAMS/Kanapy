@@ -294,7 +294,7 @@ class Ellipsoid(object):
                 right = True if self.bbox_xmax > sim_box.right else False
                 bottom = True if self.bbox_ymax > sim_box.bottom else False
                 back = True if self.bbox_zmax > sim_box.back else False
-
+                
             else:
                 # Its outside: Move the particle to the opposite side
                 if self.x > sim_box.right:
@@ -331,7 +331,7 @@ class Ellipsoid(object):
             sim_width = abs(sim_box.right - sim_box.left)
             sim_height = abs(sim_box.bottom - sim_box.top)
             sim_depth = abs(sim_box.back - sim_box.front)
-
+            
             # If it collides with any three faces: Create 7 duplicates
             if sum([left, top, right, bottom, front, back]) == 3:
                 if left and top and front:

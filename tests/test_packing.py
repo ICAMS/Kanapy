@@ -154,4 +154,6 @@ def test_packingRoutine():
     shutil.rmtree(json_dir)
     shutil.rmtree(cwd + '/dump_files')
 
-
+    # Test if FileNotFoundError is raised
+    with pytest.raises(FileNotFoundError):
+        packingRoutine()

@@ -91,12 +91,12 @@ def particleStatGenerator(inputFile):
                     periodicity = str(content[2])
 
         if type(voxel_per_side) is not int:
-            raise ValueError(
-                'Number of voxel per RVE side can only take integer values!')
+            raise ValueError('Number of voxel per RVE side can only take integer values!')
 
     except FileNotFoundError:
         print('Input file not found, make sure "stat_input.txt" file is present in the working directory!')
-
+        raise FileNotFoundError
+        
     # Generate the x-gaussian
     exp_array = np.arange(-5, +5, 0.1)
     x_lognormal = np.exp(exp_array)
@@ -153,8 +153,7 @@ def particleStatGenerator(inputFile):
     voxel_size = RVEsize / voxel_per_side
 
     if voxel_size >= np.amin(minDia) / 2.:
-        raise ValueError(
-            'Grains will not be voxelated well, please increase the number of voxels per RVE side (or) decrease the RVE side length!')
+        raise ValueError('Grains will not be voxelated well, please increase the number of voxels per RVE side (or) decrease the RVE side length!')
 
     print('    Total number of ellipsoids = ', totalEllipsoids)
     print('    RVE side length = ', RVEsize)
@@ -255,7 +254,8 @@ def read_dump(dump_file):
 
     except FileNotFoundError:
         print('    .dump file not found, make sure "packingRoutine()" function is executed first!')
-
+        raise FileNotFoundError
+        
     # Create an instance of simulation box
     sim_box = Cuboid(RVE_min, RVE_min, RVE_max, RVE_max, RVE_min, RVE_max)
 
@@ -333,7 +333,8 @@ def write_position_weights(file_num):
 
     except FileNotFoundError:
         print('    .dump file not found, make sure "packingRoutine()" function is executed first!')
-
+        raise FileNotFoundError
+        
     par_dict = dict()
     with open(dump_file, "r") as f:
         count = 0
@@ -397,7 +398,8 @@ def write_abaqus_inp():
 
     except FileNotFoundError:
         print('Json file not found, make sure "voxelizationRoutine()" function is executed first!')
-
+        raise FileNotFoundError
+        
     abaqus_file = cwd + '/kanapy.inp'
     if os.path.exists(abaqus_file):
         os.remove(abaqus_file)                  # remove old file if it exists
@@ -488,6 +490,7 @@ def write_output_stat():
           
     except FileNotFoundError:
         print('Json file not found, make sure "particleStatGenerator(), packingRoutine(), voxelizationRoutine()" function is executed first!')
+        raise FileNotFoundError
     
     # Extract from dictionaries
     par_eqDia = particle_data['Equivalent_diameter']
