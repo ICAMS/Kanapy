@@ -530,114 +530,31 @@ def write_output_stat():
         #plt.show()
     
     else:                                               # Elongated grains (ellipsoidal particles)
-    
-        if periodic_status == False:                    # Non-periodic microstructure
+
+        grain_eqDia, grain_majDia, grain_minDia = [], [], []                                                              
+        # Find all the nodal coordinates belonging to the grain
+        grain_node = {}    
+        for k, v in elmtSetDict.items():                   
+            num_voxels = len(v)
+            grain_vol = num_voxels * (voxel_size)**3
+            grain_dia = 2 * (grain_vol * (3/(4*np.pi)))**(1/3)
+            grain_eqDia.append(grain_dia)  
             
-            # Find each grain's equivalent, major and minor diameters
-            grain_eqDia, grain_majDia, grain_minDia = [], [], [] 
-            for k, v in elmtSetDict.items():
-                num_voxels = len(v)
-                grain_vol = num_voxels * (voxel_size)**3
-                grain_dia = 2 * (grain_vol * (3/(4*np.pi)))**(1/3)
-                grain_eqDia.append(grain_dia)            
-                
-                # Find all the node id's belonging to the grain
-                nodeset = set()
-                for el in v:
-                    nodes = elmtDict[el]
-                    for n in nodes:
-                        if n not in nodeset:
-                            nodeset.add(n)
-                
-                # Get the coordinates as an array 
-                points = []
-                for n in nodeset:
-                    points.append(nodeDict[n])
-                points = np.asarray(points)    
-
-                # create the convex hull and find the vertex points
-                hull = ConvexHull(points)             
-                hull_pts = points[hull.vertices]
-                
-                # Find the approximate center of the grain using extreme surface points
-                xmin, xmax = np.amin(points[:, 0]), np.amax(points[:, 0])
-                ymin, ymax = np.amin(points[:, 1]), np.amax(points[:, 1])
-                zmin, zmax = np.amin(points[:, 2]), np.amax(points[:, 2])             
-                center = np.array([xmin + (xmax-xmin)/2.0, ymin + (ymax-ymin)/2.0, zmin + (zmax-zmin)/2.0])
-                
-                # Find the euclidean distance to all surface points from the center
-                dists = [euclidean(center, pt) for pt in hull_pts]
-                a2 = 2.0*np.amax(dists)
-                b2 = 2.0*np.amin(dists)
-                           
-                grain_majDia.append(a2)                 # update the major diameter list
-                grain_minDia.append(b2)                 # update the minor diameter list
+            # All nodes belonging to grain                                     
+            nodeset = set()
+            for el in v:
+                nodes = elmtDict[str(el)]
+                for n in nodes:
+                    if n not in nodeset:
+                        nodeset.add(n)
             
-            # Plot the statistics                       
-            # plot Log-normal distribution ---> For Equivalent diameter length
-            plt.figure(figsize=(12, 9))
-            colors = ['#2300A8', '#00A658', '#DC143C', '#000000']  
-            ax = plt.subplot(111) 
-            plt.xticks(fontsize=22)
-            plt.yticks(fontsize=22)
-            plt.hist([par_eqDia, grain_eqDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=7, label=['Ellipsoid packing', 'RVE grains'])
-            plt.xlabel('Equivalent diameter (μm)', fontsize=26)
-            plt.ylabel('Frequency', fontsize=26, labelpad=12)
-            plt.legend(fontsize=22)
-            plt.savefig('EqDia_comp.png', bbox_inches="tight", dpi=400)
-            #plt.show()
-
-            # plot Log-normal distribution ---> For Major Axis length
-            plt.figure(figsize=(12, 9))
-            ax = plt.subplot(111) 
-            plt.xticks(fontsize=22)
-            plt.yticks(fontsize=22)
-            plt.hist([par_majDia, grain_majDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=8, label=['Ellipsoid packing', 'RVE grains'])
-            plt.xlabel('Major diameter (μm)', fontsize=26)
-            plt.ylabel('Frequency', fontsize=26, labelpad=12)
-            plt.legend(fontsize=24)
-            plt.savefig('MajorDia_comp.png', bbox_inches="tight", dpi=400)
-            #plt.show()
-
-            # plot Log-normal distribution ---> For Minor Axis
-            plt.figure(figsize=(12, 9))
-            ax = plt.subplot(111) 
-            plt.xticks(fontsize=22)
-            plt.yticks(fontsize=22)
-            plt.hist([par_minDia, grain_minDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=8, label=['Ellipsoid packing', 'RVE grains'])
-            plt.xlabel('Minor diameter (μm)', fontsize=26)
-            plt.ylabel('Frequency', fontsize=26, labelpad=12)
-            plt.legend(fontsize=24)
-            plt.savefig('MinorDia_compare.png', bbox_inches="tight", dpi=400)
-            #plt.show()   
-                                
-        else:                                           # Periodic microstructure       
-            
-            # Find all the nodal coordinates belonging to the grain
-            grain_eqDia = []
-            grain_node = {}    
-            for k, v in elmtSetDict.items():   
-                
-                # Grain's equivalent diameter
-                num_voxels = len(v)
-                grain_vol = num_voxels * (voxel_size)**3
-                grain_dia = 2 * (grain_vol * (3/(4*np.pi)))**(1/3)
-                grain_eqDia.append(grain_dia)  
-                
-                # All nodes belonging to grain                                     
-                nodeset = set()
-                for el in v:
-                    nodes = elmtDict[str(el)]
-                    for n in nodes:
-                        if n not in nodeset:
-                            nodeset.add(n)
-                
-                # Get the coordinates as an array 
-                points = [nodeDict[str(n)] for n in nodeset]
-                points = np.asarray(points)                  
-                grain_node[k] = points
-
-            # Find the grains whose perodic halves have to be shifted
+            # Get the coordinates as an array 
+            points = [nodeDict[str(n)] for n in nodeset]
+            points = np.asarray(points)                  
+            grain_node[k] = points
+        
+        if periodic_status:                       
+            # If periodic, find the grains whose perodic halves have to be shifted
             shiftRight, shiftTop, shiftBack = [], [], [] 
             for key, value in grain_node.items():                             
                 
@@ -665,9 +582,9 @@ def write_output_stat():
                 if len(nodeLS) != 0 and len(nodeRS) != 0:   # grain is periodic, has faces on both Left & Right sides
                     shiftRight.append(key)                  # left set has to be moved to right side 
                 if len(nodeBS) != 0 and len(nodeTS) != 0:   # grain is periodic, has faces on both Top & Bottom sides
-                    shiftTop.append(key)                    # left set has to be moved to Top side 
+                    shiftTop.append(key)                    # bottom set has to be moved to Top side 
                 if len(nodeFS) != 0 and len(nodeBaS) != 0:  # grain is periodic, has faces on both Front & Back sides
-                    shiftBack.append(key)                  # left set has to be moved to Back side                         
+                    shiftBack.append(key)                   # front set has to be moved to Back side                         
                                   
             # For each grain that has to be shifted, pad along x, y, z respectively
             for grain in shiftRight:
@@ -690,69 +607,66 @@ def write_output_stat():
                 for enum, val in enumerate(pts[:, 1]):
                     if val>=0.0 and val<=RVEsize/2.:
                         pts[enum, 1] += RVEsize                                
-                        
-
-            # create the convex hull and find the major & minor diameters
-            grain_majDia, grain_minDia = [], []
-            for grain, points in grain_node.items():   
-                
-                hull = ConvexHull(points)             
-                hull_pts = points[hull.vertices]
-                
-                # Find the approximate center of the grain using extreme surface points
-                xmin, xmax = np.amin(points[:, 0]), np.amax(points[:, 0])
-                ymin, ymax = np.amin(points[:, 1]), np.amax(points[:, 1])
-                zmin, zmax = np.amin(points[:, 2]), np.amax(points[:, 2])             
-                center = np.array([xmin + (xmax-xmin)/2.0, ymin + (ymax-ymin)/2.0, zmin + (zmax-zmin)/2.0])
-                
-                # Find the euclidean distance to all surface points from the center
-                dists = [euclidean(center, pt) for pt in hull_pts]
-                a2 = 2.0*np.amax(dists)
-                b2 = 2.0*np.amin(dists)
-
-                grain_majDia.append(a2)                 # update the major diameter list
-                grain_minDia.append(b2)                 # update the minor diameter list
-
-            # Plot the statistics                       
-            # plot Log-normal distribution ---> For Equivalent diameter length
-            plt.figure(figsize=(12, 9))
-            colors = ['#2300A8', '#00A658', '#DC143C', '#000000']  
-            ax = plt.subplot(111) 
-            plt.xticks(fontsize=22)
-            plt.yticks(fontsize=22)
-            plt.hist([par_eqDia, grain_eqDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=7, label=['Ellipsoid packing', 'RVE grains'])
-            plt.xlabel('Equivalent diameter (μm)', fontsize=26)
-            plt.ylabel('Frequency', fontsize=26, labelpad=12)
-            plt.legend(fontsize=22)
-            plt.savefig('EqDia_comp.png', bbox_inches="tight", dpi=400)
-            #plt.show()
-                                    
-            # plot Log-normal distribution ---> For Major Axis length
-            colors = ['#2300A8', '#00A658', '#DC143C', '#000000']
-            plt.figure(figsize=(12, 9))
-            ax = plt.subplot(111) 
-            plt.xticks(fontsize=22)
-            plt.yticks(fontsize=22)
-            plt.hist([par_majDia, grain_majDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=8, label=['Ellipsoid packing', 'RVE grains'])
-            plt.xlabel('Major diameter (μm)', fontsize=26)
-            plt.ylabel('Frequency', fontsize=26, labelpad=12)
-            plt.legend(fontsize=24)
-            plt.savefig('MajorDia_comp.png', bbox_inches="tight", dpi=400)
-            #plt.show()
-
-            # plot Log-normal distribution ---> For Minor Axis
-            plt.figure(figsize=(12, 9))
-            ax = plt.subplot(111) 
-            plt.xticks(fontsize=22)
-            plt.yticks(fontsize=22)
-            plt.hist([par_minDia, grain_minDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=8, label=['Ellipsoid packing', 'RVE grains'])
-            plt.xlabel('Minor diameter (μm)', fontsize=26)
-            plt.ylabel('Frequency', fontsize=26, labelpad=12)
-            plt.legend(fontsize=24)
-            plt.savefig('MinorDia_compare.png', bbox_inches="tight", dpi=400)
-            #plt.show()   
                     
-     
+        # For periodic & Non-periodic: create the convex hull and find the major & minor diameters
+        for grain, points in grain_node.items():   
+            
+            hull = ConvexHull(points)             
+            hull_pts = points[hull.vertices]
+            
+            # Find the approximate center of the grain using extreme surface points
+            xmin, xmax = np.amin(points[:, 0]), np.amax(points[:, 0])
+            ymin, ymax = np.amin(points[:, 1]), np.amax(points[:, 1])
+            zmin, zmax = np.amin(points[:, 2]), np.amax(points[:, 2])             
+            center = np.array([xmin + (xmax-xmin)/2.0, ymin + (ymax-ymin)/2.0, zmin + (zmax-zmin)/2.0])
+            
+            # Find the euclidean distance to all surface points from the center
+            dists = [euclidean(center, pt) for pt in hull_pts]
+            a2 = 2.0*np.amax(dists)
+            b2 = 2.0*np.amin(dists)
+
+            grain_majDia.append(a2)                 # update the major diameter list
+            grain_minDia.append(b2)                 # update the minor diameter list
+
+
+        # Plot the statistics                       
+        # plot Log-normal distribution ---> For Equivalent diameter length
+        plt.figure(figsize=(12, 9))
+        colors = ['#2300A8', '#00A658', '#DC143C', '#000000']  
+        ax = plt.subplot(111) 
+        plt.xticks(fontsize=22)
+        plt.yticks(fontsize=22)
+        plt.hist([par_eqDia, grain_eqDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=7, label=['Ellipsoid packing', 'RVE grains'])
+        plt.xlabel('Equivalent diameter (μm)', fontsize=26)
+        plt.ylabel('Frequency', fontsize=26, labelpad=12)
+        plt.legend(fontsize=22)
+        plt.savefig('EqDia_comp.png', bbox_inches="tight", dpi=400)
+        #plt.show()
+                                
+        # plot Log-normal distribution ---> For Major Axis length
+        plt.figure(figsize=(12, 9))
+        ax = plt.subplot(111) 
+        plt.xticks(fontsize=22)
+        plt.yticks(fontsize=22)
+        plt.hist([par_majDia, grain_majDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=8, label=['Ellipsoid packing', 'RVE grains'])
+        plt.xlabel('Major diameter (μm)', fontsize=26)
+        plt.ylabel('Frequency', fontsize=26, labelpad=12)
+        plt.legend(fontsize=24)
+        plt.savefig('MajorDia_comp.png', bbox_inches="tight", dpi=400)
+        #plt.show()
+
+        # plot Log-normal distribution ---> For Minor Axis
+        plt.figure(figsize=(12, 9))
+        ax = plt.subplot(111) 
+        plt.xticks(fontsize=22)
+        plt.yticks(fontsize=22)
+        plt.hist([par_minDia, grain_minDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=8, label=['Ellipsoid packing', 'RVE grains'])
+        plt.xlabel('Minor diameter (μm)', fontsize=26)
+        plt.ylabel('Frequency', fontsize=26, labelpad=12)
+        plt.legend(fontsize=24)
+        plt.savefig('MinorDia_compare.png', bbox_inches="tight", dpi=400)
+        #plt.show()   
+                         
     return
     
     
