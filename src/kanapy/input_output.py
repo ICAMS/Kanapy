@@ -9,9 +9,8 @@ from scipy.special import erfc
 from scipy.spatial import cKDTree
 from scipy.spatial import ConvexHull 
 from scipy.spatial.distance import euclidean
-import matplotlib.pyplot as plt
 
-from src.kanapy.entities import Ellipsoid, Cuboid
+from kanapy.entities import Ellipsoid, Cuboid
 
 
 def particleStatGenerator(inputFile):
@@ -98,14 +97,13 @@ def particleStatGenerator(inputFile):
         raise FileNotFoundError
         
     # Generate the x-gaussian
-    exp_array = np.arange(-5, +5, 0.1)
+    exp_array = np.arange(-10, +10, 0.01)
     x_lognormal = np.exp(exp_array)
     x_lognormal_mean = np.vstack([x_lognormal[1:], x_lognormal[:-1]]).mean(axis=0)
     
     # Mean, variance for normal distribution (For back verification)
     m = np.exp(mean_lognormal + (sd_lognormal**2)/2.0)                            
     v = np.exp((sd_lognormal**2) - 1) * np.exp(2*mean_lognormal*(sd_lognormal**2))
-    print('    Mean and variance for corresponding normal ditribution: mean = ', m, 'variance = ', v)
 
     # From wikipedia page for Log-normal distribution
     # Calculate the CDF using the error function    
@@ -116,9 +114,9 @@ def particleStatGenerator(inputFile):
     number_fraction = np.ediff1d(y_CDF)
 
     # Based on the cutoff specified, get the restricted distribution
-    index_array = np.where((x_lognormal_mean >= dia_cutoff_min) & (x_lognormal_mean <= dia_cutoff_max))
-    # Selected diameters within the cutoff
-    eq_Dia = x_lognormal_mean[index_array]
+    index_array = np.where((x_lognormal_mean >= dia_cutoff_min) & (x_lognormal_mean <= dia_cutoff_max))    
+    eq_Dia = x_lognormal_mean[index_array]          # Selected diameters within the cutoff
+    
     # corresponding number fractions
     numFra_Dia = number_fraction[index_array]
 
@@ -130,32 +128,33 @@ def particleStatGenerator(inputFile):
     K = individualK/np.sum(individualK)
 
     # Total number of ellipsoids
-    num = np.divide(K*(RVEsize**3), volume_array)
-    # Round to the nearest integer
-    num = np.rint(num).astype(int)
-    # Total number of ellipsoids
-    totalEllipsoids = np.sum(num)
+    num = np.divide(K*(RVEsize**3), volume_array)    
+    num = np.rint(num).astype(int)                  # Round to the nearest integer    
+    totalEllipsoids = np.sum(num)                   # Total number of ellipsoids
 
     # Duplicate the diameter values
     eq_Dia = np.repeat(eq_Dia, num)
-
+    
+    # Raise value error in case the RVE side length is too small to fit grains inside.
+    if len(eq_Dia) == 0:
+         raise ValueError('RVE volume too less to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
+    
     # Ellipsoid tilt angles
     ori_array = np.random.normal(mean_Ori, sigma_Ori, totalEllipsoids)
 
-    # Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b
-    # Minor axis length
-    minDia = eq_Dia / (mean_AR)**(1/3)
-    majDia = minDia * mean_AR                                   # Major axis length
-    # Minor2 axis length (assuming spheroid)
-    minDia2 = minDia.copy()
+    # Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b    
+    minDia = eq_Dia / (mean_AR)**(1/3)                          # Minor axis length
+    majDia = minDia * mean_AR                                   # Major axis length    
+    minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)
 
-    # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 2 voxels
+    # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
     voxel_size = RVEsize / voxel_per_side
 
-    if voxel_size >= np.amin(minDia) / 2.:
+    # raise value error in case the grains are not voxelated well
+    if voxel_size >= np.amin(minDia) / 3.:
         raise ValueError('Grains will not be voxelated well, please increase the number of voxels per RVE side (or) decrease the RVE side length!')
 
-    print('    Total number of ellipsoids = ', totalEllipsoids)
+    print('    Total number of particles = ', totalEllipsoids)
     print('    RVE side length = ', RVEsize)
     print('    Voxel resolution = ', voxel_size)
     print('    Total number of hexahedral elements (C3D8) = ', (voxel_per_side)**3)
@@ -177,13 +176,13 @@ def particleStatGenerator(inputFile):
         os.makedirs(json_dir)
 
     with open(json_dir + '/particle_data.txt', 'w') as outfile:
-        json.dump(particle_data, outfile)
+        json.dump(particle_data, outfile, indent=2)
 
     with open(json_dir + '/RVE_data.txt', 'w') as outfile:
-        json.dump(RVE_data, outfile)
+        json.dump(RVE_data, outfile, indent=2)
 
     with open(json_dir + '/simulation_data.txt', 'w') as outfile:
-        json.dump(simulation_data, outfile)
+        json.dump(simulation_data, outfile, indent=2)
 
     return
 
@@ -314,7 +313,7 @@ def write_position_weights(file_num):
               2. The generated 'sphere_positions.txt' and 'sphere_weights.txt' files can be inputted 
                  into NEPER for tessellation and meshing.
     """
-    print('Writing position and weights files\n')
+    print('Writing position and weights files')
     cwd = os.getcwd()
     dump_file = cwd + '/dump_files/particle.{0}.dump'.format(file_num)
 
@@ -381,7 +380,7 @@ def write_abaqus_inp():
                  
               2. The nodal coordinates are written out in 'mm' scale.
     """
-    print('Writing ABAQUS (.inp) file\n')
+    print('Writing ABAQUS (.inp) file')
 
     cwd = os.getcwd()
     json_dir = cwd + '/json_files'          # Folder to store the json files
@@ -400,7 +399,7 @@ def write_abaqus_inp():
         print('Json file not found, make sure "voxelizationRoutine()" function is executed first!')
         raise FileNotFoundError
         
-    abaqus_file = cwd + '/kanapy.inp'
+    abaqus_file = cwd + '/kanapy_{0}grains.inp'.format(len(elmtSetDict))
     if os.path.exists(abaqus_file):
         os.remove(abaqus_file)                  # remove old file if it exists
 
@@ -465,7 +464,7 @@ def write_output_stat():
     .. note:: Particle information is read from (.json) file generated by :meth:`src.kanapy.input_output.particleStatGenerator`.
               And RVE grain information is read from the (.json) files generated by :meth:`src.kanapy.voxelization.voxelizationRoutine`.
     """  
-    print('Comparing input & output statistics\n')
+    print('Comparing input & output statistics')
     cwd = os.getcwd()
     json_dir = cwd + '/json_files'          # Folder to store the json files
 
@@ -515,19 +514,11 @@ def write_output_stat():
             grain_dia = 2 * (grain_vol * (3/(4*np.pi)))**(1/3)
             grain_eqDia.append(grain_dia)
         
-        # Plot the statistics                       
-        # plot Log-normal distribution ---> For Equivalent diameter length
-        plt.figure(figsize=(12, 9))
-        colors = ['#2300A8', '#00A658', '#DC143C', '#000000']  
-        ax = plt.subplot(111) 
-        plt.xticks(fontsize=22)
-        plt.yticks(fontsize=22)
-        plt.hist([par_eqDia, grain_eqDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=7, label=['Sphere packing', 'RVE grains'])
-        plt.xlabel('Equivalent diameter (μm)', fontsize=26)
-        plt.ylabel('Frequency', fontsize=26, labelpad=12)
-        plt.legend(fontsize=22)
-        plt.savefig('EqDia_comp.png', bbox_inches="tight", dpi=400)
-        #plt.show()
+        print('Writing particle & grain equivalent diameter files')
+            
+        # write out the particle and grain equivalent diameters to files
+        np.savetxt('particle_equiDiameters.txt', par_eqDia)
+        np.savetxt('grain_equiDiameters.txt', grain_eqDia)        
     
     else:                                               # Elongated grains (ellipsoidal particles)
 
@@ -627,45 +618,19 @@ def write_output_stat():
 
             grain_majDia.append(a2)                 # update the major diameter list
             grain_minDia.append(b2)                 # update the minor diameter list
-
-
-        # Plot the statistics                       
-        # plot Log-normal distribution ---> For Equivalent diameter length
-        plt.figure(figsize=(12, 9))
-        colors = ['#2300A8', '#00A658', '#DC143C', '#000000']  
-        ax = plt.subplot(111) 
-        plt.xticks(fontsize=22)
-        plt.yticks(fontsize=22)
-        plt.hist([par_eqDia, grain_eqDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=7, label=['Ellipsoid packing', 'RVE grains'])
-        plt.xlabel('Equivalent diameter (μm)', fontsize=26)
-        plt.ylabel('Frequency', fontsize=26, labelpad=12)
-        plt.legend(fontsize=22)
-        plt.savefig('EqDia_comp.png', bbox_inches="tight", dpi=400)
-        #plt.show()
-                                
-        # plot Log-normal distribution ---> For Major Axis length
-        plt.figure(figsize=(12, 9))
-        ax = plt.subplot(111) 
-        plt.xticks(fontsize=22)
-        plt.yticks(fontsize=22)
-        plt.hist([par_majDia, grain_majDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=8, label=['Ellipsoid packing', 'RVE grains'])
-        plt.xlabel('Major diameter (μm)', fontsize=26)
-        plt.ylabel('Frequency', fontsize=26, labelpad=12)
-        plt.legend(fontsize=24)
-        plt.savefig('MajorDia_comp.png', bbox_inches="tight", dpi=400)
-        #plt.show()
-
-        # plot Log-normal distribution ---> For Minor Axis
-        plt.figure(figsize=(12, 9))
-        ax = plt.subplot(111) 
-        plt.xticks(fontsize=22)
-        plt.yticks(fontsize=22)
-        plt.hist([par_minDia, grain_minDia], density=False, color=[colors[0], colors[2]], edgecolor='black', bins=8, label=['Ellipsoid packing', 'RVE grains'])
-        plt.xlabel('Minor diameter (μm)', fontsize=26)
-        plt.ylabel('Frequency', fontsize=26, labelpad=12)
-        plt.legend(fontsize=24)
-        plt.savefig('MinorDia_compare.png', bbox_inches="tight", dpi=400)
-        #plt.show()   
+        
+        print('Writing particle & grain equivalent, major & minor diameter files')
+        
+        # write out the particle and grain equivalent diameters to files
+        np.savetxt('particle_equiDiameters.txt', par_eqDia)
+        np.savetxt('grain_equiDiameters.txt', grain_eqDia)
+        
+        # write out the particle and grain equivalent diameters to files
+        np.savetxt('particle_majorDiameters.txt', par_majDia)
+        np.savetxt('grain_majorDiameters.txt', grain_majDia)
+        # write out the particle and grain equivalent diameters to files
+        np.savetxt('particle_minorDiameters.txt', par_minDia)
+        np.savetxt('grain_minorDiameters.txt', grain_minDia)                        
                          
     return
     

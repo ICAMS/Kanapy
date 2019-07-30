@@ -174,8 +174,9 @@
             
   <div class="section" id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
-<a class="reference external image-reference" href="https://travis-ci.org/mrgprasad/kanapy"><img alt="https://img.shields.io/travis/mrgprasad/kanapy.svg" src="https://img.shields.io/travis/mrgprasad/kanapy.svg" width="20%" /></a>
-<a class="reference external image-reference" href="https://lbesson.mit-license.org/"><img alt="https://img.shields.io/badge/License-MIT-blue.svg" src="https://img.shields.io/badge/License-MIT-blue.svg" width="17%" /></a>
+<a class="reference external image-reference" href="https://travis-ci.org/mrgprasad/kanapy"><img alt="https://img.shields.io/travis/mrgprasad/kanapy.svg" src="https://img.shields.io/travis/mrgprasad/kanapy.svg" /></a>
+<a class="reference external image-reference" href="https://codecov.io/gh/mrgprasad/kanapy"><img alt="https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg" src="https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg" /></a>
+<a class="reference external image-reference" href="https://lbesson.mit-license.org/"><img alt="https://img.shields.io/badge/License-MIT-blue.svg" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 <p>kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in <a class="reference external" href="http://www.python.org">Python</a> with performance critical part implemented in C++. Python bindings for the code written in C++ is generated using the lightweight header-only library <a class="reference external" href="https://pybind11.readthedocs.io/en/stable/">pybind11</a>. The C++ part of the implementation utilizes the <a class="reference external" href="http://eigen.tuxfamily.org/index.php?title=Main_Page">Eigen</a> library for efficient linear algebra calculations.</p>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
@@ -199,7 +200,7 @@
 <p>CMake is used for building extensions, if it is not installed on your machine follow this
 <a class="reference external" href="https://cgold.readthedocs.io/en/latest/first-step/installation.html">CMake documentation</a> to install it.</p>
 <p>The preferred method to install kanapy is through Anaconda or Miniconda python distributions.
-If you do not have any we suggest installing <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.</p>
+If you do not have any, we suggest installing <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.</p>
 <p>Once done, create a virtual environment for installing python specific packages required for kanapy and
 activate it.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -n myenv <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6 pip git
@@ -221,7 +222,7 @@ activate it.</p>
 download the kanapy source code from the <a class="reference external" href="https://github.com/mrgprasad/kanapy">Github repo</a> to a desired location.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
 <span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/
-<span class="gp">(myenv) $</span> conda install --file requirements.txt
+<span class="gp">(myenv) $</span> conda install -y -c conda-forge --file requirements.txt
 <span class="gp">(myenv) $</span> pip install -e .
 </pre></div>
 </div>
@@ -229,7 +230,7 @@ download the kanapy source code from the <a class="reference external" href="htt
 </div>
 <div class="section" id="running-tests">
 <h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
-<p>kanapy uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> to perform all its unit testing. From the kanapy main directory (<code class="docutils literal notranslate"><span class="pre">kanapy-master</span></code>) run the tests using <code class="docutils literal notranslate"><span class="pre">pytest</span></code>:</p>
+<p>kanapy uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> to perform all its unit testing. From the kanapy main directory (<code class="docutils literal notranslate"><span class="pre">kanapy-master</span></code>) run the tests:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> pytest tests/ -v
 </pre></div>
 </div>
@@ -239,13 +240,10 @@ download the kanapy source code from the <a class="reference external" href="htt
 <p>Documentation for kanapy is generated using <code class="docutils literal notranslate"><span class="pre">Sphinx</span></code>. The following command generates HTML-based reference documentation;
 for other formats please refer to the Sphinx manual. From the kanapy main directory (<code class="docutils literal notranslate"><span class="pre">kanapy-master</span></code>):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> <span class="nb">cd</span> docs/
-<span class="gp">(myenv) $</span> make html
+<span class="gp">(myenv) $</span> make clean <span class="o">&amp;&amp;</span> make html
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
 <p>The HTML documentation can be found at <code class="docutils literal notranslate"><span class="pre">/kanapy-master/docs/index.html</span></code></p>
-</div>
 </div>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>

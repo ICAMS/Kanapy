@@ -9,7 +9,7 @@ from operator import itemgetter
 import numpy as np
 from scipy.spatial import cKDTree, ConvexHull
 
-from src.kanapy.input_output import read_dump, printProgressBar
+from kanapy.input_output import read_dump, printProgressBar
 
 
 def points_in_convexHull(Points, hull):
@@ -353,13 +353,13 @@ def voxelizationRoutine(file_num):
 
         # Dump the Dictionaries as json files
         with open(json_dir + '/nodeDict.txt', 'w') as outfile:
-            json.dump(nodeDict, outfile)
+            json.dump(nodeDict, outfile, indent=2)
 
         with open(json_dir + '/elmtDict.txt', 'w') as outfile:
-            json.dump(elmtDict, outfile)
+            json.dump(elmtDict, outfile, indent=2)
 
         with open(json_dir + '/elmtSetDict.txt', 'w') as outfile:
-            json.dump(elmtSetDict, outfile)        
+            json.dump(elmtSetDict, outfile, indent=2)        
             
         return
 

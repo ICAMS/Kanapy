@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 
 import kanapy
-from src.kanapy.entities import *
+from kanapy.entities import *
 
 
 @pytest.fixture

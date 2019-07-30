@@ -10,11 +10,11 @@ import numpy as np
 from scipy.spatial import ConvexHull, cKDTree
 
 import kanapy
-from src.kanapy.voxelization import *
-from src.kanapy.entities import Ellipsoid, Simulation_Box
-from src.kanapy.input_output import particleStatGenerator
-from src.kanapy.input_output import write_dump
-from src.kanapy.packing import particle_generator
+from kanapy.voxelization import *
+from kanapy.entities import Ellipsoid, Simulation_Box
+from kanapy.input_output import particleStatGenerator
+from kanapy.input_output import write_dump
+from kanapy.packing import particle_generator
 
 def test_points_in_convexHull():
     outer_points = np.array([[0.3215426810286406, 0.1678336189760208, -0.2203710966001927],

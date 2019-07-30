@@ -1,11 +1,10 @@
 import os
 import sys
-sys.path.append('../..')
 
 import kanapy
-from src.kanapy.packing import packingRoutine
-from src.kanapy.input_output import write_position_weights
-from src.kanapy.input_output import particleStatGenerator
+from kanapy.packing import packingRoutine
+from kanapy.input_output import write_position_weights
+from kanapy.input_output import particleStatGenerator
 
 
 def main():

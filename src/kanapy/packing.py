@@ -6,8 +6,8 @@ import random
 
 import numpy as np
 
-from src.kanapy.input_output import write_dump, printProgressBar
-from src.kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
+from kanapy.input_output import write_dump, printProgressBar
+from kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
 
 
 def particle_generator(particle_data, sim_box):

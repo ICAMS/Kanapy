@@ -10,8 +10,8 @@ import pytest
 import numpy as np
 
 import kanapy
-from src.kanapy.packing import *
-from src.kanapy.entities import Ellipsoid, Simulation_Box
+from kanapy.packing import *
+from kanapy.entities import Ellipsoid, Simulation_Box
 
 
 @pytest.fixture
@@ -142,12 +142,12 @@ def test_packingRoutine():
         json.dump(sd, outfile)
 
     # Test if the 'particle_generator' function is called once
-    with mock.patch('src.kanapy.packing.particle_generator') as mocked_method:
+    with mock.patch('kanapy.packing.particle_generator') as mocked_method:
         packingRoutine()
         assert mocked_method.call_count == 1
 
     # Test if the 'particle_grow' function is called once
-    with mock.patch('src.kanapy.packing.particle_grow') as mocked_method:
+    with mock.patch('kanapy.packing.particle_grow') as mocked_method:
         packingRoutine()
         assert mocked_method.call_count == 1
 

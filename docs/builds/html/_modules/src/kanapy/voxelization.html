@@ -166,7 +166,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">cKDTree</span><span class="p">,</span> <span class="n">ConvexHull</span>
 
-<span class="kn">from</span> <span class="nn">src.kanapy.input_output</span> <span class="k">import</span> <span class="n">read_dump</span><span class="p">,</span> <span class="n">printProgressBar</span>
+<span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="k">import</span> <span class="n">read_dump</span><span class="p">,</span> <span class="n">printProgressBar</span>
 
 
 <div class="viewcode-block" id="points_in_convexHull"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.voxelization.points_in_convexHull">[docs]</a><span class="k">def</span> <span class="nf">points_in_convexHull</span><span class="p">(</span><span class="n">Points</span><span class="p">,</span> <span class="n">hull</span><span class="p">):</span>
@@ -465,7 +465,8 @@
 
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;RVE_data.txt&quot; file exists!&#39;</span><span class="p">)</span>
-
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+            
         <span class="n">filename</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_num</span><span class="p">)</span>
 
         <span class="c1"># Read the required dump file</span>
@@ -509,13 +510,13 @@
 
         <span class="c1"># Dump the Dictionaries as json files</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/nodeDict.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
-            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">nodeDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">nodeDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtDict.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
-            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">elmtDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">elmtDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtSetDict.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
-            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>        
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>        
             
         <span class="k">return</span>
 

@@ -29,7 +29,7 @@ Microstructures generated through conventional manufacturing processes like roll
 .. figure:: /figs/ellipsoid_app.png
     :align: center
     
-    **Figure**: An example of ellipsoidal packing (left), Voxelization - Initial assignment (center) and Final assignment (right).
+    **Figure**: An example of ellipsoidal packing (left), Voxelization - FE hexahedral mesh (right).
 
-The ellipsoid packing process is similar to that of sphere packing described earlier. Once the ellipsoids are tightly packed with minimal acceptable overlaps, they are processed further for meshing. Since Voronoi tessellations cannot be applied to anisotropic particles such as ellipsoids, a voxel based mesh generating routine that utilizes spatial partitioning data structure :math:`k`-d tree for discretizing the RVE is employed. The voxelization (meshing) routine is made up of 2 stages. The number of voxels in the RVE has a direct influence on the FE solution and the FE simulation time, hence it must be meticulously chosen. The choice is not arbitrary, as it is constrained by how well the grains of the RVE are represented with respect to their geometry and the FEM simulation time. 
+The ellipsoid packing process is similar to that of sphere packing described earlier. Once the ellipsoids are tightly packed with minimal acceptable overlaps, they are processed further for meshing. Since Voronoi tessellations cannot be applied to anisotropic particles such as ellipsoids, a voxel based mesh generating routine that utilizes convex hull for discretizing the RVE is employed. The voxelization (meshing) routine is made up of 2 stages. The number of voxels in the RVE has a direct influence on the FE solution and the FE simulation time, hence it must be meticulously chosen. The choice is not arbitrary, as it is constrained by how well the grains of the RVE are represented with respect to their geometry and the FEM simulation time. 
 

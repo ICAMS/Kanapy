@@ -3,7 +3,7 @@ import os
 import itertools
 import numpy as np
 
-from src.kanapy.collision_detect_react import collision_routine
+from kanapy.collision_detect_react import collision_routine
 
 
 def cub_oct_split(cub):

@@ -75,6 +75,5 @@ in the documentation.
 
 # Acknowledgements
 
-This work was sponsored in part by Siemens AG - Corporate Technology.
 
 # References
