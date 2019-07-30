@@ -15,7 +15,7 @@
    id="svg5702"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="ellipsoid_app2.pdf">
+   sodipodi:docname="ellipsoid_app.pdf">
   <defs
      id="defs5704">
     <clipPath
@@ -102,10 +102,10 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="1627"
-     inkscape:window-height="1026"
-     inkscape:window-x="1973"
-     inkscape:window-y="174"
+     inkscape:window-width="1867"
+     inkscape:window-height="1176"
+     inkscape:window-x="53"
+     inkscape:window-y="24"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata5707">
@@ -139,27 +139,15 @@
     <text
        xml:space="preserve"
        style="font-size:30px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Times New Roman;-inkscape-font-specification:'Times New Roman, Bold'"
-       x="606.69104"
+       x="774.69104"
        y="834.71942"
        id="text6054-6"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan6056-8"
-         x="606.69104"
+         x="774.69104"
          y="834.71942"
-         style="font-size:40px">Voxelization - Stage 1</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-size:30px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Times New Roman;-inkscape-font-specification:'Times New Roman, Bold'"
-       x="1176.6909"
-       y="834.71942"
-       id="text6054-66"
-       sodipodi:linespacing="125%"><tspan
-         sodipodi:role="line"
-         id="tspan6056-84"
-         x="1176.6909"
-         y="834.71942"
-         style="font-size:40px">Voxelization - Stage 2</tspan></text>
+         style="font-size:40px">Voxelization - Hexahedral meshing</tspan></text>
     <image
        y="-335.66315"
        x="-88.081017"

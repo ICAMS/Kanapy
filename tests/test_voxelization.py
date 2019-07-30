@@ -7,7 +7,7 @@ import json
 
 import pytest
 import numpy as np
-from scipy.spatial import ConvexHull, cKDTree
+from scipy.spatial import ConvexHull
 
 import kanapy
 from kanapy.voxelization import *
@@ -137,11 +137,7 @@ def dec_info():
                    21: (2.5, 0.5, 2.5), 22: (0.5, 1.5, 2.5), 23: (1.5, 1.5, 2.5), 24: (2.5, 1.5, 2.5),
                    25: (0.5, 2.5, 2.5), 26: (1.5, 2.5, 2.5), 27: (2.5, 2.5, 2.5)}
 
-    # Create a cKDTree for fast lookups of voxel center's
-    vcenters_list = [vcenter for vid, vcenter in center_test.items()]
-    vcentertree_test = cKDTree(vcenters_list)
-
-    return node_test, elmt_test, center_test, vcentertree_test
+    return node_test, elmt_test, center_test
 
 
 @pytest.fixture
@@ -157,49 +153,35 @@ def SBox(mocker):
     return sb
 
 
-@pytest.fixture
-def CuboidBox(mocker):
-    cb = mocker.MagicMock()
-
-    # Define attributes to mocker object
-    cb.left, cb.top, cb.front = 0, 0, 0
-    cb.right, cb.bottom, cb.back = 3, 3, 3
-    cb.width, cb.height, cb.depth = 3, 3, 3
-
-    return cb
-
-
 def test_create_voxels(dec_info, SBox):
 
     box = SBox
-    nodeDict, elmtDict, vox_centerDict, vox_centertree = create_voxels(box, 3)
+    nodeDict, elmtDict, vox_centerDict = create_voxels(box, 3)
 
     assert dec_info[0] == nodeDict
     assert dec_info[1] == elmtDict
     assert dec_info[2] == vox_centerDict
-    assert isinstance(vox_centertree, cKDTree)
 
 
-def test_assign_voxels_to_ellipsoid(dec_info, CuboidBox):
+def test_assign_voxels_to_ellipsoid(dec_info):
 
     # Initialize the Ellipsoids
     ell1 = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5,
                      np.array([0.52532199, 0., -0., 0.85090352]))
     ell2 = Ellipsoid(2, 1.9, 1.68, 2.6, 2.0, 1.5, 1.5,
                      np.array([0.52532199, 0., -0., 0.85090352]))
-    ells = [ell1, ell2]
-    simbox = CuboidBox
+    ells = [ell1, ell2]    
 
-    assign_voxels_to_ellipsoid(dec_info[3], dec_info[2], ells, simbox)
+    assign_voxels_to_ellipsoid(dec_info[2], ells, dec_info[1])
 
-    ref1 = [1, 2, 3, 4, 5, 10, 11, 13, 14, 7, 16, 8, 19, 6]
-    ref2 = [12, 14, 15, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 16, 19, 9]
-
+    ref1 = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 19]
+    ref2 = [9, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27]
+    
     assert set(ell1.inside_voxels) == set(ref1)
     assert set(ell2.inside_voxels) == set(ref2)
 
 
-def test_reassign_shared_voxels(dec_info, CuboidBox):
+def test_reassign_shared_voxels(dec_info):
 
     # Initialize the Ellipsoids
     ell1 = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5,
@@ -209,19 +191,11 @@ def test_reassign_shared_voxels(dec_info, CuboidBox):
 
     # Update the ellipsoid dictionary of ficture function
     ell1.inside_voxels.extend([1, 2, 3, 4, 5, 10, 11, 13, 14, 7, 16, 8, 19, 6])
-    ell2.inside_voxels.extend(
-        [12, 14, 15, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 16, 19, 9])
+    ell2.inside_voxels.extend([12, 14, 15, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 16, 19, 9])
 
     ells = [ell1, ell2]
-    simbox = CuboidBox
 
-    # Define ellipsoid center dict and cKDtree
-    ell_centerDict = {1: ell1, 2: ell2}
-    ell_centers = [tuple(ell1.get_pos()), tuple(ell1.get_pos())]
-    ell_centerTree = cKDTree(ell_centers)
-
-    reassign_shared_voxels(
-        dec_info[2], ell_centerTree, ell_centerDict, ells, simbox)
+    reassign_shared_voxels(dec_info[2], ells)
 
     ref1 = [1, 2, 3, 4, 5, 10, 11, 13, 7, 8, 6, 19]
     ref2 = [12, 15, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 9, 16, 14]

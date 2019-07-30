@@ -122,7 +122,7 @@ Core dependencies
 Below are the listed dependencies for running kanapy:
 
   - NumPy_ for array manipulation.
-  - Scipy_ for functionalities like Convexhull and KDTree.
+  - Scipy_ for functionalities like Convexhull.
   - pybind11_ for creating python bindings for C++ code.
   - Eigen_ for C++ linear algebra operations.
   - pytest_ for running kanapy unit tests.

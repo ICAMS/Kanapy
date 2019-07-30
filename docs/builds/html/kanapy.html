@@ -671,14 +671,12 @@ working directory for later access.</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>Cuboid object that represents the RVE.</p></li>
-<li><p>Ellipsoid object that represents the grains.</p></li>
-<li><p>Coordinates of ellipsoid centers.</p></li>
-<li><p>Scipy’s cKDTree object representing ellipsoid centers.</p></li>
+<li><p>List of ellipsoid objects that represent the grains.</p></li>
 </ul>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Tuple of python objects (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Cuboid</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>, dictionary, <code class="xref py py-obj docutils literal notranslate"><span class="pre">cKDTree</span></code>)</p>
+<dd class="field-odd"><p>Tuple of python objects (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Cuboid</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -821,15 +819,14 @@ but this option can be disabled within the function.</p>
 <span id="module-voxelization"></span><h2>Module voxelization<a class="headerlink" href="#module-src.kanapy.voxelization" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="src.kanapy.voxelization.assign_voxels_to_ellipsoid">
-<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">assign_voxels_to_ellipsoid</code><span class="sig-paren">(</span><em class="sig-param">cooTree</em>, <em class="sig-param">cooDict</em>, <em class="sig-param">Ellipsoids</em>, <em class="sig-param">sim_box</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#assign_voxels_to_ellipsoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.assign_voxels_to_ellipsoid" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">assign_voxels_to_ellipsoid</code><span class="sig-paren">(</span><em class="sig-param">cooDict</em>, <em class="sig-param">Ellipsoids</em>, <em class="sig-param">elmtDict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#assign_voxels_to_ellipsoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.assign_voxels_to_ellipsoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines voxels belonging to each ellipsoid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cooTree</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">cKDTree</span></code>) – Scipy’s cKDTree object representing voxel centers.</p></li>
-<li><p><strong>cooDict</strong> (<em>Python dictionary</em>) – Voxel dictionary containing voxel ID’s and center coordinates.</p></li>
+<li><p><strong>cooDict</strong> (<em>Python dictionary</em>) – Voxel dictionary containing voxel IDs and center coordinates.</p></li>
 <li><p><strong>Ellipsoids</strong> (<em>list</em>) – Ellipsoids from the packing routine.</p></li>
-<li><p><strong>sim_box</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">entities.Cuboid</span></code>) – Simulation box representing RVE dimensions</p></li>
+<li><p><strong>elmtDict</strong> (<em>Python dictionary</em>) – Element dictionary containing element IDs and nodal connectivities.</p></li>
 </ul>
 </dd>
 </dl>
@@ -849,43 +846,15 @@ but this option can be disabled within the function.</p>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>Node dictionary containing node ID and coordinates.</p></li>
-<li><p>Element dictionary containing element Id’s and nodal connectivities.</p></li>
+<li><p>Element dictionary containing element IDs and nodal connectivities.</p></li>
 <li><p>Voxel dictionary containing voxel ID and center coordinates.</p></li>
-<li><p>Scipy’s cKDTree object representing voxel centers.</p></li>
 </ul>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Tuple of python objects (dictionaries, <code class="xref py py-obj docutils literal notranslate"><span class="pre">cKDTree</span></code>)</p>
+<dd class="field-odd"><p>Tuple of python dictionaries.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="src.kanapy.voxelization.distance_away">
-<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">distance_away</code><span class="sig-paren">(</span><em class="sig-param">shared</em>, <em class="sig-param">cooDict</em>, <em class="sig-param">ell1</em>, <em class="sig-param">ell2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#distance_away"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.distance_away" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determines the closest ellipsoid to a given voxel based on ellipsoid’s center</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>shared</strong> (<em>numpy array</em>) – voxel IDs</p></li>
-<li><p><strong>cooDict</strong> (<em>python dictionary</em>) – Contains information on the position (x, y, z) of the voxels</p></li>
-<li><p><strong>ell1</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">entities.Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
-<li><p><strong>ell2</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">entities.Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Array of 0 and 1, where 0 &amp; 1 represents ellipsoid <span class="math notranslate nohighlight">\(i\)</span> &amp; <span class="math notranslate nohighlight">\(j\)</span> respectively</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>numpy array</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Closest ellipsoid is evaluated based on the distance from the voxel to the ellipsoid centers and not 
-with respect to the ellipsoid surface points.</p>
-</div>
 </dd></dl>
 
 <dl class="function">
@@ -896,7 +865,7 @@ with respect to the ellipsoid surface points.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>Points</strong> (<em>numpy array</em>) – Array of points to be tested if they lie inside the hull or not.</p></li>
-<li><p><strong>hull</strong> (Scipy’s <code class="xref py py-obj docutils literal notranslate"><span class="pre">cKDTree</span></code> object) – Ellipsoid represented by a convex hull created from its outer surface points.</p></li>
+<li><p><strong>hull</strong> (Scipy’s <code class="xref py py-obj docutils literal notranslate"><span class="pre">ConvexHull</span></code> object) – Ellipsoid represented by a convex hull created from its outer surface points.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -914,16 +883,13 @@ with respect to the ellipsoid surface points.</p>
 
 <dl class="function">
 <dt id="src.kanapy.voxelization.reassign_shared_voxels">
-<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">reassign_shared_voxels</code><span class="sig-paren">(</span><em class="sig-param">cooDict</em>, <em class="sig-param">centerTree</em>, <em class="sig-param">centerDict</em>, <em class="sig-param">Ellipsoids</em>, <em class="sig-param">sim_box</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#reassign_shared_voxels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.reassign_shared_voxels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assigns shared voxels between ellipsoids to the ellispoid with the closest center using <a class="reference internal" href="#src.kanapy.voxelization.distance_away" title="src.kanapy.voxelization.distance_away"><code class="xref py py-meth docutils literal notranslate"><span class="pre">distance_away()</span></code></a></p>
+<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">reassign_shared_voxels</code><span class="sig-paren">(</span><em class="sig-param">cooDict</em>, <em class="sig-param">Ellipsoids</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#reassign_shared_voxels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.reassign_shared_voxels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assigns shared voxels between ellipsoids to the ellispoid with the closest center.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cooDict</strong> (<em>Python dictionary</em>) – Voxel dictionary containing voxel ID’s and center coordinates.</p></li>
-<li><p><strong>centerTree</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">cKDTree</span></code>) – Scipy’s cKDTree object representing ellipsoid’s centers.</p></li>
-<li><p><strong>centerDict</strong> (<em>Python dictionary</em>) – Voxel dictionary containing ellipsoid ID’s and center coordinates.</p></li>
+<li><p><strong>cooDict</strong> (<em>Python dictionary</em>) – Voxel dictionary containing voxel IDs and center coordinates.</p></li>
 <li><p><strong>Ellipsoids</strong> (<em>list</em>) – Ellipsoids from the packing routine.</p></li>
-<li><p><strong>sim_box</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">entities.Cuboid</span></code>) – Simulation box representing RVE dimensions</p></li>
 </ul>
 </dd>
 </dl>

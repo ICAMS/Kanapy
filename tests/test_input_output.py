@@ -6,7 +6,6 @@ import shutil
 
 import pytest
 import numpy as np
-from scipy.spatial import cKDTree
 
 import kanapy
 from kanapy.input_output import *
@@ -140,15 +139,11 @@ def test_read_dump(temp_dump):
         read_dump(cwd + '/dump_files/nonExistingFile.dump')
     
     # test the remainder of the code
-    gen_sbox, genEll, gen_centerDict, gen_centerTree = read_dump(
-        cwd + '/dump_files/particle.{0}.dump'.format(temp_dump.sim_ts))
+    gen_sbox, genEll = read_dump(cwd + '/dump_files/particle.{0}.dump'.format(temp_dump.sim_ts))
 
     assert isinstance(gen_sbox, Cuboid)
     for gel in genEll:
         assert isinstance(gel, Ellipsoid)
-    for k, v in gen_centerDict.items():
-        assert isinstance(v, Ellipsoid)
-    assert isinstance(gen_centerTree, cKDTree)
 
 
 def test_write_position_weights(temp_dump):

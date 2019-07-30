@@ -101,7 +101,7 @@ It is built with the following keywords: ``@ Equivalent diameter, @ Aspect ratio
   - The keyword ``@ Equivalent diameter`` takes in four arguments to generate a 
     log-normal distribution for particle's equivalent diameter, they are the 
     `Log-normal distribution's`_ standard deviation and mean, and the minimum 
-    and maximum cut-off values for the diameter.  
+    and maximum cut-off values for the diameter. The values should correspond to :math:`\mu m` scale.
   - The ``@ Aspect ratio`` takes only the mean value as input. If the resultant 
     microstructure should contain equiaxed grains then this value should be set to `1`.
   - The ``@ Orientation`` keyword represents the tilt angle of particles with 
@@ -116,7 +116,7 @@ It is built with the following keywords: ``@ Equivalent diameter, @ Aspect ratio
              for meshing the final RVE. Nevertheless, a value for `voxel_per_side` has to be provided.
           2. A good estimation for `voxel_per_side` value can be made by keeping the 
              following point in mind: The smallest dimension of the smallest ellipsoid/sphere 
-             should contain atleast 2 voxels.
+             should contain atleast 3 voxels.
           3. The `nsteps` value determines the growth of the particle during the simulation. 
              At the start of the simulation all particles are initialized with null volume. 
              At each time step they grow in size by the value: diameter/nsteps. Theerefore, the last 
@@ -143,7 +143,8 @@ and meshing software Neper_ for generating tessellations and FEM mesh. For more 
 documentation_.
 
 If the in-built voxelization routine is prefered, then the :ref:`Module voxelization` will generate
-hexahedral element (C3D8) mesh that can be read by commercial FEM software Abaqus_.
+hexahedral element (C3D8) mesh that can be read by commercial FEM software Abaqus_. The Abaqus .inp 
+file will be written out in :math:`mm` scale.
 
 .. _Neper: http://neper.sourceforge.net/
 .. _documentaion: http://neper.sourceforge.net/docs/neper.pdf
@@ -155,12 +156,11 @@ hexahedral element (C3D8) mesh that can be read by commercial FEM software Abaqu
 
     import os 
     import sys
-    sys.path.append('../..')
     
     import kanapy
-    from src.kanapy.input_output import particleStatGenerator
-    from src.kanapy.input_output import write_position_weights
-    from src.kanapy.packing import packingRoutine    
+    from kanapy.input_output import particleStatGenerator
+    from kanapy.input_output import write_position_weights
+    from kanapy.packing import packingRoutine    
 
 The methods for generating particle distribution statistics and outputing particle 
 position and weights are imported from the ``input_output`` module. The routine
@@ -216,12 +216,12 @@ By extracting the particle's position and dimensions it creates the ``sphere_pos
 If the built-in voxelization is prefered then the :meth:`src.kanapy.voxelization.voxelizationRoutine` method can be called 
 to generate the hexahedral mesh. This function also takes in the timestep value as an input parameter and reads the 
 corresponding dump file generated previously. The :meth:`src.kanapy.input_output.write_abaqus_inp` method can be called to 
-write out Abaqus (.inp) input file. The workflow for this looks like:
+write out Abaqus (.inp) input file. The Abaqus .inp file will be written out in :math:`mm` scale. The workflow for this looks like:
 
 .. code-block:: python
     
-    from src.kanapy.voxelization import voxelizationRoutine
-    from src.kanapy.input_output import write_abaqus_inp, write_output_stat
+    from kanapy.voxelization import voxelizationRoutine
+    from kanapy.input_output import write_abaqus_inp, write_output_stat
     
     def main():
         inputFile = os.getcwd() + '/stat_input.txt'
@@ -266,13 +266,12 @@ The :ref:`Module voxelization` will generate hexahedral element (C3D8) mesh that
 
     import os 
     import sys
-    sys.path.append('../..')
     
     import kanapy
-    from src.kanapy.input_output import particleStatGenerator
-    from src.kanapy.input_output import write_abaqus_inp, write_output_stat
-    from src.kanapy.packing import packingRoutine
-    from src.kanapy.voxelization import voxelizationRoutine    
+    from kanapy.input_output import particleStatGenerator
+    from kanapy.input_output import write_abaqus_inp, write_output_stat
+    from kanapy.packing import packingRoutine
+    from kanapy.voxelization import voxelizationRoutine    
 
 The methods for generating particle distribution statistics and outputing Abaqus input file
 are imported from the ``input_output`` module. The routine for the actual particle packing 

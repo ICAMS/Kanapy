@@ -149,6 +149,7 @@ def packingRoutine():
               * Simulation attribute such as total number of timesteps and periodicity.                         
     """
     try:
+        print('\n')
         print('Starting particle simulation')
 
         cwd = os.getcwd()

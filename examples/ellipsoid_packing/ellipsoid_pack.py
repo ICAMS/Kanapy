@@ -2,8 +2,8 @@ import os
 import sys
 
 import kanapy
-from kanapy.input_output import particleStatGenerator 
 from kanapy.packing import packingRoutine
+from kanapy.input_output import particleStatGenerator 
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.input_output import write_abaqus_inp, write_output_stat
 
