@@ -58,7 +58,7 @@ The two examples ``sphere_packing`` and ``ellipsoid_packing`` depict the differe
 that has to be setup for generating synthetic microstructures with equiaxed and elongated 
 grains respectively. Both the examples contain an input file wherein the user can specify 
 the statistical parameters required for the simulation. For a detailed understanding of the 
-general framework of packing simulations please refer to: :ref:`Modeling approach`.
+general framework of packing simulations please refer to: :ref:`Modeling`.
 
 .. note:: 1. New examples must be created in a separate directory under the ``kanapy-master/examples/`` 
              directory structure. It allows the kanapy modules an easy access to the json and 

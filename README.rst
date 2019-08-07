@@ -12,9 +12,9 @@ Overview
     :target: https://codecov.io/gh/mrgprasad/kanapy
   
 .. image:: https://img.shields.io/badge/License-MIT-blue.svg
-   :target: https://lbesson.mit-license.org/
+   :target: https://opensource.org/licenses/MIT
 
-kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in Python_ with performance critical part implemented in C++. Python bindings for the code written in C++ is generated using the lightweight header-only library pybind11_. The C++ part of the implementation utilizes the Eigen_ library for efficient linear algebra calculations.
+Kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in Python_ with performance critical part implemented in C++. Python bindings for the code written in C++ is generated using the lightweight header-only library pybind11_. The C++ part of the implementation utilizes the Eigen_ library for efficient linear algebra calculations.
 
 .. _Python: http://www.python.org
 .. _pybind11: https://pybind11.readthedocs.io/en/stable/
@@ -24,9 +24,10 @@ kanapy is a python package for generating complex synthetic polycrystalline micr
 Features
 --------
 
-* User interface to kanapy through scripts are written in pure Python.  
-* Efficient collision handling through a two-layer collision detection method  employing the Octree spatial data structure and the bounding sphere hierarchy. 
-* Efficient in-built hexahedral mesh generator for complex polycrystalline microstructures.    
+* User interface to kanapy through scripts are written in pure Python.
+* Grains are approximated by ellipsoids (particles) and are packed into a pre-defined domain representing RVE.   
+* Efficient collision handling of particles through a two-layer collision detection method employing the Octree spatial data structure and the bounding sphere hierarchy. 
+* In-built hexahedral mesh generator for complex polycrystalline microstructures.    
 * Independent execution of individual modules through easy data storage and handling.    
 * Flexibility in the choice of particle packing time step to be sent for voxelization (meshing).
 * Option to generate spherical particle position and radius files that can be read by voronoi tessellation software Neper_.
@@ -79,14 +80,14 @@ download the kanapy source code from the `Github repo`_ to a desired location.
     (myenv) $ conda install -y -c conda-forge --file requirements.txt
     (myenv) $ pip install -e .
 
-kanapy is now installed along with all its dependencies.
+Kanapy is now installed along with all its dependencies.
 
 .. _Github repo: https://github.com/mrgprasad/kanapy
           
 Running tests
 --------------
 
-kanapy uses ``pytest`` to perform all its unit testing. From the kanapy main directory (``kanapy-master``) run the tests:
+Kanapy uses ``pytest`` to perform all its unit testing. From the kanapy main directory (``kanapy-master``) run the tests:
 
 .. code-block:: console
     
@@ -148,11 +149,13 @@ Optional dependencies
 
 License
 --------
-kanapy is made available under the MIT license
+Kanapy is made available under the MIT license_.
+
+.. _license: https://opensource.org/licenses/MIT
 
 
 About
 -------
-The name kanapy is derived from the sanskrit word káṇa_ meaning particle. It is primarily developed at the `Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany <http://www.icams.de/content/>`__. Our goal is to build a complete synthetic microstructure generation tool for research and industry use. 
+The name kanapy is derived from the sanskrit word káṇa_ meaning particle. Kanapy is primarily developed at the `Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany <http://www.icams.de/content/>`__. Our goal is to build a complete synthetic microstructure generation tool for research and industry use. 
 
 .. _káṇa: https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3

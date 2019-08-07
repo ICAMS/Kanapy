@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Modeling approach &mdash; kanapy 0.0.1 documentation</title>
+  <title>Modeling &mdash; kanapy 0.0.1 documentation</title>
   
 
   
@@ -89,7 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="readme.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Modeling approach</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modeling</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#two-layered-collision-detection">Two layered collision detection</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#layer-1-octree-data-structure">Layer 1: Octree data structure</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#layer-2-bounding-sphere-hierarchy">Layer 2: Bounding sphere hierarchy</a></li>
@@ -148,7 +148,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Modeling approach</li>
+      <li>Modeling</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -167,8 +167,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="modeling-approach">
-<h1>Modeling approach<a class="headerlink" href="#modeling-approach" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="modeling">
+<h1>Modeling<a class="headerlink" href="#modeling" title="Permalink to this headline">¶</a></h1>
 <p>Grains in polycrystalline microstructures can be approximated by ellipsoids. To generate synthetic microstructures, packing the particles (ellipsoids) which follow a particular size distribution into a pre-defined domain becomes the objective. The general framework employed in this regard is the collision detection and response system for particles under random motion in the box. Each particle <span class="math notranslate nohighlight">\(i\)</span> in the domain is defined as an ellipsoid in three-dimensional Euclidean space <span class="math notranslate nohighlight">\(\mathbb{R}^3\)</span>, and random position and velocity vectors <span class="math notranslate nohighlight">\(\mathbf{r}^i\)</span>, <span class="math notranslate nohighlight">\(\mathbf{v}^i\)</span> are assigned to it. During their motion, the particles interact with each other and with the simulation box. The interaction between particles can be modeled by breaking it down into stages of collision detection and response. And the interaction between particles and the simulation box can be modeled by evaluating if the particle crosses the boundaries of the box. If periodicity is enabled periodic images on the opposite boundaries of the box are created, else the particle position and velocity vectors have to be updated to mimic the bouncing back effect.</p>
 <div class="section" id="two-layered-collision-detection">
 <h2>Two layered collision detection<a class="headerlink" href="#two-layered-collision-detection" title="Permalink to this headline">¶</a></h2>

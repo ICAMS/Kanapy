@@ -1,6 +1,6 @@
-=================
-Modeling approach
-=================
+=========
+Modeling
+=========
 
 Grains in polycrystalline microstructures can be approximated by ellipsoids. To generate synthetic microstructures, packing the particles (ellipsoids) which follow a particular size distribution into a pre-defined domain becomes the objective. The general framework employed in this regard is the collision detection and response system for particles under random motion in the box. Each particle :math:`i` in the domain is defined as an ellipsoid in three-dimensional Euclidean space :math:`\mathbb{R}^3`, and random position and velocity vectors :math:`\mathbf{r}^i`, :math:`\mathbf{v}^i` are assigned to it. During their motion, the particles interact with each other and with the simulation box. The interaction between particles can be modeled by breaking it down into stages of collision detection and response. And the interaction between particles and the simulation box can be modeled by evaluating if the particle crosses the boundaries of the box. If periodicity is enabled periodic images on the opposite boundaries of the box are created, else the particle position and velocity vectors have to be updated to mimic the bouncing back effect.
 

@@ -103,7 +103,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="method.html">Modeling approach</a></li>
+<li class="toctree-l1"><a class="reference internal" href="method.html">Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kanapy.html">Code documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
@@ -176,14 +176,15 @@
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://travis-ci.org/mrgprasad/kanapy"><img alt="https://img.shields.io/travis/mrgprasad/kanapy.svg" src="https://img.shields.io/travis/mrgprasad/kanapy.svg" /></a>
 <a class="reference external image-reference" href="https://codecov.io/gh/mrgprasad/kanapy"><img alt="https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg" src="https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg" /></a>
-<a class="reference external image-reference" href="https://lbesson.mit-license.org/"><img alt="https://img.shields.io/badge/License-MIT-blue.svg" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
-<p>kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in <a class="reference external" href="http://www.python.org">Python</a> with performance critical part implemented in C++. Python bindings for the code written in C++ is generated using the lightweight header-only library <a class="reference external" href="https://pybind11.readthedocs.io/en/stable/">pybind11</a>. The C++ part of the implementation utilizes the <a class="reference external" href="http://eigen.tuxfamily.org/index.php?title=Main_Page">Eigen</a> library for efficient linear algebra calculations.</p>
+<a class="reference external image-reference" href="https://opensource.org/licenses/MIT"><img alt="https://img.shields.io/badge/License-MIT-blue.svg" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+<p>Kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in <a class="reference external" href="http://www.python.org">Python</a> with performance critical part implemented in C++. Python bindings for the code written in C++ is generated using the lightweight header-only library <a class="reference external" href="https://pybind11.readthedocs.io/en/stable/">pybind11</a>. The C++ part of the implementation utilizes the <a class="reference external" href="http://eigen.tuxfamily.org/index.php?title=Main_Page">Eigen</a> library for efficient linear algebra calculations.</p>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>User interface to kanapy through scripts are written in pure Python.</p></li>
-<li><p>Efficient collision handling through a two-layer collision detection method  employing the Octree spatial data structure and the bounding sphere hierarchy.</p></li>
-<li><p>Efficient in-built hexahedral mesh generator for complex polycrystalline microstructures.</p></li>
+<li><p>Grains are approximated by ellipsoids (particles) and are packed into a pre-defined domain representing RVE.</p></li>
+<li><p>Efficient collision handling of particles through a two-layer collision detection method employing the Octree spatial data structure and the bounding sphere hierarchy.</p></li>
+<li><p>In-built hexahedral mesh generator for complex polycrystalline microstructures.</p></li>
 <li><p>Independent execution of individual modules through easy data storage and handling.</p></li>
 <li><p>Flexibility in the choice of particle packing time step to be sent for voxelization (meshing).</p></li>
 <li><p>Option to generate spherical particle position and radius files that can be read by voronoi tessellation software <a class="reference external" href="http://neper.sourceforge.net/">Neper</a>.</p></li>
@@ -226,11 +227,11 @@ download the kanapy source code from the <a class="reference external" href="htt
 <span class="gp">(myenv) $</span> pip install -e .
 </pre></div>
 </div>
-<p>kanapy is now installed along with all its dependencies.</p>
+<p>Kanapy is now installed along with all its dependencies.</p>
 </div>
 <div class="section" id="running-tests">
 <h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
-<p>kanapy uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> to perform all its unit testing. From the kanapy main directory (<code class="docutils literal notranslate"><span class="pre">kanapy-master</span></code>) run the tests:</p>
+<p>Kanapy uses <code class="docutils literal notranslate"><span class="pre">pytest</span></code> to perform all its unit testing. From the kanapy main directory (<code class="docutils literal notranslate"><span class="pre">kanapy-master</span></code>) run the tests:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> pytest tests/ -v
 </pre></div>
 </div>
@@ -278,11 +279,11 @@ The C++ function will be complied by linking the Eigen library
 </div>
 <div class="section" id="license">
 <h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
-<p>kanapy is made available under the MIT license</p>
+<p>Kanapy is made available under the MIT <a class="reference external" href="https://opensource.org/licenses/MIT">license</a>.</p>
 </div>
 <div class="section" id="about">
 <h2>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h2>
-<p>The name kanapy is derived from the sanskrit word <a class="reference external" href="https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3">káṇa</a> meaning particle. It is primarily developed at the <a class="reference external" href="http://www.icams.de/content/">Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany</a>. Our goal is to build a complete synthetic microstructure generation tool for research and industry use.</p>
+<p>The name kanapy is derived from the sanskrit word <a class="reference external" href="https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3">káṇa</a> meaning particle. Kanapy is primarily developed at the <a class="reference external" href="http://www.icams.de/content/">Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany</a>. Our goal is to build a complete synthetic microstructure generation tool for research and industry use.</p>
 </div>
 </div>
 

@@ -6,7 +6,11 @@ Applications
 Microstructure with equiaxed grains
 ------------------------------------
 
-Voronoi and Laguerre tessellations are some of the popular methods for generating polycrystalline microstructures. These approaches require positions and weights as input parameters for generating tessellation cells that resemble grains of a polycrystal. In this regard, the proposed particle packing approach can be used to generate the required information. Microstructure with equiaxed grains are best approximated by spheres and after obtaining the necessary packing fraction, positions and radii can be outputted. 
+Voronoi_ and Laguerre_ tessellations are some of the popular methods for generating polycrystalline microstructures. These approaches require positions and weights as input parameters for generating tessellation cells that resemble grains of a polycrystal. In this regard, the proposed particle packing approach can be used to generate the required information. Microstructure with equiaxed grains are best approximated by spheres and after obtaining the necessary packing fraction, positions and radii can be outputted. 
+
+.. _Voronoi: https://en.wikipedia.org/wiki/Voronoi_diagram
+.. _Laguerre: https://en.wikipedia.org/wiki/Power_diagram
+
 
 .. figure:: /figs/sphere_app.png
     :align: center
