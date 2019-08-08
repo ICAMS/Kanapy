@@ -119,7 +119,7 @@ It is built with the following keywords: ``@ Equivalent diameter, @ Aspect ratio
              should contain atleast 3 voxels.
           3. The `nsteps` value determines the growth of the particle during the simulation. 
              At the start of the simulation all particles are initialized with null volume. 
-             At each time step they grow in size by the value: diameter/nsteps. Theerefore, the last 
+             At each time step they grow in size by the value: diameter/nsteps. Therefore, the last 
              timestep would naturally contain particles in their actual size. 
 
 .. _Log-normal distribution's: https://en.wikipedia.org/wiki/Log-normal_distribution   
@@ -210,13 +210,13 @@ By extracting the particle's position and dimensions it creates the ``sphere_pos
         
             1. The json file ``particle_data.txt`` in the directory ``../json_files/`` can be used to 
                read the particle's equivalent diameter as input statistics.
-            2. After tessellation,`Neper` can be used to generate the equivalent diameter for output statistics.
+            2. After tessellation, Neper can be used to generate the equivalent diameter for output statistics.
           
           
 If the built-in voxelization is prefered then the :meth:`src.kanapy.voxelization.voxelizationRoutine` method can be called 
 to generate the hexahedral mesh. This function also takes in the timestep value as an input parameter and reads the 
 corresponding dump file generated previously. The :meth:`src.kanapy.input_output.write_abaqus_inp` method can be called to 
-write out Abaqus (.inp) input file. The Abaqus .inp file will be written out in :math:`mm` scale. The workflow for this looks like:
+write out Abaqus (.inp) input file. The Abaqus (.inp) file will be written out in :math:`mm` scale. The workflow for this looks like:
 
 .. code-block:: python
     

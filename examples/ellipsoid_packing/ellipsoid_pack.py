@@ -22,7 +22,7 @@ def main():
     inputFile = os.getcwd() + '/stat_input.txt'
     particleStatGenerator(inputFile)                    # Generate data for particle simulation
     packingRoutine()                                    # Particle packing simulation    
-    voxelizationRoutine(800)                            # RVE voxelization (Meshing)    
+    voxelizationRoutine(750)                            # RVE voxelization (Meshing)    
     write_abaqus_inp()                                  # Write out Abaqus input (.inp) file
     write_output_stat()                                 # Compare input and output statistics
     return
