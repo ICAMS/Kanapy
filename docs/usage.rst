@@ -13,8 +13,8 @@ them individually by navigating into the corresponding directories and executing
 them as shown:
 
 
-.. note:: Make sure that you are within the virtual environment created during kanapy installation.
-          As this environment contains the installed kanapy and its required dependencies.
+.. note:: Make sure that you are within the virtual environment created during the kanapy installation, as 
+          this environment contains the installed kanapy and its required dependencies.
           
           
 .. code-block:: console
@@ -32,20 +32,20 @@ The UI should look similar to this:
 .. image:: /figs/UI.png
     :width: 750px    
 
-By default OVITO loads the particles as spheres, to change this option to ellipsoids. 
+By default, OVITO loads the particles as spheres, this option can be changed to visualize ellipsoids. 
 The asphericalshapex, asphericalshapey, and asphericalshapez columns need to be mapped to 
 Aspherical Shape.X, Aspherical Shape.Y, and Aspherical Shape.Z properties of OVITO when 
 importing the dump file. Similarily, the orientationx, orientationy, orientationz, and 
 orientationw particle properties need to be mapped to the Orientation.X, Orientation.Y, 
 Orientation.Z, and Orientation.W. OVITO cannot set up this mapping automatically, you have 
-to do it manually by using the ``Edit column mapping`` button (at the bottom right corner 
+to do it manually by using the ``Edit column mapping`` button (at the bottom-right corner 
 of the GUI) in the file import panel after loading the dump files. The required assignment 
 and components are shown here:
 
 .. image:: /figs/UI_options.png
     :width: 750px    
 
-For further viewing customization refer to OVITO's documentation_.
+For further viewing customizations refer to OVITO's documentation_.
 
 .. _documentation: https://ovito.org/manual/ 
 
@@ -55,10 +55,10 @@ Detailed tutorial
 
 A detailed description of the default examples that come packaged with kanapy is presented here. 
 The two examples ``sphere_packing`` and ``ellipsoid_packing`` depict the different workflows 
-that has to be setup for generating synthetic microstructures with equiaxed and elongated 
-grains respectively. Both the examples contain an input file wherein the user can specify 
+that have to be setup for generating synthetic microstructures with equiaxed and elongated 
+grains. Both examples contain an input file wherein the user can specify 
 the statistical parameters required for the simulation. For a detailed understanding of the 
-general framework of packing simulations please refer to: :ref:`Modeling`.
+general framework of packing simulations, please refer to: :ref:`Modeling`.
 
 .. note:: 1. New examples must be created in a separate directory under the ``kanapy-master/examples/`` 
              directory structure. It allows the kanapy modules an easy access to the json and 
