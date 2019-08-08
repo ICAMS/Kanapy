@@ -95,17 +95,17 @@ An exemplary structure of the input file: ``stat_input.txt`` is shown below:
     nsteps = 
     periodicity =   
     
-It is built with the following keywords: ``@ Equivalent diameter, @ Aspect ratio, 
+The input file is built with the following keywords: ``@ Equivalent diameter, @ Aspect ratio, 
 @ Orientation, @ RVE, @ Simulation``. 
 
   - The keyword ``@ Equivalent diameter`` takes in four arguments to generate a 
-    log-normal distribution for particle's equivalent diameter, they are the 
+    log-normal distribution for the particle's equivalent diameter; they are the 
     `Log-normal distribution's`_ standard deviation and mean, and the minimum 
     and maximum cut-off values for the diameter. The values should correspond to :math:`\mu m` scale.
   - The ``@ Aspect ratio`` takes only the mean value as input. If the resultant 
-    microstructure should contain equiaxed grains then this value should be set to `1`.
+    microstructure contains equiaxed grains then this value should be set to `1`.
   - The ``@ Orientation`` keyword represents the tilt angle of particles with 
-    respect to the positive x-axis. Hence, to generate a distribution it takes in 
+    respect to the positive x-axis. Hence, to generate a distribution, it takes in 
     two arguments: the normal distribution's mean and the standard deviation. 
   - The ``@ RVE`` keyword takes two inputs: the side length of the final RVE 
     required and the number of voxels per RVE side length. 
@@ -116,10 +116,10 @@ It is built with the following keywords: ``@ Equivalent diameter, @ Aspect ratio
              for meshing the final RVE. Nevertheless, a value for `voxel_per_side` has to be provided.
           2. A good estimation for `voxel_per_side` value can be made by keeping the 
              following point in mind: The smallest dimension of the smallest ellipsoid/sphere 
-             should contain atleast 3 voxels.
+             should contain at least 3 voxels.
           3. The `nsteps` value determines the growth of the particle during the simulation. 
-             At the start of the simulation all particles are initialized with null volume. 
-             At each time step they grow in size by the value: diameter/nsteps. Therefore, the last 
+             At the start of the simulation, all particles are initialized with null volume. 
+             At each time step, they grow in size by the value: diameter/nsteps. Therefore, the last 
              timestep would naturally contain particles in their actual size. 
 
 .. _Log-normal distribution's: https://en.wikipedia.org/wiki/Log-normal_distribution   
@@ -137,20 +137,20 @@ equiaxed grains. The principle involved in generating such microstructures are d
 in the sub-section :ref:`Microstructure with equiaxed grains`. With respect to the final RVE mesh, 
 the user has the flexibility to choose between the in-built voxelization routine and external meshing softwares.
 
-If external meshing is required then the positions and weights of the particles (spheres) after packing 
-can be written out to be post-processed. The positions and weights can be read by Voronoi tessellation 
+If external meshing is required, the positions and weights of the particles (spheres) after packing 
+can be written out to be post-processed. The positions and weights can be read by the Voronoi tessellation 
 and meshing software Neper_ for generating tessellations and FEM mesh. For more details refer to Neper's 
 documentation_.
 
 If the in-built voxelization routine is prefered, then the :ref:`Module voxelization` will generate
-hexahedral element (C3D8) mesh that can be read by commercial FEM software Abaqus_. The Abaqus .inp 
+hexahedral element (C3D8) mesh that can be read by the commercial FEM software Abaqus_. The Abaqus .inp 
 file will be written out in :math:`mm` scale.
 
 .. _Neper: http://neper.sourceforge.net/
 .. _documentaion: http://neper.sourceforge.net/docs/neper.pdf
 .. _Abaqus: https://www.3ds.com/products-services/simulia/products/abaqus/
 
-**Imports**: This example requires the following imports from the python standard and kanapy modules.
+**Imports**: This example requires the following imports from the Python standard and kanapy modules.
 
 .. code-block:: python
 
@@ -163,7 +163,7 @@ file will be written out in :math:`mm` scale.
     from kanapy.packing import packingRoutine    
 
 The methods for generating particle distribution statistics and outputing particle 
-position and weights are imported from the ``input_output`` module. The routine
+position- and weights are imported from the ``input_output`` module. The routine
 for the actual particle packing simulation is imported from the ``packing`` module.
 
 **Workflow**: The complete process consists of 3 stages: 
@@ -188,22 +188,22 @@ for the actual particle packing simulation is imported from the ``packing`` modu
           2. The :meth:`src.kanapy.input_output.particleStatGenerator` method requires the ``stat_input.txt`` as input.
           3. The :meth:`src.kanapy.input_output.write_position_weights` method requires the simulation timestep as input.
              The choice of the timestep is very important. It is suggested to choose the time step at which the spheres
-             are tightly packed and there is least amount of overlap. The remaining empty spaces will get assigned to 
+             are tightly packed and at which there is the least amount of overlap. The remaining empty spaces will get assigned to 
              the closest sphere when it is sent to the tessellation and meshing routine. Please refer to 
              :ref:`Microstructure with equiaxed grains` for more details.   
           
-The data required for packing simulation contained in the user defined input file: ``stat_input.txt`` is read 
-by the method :meth:`src.kanapy.input_output.particleStatGenerator`. It generates the necessary particle, RVE and 
-the simulation attributes and writes it to json files. The method :meth:`src.kanapy.packing.packingRoutine` when 
-called looks for the json files generated by :meth:`src.kanapy.input_output.particleStatGenerator`
-and reads the files for extracting information required for the packing simulation. At each time step of the 
-packing simulation the :meth:`src.kanapy.packing.particle_grow` method will write out a dump file containing information
+The data required for the packing simulation contained in the user-defined input file: ``stat_input.txt`` is read 
+by the method :meth:`src.kanapy.input_output.particleStatGenerator`. It generates the necessary particle, RVE, and 
+the simulation attributes, and it writes it to json files. The method :meth:`src.kanapy.packing.packingRoutine`, when 
+called, looks for the json files generated by :meth:`src.kanapy.input_output.particleStatGenerator`
+and reads the files for extracting the information required for the packing simulation. At each time step of the 
+packing simulation, the :meth:`src.kanapy.packing.particle_grow` method will write out a dump file containing information
 of particle positions and other attributes. 
 
 Finally, the :meth:`src.kanapy.input_output.write_position_weights` method can be called 
 to write out the position and weights files required for further post-processing. This function takes the
-specified timestep value as an input parameter and reads the corresponding dump file generated previously. 
-By extracting the particle's position and dimensions it creates the ``sphere_positions.txt`` & 
+specified timestep value as an input parameter and reads the corresponding, previously generated dump file. 
+By extracting the particle's position and dimensions, it creates the ``sphere_positions.txt`` & 
 ``sphere_weights.txt`` files.  
 
 .. note:: For comparing the input and output statistics:  
@@ -213,10 +213,10 @@ By extracting the particle's position and dimensions it creates the ``sphere_pos
             2. After tessellation, Neper can be used to generate the equivalent diameter for output statistics.
           
           
-If the built-in voxelization is prefered then the :meth:`src.kanapy.voxelization.voxelizationRoutine` method can be called 
+If the built-in voxelization is prefered, then the :meth:`src.kanapy.voxelization.voxelizationRoutine` method can be called 
 to generate the hexahedral mesh. This function also takes in the timestep value as an input parameter and reads the 
-corresponding dump file generated previously. The :meth:`src.kanapy.input_output.write_abaqus_inp` method can be called to 
-write out Abaqus (.inp) input file. The Abaqus (.inp) file will be written out in :math:`mm` scale. The workflow for this looks like:
+corresponding, previously generated dump file. The :meth:`src.kanapy.input_output.write_abaqus_inp` method can be called to 
+write out the Abaqus (.inp) input file. The Abaqus (.inp) file will be written out in :math:`mm` scale. The workflow for this looks like:
 
 .. code-block:: python
     
@@ -235,14 +235,14 @@ write out Abaqus (.inp) input file. The Abaqus (.inp) file will be written out i
     if __name__ == '__main__':
         main()
 
-.. note:: For comparing the input and output equivalent diameter statistics the method 
+.. note:: For comparing the input and the output equivalent diameter statistics the method 
           :meth:`src.kanapy.input_output.write_output_stat` can be called.                     
                   
 Storing information in json & dump files is effective in making the workflow stages independent of one another. 
 But the sequence of the workflow is important, for example: Running the packing routine before the statistics generation 
-is not advised as the packing routine would not have any input to work on. Both the json and dump files are human readable 
+is not advised as the packing routine would not have any input to work on. Both the json and the dump files are human readable, 
 and hence they help the user debug the code in case of simulation problems. As mentioned earlier, the dump files can
-be read by visualization software OVITO_, this provides the user a visual aid to understand the physics behind packing. 
+be read by the visualization software OVITO_; this provides the user a visual aid to understand the physics behind packing. 
 
 .. _OVITO: https://ovito.org/             
 
@@ -252,10 +252,10 @@ Ellipsoid packing
 """"""""""""""""""
 
 This example demonstrates the workflow for generating synthetic microstructures with
-elongated grains. The principle involved in generating such microstructures are described
+elongated grains. The principle involved in generating such microstructures is described
 in the sub-section :ref:`Microstructure with elongated grains`. With respect to the final RVE mesh, 
 the built-in voxelization routine has to be used due to the inavailability of anisotropic tessellation techniques.
-The :ref:`Module voxelization` will generate hexahedral element (C3D8) mesh that can be read by commercial FEM software Abaqus_.
+The :ref:`Module voxelization` will generate a hexahedral element (C3D8) mesh that can be read by the commercial FEM software Abaqus_.
 
 .. _Abaqus: https://www.3ds.com/products-services/simulia/products/abaqus/
 
@@ -273,10 +273,10 @@ The :ref:`Module voxelization` will generate hexahedral element (C3D8) mesh that
     from kanapy.packing import packingRoutine
     from kanapy.voxelization import voxelizationRoutine    
 
-The methods for generating particle distribution statistics and outputing Abaqus input file
+The methods for generating particle distribution statistics and for outputing the Abaqus input file
 are imported from the ``input_output`` module. The routine for the actual particle packing 
 simulation is imported from the ``packing`` module. And the routine for generating hexahedral mesh
-is imported from ``voxelization`` module.      
+is imported from the ``voxelization`` module.      
 
 
 **Workflow**: The complete process consists of 4 stages: 
@@ -304,14 +304,14 @@ is imported from ``voxelization`` module.
           2. The :meth:`src.kanapy.input_output.particleStatGenerator` method requires the ``stat_input.txt`` as input.
           3. The :meth:`src.kanapy.voxelization.voxelizationRoutine` method requires the simulation timestep as input.
              The choice of the timestep is very important. It is suggested to choose the time step at which the ellipsoids
-             are tightly packed and there is least amount of overlap. The remaining empty spaces will get assigned to 
+             are tightly packed and there is the least amount of overlap. The remaining empty spaces will get assigned to 
              the closest ellipsoid when it is sent to the voxelization (meshing) routine. Please refer to 
              :ref:`Microstructure with elongated grains` for more details.  
-          4. For comparing the input and output equivalent, major and minor diameter statistics the method 
+          4. For comparing the input and output equivalent, major and minor diameter statistics, the method 
              :meth:`src.kanapy.input_output.write_output_stat` can be called.               
 
 The process of the methods :meth:`src.kanapy.input_output.particleStatGenerator` and :meth:`src.kanapy.packing.packingRoutine`
-is similar to that described in :ref:`Sphere packing`. But for voxelization the :meth:`src.kanapy.voxelization.voxelizationRoutine` 
-method is called to generate the hexahedral mesh. It takes in the timestep value as an input parameter and reads the corresponding 
-dump file generated previously. By extracting the particle's position and dimensions it creates the final FEM mesh. Finally, 
-the :meth:`src.kanapy.input_output.write_abaqus_inp` method can be called to write out Abaqus (.inp) input file. 
+is similar to that described in :ref:`Sphere packing`. But for voxelization, the :meth:`src.kanapy.voxelization.voxelizationRoutine` 
+method is called to generate the hexahedral mesh. It takes in the timestep value as an input parameter and reads the corresponding, 
+previously generated dump file. By extracting the particle's position and dimensions, it creates the final FEM mesh. Finally, 
+the :meth:`src.kanapy.input_output.write_abaqus_inp` method can be called to write out the Abaqus (.inp) input file. 

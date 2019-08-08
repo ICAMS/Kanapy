@@ -68,7 +68,7 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps):
     """
     Initializes the :class:`entities.Octree` class and performs recursive subdivision with 
     collision checks and response for the ellipsoids. At each time step of the simulation it 
-    increases the size of the ellipsoid by a factor which depends on the user defined value for total number of time steps. 
+    increases the size of the ellipsoid by a factor, which depends on the user-defined value for total number of time steps. 
 
     :param sim_box: Simulation box representing RVE.
     :type sim_box: :obj:`entities.Simulation_Box`  
@@ -80,7 +80,7 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps):
     :type nsteps: int       
 
     .. note:: :meth:`src.kanapy.input_output.write_dump` function is called at each time step of the simulation to
-              write output (.dump) files. By default periodic images are written to the output file, 
+              write output (.dump) files. By default, periodic images are written to the output file, 
               but this option can be disabled within the function.         
     """
     # Initial call to print 0% progress
@@ -146,7 +146,7 @@ def packingRoutine():
 
               * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. 
               * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.
-              * Simulation attribute such as total number of timesteps and periodicity.                         
+              * Simulation attributes such as total number of timesteps and periodicity.                         
     """
     try:
         print('\n')

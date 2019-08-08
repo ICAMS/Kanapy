@@ -13,9 +13,9 @@ from kanapy.input_output import read_dump, printProgressBar
 
 def points_in_convexHull(Points, hull):
     """
-    Determines if the given array of points lie inside the convex hull or outside.        
+    Determines whether the given array of points lie inside the convex hull or outside.        
 
-    :param Points: Array of points to be tested if they lie inside the hull or not. 
+    :param Points: Array of points to be tested whether they lie inside the hull or not. 
     :type Points: numpy array
     :param hull: Ellipsoid represented by a convex hull created from its outer surface points.  
     :type hull: Scipy's :obj:`ConvexHull` object
@@ -42,7 +42,7 @@ def create_voxels(sim_box, voxel_num):
     :returns: * Node dictionary containing node ID and coordinates.
               * Element dictionary containing element IDs and nodal connectivities. 
               * Voxel dictionary containing voxel ID and center coordinates.
-    :rtype: Tuple of python dictionaries.
+    :rtype: Tuple of Python dictionaries.
     """
     print('    Generating voxels inside RVE')
     # generate nodes of all voxels from RVE side dimensions    

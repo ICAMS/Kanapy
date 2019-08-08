@@ -38,9 +38,9 @@ and "help wanted" is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-kanapy could always use more documentation, whether as part of the
+Kanapy could always use more documentation, whether as part of the
 official kanapy docs, in docstrings, or even on the web in blog posts,
-articles, and such.
+articles, and alike.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
@@ -66,7 +66,7 @@ Ready to contribute? Here's how to set up `kanapy` for local development.
 
     $ git clone git@github.com:your_name_here/kanapy.git
 
-3. Install your local copy into a virtual environment. Assuming you have anaconda installed, this is how you set up your fork for local development:
+3. Install your local copy into a virtual environment. Assuming you have Anaconda installed, this is how you set up your fork for local development:
 
 .. code-block:: console
 

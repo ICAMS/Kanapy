@@ -162,7 +162,7 @@
 
 <div class="viewcode-block" id="collision_routine"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.collision_detect_react.collision_routine">[docs]</a><span class="k">def</span> <span class="nf">collision_routine</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calls the c++ method :meth:`kanapy.base.collideDetect` to determine if the given two ellipsoid objects overlap using </span>
+<span class="sd">    Calls the c++ method :meth:`kanapy.base.collideDetect` to determine whether the given two ellipsoid objects overlap using </span>
 <span class="sd">    the Algebraic separation condition developed by W. Wang et al. A detailed description is provided</span>
 <span class="sd">    therein.</span>
 
@@ -174,9 +174,9 @@
 <span class="sd">    :type E2: object :obj:`Ellipsoid`</span>
 
 <span class="sd">    .. note:: 1. If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is sufficient to </span>
-<span class="sd">                 determine if they overlap.</span>
-<span class="sd">              2. Else if either of them is an ellipsoid then their coefficients, positions &amp; rotation matrices are used</span>
-<span class="sd">                 to determine if they overlap.                             </span>
+<span class="sd">                 determine whether they overlap.</span>
+<span class="sd">              2. Else, if either of them is an ellipsoid, then their coefficients, positions &amp; rotation matrices are used</span>
+<span class="sd">                 to determine whether they overlap.                             </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># If spheres:</span>

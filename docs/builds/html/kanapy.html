@@ -204,7 +204,7 @@ would bounce back after collision. Thus, the updated velocity vector components 
 <dl class="function">
 <dt id="src.kanapy.collision_detect_react.collision_routine">
 <code class="sig-prename descclassname">src.kanapy.collision_detect_react.</code><code class="sig-name descname">collision_routine</code><span class="sig-paren">(</span><em class="sig-param">E1</em>, <em class="sig-param">E2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/collision_detect_react.html#collision_routine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.collision_detect_react.collision_routine" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calls the c++ method <a class="reference internal" href="#kanapy.base.collideDetect" title="kanapy.base.collideDetect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.base.collideDetect()</span></code></a> to determine if the given two ellipsoid objects overlap using 
+<dd><p>Calls the c++ method <a class="reference internal" href="#kanapy.base.collideDetect" title="kanapy.base.collideDetect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.base.collideDetect()</span></code></a> to determine whether the given two ellipsoid objects overlap using 
 the Algebraic separation condition developed by W. Wang et al. A detailed description is provided
 therein.</p>
 <p>Also calls the <a class="reference internal" href="#src.kanapy.collision_detect_react.collision_react" title="src.kanapy.collision_detect_react.collision_react"><code class="xref py py-meth docutils literal notranslate"><span class="pre">collision_react()</span></code></a> to evaluate the response after collision.</p>
@@ -220,9 +220,9 @@ therein.</p>
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
 <li><p>If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is sufficient to 
-determine if they overlap.</p></li>
-<li><p>Else if either of them is an ellipsoid then their coefficients, positions &amp; rotation matrices are used
-to determine if they overlap.</p></li>
+determine whether they overlap.</p></li>
+<li><p>Else, if either of them is an ellipsoid, then their coefficients, positions &amp; rotation matrices are used
+to determine whether they overlap.</p></li>
 </ol>
 </div>
 </dd></dl>
@@ -300,7 +300,7 @@ ellipsoids can be established as described in <a class="reference internal" href
 <dl class="method">
 <dt id="src.kanapy.entities.Cuboid.intersect">
 <code class="sig-name descname">intersect</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Cuboid.intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Cuboid.intersect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates if the <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid intersects with the <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the <a class="reference internal" href="#src.kanapy.entities.Octree" title="src.kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> sub-branch.</p>
+<dd><p>Evaluates whether the <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid intersects with the <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the <a class="reference internal" href="#src.kanapy.entities.Octree" title="src.kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> sub-branch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>other</strong> (object of the class <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a>) – Sub-branch cuboid object of the octree</p>
@@ -335,7 +335,7 @@ to the positive x-axis</p></li>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic">
-<li><p>The orientations of ellipsoid <span class="math notranslate nohighlight">\(i\)</span> in global coordinate space is defined by its 
+<li><p>The orientations of ellipsoid <span class="math notranslate nohighlight">\(i\)</span> in the global coordinate space is defined by its 
 tilt angle and axis vector and expressed in quaternion notation as,</p>
 <a class="reference internal image-reference" href="_images/quaternion_ell.png"><img alt="_images/quaternion_ell.png" class="align-center" src="_images/quaternion_ell.png" style="width: 210px; height: 40px;" /></a>
 </li>
@@ -470,7 +470,7 @@ and is later assigned a random value by <a class="reference internal" href="#src
 <dl class="method">
 <dt id="src.kanapy.entities.Ellipsoid.wallCollision">
 <code class="sig-name descname">wallCollision</code><span class="sig-paren">(</span><em class="sig-param">sim_box</em>, <em class="sig-param">periodicity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.wallCollision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.wallCollision" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates if the ellipsoid collides with the boundaries of the simulation box.</p>
+<dd><p>Evaluates whether the ellipsoid collides with the boundaries of the simulation box.</p>
 <ul class="simple">
 <li><p>If periodicity is enabled -&gt; Creates duplicates of the ellipsoid on opposite faces of the box</p></li>
 <li><p>If periodicity is disabled -&gt; Mimicks the bouncing back effect.</p></li>
@@ -547,20 +547,20 @@ sub-branch</p>
 <dt id="src.kanapy.entities.Octree.subdivide">
 <code class="sig-name descname">subdivide</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree.subdivide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree.subdivide" title="Permalink to this definition">¶</a></dt>
 <dd><p>Divides the given Octree sub-branch into eight further sub-branches and 
-initialize each newly created sub-branch as an <a class="reference internal" href="#src.kanapy.entities.Octree" title="src.kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> object</p>
+initializes each newly created sub-branch as an <a class="reference internal" href="#src.kanapy.entities.Octree" title="src.kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> object</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="src.kanapy.entities.Octree.subdivide_particles">
 <code class="sig-name descname">subdivide_particles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree.subdivide_particles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree.subdivide_particles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates if ellipsoids belongs to a particular Octree sub-branch
+<dd><p>Evaluates whether ellipsoids belong to a particular Octree sub-branch
 by calling <code class="xref py py-meth docutils literal notranslate"><span class="pre">intersect()</span></code> on each ellipsoid.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="src.kanapy.entities.Octree.update">
 <code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates the Octree and begins recursive process of subdividing or collision testing</p>
+<dd><p>Updates the Octree and begins the recursive process of subdividing or collision testing</p>
 </dd></dl>
 
 </dd></dl>
@@ -593,7 +593,7 @@ by calling <code class="xref py py-meth docutils literal notranslate"><span clas
 <dd class="field-even"><p>Eight new sub-branch cuboid objects in a list</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><p>List</p>
 </dd>
 </dl>
 </dd></dl>
@@ -604,10 +604,10 @@ by calling <code class="xref py py-meth docutils literal notranslate"><span clas
 <dl class="function">
 <dt id="src.kanapy.input_output.particleStatGenerator">
 <code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">particleStatGenerator</code><span class="sig-paren">(</span><em class="sig-param">inputFile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#particleStatGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.particleStatGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates ellipsoid size distribution (Log-normal) based on user defined statistics</p>
+<dd><p>Generates ellipsoid size distribution (Log-normal) based on user-defined statistics</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inputFile</strong> (<em>document</em>) – User defined statistics file for ellipsoid generation.</p>
+<dd class="field-odd"><p><strong>inputFile</strong> (<em>document</em>) – User-defined statistics file for ellipsoid generation.</p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -619,7 +619,7 @@ by calling <code class="xref py py-meth docutils literal notranslate"><span clas
 <div><ul class="simple">
 <li><p>Standard deviation for ellipsoid equivalent diameter (Log-normal distribution)</p></li>
 <li><p>Mean value of ellipsoid equivalent diameter (Log-normal distribution)</p></li>
-<li><p>Minimum and Maximum cut offs for ellipsoid equivalent diameters</p></li>
+<li><p>Minimum and Maximum cut-offs for ellipsoid equivalent diameters</p></li>
 <li><p>Mean value for aspect ratio</p></li>
 <li><p>Mean value for ellipsoid tilt angles (Normal distribution)</p></li>
 <li><p>Standard deviation for ellipsoid tilt angles (Normal distribution)</p></li>
@@ -635,7 +635,7 @@ working directory for later access.</p></li>
 <div><ul class="simple">
 <li><p>Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.</p></li>
 <li><p>RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</p></li>
-<li><p>Simulation attribute such as total number of timesteps and periodicity.</p></li>
+<li><p>Simulation attributes such as total number of timesteps and periodicity.</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -705,7 +705,7 @@ The json files contain:</p>
 <dl class="function">
 <dt id="src.kanapy.input_output.write_dump">
 <code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">write_dump</code><span class="sig-paren">(</span><em class="sig-param">Ellipsoids</em>, <em class="sig-param">sim_box</em>, <em class="sig-param">num_particles</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#write_dump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.write_dump" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes the (.dump) file which can be read by visualization software OVITO.</p>
+<dd><p>Writes the (.dump) file, which can be read by visualization software OVITO.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -724,7 +724,7 @@ The json files contain:</p>
 <dl class="function">
 <dt id="src.kanapy.input_output.write_output_stat">
 <code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">write_output_stat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#write_output_stat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.write_output_stat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates particle and output RVE grain statistics with respect to Major, Minor &amp; Equivalent diameters for comparison.</p>
+<dd><p>Evaluates particle- and output RVE grain statistics with respect to Major, Minor &amp; Equivalent diameters for comparison.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Particle information is read from (.json) file generated by <a class="reference internal" href="#src.kanapy.input_output.particleStatGenerator" title="src.kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src.kanapy.input_output.particleStatGenerator()</span></code></a>.
@@ -765,7 +765,7 @@ They contain the following information:</p>
 <ul class="simple">
 <li><p>Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.</p></li>
 <li><p>RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</p></li>
-<li><p>Simulation attribute such as total number of timesteps and periodicity.</p></li>
+<li><p>Simulation attributes such as total number of timesteps and periodicity.</p></li>
 </ul>
 </div>
 </dd></dl>
@@ -795,7 +795,7 @@ They contain the following information:</p>
 <code class="sig-prename descclassname">src.kanapy.packing.</code><code class="sig-name descname">particle_grow</code><span class="sig-paren">(</span><em class="sig-param">sim_box</em>, <em class="sig-param">Ellipsoids</em>, <em class="sig-param">periodicity</em>, <em class="sig-param">nsteps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/packing.html#particle_grow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.packing.particle_grow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes the <code class="xref py py-class docutils literal notranslate"><span class="pre">entities.Octree</span></code> class and performs recursive subdivision with 
 collision checks and response for the ellipsoids. At each time step of the simulation it 
-increases the size of the ellipsoid by a factor which depends on the user defined value for total number of time steps.</p>
+increases the size of the ellipsoid by a factor, which depends on the user-defined value for total number of time steps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -809,7 +809,7 @@ increases the size of the ellipsoid by a factor which depends on the user define
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><a class="reference internal" href="#src.kanapy.input_output.write_dump" title="src.kanapy.input_output.write_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src.kanapy.input_output.write_dump()</span></code></a> function is called at each time step of the simulation to
-write output (.dump) files. By default periodic images are written to the output file, 
+write output (.dump) files. By default, periodic images are written to the output file, 
 but this option can be disabled within the function.</p>
 </div>
 </dd></dl>
@@ -852,7 +852,7 @@ but this option can be disabled within the function.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Tuple of python dictionaries.</p>
+<dd class="field-odd"><p>Tuple of Python dictionaries.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -860,11 +860,11 @@ but this option can be disabled within the function.</p>
 <dl class="function">
 <dt id="src.kanapy.voxelization.points_in_convexHull">
 <code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">points_in_convexHull</code><span class="sig-paren">(</span><em class="sig-param">Points</em>, <em class="sig-param">hull</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#points_in_convexHull"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.points_in_convexHull" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determines if the given array of points lie inside the convex hull or outside.</p>
+<dd><p>Determines whether the given array of points lie inside the convex hull or outside.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>Points</strong> (<em>numpy array</em>) – Array of points to be tested if they lie inside the hull or not.</p></li>
+<li><p><strong>Points</strong> (<em>numpy array</em>) – Array of points to be tested whether they lie inside the hull or not.</p></li>
 <li><p><strong>hull</strong> (Scipy’s <code class="xref py py-obj docutils literal notranslate"><span class="pre">ConvexHull</span></code> object) – Ellipsoid represented by a convex hull created from its outer surface points.</p></li>
 </ul>
 </dd>

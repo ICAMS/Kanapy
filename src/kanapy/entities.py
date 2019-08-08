@@ -13,7 +13,7 @@ def cub_oct_split(cub):
     :param cub: Branch cuboid object containing ellipsoids 
     :type cub: object of the class :class:`~Cuboid`
     :returns: Eight new sub-branch cuboid objects in a list
-    :rtype: list 
+    :rtype: List 
     """
     w = cub.width/2.0
     h = cub.height/2.0
@@ -79,7 +79,7 @@ class Ellipsoid(object):
                  to the positive x-axis       
     :type quat: numpy array    
 
-    .. note:: 1. The orientations of ellipsoid :math:`i` in global coordinate space is defined by its 
+    .. note:: 1. The orientations of ellipsoid :math:`i` in the global coordinate space is defined by its 
                  tilt angle and axis vector and expressed in quaternion notation as,
 
                  .. image:: /figs/quaternion_ell.png                        
@@ -268,7 +268,7 @@ class Ellipsoid(object):
 
     def wallCollision(self, sim_box, periodicity):
         """
-        Evaluates if the ellipsoid collides with the boundaries of the simulation box.
+        Evaluates whether the ellipsoid collides with the boundaries of the simulation box.
 
         * If periodicity is enabled -> Creates duplicates of the ellipsoid on opposite faces of the box
         * If periodicity is disabled -> Mimicks the bouncing back effect.
@@ -642,7 +642,7 @@ class Cuboid(object):
 
     def intersect(self, other):
         """
-        Evaluates if the :class:`Cuboid` object of the ellipsoid intersects with the :class:`Cuboid` object of the :class:`Octree` sub-branch.
+        Evaluates whether the :class:`Cuboid` object of the ellipsoid intersects with the :class:`Cuboid` object of the :class:`Octree` sub-branch.
 
         :param other: Sub-branch cuboid object of the octree
         :type other: object of the class :class:`Cuboid`
@@ -699,7 +699,7 @@ class Octree(object):
     def subdivide(self):
         """
         Divides the given Octree sub-branch into eight further sub-branches and 
-        initialize each newly created sub-branch as an :class:`~Octree` object             
+        initializes each newly created sub-branch as an :class:`~Octree` object             
         """
         for cub in cub_oct_split(self.cub):
             branch = Octree(self.level+1, cub, [])
@@ -713,7 +713,7 @@ class Octree(object):
 
     def subdivide_particles(self):
         """
-        Evaluates if ellipsoids belongs to a particular Octree sub-branch
+        Evaluates whether ellipsoids belong to a particular Octree sub-branch
         by calling :meth:`intersect` on each ellipsoid.           
         """
         for particle, branch in itertools.product(self.particles, self.branches):
@@ -739,7 +739,7 @@ class Octree(object):
 
     def update(self):
         """
-        Updates the Octree and begins recursive process of subdividing or collision testing           
+        Updates the Octree and begins the recursive process of subdividing or collision testing           
         """
         if len(self.particles) > self.maxparticles and self.level <= self.maxlevel:
             self.subdivide()

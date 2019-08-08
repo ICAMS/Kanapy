@@ -5,7 +5,7 @@ import kanapy.base as kbase
 
 def collision_routine(E1, E2):
     """
-    Calls the c++ method :meth:`kanapy.base.collideDetect` to determine if the given two ellipsoid objects overlap using 
+    Calls the c++ method :meth:`kanapy.base.collideDetect` to determine whether the given two ellipsoid objects overlap using 
     the Algebraic separation condition developed by W. Wang et al. A detailed description is provided
     therein.
 
@@ -17,9 +17,9 @@ def collision_routine(E1, E2):
     :type E2: object :obj:`Ellipsoid`
 
     .. note:: 1. If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is sufficient to 
-                 determine if they overlap.
-              2. Else if either of them is an ellipsoid then their coefficients, positions & rotation matrices are used
-                 to determine if they overlap.                             
+                 determine whether they overlap.
+              2. Else, if either of them is an ellipsoid, then their coefficients, positions & rotation matrices are used
+                 to determine whether they overlap.                             
     """
 
     # If spheres:

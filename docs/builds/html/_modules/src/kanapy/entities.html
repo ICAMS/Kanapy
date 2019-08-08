@@ -170,7 +170,7 @@
 <span class="sd">    :param cub: Branch cuboid object containing ellipsoids </span>
 <span class="sd">    :type cub: object of the class :class:`~Cuboid`</span>
 <span class="sd">    :returns: Eight new sub-branch cuboid objects in a list</span>
-<span class="sd">    :rtype: list </span>
+<span class="sd">    :rtype: List </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">w</span> <span class="o">=</span> <span class="n">cub</span><span class="o">.</span><span class="n">width</span><span class="o">/</span><span class="mf">2.0</span>
     <span class="n">h</span> <span class="o">=</span> <span class="n">cub</span><span class="o">.</span><span class="n">height</span><span class="o">/</span><span class="mf">2.0</span>
@@ -236,7 +236,7 @@
 <span class="sd">                 to the positive x-axis       </span>
 <span class="sd">    :type quat: numpy array    </span>
 
-<span class="sd">    .. note:: 1. The orientations of ellipsoid :math:`i` in global coordinate space is defined by its </span>
+<span class="sd">    .. note:: 1. The orientations of ellipsoid :math:`i` in the global coordinate space is defined by its </span>
 <span class="sd">                 tilt angle and axis vector and expressed in quaternion notation as,</span>
 
 <span class="sd">                 .. image:: /figs/quaternion_ell.png                        </span>
@@ -425,7 +425,7 @@
 
 <div class="viewcode-block" id="Ellipsoid.wallCollision"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.entities.Ellipsoid.wallCollision">[docs]</a>    <span class="k">def</span> <span class="nf">wallCollision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluates if the ellipsoid collides with the boundaries of the simulation box.</span>
+<span class="sd">        Evaluates whether the ellipsoid collides with the boundaries of the simulation box.</span>
 
 <span class="sd">        * If periodicity is enabled -&gt; Creates duplicates of the ellipsoid on opposite faces of the box</span>
 <span class="sd">        * If periodicity is disabled -&gt; Mimicks the bouncing back effect.</span>
@@ -799,7 +799,7 @@
 
 <div class="viewcode-block" id="Cuboid.intersect"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.entities.Cuboid.intersect">[docs]</a>    <span class="k">def</span> <span class="nf">intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluates if the :class:`Cuboid` object of the ellipsoid intersects with the :class:`Cuboid` object of the :class:`Octree` sub-branch.</span>
+<span class="sd">        Evaluates whether the :class:`Cuboid` object of the ellipsoid intersects with the :class:`Cuboid` object of the :class:`Octree` sub-branch.</span>
 
 <span class="sd">        :param other: Sub-branch cuboid object of the octree</span>
 <span class="sd">        :type other: object of the class :class:`Cuboid`</span>
@@ -856,7 +856,7 @@
 <div class="viewcode-block" id="Octree.subdivide"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.entities.Octree.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Divides the given Octree sub-branch into eight further sub-branches and </span>
-<span class="sd">        initialize each newly created sub-branch as an :class:`~Octree` object             </span>
+<span class="sd">        initializes each newly created sub-branch as an :class:`~Octree` object             </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">cub</span> <span class="ow">in</span> <span class="n">cub_oct_split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cub</span><span class="p">):</span>
             <span class="n">branch</span> <span class="o">=</span> <span class="n">Octree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">cub</span><span class="p">,</span> <span class="p">[])</span>
@@ -870,7 +870,7 @@
 
 <div class="viewcode-block" id="Octree.subdivide_particles"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.entities.Octree.subdivide_particles">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluates if ellipsoids belongs to a particular Octree sub-branch</span>
+<span class="sd">        Evaluates whether ellipsoids belong to a particular Octree sub-branch</span>
 <span class="sd">        by calling :meth:`intersect` on each ellipsoid.           </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">particle</span><span class="p">,</span> <span class="n">branch</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">branches</span><span class="p">):</span>
@@ -896,7 +896,7 @@
 
 <div class="viewcode-block" id="Octree.update"><a class="viewcode-back" href="../../../kanapy.html#src.kanapy.entities.Octree.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Updates the Octree and begins recursive process of subdividing or collision testing           </span>
+<span class="sd">        Updates the Octree and begins the recursive process of subdividing or collision testing           </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxparticles</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxlevel</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">subdivide</span><span class="p">()</span>

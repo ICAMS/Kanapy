@@ -225,7 +225,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initializes the :class:`entities.Octree` class and performs recursive subdivision with </span>
 <span class="sd">    collision checks and response for the ellipsoids. At each time step of the simulation it </span>
-<span class="sd">    increases the size of the ellipsoid by a factor which depends on the user defined value for total number of time steps. </span>
+<span class="sd">    increases the size of the ellipsoid by a factor, which depends on the user-defined value for total number of time steps. </span>
 
 <span class="sd">    :param sim_box: Simulation box representing RVE.</span>
 <span class="sd">    :type sim_box: :obj:`entities.Simulation_Box`  </span>
@@ -237,7 +237,7 @@
 <span class="sd">    :type nsteps: int       </span>
 
 <span class="sd">    .. note:: :meth:`src.kanapy.input_output.write_dump` function is called at each time step of the simulation to</span>
-<span class="sd">              write output (.dump) files. By default periodic images are written to the output file, </span>
+<span class="sd">              write output (.dump) files. By default, periodic images are written to the output file, </span>
 <span class="sd">              but this option can be disabled within the function.         </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Initial call to print 0% progress</span>
@@ -303,7 +303,7 @@
 
 <span class="sd">              * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. </span>
 <span class="sd">              * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
-<span class="sd">              * Simulation attribute such as total number of timesteps and periodicity.                         </span>
+<span class="sd">              * Simulation attributes such as total number of timesteps and periodicity.                         </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
