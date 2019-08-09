@@ -19,8 +19,7 @@ authors:
     orcid: 0000-0002-3710-1169
     affiliation: 1
 affiliations:
- - name: Interdisciplinary Centre for Advanced Materials Simulation, Ruhr-Universität Bochum, Universitätsstr. 150,
-44801 Bochum, Germany.
+ - name: Interdisciplinary Centre for Advanced Materials Simulation, Ruhr-Universität Bochum, Universitätsstr. 150, 44801 Bochum, Germany.
    index: 1
 date: 05 August 2019
 bibliography: paper.bib
