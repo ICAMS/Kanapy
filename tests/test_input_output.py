@@ -15,43 +15,42 @@ from kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
 def test_particleStatGenerator():
 
     # Test if FileNotFoundError is raised
-    with pytest.raises(FileNotFoundError):
-        particleStatGenerator('stat_inp')
-            
+    with pytest.raises(FileNotFoundError):        
+        particleStatGenerator('inp.json')
+
     # create an temporary input file for user defined statistics
     cwd = os.getcwd()
-    stat_inp = cwd + '/stat_input.txt'   
+    stat_inp = cwd + '/stat_input.json'   
             
-    # Test if ValueError is raised
-    to_write = ['@ Equivalent diameter', 'std = 0.531055', 'mean = 2.76736', 'cutoff_min = 2.0', 'cutoff_max = 4.0',
-                ' ', '@ Aspect ratio', 'mean = 2.5', ' ', '@ Orientation', 'sigma = 28.8', 'mean = 87.4', ' ',
-                '@ RVE', 'side_length = 8', 'voxel_per_side = 5', ' ', '@ Simulation', 'nsteps = 1000', 'periodicity = True']
+    # Test if ValueError is raised w.r.t output_units
+    to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
+                'Aspect ratio': {'mean': 2.5}, 'Orientation': {'sigma': 28.8, 'mean': 87.4},
+                'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'nsteps': 1000, 'periodicity': 'True', 'output_units': 'm'}}
 
-    with open(stat_inp, 'w') as fd:
-        for text in to_write:
-            fd.write('{0}\n'.format(text))
+    with open(stat_inp, 'w') as outfile:
+        json.dump(to_write, outfile, indent=2)       
 
-    with pytest.raises(ValueError):    
+    with pytest.raises(ValueError):            
         particleStatGenerator(stat_inp)
-        
+    os.remove(stat_inp)
+                            
     # Test the remaining code
-    to_write = ['@ Equivalent diameter', 'std = 0.531055', 'mean = 2.76736', 'cutoff_min = 2.0', 'cutoff_max = 4.0',
-                ' ', '@ Aspect ratio', 'mean = 2.5', ' ', '@ Orientation', 'sigma = 28.8', 'mean = 87.4', ' ',
-                '@ RVE', 'side_length = 8', 'voxel_per_side = 15', ' ', '@ Simulation', 'nsteps = 1000', 'periodicity = True']
+    to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
+                'Aspect ratio': {'mean': 2.5}, 'Orientation': {'sigma': 28.8, 'mean': 87.4}, 
+                'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'nsteps': 1000, 'periodicity': 'True', 'output_units': 'mm'}}    
 
-    with open(stat_inp, 'w') as fd:
-        for text in to_write:
-            fd.write('{0}\n'.format(text))
-
+    with open(stat_inp, 'w') as outfile:
+        json.dump(to_write, outfile, indent=2) 
+    
     particleStatGenerator(stat_inp)
 
     # Read the json files written by the function
     json_dir = cwd + '/json_files'
-    with open(json_dir + '/particle_data.txt') as json_file:
+    with open(json_dir + '/particle_data.json') as json_file:
         pd = json.load(json_file)
-    with open(json_dir + '/RVE_data.txt') as json_file:
+    with open(json_dir + '/RVE_data.json') as json_file:
         rd = json.load(json_file)
-    with open(json_dir + '/simulation_data.txt') as json_file:
+    with open(json_dir + '/simulation_data.json') as json_file:
         sd = json.load(json_file)
 
     # Dictionaries to verify against
@@ -93,7 +92,7 @@ def test_particleStatGenerator():
 
     compare_rd = {'RVE_size': 8.0, 'Voxel_number_per_side': 15, 
                   'Voxel_resolution': 0.5333333333333333}
-    compare_sd = {'Time steps': 1000.0, 'Periodicity': 'True'}
+    compare_sd = {'Time steps': 1000.0, 'Periodicity': 'True', 'Output units': 'mm'}
 
     # Verify
     for k, v in pd.items():
@@ -194,6 +193,8 @@ def test_write_abaqus_inp():
     esd = {1: [1, 2, 4, 5, 10, 11, 13, 3, 6, 7, 8, 9, 16],
            2: [20, 22, 23, 17, 25, 26, 12, 15, 18, 21, 24, 27, 19, 14]}
 
+    simData = {'Time steps': 1000.0, 'Periodicity': 'True', 'Output units': 'mm'}
+    
     cwd = os.getcwd()
     json_dir = cwd + '/json_files'
 
@@ -205,13 +206,16 @@ def test_write_abaqus_inp():
     if not os.path.exists(json_dir):
         os.makedirs(json_dir)
 
-    with open(json_dir + '/nodeDict.txt', 'w') as outfile:
+    with open(json_dir + '/simulation_data.json', 'w') as outfile:
+        json.dump(simData, outfile)
+        
+    with open(json_dir + '/nodeDict.json', 'w') as outfile:
         json.dump(nd, outfile)
 
-    with open(json_dir + '/elmtDict.txt', 'w') as outfile:
+    with open(json_dir + '/elmtDict.json', 'w') as outfile:
         json.dump(ed, outfile)
 
-    with open(json_dir + '/elmtSetDict.txt', 'w') as outfile:
+    with open(json_dir + '/elmtSetDict.json', 'w') as outfile:
         json.dump(esd, outfile)
 
     write_abaqus_inp()

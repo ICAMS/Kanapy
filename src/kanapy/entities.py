@@ -88,7 +88,7 @@ class Ellipsoid(object):
                     :align: center   
 
               2. Ellipsoids are initilaized without a value for its velocity,
-                 and is later assigned a random value by :mod:`src.kanapy.packing.particle_generator`.
+                 and is later assigned a random value by :mod:`kanapy.packing.particle_generator`.
 
               3. An empty list for storing voxels belonging to the ellipsoid is initialized.                   
     """

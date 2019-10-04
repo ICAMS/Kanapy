@@ -20,12 +20,12 @@ def main():
     Individual stages can be run by commenting out the other stages.  
     """
 
-    inputFile = os.getcwd() + '/stat_input.txt'    
+    inputFile = os.getcwd() + '/stat_input.json'    
     particleStatGenerator(inputFile)                    # Generate data for particle simulation
     packingRoutine()                                    # Particle packing simulation    
-    write_position_weights(800)                         # Write out position and weight files for tessellation.    
+    write_position_weights(750)                         # Write out position and weight files for tessellation.    
     
-    voxelizationRoutine(800)                            # RVE voxelization (Meshing)    
+    voxelizationRoutine(750)                            # RVE voxelization (Meshing)    
     write_abaqus_inp()                                  # Write out Abaqus input (.inp) file
     write_output_stat()                                 # Compare input and output statistics    
     return

@@ -3,12 +3,13 @@ import os
 import sys
 import json
 import itertools
+from tqdm import tqdm
 from collections import defaultdict
 
 import numpy as np
 from scipy.spatial import ConvexHull
 
-from kanapy.input_output import read_dump, printProgressBar
+from kanapy.input_output import read_dump
 
 
 def points_in_convexHull(Points, hull):
@@ -100,36 +101,51 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
     test_points = np.array(list(cooDict.values()))
 
     # array defining ellipsoid growth for each stage of while loop
-    growth = iter(list(np.arange(0.6, 10.0, 0.5)))    
+    growth = iter(list(np.arange(0.5, 10.0, 0.1)))    
     remaining_voxels = set(list(cooDict.keys()))
     assigned_voxels = set()
+    
+    # Initialize a tqdm progress bar to the Number of voxels in the domain
+    pbar = tqdm(total = len(remaining_voxels))
+    
     while True:
-
-        # Initial call to print 0% progress
-        printProgressBar(0, len(Ellipsoids), prefix='    Progress:', suffix='', length=50)
-
+        
         # call the growth value for the ellipsoids
         scale = next(growth)
-        for enum, ellipsoid in enumerate(Ellipsoids):
+        for ellipsoid in Ellipsoids:
 
             # scale ellipsoid dimensions by the growth factor and generate surface points
             ellipsoid.a, ellipsoid.b, ellipsoid.c = scale*ellipsoid.a, scale*ellipsoid.b, scale*ellipsoid.c
             ellipsoid.surfacePointsGen()
-
+            
             # Find the new surface points of the ellipsoid at their final position
             new_surfPts = ellipsoid.surface_points + ellipsoid.get_pos()
-
+            
+            # Find the bounding box extremums along x, y, and z
+            bbox_xmin, bbox_xmax = np.amin(new_surfPts[:, 0]), np.amax(new_surfPts[:, 0])
+            bbox_ymin, bbox_ymax = np.amin(new_surfPts[:, 1]), np.amax(new_surfPts[:, 1])
+            bbox_zmin, bbox_zmax = np.amin(new_surfPts[:, 2]), np.amax(new_surfPts[:, 2])
+            
+            # Find the numpy indices of all voxels within the bounding box                                                    
+            in_bbox_idx = np.where((test_points[:, 0] >= bbox_xmin) & (test_points[:, 0] <= bbox_xmax) 
+                             & (test_points[:, 1] >= bbox_ymin) & (test_points[:, 1] <= bbox_ymax)
+                             & (test_points[:, 2] >= bbox_zmin) & (test_points[:, 2] <= bbox_zmax))[0] 
+            
+            # extract the actual voxel ids and coordinates from the reduced numpy indices
+            bbox_testids = test_ids[in_bbox_idx]        # voxels ids 
+            bbox_testPts = test_points[in_bbox_idx]     # coordinates            
+            
             # create a convex hull from the surface points
             hull = ConvexHull(new_surfPts, incremental=False)
-
-            # check if points are within the hull
-            results = points_in_convexHull(test_points, hull)
             
-            # Extract the ids of voxels inside the hull
-            inside_ids = list(test_ids[results])                        
+            # check if the extracted points are within the hull
+            results = points_in_convexHull(bbox_testPts, hull)
+            
+            # Extract the voxel ids inside the hull
+            inside_ids = list(bbox_testids[results])
             
             # Check if the new found voxels share atlest 4 nodes with ellipsoid nodes
-            if scale != 0.6:
+            if scale != 0.5:               
                 # Extract single instance of all nodes currently belonging to the ellipsoid
                 all_nodes = [elmtDict[i] for i in ellipsoid.inside_voxels]
                 merged_nodes = list(itertools.chain(*all_nodes))
@@ -170,7 +186,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
                             
                             # Remove them and test again
                             for i in int_assigned:
-                                inside_ids.remove(i)                   # Remove the assigned voxel from the list                                                                        
+                                inside_ids.remove(i)           # Remove the assigned voxel from the list                                                                        
                                 
                                 nds = set(elmtDict[i])
                                 ell_nodes.update(nds)          # Update the actual ellipsoid node list                        
@@ -183,16 +199,12 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
                         break
                 
                 # scale ellipsoid dimensions back to original by the growth factor
-                ellipsoid.a, ellipsoid.b, ellipsoid.c = ellipsoid.a/scale, ellipsoid.b/scale, ellipsoid.c/scale
-    
-                # Update Progress Bar
-                printProgressBar(enum + 1, len(Ellipsoids), prefix='    Progress:', suffix='', length=50)
+                ellipsoid.a, ellipsoid.b, ellipsoid.c = ellipsoid.a/scale, ellipsoid.b/scale, ellipsoid.c/scale   
     
                 continue   
                                                 
-            # If scale == 0.6          
+            # If scale == 0.5          
             else:    
-
                 # Each voxel should share atleast 4 nodes with the remaining voxels
                 for vid in inside_ids:
                     nds = elmtDict[vid]
@@ -206,13 +218,11 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
                     if len(common_nodes) >= 4:
                         # update the ellipsoid instance and assigned set
                         ellipsoid.inside_voxels.append(vid)
-                        assigned_voxels.add(vid)                                                        
-
+                        assigned_voxels.add(vid)                                                                        
+                
                 # scale ellipsoid dimensions back to original by the growth factor
                 ellipsoid.a, ellipsoid.b, ellipsoid.c = ellipsoid.a/scale, ellipsoid.b/scale, ellipsoid.c/scale
-
-            # Update Progress Bar
-            printProgressBar(enum + 1, len(Ellipsoids), prefix='    Progress:', suffix='', length=50)        
+     
         
         # find the remaining voxels
         remaining_voxels = set(list(cooDict.keys())) - assigned_voxels
@@ -224,11 +234,15 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
         test_ids = np.array(list(remaining_voxels))        
         test_points = np.array([cooDict[pt_id] for pt_id in test_ids])
         
-        print('    Number of unassigned voxels: ', len(remaining_voxels))
+        # Reset the progress bar to '0' and update it and then refresh the view again
+        pbar.reset()
+        pbar.update(len(assigned_voxels)) 
+        pbar.refresh()
 
-        if len(remaining_voxels) == 0:
+        if len(remaining_voxels) == 0:            
             break
-
+            
+    pbar.close()    # Close the progress bar
     return
 
 
@@ -241,8 +255,6 @@ def reassign_shared_voxels(cooDict, Ellipsoids):
     :param Ellipsoids: Ellipsoids from the packing routine.
     :type Ellipsoids: list               
     """
-    print('    Assigning shared voxels between grains to the closest grain')
-
     # Find all combination of ellipsoids to check for shared voxels
     combis = list(itertools.combinations(Ellipsoids, 2))
     
@@ -255,14 +267,10 @@ def reassign_shared_voxels(cooDict, Ellipsoids):
             for vox in shared_voxels:
                 vox_ellDict[vox].update(cb)
 
-    if len(list(vox_ellDict.keys())) != 0:
-       
-        # Initial call to print 0% progress
-        printProgressBar(0, len(vox_ellDict), prefix='    Progress:', suffix='', length=50)
+    if len(list(vox_ellDict.keys())) != 0:       
 
         assigned_voxel = []
         for vox, ells in vox_ellDict.items():
-        
             # Remove the shared voxel for all the ellipsoids containing it
             for el in ells:
                 el.inside_voxels.remove(vox)                    
@@ -295,24 +303,21 @@ def reassign_shared_voxels(cooDict, Ellipsoids):
                 # assign to the smallest one regardless how many are of the same volume
                 small_ells[0].inside_voxels.append(vox)
         
-            assigned_voxel.append(vox)                                             
-        
-            # Update Progress Bar
-            printProgressBar(len(assigned_voxel), len(vox_ellDict), prefix='    Progress:', suffix='', length=50)                
+            assigned_voxel.append(vox)                                                          
 
     return
 
 
 def voxelizationRoutine(file_num):
     """
-    The main function that controls the voxelization routine using: :meth:`src.kanapy.input_output.read_dump`, :meth:`create_voxels`
+    The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`, :meth:`create_voxels`
     , :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`
 
     :param file_num: Simulation time step to be voxelized. 
     :type file_num: int
     
     .. note:: 1. The RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution 
-                 is read by loading the JSON file that is generated by :meth:`src.kanapy.input_output.read_dump`.
+                 is read by loading the JSON file that is generated by :meth:`kanapy.input_output.read_dump`.
               2. The following dictionaries are written as json files into a folder in the current working directory.
 
                 * Node dictionary containing node IDs and coordinates.
@@ -328,7 +333,7 @@ def voxelizationRoutine(file_num):
         json_dir = cwd + '/json_files'          # Folder to store the json files
 
         try:
-            with open(json_dir + '/RVE_data.txt') as json_file:
+            with open(json_dir + '/RVE_data.json') as json_file:
                 RVE_data = json.load(json_file)
 
         except FileNotFoundError:
@@ -368,7 +373,7 @@ def voxelizationRoutine(file_num):
                 continue
                 # If ellipsoid does'nt contain any voxel inside
                 print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissable'.format(
-                    enum + 1))
+                    int(ellipsoid.id)))
                 sys.exit(0)
 
         print('Completed RVE voxelization')
@@ -377,13 +382,13 @@ def voxelizationRoutine(file_num):
             os.makedirs(json_dir)
 
         # Dump the Dictionaries as json files
-        with open(json_dir + '/nodeDict.txt', 'w') as outfile:
+        with open(json_dir + '/nodeDict.json', 'w') as outfile:
             json.dump(nodeDict, outfile, indent=2)
 
-        with open(json_dir + '/elmtDict.txt', 'w') as outfile:
+        with open(json_dir + '/elmtDict.json', 'w') as outfile:
             json.dump(elmtDict, outfile, indent=2)
 
-        with open(json_dir + '/elmtSetDict.txt', 'w') as outfile:
+        with open(json_dir + '/elmtSetDict.json', 'w') as outfile:
             json.dump(elmtSetDict, outfile, indent=2)        
             
         return

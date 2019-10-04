@@ -1,0 +1,30 @@
+{
+  "Equivalent diameter": 
+    {
+      "std": 0.531055,
+      "mean": 2.76736,
+      "cutoff_min": 4.0,
+      "cutoff_max": 20.0
+    },
+  "Aspect ratio": 
+    {
+      "mean": 3.0        
+    },           
+  "Orientation":
+    {
+      "sigma": 28.8774,
+      "mean": 87.4178    
+    },
+  "RVE": 
+    {
+      "side_length": 60.9,
+      "voxel_per_side": 45
+    },
+  "Simulation":
+    {
+      "nsteps": 1000,
+      "periodicity": "True",                                         
+      "output_units": "mm"         
+    }
+}
+

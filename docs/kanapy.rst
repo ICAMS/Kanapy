@@ -4,7 +4,7 @@ Code documentation
 Module collision\_detect\_react 
 --------------------------------
 
-.. automodule:: src.kanapy.collision_detect_react
+.. automodule:: kanapy.collision_detect_react
    :members:
    :undoc-members:
    :show-inheritance:
@@ -19,7 +19,7 @@ Module collision\_detect\_react
 Module entities
 ---------------
 
-.. automodule:: src.kanapy.entities
+.. automodule:: kanapy.entities
    :members:
    :undoc-members:
    :show-inheritance:
@@ -28,7 +28,7 @@ Module entities
 Module input\_output
 ---------------------
 
-.. automodule:: src.kanapy.input_output
+.. automodule:: kanapy.input_output
    :members:
    :undoc-members:
    :show-inheritance:
@@ -37,7 +37,7 @@ Module input\_output
 Module packing
 --------------
 
-.. automodule:: src.kanapy.packing
+.. automodule:: kanapy.packing
    :members:
    :undoc-members:
    :show-inheritance:
@@ -46,7 +46,7 @@ Module packing
 Module voxelization
 -------------------
 
-.. automodule:: src.kanapy.voxelization
+.. automodule:: kanapy.voxelization
    :members:
    :undoc-members:
    :show-inheritance:

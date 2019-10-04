@@ -34,67 +34,51 @@ def particleStatGenerator(inputFile):
 
                 * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. 
                 * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.
-                * Simulation attributes such as total number of timesteps and periodicity.
+                * Simulation attributes such as total number of timesteps, periodicity and Output unit scale (:math:`mm` 
+                  or :math:`\mu m`) for ABAQUS .inp file.
 
     """
-    print('\n')
+    print(' \n')
     print('Welcome to KANAPY - A synthetic polycrystalline microstructure generator')
     print('------------------------------------------------------------------------')
     
     print('Generating particle distribution based on user defined statistics')
+    
     # Open the user input statistics file and read the data
     try:
-        with open(inputFile, 'r+') as fd:
-            lookup = "@ Equivalent diameter"
-            lookup2 = "@ Aspect ratio"
-            lookup3 = "@ Orientation"
-            lookup4 = "@ RVE"
-            lookup5 = "@ Simulation"
+                
+        with open(inputFile) as json_file:  
+            stats_dict = json.load(json_file)    
+        
+        # Extract grain diameter statistics info from input file 
+        sd_lognormal = stats_dict["Equivalent diameter"]["std"]
+        mean_lognormal = stats_dict["Equivalent diameter"]["mean"]
+        dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
+        dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
+        
+        # Extract mean grain aspect ratio value info from input file 
+        mean_AR = stats_dict["Aspect ratio"]["mean"]
 
-            for num, lines in enumerate(fd, 1):
-                if lookup in lines:
-                    content = next(fd).split()
-                    sd_lognormal = float(content[2])
-
-                    content = next(fd).split()
-                    mean_lognormal = float(content[2])
-
-                    content = next(fd).split()
-                    dia_cutoff_min = float(content[2])
-
-                    content = next(fd).split()
-                    dia_cutoff_max = float(content[2])
-
-                if lookup2 in lines:
-                    content = next(fd).split()
-                    mean_AR = float(content[2])
-
-                if lookup3 in lines:
-                    content = next(fd).split()
-                    sigma_Ori = float(content[2])
-
-                    content = next(fd).split()
-                    mean_Ori = float(content[2])
-
-                if lookup4 in lines:
-                    content = next(fd).split()
-                    RVEsize = float(content[2])
-
-                    content = next(fd).split()
-                    voxel_per_side = int(content[2])
-
-                if lookup5 in lines:
-                    content = next(fd).split()
-                    nsteps = float(content[2])
-
-                    content = next(fd).split()
-                    periodicity = str(content[2])
-
-        if type(voxel_per_side) is not int:
-            raise ValueError('Number of voxel per RVE side can only take integer values!')
-
+        # Extract grain tilt angle statistics info from input file 
+        sigma_Ori = stats_dict["Orientation"]["sigma"]
+        mean_Ori = stats_dict["Orientation"]["mean"]        
+        
+        # Extract RVE side length and voxel number info from input file 
+        RVEsize = stats_dict["RVE"]["side_length"]    
+        voxel_per_side = int(stats_dict["RVE"]["voxel_per_side"])    
+        
+        # Extract other simulation attrributes from input file 
+        nsteps = int(stats_dict["Simulation"]["nsteps"])
+        periodicity = str(stats_dict["Simulation"]["periodicity"])       
+        output_units = str(stats_dict["Simulation"]["output_units"])                                                                                     
+        
+        # Raise ValueError if units are not specified as 'mm' or 'um'
+        if output_units != 'mm':
+            if output_units != 'um':
+                raise ValueError('Output units can only be "mm" or "um"!')
+            
     except FileNotFoundError:
-        print('Input file not found, make sure "stat_input.txt" file is present in the working directory!')
+        print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
         raise FileNotFoundError
         
     # Generate the x-gaussian
@@ -167,22 +151,22 @@ def particleStatGenerator(inputFile):
     RVE_data = {'RVE_size': RVEsize, 'Voxel_number_per_side': voxel_per_side,
                 'Voxel_resolution': voxel_size}
 
-    simulation_data = {'Time steps': nsteps, 'Periodicity': periodicity}
+    simulation_data = {'Time steps': nsteps, 'Periodicity': periodicity, 'Output units': output_units}
 
     # Dump the Dictionaries as json files
-    cwd = os.getcwd()
+    cwd = os.getcwd()     
     json_dir = cwd + '/json_files'          # Folder to store the json files
 
     if not os.path.exists(json_dir):
         os.makedirs(json_dir)
 
-    with open(json_dir + '/particle_data.txt', 'w') as outfile:
+    with open(json_dir + '/particle_data.json', 'w') as outfile:
         json.dump(particle_data, outfile, indent=2)
 
-    with open(json_dir + '/RVE_data.txt', 'w') as outfile:
+    with open(json_dir + '/RVE_data.json', 'w') as outfile:
         json.dump(RVE_data, outfile, indent=2)
 
-    with open(json_dir + '/simulation_data.txt', 'w') as outfile:
+    with open(json_dir + '/simulation_data.json', 'w') as outfile:
         json.dump(simulation_data, outfile, indent=2)
 
     return
@@ -302,9 +286,10 @@ def write_position_weights(file_num):
     .. note:: 1. Applicable only to spherical particles.         
               2. The generated 'sphere_positions.txt' and 'sphere_weights.txt' files can be inputted 
                  into NEPER for tessellation and meshing.
+              3. The values of positions and weights are written in :math:`\mu m` scale only.
     """
     print('\n')
-    print('Writing position and weights files', end="")
+    print('Writing position and weights files for NEPER', end="")
     cwd = os.getcwd()
     dump_file = cwd + '/dump_files/particle.{0}.dump'.format(file_num)
 
@@ -362,41 +347,53 @@ def write_abaqus_inp():
     Creates an ABAQUS input file with microstructure morphology information
     in the form of nodes, elements and element sets.
 
-    .. note:: 1. JSON files generated by :meth:`src.kanapy.voxelization.voxelizationRoutine` are read to generate the ABAQUS (.inp) file.
+    .. note:: 1. JSON files generated by :meth:`kanapy.voxelization.voxelizationRoutine` are read to generate the ABAQUS (.inp) file.
                  The json files contain:
 
                  * Node ID and its corresponding coordinates
                  * Element ID with its nodal connectivities
                  * Element sets representing grains (Assembly of elements) 
                  
-              2. The nodal coordinates are written out in 'mm' scale.
+              2. The nodal coordinates are written out in :math:`mm` or :math:`\mu m` scale, as requested by the user in the input file.
     """
-    print('\n')
+    print(' \n')
     print('Writing ABAQUS (.inp) file', end="")
 
     cwd = os.getcwd()
-    json_dir = cwd + '/json_files'          # Folder to store the json files
-
+    json_dir = cwd + '/json_files'          # Folder to store the json files   
+        
     try:
-        with open(json_dir + '/nodeDict.txt') as json_file:
+        with open(json_dir + '/simulation_data.json') as json_file:  
+            simulation_data = json.load(json_file)     
+    
+        with open(json_dir + '/nodeDict.json') as json_file:
             nodeDict = json.load(json_file)
 
-        with open(json_dir + '/elmtDict.txt') as json_file:
+        with open(json_dir + '/elmtDict.json') as json_file:
             elmtDict = json.load(json_file)
 
-        with open(json_dir + '/elmtSetDict.txt') as json_file:
+        with open(json_dir + '/elmtSetDict.json') as json_file:
             elmtSetDict = json.load(json_file)
 
     except FileNotFoundError:
         print('Json file not found, make sure "voxelizationRoutine()" function is executed first!')
         raise FileNotFoundError
-        
+
+    # Factor used to generate nodal cordinates in 'mm' or 'um' scale
+    if simulation_data['Output units'] == 'mm':
+        scale = 'mm'
+        divideBy = 1000
+    elif simulation_data['Output units'] == 'um':
+        scale = 'um'
+        divideBy = 1
+                
     abaqus_file = cwd + '/kanapy_{0}grains.inp'.format(len(elmtSetDict))
     if os.path.exists(abaqus_file):
         os.remove(abaqus_file)                  # remove old file if it exists
 
     with open(abaqus_file, 'w') as f:
         f.write('** Input file generated by kanapy\n')
+        f.write('** Nodal coordinates scale in {0}\n'.format(scale))
         f.write('*HEADING\n')
         f.write('*PREPRINT,ECHO=NO,HISTORY=NO,MODEL=NO,CONTACT=NO\n')
         f.write('**\n')
@@ -407,8 +404,8 @@ def write_abaqus_inp():
 
         # Create nodes
         for k, v in nodeDict.items():
-            # Write out coordinates in 'mm'
-            f.write('{0}, {1}, {2}, {3}\n'.format(k, v[0]/1000, v[1]/1000, v[2]/1000))
+            # Write out coordinates in 'mm' or 'um'
+            f.write('{0}, {1}, {2}, {3}\n'.format(k, v[0]/divideBy, v[1]/divideBy, v[2]/divideBy))
 
         # Create Elements
         f.write('*ELEMENT, TYPE=C3D8\n')
@@ -451,10 +448,14 @@ def write_abaqus_inp():
         
 def write_output_stat():
     """
-    Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters for comparison.
+    Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters for comparison
+    and writes them to 'output_statistics.json' file. 
 
-    .. note:: Particle information is read from (.json) file generated by :meth:`src.kanapy.input_output.particleStatGenerator`.
-              And RVE grain information is read from the (.json) files generated by :meth:`src.kanapy.voxelization.voxelizationRoutine`.
+    .. note:: 1. Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.
+                 And RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.
+                 
+              2. The particle and grain diameter values are written in either :math:`mm` or :math:`\mu m` scale, 
+                 as requested by the user in the input file.
     """ 
     print('\n') 
     print('Comparing input & output statistics')
@@ -462,22 +463,22 @@ def write_output_stat():
     json_dir = cwd + '/json_files'          # Folder to store the json files
 
     try:
-        with open(json_dir + '/nodeDict.txt') as json_file:
+        with open(json_dir + '/nodeDict.json') as json_file:
             nodeDict = json.load(json_file)
 
-        with open(json_dir + '/elmtDict.txt') as json_file:
+        with open(json_dir + '/elmtDict.json') as json_file:
             elmtDict = json.load(json_file)
 
-        with open(json_dir + '/elmtSetDict.txt') as json_file:
+        with open(json_dir + '/elmtSetDict.json') as json_file:
             elmtSetDict = json.load(json_file)
 
-        with open(json_dir + '/particle_data.txt') as json_file:  
+        with open(json_dir + '/particle_data.json') as json_file:  
             particle_data = json.load(json_file)
         
-        with open(json_dir + '/RVE_data.txt') as json_file:  
+        with open(json_dir + '/RVE_data.json') as json_file:  
             RVE_data = json.load(json_file)
 
-        with open(json_dir + '/simulation_data.txt') as json_file:  
+        with open(json_dir + '/simulation_data.json') as json_file:  
             simulation_data = json.load(json_file)    
           
     except FileNotFoundError:
@@ -495,7 +496,15 @@ def write_output_stat():
         periodic_status = True
     elif simulation_data['Periodicity'] == 'False':
         periodic_status = False
-            
+
+    # Factor used to generate particle and grains diameters in 'mm' or 'um' scale
+    if simulation_data['Output units'] == 'mm':
+        scale = 'mm'
+        divideBy = 1000
+    elif simulation_data['Output units'] == 'um':
+        scale = 'um'
+        divideBy = 1
+                                           
     # Check if Equiaxed or elongated particles
     if np.array_equal(par_majDia, par_minDia):          # Equiaxed grains (spherical particles)    
         
@@ -507,11 +516,20 @@ def write_output_stat():
             grain_dia = 2 * (grain_vol * (3/(4*np.pi)))**(1/3)
             grain_eqDia.append(grain_dia)
         
-        print('Writing particle & grain equivalent diameter files', end="")
+        print('Writing particle & grain equivalent diameter to files', end="")
             
-        # write out the particle and grain equivalent diameters to files
-        np.savetxt('particle_equiDiameters.txt', par_eqDia)
-        np.savetxt('grain_equiDiameters.txt', grain_eqDia)        
+        # write out the particle and grain equivalent diameters to files            
+        par_eqDia = list(np.array(par_eqDia)/divideBy)
+        grain_eqDia = list(np.array(grain_eqDia)/divideBy)
+        
+        # Create dictionaries to store the data generated
+        output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
+                       'Unit_scale': scale,
+                       'Particle_Equivalent_diameter': par_eqDia, 
+                       'Grain_Equivalent_diameter': grain_eqDia}
+        
+        with open(json_dir + '/output_statistics.json', 'w') as outfile:
+            json.dump(output_data, outfile, indent=2)             
     
     else:                                               # Elongated grains (ellipsoidal particles)
 
@@ -612,49 +630,32 @@ def write_output_stat():
             grain_majDia.append(a2)                 # update the major diameter list
             grain_minDia.append(b2)                 # update the minor diameter list
         
-        print('Writing particle & grain equivalent, major & minor diameter files', end="")
+        print('Writing particle & grain equivalent, major & minor diameter to files', end="")
+
+        # write out the particle and grain equivalent, major, minor diameters to file            
+        par_eqDia = list(np.array(par_eqDia)/divideBy)
+        grain_eqDia = list(np.array(grain_eqDia)/divideBy)
+
+        par_majDia = list(np.array(par_majDia)/divideBy)
+        grain_majDia = list(np.array(grain_majDia)/divideBy)
+
+        par_minDia = list(np.array(par_minDia)/divideBy)
+        grain_minDia = list(np.array(grain_minDia)/divideBy)                
         
-        # write out the particle and grain equivalent diameters to files
-        np.savetxt('particle_equiDiameters.txt', par_eqDia)
-        np.savetxt('grain_equiDiameters.txt', grain_eqDia)
+        # Create dictionaries to store the data generated
+        output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
+                       'Unit_scale': scale,
+                       'Particle_Equivalent_diameter': par_eqDia, 
+                       'Particle_Major_diameter': par_majDia,
+                       'Particle_Minor_diameter': par_minDia,
+                       'Grain_Equivalent_diameter': grain_eqDia,
+                       'Grain_Major_diameter': grain_majDia,
+                       'Grain_Minor_diameter': grain_minDia}
         
-        # write out the particle and grain equivalent diameters to files
-        np.savetxt('particle_majorDiameters.txt', par_majDia)
-        np.savetxt('grain_majorDiameters.txt', grain_majDia)
-        
-        # write out the particle and grain equivalent diameters to files
-        np.savetxt('particle_minorDiameters.txt', par_minDia)
-        np.savetxt('grain_minorDiameters.txt', grain_minDia)                        
+        with open(json_dir + '/output_statistics.json', 'w') as outfile:
+            json.dump(output_data, outfile, indent=2)                                                                                           
     
     print('---->DONE!')             
     return
     
     
-def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
-    """
-    Prints the progress bar in the terminal for a given loop
-
-    :param iteration: current iteration
-    :type iteration: int
-    :param total: total iterations
-    :type total: int
-    :param prefix: prefix string
-    :type prefix: str
-    :param suffix: suffix string
-    :type suffix: str
-    :param decimals: positive number of decimals in percent complete
-    :type decimals: int
-    :param length: character length of bar
-    :type length: int
-    :param fill: bar fill character
-    :type fill: str
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 *
-                                                     (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
-    # Print New Line on Complete
-    if iteration == total:
-        print()
-    return

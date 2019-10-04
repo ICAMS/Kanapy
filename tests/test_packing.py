@@ -132,13 +132,13 @@ def test_packingRoutine():
     if not os.path.exists(json_dir):
         os.makedirs(json_dir)
 
-    with open(json_dir + '/particle_data.txt', 'w') as outfile:
+    with open(json_dir + '/particle_data.json', 'w') as outfile:
         json.dump(pd, outfile)
 
-    with open(json_dir + '/RVE_data.txt', 'w') as outfile:
+    with open(json_dir + '/RVE_data.json', 'w') as outfile:
         json.dump(rd, outfile)
 
-    with open(json_dir + '/simulation_data.txt', 'w') as outfile:
+    with open(json_dir + '/simulation_data.json', 'w') as outfile:
         json.dump(sd, outfile)
 
     # Test if the 'particle_generator' function is called once

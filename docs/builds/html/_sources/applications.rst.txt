@@ -37,3 +37,95 @@ Microstructures generated through conventional manufacturing processes like roll
 
 The ellipsoid packing process is similar to that of sphere packing as described earlier. Once the ellipsoids are tightly packed with minimal acceptable overlaps, they are processed further for meshing. Since Voronoi tessellations cannot be applied to anisotropic particles such as ellipsoids, a voxel-based mesh-generating routine that utilizes convex hull for discretizing the RVE is employed. The voxelization (meshing) routine is made of 2 stages. The number of voxels in the RVE has a direct influence on the FE solution and the FE simulation time and must hence be meticulously chosen. The choice is not arbitrary, as it is constrained by how well the grains of the RVE are represented with respect to their geometry and the FEM simulation time. 
 
+---------------------
+Simulation benchmarks
+---------------------
+To estimate the performance of Kanapy with respect to its particle packing and voxelization routines, multiple realizations of both sphere and ellipsoid packing was performed on a 2.60 GHz Intel Xeon CPU. Figure 1 depicts graphically the average CPU time recorded over 10 simulation runs for each realization of particle packing. The data is tabulated in Table 1. A significant difference in the variation of CPU time can be observed between spheres and ellipsoids of the same number. The difference arises from the fact that, two layered collision detection is sufficient to estimate if spheres collide. But ellipsoid collision detection requires an additional computational step of solving the characteristic equation as described in :ref:`Overlap detection`. 
+
+.. figure:: /figs/CPUtime_analysis_packing.png
+    :align: center
+    
+    **Figure 1**: Log-log plot depicting the performance of the particle packing routine in terms of average CPU time (in seconds) recorded for different realizations of packing of spheres and ellipsoids.
+    
+.. list-table:: **Table 1**: Particle packing simulation tests for spheres and ellipsoids. The CPU time is averaged over 10 simulation runs.
+   :widths: 10 10 10
+   :header-rows: 2
+
+   * - Number of
+     - CPU time (s)
+     - 
+   * - particles
+     - Sphere
+     - Ellipsoids    
+   * - 50
+     - 50.63
+     - 72.29 
+   * - 100
+     - 91.15     
+     - 163.88
+   * - 500
+     - 362.32     
+     - 618.73
+   * - 1000
+     - 704.13
+     - 1174.94
+   * - 5000
+     - 3119.56
+     - 4635.41
+    
+Figure 2 depicts the CPU time recorded for the kanapy's voxelization routine. The CPU time is estimated for various combinations of number of grains and number of voxels. These results are tabulated in Table 2.  
+
+.. figure:: /figs/CPUtime_analysis_voxelization.png
+    :align: center
+    
+    **Figure 2**: Plot depicting the performance of the voxelization routine in terms of CPU time (in seconds) for various combinations of grain numbers and total voxel numbers.     
+     
+.. list-table:: **Table 2**: Voxelization routine performance data for various combinations of grain numbers and total voxel numbers.
+   :widths: 15 10 10 10
+   :header-rows: 2
+
+   * - Number of voxels
+     - 
+     - CPU time (s)
+     - 
+   * - 
+     - 100 grains
+     - 500 grains
+     - 1000 grains
+   * - :math:`20^3` = 8000
+     - 7.09
+     -
+     -    
+   * - :math:`30^3` = 27,000
+     - 11.33
+     - 
+     - 
+   * - :math:`40^3` = 64,000
+     - 18.9
+     - 53.63
+     - 
+   * - :math:`50^3` = 125,000
+     - 28.26
+     - 78.33
+     - 122.19
+   * - :math:`60^3` = 216,000
+     - 44.79 
+     - 123.36 
+     - 186.54
+   * - :math:`70^3` = 343,000 
+     - 68.65 
+     - 186.49 
+     - 282.17
+   * - :math:`80^3` = 512,000 
+     -  
+     - 257.95 
+     - 378.13 
+   * - :math:`90^3` = 729,000 
+     -  
+     - 389.48 
+     - 528.95 
+   * - :math:`100^3` = 1,000,000 
+     - 
+     - 
+     - 683.30      
+     

@@ -6,4 +6,6 @@ pytest-cov
 codecov
 sphinx
 sphinx_rtd_theme
+tqdm
 matplotlib
+click

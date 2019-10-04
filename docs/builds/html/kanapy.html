@@ -91,14 +91,14 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="method.html">Modeling</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Code documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-src.kanapy.collision_detect_react">Module collision_detect_react</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.collision_detect_react">Module collision_detect_react</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pybind11-plugin">Pybind11 plugin</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-src.kanapy.entities">Module entities</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-src.kanapy.input_output">Module input_output</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-src.kanapy.packing">Module packing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-src.kanapy.voxelization">Module voxelization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.entities">Module entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.input_output">Module input_output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.packing">Module packing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.voxelization">Module voxelization</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
@@ -170,11 +170,11 @@
             
   <div class="section" id="code-documentation">
 <h1>Code documentation<a class="headerlink" href="#code-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-src.kanapy.collision_detect_react">
-<span id="module-collision-detect-react"></span><h2>Module collision_detect_react<a class="headerlink" href="#module-src.kanapy.collision_detect_react" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-kanapy.collision_detect_react">
+<span id="module-collision-detect-react"></span><h2>Module collision_detect_react<a class="headerlink" href="#module-kanapy.collision_detect_react" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="src.kanapy.collision_detect_react.collision_react">
-<code class="sig-prename descclassname">src.kanapy.collision_detect_react.</code><code class="sig-name descname">collision_react</code><span class="sig-paren">(</span><em class="sig-param">E1</em>, <em class="sig-param">E2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/collision_detect_react.html#collision_react"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.collision_detect_react.collision_react" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.collision_detect_react.collision_react">
+<code class="sig-prename descclassname">kanapy.collision_detect_react.</code><code class="sig-name descname">collision_react</code><span class="sig-paren">(</span><em class="sig-param">E1</em>, <em class="sig-param">E2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/collision_detect_react.html#collision_react"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.collision_detect_react.collision_react" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates and modifies the magnitude and direction of the ellipsoid’s velocity after collision.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -202,12 +202,12 @@ would bounce back after collision. Thus, the updated velocity vector components 
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.collision_detect_react.collision_routine">
-<code class="sig-prename descclassname">src.kanapy.collision_detect_react.</code><code class="sig-name descname">collision_routine</code><span class="sig-paren">(</span><em class="sig-param">E1</em>, <em class="sig-param">E2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/collision_detect_react.html#collision_routine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.collision_detect_react.collision_routine" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.collision_detect_react.collision_routine">
+<code class="sig-prename descclassname">kanapy.collision_detect_react.</code><code class="sig-name descname">collision_routine</code><span class="sig-paren">(</span><em class="sig-param">E1</em>, <em class="sig-param">E2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/collision_detect_react.html#collision_routine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.collision_detect_react.collision_routine" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calls the c++ method <a class="reference internal" href="#kanapy.base.collideDetect" title="kanapy.base.collideDetect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.base.collideDetect()</span></code></a> to determine whether the given two ellipsoid objects overlap using 
 the Algebraic separation condition developed by W. Wang et al. A detailed description is provided
 therein.</p>
-<p>Also calls the <a class="reference internal" href="#src.kanapy.collision_detect_react.collision_react" title="src.kanapy.collision_detect_react.collision_react"><code class="xref py py-meth docutils literal notranslate"><span class="pre">collision_react()</span></code></a> to evaluate the response after collision.</p>
+<p>Also calls the <a class="reference internal" href="#kanapy.collision_detect_react.collision_react" title="kanapy.collision_detect_react.collision_react"><code class="xref py py-meth docutils literal notranslate"><span class="pre">collision_react()</span></code></a> to evaluate the response after collision.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -278,13 +278,13 @@ ellipsoids can be established as described in <a class="reference internal" href
 
 </div>
 </div>
-<div class="section" id="module-src.kanapy.entities">
-<span id="module-entities"></span><h2>Module entities<a class="headerlink" href="#module-src.kanapy.entities" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-kanapy.entities">
+<span id="module-entities"></span><h2>Module entities<a class="headerlink" href="#module-kanapy.entities" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="src.kanapy.entities.Cuboid">
-<em class="property">class </em><code class="sig-prename descclassname">src.kanapy.entities.</code><code class="sig-name descname">Cuboid</code><span class="sig-paren">(</span><em class="sig-param">left</em>, <em class="sig-param">top</em>, <em class="sig-param">right</em>, <em class="sig-param">bottom</em>, <em class="sig-param">front</em>, <em class="sig-param">back</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Cuboid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Cuboid" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Cuboid">
+<em class="property">class </em><code class="sig-prename descclassname">kanapy.entities.</code><code class="sig-name descname">Cuboid</code><span class="sig-paren">(</span><em class="sig-param">left</em>, <em class="sig-param">top</em>, <em class="sig-param">right</em>, <em class="sig-param">bottom</em>, <em class="sig-param">front</em>, <em class="sig-param">back</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Cuboid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Cuboid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Creates <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> objects for ellipsoids and Octree sub-branches.</p>
+<p>Creates <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> objects for ellipsoids and Octree sub-branches.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -298,12 +298,12 @@ ellipsoids can be established as described in <a class="reference internal" href
 </dd>
 </dl>
 <dl class="method">
-<dt id="src.kanapy.entities.Cuboid.intersect">
-<code class="sig-name descname">intersect</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Cuboid.intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Cuboid.intersect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates whether the <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid intersects with the <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the <a class="reference internal" href="#src.kanapy.entities.Octree" title="src.kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> sub-branch.</p>
+<dt id="kanapy.entities.Cuboid.intersect">
+<code class="sig-name descname">intersect</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Cuboid.intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Cuboid.intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates whether the <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid intersects with the <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the <a class="reference internal" href="#kanapy.entities.Octree" title="kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> sub-branch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>other</strong> (object of the class <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a>) – Sub-branch cuboid object of the octree</p>
+<dd class="field-odd"><p><strong>other</strong> (object of the class <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a>) – Sub-branch cuboid object of the octree</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>if intersection - <strong>True</strong>, else <strong>False</strong></p>
@@ -317,10 +317,10 @@ ellipsoids can be established as described in <a class="reference internal" href
 </dd></dl>
 
 <dl class="class">
-<dt id="src.kanapy.entities.Ellipsoid">
-<em class="property">class </em><code class="sig-prename descclassname">src.kanapy.entities.</code><code class="sig-name descname">Ellipsoid</code><span class="sig-paren">(</span><em class="sig-param">iden</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">z</em>, <em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">c</em>, <em class="sig-param">quat</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid">
+<em class="property">class </em><code class="sig-prename descclassname">kanapy.entities.</code><code class="sig-name descname">Ellipsoid</code><span class="sig-paren">(</span><em class="sig-param">iden</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">z</em>, <em class="sig-param">a</em>, <em class="sig-param">b</em>, <em class="sig-param">c</em>, <em class="sig-param">quat</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Creates <a class="reference internal" href="#src.kanapy.entities.Ellipsoid" title="src.kanapy.entities.Ellipsoid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ellipsoid</span></code></a> objects for each ellipsoid generated from input statistics.</p>
+<p>Creates <a class="reference internal" href="#kanapy.entities.Ellipsoid" title="kanapy.entities.Ellipsoid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ellipsoid</span></code></a> objects for each ellipsoid generated from input statistics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -340,14 +340,14 @@ tilt angle and axis vector and expressed in quaternion notation as,</p>
 <a class="reference internal image-reference" href="_images/quaternion_ell.png"><img alt="_images/quaternion_ell.png" class="align-center" src="_images/quaternion_ell.png" style="width: 210px; height: 40px;" /></a>
 </li>
 <li><p>Ellipsoids are initilaized without a value for its velocity,
-and is later assigned a random value by <a class="reference internal" href="#src.kanapy.packing.particle_generator" title="src.kanapy.packing.particle_generator"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.kanapy.packing.particle_generator</span></code></a>.</p></li>
+and is later assigned a random value by <a class="reference internal" href="#kanapy.packing.particle_generator" title="kanapy.packing.particle_generator"><code class="xref py py-mod docutils literal notranslate"><span class="pre">kanapy.packing.particle_generator</span></code></a>.</p></li>
 <li><p>An empty list for storing voxels belonging to the ellipsoid is initialized.</p></li>
 </ol>
 </div>
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.Bbox">
-<code class="sig-name descname">Bbox</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.Bbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.Bbox" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates the bounding box limits along x, y, z directions using the surface points from <a class="reference internal" href="#src.kanapy.entities.Ellipsoid.surfacePointsGen" title="src.kanapy.entities.Ellipsoid.surfacePointsGen"><code class="xref py py-meth docutils literal notranslate"><span class="pre">surfacePointsGen()</span></code></a></p>
+<dt id="kanapy.entities.Ellipsoid.Bbox">
+<code class="sig-name descname">Bbox</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.Bbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.Bbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the bounding box limits along x, y, z directions using the surface points from <a class="reference internal" href="#kanapy.entities.Ellipsoid.surfacePointsGen" title="kanapy.entities.Ellipsoid.surfacePointsGen"><code class="xref py py-meth docutils literal notranslate"><span class="pre">surfacePointsGen()</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>numpy array</p>
@@ -356,8 +356,8 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.get_coeffs">
-<code class="sig-name descname">get_coeffs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.get_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.get_coeffs" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid.get_coeffs">
+<code class="sig-name descname">get_coeffs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.get_coeffs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.get_coeffs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the coefficients array of the ellipsoid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -367,19 +367,19 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.get_cub">
-<code class="sig-name descname">get_cub</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.get_cub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.get_cub" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid.get_cub">
+<code class="sig-name descname">get_cub</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.get_cub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.get_cub" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the cuboid object of the ellipsoid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>object of the class <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a></p>
+<dd class="field-odd"><p>object of the class <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.get_pos">
-<code class="sig-name descname">get_pos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.get_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.get_pos" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid.get_pos">
+<code class="sig-name descname">get_pos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.get_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.get_pos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the position array of the ellipsoid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -389,8 +389,8 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.get_volume">
-<code class="sig-name descname">get_volume</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.get_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.get_volume" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid.get_volume">
+<code class="sig-name descname">get_volume</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.get_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.get_volume" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the volume of the ellipsoid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -400,8 +400,8 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.gravity_effect">
-<code class="sig-name descname">gravity_effect</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.gravity_effect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.gravity_effect" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid.gravity_effect">
+<code class="sig-name descname">gravity_effect</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.gravity_effect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.gravity_effect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves the ellipsoid downwards to mimick the effect of gravity acting on it</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -410,13 +410,13 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid has to be updated everytime it moves</p>
+<p>The <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid has to be updated everytime it moves</p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.growth">
-<code class="sig-name descname">growth</code><span class="sig-paren">(</span><em class="sig-param">factor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.growth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.growth" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid.growth">
+<code class="sig-name descname">growth</code><span class="sig-paren">(</span><em class="sig-param">factor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.growth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.growth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Increases the size of the ellipsoid along its axes governed by the user defined value</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -430,18 +430,18 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.move">
-<code class="sig-name descname">move</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.move"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.move" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid.move">
+<code class="sig-name descname">move</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.move"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.move" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves the ellipsoid by updating its position vector according to Eulerian integration method</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid has to be updated everytime it moves</p>
+<p>The <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid has to be updated everytime it moves</p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.rotationMatrixGen">
-<code class="sig-name descname">rotationMatrixGen</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.rotationMatrixGen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.rotationMatrixGen" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid.rotationMatrixGen">
+<code class="sig-name descname">rotationMatrixGen</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.rotationMatrixGen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.rotationMatrixGen" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates the rotation matrix for the ellipsoid using the quaternion</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -451,15 +451,15 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.set_cub">
-<code class="sig-name descname">set_cub</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.set_cub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.set_cub" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes an object of the class <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> using the bounding box limits from <a class="reference internal" href="#src.kanapy.entities.Ellipsoid.Bbox" title="src.kanapy.entities.Ellipsoid.Bbox"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Bbox()</span></code></a></p>
+<dt id="kanapy.entities.Ellipsoid.set_cub">
+<code class="sig-name descname">set_cub</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.set_cub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.set_cub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes an object of the class <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> using the bounding box limits from <a class="reference internal" href="#kanapy.entities.Ellipsoid.Bbox" title="kanapy.entities.Ellipsoid.Bbox"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Bbox()</span></code></a></p>
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.surfacePointsGen">
-<code class="sig-name descname">surfacePointsGen</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.surfacePointsGen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.surfacePointsGen" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates points on the outer surface of the ellipsoid using the rotation matrix from <a class="reference internal" href="#src.kanapy.entities.Ellipsoid.rotationMatrixGen" title="src.kanapy.entities.Ellipsoid.rotationMatrixGen"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rotationMatrixGen()</span></code></a></p>
+<dt id="kanapy.entities.Ellipsoid.surfacePointsGen">
+<code class="sig-name descname">surfacePointsGen</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.surfacePointsGen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.surfacePointsGen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates points on the outer surface of the ellipsoid using the rotation matrix from <a class="reference internal" href="#kanapy.entities.Ellipsoid.rotationMatrixGen" title="kanapy.entities.Ellipsoid.rotationMatrixGen"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rotationMatrixGen()</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>numpy array</p>
@@ -468,8 +468,8 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Ellipsoid.wallCollision">
-<code class="sig-name descname">wallCollision</code><span class="sig-paren">(</span><em class="sig-param">sim_box</em>, <em class="sig-param">periodicity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Ellipsoid.wallCollision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Ellipsoid.wallCollision" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Ellipsoid.wallCollision">
+<code class="sig-name descname">wallCollision</code><span class="sig-paren">(</span><em class="sig-param">sim_box</em>, <em class="sig-param">periodicity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Ellipsoid.wallCollision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Ellipsoid.wallCollision" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates whether the ellipsoid collides with the boundaries of the simulation box.</p>
 <ul class="simple">
 <li><p>If periodicity is enabled -&gt; Creates duplicates of the ellipsoid on opposite faces of the box</p></li>
@@ -478,7 +478,7 @@ and is later assigned a random value by <a class="reference internal" href="#src
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sim_box</strong> (object of the class <a class="reference internal" href="#src.kanapy.entities.Simulation_Box" title="src.kanapy.entities.Simulation_Box"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulation_Box</span></code></a>) – Simulation box</p></li>
+<li><p><strong>sim_box</strong> (object of the class <a class="reference internal" href="#kanapy.entities.Simulation_Box" title="kanapy.entities.Simulation_Box"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulation_Box</span></code></a>) – Simulation box</p></li>
 <li><p><strong>periodicity</strong> (<em>boolean</em>) – Status of periodicity</p></li>
 </ul>
 </dd>
@@ -491,22 +491,22 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid has to be updated everytime it moves</p>
+<p>The <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> object of the ellipsoid has to be updated everytime it moves</p>
 </div>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="src.kanapy.entities.Octree">
-<em class="property">class </em><code class="sig-prename descclassname">src.kanapy.entities.</code><code class="sig-name descname">Octree</code><span class="sig-paren">(</span><em class="sig-param">level</em>, <em class="sig-param">cub</em>, <em class="sig-param">particles=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Octree">
+<em class="property">class </em><code class="sig-prename descclassname">kanapy.entities.</code><code class="sig-name descname">Octree</code><span class="sig-paren">(</span><em class="sig-param">level</em>, <em class="sig-param">cub</em>, <em class="sig-param">particles=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Octree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Octree" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Creates <a class="reference internal" href="#src.kanapy.entities.Octree" title="src.kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> objects for tree trunk and its sub-branches.</p>
+<p>Creates <a class="reference internal" href="#kanapy.entities.Octree" title="kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> objects for tree trunk and its sub-branches.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>level</strong> (<em>int</em>) – Current level of the Octree</p></li>
-<li><p><strong>cub</strong> (object of the class <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a>) – Cuboid object of the tree trunk / sub-branches</p></li>
+<li><p><strong>cub</strong> (object of the class <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a>) – Cuboid object of the tree trunk / sub-branches</p></li>
 <li><p><strong>particles</strong> (<em>list</em>) – Particles within the tree trunk / sub-branches</p></li>
 </ul>
 </dd>
@@ -520,56 +520,56 @@ and is later assigned a random value by <a class="reference internal" href="#src
 </ol>
 </div>
 <dl class="method">
-<dt id="src.kanapy.entities.Octree.add_particle">
-<code class="sig-name descname">add_particle</code><span class="sig-paren">(</span><em class="sig-param">particle</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree.add_particle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree.add_particle" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Octree.add_particle">
+<code class="sig-name descname">add_particle</code><span class="sig-paren">(</span><em class="sig-param">particle</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Octree.add_particle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Octree.add_particle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the particle list of the Octree sub-branch</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Octree.collisionsTest">
-<code class="sig-name descname">collisionsTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree.collisionsTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree.collisionsTest" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Octree.collisionsTest">
+<code class="sig-name descname">collisionsTest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Octree.collisionsTest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Octree.collisionsTest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tests for collision between all ellipsoids in the particle list of a particular Octree
 sub-branch</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Octree.get_cub">
-<code class="sig-name descname">get_cub</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree.get_cub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree.get_cub" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Octree.get_cub">
+<code class="sig-name descname">get_cub</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Octree.get_cub"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Octree.get_cub" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the cuboid object of the octree sub-branch</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>object <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Cuboid</span></code></a></p>
+<dd class="field-odd"><p>object <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Cuboid</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Octree.subdivide">
-<code class="sig-name descname">subdivide</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree.subdivide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree.subdivide" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Octree.subdivide">
+<code class="sig-name descname">subdivide</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Octree.subdivide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Octree.subdivide" title="Permalink to this definition">¶</a></dt>
 <dd><p>Divides the given Octree sub-branch into eight further sub-branches and 
-initializes each newly created sub-branch as an <a class="reference internal" href="#src.kanapy.entities.Octree" title="src.kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> object</p>
+initializes each newly created sub-branch as an <a class="reference internal" href="#kanapy.entities.Octree" title="kanapy.entities.Octree"><code class="xref py py-class docutils literal notranslate"><span class="pre">Octree</span></code></a> object</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Octree.subdivide_particles">
-<code class="sig-name descname">subdivide_particles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree.subdivide_particles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree.subdivide_particles" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Octree.subdivide_particles">
+<code class="sig-name descname">subdivide_particles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Octree.subdivide_particles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Octree.subdivide_particles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates whether ellipsoids belong to a particular Octree sub-branch
 by calling <code class="xref py py-meth docutils literal notranslate"><span class="pre">intersect()</span></code> on each ellipsoid.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="src.kanapy.entities.Octree.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Octree.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Octree.update" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Octree.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Octree.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Octree.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Updates the Octree and begins the recursive process of subdividing or collision testing</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="src.kanapy.entities.Simulation_Box">
-<em class="property">class </em><code class="sig-prename descclassname">src.kanapy.entities.</code><code class="sig-name descname">Simulation_Box</code><span class="sig-paren">(</span><em class="sig-param">w</em>, <em class="sig-param">h</em>, <em class="sig-param">d</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#Simulation_Box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.Simulation_Box" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.entities.Simulation_Box">
+<em class="property">class </em><code class="sig-prename descclassname">kanapy.entities.</code><code class="sig-name descname">Simulation_Box</code><span class="sig-paren">(</span><em class="sig-param">w</em>, <em class="sig-param">h</em>, <em class="sig-param">d</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#Simulation_Box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.Simulation_Box" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Creates <a class="reference internal" href="#src.kanapy.entities.Simulation_Box" title="src.kanapy.entities.Simulation_Box"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulation_Box</span></code></a> objects for the defined simulation domain.</p>
+<p>Creates <a class="reference internal" href="#kanapy.entities.Simulation_Box" title="kanapy.entities.Simulation_Box"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulation_Box</span></code></a> objects for the defined simulation domain.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -582,12 +582,12 @@ by calling <code class="xref py py-meth docutils literal notranslate"><span clas
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.entities.cub_oct_split">
-<code class="sig-prename descclassname">src.kanapy.entities.</code><code class="sig-name descname">cub_oct_split</code><span class="sig-paren">(</span><em class="sig-param">cub</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/entities.html#cub_oct_split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.entities.cub_oct_split" title="Permalink to this definition">¶</a></dt>
-<dd><p>Splits cuboid object of the class <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> into eight smaller cuboid objects</p>
+<dt id="kanapy.entities.cub_oct_split">
+<code class="sig-prename descclassname">kanapy.entities.</code><code class="sig-name descname">cub_oct_split</code><span class="sig-paren">(</span><em class="sig-param">cub</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/entities.html#cub_oct_split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.entities.cub_oct_split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits cuboid object of the class <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a> into eight smaller cuboid objects</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>cub</strong> (object of the class <a class="reference internal" href="#src.kanapy.entities.Cuboid" title="src.kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a>) – Branch cuboid object containing ellipsoids</p>
+<dd class="field-odd"><p><strong>cub</strong> (object of the class <a class="reference internal" href="#kanapy.entities.Cuboid" title="kanapy.entities.Cuboid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cuboid</span></code></a>) – Branch cuboid object containing ellipsoids</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Eight new sub-branch cuboid objects in a list</p>
@@ -599,11 +599,11 @@ by calling <code class="xref py py-meth docutils literal notranslate"><span clas
 </dd></dl>
 
 </div>
-<div class="section" id="module-src.kanapy.input_output">
-<span id="module-input-output"></span><h2>Module input_output<a class="headerlink" href="#module-src.kanapy.input_output" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-kanapy.input_output">
+<span id="module-input-output"></span><h2>Module input_output<a class="headerlink" href="#module-kanapy.input_output" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="src.kanapy.input_output.particleStatGenerator">
-<code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">particleStatGenerator</code><span class="sig-paren">(</span><em class="sig-param">inputFile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#particleStatGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.particleStatGenerator" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.input_output.particleStatGenerator">
+<code class="sig-prename descclassname">kanapy.input_output.</code><code class="sig-name descname">particleStatGenerator</code><span class="sig-paren">(</span><em class="sig-param">inputFile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#particleStatGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.input_output.particleStatGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates ellipsoid size distribution (Log-normal) based on user-defined statistics</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -635,34 +635,16 @@ working directory for later access.</p></li>
 <div><ul class="simple">
 <li><p>Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.</p></li>
 <li><p>RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</p></li>
-<li><p>Simulation attributes such as total number of timesteps and periodicity.</p></li>
+<li><p>Simulation attributes such as total number of timesteps, periodicity and Output unit scale (<span class="math notranslate nohighlight">\(mm\)</span> 
+or <span class="math notranslate nohighlight">\(\mu m\)</span>) for ABAQUS .inp file.</p></li>
 </ul>
 </div></blockquote>
 </div>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.input_output.printProgressBar">
-<code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">printProgressBar</code><span class="sig-paren">(</span><em class="sig-param">iteration</em>, <em class="sig-param">total</em>, <em class="sig-param">prefix=''</em>, <em class="sig-param">suffix=''</em>, <em class="sig-param">decimals=1</em>, <em class="sig-param">length=100</em>, <em class="sig-param">fill='█'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#printProgressBar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.printProgressBar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prints the progress bar in the terminal for a given loop</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>iteration</strong> (<em>int</em>) – current iteration</p></li>
-<li><p><strong>total</strong> (<em>int</em>) – total iterations</p></li>
-<li><p><strong>prefix</strong> (<em>str</em>) – prefix string</p></li>
-<li><p><strong>suffix</strong> (<em>str</em>) – suffix string</p></li>
-<li><p><strong>decimals</strong> (<em>int</em>) – positive number of decimals in percent complete</p></li>
-<li><p><strong>length</strong> (<em>int</em>) – character length of bar</p></li>
-<li><p><strong>fill</strong> (<em>str</em>) – bar fill character</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="src.kanapy.input_output.read_dump">
-<code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">read_dump</code><span class="sig-paren">(</span><em class="sig-param">dump_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#read_dump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.read_dump" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.input_output.read_dump">
+<code class="sig-prename descclassname">kanapy.input_output.</code><code class="sig-name descname">read_dump</code><span class="sig-paren">(</span><em class="sig-param">dump_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#read_dump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.input_output.read_dump" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads the (.dump) file to extract information for voxelization (meshing) routine</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -682,14 +664,14 @@ working directory for later access.</p></li>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.input_output.write_abaqus_inp">
-<code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">write_abaqus_inp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#write_abaqus_inp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.write_abaqus_inp" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.input_output.write_abaqus_inp">
+<code class="sig-prename descclassname">kanapy.input_output.</code><code class="sig-name descname">write_abaqus_inp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#write_abaqus_inp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.input_output.write_abaqus_inp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates an ABAQUS input file with microstructure morphology information
 in the form of nodes, elements and element sets.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
-<li><p>JSON files generated by <a class="reference internal" href="#src.kanapy.voxelization.voxelizationRoutine" title="src.kanapy.voxelization.voxelizationRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src.kanapy.voxelization.voxelizationRoutine()</span></code></a> are read to generate the ABAQUS (.inp) file.
+<li><p>JSON files generated by <a class="reference internal" href="#kanapy.voxelization.voxelizationRoutine" title="kanapy.voxelization.voxelizationRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.voxelization.voxelizationRoutine()</span></code></a> are read to generate the ABAQUS (.inp) file.
 The json files contain:</p>
 <ul class="simple">
 <li><p>Node ID and its corresponding coordinates</p></li>
@@ -697,14 +679,14 @@ The json files contain:</p>
 <li><p>Element sets representing grains (Assembly of elements)</p></li>
 </ul>
 </li>
-<li><p>The nodal coordinates are written out in ‘mm’ scale.</p></li>
+<li><p>The nodal coordinates are written out in <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, as requested by the user in the input file.</p></li>
 </ol>
 </div>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.input_output.write_dump">
-<code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">write_dump</code><span class="sig-paren">(</span><em class="sig-param">Ellipsoids</em>, <em class="sig-param">sim_box</em>, <em class="sig-param">num_particles</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#write_dump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.write_dump" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.input_output.write_dump">
+<code class="sig-prename descclassname">kanapy.input_output.</code><code class="sig-name descname">write_dump</code><span class="sig-paren">(</span><em class="sig-param">Ellipsoids</em>, <em class="sig-param">sim_box</em>, <em class="sig-param">num_particles</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#write_dump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.input_output.write_dump" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes the (.dump) file, which can be read by visualization software OVITO.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -722,19 +704,24 @@ The json files contain:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.input_output.write_output_stat">
-<code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">write_output_stat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#write_output_stat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.write_output_stat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluates particle- and output RVE grain statistics with respect to Major, Minor &amp; Equivalent diameters for comparison.</p>
+<dt id="kanapy.input_output.write_output_stat">
+<code class="sig-prename descclassname">kanapy.input_output.</code><code class="sig-name descname">write_output_stat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#write_output_stat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.input_output.write_output_stat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates particle- and output RVE grain statistics with respect to Major, Minor &amp; Equivalent diameters for comparison
+and writes them to ‘output_statistics.json’ file.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Particle information is read from (.json) file generated by <a class="reference internal" href="#src.kanapy.input_output.particleStatGenerator" title="src.kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src.kanapy.input_output.particleStatGenerator()</span></code></a>.
-And RVE grain information is read from the (.json) files generated by <a class="reference internal" href="#src.kanapy.voxelization.voxelizationRoutine" title="src.kanapy.voxelization.voxelizationRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src.kanapy.voxelization.voxelizationRoutine()</span></code></a>.</p>
+<ol class="arabic simple">
+<li><p>Particle information is read from (.json) file generated by <a class="reference internal" href="#kanapy.input_output.particleStatGenerator" title="kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.particleStatGenerator()</span></code></a>.
+And RVE grain information is read from the (.json) files generated by <a class="reference internal" href="#kanapy.voxelization.voxelizationRoutine" title="kanapy.voxelization.voxelizationRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.voxelization.voxelizationRoutine()</span></code></a>.</p></li>
+<li><p>The particle and grain diameter values are written in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, 
+as requested by the user in the input file.</p></li>
+</ol>
 </div>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.input_output.write_position_weights">
-<code class="sig-prename descclassname">src.kanapy.input_output.</code><code class="sig-name descname">write_position_weights</code><span class="sig-paren">(</span><em class="sig-param">file_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/input_output.html#write_position_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.input_output.write_position_weights" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.input_output.write_position_weights">
+<code class="sig-prename descclassname">kanapy.input_output.</code><code class="sig-name descname">write_position_weights</code><span class="sig-paren">(</span><em class="sig-param">file_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#write_position_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.input_output.write_position_weights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads the (.dump) file to extract information and ouputs the position and weight files for tessellation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -747,20 +734,21 @@ And RVE grain information is read from the (.json) files generated by <a class="
 <li><p>Applicable only to spherical particles.</p></li>
 <li><p>The generated ‘sphere_positions.txt’ and ‘sphere_weights.txt’ files can be inputted 
 into NEPER for tessellation and meshing.</p></li>
+<li><p>The values of positions and weights are written in <span class="math notranslate nohighlight">\(\mu m\)</span> scale only.</p></li>
 </ol>
 </div>
 </dd></dl>
 
 </div>
-<div class="section" id="module-src.kanapy.packing">
-<span id="module-packing"></span><h2>Module packing<a class="headerlink" href="#module-src.kanapy.packing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-kanapy.packing">
+<span id="module-packing"></span><h2>Module packing<a class="headerlink" href="#module-kanapy.packing" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="src.kanapy.packing.packingRoutine">
-<code class="sig-prename descclassname">src.kanapy.packing.</code><code class="sig-name descname">packingRoutine</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/packing.html#packingRoutine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.packing.packingRoutine" title="Permalink to this definition">¶</a></dt>
-<dd><p>The main function that controls the particle packing routine using: <a class="reference internal" href="#src.kanapy.packing.particle_grow" title="src.kanapy.packing.particle_grow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">particle_grow()</span></code></a> &amp; <a class="reference internal" href="#src.kanapy.packing.particle_generator" title="src.kanapy.packing.particle_generator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">particle_generator()</span></code></a></p>
+<dt id="kanapy.packing.packingRoutine">
+<code class="sig-prename descclassname">kanapy.packing.</code><code class="sig-name descname">packingRoutine</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#packingRoutine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.packing.packingRoutine" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main function that controls the particle packing routine using: <a class="reference internal" href="#kanapy.packing.particle_grow" title="kanapy.packing.particle_grow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">particle_grow()</span></code></a> &amp; <a class="reference internal" href="#kanapy.packing.particle_generator" title="kanapy.packing.particle_generator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">particle_generator()</span></code></a></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Particle, RVE and simulation data are read from the JSON files generated by <a class="reference internal" href="#src.kanapy.input_output.particleStatGenerator" title="src.kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src.kanapy.input_output.particleStatGenerator()</span></code></a>.
+<p>Particle, RVE and simulation data are read from the JSON files generated by <a class="reference internal" href="#kanapy.input_output.particleStatGenerator" title="kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.particleStatGenerator()</span></code></a>.
 They contain the following information:</p>
 <ul class="simple">
 <li><p>Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.</p></li>
@@ -771,8 +759,8 @@ They contain the following information:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.packing.particle_generator">
-<code class="sig-prename descclassname">src.kanapy.packing.</code><code class="sig-name descname">particle_generator</code><span class="sig-paren">(</span><em class="sig-param">particle_data</em>, <em class="sig-param">sim_box</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/packing.html#particle_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.packing.particle_generator" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.packing.particle_generator">
+<code class="sig-prename descclassname">kanapy.packing.</code><code class="sig-name descname">particle_generator</code><span class="sig-paren">(</span><em class="sig-param">particle_data</em>, <em class="sig-param">sim_box</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#particle_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.packing.particle_generator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes ellipsoids by assigning them random positions and speeds within the simulation box.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -791,8 +779,8 @@ They contain the following information:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.packing.particle_grow">
-<code class="sig-prename descclassname">src.kanapy.packing.</code><code class="sig-name descname">particle_grow</code><span class="sig-paren">(</span><em class="sig-param">sim_box</em>, <em class="sig-param">Ellipsoids</em>, <em class="sig-param">periodicity</em>, <em class="sig-param">nsteps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/packing.html#particle_grow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.packing.particle_grow" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.packing.particle_grow">
+<code class="sig-prename descclassname">kanapy.packing.</code><code class="sig-name descname">particle_grow</code><span class="sig-paren">(</span><em class="sig-param">sim_box</em>, <em class="sig-param">Ellipsoids</em>, <em class="sig-param">periodicity</em>, <em class="sig-param">nsteps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#particle_grow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.packing.particle_grow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes the <code class="xref py py-class docutils literal notranslate"><span class="pre">entities.Octree</span></code> class and performs recursive subdivision with 
 collision checks and response for the ellipsoids. At each time step of the simulation it 
 increases the size of the ellipsoid by a factor, which depends on the user-defined value for total number of time steps.</p>
@@ -808,18 +796,18 @@ increases the size of the ellipsoid by a factor, which depends on the user-defin
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p><a class="reference internal" href="#src.kanapy.input_output.write_dump" title="src.kanapy.input_output.write_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src.kanapy.input_output.write_dump()</span></code></a> function is called at each time step of the simulation to
+<p><a class="reference internal" href="#kanapy.input_output.write_dump" title="kanapy.input_output.write_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.write_dump()</span></code></a> function is called at each time step of the simulation to
 write output (.dump) files. By default, periodic images are written to the output file, 
 but this option can be disabled within the function.</p>
 </div>
 </dd></dl>
 
 </div>
-<div class="section" id="module-src.kanapy.voxelization">
-<span id="module-voxelization"></span><h2>Module voxelization<a class="headerlink" href="#module-src.kanapy.voxelization" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-kanapy.voxelization">
+<span id="module-voxelization"></span><h2>Module voxelization<a class="headerlink" href="#module-kanapy.voxelization" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="src.kanapy.voxelization.assign_voxels_to_ellipsoid">
-<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">assign_voxels_to_ellipsoid</code><span class="sig-paren">(</span><em class="sig-param">cooDict</em>, <em class="sig-param">Ellipsoids</em>, <em class="sig-param">elmtDict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#assign_voxels_to_ellipsoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.assign_voxels_to_ellipsoid" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.voxelization.assign_voxels_to_ellipsoid">
+<code class="sig-prename descclassname">kanapy.voxelization.</code><code class="sig-name descname">assign_voxels_to_ellipsoid</code><span class="sig-paren">(</span><em class="sig-param">cooDict</em>, <em class="sig-param">Ellipsoids</em>, <em class="sig-param">elmtDict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/voxelization.html#assign_voxels_to_ellipsoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.voxelization.assign_voxels_to_ellipsoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines voxels belonging to each ellipsoid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -833,8 +821,8 @@ but this option can be disabled within the function.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.voxelization.create_voxels">
-<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">create_voxels</code><span class="sig-paren">(</span><em class="sig-param">sim_box</em>, <em class="sig-param">voxel_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#create_voxels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.create_voxels" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.voxelization.create_voxels">
+<code class="sig-prename descclassname">kanapy.voxelization.</code><code class="sig-name descname">create_voxels</code><span class="sig-paren">(</span><em class="sig-param">sim_box</em>, <em class="sig-param">voxel_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/voxelization.html#create_voxels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.voxelization.create_voxels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates voxels inside the defined RVE (Simulation box)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -858,8 +846,8 @@ but this option can be disabled within the function.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.voxelization.points_in_convexHull">
-<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">points_in_convexHull</code><span class="sig-paren">(</span><em class="sig-param">Points</em>, <em class="sig-param">hull</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#points_in_convexHull"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.points_in_convexHull" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.voxelization.points_in_convexHull">
+<code class="sig-prename descclassname">kanapy.voxelization.</code><code class="sig-name descname">points_in_convexHull</code><span class="sig-paren">(</span><em class="sig-param">Points</em>, <em class="sig-param">hull</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/voxelization.html#points_in_convexHull"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.voxelization.points_in_convexHull" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines whether the given array of points lie inside the convex hull or outside.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -882,8 +870,8 @@ but this option can be disabled within the function.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.voxelization.reassign_shared_voxels">
-<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">reassign_shared_voxels</code><span class="sig-paren">(</span><em class="sig-param">cooDict</em>, <em class="sig-param">Ellipsoids</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#reassign_shared_voxels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.reassign_shared_voxels" title="Permalink to this definition">¶</a></dt>
+<dt id="kanapy.voxelization.reassign_shared_voxels">
+<code class="sig-prename descclassname">kanapy.voxelization.</code><code class="sig-name descname">reassign_shared_voxels</code><span class="sig-paren">(</span><em class="sig-param">cooDict</em>, <em class="sig-param">Ellipsoids</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/voxelization.html#reassign_shared_voxels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.voxelization.reassign_shared_voxels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assigns shared voxels between ellipsoids to the ellispoid with the closest center.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -896,10 +884,10 @@ but this option can be disabled within the function.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="src.kanapy.voxelization.voxelizationRoutine">
-<code class="sig-prename descclassname">src.kanapy.voxelization.</code><code class="sig-name descname">voxelizationRoutine</code><span class="sig-paren">(</span><em class="sig-param">file_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/kanapy/voxelization.html#voxelizationRoutine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.kanapy.voxelization.voxelizationRoutine" title="Permalink to this definition">¶</a></dt>
-<dd><p>The main function that controls the voxelization routine using: <a class="reference internal" href="#src.kanapy.input_output.read_dump" title="src.kanapy.input_output.read_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src.kanapy.input_output.read_dump()</span></code></a>, <a class="reference internal" href="#src.kanapy.voxelization.create_voxels" title="src.kanapy.voxelization.create_voxels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_voxels()</span></code></a>
-, <a class="reference internal" href="#src.kanapy.voxelization.assign_voxels_to_ellipsoid" title="src.kanapy.voxelization.assign_voxels_to_ellipsoid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assign_voxels_to_ellipsoid()</span></code></a>, <a class="reference internal" href="#src.kanapy.voxelization.reassign_shared_voxels" title="src.kanapy.voxelization.reassign_shared_voxels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reassign_shared_voxels()</span></code></a></p>
+<dt id="kanapy.voxelization.voxelizationRoutine">
+<code class="sig-prename descclassname">kanapy.voxelization.</code><code class="sig-name descname">voxelizationRoutine</code><span class="sig-paren">(</span><em class="sig-param">file_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/voxelization.html#voxelizationRoutine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kanapy.voxelization.voxelizationRoutine" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main function that controls the voxelization routine using: <a class="reference internal" href="#kanapy.input_output.read_dump" title="kanapy.input_output.read_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.read_dump()</span></code></a>, <a class="reference internal" href="#kanapy.voxelization.create_voxels" title="kanapy.voxelization.create_voxels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_voxels()</span></code></a>
+, <a class="reference internal" href="#kanapy.voxelization.assign_voxels_to_ellipsoid" title="kanapy.voxelization.assign_voxels_to_ellipsoid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assign_voxels_to_ellipsoid()</span></code></a>, <a class="reference internal" href="#kanapy.voxelization.reassign_shared_voxels" title="kanapy.voxelization.reassign_shared_voxels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reassign_shared_voxels()</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>file_num</strong> (<em>int</em>) – Simulation time step to be voxelized.</p>
@@ -909,7 +897,7 @@ but this option can be disabled within the function.</p>
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
 <li><p>The RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution 
-is read by loading the JSON file that is generated by <a class="reference internal" href="#src.kanapy.input_output.read_dump" title="src.kanapy.input_output.read_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src.kanapy.input_output.read_dump()</span></code></a>.</p></li>
+is read by loading the JSON file that is generated by <a class="reference internal" href="#kanapy.input_output.read_dump" title="kanapy.input_output.read_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.read_dump()</span></code></a>.</p></li>
 <li><p>The following dictionaries are written as json files into a folder in the current working directory.</p></li>
 </ol>
 <blockquote>

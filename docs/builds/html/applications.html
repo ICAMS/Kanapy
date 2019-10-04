@@ -90,6 +90,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Applications</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#microstructure-with-equiaxed-grains">Microstructure with equiaxed grains</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#microstructure-with-elongated-grains">Microstructure with elongated grains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simulation-benchmarks">Simulation benchmarks</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
@@ -182,6 +183,127 @@
 <p class="caption"><span class="caption-text"><strong>Figure</strong>: An example of ellipsoidal packing (left), Voxelization - FE hexahedral mesh (right).</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </div>
 <p>The ellipsoid packing process is similar to that of sphere packing as described earlier. Once the ellipsoids are tightly packed with minimal acceptable overlaps, they are processed further for meshing. Since Voronoi tessellations cannot be applied to anisotropic particles such as ellipsoids, a voxel-based mesh-generating routine that utilizes convex hull for discretizing the RVE is employed. The voxelization (meshing) routine is made of 2 stages. The number of voxels in the RVE has a direct influence on the FE solution and the FE simulation time and must hence be meticulously chosen. The choice is not arbitrary, as it is constrained by how well the grains of the RVE are represented with respect to their geometry and the FEM simulation time.</p>
+</div>
+<div class="section" id="simulation-benchmarks">
+<h2>Simulation benchmarks<a class="headerlink" href="#simulation-benchmarks" title="Permalink to this headline">¶</a></h2>
+<p>To estimate the performance of Kanapy with respect to its particle packing and voxelization routines, multiple realizations of both sphere and ellipsoid packing was performed on a 2.60 GHz Intel Xeon CPU. Figure 1 depicts graphically the average CPU time recorded over 10 simulation runs for each realization of particle packing. The data is tabulated in Table 1. A significant difference in the variation of CPU time can be observed between spheres and ellipsoids of the same number. The difference arises from the fact that, two layered collision detection is sufficient to estimate if spheres collide. But ellipsoid collision detection requires an additional computational step of solving the characteristic equation as described in <a class="reference internal" href="method.html#overlap-detection"><span class="std std-ref">Overlap detection</span></a>.</p>
+<div class="figure align-center" id="id3">
+<img alt="_images/CPUtime_analysis_packing.png" src="_images/CPUtime_analysis_packing.png" />
+<p class="caption"><span class="caption-text"><strong>Figure 1</strong>: Log-log plot depicting the performance of the particle packing routine in terms of average CPU time (in seconds) recorded for different realizations of packing of spheres and ellipsoids.</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<table class="colwidths-given docutils align-default" id="id4">
+<caption><span class="caption-text"><strong>Table 1</strong>: Particle packing simulation tests for spheres and ellipsoids. The CPU time is averaged over 10 simulation runs.</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Number of</p></th>
+<th class="head"><p>CPU time (s)</p></th>
+<th class="head"></th>
+</tr>
+<tr class="row-even"><th class="head"><p>particles</p></th>
+<th class="head"><p>Sphere</p></th>
+<th class="head"><p>Ellipsoids</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-odd"><td><p>50</p></td>
+<td><p>50.63</p></td>
+<td><p>72.29</p></td>
+</tr>
+<tr class="row-even"><td><p>100</p></td>
+<td><p>91.15</p></td>
+<td><p>163.88</p></td>
+</tr>
+<tr class="row-odd"><td><p>500</p></td>
+<td><p>362.32</p></td>
+<td><p>618.73</p></td>
+</tr>
+<tr class="row-even"><td><p>1000</p></td>
+<td><p>704.13</p></td>
+<td><p>1174.94</p></td>
+</tr>
+<tr class="row-odd"><td><p>5000</p></td>
+<td><p>3119.56</p></td>
+<td><p>4635.41</p></td>
+</tr>
+</tbody>
+</table>
+<p>Figure 2 depicts the CPU time recorded for the kanapy’s voxelization routine. The CPU time is estimated for various combinations of number of grains and number of voxels. These results are tabulated in Table 2.</p>
+<div class="figure align-center" id="id5">
+<img alt="_images/CPUtime_analysis_voxelization.png" src="_images/CPUtime_analysis_voxelization.png" />
+<p class="caption"><span class="caption-text"><strong>Figure 2</strong>: Plot depicting the performance of the voxelization routine in terms of CPU time (in seconds) for various combinations of grain numbers and total voxel numbers.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</div>
+<table class="colwidths-given docutils align-default" id="id6">
+<caption><span class="caption-text"><strong>Table 2</strong>: Voxelization routine performance data for various combinations of grain numbers and total voxel numbers.</span><a class="headerlink" href="#id6" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Number of voxels</p></th>
+<th class="head"></th>
+<th class="head"><p>CPU time (s)</p></th>
+<th class="head"></th>
+</tr>
+<tr class="row-even"><th class="head"></th>
+<th class="head"><p>100 grains</p></th>
+<th class="head"><p>500 grains</p></th>
+<th class="head"><p>1000 grains</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(20^3\)</span> = 8000</p></td>
+<td><p>7.09</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(30^3\)</span> = 27,000</p></td>
+<td><p>11.33</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(40^3\)</span> = 64,000</p></td>
+<td><p>18.9</p></td>
+<td><p>53.63</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(50^3\)</span> = 125,000</p></td>
+<td><p>28.26</p></td>
+<td><p>78.33</p></td>
+<td><p>122.19</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(60^3\)</span> = 216,000</p></td>
+<td><p>44.79</p></td>
+<td><p>123.36</p></td>
+<td><p>186.54</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(70^3\)</span> = 343,000</p></td>
+<td><p>68.65</p></td>
+<td><p>186.49</p></td>
+<td><p>282.17</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(80^3\)</span> = 512,000</p></td>
+<td></td>
+<td><p>257.95</p></td>
+<td><p>378.13</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(90^3\)</span> = 729,000</p></td>
+<td></td>
+<td><p>389.48</p></td>
+<td><p>528.95</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(100^3\)</span> = 1,000,000</p></td>
+<td></td>
+<td></td>
+<td><p>683.30</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 

@@ -90,6 +90,7 @@ setup(
     #include_package_data=True,    
     ext_modules=[CMakeExtension('kanapy/base')],
     cmdclass=dict(build_ext=CMakeBuild),
+    entry_points={'console_scripts': ['kanapy = kanapy.cli:start']},    
     zip_safe=False,
 )
       

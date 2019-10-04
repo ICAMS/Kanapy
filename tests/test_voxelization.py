@@ -174,8 +174,8 @@ def test_assign_voxels_to_ellipsoid(dec_info):
 
     assign_voxels_to_ellipsoid(dec_info[2], ells, dec_info[1])
 
-    ref1 = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 19]
-    ref2 = [9, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27]
+    ref1 = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 19]
+    ref2 = [9, 12, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27]
     
     assert set(ell1.inside_voxels) == set(ref1)
     assert set(ell2.inside_voxels) == set(ref2)
@@ -214,24 +214,23 @@ def test_voxelizationRoutine():
     cwd = os.getcwd()    
     json_dir = cwd + '/json_files'
     dump_dir = cwd + '/dump_files'
-    stat_inp = cwd + '/stat_input.txt'
+    stat_inp = cwd + '/stat_input.json'
             
     # create an temporary 'json' directory for reading files from
-    to_write = ['@ Equivalent diameter', 'std = 0.531055', 'mean = 2.76736', 'cutoff_min = 1.0', 'cutoff_max = 2.0',
-                ' ', '@ Aspect ratio', 'mean = 2.5', ' ', '@ Orientation', 'sigma = 28.8', 'mean = 87.4', ' ',
-                '@ RVE', 'side_length = 3', 'voxel_per_side = 10', ' ', '@ Simulation', 'nsteps = 1000', 'periodicity = True']
+    to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
+                'Aspect ratio': {'mean': 2.5}, 'Orientation': {'sigma': 28.8, 'mean': 87.4},
+                'RVE': {'side_length': 3, 'voxel_per_side': 10}, 'Simulation': {'nsteps': 1000, 'periodicity': 'True', 'output_units': 'mm'}}
 
-    with open(stat_inp, 'w') as fd:
-        for text in to_write:
-            fd.write('{0}\n'.format(text))
+    with open(stat_inp, 'w') as outfile:
+        json.dump(to_write, outfile, indent=2) 
 
     particleStatGenerator(stat_inp)   
 
     # create an temporary 'dump' directory for reading files from
-    with open(json_dir + '/RVE_data.txt') as json_file:
+    with open(json_dir + '/RVE_data.json') as json_file:
         RVE_data = json.load(json_file)
         
-    with open(json_dir + '/particle_data.txt') as json_file:
+    with open(json_dir + '/particle_data.json') as json_file:
         particle_data = json.load(json_file)
                                     
     sim_box = Simulation_Box(RVE_data['RVE_size'], RVE_data['RVE_size'], RVE_data['RVE_size'])
@@ -241,9 +240,9 @@ def test_voxelizationRoutine():
     
     voxelizationRoutine(0)
 
-    assert os.path.isfile(json_dir + '/nodeDict.txt')
-    assert os.path.isfile(json_dir + '/elmtDict.txt')
-    assert os.path.isfile(json_dir + '/elmtSetDict.txt')
+    assert os.path.isfile(json_dir + '/nodeDict.json')
+    assert os.path.isfile(json_dir + '/elmtDict.json')
+    assert os.path.isfile(json_dir + '/elmtSetDict.json')
 
     os.remove(stat_inp)    
     shutil.rmtree(json_dir)
