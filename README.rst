@@ -20,6 +20,9 @@ Kanapy is a python package for generating complex synthetic polycrystalline micr
 .. _pybind11: https://pybind11.readthedocs.io/en/stable/
 .. _Eigen: http://eigen.tuxfamily.org/index.php?title=Main_Page
 
+Motivation
+----------
+An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed not only to provide an alternative to the existing Random Sequential Addition technique of microstructure generation, but also to model simple and complex grain morphologies, thus overcoming the limitations of spatial tessellation methods. 
 
 Features
 --------
