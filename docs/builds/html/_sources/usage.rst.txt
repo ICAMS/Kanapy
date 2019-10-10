@@ -294,7 +294,7 @@ for the actual particle packing simulation is imported from the ``packing`` modu
         inputFile = os.getcwd() + '/stat_input.json'
         particleStatGenerator(inputFile)
         packingRoutine()                                            
-        write_position_weights(800)
+        write_position_weights(750)
         return
 
     if __name__ == '__main__':
@@ -345,7 +345,7 @@ depending on the user requirement specified in the input file. The workflow for 
         inputFile = os.getcwd() + '/stat_input.json'
         particleStatGenerator(inputFile)
         packingRoutine()                                            
-        voxelizationRoutine(800)
+        voxelizationRoutine(750)
         write_abaqus_inp()
         write_output_stat()
         return
@@ -433,7 +433,7 @@ is imported from the ``voxelization`` module.
         inputFile = os.getcwd() + '/stat_input.json'
         particleStatGenerator(inputFile)
         packingRoutine()    
-        voxelizationRoutine(800)   
+        voxelizationRoutine(750)   
         write_abaqus_inp()  
         write_output_stat()                                           
         return
