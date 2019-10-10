@@ -43,7 +43,7 @@ def collision_routine(E1, E2):
 
 
 def collision_react(E1, E2):
-    """
+    r"""
     Evaluates and modifies the magnitude and direction of the ellipsoid's velocity after collision.    
 
     :param E1: Ellipsoid :math:`i`

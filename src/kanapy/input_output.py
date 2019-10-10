@@ -12,7 +12,7 @@ from kanapy.entities import Ellipsoid, Cuboid
 
 
 def particleStatGenerator(inputFile):
-    """
+    r"""
     Generates ellipsoid size distribution (Log-normal) based on user-defined statistics
 
     :param inputFile: User-defined statistics file for ellipsoid generation.
@@ -277,7 +277,7 @@ def read_dump(dump_file):
 
 
 def write_position_weights(file_num):
-    """
+    r"""
     Reads the (.dump) file to extract information and ouputs the position and weight files for tessellation.
 
     :param file_num: Simulation time step for which position and weights output. 
@@ -343,7 +343,7 @@ def write_position_weights(file_num):
 
 
 def write_abaqus_inp():
-    """
+    r"""
     Creates an ABAQUS input file with microstructure morphology information
     in the form of nodes, elements and element sets.
 
@@ -447,7 +447,7 @@ def write_abaqus_inp():
 
         
 def write_output_stat():
-    """
+    r"""
     Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters for comparison
     and writes them to 'output_statistics.json' file. 
 
