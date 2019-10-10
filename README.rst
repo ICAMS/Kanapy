@@ -40,10 +40,6 @@ Features
 .. _Neper: http://neper.sourceforge.net/
 .. _Abaqus: https://www.3ds.com/products-services/simulia/products/abaqus/
 
-Documentation
--------------
-
-Online documentation can be found `here <https://mrgprasad.github.io/kanapy/index.html>`_.  
 
 Installation
 ------------
