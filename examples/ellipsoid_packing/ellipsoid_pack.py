@@ -19,7 +19,7 @@ def main():
     Individual stages can be run by commenting out the remaining stages.  
     """
 
-    inputFile = os.getcwd() + '/stat_input.txt'
+    inputFile = os.getcwd() + '/stat_input.json'
     particleStatGenerator(inputFile)                    # Generate data for particle simulation
     packingRoutine()                                    # Particle packing simulation    
     voxelizationRoutine(750)                            # RVE voxelization (Meshing)    
