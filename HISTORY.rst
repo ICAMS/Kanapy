@@ -6,3 +6,8 @@ History
 ------------------
 
 * First release on GitHub.
+
+1.0.0 (2019-11-05)
+------------------
+
+* Completed JOSS review for Kanapy.
