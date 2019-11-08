@@ -4,7 +4,9 @@
 Overview
 =========
 
-
+.. image:: https://joss.theoj.org/papers/10.21105/joss.01732/status.svg
+   :target: https://doi.org/10.21105/joss.01732
+   
 .. image:: https://img.shields.io/travis/mrgprasad/kanapy.svg
     :target: https://travis-ci.org/mrgprasad/kanapy
 
@@ -145,6 +147,12 @@ Optional dependencies
 .. _Matplotlib: https://matplotlib.org/
 .. _OVITO: https://ovito.org/
 
+
+Citation
+---------
+The preferred way to cite Kanapy is: 
+
+Prasad et al., (2019). Kanapy: A Python package for generating complex synthetic polycrystalline microstructures. Journal of Open Source Software, 4(43), 1732, https://doi.org/10.21105/joss.01732
 
 License
 --------
