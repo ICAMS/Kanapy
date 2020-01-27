@@ -86,3 +86,7 @@ ENV/
 env.bak/
 venv.bak/
 
+# KANAPY specific files
+PATHS.json
+# Log files
+.log

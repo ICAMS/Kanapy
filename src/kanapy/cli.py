@@ -6,6 +6,7 @@ import click
 from kanapy.util import ROOT_DIR, MAIN_DIR 
 from kanapy.input_output import particleStatGenerator, write_position_weights
 from kanapy.input_output import write_abaqus_inp, write_output_stat
+from kanapy.input_output import extract_volume_sharedGBarea
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.analyze_texture import textureReduction
@@ -77,20 +78,22 @@ def voxelize(ctx, timestep: int):
     if timestep == None:
         raise ValueError('Please provide the timestep value for voxelization!')
     voxelizationRoutine(timestep)
-
+    
 
 @main.command()
 @click.pass_context
 def abaqusoutput(ctx):
     """ Writes out the Abaqus (.inp) file for the generated RVE."""    
     write_abaqus_inp()
-        
+    
         
 @main.command()
 @click.pass_context
 def outputstats(ctx):
-    """ Writes out the particle- and grain diameter attributes for statistical comparison."""
+    """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
+    grain volumes and shared grain boundary surface areas info are written out as well."""
     write_output_stat()
+    extract_volume_sharedGBarea()
         
                 
 @main.command()
