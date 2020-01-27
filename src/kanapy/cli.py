@@ -147,6 +147,7 @@ def setPaths():
 @click.option('--fit_mad', default='no', help='Fit Misorientation Angle Distribution (yes/no).')
 @click.pass_context
 def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
+    """ Texture reduction algorithm with optional Misorientation angle fitting."""
     
     if ebsd==None:
         click.echo('Please provide some EBSD inputs for texture reduction!') 
