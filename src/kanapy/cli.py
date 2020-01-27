@@ -161,14 +161,14 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
         arg_dict = {}           
         if ebsd != None:
             if not os.path.exists(cwd + '/{}'.format(ebsd)):
-                click.echo('Mentioned file: {} does not exist in the current working directory!\n'.format(ebsd), err=True)
+                click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(ebsd), err=True)
                 sys.exit(0)
             else:
                 arg_dict['ebsdMatFile'] = cwd + '/{}'.format(ebsd)
 
         if grains != None:
             if not os.path.exists(cwd + '/{}'.format(grains)):
-                click.echo('Mentioned file: {} does not exist in the current working directory!\n'.format(grains), err=True)
+                click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(grains), err=True)
                 sys.exit(0)
             else:        
                 arg_dict['grainsMatFile'] = cwd + '/{}'.format(grains)

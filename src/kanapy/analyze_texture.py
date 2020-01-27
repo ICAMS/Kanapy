@@ -11,7 +11,7 @@ def checkConfiguration():
     print('')
     
     if not os.path.exists(path_file):        
-        print("    Your Kanapy is not configured for texture analysis yet! Please run 'kanapy setuptexture' to do so.")
+        print("    Your Kanapy is not configured for texture analysis yet! Please run 'kanapy setuptexture' to do so.\n")
         sys.exit(0)
     else:            
         with open(path_file) as json_file:  
@@ -61,11 +61,11 @@ def getSharedSurfaceArea(wd):
         if decision == 'yes' or decision == 'y' or decision == 'Y' or decision == 'YES':
             ssafile = ssa_info
         elif decision == 'no' or decision == 'n' or decision == 'N' or decision == 'NO':
-            ssafileName = input("    Please provide the shared surface area file name located in the current directory! (.csv format): ")
-            ssafile = wd + '/' + ssafileName
+            ssafileName = input("    Please provide the shared surface area file name located in the 'current/working/directory/json_files' directory! (.csv format): ")
+            ssafile = wd + '/json_files/' + ssafileName
 
             if not os.path.exists(ssafile):
-                print('    Mentioned file: {} does not exist in the current working directory!'.format(ssafileName))
+                print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(ssafileName))
                 sys.exit(0)
             
         else:
@@ -74,11 +74,11 @@ def getSharedSurfaceArea(wd):
               
     # Else ask the user for input.
     elif not os.path.exists(ssa_info):        
-        ssafileName = input("    Please provide the shared surface area file name located in the current directory! (.csv format): ")       
-        ssafile = wd + '/' + ssafileName
+        ssafileName = input("    Please provide the shared surface area file name located in the 'current/working/directory/json_files' directory! (.csv format): ")       
+        ssafile = wd + '/json_files/' + ssafileName
         
         if not os.path.exists(ssafile):
-            print('    Mentioned file: {} does not exist in the current working directory!'.format(ssafileName))
+            print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(ssafileName))
             sys.exit(0)
 
     return ssafile
@@ -106,11 +106,11 @@ def getGrainVolume(wd):
             if decision == 'yes' or decision == 'y' or decision == 'Y' or decision == 'YES':
                 volfile = vol_info
             elif decision == 'no' or decision == 'n' or decision == 'N' or decision == 'NO':
-                volfileName = input("    Please provide the grain volumes file name located in the current directory! (.csv format): ")
-                volfile = wd + '/' + volfileName 
+                volfileName = input("    Please provide the grain volumes file name located in the 'current/working/directory/json_files' directory! (.csv format): ")
+                volfile = wd + '/json_files/' + volfileName 
 
                 if not os.path.exists(volfile):
-                    print('    Mentioned file: {} does not exist in the current working directory!'.format(volfileName))
+                    print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(volfileName))
                     sys.exit(0)
                                        
             else:
@@ -119,11 +119,11 @@ def getGrainVolume(wd):
               
         # Else ask the user for input.
         elif not os.path.exists(vol_info):        
-            volfileName = input("    Please provide the grain volumes file name located in the current directory! (.csv format): ")       
-            volfile = wd + '/' + volfileName
+            volfileName = input("    Please provide the grain volumes file name located in the 'current/working/directory/json_files' directory! (.csv format): ")       
+            volfile = wd + '/json_files/' + volfileName
 
         if not os.path.exists(volfile):
-            print('    Mentioned file: {} does not exist in the current working directory!'.format(volfileName))
+            print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(volfileName))
             sys.exit(0)
                 
         return volfile
@@ -160,12 +160,12 @@ def textureReduction(kdict):
     # If MDF fitting is requested get the grains info!
     if 'MisAngDist' in kdict.keys():
         if 'grainsMatFile' not in kdict.keys():
-            print('\n')
-            user_grainsFileName = input('    Misorientation fitting requires inpout misorientation info! Please provide the required file in the current directory (.mat): ')
-            user_grainsFile = wd + '/' + user_grainsFileName
+            print('')
+            user_grainsFileName = input('    Misorientation fitting requires input misorientation info! Please provide the required file in the current directory (.mat): ')
+            user_grainsFile = cwd + '/' + user_grainsFileName
             
             if not os.path.exists(user_grainsFile):
-                print('    Mentioned file: {} does not exist in the current working directory!'.format(user_grainsFileName))
+                print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(user_grainsFileName))
                 sys.exit(0)
             
     # Create a temporary matlab script file that runs Texture reduction algorithm    
