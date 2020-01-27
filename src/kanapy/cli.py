@@ -3,7 +3,7 @@ import os, sys
 import shutil, json
 import click
 
-from kanapy.util import ROOT_DIR 
+from kanapy.util import ROOT_DIR, MAIN_DIR 
 from kanapy.input_output import particleStatGenerator, write_position_weights
 from kanapy.input_output import write_abaqus_inp, write_output_stat
 from kanapy.packing import packingRoutine
@@ -14,7 +14,40 @@ from kanapy.analyze_texture import textureReduction
 @click.pass_context
 def main(ctx):    
     pass    
-   
+
+
+@main.command()
+@click.pass_context
+def install(ctx):    
+    """ Install kanapy's geometry packing module."""
+    
+    click.echo('')
+    os.system("conda install -y -c conda-forge --file {0}/requirements.txt".format(MAIN_DIR))   
+    os.system("pip install -e {0}".format(MAIN_DIR))   
+
+
+@main.command()
+@click.pass_context
+def unittests(ctx):    
+    """ Runs unittests built within kanapy."""
+    
+    click.echo('')
+    os.system("pytest {0}/tests/ -v".format(MAIN_DIR))      
+    click.echo('')    
+        
+    
+@main.command()
+@click.pass_context
+def builddocs(ctx):    
+    """ Generates a HTML-based reference documentation."""
+    
+    click.echo('')
+    os.system("make -C {0}/docs/ clean && make -C {0}/docs/ html".format(MAIN_DIR))      
+    click.echo('')
+    click.echo("The HTML documentation can be found at '/path/to/your/kanapy/docs/index.html'")
+    click.echo('')
+    
+       
 @main.command()
 @click.option('--filename', help='Input statistics file name in the current directory.')
 @click.pass_context
