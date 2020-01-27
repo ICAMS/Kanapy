@@ -82,6 +82,7 @@ def setPaths():
     ''' Requests user input for MATLAB & MTEX installation paths'''
     
     # For MATLAB executable
+    print('')
     status1 = input('Is MATLAB installed in this system (yes/no): ')
     
     if status1 == 'yes' or status1 == 'y' or status1 == 'Y' or status1 == 'YES':
@@ -104,13 +105,14 @@ def setPaths():
             userpath1 = input('Please provide the path to MATLAB executable: ')
 
         # For MTEX installation path
-        print('\n')
+        print('')
         status2 = input('Is MTEX installed in this system (yes/no): ')
 
         if status2 == 'yes' or status2 == 'y' or status2 == 'Y' or status2 == 'YES':                    
             userpath2 = input('Please provide the path to MTEX installation: ')                                         
         elif status2 == 'no' or status2 == 'n' or status2 == 'N' or status2 == 'NO':
             print("Kanapy's texture analysis code requires MTEX. Please install it from: https://mtex-toolbox.github.io/download.")
+            print('')
             userpath2 = False
         else:
             click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
@@ -119,6 +121,7 @@ def setPaths():
                      
     elif status1 == 'no' or status1 == 'n' or status1 == 'N' or status1 == 'NO':
         print("Kanapy's texture analysis code requires MATLAB. Please install it.")
+        print('')
         userpath1 = False
     else:
         click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
@@ -136,7 +139,7 @@ def setPaths():
         with open(path_path,'w') as outfile:
             json.dump(pathDict, outfile, indent=2)                
         
-        print('\n')
+        print('')
         print('Kanapy is now configured for texture analysis!\n')
 
 
