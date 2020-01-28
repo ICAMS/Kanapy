@@ -6,6 +6,7 @@ Developers
 ----------
 
 * Mahesh R.G Prasad <mahesh.prasad@rub.de>
+* Abhishek Biswas <abhishek.biswas@rub.de>
 
 Contributors
 ------------

@@ -73,7 +73,7 @@ with open('HISTORY.rst') as history_file:
     
 setup(
     name='kanapy',
-    version='1.0.0',
+    version='1.1.0',
     author='Mahesh R.G Prasad',
     author_email='mahesh.prasad@rub.de',
     classifiers=[        
