@@ -706,7 +706,7 @@ def extract_volume_sharedGBarea():
         
     # Sort the grain volumes in ascending order of grain IDs
     gv_sorted_keys = sorted(grain_vol, key=grain_vol.get)
-    gv_sorted_values = [grain_vol[gk] for gk in gv_sorted_keys]            
+    gv_sorted_values = [[grain_vol[gk]] for gk in gv_sorted_keys]            
 
     print('Writing grain volumes info. to file', end="")
         
