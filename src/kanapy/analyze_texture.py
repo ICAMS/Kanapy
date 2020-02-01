@@ -231,7 +231,7 @@ def textureReduction(kdict):
     os.system(cmd + '> {}'.format(logFile))   
 
     print("    Generated output files & placed it in the '/mat_files' folder under the current directory.")
-    print("    Wrote Log file ( 'kanapyTexture.log') in the current directory. Check for possible errors and warnings.")
+    print("    Wrote Log file ('kanapyTexture.log') in the current directory. Check for possible errors and warnings.")
     
     os.remove(TRfile)        # Remove the file once done!
     print('')

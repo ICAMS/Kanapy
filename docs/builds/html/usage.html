@@ -90,22 +90,17 @@
 <li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#kanapy-s-cli">Kanapy’s CLI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-examples">Running examples</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#through-cli">Through CLI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#through-python-script">Through python script</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#visualize-the-packing-simulation">Visualize the packing simulation</a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="#detailed-tutorial">Detailed tutorial</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#input-file-structure">Input file structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#workflows-for-sphere-packing">Workflows for sphere packing</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#using-cli-sphere">Using CLI - sphere</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#using-python-script-sphere">Using Python script - sphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#geometry-examples">Geometry examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#input-file-structure">Input file structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#workflows-for-sphere-packing">Workflows for sphere packing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#visualize-the-packing-simulation">Visualize the packing simulation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#workflows-for-ellipsoid-packing">Workflows for ellipsoid packing</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#workflows-for-ellipsoid-packing">Workflows for ellipsoid packing</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#using-cli-ellipsoid">Using CLI - ellipsoid</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#using-python-script-ellipsoid">Using Python script - ellipsoid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#texture-examples">Texture examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#workflow-for-odf-reconstruction">Workflow for ODF reconstruction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#workflow-for-odf-reconstruction-with-orientation-assignment">Workflow for ODF reconstruction with orientation assignment</a></li>
 </ul>
 </li>
 </ul>
@@ -199,12 +194,19 @@ this environment contains the installed kanapy and its required dependencies.</p
 <span class="go">            --help  Show this message and exit.</span>
 
 <span class="go">          Commands:</span>
-<span class="go">            abaqusoutput  Writes out the Abaqus (.inp) file for the generated RVE.</span>
-<span class="go">            neperoutput   Writes out particle position and weights files required for...</span>
-<span class="go">            outputstats   Writes out the particle- and grain diameter attributes for...</span>
-<span class="go">            pack          Packs the particles into a simulation box.</span>
-<span class="go">            statgenerate  Generates particle statistics based on the data provided in...</span>
-<span class="go">            voxelize      Generates the RVE by assigning voxels to grains.</span>
+<span class="go">            abaqusoutput   Writes out the Abaqus (.inp) file for the generated RVE.</span>
+<span class="go">            builddocs      Generates a HTML-based reference documentation.</span>
+<span class="go">            install        Install kanapy&#39;s geometry packing module.</span>
+<span class="go">            neperoutput    Writes out particle position and weights files required</span>
+<span class="go">                           for...</span>
+<span class="go">            outputstats    Writes out the particle- and grain diameter attributes for...</span>
+<span class="go">            pack           Packs the particles into a simulation box.</span>
+<span class="go">            reducetexture  Texture reduction algorithm with optional Misorientation...</span>
+<span class="go">            setuptexture   Stores the user provided MATLAB &amp; MTEX paths for texture...</span>
+<span class="go">            statgenerate   Generates particle statistics based on the data provided</span>
+<span class="go">                           in...</span>
+<span class="go">            unittests      Runs unittests built within kanapy.</span>
+<span class="go">            voxelize       Generates the RVE by assigning voxels to grains.</span>
 </pre></div>
 </div>
 <p>The functionality and the arguments of each command listed above can be requested. For example:</p>
@@ -219,93 +221,41 @@ this environment contains the installed kanapy and its required dependencies.</p
 <span class="go">            --help           Show this message and exit.</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="running-examples">
-<h2>Running examples<a class="headerlink" href="#running-examples" title="Permalink to this headline">¶</a></h2>
-<p>Two examples come bundled along with the kanapy package, they can be run either through the
-Command Line Interface (CLI) or through python scripts.</p>
-<div class="section" id="through-cli">
-<h3>Through CLI<a class="headerlink" href="#through-cli" title="Permalink to this headline">¶</a></h3>
-<p>To run the examples, navigate into the corresponding directory where the input file <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code>
-is located, and execute the CLI commands sequentially as shown:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Make sure that you are within the virtual environment created during the kanapy installation, as
-this environment contains the installed kanapy and its required dependencies.</p>
-</div>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
-<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/examples/
-<span class="gp">(myenv) $</span> <span class="nb">cd</span> sphere_packing/
-<span class="gp">(myenv) $</span> kanapy statgenerate --filename stat_input.json
-<span class="gp">(myenv) $</span> kanapy pack
-<span class="gp">(myenv) $</span> kanapy voxelize --timestep <span class="m">750</span>
-<span class="gp">(myenv) $</span> kanapy abaqusoutput
-<span class="gp">(myenv) $</span> kanapy outputstats
-<span class="gp">(myenv) $</span> kanapy neperoutput --timestep <span class="m">750</span>
-</pre></div>
-</div>
-<p>For a detailed description of the commands used above, refer to: <a class="reference internal" href="#using-cli-sphere"><span class="std std-ref">Using CLI - sphere</span></a>.</p>
-</div>
-<div class="section" id="through-python-script">
-<h3>Through python script<a class="headerlink" href="#through-python-script" title="Permalink to this headline">¶</a></h3>
-<p>Navigate into the example directory and execute the python script as shown:</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Make sure that you are within the virtual environment created during the kanapy installation, as
-this environment contains the installed kanapy and its required dependencies.</p>
-</div>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
-<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/examples/
-<span class="gp">(myenv) $</span> <span class="nb">cd</span> sphere_packing/
-<span class="gp">(myenv) $</span> python sphere_pack.py
-</pre></div>
-</div>
-<p>For a detailed description of the kanapy modules used in the script <code class="docutils literal notranslate"><span class="pre">sphere_pack.py</span></code>, refer to: <a class="reference internal" href="#using-python-script-sphere"><span class="std std-ref">Using Python script - sphere</span></a>.</p>
-</div>
-<div class="section" id="visualize-the-packing-simulation">
-<h3>Visualize the packing simulation<a class="headerlink" href="#visualize-the-packing-simulation" title="Permalink to this headline">¶</a></h3>
-<p>You can view the data generated by the simulation (after the simulation
-is complete or during the simulation) by launching OVITO and reading in
-the dump files generated by kanapy from the <code class="docutils literal notranslate"><span class="pre">../sphere_packing/dump_files/</span></code> directory.
-The dump file is generated at each timestep of the particle packing simulation. It contains
-the timestep, the number of particles, the simulation box dimensions and the particle’s attributes
-such as its ID, position (x, y, z), axes lengths (a, b, c) and orientation (Quaternion format - X, Y, Z, W).
-The OVITO user interface when loaded, should look similar to this:</p>
-<a class="reference internal image-reference" href="_images/UI.png"><img alt="_images/UI.png" src="_images/UI.png" style="width: 750px;" /></a>
-<p>By default, OVITO loads the particles as spheres, this option can be changed to visualize ellipsoids.
-The asphericalshapex, asphericalshapey, and asphericalshapez columns need to be mapped to
-Aspherical Shape.X, Aspherical Shape.Y, and Aspherical Shape.Z properties of OVITO when
-importing the dump file. Similarily, the orientationx, orientationy, orientationz, and
-orientationw particle properties need to be mapped to the Orientation.X, Orientation.Y,
-Orientation.Z, and Orientation.W. OVITO cannot set up this mapping automatically, you have
-to do it manually by using the <code class="docutils literal notranslate"><span class="pre">Edit</span> <span class="pre">column</span> <span class="pre">mapping</span></code> button (at the bottom-right corner
-of the GUI) in the file import panel after loading the dump files. The required assignment
-and components are shown here:</p>
-<a class="reference internal image-reference" href="_images/UI_options.png"><img alt="_images/UI_options.png" src="_images/UI_options.png" style="width: 750px;" /></a>
-<p>For further viewing customizations refer to OVITO’s <a class="reference external" href="https://ovito.org/manual/">documentation</a>.</p>
+<p>Bash auto-completion option is avaiable for Kanapy’s CLI commands.</p>
 </div>
 </div>
 <div class="section" id="detailed-tutorial">
 <h2>Detailed tutorial<a class="headerlink" href="#detailed-tutorial" title="Permalink to this headline">¶</a></h2>
-<p>A detailed description of the default examples that come packaged with kanapy is presented here.
+<p>Four examples come bundled along with the kanapy package. Each example describes a particular workflow that is
+either related to the geometry module or the texture module. Hence the examples are sub-categorized here under
+two sub-sections: Geometry examples and Texture examples. A detailed description of these examples is presented here.
 The two examples <code class="docutils literal notranslate"><span class="pre">sphere_packing</span></code> and <code class="docutils literal notranslate"><span class="pre">ellipsoid_packing</span></code> depict the different workflows
 that have to be setup for generating synthetic microstructures with equiaxed and elongated
-grains. Both examples contain an input file wherein the user can specify
-the statistical parameters required for the simulation. For a detailed understanding of the
-general framework of packing simulations, please refer to: <a class="reference internal" href="method.html#modeling"><span class="std std-ref">Modeling</span></a>.</p>
+grains, respectively. And the two examples <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction</span></code> and <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction_with_orientation_assignment</span></code>
+depict the workflows for reconstructing ODF from EBSD data and assigning orientations to RVE grains, respectively.
+For a detailed understanding of the general framework of the packing simulations or the ODF reconstruction, please
+refer to: <a class="reference internal" href="method.html#modeling"><span class="std std-ref">Modeling</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>1. New examples must be created in a separate directory. It allows the kanapy modules
+an easy access to the json, dump and other files created during the simulation.</p>
+</div>
+<div class="section" id="geometry-examples">
+<h3>Geometry examples<a class="headerlink" href="#geometry-examples" title="Permalink to this headline">¶</a></h3>
+<p>Both examples <code class="docutils literal notranslate"><span class="pre">sphere_packing</span></code> and <code class="docutils literal notranslate"><span class="pre">ellipsoid_packing</span></code> contain an input file wherein the user can
+specify the statistical parameters required for the simulation.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
-<li><p>New examples must be created in a separate directory under the <code class="docutils literal notranslate"><span class="pre">kanapy-master/examples/</span></code>
-directory structure. It allows the kanapy modules an easy access to the json and
-dump files created during the simulation.</p></li>
-<li><p>The json and dump files help in making the various kanapy modules independent
+<li><p>The json and dump files help in making the various kanapy geometry modules independent
 of one another during execution.</p></li>
 <li><p>The input file must always be named as: <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> to be read by kanapy.</p></li>
 </ol>
 </div>
 <div class="section" id="input-file-structure">
-<h3>Input file structure<a class="headerlink" href="#input-file-structure" title="Permalink to this headline">¶</a></h3>
+<h4>Input file structure<a class="headerlink" href="#input-file-structure" title="Permalink to this headline">¶</a></h4>
 <p>An exemplary structure of the input file: <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> is shown below:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">{</span>
   <span class="s2">&quot;Equivalent diameter&quot;</span>:
@@ -319,7 +269,7 @@ of one another during execution.</p></li>
     <span class="o">{</span>
       <span class="s2">&quot;mean&quot;</span>: <span class="m">1</span>.0
     <span class="o">}</span>,
-  <span class="s2">&quot;Orientation&quot;</span>:
+  <span class="s2">&quot;Tilt angle&quot;</span>:
     <span class="o">{</span>
       <span class="s2">&quot;sigma&quot;</span>: <span class="m">28</span>.8774,
       <span class="s2">&quot;mean&quot;</span>: <span class="m">87</span>.4178
@@ -339,7 +289,7 @@ of one another during execution.</p></li>
 </pre></div>
 </div>
 <p>The input file is built in the JSON file format, with the following keywords: <code class="docutils literal notranslate"><span class="pre">Equivalent</span> <span class="pre">diameter,</span> <span class="pre">Aspect</span> <span class="pre">ratio,</span>
-<span class="pre">Orientation,</span> <span class="pre">RVE,</span> <span class="pre">Simulation</span></code>.</p>
+<span class="pre">Tilt</span> <span class="pre">angle,</span> <span class="pre">RVE,</span> <span class="pre">Simulation</span></code>.</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>The keyword <code class="docutils literal notranslate"><span class="pre">Equivalent</span> <span class="pre">diameter</span></code> takes in four arguments to generate a
@@ -348,7 +298,7 @@ log-normal distribution for the particle’s equivalent diameter; they are the
 and maximum cut-off values for the diameter. The values should correspond to <span class="math notranslate nohighlight">\(\mu m\)</span> scale.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Aspect</span> <span class="pre">ratio</span></code> takes only the mean value as input. If the resultant
 microstructure contains equiaxed grains then this value should be set to <cite>1</cite>.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Orientation</span></code> keyword represents the tilt angle of particles with
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Tilt</span> <span class="pre">angle</span></code> keyword represents the tilt angle of particles with
 respect to the positive x-axis. Hence, to generate a distribution, it takes in
 two arguments: the normal distribution’s mean and the standard deviation.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">RVE</span></code> keyword takes two inputs: the side length of the final RVE
@@ -377,7 +327,7 @@ ABAQUS .inp file will be written.</p></li>
 </div>
 </div>
 <div class="section" id="workflows-for-sphere-packing">
-<h3>Workflows for sphere packing<a class="headerlink" href="#workflows-for-sphere-packing" title="Permalink to this headline">¶</a></h3>
+<h4>Workflows for sphere packing<a class="headerlink" href="#workflows-for-sphere-packing" title="Permalink to this headline">¶</a></h4>
 <p>This example demonstrates the workflow for generating synthetic microstructures with
 equiaxed grains. The principle involved in generating such microstructures are described
 in the sub-section <a class="reference internal" href="applications.html#microstructure-with-equiaxed-grains"><span class="std std-ref">Microstructure with equiaxed grains</span></a>. With respect to the final RVE mesh,
@@ -386,11 +336,51 @@ the user has the flexibility to choose between the in-built voxelization routine
 can be written out to be post-processed. The positions and weights can be read by the Voronoi tessellation
 and meshing software <a class="reference external" href="http://neper.sourceforge.net/">Neper</a> for generating tessellations and FEM mesh. For more details refer to Neper’s
 <a class="reference external" href="https://ovito.org/manual/">documentation</a>.</p>
-<p>If the in-built voxelization routine is prefered, then the <a class="reference internal" href="kanapy.html#module-kanapy.voxelization"><span class="std std-ref">Module voxelization</span></a> will generate
+<p>If the in-built voxelization routine is prefered, then kanapy will generate
 hexahedral element (C3D8) mesh that can be read by the commercial FEM software <a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>. The Abaqus .inp
 file will be written out in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale.</p>
-<div class="section" id="using-cli-sphere">
-<h4>Using CLI - sphere<a class="headerlink" href="#using-cli-sphere" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/examples/
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> sphere_packing/
+<span class="gp">(myenv) $</span> kanapy statgenerate --filename stat_input.json
+<span class="gp">(myenv) $</span> kanapy pack
+<span class="gp">(myenv) $</span> kanapy neperoutput --timestep <span class="m">750</span>
+</pre></div>
+</div>
+<p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> is located, kanapy’s CLI
+command <code class="docutils literal notranslate"><span class="pre">statgenerate</span></code> is executed along with its argument (name of the input file). It generates the
+necessary particle, RVE, and the simulation attributes, and it writes it to json files. Next the <code class="docutils literal notranslate"><span class="pre">pack</span></code> command is
+called to run the particle packing simulation. This command looks for the json files generated by <code class="docutils literal notranslate"><span class="pre">statgenerate</span></code>
+and reads the files for extracting the information required for the packing simulation. At each time step of the
+packing simulation, kanapy will write out a dump file containing information of particle positions and other attributes.
+Finally, the <code class="docutils literal notranslate"><span class="pre">neperoutput</span></code> command (Optional) can be called to write out the position and weights files
+required for further post-processing. This function takes the specified timestep value as an input parameter
+and reads the corresponding, previously generated dump file. By extracting the particle’s position and dimensions,
+it creates the <code class="docutils literal notranslate"><span class="pre">sphere_positions.txt</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">sphere_weights.txt</span></code> files.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">statgenerate</span></code> command requires the <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> as input.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">neperoutput</span></code> command requires the simulation timestep as input. The choice of the timestep is very important.
+It is suggested to choose the time step at which the spheres are tightly packed and at which there is the least
+amount of overlap. The remaining empty spaces will get assigned to the closest sphere when it is sent to the
+tessellation and meshing routine. Please refer to <a class="reference internal" href="applications.html#microstructure-with-equiaxed-grains"><span class="std std-ref">Microstructure with equiaxed grains</span></a> for more details.</p></li>
+<li><p>The values of position and weights for Neper will be written in <span class="math notranslate nohighlight">\(\mu m\)</span> scale only.</p></li>
+</ol>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For comparing the input and output statistics:</p>
+<ol class="arabic simple">
+<li><p>The json file <code class="docutils literal notranslate"><span class="pre">particle_data.json</span></code> in the directory <code class="docutils literal notranslate"><span class="pre">../json_files/</span></code> can be used to read the
+particle’s equivalent diameter as input statistics.</p></li>
+<li><p>After tessellation, Neper can be used to generate the equivalent diameter for output statistics.</p></li>
+</ol>
+</div>
+<p>If the built-in voxelization is prefered, then the <code class="docutils literal notranslate"><span class="pre">voxelize</span></code> command can be called to generate the hexahedral mesh.
+It populates the simulation box with voxels and assigns the voxels to the respective particles (Spheres). This function
+also takes in the timestep value as an input parameter and reads the corresponding, previously generated
+dump file. The <code class="docutils literal notranslate"><span class="pre">abaqusoutput</span></code> command can be called to write out the Abaqus (.inp) input file. The workflow for this looks like:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
 <span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/examples/
 <span class="gp">(myenv) $</span> <span class="nb">cd</span> sphere_packing/
@@ -399,134 +389,61 @@ file will be written out in either <span class="math notranslate nohighlight">\(
 <span class="gp">(myenv) $</span> kanapy voxelize --timestep <span class="m">750</span>
 <span class="gp">(myenv) $</span> kanapy abaqusoutput
 <span class="gp">(myenv) $</span> kanapy outputstats
-<span class="gp">(myenv) $</span> kanapy neperoutput --timestep <span class="m">750</span>
-</pre></div>
-</div>
-<p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> is located, kanapy’s CLI
-command <code class="docutils literal notranslate"><span class="pre">statgenerate</span></code> is executed along with its argument (name of the input file). Next the <code class="docutils literal notranslate"><span class="pre">pack</span></code> command is
-called to run the particle packing simulation. The <code class="docutils literal notranslate"><span class="pre">voxelize</span></code> command populates the simulation box with voxels
-and assigns the voxels to the respective particles (Spheres). The argument required for the <code class="docutils literal notranslate"><span class="pre">voxelize</span></code> command
-is the timestep of the packing simulation. The choice of the timestep is very important. It is suggested to choose
-the time step at which the spheres are tightly packed and at which there is the least amount of overlap. The
-remaining empty spaces will get assigned to the closest sphere when it is sent to the meshing. Please refer to
-<a class="reference internal" href="applications.html#microstructure-with-equiaxed-grains"><span class="std std-ref">Microstructure with equiaxed grains</span></a> for more details. The <code class="docutils literal notranslate"><span class="pre">abaqusoutput</span></code> command is called to write out
-the Abaqus (.inp) input file. The <code class="docutils literal notranslate"><span class="pre">outputstats</span></code> command is called for generating equivalent
-diameter statistics for comparing input particles and output grains. In both these commands, the output will be written
-out in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, depending on the user requirement specified in the input file. Finally,
-the <code class="docutils literal notranslate"><span class="pre">neperoutput</span></code> command is called (Optional) to write out particle’s positions (<code class="docutils literal notranslate"><span class="pre">sphere_positions.txt</span></code>) and weights
-(<code class="docutils literal notranslate"><span class="pre">sphere_weights.txt</span></code>) files that can be used by Neper.</p>
-</div>
-<div class="section" id="using-python-script-sphere">
-<h4>Using Python script - sphere<a class="headerlink" href="#using-python-script-sphere" title="Permalink to this headline">¶</a></h4>
-<p><strong>Imports</strong>: This example requires the following imports from the Python standard and kanapy modules.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-
-<span class="kn">import</span> <span class="nn">kanapy</span>
-<span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="kn">import</span> <span class="n">particleStatGenerator</span>
-<span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="kn">import</span> <span class="n">write_position_weights</span>
-<span class="kn">from</span> <span class="nn">kanapy.packing</span> <span class="kn">import</span> <span class="n">packingRoutine</span>
-</pre></div>
-</div>
-<p>The methods for generating particle distribution statistics and outputing particle
-position- and weights are imported from the <code class="docutils literal notranslate"><span class="pre">input_output</span></code> module. The routine
-for the actual particle packing simulation is imported from the <code class="docutils literal notranslate"><span class="pre">packing</span></code> module.</p>
-<p><strong>Workflow</strong>: The complete process consists of 3 stages:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Particle data generation.</p></li>
-<li><p>Particle packing simulation.</p></li>
-<li><p>Writing output files.</p></li>
-</ul>
-</div></blockquote>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">inputFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;/stat_input.json&#39;</span>
-    <span class="n">particleStatGenerator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">)</span>
-    <span class="n">packingRoutine</span><span class="p">()</span>
-    <span class="n">write_position_weights</span><span class="p">(</span><span class="mi">750</span><span class="p">)</span>
-    <span class="k">return</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
-<li><p>Individual stages can be run by commenting out the other stages but should be done sequentially.</p></li>
-<li><p>The <a class="reference internal" href="kanapy.html#kanapy.input_output.particleStatGenerator" title="kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.particleStatGenerator()</span></code></a> method requires the <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> as input.</p></li>
-<li><p>The <a class="reference internal" href="kanapy.html#kanapy.input_output.write_position_weights" title="kanapy.input_output.write_position_weights"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.write_position_weights()</span></code></a> method requires the simulation timestep as input.
-The choice of the timestep is very important. It is suggested to choose the time step at which the spheres
-are tightly packed and at which there is the least amount of overlap. The remaining empty spaces will get assigned to
-the closest sphere when it is sent to the tessellation and meshing routine. Please refer to
+<li><p>The argument required for the <code class="docutils literal notranslate"><span class="pre">voxelize</span></code> command is the timestep of the packing simulation.
+The choice of the timestep is very important. It is suggested to choose the time step at which the
+spheres are tightly packed and at which there is the least amount of overlap. The remaining empty
+spaces will get assigned to the closest sphere when it is sent to the meshing. Please refer to
 <a class="reference internal" href="applications.html#microstructure-with-equiaxed-grains"><span class="std std-ref">Microstructure with equiaxed grains</span></a> for more details.</p></li>
-<li><p>The values of position and weights for Neper will be written in <span class="math notranslate nohighlight">\(\mu m\)</span> scale only.</p></li>
+<li><p>The Abaqus (.inp) file will be written out in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, depending
+on the user requirement specified in the input file</p></li>
 </ol>
-</div>
-<p>The data required for the packing simulation contained in the user-defined input file: <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> is read
-by the method <a class="reference internal" href="kanapy.html#kanapy.input_output.particleStatGenerator" title="kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.particleStatGenerator()</span></code></a>. It generates the necessary particle, RVE, and
-the simulation attributes, and it writes it to json files. The method <a class="reference internal" href="kanapy.html#kanapy.packing.packingRoutine" title="kanapy.packing.packingRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.packing.packingRoutine()</span></code></a>, when
-called, looks for the json files generated by <a class="reference internal" href="kanapy.html#kanapy.input_output.particleStatGenerator" title="kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.particleStatGenerator()</span></code></a>
-and reads the files for extracting the information required for the packing simulation. At each time step of the
-packing simulation, the <a class="reference internal" href="kanapy.html#kanapy.packing.particle_grow" title="kanapy.packing.particle_grow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.packing.particle_grow()</span></code></a> method will write out a dump file containing information
-of particle positions and other attributes.</p>
-<p>Finally, the <a class="reference internal" href="kanapy.html#kanapy.input_output.write_position_weights" title="kanapy.input_output.write_position_weights"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.write_position_weights()</span></code></a> method can be called
-to write out the position and weights files required for further post-processing. This function takes the
-specified timestep value as an input parameter and reads the corresponding, previously generated dump file.
-By extracting the particle’s position and dimensions, it creates the <code class="docutils literal notranslate"><span class="pre">sphere_positions.txt</span></code> &amp;
-<code class="docutils literal notranslate"><span class="pre">sphere_weights.txt</span></code> files.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For comparing the input and output statistics:</p>
-<ol class="arabic simple">
-<li><p>The json file <code class="docutils literal notranslate"><span class="pre">particle_data.json</span></code> in the directory <code class="docutils literal notranslate"><span class="pre">../json_files/</span></code> can be used to
-read the particle’s equivalent diameter as input statistics.</p></li>
-<li><p>After tessellation, Neper can be used to generate the equivalent diameter for output statistics.</p></li>
-</ol>
-</div>
-<p>If the built-in voxelization is prefered, then the <a class="reference internal" href="kanapy.html#kanapy.voxelization.voxelizationRoutine" title="kanapy.voxelization.voxelizationRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.voxelization.voxelizationRoutine()</span></code></a> method can be called
-to generate the hexahedral mesh. This function also takes in the timestep value as an input parameter and reads the
-corresponding, previously generated dump file. The <a class="reference internal" href="kanapy.html#kanapy.input_output.write_abaqus_inp" title="kanapy.input_output.write_abaqus_inp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.write_abaqus_inp()</span></code></a> method can be called to
-write out the Abaqus (.inp) input file. The Abaqus (.inp) file will be written out in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale,
-depending on the user requirement specified in the input file. The workflow for this looks like:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">kanapy.voxelization</span> <span class="kn">import</span> <span class="n">voxelizationRoutine</span>
-<span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="kn">import</span> <span class="n">write_abaqus_inp</span><span class="p">,</span> <span class="n">write_output_stat</span>
-
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">inputFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;/stat_input.json&#39;</span>
-    <span class="n">particleStatGenerator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">)</span>
-    <span class="n">packingRoutine</span><span class="p">()</span>
-    <span class="n">voxelizationRoutine</span><span class="p">(</span><span class="mi">750</span><span class="p">)</span>
-    <span class="n">write_abaqus_inp</span><span class="p">()</span>
-    <span class="n">write_output_stat</span><span class="p">()</span>
-    <span class="k">return</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
-</pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For comparing the input and the output equivalent diameter statistics the method
-<a class="reference internal" href="kanapy.html#kanapy.input_output.write_output_stat" title="kanapy.input_output.write_output_stat"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.write_output_stat()</span></code></a> can be called. This function writes the diameter values
-in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, depending on the user requirement specified in the input file.</p>
+<p>For comparing the input and the output equivalent diameter statistics the <code class="docutils literal notranslate"><span class="pre">outputstats</span></code> command can be
+called. This command writes the diameter values in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, depending
+on the user requirement specified in the input file.</p>
 </div>
 <p>Storing information in json &amp; dump files is effective in making the workflow stages independent of one another.
 But the sequence of the workflow is important, for example: Running the packing routine before the statistics generation
 is not advised as the packing routine would not have any input to work on. Both the json and the dump files are human readable,
-and hence they help the user debug the code in case of simulation problems. As mentioned earlier, the dump files can
-be read by the visualization software <a class="reference external" href="https://ovito.org/">OVITO</a>; this provides the user a visual aid to understand the physics behind packing.</p>
+and hence they help the user debug the code in case of simulation problems. The dump files can be read by the visualization
+software <a class="reference external" href="https://ovito.org/">OVITO</a>; this provides the user a visual aid to understand the physics behind packing.</p>
 </div>
+<div class="section" id="visualize-the-packing-simulation">
+<h4>Visualize the packing simulation<a class="headerlink" href="#visualize-the-packing-simulation" title="Permalink to this headline">¶</a></h4>
+<p>You can view the data generated by the simulation (after the simulation
+is complete or during the simulation) by launching OVITO and reading in
+the dump files generated by kanapy from the <code class="docutils literal notranslate"><span class="pre">../sphere_packing/dump_files/</span></code> directory.
+The dump file is generated at each timestep of the particle packing simulation. It contains
+the timestep, the number of particles, the simulation box dimensions and the particle’s attributes
+such as its ID, position (x, y, z), axes lengths (a, b, c) and tilt angle (Quaternion format - X, Y, Z, W).
+The OVITO user interface when loaded, should look similar to this:</p>
+<a class="reference internal image-reference" href="_images/UI.png"><img alt="_images/UI.png" src="_images/UI.png" style="width: 750px;" /></a>
+<p>By default, OVITO loads the particles as spheres, this option can be changed to visualize ellipsoids.
+The asphericalshapex, asphericalshapey, and asphericalshapez columns need to be mapped to
+Aspherical Shape.X, Aspherical Shape.Y, and Aspherical Shape.Z properties of OVITO when
+importing the dump file. Similarily, the orientationx, orientationy, orientationz, and
+orientationw particle properties need to be mapped to the Orientation.X, Orientation.Y,
+Orientation.Z, and Orientation.W. OVITO cannot set up this mapping automatically, you have
+to do it manually by using the <code class="docutils literal notranslate"><span class="pre">Edit</span> <span class="pre">column</span> <span class="pre">mapping</span></code> button (at the bottom-right corner
+of the GUI) in the file import panel after loading the dump files. The required assignment
+and components are shown here:</p>
+<a class="reference internal image-reference" href="_images/UI_options.png"><img alt="_images/UI_options.png" src="_images/UI_options.png" style="width: 750px;" /></a>
+<p>For further viewing customizations refer to OVITO’s <a class="reference external" href="https://ovito.org/manual/">documentation</a>.</p>
 </div>
 <div class="section" id="workflows-for-ellipsoid-packing">
-<h3>Workflows for ellipsoid packing<a class="headerlink" href="#workflows-for-ellipsoid-packing" title="Permalink to this headline">¶</a></h3>
+<h4>Workflows for ellipsoid packing<a class="headerlink" href="#workflows-for-ellipsoid-packing" title="Permalink to this headline">¶</a></h4>
 <p>This example demonstrates the workflow for generating synthetic microstructures with
 elongated grains. The principle involved in generating such microstructures is described
 in the sub-section <a class="reference internal" href="applications.html#microstructure-with-elongated-grains"><span class="std std-ref">Microstructure with elongated grains</span></a>. With respect to the final RVE mesh,
 the built-in voxelization routine has to be used due to the inavailability of anisotropic tessellation techniques.
 The <a class="reference internal" href="kanapy.html#module-kanapy.voxelization"><span class="std std-ref">Module voxelization</span></a> will generate a hexahedral element (C3D8) mesh that can be read by the commercial FEM software <a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>.</p>
-<div class="section" id="using-cli-ellipsoid">
-<h4>Using CLI - ellipsoid<a class="headerlink" href="#using-cli-ellipsoid" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
 <span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/examples/
 <span class="gp">(myenv) $</span> <span class="nb">cd</span> ellipsoid_packing/
@@ -540,66 +457,130 @@ The <a class="reference internal" href="kanapy.html#module-kanapy.voxelization">
 <p>The workflow is similar to the one described earlier for sphere packing. The only difference being, that the <code class="docutils literal notranslate"><span class="pre">neperoutput</span></code>
 command is not applicable here. The <code class="docutils literal notranslate"><span class="pre">outputstats</span></code> command not only writes out the equivalent diameters, but also the
 major and minor diameters of the ellipsoidal particles and grains.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">statgenerate</span></code> command requires the <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> as input.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">voxelize</span></code> command requires the simulation timestep as input. The choice of the timestep is very important.
+It is suggested to choose the time step at which the ellipsoids are tightly packed and there is the least
+amount of overlap. The remaining empty spaces will get assigned to the closest ellipsoid when it is sent
+to the voxelization (meshing) routine. Please refer to <a class="reference internal" href="applications.html#microstructure-with-elongated-grains"><span class="std std-ref">Microstructure with elongated grains</span></a> for more details.</p></li>
+<li><p>For comparing the input and output equivalent, major and minor diameter statistics, the command
+<code class="docutils literal notranslate"><span class="pre">outputstats</span></code> can be called. Kanapy writes the diameter values in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale,
+depending on the user requirement specified in the input file.</p></li>
+</ol>
 </div>
-<div class="section" id="using-python-script-ellipsoid">
-<h4>Using Python script - ellipsoid<a class="headerlink" href="#using-python-script-ellipsoid" title="Permalink to this headline">¶</a></h4>
-<p><strong>Imports</strong>: This example requires the following methods to be imported from kanapy modules.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-
-<span class="kn">import</span> <span class="nn">kanapy</span>
-<span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="kn">import</span> <span class="n">particleStatGenerator</span>
-<span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="kn">import</span> <span class="n">write_abaqus_inp</span><span class="p">,</span> <span class="n">write_output_stat</span>
-<span class="kn">from</span> <span class="nn">kanapy.packing</span> <span class="kn">import</span> <span class="n">packingRoutine</span>
-<span class="kn">from</span> <span class="nn">kanapy.voxelization</span> <span class="kn">import</span> <span class="n">voxelizationRoutine</span>
-</pre></div>
 </div>
-<p>The methods for generating particle distribution statistics and for outputing the Abaqus input file
-are imported from the <code class="docutils literal notranslate"><span class="pre">input_output</span></code> module. The routine for the actual particle packing
-simulation is imported from the <code class="docutils literal notranslate"><span class="pre">packing</span></code> module. And the routine for generating hexahedral mesh
-is imported from the <code class="docutils literal notranslate"><span class="pre">voxelization</span></code> module.</p>
-<p><strong>Workflow</strong>: The complete process consists of 4 stages:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Particle data generation.</p></li>
-<li><p>Particle packing simulation.</p></li>
-<li><p>RVE voxelization.</p></li>
-<li><p>Writing output files.</p></li>
-</ul>
-</div></blockquote>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    <span class="n">inputFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;/stat_input.json&#39;</span>
-    <span class="n">particleStatGenerator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">)</span>
-    <span class="n">packingRoutine</span><span class="p">()</span>
-    <span class="n">voxelizationRoutine</span><span class="p">(</span><span class="mi">750</span><span class="p">)</span>
-    <span class="n">write_abaqus_inp</span><span class="p">()</span>
-    <span class="n">write_output_stat</span><span class="p">()</span>
-    <span class="k">return</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">main</span><span class="p">()</span>
+</div>
+<div class="section" id="texture-examples">
+<h3>Texture examples<a class="headerlink" href="#texture-examples" title="Permalink to this headline">¶</a></h3>
+<p>Both examples <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction</span></code> and <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction_with_orientation_assignment</span></code> require MATLAb &amp; MTEX to be
+installed in your system. If your kanapy is not configured for texture analysis, please run the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
+<span class="gp">(myenv) $</span> kanapy setuptexture
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
-<li><p>As mentioned previously, individual stages can be run by commenting out the other stages but should be done sequentially.</p></li>
-<li><p>The <a class="reference internal" href="kanapy.html#kanapy.input_output.particleStatGenerator" title="kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.particleStatGenerator()</span></code></a> method requires the <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> as input.</p></li>
-<li><p>The <a class="reference internal" href="kanapy.html#kanapy.voxelization.voxelizationRoutine" title="kanapy.voxelization.voxelizationRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.voxelization.voxelizationRoutine()</span></code></a> method requires the simulation timestep as input.
-The choice of the timestep is very important. It is suggested to choose the time step at which the ellipsoids
-are tightly packed and there is the least amount of overlap. The remaining empty spaces will get assigned to
-the closest ellipsoid when it is sent to the voxelization (meshing) routine. Please refer to
-<a class="reference internal" href="applications.html#microstructure-with-elongated-grains"><span class="std std-ref">Microstructure with elongated grains</span></a> for more details.</p></li>
-<li><p>For comparing the input and output equivalent, major and minor diameter statistics, the method
-<a class="reference internal" href="kanapy.html#kanapy.input_output.write_output_stat" title="kanapy.input_output.write_output_stat"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.write_output_stat()</span></code></a> can be called. This function writes the diameter values
-in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, depending on the user requirement specified in the input file.</p></li>
+<li><p>Your MATLAB version must be 2015 and above.</p></li>
+<li><p>The required input files must be placed in the working directory from where the kanapy commands are run.</p></li>
 </ol>
 </div>
-<p>The process of the methods <a class="reference internal" href="kanapy.html#kanapy.input_output.particleStatGenerator" title="kanapy.input_output.particleStatGenerator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.particleStatGenerator()</span></code></a> and <a class="reference internal" href="kanapy.html#kanapy.packing.packingRoutine" title="kanapy.packing.packingRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.packing.packingRoutine()</span></code></a>
-is similar to that described in <a class="reference internal" href="#using-python-script-ellipsoid"><span class="std std-ref">Using Python script - ellipsoid</span></a>. But for voxelization, the <a class="reference internal" href="kanapy.html#kanapy.voxelization.voxelizationRoutine" title="kanapy.voxelization.voxelizationRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.voxelization.voxelizationRoutine()</span></code></a>
-method is called to generate the hexahedral mesh. It takes in the timestep value as an input parameter and reads the corresponding,
-previously generated dump file. By extracting the particle’s position and dimensions, it creates the final FEM mesh. Finally,
-the <a class="reference internal" href="kanapy.html#kanapy.input_output.write_abaqus_inp" title="kanapy.input_output.write_abaqus_inp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.write_abaqus_inp()</span></code></a> method can be called to write out the Abaqus (.inp) input file.</p>
+<div class="section" id="workflow-for-odf-reconstruction">
+<h4>Workflow for ODF reconstruction<a class="headerlink" href="#workflow-for-odf-reconstruction" title="Permalink to this headline">¶</a></h4>
+<p>This example demonstrates the workflow for reconstructing ODF from experimental EBSD data. The principle involved
+in generating the reduced ODF is described in the sub-section <a class="reference internal" href="applications.html#odf-reconstruction"><span class="std std-ref">ODF reconstruction</span></a>. Kanapy requires the EBSD data
+estimated using MTEX as input in the (.mat) file format. In this regard, an exemplary EBSD file (<cite>titanium.mat</cite>) is
+provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction/</span></code> folder.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/examples/
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> ODF_reconstruction/
+<span class="gp">(myenv) $</span> kanapy reducetexture --ebsd titanium.mat
+</pre></div>
+</div>
+<p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code> is located, kanapy’s CLI
+command <code class="docutils literal notranslate"><span class="pre">reducetexture</span></code> is executed along with its argument (name of the EBSD (.mat) file). If kanapy’s
+geometry module is executed already, then the number of reduced orientations are read directly. Else kanapy requests
+the user to provide the number of reduced orientations required before calling the MATLAB ODF reconstruction algorithm.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>The EBSD (.mat) file is a mandatory requirement for the ODF reconstruction algorithm.</p></li>
+<li><p>Note here the value of the kernel shape parameter (<span class="math notranslate nohighlight">\(\kappa\)</span>) is set to a default value of 0.0873 rad.</p></li>
+</ol>
+</div>
+<p>Alternatly, an initial kernel shape parameter (<span class="math notranslate nohighlight">\(\kappa\)</span>) can be specified as an user input (OR) the grains
+estimated using MTEX can be provided as an input in the (.mat) file format. The value of <span class="math notranslate nohighlight">\(\kappa\)</span> must be in radians,
+if user specified. Else if the grains (.mat) file is provided, then the optimum <span class="math notranslate nohighlight">\(\kappa\)</span> is estimated by kanapy using
+the mean orientation of the grains. In this regard, an exemplary grains file (<code class="docutils literal notranslate"><span class="pre">titanium_grains.mat</span></code>) is
+provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction/</span></code> folder. The workflow for this looks like:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/examples/
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> ODF_reconstruction/
+<span class="gp">(myenv) $</span> kanapy reducetexture --ebsd titanium.mat --kernel <span class="m">0</span>.096
+<span class="go">                                 (OR)</span>
+<span class="gp">(myenv) $</span> kanapy reducetexture --ebsd titanium.mat --grains titanium_grains.mat
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>The output files are saved to the <code class="docutils literal notranslate"><span class="pre">/mat_files</span></code> folder under the current working directory.</p></li>
+<li><p>The output (.txt) file contains the following information: <span class="math notranslate nohighlight">\(L_1\)</span> error of ODF reconstruction,
+the initial (<span class="math notranslate nohighlight">\(\kappa\)</span>) and the optimized (<span class="math notranslate nohighlight">\(\kappa^\prime\)</span>) values, and a list of discrete orientations.</p></li>
+<li><p>Additionaly kanapy saves the reduced ODF and the reduced orientations (.mat) files in this folder.</p></li>
+<li><p>Kanapy writes a log file (<code class="docutils literal notranslate"><span class="pre">kanapyTexture.log</span></code>) in the current working directory for possible errors and warnings debugging.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="workflow-for-odf-reconstruction-with-orientation-assignment">
+<h4>Workflow for ODF reconstruction with orientation assignment<a class="headerlink" href="#workflow-for-odf-reconstruction-with-orientation-assignment" title="Permalink to this headline">¶</a></h4>
+<p>This example demonstrates the workflow for reconstructing ODF from experimental EBSD data and then determining the optimal
+assignment of orientations to RVE grains. The principle involved in optimal orientation assignment is described in the
+sub-section <a class="reference internal" href="applications.html#odf-reconstruction-with-orientation-assignment"><span class="std std-ref">ODF reconstruction with orientation assignment</span></a>. In addition to the EBSD data, Kanapy requires
+grain (.mat) file, and the grain boundary shared surface area information as input. In this regard, an exemplary
+EBSD file (<code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code>), grains file (<code class="docutils literal notranslate"><span class="pre">titanium_grains.mat</span></code>) and shared surface area file (<code class="docutils literal notranslate"><span class="pre">/json_files/shared_surfaceArea.csv</span></code>) is
+provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction_with_orientation_assignment/</span></code> folder. It is important to note that
+the grain boundary shared surface area file is created whilst generating an RVE by kanapy’s geometry module.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/examples/
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> ODF_reconstruction/
+<span class="gp">(myenv) $</span> kanapy reducetexture --ebsd titanium.mat --grains titanium_grains.mat --fit_mad yes
+</pre></div>
+</div>
+<p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code> is located, kanapy’s CLI
+command <code class="docutils literal notranslate"><span class="pre">reducetexture</span></code> is executed along with its arguments (name of the EBSD, grains (.mat) files). The
+key <code class="docutils literal notranslate"><span class="pre">--fit_mad</span></code> must be used with this command to tell kanapy that orientation assignment to grains is required.
+If kanapy’s geometry module is executed already, then the number of reduced orientations are read directly. Else kanapy requests
+the user to provide the number of reduced orientations required before calling the MATLAB functions.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>The EBSD, grains (.mat) files and the grain boundary shared surface file is a mandatory requirement for the
+orientation assignment algorithm.</p></li>
+<li><p>The shared surface area file can only be generated if kanapy’s geometry module is executed.</p></li>
+<li><p>To generate the shared surface area file, run <code class="docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">outputstats</span></code> command after generating the RVE. Kanapy will
+write a <code class="docutils literal notranslate"><span class="pre">shared_surfaceArea.csv</span></code> file to the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder.</p></li>
+</ol>
+</div>
+<p>Additionally an optional input that can be provided is the grain volume information, which is used for weighting the
+orientations after assignment and for estimating the ODF represented by the RVE. In this regard, an exemplary grains
+volume file (<code class="docutils literal notranslate"><span class="pre">grainsVolumes.csv</span></code>) is provided in the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ol class="arabic simple">
+<li><p>Kanapy automatically detects the presence of the <code class="docutils literal notranslate"><span class="pre">shared_surfaceArea.csv</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">grainsVolumes.csv</span></code> files are
+present in the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder.</p></li>
+<li><p>The output files are saved to the <code class="docutils literal notranslate"><span class="pre">/mat_files</span></code> folder under the current working directory.</p></li>
+<li><p>The output (.txt) file contains the following information: <span class="math notranslate nohighlight">\(L_1\)</span> error of ODF reconstruction,
+<span class="math notranslate nohighlight">\(L_1\)</span> error between disorientation angle distributions from the EBSD data and the RVE, the initial
+(<span class="math notranslate nohighlight">\(\kappa\)</span>) and the optimized (<span class="math notranslate nohighlight">\(\kappa^\prime\)</span>) values, and a list of discrete orientations each
+with a specific grain number that it should be assigned to.</p></li>
+<li><p>Additionaly kanapy saves the reduced ODF and the reduced orientations (.mat) files in this folder.</p></li>
+<li><p>Kanapy writes a log file (<code class="docutils literal notranslate"><span class="pre">kanapyTexture.log</span></code>) in the current working directory for possible errors and warnings debugging.</p></li>
+</ol>
+</div>
 </div>
 </div>
 </div>
