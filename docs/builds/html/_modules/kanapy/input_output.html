@@ -863,7 +863,7 @@
         
     <span class="c1"># Sort the grain volumes in ascending order of grain IDs</span>
     <span class="n">gv_sorted_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">grain_vol</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">grain_vol</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
-    <span class="n">gv_sorted_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">grain_vol</span><span class="p">[</span><span class="n">gk</span><span class="p">]</span> <span class="k">for</span> <span class="n">gk</span> <span class="ow">in</span> <span class="n">gv_sorted_keys</span><span class="p">]</span>            
+    <span class="n">gv_sorted_values</span> <span class="o">=</span> <span class="p">[[</span><span class="n">grain_vol</span><span class="p">[</span><span class="n">gk</span><span class="p">]]</span> <span class="k">for</span> <span class="n">gk</span> <span class="ow">in</span> <span class="n">gv_sorted_keys</span><span class="p">]</span>            
 
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing grain volumes info. to file&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         

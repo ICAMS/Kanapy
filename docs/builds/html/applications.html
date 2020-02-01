@@ -88,9 +88,17 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">Overview</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Applications</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#microstructure-with-equiaxed-grains">Microstructure with equiaxed grains</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#microstructure-with-elongated-grains">Microstructure with elongated grains</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#simulation-benchmarks">Simulation benchmarks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#geometry-module">Geometry module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#microstructure-with-equiaxed-grains">Microstructure with equiaxed grains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#microstructure-with-elongated-grains">Microstructure with elongated grains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation-benchmarks">Simulation benchmarks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#texture-module">Texture module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#odf-reconstruction">ODF reconstruction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#odf-reconstruction-with-orientation-assignment">ODF reconstruction with orientation assignment</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
@@ -165,8 +173,10 @@
             
   <div class="section" id="applications">
 <h1>Applications<a class="headerlink" href="#applications" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="geometry-module">
+<h2>Geometry module<a class="headerlink" href="#geometry-module" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="microstructure-with-equiaxed-grains">
-<h2>Microstructure with equiaxed grains<a class="headerlink" href="#microstructure-with-equiaxed-grains" title="Permalink to this headline">¶</a></h2>
+<h3>Microstructure with equiaxed grains<a class="headerlink" href="#microstructure-with-equiaxed-grains" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference external" href="https://en.wikipedia.org/wiki/Voronoi_diagram">Voronoi</a> and <a class="reference external" href="https://en.wikipedia.org/wiki/Power_diagram">Laguerre</a> tessellations are some of the popular methods for generating polycrystalline microstructures. These approaches require positions and weights as input parameters for generating tessellation cells that resemble grains of a polycrystal. In this regard, the proposed particle packing approach can be used to generate the required information. Microstructures with equiaxed grains are best approximated by spheres, and after obtaining the necessary packing fraction, positions and radii can be outputted.</p>
 <div class="figure align-center" id="id1">
 <img alt="_images/sphere_app.png" src="_images/sphere_app.png" />
@@ -176,7 +186,7 @@
 <p>Using the information obtained from sphere packing, radical Voronoi tessellation can be performed by Neper. And FE discretization of the tessellation cells by tetrahedral elements can also be done within Neper - <a class="reference external" href="https://doi.org/10.1016/j.cma.2011.01.002">Quey (2011)</a> with assistance from the FE mesh generating software Gmsh - <a class="reference external" href="https://doi.org/10.1002/nme.2579">Geuzaine (2009)</a>.</p>
 </div>
 <div class="section" id="microstructure-with-elongated-grains">
-<h2>Microstructure with elongated grains<a class="headerlink" href="#microstructure-with-elongated-grains" title="Permalink to this headline">¶</a></h2>
+<h3>Microstructure with elongated grains<a class="headerlink" href="#microstructure-with-elongated-grains" title="Permalink to this headline">¶</a></h3>
 <p>Microstructures generated through conventional manufacturing processes like rolling and state-of-the-art processes like additive manufacturing (AM) consist of both elongated and equiaxed grains. In the context of AM, this is due to the complex solidification process, which occurs as a result of constant re-heating and re-cooling of previously melted layers during the manufacturing. The morphology of the grains along with the texture plays an important role in the resulting mechanical behavior. Hence, modeling such complex microstructures is vital, and in this regard the proposed approach of random ellipsoid packing is used.</p>
 <div class="figure align-center" id="id2">
 <img alt="_images/ellipsoid_app.png" src="_images/ellipsoid_app.png" />
@@ -185,7 +195,7 @@
 <p>The ellipsoid packing process is similar to that of sphere packing as described earlier. Once the ellipsoids are tightly packed with minimal acceptable overlaps, they are processed further for meshing. Since Voronoi tessellations cannot be applied to anisotropic particles such as ellipsoids, a voxel-based mesh-generating routine that utilizes convex hull for discretizing the RVE is employed. The voxelization (meshing) routine is made of 2 stages. The number of voxels in the RVE has a direct influence on the FE solution and the FE simulation time and must hence be meticulously chosen. The choice is not arbitrary, as it is constrained by how well the grains of the RVE are represented with respect to their geometry and the FEM simulation time.</p>
 </div>
 <div class="section" id="simulation-benchmarks">
-<h2>Simulation benchmarks<a class="headerlink" href="#simulation-benchmarks" title="Permalink to this headline">¶</a></h2>
+<h3>Simulation benchmarks<a class="headerlink" href="#simulation-benchmarks" title="Permalink to this headline">¶</a></h3>
 <p>To estimate the performance of Kanapy with respect to its particle packing and voxelization routines, multiple realizations of both sphere and ellipsoid packing was performed on a 2.60 GHz Intel Xeon CPU. Figure 1 depicts graphically the average CPU time recorded over 10 simulation runs for each realization of particle packing. The data is tabulated in Table 1. A significant difference in the variation of CPU time can be observed between spheres and ellipsoids of the same number. The difference arises from the fact that, two layered collision detection is sufficient to estimate if spheres collide. But ellipsoid collision detection requires an additional computational step of solving the characteristic equation as described in <a class="reference internal" href="method.html#overlap-detection"><span class="std std-ref">Overlap detection</span></a>.</p>
 <div class="figure align-center" id="id3">
 <img alt="_images/CPUtime_analysis_packing.png" src="_images/CPUtime_analysis_packing.png" />
@@ -304,6 +314,52 @@
 </tr>
 </tbody>
 </table>
+</div>
+</div>
+<div class="section" id="texture-module">
+<h2>Texture module<a class="headerlink" href="#texture-module" title="Permalink to this headline">¶</a></h2>
+<p>The ODF reconstruction and the orientation assignment algorithms are both implemented as MATLAB functions within Kanapy. Both these algorithms utilizes several MTEX <a class="reference external" href="https://www.tib.eu/en/search/id/TIBKAT%3A623768526/">Bachmann (2010)</a> functions, and are called within Kanapy by python. The ODF reconstruction algorithm can be used independently (if the required inputs are provided), whereas the orientation assignment algorithm only works if the ODF reconstruction is performed and the RVE is generated by Kanapy’s geometry module. The ODF reconstruction MATLAB function can also be used as a standalone program outside of Kanapy’s framework, but it still requires MTEX installation. Please refer to the comments in the MATLAB scripts for their independent usage. Various possible input configurations are discussed below, which have been exemplified using the Titanium EBSD data available within MTEX.</p>
+<p>Since both these algorithms are imlemented as MATLAB functions that calls other MTEX functions, the MATLAB and MTEX installation paths are required for Kanapy’s texture module. Make sure to set up the texture module within kanapy by running the command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
+<span class="gp">(myenv) $</span> kanapy setuptexture
+</pre></div>
+</div>
+<div class="section" id="odf-reconstruction">
+<h3>ODF reconstruction<a class="headerlink" href="#odf-reconstruction" title="Permalink to this headline">¶</a></h3>
+<p>To use the ODF reconstruction algorithm, the EBSD data estimated using MTEX must be given as input in the form of (.mat) file. By providing the number of discrete orientations (<span class="math notranslate nohighlight">\(N^\prime\)</span>) required, the algorithm can be used in the minimum possible configuration. Note here the value of <span class="math notranslate nohighlight">\(\kappa\)</span> is set to a default value of <span class="math notranslate nohighlight">\(0.0873\)</span> rad. Figure 3 depicts the pole figure (plotted using MTEX) estimated from the experiment EBSD data file provided and Figure 4 depicts the pole figure for 250 discrete orientations obtained as output with the default <span class="math notranslate nohighlight">\(\kappa\)</span> value.</p>
+<div class="figure align-center" id="id7">
+<img alt="_images/odf_titanium_5degkappa_exp.png" src="_images/odf_titanium_5degkappa_exp.png" />
+<p class="caption"><span class="caption-text"><strong>Figure 3</strong>: Plot depicting the pole figure obtained from EBSD data analysis.</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id8">
+<img alt="_images/odf_titanium_5degkappa_250.png" src="_images/odf_titanium_5degkappa_250.png" />
+<p class="caption"><span class="caption-text"><strong>Figure 4</strong>: Plot depicting the pole figure obtained from 250 discrete orientation with default <span class="math notranslate nohighlight">\(\kappa\)</span> value of <span class="math notranslate nohighlight">\(0.0873\)</span> rad.</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+</div>
+<p>Alternately, the initial <span class="math notranslate nohighlight">\(\kappa\)</span> value can be specified (in radians) or the grains estimated using MTEX can be provided as an input in the (.mat) file format. If the grains (.mat) file is provided, then the optimum <span class="math notranslate nohighlight">\(\kappa\)</span> is estimated using the mean orientation of the grains (by an MTEX function). Figure 5 shows the pole figure (plotted using MTEX) estimated from EBSD data analysis and Figure 6 shows the pole figure for 250 discrete orientations obtained as output with <span class="math notranslate nohighlight">\(\kappa\)</span> value estimated using grain mean orientation.</p>
+<div class="figure align-center" id="id9">
+<img alt="_images/odf_titanium_grainoptkappa_exp.png" src="_images/odf_titanium_grainoptkappa_exp.png" />
+<p class="caption"><span class="caption-text"><strong>Figure 5</strong>: Plot depicting the pole figure of ODF data obtained from EBSD data analysis.</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id10">
+<img alt="_images/odf_titanium_grainoptkappa_250.png" src="_images/odf_titanium_grainoptkappa_250.png" />
+<p class="caption"><span class="caption-text"><strong>Figure 6</strong>: Plot depicting the pole figure of reconstructed ODF of 250 discrete orientation with <span class="math notranslate nohighlight">\(\kappa\)</span> value estimated using grain mean orientations.</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+</div>
+<p>The output from the ODF reconstruction algorithm is written to a (.txt) file, which consists of the <span class="math notranslate nohighlight">\(L_1\)</span> error of ODF reconstruction, the initial (<span class="math notranslate nohighlight">\(\kappa\)</span>) and the optimized (<span class="math notranslate nohighlight">\(\kappa^\prime\)</span>) values, and a list of the discrete orientations.</p>
+</div>
+<div class="section" id="odf-reconstruction-with-orientation-assignment">
+<h3>ODF reconstruction with orientation assignment<a class="headerlink" href="#odf-reconstruction-with-orientation-assignment" title="Permalink to this headline">¶</a></h3>
+<p>In addition to the ODF reconstruction, kanapy’s texture module can also be used to determine the optimal assignment of orientations to the grains. The orientation assignment algorithm can be used in this regard. The EBSD and the grain (.mat) files, along with the grain boundary shared surface area information are the required mandatory inputs. The grain boundary shared surface area is the output that is available after generating the RVE using kanapy’s geometry module. As explained earlier the surface area is used as weights for estimating the disorientation angle distribution.</p>
+<p>An optional input that can be provided is the grain volume information, which is used for weighting the orientations after assignment and for estimating the ODF represented by the RVE. Figure 7 shows the ODF reconstructed using 250 discrete orientations weighted as per the grain volume (obtained from kanapy’s geometry module) and Figure 8 shows the comparison of the disorientation angle distribution between the EBSD data and the RVE (after orientation assignment).</p>
+<div class="figure align-center" id="id11">
+<img alt="_images/odf_titanium_grainoptkappa_250_MDF_odfcor.png" src="_images/odf_titanium_grainoptkappa_250_MDF_odfcor.png" />
+<p class="caption"><span class="caption-text"><strong>Figure 7</strong>: Pole figure of the ODF estimated after reconstruction with 250 discrete orientation weighted as per the grain volume and assigned using the orientation assignment algorithm.</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-center" id="id12">
+<img alt="_images/disorientation_fitting.png" src="_images/disorientation_fitting.png" />
+<p class="caption"><span class="caption-text"><strong>Figure 8</strong>: Bar plot depicting the comparison of the disorientation angle distribution between the EBSD data and the generated RVE.</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
+</div>
+<p>The output of the orientation assignment algorithm is also written to a (.txt) file. It contains the <span class="math notranslate nohighlight">\(L_1\)</span> error due to ODF reconstruction, the <span class="math notranslate nohighlight">\(L_1\)</span> error between disorientation angle distributions from the EBSD data and the RVE, the initial (<span class="math notranslate nohighlight">\(\kappa\)</span>) and the optimized (<span class="math notranslate nohighlight">\(\kappa^\prime\)</span>) values, and a list of the discrete orientations each with a specific grain number that it should be assigned to.</p>
+</div>
 </div>
 </div>
 
