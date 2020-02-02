@@ -540,38 +540,45 @@ the initial (<span class="math notranslate nohighlight">\(\kappa\)</span>) and t
 assignment of orientations to RVE grains. The principle involved in optimal orientation assignment is described in the
 sub-section <a class="reference internal" href="applications.html#odf-reconstruction-with-orientation-assignment"><span class="std std-ref">ODF reconstruction with orientation assignment</span></a>. In addition to the EBSD data, Kanapy requires
 grain (.mat) file, and the grain boundary shared surface area information as input. In this regard, an exemplary
-EBSD file (<code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code>), grains file (<code class="docutils literal notranslate"><span class="pre">titanium_grains.mat</span></code>) and shared surface area file (<code class="docutils literal notranslate"><span class="pre">/json_files/shared_surfaceArea.csv</span></code>) is
-provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction_with_orientation_assignment/</span></code> folder. It is important to note that
+EBSD file (<code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code>), and a grains file (<code class="docutils literal notranslate"><span class="pre">titanium_grains.mat</span></code>) are provided in the
+<code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction_with_orientation_assignment/</span></code> folder. It is important to note that
 the grain boundary shared surface area file is created whilst generating an RVE by kanapy’s geometry module.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate myenv
 <span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/examples/
-<span class="gp">(myenv) $</span> <span class="nb">cd</span> ODF_reconstruction/
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> ODF_reconstruction_orientation_assignment/
+<span class="gp">(myenv) $</span> kanapy statgenerate --filename stat_input.json
+<span class="gp">(myenv) $</span> kanapy pack
+<span class="gp">(myenv) $</span> kanapy voxelize --timestep <span class="m">750</span>
+<span class="gp">(myenv) $</span> kanapy outputstats
 <span class="gp">(myenv) $</span> kanapy reducetexture --ebsd titanium.mat --grains titanium_grains.mat --fit_mad yes
 </pre></div>
 </div>
-<p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code> is located, kanapy’s CLI
-command <code class="docutils literal notranslate"><span class="pre">reducetexture</span></code> is executed along with its arguments (name of the EBSD, grains (.mat) files). The
-key <code class="docutils literal notranslate"><span class="pre">--fit_mad</span></code> must be used with this command to tell kanapy that orientation assignment to grains is required.
-If kanapy’s geometry module is executed already, then the number of reduced orientations are read directly. Else kanapy requests
-the user to provide the number of reduced orientations required before calling the MATLAB functions.</p>
+<p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code> is located, generate an RVE by calling kanapy’s
+geometry CLI commands: <code class="docutils literal notranslate"><span class="pre">statgenerate</span></code>, <code class="docutils literal notranslate"><span class="pre">pack</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">voxelize</span></code>. To generate the shared surface area file,
+run <code class="docutils literal notranslate"><span class="pre">outputstats</span></code> command. Kanapy will write a <code class="docutils literal notranslate"><span class="pre">shared_surfaceArea.csv</span></code>
+file to the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder. This file contains the grain boundary shared surface area
+information between neighbouring grains. Now, kanapy’s texture CLI command <code class="docutils literal notranslate"><span class="pre">reducetexture</span></code> can be called along with
+its arguments (name of the EBSD, grains (.mat) files). The key <code class="docutils literal notranslate"><span class="pre">--fit_mad</span></code> must be used with this command to tell
+kanapy that orientation assignment to grains is required. Since kanapy’s geometry module is executed already, kanapy recognizes
+the number of reduced orientations required (=number of grains in the RVE). Else kanapy requests the user to provide
+the number of reduced orientations required before calling the MATLAB functions.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
-<li><p>The EBSD, grains (.mat) files and the grain boundary shared surface file is a mandatory requirement for the
+<li><p>The EBSD, grains (.mat) files and the grain boundary shared surface file are mandatory requirements for the
 orientation assignment algorithm.</p></li>
-<li><p>The shared surface area file can only be generated if kanapy’s geometry module is executed.</p></li>
-<li><p>To generate the shared surface area file, run <code class="docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">outputstats</span></code> command after generating the RVE. Kanapy will
-write a <code class="docutils literal notranslate"><span class="pre">shared_surfaceArea.csv</span></code> file to the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">shared_surfaceArea.csv</span></code> file is generated by running <code class="docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">outputstats</span></code>.</p></li>
 </ol>
 </div>
 <p>Additionally an optional input that can be provided is the grain volume information, which is used for weighting the
-orientations after assignment and for estimating the ODF represented by the RVE. In this regard, an exemplary grains
-volume file (<code class="docutils literal notranslate"><span class="pre">grainsVolumes.csv</span></code>) is provided in the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder.</p>
+orientations after assignment and for estimating the ODF represented by the RVE. Kanapy also writes the grains volume file
+(<code class="docutils literal notranslate"><span class="pre">grainsVolumes.csv</span></code>) to the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder, when the <code class="docutils literal notranslate"><span class="pre">outputstats</span></code> command is executed after RVE generation.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
-<li><p>Kanapy automatically detects the presence of the <code class="docutils literal notranslate"><span class="pre">shared_surfaceArea.csv</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">grainsVolumes.csv</span></code> files are
-present in the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">grainsVolumes.csv</span></code> file lists the volume of each grain in the ascending order of the grain ID.</p></li>
+<li><p>Kanapy automatically detects the presence of the <code class="docutils literal notranslate"><span class="pre">shared_surfaceArea.csv</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">grainsVolumes.csv</span></code> files,
+if they are present in the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder.</p></li>
 <li><p>The output files are saved to the <code class="docutils literal notranslate"><span class="pre">/mat_files</span></code> folder under the current working directory.</p></li>
 <li><p>The output (.txt) file contains the following information: <span class="math notranslate nohighlight">\(L_1\)</span> error of ODF reconstruction,
 <span class="math notranslate nohighlight">\(L_1\)</span> error between disorientation angle distributions from the EBSD data and the RVE, the initial
