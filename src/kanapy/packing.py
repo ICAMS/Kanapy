@@ -141,7 +141,7 @@ def packingRoutine():
               * Simulation attributes such as total number of timesteps and periodicity.                         
     """
     try:
-        print('\n')
+        print('')
         print('Starting particle simulation')
 
         cwd = os.getcwd()
@@ -183,6 +183,7 @@ def packingRoutine():
         particle_grow(sim_box, Particles, periodic_status, simulation_data['Time steps'])
 
         print('Completed particle packing')
-
+        print('')
+        
     except KeyboardInterrupt:
         sys.exit(0)

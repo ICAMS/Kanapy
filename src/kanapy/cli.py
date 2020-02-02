@@ -24,7 +24,11 @@ def install(ctx):
     
     click.echo('')
     os.system("conda install -y -c conda-forge --file {0}/requirements.txt".format(MAIN_DIR))   
-    os.system("pip install -e {0}".format(MAIN_DIR))   
+    os.system("pip install -e {0}".format(MAIN_DIR)) 
+    
+    # For Kanapy bash auto completion
+    os.system("echo '# For KANAPY bash autocompletion' >> ~/.bashrc")
+    os.system("echo '. {}' >> ~/.bashrc".format(ROOT_DIR+'/kanapy-complete.sh'))  
 
 
 @main.command()
@@ -50,16 +54,23 @@ def builddocs(ctx):
     
        
 @main.command()
-@click.option('--filename', help='Input statistics file name in the current directory.')
+@click.option('--filename', default=None, help='Input statistics file name in the current directory.')
 @click.pass_context
 def statgenerate(ctx, filename: str):    
     """ Generates particle statistics based on the data provided in the input file."""
-
+                
     if filename == None:
-        raise ValueError('Please provide the name of the input file available in the current directory!')
-            
-    cwd = os.getcwd()
-    particleStatGenerator(cwd + '/' + filename)           
+        click.echo('')
+        click.echo('Please provide the name of the input file available in the current directory', err=True)
+        click.echo('For more info. run: kanapy statgenerate --help\n', err=True)
+        sys.exit(0)         
+    else:
+        cwd = os.getcwd()
+        if not os.path.exists(cwd + '/{}'.format(filename)):
+            click.echo('')
+            click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(filename), err=True)
+            sys.exit(0)        
+        particleStatGenerator(cwd + '/' + filename)           
 
         
 @main.command()
@@ -76,7 +87,10 @@ def voxelize(ctx, timestep: int):
     """ Generates the RVE by assigning voxels to grains.""" 
 
     if timestep == None:
-        raise ValueError('Please provide the timestep value for voxelization!')
+        click.echo('')    
+        click.echo('Please provide the timestep value for voxelization!', err=True)
+        click.echo('For more info. run: kanapy voxelize --help\n', err=True)
+        sys.exit(0)         
     voxelizationRoutine(timestep)
     
 
@@ -103,7 +117,10 @@ def neperoutput(ctx, timestep: int):
     """ Writes out particle position and weights files required for tessellation in Neper."""
 
     if timestep == None:
-        raise ValueError('Please provide an timestep value for generating ouput!')
+        click.echo('')    
+        click.echo('Please provide the timestep value for generating ouput!', err=True)
+        click.echo('For more info. run: kanapy neperoutput --help\n', err=True)
+        sys.exit(0)                
     write_position_weights(timestep)
 
 
@@ -113,7 +130,15 @@ def setupTexture(ctx):
     """ Stores the user provided MATLAB & MTEX paths for texture analysis."""
     setPaths()                    
 
+
+def chkVersion(matlab):
+    ''' Read the version of Matlab'''
+    output = os.popen('{} -r quit -nojvm | grep "R201[0-9][ab]"'.format(matlab)).read()                
+    version = output.split()[0]
+    version = int(version[1:-1])
+    return version
     
+        
 def setPaths():
     ''' Requests user input for MATLAB & MTEX installation paths'''
     
@@ -128,18 +153,44 @@ def setPaths():
         if MATLAB:
             decision1 = input('Found MATLAB in {0}, continue (yes/no): '.format(MATLAB))
             
-            if decision1 == 'yes' or decision1 == 'y' or decision1 == 'Y' or decision1 == 'YES':
-                userpath1 = MATLAB
+            if decision1 == 'yes' or decision1 == 'y' or decision1 == 'Y' or decision1 == 'YES':                
+
+                version = chkVersion(MATLAB)        # Get the MATLAB version
+                if version < 2015:
+                    click.echo('')
+                    click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
+                    sys.exit(0)
+                else:
+                    userpath1 = MATLAB
+
             elif decision1 == 'no' or decision1 == 'n' or decision1 == 'N' or decision1 == 'NO':
-                userpath1 = input('Please provide the path to MATLAB executable: ')
+                userinput = input('Please provide the path to MATLAB executable: ')
+                
+                version = chkVersion(userinput)
+                if version < 2015:
+                    click.echo('')
+                    click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
+                    sys.exit(0)
+                else:
+                    userpath1 = userinput
+                                    
             else:
                 click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
                 sys.exit(0) 
                             
         elif not MATLAB:
             print('No MATLAB executable found!')            
-            userpath1 = input('Please provide the path to MATLAB executable: ')
-
+            userinput = input('Please provide the path to MATLAB executable: ')
+            
+            version = chkVersion(userinput)
+            if version < 2015:
+                click.echo('')
+                click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
+                sys.exit(0)
+            else:
+                userpath1 = userinput
+                    
+                    
         # For MTEX installation path
         print('')
         status2 = input('Is MTEX installed in this system (yes/no): ')
@@ -189,6 +240,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
     """ Texture reduction algorithm with optional Misorientation angle fitting."""
     
     if ebsd==None:
+        click.echo('')
         click.echo('Please provide some EBSD inputs for texture reduction!') 
         click.echo('For more info, run: kanapy reducetexture --help\n', err=True)
         sys.exit(0)
@@ -197,6 +249,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
         arg_dict = {}           
         if ebsd != None:
             if not os.path.exists(cwd + '/{}'.format(ebsd)):
+                click.echo('')
                 click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(ebsd), err=True)
                 sys.exit(0)
             else:
@@ -204,6 +257,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
 
         if grains != None:
             if not os.path.exists(cwd + '/{}'.format(grains)):
+                click.echo('')
                 click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(grains), err=True)
                 sys.exit(0)
             else:        
@@ -219,6 +273,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
         elif fit_mad == 'no' or fit_mad == 'n' or fit_mad == 'N' or fit_mad == 'NO': 
             textureReduction(arg_dict)
         else:
+            click.echo('')
             click.echo('Invalid entry! Run: kanapy reducetexture --help\n', err=True)
             sys.exit(0)
         

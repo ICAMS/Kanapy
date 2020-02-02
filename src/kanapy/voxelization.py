@@ -326,7 +326,7 @@ def voxelizationRoutine(file_num):
                   elements each representing a grain of the RVE.                                 
     """
     try:
-        print('\n')
+        print('')
         print('Starting RVE voxelization')
 
         cwd = os.getcwd()
@@ -377,7 +377,8 @@ def voxelizationRoutine(file_num):
                 sys.exit(0)
 
         print('Completed RVE voxelization')
-
+        print('')
+        
         if not os.path.exists(json_dir):
             os.makedirs(json_dir)
 

@@ -38,7 +38,8 @@ def particleStatGenerator(inputFile):
                   or :math:`\mu m`) for ABAQUS .inp file.
 
     """
-    print(' \n')
+    print('')
+    print('------------------------------------------------------------------------')    
     print('Welcome to KANAPY - A synthetic polycrystalline microstructure generator')
     print('------------------------------------------------------------------------')
     
@@ -139,11 +140,11 @@ def particleStatGenerator(inputFile):
     if voxel_size >= np.amin(minDia) / 3.:
         raise ValueError('Grains will not be voxelated well, please increase the number of voxels per RVE side (or) decrease the RVE side length!')
 
-    print('    Total number of particles = ', totalEllipsoids)
-    print('    RVE side length = ', RVEsize)
-    print('    Voxel resolution = ', voxel_size)
-    print('    Total number of hexahedral elements (C3D8) = ', (voxel_per_side)**3)
-
+    print('    Total number of particles = {}'.format(totalEllipsoids))
+    print('    RVE side length = {}'.format(RVEsize))
+    print('    Voxel resolution = {}'.format(voxel_size))
+    print('    Total number of voxels (C3D8) = {}\n'.format(voxel_per_side**3))
+    
     # Create dictionaries to store the data generated
     particle_data = {'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
                      'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(ori_array)}
@@ -288,7 +289,7 @@ def write_position_weights(file_num):
                  into NEPER for tessellation and meshing.
               3. The values of positions and weights are written in :math:`\mu m` scale only.
     """
-    print('\n')
+    print('')
     print('Writing position and weights files for NEPER', end="")
     cwd = os.getcwd()
     dump_file = cwd + '/dump_files/particle.{0}.dump'.format(file_num)
@@ -338,7 +339,7 @@ def write_position_weights(file_num):
     with open('sphere_weights.txt', 'w') as fd:
         for key, value in par_dict.items():
             fd.write('{0}\n'.format(value[3]))
-    print('---->DONE!') 
+    print('---->DONE!\n') 
     return
 
 
@@ -356,7 +357,7 @@ def write_abaqus_inp():
                  
               2. The nodal coordinates are written out in :math:`mm` or :math:`\mu m` scale, as requested by the user in the input file.
     """
-    print(' \n')
+    print('')
     print('Writing ABAQUS (.inp) file', end="")
 
     cwd = os.getcwd()
@@ -442,7 +443,7 @@ def write_abaqus_inp():
         f.write('*Instance, name=PART-1-1, part=PART-1\n')
         f.write('*End Instance\n')
         f.write('*End Assembly\n')
-    print('---->DONE!') 
+    print('---->DONE!\n') 
     return
 
         
@@ -457,7 +458,7 @@ def write_output_stat():
               2. The particle and grain diameter values are written in either :math:`mm` or :math:`\mu m` scale, 
                  as requested by the user in the input file.
     """ 
-    print('\n') 
+    print('') 
     print('Comparing input & output statistics')
     cwd = os.getcwd()
     json_dir = cwd + '/json_files'          # Folder to store the json files
@@ -672,7 +673,7 @@ def extract_volume_sharedGBarea():
               3. The shared surface area written to the 'shared_surfaceArea.csv' file are in either :math:`mm` or :math:`\mu m` scale, 
                  as requested by the user in the input file.
     """ 
-    print('\n') 
+    print('') 
     print('Evaluating grain volumes.')
     print('Evaluating shared Grain Boundary surface area between grains.')
     cwd = os.getcwd()
@@ -763,5 +764,5 @@ def extract_volume_sharedGBarea():
         writer = csv.writer(f)
         writer.writerows(shared_area)
     
-    print('---->DONE!')       
+    print('---->DONE!\n')       
     return    
