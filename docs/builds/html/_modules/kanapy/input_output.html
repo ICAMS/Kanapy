@@ -217,8 +217,8 @@
         <span class="n">mean_AR</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
 
         <span class="c1"># Extract grain tilt angle statistics info from input file </span>
-        <span class="n">sigma_Ori</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Orientation&quot;</span><span class="p">][</span><span class="s2">&quot;sigma&quot;</span><span class="p">]</span>
-        <span class="n">mean_Ori</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Orientation&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>        
+        <span class="n">sigma_Ori</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="s2">&quot;sigma&quot;</span><span class="p">]</span>
+        <span class="n">mean_Ori</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>        
         
         <span class="c1"># Extract RVE side length and voxel number info from input file </span>
         <span class="n">RVEsize</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;side_length&quot;</span><span class="p">]</span>    
@@ -303,7 +303,7 @@
 
     <span class="c1"># Create dictionaries to store the data generated</span>
     <span class="n">particle_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">),</span> <span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">),</span> <span class="s1">&#39;Major_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">majDia</span><span class="p">),</span>
-                     <span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia</span><span class="p">),</span> <span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia2</span><span class="p">),</span> <span class="s1">&#39;Orientation&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">ori_array</span><span class="p">)}</span>
+                     <span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia</span><span class="p">),</span> <span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia2</span><span class="p">),</span> <span class="s1">&#39;Tilt angle&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">ori_array</span><span class="p">)}</span>
 
     <span class="n">RVE_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;RVE_size&#39;</span><span class="p">:</span> <span class="n">RVEsize</span><span class="p">,</span> <span class="s1">&#39;Voxel_number_per_side&#39;</span><span class="p">:</span> <span class="n">voxel_per_side</span><span class="p">,</span>
                 <span class="s1">&#39;Voxel_resolution&#39;</span><span class="p">:</span> <span class="n">voxel_size</span><span class="p">}</span>
@@ -333,7 +333,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Writes the (.dump) file, which can be read by visualization software OVITO.  </span>
 
-<span class="sd">    :param Ellipsoids: Contains information of ellipsoids such as its position, axes lengths and orientation </span>
+<span class="sd">    :param Ellipsoids: Contains information of ellipsoids such as its position, axes lengths and tilt angles </span>
 <span class="sd">    :type Ellipsoids: list    </span>
 <span class="sd">    :param sim_box: Contains information of the dimensions of the simulation box</span>
 <span class="sd">    :type sim_box: :obj:`Cuboid`    </span>

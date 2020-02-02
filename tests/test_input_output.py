@@ -24,7 +24,7 @@ def test_particleStatGenerator():
             
     # Test if ValueError is raised w.r.t output_units
     to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
-                'Aspect ratio': {'mean': 2.5}, 'Orientation': {'sigma': 28.8, 'mean': 87.4},
+                'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4},
                 'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'nsteps': 1000, 'periodicity': 'True', 'output_units': 'm'}}
 
     with open(stat_inp, 'w') as outfile:
@@ -36,7 +36,7 @@ def test_particleStatGenerator():
                             
     # Test the remaining code
     to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
-                'Aspect ratio': {'mean': 2.5}, 'Orientation': {'sigma': 28.8, 'mean': 87.4}, 
+                'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4}, 
                 'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'nsteps': 1000, 'periodicity': 'True', 'output_units': 'mm'}}    
 
     with open(stat_inp, 'w') as outfile:
@@ -82,7 +82,7 @@ def test_particleStatGenerator():
                                       2.7720365204035446, 2.7998959505970156, 2.8280353727188, 
                                       2.8564576007345615, 2.8851654768907844, 2.91416187199901, 
                                       2.943449685722911], 
-                                      'Orientation': [59.94048469671874, 83.71014928822248, 
+                                      'Tilt angle': [59.94048469671874, 83.71014928822248, 
                                       92.52356744278605, 145.15767829656713, 83.2084146887389, 
                                       87.69302322500772, 87.39381735236529, 72.62719088548104, 
                                       82.72319783494586, 128.8008099039291, 101.5359142671148, 
@@ -96,7 +96,7 @@ def test_particleStatGenerator():
 
     # Verify
     for k, v in pd.items():
-        if k != 'Orientation':              # Don't check for orientation as it is random
+        if k != 'Tilt angle':              # Don't check for Tilt angles as it is random
             assert pd[k] == compare_pd[k]
 
     assert rd == compare_rd

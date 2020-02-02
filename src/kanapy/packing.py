@@ -39,7 +39,7 @@ def particle_generator(particle_data, sim_box):
 
         # Angle represents inclination of Major axis w.r.t positive x-axis
         
-        angle = np.radians(particle_data['Orientation'][n])         # Extract the angle        
+        angle = np.radians(particle_data['Tilt angle'][n])         # Extract the angle        
         vec_a = np.array([a*np.cos(angle), a*np.sin(angle), 0.0])   # Tilt vector wrt (+ve) x axis        
         cross_a = np.cross(np.array([1, 0, 0]), vec_a)              # Do the cross product to find the quaternion axis        
         norm_cross_a = np.linalg.norm(cross_a, 2)                   # norm of the vector (Magnitude)        

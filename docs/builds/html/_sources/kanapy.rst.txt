@@ -51,4 +51,11 @@ Module voxelization
    :undoc-members:
    :show-inheritance:
 
-   
+
+Module analyze\_texture
+-----------------------
+
+.. automodule:: kanapy.analyze_texture
+   :members:
+   :undoc-members:
+   :show-inheritance:   

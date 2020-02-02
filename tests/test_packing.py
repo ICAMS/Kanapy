@@ -17,7 +17,7 @@ from kanapy.entities import Ellipsoid, Simulation_Box
 @pytest.fixture
 def par_sim(mocker):
     parDict = {'Number': 3, 'Major_diameter': np.array([5.2, 3.6, 2.4]), 'Minor_diameter1': np.array([2.15, 3.6, 1.15]),
-               'Minor_diameter2': np.array([2.15, 3.6, 1.15]), 'Orientation': np.array([92, 89.3, 85])}
+               'Minor_diameter2': np.array([2.15, 3.6, 1.15]), 'Tilt angle': np.array([92, 89.3, 85])}
 
     sb = mocker.MagicMock()
 
@@ -119,7 +119,7 @@ def test_packingRoutine():
 
     # Prepare the dictionaries to be dumped as json files
     pd = {'Number': 2, 'Equivalent_diameter': [1.651, 1.651], 'Major_diameter': [2.0, 2.0],
-          'Minor_diameter1': [1.5, 1.5], 'Minor_diameter2': [1.5, 1.5], 'Orientation': [86, 92]}
+          'Minor_diameter1': [1.5, 1.5], 'Minor_diameter2': [1.5, 1.5], 'Tilt angle': [86, 92]}
 
     rd = {'RVE_size': 10, 'Voxel_number_per_side': 3, 'Voxel_resolution': 3.334}
 

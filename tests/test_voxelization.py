@@ -218,7 +218,7 @@ def test_voxelizationRoutine():
             
     # create an temporary 'json' directory for reading files from
     to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
-                'Aspect ratio': {'mean': 2.5}, 'Orientation': {'sigma': 28.8, 'mean': 87.4},
+                'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4},
                 'RVE': {'side_length': 3, 'voxel_per_side': 10}, 'Simulation': {'nsteps': 1000, 'periodicity': 'True', 'output_units': 'mm'}}
 
     with open(stat_inp, 'w') as outfile:

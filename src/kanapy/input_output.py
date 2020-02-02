@@ -60,8 +60,8 @@ def particleStatGenerator(inputFile):
         mean_AR = stats_dict["Aspect ratio"]["mean"]
 
         # Extract grain tilt angle statistics info from input file 
-        sigma_Ori = stats_dict["Orientation"]["sigma"]
-        mean_Ori = stats_dict["Orientation"]["mean"]        
+        sigma_Ori = stats_dict["Tilt angle"]["sigma"]
+        mean_Ori = stats_dict["Tilt angle"]["mean"]        
         
         # Extract RVE side length and voxel number info from input file 
         RVEsize = stats_dict["RVE"]["side_length"]    
@@ -146,7 +146,7 @@ def particleStatGenerator(inputFile):
 
     # Create dictionaries to store the data generated
     particle_data = {'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
-                     'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Orientation': list(ori_array)}
+                     'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(ori_array)}
 
     RVE_data = {'RVE_size': RVEsize, 'Voxel_number_per_side': voxel_per_side,
                 'Voxel_resolution': voxel_size}
@@ -176,7 +176,7 @@ def write_dump(Ellipsoids, sim_box, num_particles):
     """
     Writes the (.dump) file, which can be read by visualization software OVITO.  
 
-    :param Ellipsoids: Contains information of ellipsoids such as its position, axes lengths and orientation 
+    :param Ellipsoids: Contains information of ellipsoids such as its position, axes lengths and tilt angles 
     :type Ellipsoids: list    
     :param sim_box: Contains information of the dimensions of the simulation box
     :type sim_box: :obj:`Cuboid`    
