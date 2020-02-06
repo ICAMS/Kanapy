@@ -1,14 +1,15 @@
 ---
-title: 'Kanapy: A Python package for generating complex synthetic polycrystalline microstructures'
+title: 'Kanapy-v2.0: A package for generating complex synthetic polycrystalline microstructures with geometry and texture'
 tags:
   - Python
-  - Microstructure modeling
-  - Additive manufacturing
-  - Particle packing
-  - Collision detection
-  - Spatial partitioning
-  - Voxelization
+  - MATLAB
+  - Synthetic microstructure
+  - ODF reconstruction
+  - Disorientation angle distribution
 authors:
+- name: Abhishek Biswas
+  orcid: 0000-0001-6984-7144
+  affiliation: 1
   - name: Mahesh R.G. Prasad
     orcid: 0000-0003-2546-0161
     affiliation: 1
@@ -21,18 +22,26 @@ authors:
 affiliations:
  - name: Interdisciplinary Centre for Advanced Materials Simulation, Ruhr-Universität Bochum, Universitätsstr. 150, 44801 Bochum, Germany.
    index: 1
-date: 05 August 2019
+date: 06 February 2020
 bibliography: paper.bib
 ---
 
 # Summary
+In the previous version of Kanapy  [@prasad2019kanapy] , an effecient tool for generating synthetic microstructure geometry using the statistical data of grain size was presented. It provided several novel features like collision handling through a two-layer collision detection, modeling complex microstructure consisting of irregular grain shapes,  coupling to softwares like ABAQUS and Neper. Synthetic microstructure is a key aspect of the micomechanical modeling for predicting material behavior numerically. Other than microstructure geometry, texture is another vital component of a polycrystalline microstructure, which has  prominent effects on the behavior of the material [@kocks1998texture] [@bunge1993texture]. Therefore, a synthetic microstructure without the texture information is incomplete.
 
-To study process-structure-property relationships it is essential to understand the contribution of microstructure to material behavior. Micromechanical modeling allows us to understand the influence of microstructural features on the macroscopic mechanical behavior through numerical simulations. At the center of this approach lies the modeling of synthetic microstructures that mimick the important aspects such as grain morphologies and crystallographic orientations.
+Texture in polycrystalline material consists of two major aspects, the distribution of crystallographic orientations and grain boundary texture. Mathematically, the distribution of crystallographic orientation in polycrystalline materials is represented by the orientation distribution function (ODF). On the other hand, the grain boundary texture consist of both misorientation between two neighbouring grains and the orientation of the boundaries with respect to the two lattices [@adams1992measurement]. This is represented by a five parameter space [@saylor2004measuring], out of which we focus on the misorientation angle, where the minimum value of misorientation (considering crystal symmetry) is referred to as disorientation.
 
-Metallic material processing (including additive manufacturing) often result in complex microstructures with equiaxed/elongated grains and strong crystallographic textures. The current state-of-the-art of synthetic microstructure generation includes probabilistic methods like spatial tessellation [@Quey2011], which provides sufficiently accurate representations for simple grain morphologies and size distributions, but cannot capture complex morphologies, i.e., irregularly shaped grains. Another widely used approach is the Random Sequential Addition (RSA) [@Groeber2014; @Vajragupta2014], which overcomes the shortcomings of tessellation based methods with its ability to model convex and non-convex grain morphologies, but its computational expense is high as space filling by random addition of particles is not efficient for higher volume fractions [@Zhang2013].
 
-``Kanapy`` is a Python package for generating complex synthetic polycrystalline microstructures based on the collision driven particle dynamics approach. ``Kanapy`` is designed to model irregular shaped grains and developed to provide an alternative to the existing particle packing approach, the RSA technique. This addresses the limitations of the existing microstructure generation techniques described earlier. In this regard, `Kanapy` employs a two-layer collision detection scheme, wherein the outer layer utilizes an octree spatial partitioning data structure to estimate which particles should be checked for collision. The inner layer consists of a bounding spheres hierarchy, which carries out the collision detection only if the bounding spheres between two particles overlap. The computational complexity involved in using the octree data structure is of the order $O(n log(n))$. The actual collision detection between two static ellipsoidal particles is determined by employing the algebraic separation condition developed by Wang et al. [-@Wang2001]. Using the built-in voxelization routine, complex microstructures like those found in additively manufactured components can be easily created.
+Figure \ref{algorithm_flow} shows the complete flow for generating a synthetic microstructure starting from an experimental data like electron back scatter diffraction (EBSD), the description about kanapy's geometry module can be found in [@prasad2019kanapy]. The texture information is incorporated in the synthetic microstructure using the ``ODF reconstruction module`` and the ``Orientation assignment module``. The ``ODF reconstruction module`` uses an $L_1$ minimization scheme [@Biswas:ks5643] to systematically reduce the experimentally measured orientations to a smaller number of discrete orientations (equal to the number of grains in the synthetic microstructure).
 
-``Kanapy`` is a modular package and it gives the user the flexibility to create individual workflows for generating specific microstructures. The modules can be executed independently of one another as Kanapy provides easy data storage and handling. It is based on existing implementations of convex hull from the Scipy package [@Jones2001] together with various Numpy array operations [@Oliphant2006]. A pure Python octree data structure is implemented for efficient collision handling. The performance critical part of the actual collision detection code is implemented in C++ (using the Eigen library [@eigenweb]) with Python bindings generated using the header-only library pybind11 [@pybind11]. Examples for generating microstructures with equiaxed and elongated grains along with simulation benchmarks are detailed in the documentation.
+The ``Orientation assignment module`` uses the disorientation angle distribution from the experiments (like EBSD), where the disorientation angle measure at each grain boundary is weighted by its dimension (described in [@kocks1998texture] as measured misorientation distribution). Since EBSD maps are 2D images the grain boundary perimeter is considered for weighting, whereas in case of the synthetic microstructures the shared grain boundary surface area is used . The $L_1$ norm of the difference between the experimental and the synthetic microstructure disorientation distribution is chosen as the error estimate. The module uses a $L_1$ minimization scheme based on a Mote-Carlo algorithm suggested in [@miodownik1999boundary]. The effect of incorporating such distributions in micromechanical modeling approach is studied in [@biswas2019influence].
+
+As indicated in [@kocks1998texture] for real microstructures, the weighted disorientation distribution or the measured misorientation distribution (used in Kanapy) can be very different from the  distribution derived from the ODF (texture derived misorientation).  This feature makes kanapy a more realistic synthetic misrostructure generator in comparison to other microstructure generators like DREAM.3D [@groeber2014dream].       
+
+The ``ODF reconstruction module`` and the ``Orientation assignment module`` are written as a MATLAB (The MathWorks Inc., Natick, USA) functions and they use several MTEX [@bachmann2010texture] functions for texture analysis. These MATLAB functions are coupled with kanapy's geometry module by creating MATLAB-python link.  
+
+
+![Flow diagram of Kanapy v2.0\label{algorithm_flow} ](../docs/figs/method_flow.jpeg)
+
 
 # References
