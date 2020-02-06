@@ -24,3 +24,4 @@ History
 
 * Updated the 'Modeling' section of the documentation with Texture.
 * Updated the 'Applications' section of the documentation with Texture module. 
+* Updated the 'Usage' section of the documentation with the two Textures examples.

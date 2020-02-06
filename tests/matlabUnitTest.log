@@ -117,7 +117,7 @@ Default initial kernel shape factor: 5 degree
 
 time =
 
-   20.0975
+   20.2274
 
 .
  
@@ -389,7 +389,7 @@ progress: 0%
 
 time =
 
-   49.2404
+   49.7665
 
 
 e =
@@ -1169,7 +1169,7 @@ e =
 
 time =
 
-   26.0634
+   26.4938
 
 Reduced ODF estimated considering equally weighted grains
 .
@@ -1182,21 +1182,21 @@ ans =
                                        Name                                        Passed    Failed    Incomplete    Duration
     ___________________________________________________________________________    ______    ______    __________    ________
 
-    'unitTest_ODF_MDF_reconstruction/testMtexpatherror'                            true      false     false          0.11944
-    'unitTest_ODF_MDF_reconstruction/testFunctioninputs(r=p__home_users_pra...'    true      false     false          0.13279
-    'unitTest_ODF_MDF_reconstruction/testEBSDMatfileread(r=p__home_users_pr...'    true      false     false          0.20115
-    'unitTest_ODF_MDF_reconstruction/testInvalidOption1(r=p__home_users_pra...'    true      false     false         0.091879
-    'unitTest_ODF_MDF_reconstruction/testEBSDInput(r=p__home_users_prasam46...'    true      false     false          0.10962
-    'unitTest_ODF_MDF_reconstruction/testEBSDMultiInput(r=p__home_users_pra...'    true      false     false          0.18596
-    'unitTest_ODF_MDF_reconstruction/testGrainsInput(r=p__home_users_prasam...'    true      false     false           3.0079
-    'unitTest_ODF_MDF_reconstruction/testKernelInput(r=p__home_users_prasam...'    true      false     false          0.13223
-    'unitTest_ODF_MDF_reconstruction/testGrainsMultiInput(r=p__home_users_p...'    true      false     false          0.66878
-    'unitTest_ODF_MDF_reconstruction/testODFReconDemo(r=p__home_users_prasa...'    true      false     false           20.803
-    'unitTest_ODF_MDF_reconstruction/testMDFInput1(r=p__home_users_prasam46...'    true      false     false          0.11714
-    'unitTest_ODF_MDF_reconstruction/testMDFInput2(r=p__home_users_prasam46...'    true      false     false          0.32662
-    'unitTest_ODF_MDF_reconstruction/testMDFInput3(r=p__home_users_prasam46...'    true      false     false          0.40499
-    'unitTest_ODF_MDF_reconstruction/testMDFVerifySharedArea(r=p__home_user...'    true      false     false          0.40383
-    'unitTest_ODF_MDF_reconstruction/testMDFReconDemo(r=p__home_users_prasa...'    true      false     false           75.818
+    'unitTest_ODF_MDF_reconstruction/testMtexpatherror'                            true      false     false         0.11978 
+    'unitTest_ODF_MDF_reconstruction/testFunctioninputs(r=p__home_users_pra...'    true      false     false         0.13415 
+    'unitTest_ODF_MDF_reconstruction/testEBSDMatfileread(r=p__home_users_pr...'    true      false     false         0.20047 
+    'unitTest_ODF_MDF_reconstruction/testInvalidOption1(r=p__home_users_pra...'    true      false     false         0.09234 
+    'unitTest_ODF_MDF_reconstruction/testEBSDInput(r=p__home_users_prasam46...'    true      false     false          0.1061 
+    'unitTest_ODF_MDF_reconstruction/testEBSDMultiInput(r=p__home_users_pra...'    true      false     false         0.20647 
+    'unitTest_ODF_MDF_reconstruction/testGrainsInput(r=p__home_users_prasam...'    true      false     false          3.0284 
+    'unitTest_ODF_MDF_reconstruction/testKernelInput(r=p__home_users_prasam...'    true      false     false         0.13507 
+    'unitTest_ODF_MDF_reconstruction/testGrainsMultiInput(r=p__home_users_p...'    true      false     false         0.71849 
+    'unitTest_ODF_MDF_reconstruction/testODFReconDemo(r=p__home_users_prasa...'    true      false     false          20.937 
+    'unitTest_ODF_MDF_reconstruction/testMDFInput1(r=p__home_users_prasam46...'    true      false     false          0.1591 
+    'unitTest_ODF_MDF_reconstruction/testMDFInput2(r=p__home_users_prasam46...'    true      false     false         0.33823 
+    'unitTest_ODF_MDF_reconstruction/testMDFInput3(r=p__home_users_prasam46...'    true      false     false         0.41395 
+    'unitTest_ODF_MDF_reconstruction/testMDFVerifySharedArea(r=p__home_user...'    true      false     false         0.34486 
+    'unitTest_ODF_MDF_reconstruction/testMDFReconDemo(r=p__home_users_prasa...'    true      false     false          76.768 
 
 [Warning: Objects of 'onCleanup' class exist.  Cannot clear this class or any of
 its superclasses.] 

@@ -298,7 +298,7 @@
 <span class="sd">              * Simulation attributes such as total number of timesteps and periodicity.                         </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting particle simulation&#39;</span><span class="p">)</span>
 
         <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
@@ -340,7 +340,8 @@
         <span class="n">particle_grow</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">Particles</span><span class="p">,</span> <span class="n">periodic_status</span><span class="p">,</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Time steps&#39;</span><span class="p">])</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Completed particle packing&#39;</span><span class="p">)</span>
-
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        
     <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
 </pre></div>
