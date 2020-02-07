@@ -49,51 +49,43 @@ Features
 .. _Neper: http://neper.sourceforge.net/
 .. _Abaqus: https://www.3ds.com/products-services/simulia/products/abaqus/
 
-
+.. role:: bash(code)
+   :language: bash
+   
 Installation
 ------------
 CMake is used for building extensions; if it is not installed on your machine, follow this 
-`CMake documentation`_ to install it.
+`CMake documentation`_ to install it. The preferred method to install kanapy is through 
+Anaconda or Miniconda Python distributions. If you do not have any, we suggest installing miniconda_. 
 
 .. _CMake documentation: https://cgold.readthedocs.io/en/latest/first-step/installation.html
-
-The preferred method to install kanapy is through Anaconda or Miniconda Python distributions. 
-If you do not have any, we suggest installing miniconda_. 
-
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 
-
-Once done, create a virtual environment for installing Python-specific packages required for kanapy and 
-activate it.
+Once done, create a virtual environment for Kanapy installation and clone the repository to 
+a desired location.
 
 .. code-block:: console
 
     $ conda create -n myenv python=3.6 pip git
     $ conda activate myenv    
+    (myenv) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
+    (myenv) $ cd kanapy-master/
+    (myenv) $ kanapy install
+
+Kanapy is now installed along with all its dependencies. To use Kanapy's texture module (optional), 
+you need to link Kanapy with MATLAB_ and MTEX_ installations. Run: :bash:`kanapy setuptexture` 
+and follow the instructions.
 
 .. note:: 1. ``myenv`` can be replaced with any name for your environment.
           2. For older versions of anaconda/miniconda use: ``source activate myenv``
                     
 .. tip:: To learn more about managing environments see Anaconda documentation_.
 
-.. _documentation: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html           
-
-You can either clone the kanapy public repository by using git or 
-download the kanapy source code from the `Github repo`_ to a desired location. 
-
-.. code-block:: console
-
-    (myenv) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
-    (myenv) $ cd kanapy-master/
-    (myenv) $ kanapy install
-
-Kanapy is now installed along with all its dependencies.
-
+.. _documentation: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html    
 .. _Github repo: https://github.com/mrgprasad/kanapy
-
-.. role:: bash(code)
-   :language: bash
-             
+.. _MATLAB: https://www.mathworks.com/products/matlab.html
+.. _MTEX: https://mtex-toolbox.github.io/
+            
 Running tests
 --------------
 Kanapy uses pytest to perform all its unit testing. Run: :bash:`(myenv) $ kanapy unittests`

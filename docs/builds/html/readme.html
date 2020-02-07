@@ -204,15 +204,20 @@
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>CMake is used for building extensions; if it is not installed on your machine, follow this
-<a class="reference external" href="https://cgold.readthedocs.io/en/latest/first-step/installation.html">CMake documentation</a> to install it.</p>
-<p>The preferred method to install kanapy is through Anaconda or Miniconda Python distributions.
-If you do not have any, we suggest installing <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.</p>
-<p>Once done, create a virtual environment for installing Python-specific packages required for kanapy and
-activate it.</p>
+<a class="reference external" href="https://cgold.readthedocs.io/en/latest/first-step/installation.html">CMake documentation</a> to install it. The preferred method to install kanapy is through
+Anaconda or Miniconda Python distributions. If you do not have any, we suggest installing <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.</p>
+<p>Once done, create a virtual environment for Kanapy installation and clone the repository to
+a desired location.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -n myenv <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6 pip git
 <span class="gp">$</span> conda activate myenv
+<span class="gp">(myenv) $</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
+<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/
+<span class="gp">(myenv) $</span> kanapy install
 </pre></div>
 </div>
+<p>Kanapy is now installed along with all its dependencies. To use Kanapy’s texture module (optional),
+you need to link Kanapy with <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> and <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> installations. Run: <code class="code bash docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">setuptexture</span></code>
+and follow the instructions.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
@@ -224,14 +229,6 @@ activate it.</p>
 <p class="admonition-title">Tip</p>
 <p>To learn more about managing environments see Anaconda <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">documentation</a>.</p>
 </div>
-<p>You can either clone the kanapy public repository by using git or
-download the kanapy source code from the <a class="reference external" href="https://github.com/mrgprasad/kanapy">Github repo</a> to a desired location.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
-<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/
-<span class="gp">(myenv) $</span> kanapy install
-</pre></div>
-</div>
-<p>Kanapy is now installed along with all its dependencies.</p>
 </div>
 <div class="section" id="running-tests">
 <h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
