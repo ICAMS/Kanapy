@@ -76,7 +76,7 @@ Texture
 --------
 In this section a brief summary of the Orientation Distribution Function (ODF) reconstruction is presented. A detailed description of this can be found in `Biswas (2020)`_ as a :math:`L_1` minimization scheme. Furthermore, an orientation assignment algorithm is presented which takes the grain boundary texture into consideration during the assignment process. 
 
-.. _Biswas (2020): https://onlinelibrary.wiley.com/journal/s16005767
+.. _Biswas (2020): https://scripts.iucr.org/cgi-bin/paper?ks5643
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ODF reconstruction with discrete orientations
