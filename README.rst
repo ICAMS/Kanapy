@@ -20,28 +20,31 @@ Overview
 
 .. image:: https://img.shields.io/github/v/release/mrgprasad/kanapy?color=lightgray
 
-Kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in Python_ with the performance critical part implemented in C++. The Python bindings for the code written in C++ are generated using the lightweight header-only library pybind11_. The C++ part of the implementation utilizes the Eigen_ library for efficient linear algebra calculations.
+Kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in Python_ with the performance critical part for the geometry module implemented in C++. The Python bindings for the code written in C++ are generated using the lightweight header-only library pybind11_. The C++ part of the implementation utilizes the Eigen_ library for efficient linear algebra calculations. The texture module of Kanapy is implemented as MATLAB_ functions. It also utilizes several algorithms implemented in MTEX_ for texture analysis. 
 
 .. _Python: http://www.python.org
 .. _pybind11: https://pybind11.readthedocs.io/en/stable/
 .. _Eigen: http://eigen.tuxfamily.org/index.php?title=Main_Page
+.. _MATLAB: https://www.mathworks.com/products/matlab.html
+.. _MTEX: https://mtex-toolbox.github.io/
 
 Motivation
 ----------
-An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed not only to provide an alternative to the existing Random Sequential Addition technique of microstructure generation, but also to model simple and complex grain morphologies, thus overcoming the limitations of spatial tessellation methods. 
+An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed to model simple and complex grain morphologies and to systematically incorporate texture data directly from experiments concurrently maintaining the numerical efficiency of the micromechanical model. Kanapy is developed to overcome the limitations of spatial tessellation methods and to provide an alternative to the existing Random Sequential Addition technique of microstructure geometry generation. 
 
 Features
 --------
 
-* User interfaces to kanapy through scripts are written in pure Python.
-* Grains are approximated by ellipsoids (particles) and are packed into a pre-defined domain representing RVE.   
+* User interface to kanapy through CLI.   
 * Efficient collision handling of particles through a two-layer collision detection method employing the Octree spatial data structure and the bounding sphere hierarchy. 
-* In-built hexahedral mesh generator for complex polycrystalline microstructures.    
-* Independent execution of individual modules through easy data storage and handling.    
+* Efficient ODF reconstruction directly using orientations from experimantal data.
+* Optimal orientaion assignment based on Measured misorientation distribution.
+* Independent execution of individual modules through easy data storage and handling.
+* In-built hexahedral mesh generator for complex polycrystalline microstructures.        
 * Flexibility in the choice of the particle packing time step to be sent for voxelization (meshing).
 * Option to generate spherical particle position- and radius files that can be read by the Voronoi tessellation software Neper_.
 * Option to generate input files for the commercial finite-element software Abaqus_.    
-* High-performance for the critical part of the code using Python-C++ bindings.  
+* High-performance for the critical part of the geometry code using Python-C++ bindings.  
 
 .. _Neper: http://neper.sourceforge.net/
 .. _Abaqus: https://www.3ds.com/products-services/simulia/products/abaqus/
@@ -82,35 +85,23 @@ download the kanapy source code from the `Github repo`_ to a desired location.
 
     (myenv) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
     (myenv) $ cd kanapy-master/
-    (myenv) $ conda install -y -c conda-forge --file requirements.txt
-    (myenv) $ pip install -e .
+    (myenv) $ kanapy install
 
 Kanapy is now installed along with all its dependencies.
 
 .. _Github repo: https://github.com/mrgprasad/kanapy
-          
+
+.. role:: bash(code)
+   :language: bash
+             
 Running tests
 --------------
-
-Kanapy uses ``pytest`` to perform all its unit testing. From the kanapy main directory (``kanapy-master``), run the tests:
-
-.. code-block:: console
-    
-    (myenv) $ pytest tests/ -v
-   
-   
+Kanapy uses pytest to perform all its unit testing. Run: :bash:`(myenv) $ kanapy unittests`
+      
 Documentation build
 -------------------
-Documentation for kanapy is generated using ``Sphinx``. The following command generates a HTML-based reference documentation; 
-for other formats, please refer to the Sphinx manual. From the kanapy main directory (``kanapy-master``), do:
-
-.. code-block:: console
-
-    (myenv) $ cd docs/
-    (myenv) $ make clean && make html
-
-The HTML documentation can be found at ``/kanapy-master/docs/index.html``.
-
+Documentation for kanapy is generated using Sphinx. Run: :bash:`(myenv) $ kanapy builddocs`.
+The HTML documentation can be found at *../kanapy-master/docs/index.html*.
 
 Dependencies
 -------------
@@ -119,8 +110,14 @@ Kanapy requires a working C/C++ compiler on your machine. On Linux/Mac OS,
 the gcc toolchain will work well. The lightweight header-only library pybind11 
 is used to create Python bindings for the code written in C++.
 The C++ function will be complied by linking the Eigen library 
-(present in the directory ``/kanapy-master/libs/``). CMake builds this extension.
-         
+(present in the directory *../kanapy-master/libs/*). CMake builds this extension.
+
+Kanapy's texture module requires MATLAB_ and MTEX_ to be installed on your machine.         
+Make sure to use MATLAB v2015a and above.
+
+.. _MATLAB: https://www.mathworks.com/products/matlab.html
+.. _MTEX: https://mtex-toolbox.github.io/
+
 ^^^^^^^^^^^^^^^^^^
 Core dependencies
 ^^^^^^^^^^^^^^^^^^
@@ -133,13 +130,17 @@ Below are the listed dependencies for running kanapy:
   - Eigen_ for C++ linear algebra operations.
   - pytest_ for running kanapy unit tests.
   - sphinx_ for generating documentation.
-
+  - MATLAB_ for texture modules.
+  - MTEX_ for texture modules.
+  
 .. _NumPy: http://numpy.scipy.org
 .. _Scipy: https://www.scipy.org/
 .. _pybind11: https://pybind11.readthedocs.io/en/stable/
 .. _Eigen: http://eigen.tuxfamily.org/index.php?title=Main_Page
 .. _pytest: https://www.pytest.org
 .. _sphinx: http://www.sphinx-doc.org/en/master/
+.. _MATLAB: https://www.mathworks.com/products/matlab.html
+.. _MTEX: https://mtex-toolbox.github.io/
 
 ^^^^^^^^^^^^^^^^^^^^^^
 Optional dependencies
