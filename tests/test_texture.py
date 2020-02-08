@@ -6,6 +6,7 @@ import shutil, json
 from pathlib import Path
 from subprocess import PIPE, run 
 
+import numpy as np
 import pytest
 
 import kanapy
@@ -25,7 +26,8 @@ def test_analyzeTexture():
     testDir = MAIN_DIR + '/tests'
     utFile = testDir + '/unitTest_ODF_MDF_reconstruction.m'
     logFile = testDir + '/matlabUnitTest.log'
-
+    resultFile = 'matlabResults.txt'
+    
     # Read the MATLAB & MTEX paths                 
     with open(pathFile) as json_file:  
         path_dict = json.load(json_file) 
@@ -44,45 +46,45 @@ def test_analyzeTexture():
 
     # Create a temporary matlab script file that runs Texture reduction algorithm      
     TRfile = testDir+'/runUnitTest.m'           # Temporary '.m' file
-    
+
     with open (TRfile,'w') as f:
         f.write("MTEXpath='{}';\n".format(path_dict['MTEXpath']))
-        f.write("run([MTEXpath '/install_mtex.m'])\n")
+        f.write("run([MTEXpath 'install_mtex.m'])\n")
         f.write('\n')
         f.write("mtexdata('titanium')\n")
         f.write("mtexdata('alu')\n")
         f.write("mtexdata('epidote')\n")
         f.write('\n')
         f.write("result = runtests('{0}');\n".format(utFile))
-        f.write("table(result)\n")      
+        f.write("T=table(result)\n")  
+        f.write("writetable(T,'{}','Delimiter',' ');\n".format(resultFile))    
         f.write("exit;")
-        
-    # Run from the terminal                                    
-    command = ["{}".format(path_dict['MATLABpath']), " -nosplash -nodesktop -nodisplay -r ", '"run(', "'{}')".format(TRfile), '; exit;"']
-    with open(logFile, "w") as outfile:
-        result = run(command, stdout=outfile, stderr=PIPE, universal_newlines=True)             
 
+    # Run from the terminal                                    
+    #command = ["{}".format(path_dict['MATLABpath']), " -nosplash -nodesktop -nodisplay -r ", '"run(', "'{}')".format(TRfile), '; exit;"']
+    #with open(logFile, "w") as outfile:
+    #    result = run(command, stdout=outfile, stderr=PIPE, universal_newlines=True)             
+
+    cmd1 = "{0} -nosplash -nodesktop -nodisplay -r ".format(path_dict['MATLABpath']) 
+    cmd2 = '"run(' + "'{}')".format(TRfile) + '; exit;"'
+    cmd = cmd1+cmd2
+    os.system(cmd + '> {}'.format(logFile))               
+        
     # Remove the files once done! 
     os.remove(TRfile)        
     for i in filelist:
         os.remove(testDir+'/'+i)
-                
-    # Read the LOG file 
-    with open(logFile) as f:
-        lines = f.read().splitlines()        
-    lines = lines[-24:-5]                
     
-    # Print the MATLAB unittest results
-    print("MATLAB unitests result: \n")
-    for l in lines:
-        print(l)
-    print("Created 'matlabUnitTest.log' file, check for error messages (if any) here!")
-
+    # Read the tabulated result written by MATLAB
+    tabRes = np.loadtxt(testDir + '/' + resultFile, delimiter=' ', skiprows=1, usecols = (1,2,3))
+    
+    # Remove the MATLAB tabulated results file
+    os.remove(testDir + '/' + resultFile)
+    
     # Report back to pytest 
-    report = [string.split()[1] for string in lines[5:]]      
-    status = all(elem == report[0] for elem in report)
-    assert status == True
+    passed, failed, incomplete = int(sum(tabRes[:,0])), int(sum(tabRes[:,1])), int(sum(tabRes[:,2]))        
+    assert passed==np.shape(tabRes)[0]    
                
 
-if __name__ == "__main__":    
+if __name__ == "__main__":   
     pytest.main([__file__])

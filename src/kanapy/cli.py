@@ -131,8 +131,12 @@ def setupTexture(ctx):
 def chkVersion(matlab):
     ''' Read the version of Matlab'''
     output = os.popen('{} -r quit -nojvm | grep "R201[0-9][ab]"'.format(matlab)).read()                
-    version = output.split()[0]
-    version = int(version[1:-1])
+        
+    try:                                  # Find the matlab version available in the system
+        version = output.split()[0]
+        version = int(version[1:-1])
+    except:                               # Set NONE if MATLAB installation is corrupt
+        version == None    
     return version
     
         
@@ -140,11 +144,11 @@ def setPaths():
     ''' Requests user input for MATLAB & MTEX installation paths'''
     
     # For MATLAB executable
-    print('')
+    click.echo('')
     status1 = input('Is MATLAB installed in this system (yes/no): ')
     
     if status1 == 'yes' or status1 == 'y' or status1 == 'Y' or status1 == 'YES':
-        print('Searching your system for MATLAB ...')
+        click.echo('Searching your system for MATLAB ...')
         MATLAB = shutil.which("matlab")        
 
         if MATLAB:
@@ -153,7 +157,11 @@ def setPaths():
             if decision1 == 'yes' or decision1 == 'y' or decision1 == 'Y' or decision1 == 'YES':                
 
                 version = chkVersion(MATLAB)        # Get the MATLAB version
-                if version < 2015:
+                if version == None:
+                    click.echo('')
+                    click.echo('MATLAB installation: {} is corrupted!\n'.format(MATLAB), err=True)
+                    sys.exit(0)
+                elif version < 2015:
                     click.echo('')
                     click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
                     sys.exit(0)
@@ -164,7 +172,11 @@ def setPaths():
                 userinput = input('Please provide the path to MATLAB executable: ')
                 
                 version = chkVersion(userinput)
-                if version < 2015:
+                if version == None:
+                    click.echo('')
+                    click.echo('MATLAB installation: {} is corrupted!\n'.format(userinput), err=True)
+                    sys.exit(0)
+                elif version < 2015:
                     click.echo('')
                     click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
                     sys.exit(0)
@@ -180,7 +192,11 @@ def setPaths():
             userinput = input('Please provide the path to MATLAB executable: ')
             
             version = chkVersion(userinput)
-            if version < 2015:
+            if version == None:
+                click.echo('')
+                click.echo('MATLAB installation: {} is corrupted!\n'.format(userinput), err=True)
+                sys.exit(0)
+            elif version < 2015:
                 click.echo('')
                 click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
                 sys.exit(0)
@@ -189,14 +205,21 @@ def setPaths():
                     
                     
         # For MTEX installation path
-        print('')
+        click.echo('')
         status2 = input('Is MTEX installed in this system (yes/no): ')
 
         if status2 == 'yes' or status2 == 'y' or status2 == 'Y' or status2 == 'YES':                    
-            userpath2 = input('Please provide the path to MTEX installation: ')                                         
+            userpath2 = input('Please provide the path to MTEX installation: ')
+            if not os.path.exists(userpath2):
+                click.echo('')
+                click.echo("Mentioned path: '{}' does not exist in your system!\n".format(userpath2), err=True)
+                sys.exit(0)            
+            else:
+                userpath2 = os.path.join(userpath2, '')     # Add string to PATH
+                
         elif status2 == 'no' or status2 == 'n' or status2 == 'N' or status2 == 'NO':
-            print("Kanapy's texture analysis code requires MTEX. Please install it from: https://mtex-toolbox.github.io/download.")
-            print('')
+            click.echo("Kanapy's texture analysis code requires MTEX. Please install it from: https://mtex-toolbox.github.io/download.")
+            click.echo('')
             userpath2 = False
         else:
             click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
@@ -204,8 +227,8 @@ def setPaths():
         
                      
     elif status1 == 'no' or status1 == 'n' or status1 == 'N' or status1 == 'NO':
-        print("Kanapy's texture analysis code requires MATLAB. Please install it.")
-        print('')
+        click.echo("Kanapy's texture analysis code requires MATLAB. Please install it.")
+        click.echo('')
         userpath1 = False
     else:
         click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
@@ -223,8 +246,8 @@ def setPaths():
         with open(path_path,'w') as outfile:
             json.dump(pathDict, outfile, indent=2)                
         
-        print('')
-        print('Kanapy is now configured for texture analysis!\n')
+        click.echo('')
+        click.echo('Kanapy is now configured for texture analysis!\n')
 
 
 @main.command()
