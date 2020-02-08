@@ -88,11 +88,11 @@ and follow the instructions.
             
 Running tests
 --------------
-Kanapy uses pytest to perform all its unit testing. Run: :bash:`(myenv) $ kanapy unittests`
+Kanapy uses pytest to perform all its unit testing. Run: :bash:`(myenv) $ kanapy tests`
       
 Documentation build
 -------------------
-Documentation for kanapy is generated using Sphinx. Run: :bash:`(myenv) $ kanapy builddocs`.
+Documentation for kanapy is generated using Sphinx. Run: :bash:`(myenv) $ kanapy docs`.
 The HTML documentation can be found at *../kanapy-master/docs/index.html*.
 
 Dependencies

@@ -30,7 +30,7 @@ def autocomplete(ctx):
 
 @main.command()
 @click.pass_context
-def unittests(ctx):    
+def tests(ctx):    
     """ Runs unittests built within kanapy."""
     
     click.echo('')
@@ -40,7 +40,7 @@ def unittests(ctx):
     
 @main.command()
 @click.pass_context
-def builddocs(ctx):    
+def docs(ctx):    
     """ Generates a HTML-based reference documentation."""
     
     click.echo('')
