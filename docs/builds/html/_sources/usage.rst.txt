@@ -50,7 +50,7 @@ The functionality and the arguments of each command listed above can be requeste
                 --timestep TEXT  Time step for which Neper input files will be generated.
                 --help           Show this message and exit.
 
-.. note:: Bash auto-completion option is avaiable for Kanapy's CLI commands. 
+.. note:: Bash auto-completion option is avaiable for Kanapy's CLI commands. Run: :bash:`kanapy autocomplete` to set it up 
 
 
 Detailed tutorial

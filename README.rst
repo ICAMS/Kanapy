@@ -76,8 +76,6 @@ a desired location and install.
 Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's texture module, link Kanapy with MATLAB_ and MTEX_ installations by running: :bash:`kanapy setuptexture` 
 and follow the instructions.
 
-To have autocompletion option on Kanapy's CLI commands, run: :bash:`kanapy autocomplete`
-
 .. note:: 1. ``myenv`` can be replaced with any name for your environment.
           2. For older versions of anaconda/miniconda use: ``source activate myenv``
                     
