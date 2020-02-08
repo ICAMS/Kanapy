@@ -207,17 +207,18 @@
 <a class="reference external" href="https://cgold.readthedocs.io/en/latest/first-step/installation.html">CMake documentation</a> to install it. The preferred method to install kanapy is through
 Anaconda or Miniconda Python distributions. If you do not have any, we suggest installing <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.</p>
 <p>Once done, create a virtual environment for Kanapy installation and clone the repository to
-a desired location.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -n myenv <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6 pip git
+a desired location and install.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -y -n myenv <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6 pip git
 <span class="gp">$</span> conda activate myenv
 <span class="gp">(myenv) $</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
 <span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/
-<span class="gp">(myenv) $</span> kanapy install
+<span class="gp">(myenv) $</span> conda install -y -c conda-forge --file requirements.txt
+<span class="gp">(myenv) $</span> pip install -e .
 </pre></div>
 </div>
-<p>Kanapy is now installed along with all its dependencies. To use Kanapy’s texture module (optional),
-you need to link Kanapy with <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> and <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> installations. Run: <code class="code bash docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">setuptexture</span></code>
+<p>Kanapy is now installed along with all its dependencies. If you intend to use Kanapy’s texture module, link Kanapy with <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> and <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> installations by running: <code class="code bash docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">setuptexture</span></code>
 and follow the instructions.</p>
+<p>To have autocompletion option on Kanapy’s CLI commands, run: <code class="code bash docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">autocomplete</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">

@@ -19,14 +19,11 @@ def main(ctx):
 
 @main.command()
 @click.pass_context
-def install(ctx):    
-    """ Install kanapy's geometry packing module."""
+def autocomplete(ctx):    
+    """ Kanapy bash auto completion."""
     
     click.echo('')
-    os.system("conda install -y -c conda-forge --file {0}/requirements.txt".format(MAIN_DIR))   
-    os.system("pip install -e {0}".format(MAIN_DIR)) 
-    
-    # For Kanapy bash auto completion
+  
     os.system("echo '# For KANAPY bash autocompletion' >> ~/.bashrc")
     os.system("echo '. {}' >> ~/.bashrc".format(ROOT_DIR+'/kanapy-complete.sh'))  
 

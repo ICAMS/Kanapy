@@ -62,19 +62,21 @@ Anaconda or Miniconda Python distributions. If you do not have any, we suggest i
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 
 Once done, create a virtual environment for Kanapy installation and clone the repository to 
-a desired location.
+a desired location and install.
 
 .. code-block:: console
 
-    $ conda create -n myenv python=3.6 pip git
+    $ conda create -y -n myenv python=3.6 pip git
     $ conda activate myenv    
     (myenv) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
     (myenv) $ cd kanapy-master/
-    (myenv) $ kanapy install
+    (myenv) $ conda install -y -c conda-forge --file requirements.txt
+    (myenv) $ pip install -e .
 
-Kanapy is now installed along with all its dependencies. To use Kanapy's texture module (optional), 
-you need to link Kanapy with MATLAB_ and MTEX_ installations. Run: :bash:`kanapy setuptexture` 
+Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's texture module, link Kanapy with MATLAB_ and MTEX_ installations by running: :bash:`kanapy setuptexture` 
 and follow the instructions.
+
+To have autocompletion option on Kanapy's CLI commands, run: :bash:`kanapy autocomplete`
 
 .. note:: 1. ``myenv`` can be replaced with any name for your environment.
           2. For older versions of anaconda/miniconda use: ``source activate myenv``
