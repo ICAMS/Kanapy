@@ -25,3 +25,8 @@ History
 * Updated the 'Modeling' section of the documentation with Texture.
 * Updated the 'Applications' section of the documentation with Texture module. 
 * Updated the 'Usage' section of the documentation with the two Textures examples.
+
+2.0.0 (2020-02-11)
+------------------
+
+* Second release on GitHub.
