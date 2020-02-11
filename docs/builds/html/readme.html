@@ -176,17 +176,18 @@
   <div class="section" id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://doi.org/10.21105/joss.01732"><img alt="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" src="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" /></a>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3662366"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg" /></a>
 <img alt="https://img.shields.io/badge/Platform-Linux%2C%20MacOS-critical" src="https://img.shields.io/badge/Platform-Linux%2C%20MacOS-critical" />
 <a class="reference external image-reference" href="https://travis-ci.org/mrgprasad/kanapy"><img alt="https://img.shields.io/travis/mrgprasad/kanapy.svg" src="https://img.shields.io/travis/mrgprasad/kanapy.svg" /></a>
 <a class="reference external image-reference" href="https://codecov.io/gh/mrgprasad/kanapy"><img alt="https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg" src="https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg" /></a>
 <a class="reference external image-reference" href="https://opensource.org/licenses/MIT"><img alt="https://img.shields.io/badge/License-MIT-blue.svg" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
-<img alt="https://img.shields.io/github/v/release/mrgprasad/kanapy?color=lightgray" src="https://img.shields.io/github/v/release/mrgprasad/kanapy?color=lightgray" />
+<img alt="https://img.shields.io/github/v/release/mrgprasad/kanapy" src="https://img.shields.io/github/v/release/mrgprasad/kanapy" />
 <p>Kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in <a class="reference external" href="http://www.python.org">Python</a> with the performance critical part for the geometry module implemented in C++. The Python bindings for the code written in C++ are generated using the lightweight header-only library <a class="reference external" href="https://pybind11.readthedocs.io/en/stable/">pybind11</a>. The C++ part of the implementation utilizes the <a class="reference external" href="http://eigen.tuxfamily.org/index.php?title=Main_Page">Eigen</a> library for efficient linear algebra calculations. The texture module of Kanapy is implemented as <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> functions. It also utilizes several algorithms implemented in <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> for texture analysis.</p>
 <div class="section" id="motivation">
 <h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
 <p>An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed to model simple and complex grain morphologies and to systematically incorporate texture data directly from experiments concurrently maintaining the numerical efficiency of the micromechanical model. Kanapy is developed to overcome the limitations of spatial tessellation methods and to provide an alternative to the existing Random Sequential Addition technique of microstructure geometry generation.</p>
 <div class="figure align-center" id="id10">
-<img alt="_images/method_flow.jpeg" src="_images/method_flow.jpeg" />
+<img alt="docs/figs/method_flow.jpeg" src="docs/figs/method_flow.jpeg" />
 <p class="caption"><span class="caption-text"><strong>Figure</strong>: Kanapy workflow.</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
 </div>
 </div>
@@ -282,6 +283,7 @@ Make sure to use MATLAB v2015a and above.</p>
 <h2>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h2>
 <p>The preferred way to cite Kanapy is:</p>
 <p>Prasad et al., (2019). Kanapy: A Python package for generating complex synthetic polycrystalline microstructures. Journal of Open Source Software, 4(43), 1732, <a class="reference external" href="https://doi.org/10.21105/joss.01732">https://doi.org/10.21105/joss.01732</a></p>
+<p>Biswas, Abhishek, R.G. Prasad, Mahesh, Vajragupta, Napat, &amp; Hartmaier, Alexander. (2020, February 11). Kanapy: Synthetic polycrystalline microstructure generator with geometry and texture (Version v2.0.0). Zenodo. <a class="reference external" href="http://doi.org/10.5281/zenodo.3662366">http://doi.org/10.5281/zenodo.3662366</a></p>
 </div>
 <div class="section" id="license">
 <h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>

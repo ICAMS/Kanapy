@@ -7,6 +7,9 @@ Overview
 .. image:: https://joss.theoj.org/papers/10.21105/joss.01732/status.svg
    :target: https://doi.org/10.21105/joss.01732
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg
+   :target: https://doi.org/10.5281/zenodo.3662366
+   
 .. image:: https://img.shields.io/badge/Platform-Linux%2C%20MacOS-critical
    
 .. image:: https://img.shields.io/travis/mrgprasad/kanapy.svg
@@ -18,7 +21,7 @@ Overview
 .. image:: https://img.shields.io/badge/License-MIT-blue.svg
    :target: https://opensource.org/licenses/MIT
 
-.. image:: https://img.shields.io/github/v/release/mrgprasad/kanapy?color=lightgray
+.. image:: https://img.shields.io/github/v/release/mrgprasad/kanapy
 
 Kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in Python_ with the performance critical part for the geometry module implemented in C++. The Python bindings for the code written in C++ are generated using the lightweight header-only library pybind11_. The C++ part of the implementation utilizes the Eigen_ library for efficient linear algebra calculations. The texture module of Kanapy is implemented as MATLAB_ functions. It also utilizes several algorithms implemented in MTEX_ for texture analysis. 
 
@@ -154,6 +157,8 @@ Citation
 The preferred way to cite Kanapy is: 
 
 Prasad et al., (2019). Kanapy: A Python package for generating complex synthetic polycrystalline microstructures. Journal of Open Source Software, 4(43), 1732, https://doi.org/10.21105/joss.01732
+
+Biswas, Abhishek, R.G. Prasad, Mahesh, Vajragupta, Napat, & Hartmaier, Alexander. (2020, February 11). Kanapy: Synthetic polycrystalline microstructure generator with geometry and texture (Version v2.0.0). Zenodo. http://doi.org/10.5281/zenodo.3662366
 
 License
 --------
