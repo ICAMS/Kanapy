@@ -23,7 +23,7 @@ details this as shown:
               
               Commands:
                 abaqusoutput   Writes out the Abaqus (.inp) file for the generated RVE.
-                builddocs      Generates a HTML-based reference documentation.
+                docs           Generates a HTML-based reference documentation.
                 install        Install kanapy's geometry packing module.
                 neperoutput    Writes out particle position and weights files required
                                for...
@@ -33,7 +33,7 @@ details this as shown:
                 setuptexture   Stores the user provided MATLAB & MTEX paths for texture...
                 statgenerate   Generates particle statistics based on the data provided
                                in...
-                unittests      Runs unittests built within kanapy.
+                tests          Runs unittests built within kanapy.
                 voxelize       Generates the RVE by assigning voxels to grains.
   
 The functionality and the arguments of each command listed above can be requested. For example:

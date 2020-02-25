@@ -35,9 +35,9 @@ Motivation
 ----------
 An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed to model simple and complex grain morphologies and to systematically incorporate texture data directly from experiments concurrently maintaining the numerical efficiency of the micromechanical model. Kanapy is developed to overcome the limitations of spatial tessellation methods and to provide an alternative to the existing Random Sequential Addition technique of microstructure geometry generation. 
 
-.. figure:: /docs/figs/method_flow.jpeg
+.. figure:: /figs/Kanapy_graphical_abstract.png
     :align: center
-
+    
     **Figure**: Kanapy workflow.
     
 Features
