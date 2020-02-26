@@ -173,6 +173,96 @@ def particleStatGenerator(inputFile):
     return
 
 
+def particleCreator(inputFile, periodic='True', units="mm"):
+    r"""
+    Generates ellipsoid particles based on user-defined inputs.
+
+    :param inputFile: User-defined grain informationfile for ellipsoid generation.
+    :type inputFile: document
+
+    .. note:: 1. Input parameters provided by the user in the input file are:
+
+                * Grain major diameter (:math:`\mu m`)
+                * Grain minor diameter (:math:`\mu m`)               
+                * Grain's major axis tilt angle (degrees) with respect to the +ve X-axis (horizontal axis)                
+              
+              2. Other user defined inputs: Periodicity & output units format (:math:`mm` or :math:`\mu m`).
+                 Default values: periodicity=True & units=:math:`\mu m`.
+              
+              3. Particle, RVE and simulation data are written as JSON files in a folder in the current 
+                 working directory for later access.
+
+                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. 
+                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.
+                * Simulation attributes such as total number of timesteps, periodicity and Output unit scale (:math:`mm` 
+                  or :math:`\mu m`) for ABAQUS .inp file.
+
+    """
+    print('')
+    print('------------------------------------------------------------------------')    
+    print('Welcome to KANAPY - A synthetic polycrystalline microstructure generator')
+    print('------------------------------------------------------------------------')
+    
+    print('Generating particles based on user defined grains')
+    
+    # Open the user input grain file and read the data
+    try:
+        input_data = np.loadtxt(inputFile, delimiter=',')
+    except FileNotFoundError:
+        print('Input file not found, make sure {0} file is present in the working directory!'.format(inputFile))
+        raise FileNotFoundError
+    
+    # User defined major, minor axes lengths using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b    
+    minDia = input_data[:,1]                          # Minor axis length
+    majDia = input_data[:,0]                          # Major axis length    
+    minDia2 = minDia.copy()                           # Minor2 axis length (assuming spheroid)
+    ori_array = input_data[:,2]
+    
+    # Volume of each ellipsoid       
+    volume_array = (4/3)*np.pi*(majDia*minDia*minDia2)*(1/8)
+    
+    # RVE size: RVE volume = sum(ellipsoidal volume)
+    RVEsize = (np.sum(volume_array))**(1/3)
+    
+    # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
+    voxel_size = 1.1*(np.amin(minDia) / 3.)
+    voxel_per_side = int(round(RVEsize / voxel_size))  # Number of voxel/RVE side                
+    voxel_size = RVEsize / voxel_per_side              # Re-calculate
+                        
+    totalEllipsoids = len(majDia)
+    print('    Total number of particles = {}'.format(totalEllipsoids))
+    print('    RVE side length = {}'.format(RVEsize))
+    print('    Voxel resolution = {}'.format(voxel_size))
+    print('    Total number of voxels (C3D8) = {}\n'.format(voxel_per_side**3))
+        
+    # Create dictionaries to store the data generated
+    particle_data = {'Number': int(totalEllipsoids), 'Major_diameter': list(majDia),
+                     'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(ori_array)}
+
+    RVE_data = {'RVE_size': RVEsize, 'Voxel_number_per_side': voxel_per_side,
+                'Voxel_resolution': voxel_size}
+
+    simulation_data = {'Time steps': 1000, 'Periodicity': "{}".format(periodic), 'Output units': units}
+
+    # Dump the Dictionaries as json files
+    cwd = os.getcwd()     
+    json_dir = cwd + '/json_files'          # Folder to store the json files
+
+    if not os.path.exists(json_dir):
+        os.makedirs(json_dir)
+
+    with open(json_dir + '/particle_data.json', 'w') as outfile:
+        json.dump(particle_data, outfile, indent=2)
+
+    with open(json_dir + '/RVE_data.json', 'w') as outfile:
+        json.dump(RVE_data, outfile, indent=2)
+
+    with open(json_dir + '/simulation_data.json', 'w') as outfile:
+        json.dump(simulation_data, outfile, indent=2)
+
+    return
+    
+
 def write_dump(Ellipsoids, sim_box, num_particles):
     """
     Writes the (.dump) file, which can be read by visualization software OVITO.  

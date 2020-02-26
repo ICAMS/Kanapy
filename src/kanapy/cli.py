@@ -4,8 +4,8 @@ import shutil, json
 import click
 
 from kanapy.util import ROOT_DIR, MAIN_DIR 
-from kanapy.input_output import particleStatGenerator, write_position_weights
-from kanapy.input_output import write_abaqus_inp, write_output_stat
+from kanapy.input_output import particleStatGenerator, particleCreator
+from kanapy.input_output import write_position_weights, write_abaqus_inp, write_output_stat
 from kanapy.input_output import extract_volume_sharedGBarea
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
@@ -69,6 +69,38 @@ def statgenerate(ctx, filename: str):
             sys.exit(0)        
         particleStatGenerator(cwd + '/' + filename)           
 
+
+@main.command()
+@click.option('--filename', default=None, help='Input file name in the current directory.')
+@click.option('--periodic', default='True', help='RVE periodicity status.')
+@click.option('--units', default='mm', help='Output unit format.')
+@click.pass_context
+def readGrains(ctx, filename: str, periodic: str, units: str):    
+    """ Generates particles based on the grain data provided in the input file."""
+    
+    if filename == None:
+        click.echo('')
+        click.echo('Please provide the name of the input file available in the current directory', err=True)
+        click.echo('For more info. run: kanapy readgrains --help\n', err=True)
+        sys.exit(0)    
+    elif ((periodic!='True') and (periodic!='False')):
+        click.echo('')
+        click.echo('Invalid entry!, Run: kanapy readgrains again', err=True)
+        click.echo('For more info. run: kanapy readgrains --help\n', err=True)
+        sys.exit(0)                
+    elif ((units!='mm') and (units!='um')):
+        click.echo('')
+        click.echo('Invalid entry!, Run: kanapy readgrains again', err=True)
+        click.echo('For more info. run: kanapy readgrains --help\n', err=True)
+        sys.exit(0)                            
+    else:
+        cwd = os.getcwd()
+        if not os.path.exists(cwd + '/{}'.format(filename)):
+            click.echo('')
+            click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(filename), err=True)
+            sys.exit(0)          
+        particleCreator(cwd + '/' + filename, periodic=periodic, units=units)         
+            
         
 @main.command()
 @click.pass_context
@@ -78,9 +110,15 @@ def pack(ctx):
 
 
 @main.command()
+@click.pass_context
+def voxelize(ctx):
+    """ Generates the RVE by assigning voxels to grains."""        
+    voxelizationRoutine()
+
+@main.command()
 @click.option('--timestep', help='Time step for voxelization.')
 @click.pass_context
-def voxelize(ctx, timestep: int):
+def voxelizeOLD(ctx, timestep: int):
     """ Generates the RVE by assigning voxels to grains.""" 
 
     if timestep == None:
