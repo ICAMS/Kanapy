@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>kanapy.voxelization &mdash; kanapy 2.0.0 documentation</title>
+  <title>kanapy.voxelization &mdash; kanapy 2.0.1 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                2.0.0
+                2.0.1
               </div>
             
           
@@ -166,7 +166,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">ConvexHull</span>
 
-<span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="k">import</span> <span class="n">read_dump</span>
+<span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="k">import</span> <span class="n">read_dump</span><span class="p">,</span> <span class="n">write_output_stat</span>
 
 
 <div class="viewcode-block" id="points_in_convexHull"><a class="viewcode-back" href="../../kanapy.html#kanapy.voxelization.points_in_convexHull">[docs]</a><span class="k">def</span> <span class="nf">points_in_convexHull</span><span class="p">(</span><span class="n">Points</span><span class="p">,</span> <span class="n">hull</span><span class="p">):</span>
@@ -258,7 +258,7 @@
     <span class="n">test_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cooDict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
 
     <span class="c1"># array defining ellipsoid growth for each stage of while loop</span>
-    <span class="n">growth</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)))</span>    
+    <span class="n">growth</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)))</span>    
     <span class="n">remaining_voxels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cooDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
     <span class="n">assigned_voxels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     
@@ -269,6 +269,7 @@
         
         <span class="c1"># call the growth value for the ellipsoids</span>
         <span class="n">scale</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">growth</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">ellipsoid</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
 
             <span class="c1"># scale ellipsoid dimensions by the growth factor and generate surface points</span>
@@ -302,7 +303,7 @@
             <span class="n">inside_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bbox_testids</span><span class="p">[</span><span class="n">results</span><span class="p">])</span>
             
             <span class="c1"># Check if the new found voxels share atlest 4 nodes with ellipsoid nodes</span>
-            <span class="k">if</span> <span class="n">scale</span> <span class="o">!=</span> <span class="mf">0.5</span><span class="p">:</span>               
+            <span class="k">if</span> <span class="n">scale</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>               
                 <span class="c1"># Extract single instance of all nodes currently belonging to the ellipsoid</span>
                 <span class="n">all_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">elmtDict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">inside_voxels</span><span class="p">]</span>
                 <span class="n">merged_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">all_nodes</span><span class="p">))</span>
@@ -360,7 +361,7 @@
     
                 <span class="k">continue</span>   
                                                 
-            <span class="c1"># If scale == 0.5          </span>
+            <span class="c1"># If scale == 1.0         </span>
             <span class="k">else</span><span class="p">:</span>    
                 <span class="c1"># Each voxel should share atleast 4 nodes with the remaining voxels</span>
                 <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">inside_ids</span><span class="p">:</span>
@@ -461,17 +462,13 @@
                 <span class="n">small_ells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inside_voxels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vox</span><span class="p">)</span>
         
             <span class="n">assigned_voxel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vox</span><span class="p">)</span>                                                          
-
     <span class="k">return</span></div>
+    
 
-
-<div class="viewcode-block" id="voxelizationRoutine"><a class="viewcode-back" href="../../kanapy.html#kanapy.voxelization.voxelizationRoutine">[docs]</a><span class="k">def</span> <span class="nf">voxelizationRoutine</span><span class="p">(</span><span class="n">file_num</span><span class="p">):</span>
+<div class="viewcode-block" id="voxelizationRoutine"><a class="viewcode-back" href="../../kanapy.html#kanapy.voxelization.voxelizationRoutine">[docs]</a><span class="k">def</span> <span class="nf">voxelizationRoutine</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`, :meth:`create_voxels`</span>
 <span class="sd">    , :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`</span>
-
-<span class="sd">    :param file_num: Simulation time step to be voxelized. </span>
-<span class="sd">    :type file_num: int</span>
 <span class="sd">    </span>
 <span class="sd">    .. note:: 1. The RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution </span>
 <span class="sd">                 is read by loading the JSON file that is generated by :meth:`kanapy.input_output.read_dump`.</span>
@@ -494,20 +491,19 @@
                 <span class="n">RVE_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;RVE_data.txt&quot; file exists!&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;RVE_data.json&quot; file exists!&#39;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
-            
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_num</span><span class="p">)</span>
-
-        <span class="c1"># Read the required dump file</span>
-        <span class="n">sim_box</span><span class="p">,</span> <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="n">read_dump</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-
+                
         <span class="n">voxel_per_side</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_number_per_side&#39;</span><span class="p">]</span>
         <span class="n">RVE_size</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_size&#39;</span><span class="p">]</span>
-        <span class="n">voxel_res</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_resolution&#39;</span><span class="p">]</span>
+        <span class="n">voxel_res</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_resolution&#39;</span><span class="p">]</span>          
 
+        <span class="c1"># Read the required dump file</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">580</span><span class="p">)</span>            
+        <span class="n">sim_box</span><span class="p">,</span> <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="n">read_dump</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        
         <span class="c1"># create voxels inside the RVE</span>
-        <span class="n">nodeDict</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">vox_centerDict</span> <span class="o">=</span> <span class="n">create_voxels</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">voxel_per_side</span><span class="p">)</span>
+        <span class="n">nodeDict</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">vox_centerDict</span> <span class="o">=</span> <span class="n">create_voxels</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">voxel_per_side</span><span class="p">)</span>              
 
         <span class="c1"># Find the voxels belonging to each grain by growing ellipsoid each time</span>
         <span class="n">assign_voxels_to_ellipsoid</span><span class="p">(</span><span class="n">vox_centerDict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">)</span>
@@ -547,13 +543,14 @@
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">elmtDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtSetDict.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
-            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>        
-            
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  
+                                                                                       
         <span class="k">return</span>
 
     <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span></div>
+        
 </pre></div>
 
            </div>

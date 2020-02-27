@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Overview &mdash; kanapy 2.0.0 documentation</title>
+  <title>Overview &mdash; kanapy 2.0.1 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                2.0.0
+                2.0.1
               </div>
             
           
@@ -213,12 +213,12 @@
 Anaconda or Miniconda Python distributions. If you do not have any, we suggest installing <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.</p>
 <p>Once done, create a virtual environment for Kanapy installation and clone the repository to
 a desired location and install.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -y -n myenv <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6 pip git
-<span class="gp">$</span> conda activate myenv
-<span class="gp">(myenv) $</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
-<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy-master/
-<span class="gp">(myenv) $</span> conda install -y -c conda-forge --file requirements.txt
-<span class="gp">(myenv) $</span> pip install -e .
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -y -n knpy <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6 pip git
+<span class="gp">$</span> conda activate knpy
+<span class="gp">(knpy) $</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
+<span class="gp">(knpy) $</span> <span class="nb">cd</span> kanapy-master/
+<span class="gp">(knpy) $</span> conda install -y -c conda-forge --file requirements.txt
+<span class="gp">(knpy) $</span> pip install -e .
 </pre></div>
 </div>
 <p>Kanapy is now installed along with all its dependencies. If you intend to use Kanapy’s texture module, link Kanapy with <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> and <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> installations by running: <code class="code bash docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">setuptexture</span></code>
@@ -226,8 +226,8 @@ and follow the instructions.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">myenv</span></code> can be replaced with any name for your environment.</p></li>
-<li><p>For older versions of anaconda/miniconda use: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">activate</span> <span class="pre">myenv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">knpy</span></code> can be replaced with any name for your environment.</p></li>
+<li><p>For older versions of anaconda/miniconda use: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">activate</span> <span class="pre">knpy</span></code></p></li>
 </ol>
 </div>
 <div class="admonition tip">
@@ -237,11 +237,11 @@ and follow the instructions.</p>
 </div>
 <div class="section" id="running-tests">
 <h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
-<p>Kanapy uses pytest to perform all its unit testing. Run: <code class="code bash docutils literal notranslate"><span class="operator"><span class="pre">(</span></span><span class="pre">myenv</span><span class="operator"><span class="pre">)</span></span> <span class="pre">$</span> <span class="pre">kanapy</span> <span class="pre">tests</span></code></p>
+<p>Kanapy uses pytest to perform all its unit testing. Run: <code class="code bash docutils literal notranslate"><span class="operator"><span class="pre">(</span></span><span class="pre">knpy</span><span class="operator"><span class="pre">)</span></span> <span class="pre">$</span> <span class="pre">kanapy</span> <span class="pre">tests</span></code></p>
 </div>
 <div class="section" id="documentation-build">
 <h2>Documentation build<a class="headerlink" href="#documentation-build" title="Permalink to this headline">¶</a></h2>
-<p>Documentation for kanapy is generated using Sphinx. Run: <code class="code bash docutils literal notranslate"><span class="operator"><span class="pre">(</span></span><span class="pre">myenv</span><span class="operator"><span class="pre">)</span></span> <span class="pre">$</span> <span class="pre">kanapy</span> <span class="pre">docs</span></code>.
+<p>Documentation for kanapy is generated using Sphinx. Run: <code class="code bash docutils literal notranslate"><span class="operator"><span class="pre">(</span></span><span class="pre">knpy</span><span class="operator"><span class="pre">)</span></span> <span class="pre">$</span> <span class="pre">kanapy</span> <span class="pre">docs</span></code>.
 The HTML documentation can be found at <em>../kanapy-master/docs/index.html</em>.</p>
 </div>
 <div class="section" id="dependencies">

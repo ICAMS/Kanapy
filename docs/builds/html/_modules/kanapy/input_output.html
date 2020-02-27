@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>kanapy.input_output &mdash; kanapy 2.0.0 documentation</title>
+  <title>kanapy.input_output &mdash; kanapy 2.0.1 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                2.0.0
+                2.0.1
               </div>
             
           
@@ -191,7 +191,7 @@
 
 <span class="sd">                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. </span>
 <span class="sd">                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
-<span class="sd">                * Simulation attributes such as total number of timesteps, periodicity and Output unit scale (:math:`mm` </span>
+<span class="sd">                * Simulation attributes such as periodicity and output unit scale (:math:`mm` </span>
 <span class="sd">                  or :math:`\mu m`) for ABAQUS .inp file.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -226,7 +226,7 @@
         <span class="n">voxel_per_side</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;voxel_per_side&quot;</span><span class="p">])</span>    
         
         <span class="c1"># Extract other simulation attrributes from input file </span>
-        <span class="n">nsteps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Simulation&quot;</span><span class="p">][</span><span class="s2">&quot;nsteps&quot;</span><span class="p">])</span>
+        <span class="n">nsteps</span> <span class="o">=</span> <span class="mi">1000</span>
         <span class="n">periodicity</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Simulation&quot;</span><span class="p">][</span><span class="s2">&quot;periodicity&quot;</span><span class="p">])</span>       
         <span class="n">output_units</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Simulation&quot;</span><span class="p">][</span><span class="s2">&quot;output_units&quot;</span><span class="p">])</span>                                                                                     
         
@@ -329,6 +329,96 @@
 
     <span class="k">return</span></div>
 
+
+<div class="viewcode-block" id="particleCreator"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.particleCreator">[docs]</a><span class="k">def</span> <span class="nf">particleCreator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;mm&quot;</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates ellipsoid particles based on user-defined inputs.</span>
+
+<span class="sd">    :param inputFile: User-defined grain informationfile for ellipsoid generation.</span>
+<span class="sd">    :type inputFile: document</span>
+
+<span class="sd">    .. note:: 1. Input parameters provided by the user in the input file are:</span>
+
+<span class="sd">                * Grain major diameter (:math:`\mu m`)</span>
+<span class="sd">                * Grain minor diameter (:math:`\mu m`)               </span>
+<span class="sd">                * Grain&#39;s major axis tilt angle (degrees) with respect to the +ve X-axis (horizontal axis)                </span>
+<span class="sd">              </span>
+<span class="sd">              2. Other user defined inputs: Periodicity &amp; output units format (:math:`mm` or :math:`\mu m`).</span>
+<span class="sd">                 Default values: periodicity=True &amp; units= :math:`\mu m`.</span>
+<span class="sd">              </span>
+<span class="sd">              3. Particle, RVE and simulation data are written as JSON files in a folder in the current </span>
+<span class="sd">                 working directory for later access.</span>
+
+<span class="sd">                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. </span>
+<span class="sd">                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
+<span class="sd">                * Simulation attributes such as total number of timesteps, periodicity and Output unit scale (:math:`mm` </span>
+<span class="sd">                  or :math:`\mu m`) for ABAQUS .inp file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------------------------------------&#39;</span><span class="p">)</span>    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Welcome to KANAPY - A synthetic polycrystalline microstructure generator&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------------------------------------&#39;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating particles based on user defined grains&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Open the user input grain file and read the data</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">input_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Input file not found, make sure </span><span class="si">{0}</span><span class="s1"> file is present in the working directory!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inputFile</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+    
+    <span class="c1"># User defined major, minor axes lengths using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) &amp; b=c &amp; a=AR*b    </span>
+    <span class="n">minDia</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>                          <span class="c1"># Minor axis length</span>
+    <span class="n">majDia</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>                          <span class="c1"># Major axis length    </span>
+    <span class="n">minDia2</span> <span class="o">=</span> <span class="n">minDia</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>                           <span class="c1"># Minor2 axis length (assuming spheroid)</span>
+    <span class="n">ori_array</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+    
+    <span class="c1"># Volume of each ellipsoid       </span>
+    <span class="n">volume_array</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">majDia</span><span class="o">*</span><span class="n">minDia</span><span class="o">*</span><span class="n">minDia2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">)</span>
+    
+    <span class="c1"># RVE size: RVE volume = sum(ellipsoidal volume)</span>
+    <span class="n">RVEsize</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">volume_array</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    
+    <span class="c1"># Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels</span>
+    <span class="n">voxel_size</span> <span class="o">=</span> <span class="mf">1.1</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">minDia</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">)</span>
+    <span class="n">voxel_per_side</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">RVEsize</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">))</span>  <span class="c1"># Number of voxel/RVE side                </span>
+    <span class="n">voxel_size</span> <span class="o">=</span> <span class="n">RVEsize</span> <span class="o">/</span> <span class="n">voxel_per_side</span>              <span class="c1"># Re-calculate</span>
+                        
+    <span class="n">totalEllipsoids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">majDia</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of particles = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    RVE side length = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">RVEsize</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Voxel resolution = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">voxel_size</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of voxels (C3D8) = </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">voxel_per_side</span><span class="o">**</span><span class="mi">3</span><span class="p">))</span>
+        
+    <span class="c1"># Create dictionaries to store the data generated</span>
+    <span class="n">particle_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">),</span> <span class="s1">&#39;Major_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">majDia</span><span class="p">),</span>
+                     <span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia</span><span class="p">),</span> <span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia2</span><span class="p">),</span> <span class="s1">&#39;Tilt angle&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">ori_array</span><span class="p">)}</span>
+
+    <span class="n">RVE_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;RVE_size&#39;</span><span class="p">:</span> <span class="n">RVEsize</span><span class="p">,</span> <span class="s1">&#39;Voxel_number_per_side&#39;</span><span class="p">:</span> <span class="n">voxel_per_side</span><span class="p">,</span>
+                <span class="s1">&#39;Voxel_resolution&#39;</span><span class="p">:</span> <span class="n">voxel_size</span><span class="p">}</span>
+
+    <span class="n">simulation_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Time steps&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s1">&#39;Periodicity&#39;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">periodic</span><span class="p">),</span> <span class="s1">&#39;Output units&#39;</span><span class="p">:</span> <span class="n">units</span><span class="p">}</span>
+
+    <span class="c1"># Dump the Dictionaries as json files</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>     
+    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">json_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">json_dir</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">simulation_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+    
 
 <div class="viewcode-block" id="write_dump"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.write_dump">[docs]</a><span class="k">def</span> <span class="nf">write_dump</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">num_particles</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -613,7 +703,7 @@
 <span class="sd">                 And RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.</span>
 <span class="sd">                 </span>
 <span class="sd">              2. The particle and grain diameter values are written in either :math:`mm` or :math:`\mu m` scale, </span>
-<span class="sd">                 as requested by the user in the input file.</span>
+<span class="sd">                 as requested by the user in the input file.                       </span>
 <span class="sd">    &quot;&quot;&quot;</span> 
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span> 
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Comparing input &amp; output statistics&#39;</span><span class="p">)</span>
@@ -679,10 +769,15 @@
         <span class="c1"># write out the particle and grain equivalent diameters to files            </span>
         <span class="n">par_eqDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
         <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
-        
+
+        <span class="c1"># Compute the L1-error</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">}</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                
         <span class="c1"># Create dictionaries to store the data generated</span>
         <span class="n">output_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number_of_particles/grains&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)),</span> 
                        <span class="s1">&#39;Unit_scale&#39;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span>
+                       <span class="s1">&#39;L1-error&#39;</span><span class="p">:</span><span class="n">error</span><span class="p">,</span>                       
                        <span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> 
                        <span class="s1">&#39;Grain_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">}</span>
         
@@ -800,9 +895,14 @@
         <span class="n">par_minDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">par_minDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
         <span class="n">grain_minDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">grain_minDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>                
         
+        <span class="c1"># Compute the L1-error</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">}</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
         <span class="c1"># Create dictionaries to store the data generated</span>
         <span class="n">output_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number_of_particles/grains&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)),</span> 
                        <span class="s1">&#39;Unit_scale&#39;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span>
+                       <span class="s1">&#39;L1-error&#39;</span><span class="p">:</span><span class="n">error</span><span class="p">,</span>
                        <span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> 
                        <span class="s1">&#39;Particle_Major_diameter&#39;</span><span class="p">:</span> <span class="n">par_majDia</span><span class="p">,</span>
                        <span class="s1">&#39;Particle_Minor_diameter&#39;</span><span class="p">:</span> <span class="n">par_minDia</span><span class="p">,</span>
@@ -816,7 +916,41 @@
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----&gt;DONE!&#39;</span><span class="p">)</span>             
     <span class="k">return</span></div>
     
+    
+<div class="viewcode-block" id="l1_error_est"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.l1_error_est">[docs]</a><span class="k">def</span> <span class="nf">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates the L1-error between the particle- and output RVE grain statistics with respect to Major, Minor &amp; </span>
+<span class="sd">    Equivalent diameters. </span>
 
+<span class="sd">    .. note:: 1. Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.</span>
+<span class="sd">                 And RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.</span>
+<span class="sd">                 </span>
+<span class="sd">              2. The L1-error value is written to the &#39;output_statistics.json&#39; file.</span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+        
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span> 
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing the L1-error between input and output diameter distributions&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Particles&#39;</span><span class="p">])</span>
+    <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">])</span>
+    
+    <span class="c1"># Scale the array between &#39;0 &amp; 1&#39;                </span>
+    <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">par_eqDia</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)</span>                
+    <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">grain_eqDia</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate the multidimensional histogram</span>
+    <span class="n">hist_par</span><span class="p">,</span> <span class="n">edge_par</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogramdd</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),))</span>
+    <span class="n">hist_gr</span><span class="p">,</span> <span class="n">edge_gr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogramdd</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),))</span>
+    
+    <span class="c1"># normalize the histogram</span>
+    <span class="n">hist_par</span> <span class="o">=</span> <span class="n">hist_par</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_par</span><span class="p">)</span>
+    <span class="n">hist_gr</span> <span class="o">=</span> <span class="n">hist_gr</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_gr</span><span class="p">)</span>
+    
+    <span class="c1"># Compute the L1-error</span>
+    <span class="n">l1_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hist_par</span> <span class="o">-</span> <span class="n">hist_gr</span><span class="p">))</span>    
+    <span class="k">return</span> <span class="n">l1_error</span>               </div>
+    
+    
 <div class="viewcode-block" id="extract_volume_sharedGBarea"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.extract_volume_sharedGBarea">[docs]</a><span class="k">def</span> <span class="nf">extract_volume_sharedGBarea</span><span class="p">():</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluates the grain volume and the grain boundary shared surface area between neighbouring grains </span>
@@ -923,6 +1057,7 @@
     
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----&gt;DONE!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>       
     <span class="k">return</span>    </div>
+
 </pre></div>
 
            </div>

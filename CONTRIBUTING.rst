@@ -70,15 +70,15 @@ Ready to contribute? Here's how to set up `kanapy` for local development.
 
 .. code-block:: console
 
-    $ conda create -n myenv
-    $ conda activate myenv
-    (myenv) $ cd kanapy/
+    $ conda create -n knpy
+    $ conda activate knpy
+    (knpy) $ cd kanapy/
 
 4. Create a branch for local development:
 
 .. code-block:: console
 
-   (myenv) $ git checkout -b name-of-your-bugfix-or-feature
+   (knpy) $ git checkout -b name-of-your-bugfix-or-feature
 
    
    Now you can make your changes locally.
@@ -87,16 +87,16 @@ Ready to contribute? Here's how to set up `kanapy` for local development.
 
 .. code-block:: console
     
-    (myenv) $ pytest tests/ -v
+    (knpy) $ pytest tests/ -v
 
    
 6. Commit your changes and push your branch to GitHub:
 
 .. code-block:: console
 
-    (myenv) $ git add .
-    (myenv) $ git commit -m "Your detailed description of your changes."
-    (myenv) $ git push origin name-of-your-bugfix-or-feature
+    (knpy) $ git add .
+    (knpy) $ git commit -m "Your detailed description of your changes."
+    (knpy) $ git push origin name-of-your-bugfix-or-feature
 
 7. Submit a pull request through the GitHub website.
 
@@ -121,5 +121,5 @@ To run a subset of tests:
 
 .. code-block:: console
 
-    (myenv) $ py.test tests.test_entities
+    (knpy) $ py.test tests.test_entities
 

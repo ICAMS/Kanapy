@@ -73,18 +73,18 @@ a desired location and install.
 
 .. code-block:: console
 
-    $ conda create -y -n myenv python=3.6 pip git
-    $ conda activate myenv    
-    (myenv) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
-    (myenv) $ cd kanapy-master/
-    (myenv) $ conda install -y -c conda-forge --file requirements.txt
-    (myenv) $ pip install -e .
+    $ conda create -y -n knpy python=3.6 pip git
+    $ conda activate knpy    
+    (knpy) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
+    (knpy) $ cd kanapy-master/
+    (knpy) $ conda install -y -c conda-forge --file requirements.txt
+    (knpy) $ pip install -e .
 
 Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's texture module, link Kanapy with MATLAB_ and MTEX_ installations by running: :bash:`kanapy setuptexture` 
 and follow the instructions.
 
-.. note:: 1. ``myenv`` can be replaced with any name for your environment.
-          2. For older versions of anaconda/miniconda use: ``source activate myenv``
+.. note:: 1. ``knpy`` can be replaced with any name for your environment.
+          2. For older versions of anaconda/miniconda use: ``source activate knpy``
                     
 .. tip:: To learn more about managing environments see Anaconda documentation_.
 
@@ -95,11 +95,11 @@ and follow the instructions.
             
 Running tests
 --------------
-Kanapy uses pytest to perform all its unit testing. Run: :bash:`(myenv) $ kanapy tests`
+Kanapy uses pytest to perform all its unit testing. Run: :bash:`(knpy) $ kanapy tests`
       
 Documentation build
 -------------------
-Documentation for kanapy is generated using Sphinx. Run: :bash:`(myenv) $ kanapy docs`.
+Documentation for kanapy is generated using Sphinx. Run: :bash:`(knpy) $ kanapy docs`.
 The HTML documentation can be found at *../kanapy-master/docs/index.html*.
 
 Dependencies

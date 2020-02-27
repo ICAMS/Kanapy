@@ -22,7 +22,6 @@
     },
   "Simulation":
     {
-      "nsteps": 1000,
       "periodicity": "True",                                         
       "output_units": "mm"         
     }

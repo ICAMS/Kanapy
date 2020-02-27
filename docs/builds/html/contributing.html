@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Contributing &mdash; kanapy 2.0.0 documentation</title>
+  <title>Contributing &mdash; kanapy 2.0.1 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                2.0.0
+                2.0.1
               </div>
             
           
@@ -231,15 +231,15 @@ articles, and alike.</p>
 <ol class="arabic simple" start="3">
 <li><p>Install your local copy into a virtual environment. Assuming you have Anaconda installed, this is how you set up your fork for local development:</p></li>
 </ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -n myenv
-<span class="gp">$</span> conda activate myenv
-<span class="gp">(myenv) $</span> <span class="nb">cd</span> kanapy/
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -n knpy
+<span class="gp">$</span> conda activate knpy
+<span class="gp">(knpy) $</span> <span class="nb">cd</span> kanapy/
 </pre></div>
 </div>
 <ol class="arabic simple" start="4">
 <li><p>Create a branch for local development:</p></li>
 </ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> git checkout -b name-of-your-bugfix-or-feature
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(knpy) $</span> git checkout -b name-of-your-bugfix-or-feature
 
 
 <span class="go">Now you can make your changes locally.</span>
@@ -248,15 +248,15 @@ articles, and alike.</p>
 <ol class="arabic simple" start="5">
 <li><p>When you’re done making changes, check that your changes pass the tests:</p></li>
 </ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> pytest tests/ -v
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(knpy) $</span> pytest tests/ -v
 </pre></div>
 </div>
 <ol class="arabic simple" start="6">
 <li><p>Commit your changes and push your branch to GitHub:</p></li>
 </ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> git add .
-<span class="gp">(myenv) $</span> git commit -m <span class="s2">&quot;Your detailed description of your changes.&quot;</span>
-<span class="gp">(myenv) $</span> git push origin name-of-your-bugfix-or-feature
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(knpy) $</span> git add .
+<span class="gp">(knpy) $</span> git commit -m <span class="s2">&quot;Your detailed description of your changes.&quot;</span>
+<span class="gp">(knpy) $</span> git push origin name-of-your-bugfix-or-feature
 </pre></div>
 </div>
 <ol class="arabic simple" start="7">
@@ -282,7 +282,7 @@ tests pass for all supported Python versions.</p></li>
 <div class="section" id="tips">
 <h2>Tips<a class="headerlink" href="#tips" title="Permalink to this headline">¶</a></h2>
 <p>To run a subset of tests:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(myenv) $</span> py.test tests.test_entities
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(knpy) $</span> py.test tests.test_entities
 </pre></div>
 </div>
 </div>

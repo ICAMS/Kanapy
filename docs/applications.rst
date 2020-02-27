@@ -143,8 +143,8 @@ Since both these algorithms are implemented as MATLAB functions that calls other
 
 .. code-block:: console
 
-    $ conda activate myenv
-    (myenv) $ kanapy setuptexture
+    $ conda activate knpy
+    (knpy) $ kanapy setuptexture
 
 .. _Bachmann (2010): https://www.tib.eu/en/search/id/TIBKAT%3A623768526/
 

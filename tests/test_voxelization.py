@@ -204,11 +204,7 @@ def test_reassign_shared_voxels(dec_info):
     assert set(ref2) == set(ell2.inside_voxels)
 
 
-def test_voxelizationRoutine():
-    
-    # Test if FileNotFoundError is raised
-    with pytest.raises(FileNotFoundError):
-        voxelizationRoutine(12597856985475)
+def test_voxelizationRoutine():    
 
     # create an temporary input file for user defined statistics
     cwd = os.getcwd()    
@@ -219,7 +215,7 @@ def test_voxelizationRoutine():
     # create an temporary 'json' directory for reading files from
     to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
                 'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4},
-                'RVE': {'side_length': 3, 'voxel_per_side': 10}, 'Simulation': {'nsteps': 1000, 'periodicity': 'True', 'output_units': 'mm'}}
+                'RVE': {'side_length': 3, 'voxel_per_side': 10}, 'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}
 
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2) 
@@ -234,11 +230,12 @@ def test_voxelizationRoutine():
         particle_data = json.load(json_file)
                                     
     sim_box = Simulation_Box(RVE_data['RVE_size'], RVE_data['RVE_size'], RVE_data['RVE_size'])
+    sim_box.sim_ts = 580
     Particles = particle_generator(particle_data, sim_box)
     
     write_dump(Particles, sim_box, len(Particles))
     
-    voxelizationRoutine(0)
+    voxelizationRoutine()
 
     assert os.path.isfile(json_dir + '/nodeDict.json')
     assert os.path.isfile(json_dir + '/elmtDict.json')

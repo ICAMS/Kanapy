@@ -20,10 +20,9 @@ def main(ctx):
 @main.command()
 @click.pass_context
 def autocomplete(ctx):    
-    """ Kanapy bash auto completion."""
-    
-    click.echo('')
-  
+    """ Kanapy bash auto completion.""" 
+       
+    click.echo('')  
     os.system("echo '# For KANAPY bash autocompletion' >> ~/.bashrc")
     os.system("echo '. {}' >> ~/.bashrc".format(ROOT_DIR+'/kanapy-complete.sh'))  
 
@@ -31,7 +30,7 @@ def autocomplete(ctx):
 @main.command()
 @click.pass_context
 def tests(ctx):    
-    """ Runs unittests built within kanapy."""
+    """ Runs unittests built within kanapy."""    
     
     click.echo('')
     os.system("pytest {0}/tests/ -v".format(MAIN_DIR))      
@@ -114,20 +113,7 @@ def pack(ctx):
 def voxelize(ctx):
     """ Generates the RVE by assigning voxels to grains."""        
     voxelizationRoutine()
-
-@main.command()
-@click.option('--timestep', help='Time step for voxelization.')
-@click.pass_context
-def voxelizeOLD(ctx, timestep: int):
-    """ Generates the RVE by assigning voxels to grains.""" 
-
-    if timestep == None:
-        click.echo('')    
-        click.echo('Please provide the timestep value for voxelization!', err=True)
-        click.echo('For more info. run: kanapy voxelize --help\n', err=True)
-        sys.exit(0)         
-    voxelizationRoutine(timestep)
-    
+        
 
 @main.command()
 @click.pass_context

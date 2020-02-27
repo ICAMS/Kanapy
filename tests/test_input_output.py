@@ -25,7 +25,7 @@ def test_particleStatGenerator():
     # Test if ValueError is raised w.r.t output_units
     to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
                 'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4},
-                'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'nsteps': 1000, 'periodicity': 'True', 'output_units': 'm'}}
+                'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'periodicity': 'True', 'output_units': 'm'}}
 
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2)       
@@ -37,7 +37,7 @@ def test_particleStatGenerator():
     # Test the remaining code
     to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
                 'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4}, 
-                'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'nsteps': 1000, 'periodicity': 'True', 'output_units': 'mm'}}    
+                'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}    
 
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2) 
@@ -92,7 +92,7 @@ def test_particleStatGenerator():
 
     compare_rd = {'RVE_size': 8.0, 'Voxel_number_per_side': 15, 
                   'Voxel_resolution': 0.5333333333333333}
-    compare_sd = {'Time steps': 1000.0, 'Periodicity': 'True', 'Output units': 'mm'}
+    compare_sd = {'Time steps': 1000, 'Periodicity': 'True', 'Output units': 'mm'}
 
     # Verify
     for k, v in pd.items():
@@ -193,7 +193,7 @@ def test_write_abaqus_inp():
     esd = {1: [1, 2, 4, 5, 10, 11, 13, 3, 6, 7, 8, 9, 16],
            2: [20, 22, 23, 17, 25, 26, 12, 15, 18, 21, 24, 27, 19, 14]}
 
-    simData = {'Time steps': 1000.0, 'Periodicity': 'True', 'Output units': 'mm'}
+    simData = {'Periodicity': 'True', 'Output units': 'mm'}
     
     cwd = os.getcwd()
     json_dir = cwd + '/json_files'
