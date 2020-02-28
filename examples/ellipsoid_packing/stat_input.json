@@ -17,8 +17,12 @@
     },
   "RVE": 
     {
-      "side_length": 60.9,
-      "voxel_per_side": 45
+      "sideX": 60.9,
+      "sideY": 60.9,
+      "sideZ": 60.9,
+      "Nx": 45,
+      "Ny": 45,
+      "Nz": 45
     },
   "Simulation":
     {

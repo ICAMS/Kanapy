@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
+import os, sys
 import re, json
 import csv, itertools
 
@@ -64,9 +64,13 @@ def particleStatGenerator(inputFile):
         sigma_Ori = stats_dict["Tilt angle"]["sigma"]
         mean_Ori = stats_dict["Tilt angle"]["mean"]        
         
-        # Extract RVE side length and voxel number info from input file 
-        RVEsize = stats_dict["RVE"]["side_length"]    
-        voxel_per_side = int(stats_dict["RVE"]["voxel_per_side"])    
+        # Extract RVE side lengths and voxel numbers info from input file 
+        RVEsizeX = stats_dict["RVE"]["sideX"]
+        RVEsizeY = stats_dict["RVE"]["sideY"]
+        RVEsizeZ = stats_dict["RVE"]["sideZ"]        
+        Nx = int(stats_dict["RVE"]["Nx"]) 
+        Ny = int(stats_dict["RVE"]["Ny"]) 
+        Nz = int(stats_dict["RVE"]["Nz"]) 
         
         # Extract other simulation attrributes from input file 
         nsteps = 1000
@@ -114,7 +118,7 @@ def particleStatGenerator(inputFile):
     K = individualK/np.sum(individualK)
 
     # Total number of ellipsoids
-    num = np.divide(K*(RVEsize**3), volume_array)    
+    num = np.divide(K*(RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
     num = np.rint(num).astype(int)                  # Round to the nearest integer    
     totalEllipsoids = np.sum(num)                   # Total number of ellipsoids
 
@@ -134,23 +138,37 @@ def particleStatGenerator(inputFile):
     minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)
 
     # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
-    voxel_size = RVEsize / voxel_per_side
-
+    voxel_sizeX = RVEsizeX / Nx
+    voxel_sizeY = RVEsizeY / Ny
+    voxel_sizeZ = RVEsizeZ / Nz
+    
+    # raise value error if voxel sizes along the 3 directions are not equal
+    if (voxel_sizeX != voxel_sizeY != voxel_sizeZ):
+        print(" ")
+        print("    The voxel resolution along (X,Y,Z): ({0:.2f},{1:.2f},{2:.2f}) are not equal!".format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
+        print("    Change the RVE side lengths (OR) the voxel numbers\n")
+        sys.exit(0) 
+    
     # raise value error in case the grains are not voxelated well
-    if voxel_size >= np.amin(minDia) / 3.:
-        raise ValueError('Grains will not be voxelated well, please increase the number of voxels per RVE side (or) decrease the RVE side length!')
-
-    print('    Total number of particles = {}'.format(totalEllipsoids))
-    print('    RVE side length = {}'.format(RVEsize))
-    print('    Voxel resolution = {}'.format(voxel_size))
-    print('    Total number of voxels (C3D8) = {}\n'.format(voxel_per_side**3))
+    if voxel_sizeX >= np.amin(minDia) / 3.:
+        print(" ")
+        print("    Grains will not be voxelated well!")
+        print("    Please increase the voxel numbers (OR) decrease the RVE side lengths\n")
+        sys.exit(0)                     
+   
+    print('    Total number of grains        = {}'.format(totalEllipsoids))
+    print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
+    print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
+    print('    Voxel resolution (X, Y, Z)    = {0:.2f}, {1:.2f}, {2:.2f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
+    print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))
     
     # Create dictionaries to store the data generated
     particle_data = {'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
                      'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(ori_array)}
 
-    RVE_data = {'RVE_size': RVEsize, 'Voxel_number_per_side': voxel_per_side,
-                'Voxel_resolution': voxel_size}
+    RVE_data = {'RVE_sizeX': RVEsizeX, 'RVE_sizeY': RVEsizeY, 'RVE_sizeZ': RVEsizeZ, 
+                'Voxel_numberX': Nx, 'Voxel_numberY': Ny, 'Voxel_numberZ': Nz,
+                'Voxel_resolutionX': voxel_sizeX,'Voxel_resolutionY': voxel_sizeY, 'Voxel_resolutionZ': voxel_sizeZ}
 
     simulation_data = {'Time steps': nsteps, 'Periodicity': periodicity, 'Output units': output_units}
 
