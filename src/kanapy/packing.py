@@ -164,7 +164,7 @@ def packingRoutine():
             
         print('    Creating simulation box of required dimensions')
         # Create an instance of simulation box
-        sim_box = Simulation_Box(RVE_data['RVE_size'], RVE_data['RVE_size'], RVE_data['RVE_size'])
+        sim_box = Simulation_Box(RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ'])
 
         print('    Creating particles from distribution statistics')
         # Create instances for particles

@@ -27,7 +27,7 @@ def particleStatGenerator(inputFile):
                 * Mean value for ellipsoid tilt angles (Normal distribution)
                 * Standard deviation for ellipsoid tilt angles (Normal distribution)
                 * Side dimension of the RVE 
-                * Discretization along the RVE side          
+                * Discretization along the RVE sides          
 
               2. Particle, RVE and simulation data are written as JSON files in a folder in the current 
                  working directory for later access.
@@ -130,7 +130,7 @@ def particleStatGenerator(inputFile):
          raise ValueError('RVE volume too less to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
     
     # Ellipsoid tilt angles
-    ori_array = np.random.normal(mean_Ori, sigma_Ori, totalEllipsoids)
+    tilt_angle = np.random.normal(mean_Ori, sigma_Ori, totalEllipsoids)
 
     # Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b    
     minDia = eq_Dia / (mean_AR)**(1/3)                          # Minor axis length
@@ -138,14 +138,18 @@ def particleStatGenerator(inputFile):
     minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)
 
     # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
-    voxel_sizeX = RVEsizeX / Nx
-    voxel_sizeY = RVEsizeY / Ny
-    voxel_sizeZ = RVEsizeZ / Nz
-    
+    voxel_sizeX = round(RVEsizeX / Nx, 4)
+    voxel_sizeY = round(RVEsizeY / Ny, 4)
+    voxel_sizeZ = round(RVEsizeZ / Nz, 4)
+        
     # raise value error if voxel sizes along the 3 directions are not equal
-    if (voxel_sizeX != voxel_sizeY != voxel_sizeZ):
+    dif1 = np.abs(voxel_sizeX-voxel_sizeY)
+    dif2 = np.abs(voxel_sizeY-voxel_sizeZ)
+    dif3 = np.abs(voxel_sizeZ-voxel_sizeX)
+
+    if (dif1 > 1e-5) or (dif1 > 1e-5) or (dif1 > 1e-5):
         print(" ")
-        print("    The voxel resolution along (X,Y,Z): ({0:.2f},{1:.2f},{2:.2f}) are not equal!".format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
+        print("    The voxel resolution along (X,Y,Z): ({0:.4f},{1:.4f},{2:.4f}) are not equal!".format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
         print("    Change the RVE side lengths (OR) the voxel numbers\n")
         sys.exit(0) 
     
@@ -159,12 +163,12 @@ def particleStatGenerator(inputFile):
     print('    Total number of grains        = {}'.format(totalEllipsoids))
     print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
     print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
-    print('    Voxel resolution (X, Y, Z)    = {0:.2f}, {1:.2f}, {2:.2f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
+    print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
     print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))
     
     # Create dictionaries to store the data generated
     particle_data = {'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
-                     'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(ori_array)}
+                     'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
 
     RVE_data = {'RVE_sizeX': RVEsizeX, 'RVE_sizeY': RVEsizeY, 'RVE_sizeZ': RVEsizeZ, 
                 'Voxel_numberX': Nx, 'Voxel_numberY': Ny, 'Voxel_numberZ': Nz,
@@ -191,7 +195,7 @@ def particleStatGenerator(inputFile):
     return
 
 
-def particleCreator(inputFile, periodic='True', units="mm"):
+def particleCreator(inputFile, RVE_length, Voxel_number, periodic='True', units="mm"):
     r"""
     Generates ellipsoid particles based on user-defined inputs.
 
@@ -231,10 +235,10 @@ def particleCreator(inputFile, periodic='True', units="mm"):
         raise FileNotFoundError
     
     # User defined major, minor axes lengths using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b    
-    minDia = input_data[:,1]                          # Minor axis length
-    majDia = input_data[:,0]                          # Major axis length    
+    majDia = input_data[:,0]                          # Major axis length  
+    minDia = input_data[:,1]                          # Minor axis length  
     minDia2 = minDia.copy()                           # Minor2 axis length (assuming spheroid)
-    ori_array = input_data[:,2]
+    tilt_angle = input_data[:,2]                      # Tilt angle 
     
     # Volume of each ellipsoid       
     volume_array = (4/3)*np.pi*(majDia*minDia*minDia2)*(1/8)
@@ -248,14 +252,15 @@ def particleCreator(inputFile, periodic='True', units="mm"):
     voxel_size = RVEsize / voxel_per_side              # Re-calculate
                         
     totalEllipsoids = len(majDia)
-    print('    Total number of particles = {}'.format(totalEllipsoids))
-    print('    RVE side length = {}'.format(RVEsize))
-    print('    Voxel resolution = {}'.format(voxel_size))
-    print('    Total number of voxels (C3D8) = {}\n'.format(voxel_per_side**3))
+    print('    Total number of grains        = {}'.format(totalEllipsoids))
+    print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVE_length[0], RVE_length[1], RVE_length[2]))
+    print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Voxel_number[0], Voxel_number[1], Voxel_number[2]))
+    print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
+    print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))        
         
     # Create dictionaries to store the data generated
     particle_data = {'Number': int(totalEllipsoids), 'Major_diameter': list(majDia),
-                     'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(ori_array)}
+                     'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
 
     RVE_data = {'RVE_size': RVEsize, 'Voxel_number_per_side': voxel_per_side,
                 'Voxel_resolution': voxel_size}
@@ -340,15 +345,21 @@ def read_dump(dump_file):
                     par_line_num = num + 7
 
                 if lookup2 in lines:
-                    values = re.findall(r'\S+', next(fd))
-                    RVE_min, RVE_max = list(map(float, values))
+                    valuesX = re.findall(r'\S+', next(fd))
+                    RVE_minX, RVE_maxX = list(map(float, valuesX))
+                    
+                    valuesY = re.findall(r'\S+', next(fd))
+                    RVE_minY, RVE_maxY = list(map(float, valuesY))
+                    
+                    valuesZ = re.findall(r'\S+', next(fd))
+                    RVE_minZ, RVE_maxZ = list(map(float, valuesZ))
 
     except FileNotFoundError:
         print('    .dump file not found, make sure "packingRoutine()" function is executed first!')
         raise FileNotFoundError
         
     # Create an instance of simulation box
-    sim_box = Cuboid(RVE_min, RVE_min, RVE_max, RVE_max, RVE_min, RVE_max)
+    sim_box = Cuboid(RVE_minX, RVE_maxY, RVE_maxX, RVE_minY, RVE_maxZ, RVE_minZ)
 
     # Read the particle shape & position information
     # Create instances for ellipsoids & assign values from dump files
@@ -411,9 +422,16 @@ def write_position_weights(file_num):
                     number_particles = int(next(fd))
                     par_line_num = num + 7
 
-                if lookup2 in lines:
-                    values = re.findall(r'\S+', next(fd))
-                    RVE_min, RVE_max = list(map(float, values))
+                if lookup2 in lines:                   
+                    valuesX = re.findall(r'\S+', next(fd))
+                    RVE_minX, RVE_maxX = list(map(float, valuesX))
+                    
+                    valuesY = re.findall(r'\S+', next(fd))
+                    RVE_minY, RVE_maxY = list(map(float, valuesY))
+                    
+                    valuesZ = re.findall(r'\S+', next(fd))
+                    RVE_minZ, RVE_maxZ = list(map(float, valuesZ))
+                                        
 
     except FileNotFoundError:
         print('    .dump file not found, make sure "packingRoutine()" function is executed first!')
@@ -598,8 +616,8 @@ def write_output_stat():
     par_eqDia = particle_data['Equivalent_diameter']
     par_majDia = particle_data['Major_diameter']
     par_minDia = particle_data['Minor_diameter1']
-    voxel_size = RVE_data['Voxel_resolution']
-    RVEsize = RVE_data['RVE_size']
+    voxel_size = RVE_data['Voxel_resolutionX']
+    RVE_sizeX, RVE_sizeY, RVE_sizeZ = RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ']
     
     if simulation_data['Periodicity'] == 'True':
         periodic_status = True
@@ -682,17 +700,17 @@ def write_output_stat():
                         
                     if abs(0.0000 - coord[0]) <= 0.00000001:       # nodes on Left face
                         nodeLS.add(enum)
-                    elif abs(RVEsize - coord[0]) <= 0.00000001:    # nodes on Right face
+                    elif abs(RVE_sizeX - coord[0]) <= 0.00000001:    # nodes on Right face
                         nodeRS.add(enum)
                     
                     if abs(0.0000 - coord[1]) <= 0.00000001:       # nodes on Bottom face
                         nodeBS.add(enum)
-                    elif abs(RVEsize - coord[1]) <= 0.00000001:    # nodes on Top face
+                    elif abs(RVE_sizeY - coord[1]) <= 0.00000001:    # nodes on Top face
                         nodeTS.add(enum)
 
                     if abs(0.0000 - coord[2]) <= 0.00000001:       # nodes on Front face
                         nodeFS.add(enum)
-                    elif abs(RVEsize - coord[2]) <= 0.00000001:    # nodes on Back face
+                    elif abs(RVE_sizeZ - coord[2]) <= 0.00000001:    # nodes on Back face
                         nodeBaS.add(enum)                
                                                                                                                                                                 
                 if len(nodeLS) != 0 and len(nodeRS) != 0:   # grain is periodic, has faces on both Left & Right sides
@@ -707,22 +725,22 @@ def write_output_stat():
                 pts = grain_node[grain]                     
                 # Pad the nodes on the left side by RVE x-dimension
                 for enum, val in enumerate(pts[:, 0]):
-                    if val>=0.0 and val<=RVEsize/2.:
-                        pts[enum, 0] += RVEsize
+                    if val>=0.0 and val<=RVE_sizeX/2.:
+                        pts[enum, 0] += RVE_sizeX
 
             for grain in shiftBack:
                 pts = grain_node[grain]        
                 # Pad the nodes on the front side by RVE z-dimension
                 for enum, val in enumerate(pts[:, 2]):
-                    if val>=0.0 and val<=RVEsize/2.:
-                        pts[enum, 2] += RVEsize
+                    if val>=0.0 and val<=RVE_sizeZ/2.:
+                        pts[enum, 2] += RVE_sizeZ
 
             for grain in shiftTop:
                 pts = grain_node[grain]        
                 # Pad the nodes on the bottom side by RVE y-dimension
                 for enum, val in enumerate(pts[:, 1]):
-                    if val>=0.0 and val<=RVEsize/2.:
-                        pts[enum, 1] += RVEsize                                
+                    if val>=0.0 and val<=RVE_sizeY/2.:
+                        pts[enum, 1] += RVE_sizeY                                
                     
         # For periodic & Non-periodic: create the convex hull and find the major & minor diameters
         for grain, points in grain_node.items():   
@@ -848,7 +866,7 @@ def extract_volume_sharedGBarea():
         print('Json file not found, make sure "particleStatGenerator(), packingRoutine(), voxelizationRoutine()" function is executed first!')
         raise FileNotFoundError
                     
-    voxel_size = RVE_data['Voxel_resolution']
+    voxel_size = RVE_data['Voxel_resolutionX']
 
     grain_vol = {}
     # For each grain find its volume and output it

@@ -103,8 +103,12 @@ An exemplary structure of the input file: ``stat_input.json`` is shown below:
         },
       "RVE": 
         {
-          "side_length": 60.9,
-          "voxel_per_side": 40
+          "sideX": 60.9,
+          "sideY": 60.9,
+          "sideZ": 60.9,
+          "Nx": 45,
+          "Ny": 45,
+          "Nz": 45
         },
       "Simulation":
         {
@@ -125,7 +129,7 @@ Tilt angle, RVE, Simulation``.
   - The ``Tilt angle`` keyword represents the tilt angle of particles with 
     respect to the positive x-axis. Hence, to generate a distribution, it takes in 
     two arguments: the normal distribution's mean and the standard deviation. 
-  - The ``RVE`` keyword takes two inputs: the side length of the final RVE 
+  - The ``RVE`` keyword takes two types of input: the side lengths of the final RVE 
     required and the number of voxels per RVE side length. 
   - The ``Simulation`` keyword takes in two inputs: A boolean value for periodicity (True/False) 
     and the required unit scale (:math:`mm` or :math:`\mu m`) for the output 
@@ -258,7 +262,8 @@ The workflow is similar to the one described earlier for sphere packing. The onl
 command is not applicable here. The ``outputstats`` command not only writes out the equivalent diameters, but also the 
 major and minor diameters of the ellipsoidal particles and grains.
     
-.. note:: 1. The ``statgenerate`` command requires the ``stat_input.json`` as input.
+.. note:: 1. A good estimation for the RVE side length values can be made by keeping the following point in mind: The 
+             biggest dimension of the biggest ellipsoid/sphere should be less than half of the corresponding RVE side length.
           2. For comparing the input and output equivalent, major and minor diameter statistics, the command 
              ``outputstats`` can be called. Kanapy writes the diameter values in either :math:`mm` or :math:`\mu m` scale, 
              depending on the user requirement specified in the input file.            

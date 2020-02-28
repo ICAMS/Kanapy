@@ -8,7 +8,7 @@
     },
   "Aspect ratio": 
     {
-      "mean": 3.0        
+      "mean": 1.0        
     },           
   "Tilt angle":
     {
@@ -18,10 +18,10 @@
   "RVE": 
     {
       "sideX": 60.9,
-      "sideY": 60.9,
+      "sideY": 87.966,
       "sideZ": 60.9,
       "Nx": 45,
-      "Ny": 45,
+      "Ny": 65,
       "Nz": 45
     },
   "Simulation":
@@ -30,4 +30,3 @@
       "output_units": "mm"         
     }
 }
-

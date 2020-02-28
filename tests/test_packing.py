@@ -121,7 +121,9 @@ def test_packingRoutine():
     pd = {'Number': 2, 'Equivalent_diameter': [1.651, 1.651], 'Major_diameter': [2.0, 2.0],
           'Minor_diameter1': [1.5, 1.5], 'Minor_diameter2': [1.5, 1.5], 'Tilt angle': [86, 92]}
 
-    rd = {'RVE_size': 10, 'Voxel_number_per_side': 3, 'Voxel_resolution': 3.334}
+    rd = {'RVE_sizeX': 10, 'RVE_sizeY': 10, 'RVE_sizeZ': 10, 
+          'Voxel_numberX': 3, 'Voxel_numberY': 3, 'Voxel_numberZ': 3, 
+          'Voxel_resolutionX': round(10/3,4), 'Voxel_resolutionY': round(10/3,4), 'Voxel_resolutionZ': round(10/3,4)}
 
     sd = {'Time steps': 2, 'Periodicity': 'True'}
 

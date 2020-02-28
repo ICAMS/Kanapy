@@ -20,12 +20,12 @@ def test_particleStatGenerator():
 
     # create an temporary input file for user defined statistics
     cwd = os.getcwd()
-    stat_inp = cwd + '/stat_input.json'   
+    stat_inp = cwd + '/input_test.json'   
             
     # Test if ValueError is raised w.r.t output_units
     to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
                 'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4},
-                'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'periodicity': 'True', 'output_units': 'm'}}
+                'RVE': {'sideX': 8, 'sideY': 8, 'sideZ': 8, 'Nx': 15, 'Ny': 15, 'Nz': 15}, 'Simulation': {'periodicity': 'True', 'output_units': 'm'}}
 
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2)       
@@ -37,7 +37,7 @@ def test_particleStatGenerator():
     # Test the remaining code
     to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
                 'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4}, 
-                'RVE': {'side_length': 8, 'voxel_per_side': 15}, 'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}    
+                'RVE': {'sideX': 8, 'sideY': 8, 'sideZ': 8, 'Nx': 15, 'Ny': 15, 'Nz': 15}, 'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}    
 
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2) 
@@ -90,10 +90,11 @@ def test_particleStatGenerator():
                                       58.583320776098375, 135.28369581228762, 48.71494252935829, 
                                       48.07037499932972]}
 
-    compare_rd = {'RVE_size': 8.0, 'Voxel_number_per_side': 15, 
-                  'Voxel_resolution': 0.5333333333333333}
+    compare_rd = {'RVE_sizeX': 8, 'RVE_sizeY': 8, 'RVE_sizeZ': 8, 'Voxel_numberX': 15, 'Voxel_numberY': 15, 'Voxel_numberZ': 15,
+                  'Voxel_resolutionX': round(8.0/15, 4), 'Voxel_resolutionY': round(8.0/15, 4), 
+                  'Voxel_resolutionZ': round(8.0/15, 4)}
     compare_sd = {'Time steps': 1000, 'Periodicity': 'True', 'Output units': 'mm'}
-
+    
     # Verify
     for k, v in pd.items():
         if k != 'Tilt angle':              # Don't check for Tilt angles as it is random
@@ -221,5 +222,4 @@ def test_write_abaqus_inp():
     write_abaqus_inp()
     assert os.path.isfile(cwd + '/kanapy_{0}grains.inp'.format(len(esd)))
     os.remove(cwd + '/kanapy_{0}grains.inp'.format(len(esd)))
-
 

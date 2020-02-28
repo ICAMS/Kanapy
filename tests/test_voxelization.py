@@ -156,7 +156,7 @@ def SBox(mocker):
 def test_create_voxels(dec_info, SBox):
 
     box = SBox
-    nodeDict, elmtDict, vox_centerDict = create_voxels(box, 3)
+    nodeDict, elmtDict, vox_centerDict = create_voxels(box, (3,3,3))
 
     assert dec_info[0] == nodeDict
     assert dec_info[1] == elmtDict
@@ -210,12 +210,13 @@ def test_voxelizationRoutine():
     cwd = os.getcwd()    
     json_dir = cwd + '/json_files'
     dump_dir = cwd + '/dump_files'
-    stat_inp = cwd + '/stat_input.json'
+    stat_inp = cwd + '/input_test.json'
             
     # create an temporary 'json' directory for reading files from
     to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
                 'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4},
-                'RVE': {'side_length': 3, 'voxel_per_side': 10}, 'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}
+                'RVE': {"sideX": 3,"sideY": 3,"sideZ": 3,"Nx": 10,"Ny": 10,"Nz": 10},
+                'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}
 
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2) 
@@ -229,7 +230,7 @@ def test_voxelizationRoutine():
     with open(json_dir + '/particle_data.json') as json_file:
         particle_data = json.load(json_file)
                                     
-    sim_box = Simulation_Box(RVE_data['RVE_size'], RVE_data['RVE_size'], RVE_data['RVE_size'])
+    sim_box = Simulation_Box(RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ'])
     sim_box.sim_ts = 580
     Particles = particle_generator(particle_data, sim_box)
     

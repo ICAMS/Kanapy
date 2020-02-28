@@ -273,8 +273,12 @@ of one another during execution.</p>
     <span class="o">}</span>,
   <span class="s2">&quot;RVE&quot;</span>:
     <span class="o">{</span>
-      <span class="s2">&quot;side_length&quot;</span>: <span class="m">60</span>.9,
-      <span class="s2">&quot;voxel_per_side&quot;</span>: <span class="m">40</span>
+      <span class="s2">&quot;sideX&quot;</span>: <span class="m">60</span>.9,
+      <span class="s2">&quot;sideY&quot;</span>: <span class="m">60</span>.9,
+      <span class="s2">&quot;sideZ&quot;</span>: <span class="m">60</span>.9,
+      <span class="s2">&quot;Nx&quot;</span>: <span class="m">45</span>,
+      <span class="s2">&quot;Ny&quot;</span>: <span class="m">45</span>,
+      <span class="s2">&quot;Nz&quot;</span>: <span class="m">45</span>
     <span class="o">}</span>,
   <span class="s2">&quot;Simulation&quot;</span>:
     <span class="o">{</span>
@@ -297,7 +301,7 @@ microstructure contains equiaxed grains then this value should be set to <cite>1
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Tilt</span> <span class="pre">angle</span></code> keyword represents the tilt angle of particles with
 respect to the positive x-axis. Hence, to generate a distribution, it takes in
 two arguments: the normal distribution’s mean and the standard deviation.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">RVE</span></code> keyword takes two inputs: the side length of the final RVE
+<li><p>The <code class="docutils literal notranslate"><span class="pre">RVE</span></code> keyword takes two types of input: the side lengths of the final RVE
 required and the number of voxels per RVE side length.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Simulation</span></code> keyword takes in two inputs: A boolean value for periodicity (True/False)
 and the required unit scale (<span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span>) for the output
@@ -423,7 +427,8 @@ major and minor diameters of the ellipsoidal particles and grains.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">statgenerate</span></code> command requires the <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> as input.</p></li>
+<li><p>A good estimation for the RVE side length values can be made by keeping the following point in mind: The
+biggest dimension of the biggest ellipsoid/sphere should be less than half of the corresponding RVE side length.</p></li>
 <li><p>For comparing the input and output equivalent, major and minor diameter statistics, the command
 <code class="docutils literal notranslate"><span class="pre">outputstats</span></code> can be called. Kanapy writes the diameter values in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale,
 depending on the user requirement specified in the input file.</p></li>

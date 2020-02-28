@@ -68,14 +68,14 @@ def statgenerate(ctx, filename: str):
             sys.exit(0)        
         particleStatGenerator(cwd + '/' + filename)           
 
-
+"""
 @main.command()
 @click.option('--filename', default=None, help='Input file name in the current directory.')
 @click.option('--periodic', default='True', help='RVE periodicity status.')
 @click.option('--units', default='mm', help='Output unit format.')
 @click.pass_context
 def readGrains(ctx, filename: str, periodic: str, units: str):    
-    """ Generates particles based on the grain data provided in the input file."""
+    ''' Generates particles based on the grain data provided in the input file.'''
     
     if filename == None:
         click.echo('')
@@ -98,8 +98,8 @@ def readGrains(ctx, filename: str, periodic: str, units: str):
             click.echo('')
             click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(filename), err=True)
             sys.exit(0)          
-        particleCreator(cwd + '/' + filename, periodic=periodic, units=units)         
-            
+        particleCreator(cwd + '/' + filename, RVE_length, Voxel_number, periodic=periodic, units=units)         
+"""        
         
 @main.command()
 @click.pass_context

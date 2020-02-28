@@ -31,14 +31,14 @@ def points_in_convexHull(Points, hull):
     return np.all((A @ np.transpose(Points)) <= np.tile(-b, (1, len(Points))), axis=0)
 
 
-def create_voxels(sim_box, voxel_num):
+def create_voxels(sim_box, voxNums):
     """
     Generates voxels inside the defined RVE (Simulation box)      
 
     :param sim_box: Simulation box representing RVE dimensions 
     :type sim_box: :obj:`entities.Cuboid`
-    :param voxel_num: Number of voxels along the RVE side length  
-    :type voxel_num: int
+    :param voxNums: Number of voxels along the RVE sides X, Y & Z  
+    :type voxNums: tuple of int
 
     :returns: * Node dictionary containing node ID and coordinates.
               * Element dictionary containing element IDs and nodal connectivities. 
@@ -46,19 +46,28 @@ def create_voxels(sim_box, voxel_num):
     :rtype: Tuple of Python dictionaries.
     """
     print('    Generating voxels inside RVE')
-    # generate nodes of all voxels from RVE side dimensions    
-    lim_min, lim_max = sim_box.front, sim_box.back   # define the cubic RVE limits
+    # generate nodes of all voxels from RVE side dimensions        
+    lim_minX, lim_maxX = sim_box.left, sim_box.right
+    lim_minY, lim_maxY = sim_box.top, sim_box.bottom
+    lim_minZ, lim_maxZ = sim_box.front, sim_box.back   # define the cuboidal RVE limits        
     
     # generate points within these limits
-    points = np.linspace(lim_min, lim_max, num=voxel_num + 1, endpoint=True)
-    points_dup = [(first, second) for first, second in zip(points, points[1:])]     # duplicate neighbouring points
+    voxNumX,voxNumY,voxNumZ = voxNums[:]    
+    pointsX = np.linspace(lim_minX, lim_maxX, num=voxNumX + 1, endpoint=True)
+    pointsY = np.linspace(lim_minY, lim_maxY, num=voxNumY + 1, endpoint=True)
+    pointsZ = np.linspace(lim_minZ, lim_maxZ, num=voxNumZ + 1, endpoint=True)
     
+    # duplicate neighbouring points
+    pointsX_dup = [(first, second) for first, second in zip(pointsX, pointsX[1:])]
+    pointsY_dup = [(first, second) for first, second in zip(pointsY, pointsY[1:])]
+    pointsZ_dup = [(first, second) for first, second in zip(pointsZ, pointsZ[1:])]
+
     verticesDict = {}                       # dictionary to store vertices    
     elmtDict = defaultdict(list)            # dictionary to store elements and its node ids    
     vox_centerDict = {}                     # dictionary to store center of each element/voxel
     node_count, elmt_count = 0, 0
     # loop over the duplicate pairs
-    for (mk, nk), (mj, nj), (mi, ni) in itertools.product(points_dup, points_dup, points_dup):
+    for (mk, nk), (mj, nj), (mi, ni) in itertools.product(pointsX_dup, pointsY_dup, pointsZ_dup):
 
         # Find the center of each voxel and update the center dictionary
         elmt_count += 1
@@ -336,17 +345,17 @@ def voxelizationRoutine():
         except FileNotFoundError:
             print('Json file not found, make sure "RVE_data.json" file exists!')
             raise FileNotFoundError
-                
-        voxel_per_side = RVE_data['Voxel_number_per_side']
-        RVE_size = RVE_data['RVE_size']
-        voxel_res = RVE_data['Voxel_resolution']          
+        
+        RVE_sizeX, RVE_sizeY, RVE_sizeZ = RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ']
+        voxX, voxY, voxZ = RVE_data['Voxel_numberX'], RVE_data['Voxel_numberY'], RVE_data['Voxel_numberZ']        
+        voxel_resX, voxel_resY, voxel_resZ = RVE_data['Voxel_resolutionX'], RVE_data['Voxel_resolutionY'], RVE_data['Voxel_resolutionZ']           
 
         # Read the required dump file
         filename = cwd + '/dump_files/particle.{0}.dump'.format(580)            
         sim_box, Ellipsoids = read_dump(filename)
         
         # create voxels inside the RVE
-        nodeDict, elmtDict, vox_centerDict = create_voxels(sim_box, voxel_per_side)              
+        nodeDict, elmtDict, vox_centerDict = create_voxels(sim_box, (voxX,voxY,voxZ))              
 
         # Find the voxels belonging to each grain by growing ellipsoid each time
         assign_voxels_to_ellipsoid(vox_centerDict, Ellipsoids, elmtDict)
