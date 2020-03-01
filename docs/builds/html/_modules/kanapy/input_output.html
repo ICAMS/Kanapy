@@ -161,16 +161,121 @@
 <span class="kn">import</span> <span class="nn">csv</span><span class="o">,</span> <span class="nn">itertools</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">erfc</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">lognorm</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="k">import</span> <span class="n">ConvexHull</span> 
 <span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="k">import</span> <span class="n">euclidean</span>
-
+    
 <span class="kn">from</span> <span class="nn">kanapy.entities</span> <span class="k">import</span> <span class="n">Ellipsoid</span><span class="p">,</span> <span class="n">Cuboid</span>
 
 
 <div class="viewcode-block" id="particleStatGenerator"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.particleStatGenerator">[docs]</a><span class="k">def</span> <span class="nf">particleStatGenerator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generates ellipsoid size distribution (Log-normal) based on user-defined statistics</span>
+
+<span class="sd">    :param inputFile: User-defined statistics file for ellipsoid generation.</span>
+<span class="sd">    :type inputFile: document</span>
+
+<span class="sd">    .. note:: 1. Input parameters provided by the user in the input file are:</span>
+
+<span class="sd">                * Standard deviation for ellipsoid equivalent diameter (Normal distribution)</span>
+<span class="sd">                * Mean value of ellipsoid equivalent diameter (Normal distribution)</span>
+<span class="sd">                * Minimum and Maximum cut-offs for ellipsoid equivalent diameters </span>
+<span class="sd">                * Mean value for aspect ratio</span>
+<span class="sd">                * Mean value for ellipsoid tilt angles (Normal distribution)</span>
+<span class="sd">                * Standard deviation for ellipsoid tilt angles (Normal distribution)</span>
+<span class="sd">                * Side dimension of the RVE </span>
+<span class="sd">                * Discretization along the RVE sides          </span>
+
+<span class="sd">              2. Particle, RVE and simulation data are written as JSON files in a folder in the current </span>
+<span class="sd">                 working directory for later access.</span>
+
+<span class="sd">                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. </span>
+<span class="sd">                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
+<span class="sd">                * Simulation attributes such as periodicity and output unit scale (:math:`mm` </span>
+<span class="sd">                  or :math:`\mu m`) for ABAQUS .inp file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------------------------------------&#39;</span><span class="p">)</span>    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Welcome to KANAPY - A synthetic polycrystalline microstructure generator&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------------------------------------&#39;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating particle distribution based on user defined statistics&#39;</span><span class="p">)</span>
+    
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> 
+    <span class="c1"># Open the user input statistics file and read the data</span>
+    <span class="k">try</span><span class="p">:</span>
+                
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">inputFile</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+            <span class="n">stats_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>    
+        
+        <span class="c1"># Extract grain diameter statistics info from input file </span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;std&quot;</span><span class="p">]</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+        <span class="n">dia_cutoff_min</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_min&quot;</span><span class="p">]</span>
+        <span class="n">dia_cutoff_max</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_max&quot;</span><span class="p">]</span>
+        
+        <span class="c1"># Extract mean grain aspect ratio value info from input file </span>
+        <span class="n">mean_AR</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Extract grain tilt angle statistics info from input file </span>
+        <span class="n">sigma_Ori</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="s2">&quot;sigma&quot;</span><span class="p">]</span>
+        <span class="n">mean_Ori</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>        
+        
+        <span class="c1"># Extract RVE side lengths and voxel numbers info from input file </span>
+        <span class="n">RVEsizeX</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;sideX&quot;</span><span class="p">]</span>
+        <span class="n">RVEsizeY</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;sideY&quot;</span><span class="p">]</span>
+        <span class="n">RVEsizeZ</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;sideZ&quot;</span><span class="p">]</span>        
+            
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Input file not found, make sure &quot;stat_input.json&quot; file is present in the working directory!&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>            
+
+    <span class="c1"># NOTE: SCIPY&#39;s lognorm takes in sigma &amp; mu of Normal distribution</span>
+    <span class="c1"># https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335</span>
+       
+    <span class="c1"># Compute the Log-normal PDF &amp; CDF.              </span>
+    <span class="n">frozen_lognorm</span> <span class="o">=</span> <span class="n">lognorm</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">sd</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mean</span><span class="p">))</span>
+    <span class="n">xaxis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">ypdf</span><span class="p">,</span> <span class="n">ycdf</span> <span class="o">=</span> <span class="n">frozen_lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">xaxis</span><span class="p">),</span> <span class="n">frozen_lognorm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">xaxis</span><span class="p">)</span>
+        
+    <span class="c1"># Find the location at which CDF &gt; 0.99    </span>
+    <span class="c1">#cdf_idx = np.where(ycdf &gt; 0.99)[0][0]</span>
+    <span class="c1">#x_lim = xaxis[cdf_idx]</span>
+    <span class="n">x_lim</span> <span class="o">=</span> <span class="n">dia_cutoff_max</span> <span class="o">+</span> <span class="mi">20</span>
+    
+    <span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">color_codes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>                                 
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>      
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>  
+    <span class="n">plt</span><span class="o">.</span><span class="n">ion</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+    <span class="c1"># Plot PDF                                  </span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">ypdf</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>              
+    <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ypdf</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> 
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">x_lim</span><span class="p">)</span>    
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Equivalent diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Density&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">dia_cutoff_min</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Minimum cut-off: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dia_cutoff_min</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">dia_cutoff_max</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Maximum cut-off: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dia_cutoff_max</span><span class="p">))</span>    
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Log-normal distribution for grain equivalent diameter&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>     
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> 
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s2">&quot;/Input_distribution.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>  
+    <span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">0.001</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span> 
+    <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;    Press [enter] to continue&quot;</span><span class="p">)</span>     
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    &#39;Input_distribution.png&#39; is placed in the current working directory</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                                     
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="RVEcreator"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.RVEcreator">[docs]</a><span class="k">def</span> <span class="nf">RVEcreator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">):</span>    
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates an RVE based on user-defined statistics</span>
 
 <span class="sd">    :param inputFile: User-defined statistics file for ellipsoid generation.</span>
 <span class="sd">    :type inputFile: document</span>
@@ -195,22 +300,20 @@
 <span class="sd">                  or :math:`\mu m`) for ABAQUS .inp file.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------------------------------------&#39;</span><span class="p">)</span>    
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Welcome to KANAPY - A synthetic polycrystalline microstructure generator&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------------------------------------&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating an RVE based on user defined statistics&#39;</span><span class="p">)</span>
     
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating particle distribution based on user defined statistics&#39;</span><span class="p">)</span>
-    
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> 
+    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+        
     <span class="c1"># Open the user input statistics file and read the data</span>
     <span class="k">try</span><span class="p">:</span>
                 
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">inputFile</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
-            <span class="n">stats_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>    
-        
+            <span class="n">stats_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>                         
+
         <span class="c1"># Extract grain diameter statistics info from input file </span>
-        <span class="n">sd_lognormal</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;std&quot;</span><span class="p">]</span>
-        <span class="n">mean_lognormal</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;std&quot;</span><span class="p">]</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
         <span class="n">dia_cutoff_min</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_min&quot;</span><span class="p">]</span>
         <span class="n">dia_cutoff_max</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_max&quot;</span><span class="p">]</span>
         
@@ -219,8 +322,8 @@
 
         <span class="c1"># Extract grain tilt angle statistics info from input file </span>
         <span class="n">sigma_Ori</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="s2">&quot;sigma&quot;</span><span class="p">]</span>
-        <span class="n">mean_Ori</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>        
-        
+        <span class="n">mean_Ori</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span> 
+                
         <span class="c1"># Extract RVE side lengths and voxel numbers info from input file </span>
         <span class="n">RVEsizeX</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;sideX&quot;</span><span class="p">]</span>
         <span class="n">RVEsizeY</span> <span class="o">=</span> <span class="n">stats_dict</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;sideY&quot;</span><span class="p">]</span>
@@ -237,54 +340,47 @@
         <span class="c1"># Raise ValueError if units are not specified as &#39;mm&#39; or &#39;um&#39;</span>
         <span class="k">if</span> <span class="n">output_units</span> <span class="o">!=</span> <span class="s1">&#39;mm&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">output_units</span> <span class="o">!=</span> <span class="s1">&#39;um&#39;</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Output units can only be &quot;mm&quot; or &quot;um&quot;!&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Output units can only be &quot;mm&quot; or &quot;um&quot;!&#39;</span><span class="p">)</span>        
             
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Input file not found, make sure &quot;stat_input.json&quot; file is present in the working directory!&#39;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
-        
-    <span class="c1"># Generate the x-gaussian</span>
-    <span class="n">exp_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">+</span><span class="mi">10</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
-    <span class="n">x_lognormal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">exp_array</span><span class="p">)</span>
-    <span class="n">x_lognormal_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">x_lognormal</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">x_lognormal</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Compute the Log-normal PDF &amp; CDF.              </span>
+    <span class="n">frozen_lognorm</span> <span class="o">=</span> <span class="n">lognorm</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">sd</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mean</span><span class="p">))</span>
+    <span class="n">xaxis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">ypdf</span><span class="p">,</span> <span class="n">ycdf</span> <span class="o">=</span> <span class="n">frozen_lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">xaxis</span><span class="p">),</span> <span class="n">frozen_lognorm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">xaxis</span><span class="p">)</span>
+            
+    <span class="c1"># Get the mean value for each pair of neighboring points                </span>
+    <span class="n">xaxis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">xaxis</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">xaxis</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     
-    <span class="c1"># Mean, variance for normal distribution (For back verification)</span>
-    <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mean_lognormal</span> <span class="o">+</span> <span class="p">(</span><span class="n">sd_lognormal</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span>                            
-    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">sd_lognormal</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">mean_lognormal</span><span class="o">*</span><span class="p">(</span><span class="n">sd_lognormal</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
-
-    <span class="c1"># From wikipedia page for Log-normal distribution</span>
-    <span class="c1"># Calculate the CDF using the error function    </span>
-    <span class="n">erfInput</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x_lognormal</span><span class="p">)</span> <span class="o">-</span> <span class="n">mean_lognormal</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span><span class="o">*</span><span class="n">sd_lognormal</span><span class="p">)</span>
-    <span class="n">y_CDF</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">erfc</span><span class="p">(</span><span class="n">erfInput</span><span class="p">)</span>
-
-    <span class="c1"># Calculate the number fraction</span>
-    <span class="n">number_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ediff1d</span><span class="p">(</span><span class="n">y_CDF</span><span class="p">)</span>
-
     <span class="c1"># Based on the cutoff specified, get the restricted distribution</span>
-    <span class="n">index_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">x_lognormal_mean</span> <span class="o">&gt;=</span> <span class="n">dia_cutoff_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x_lognormal_mean</span> <span class="o">&lt;=</span> <span class="n">dia_cutoff_max</span><span class="p">))</span>    
-    <span class="n">eq_Dia</span> <span class="o">=</span> <span class="n">x_lognormal_mean</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span>          <span class="c1"># Selected diameters within the cutoff</span>
+    <span class="n">index_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">xaxis</span> <span class="o">&gt;=</span> <span class="n">dia_cutoff_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">xaxis</span> <span class="o">&lt;=</span> <span class="n">dia_cutoff_max</span><span class="p">))</span>    
+    <span class="n">eq_Dia</span> <span class="o">=</span> <span class="n">xaxis</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span>          <span class="c1"># Selected diameters within the cutoff            </span>
     
-    <span class="c1"># corresponding number fractions</span>
-    <span class="n">numFra_Dia</span> <span class="o">=</span> <span class="n">number_fraction</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span>
-
+    <span class="c1"># Compute the number fractions and extract them based on the cut-off</span>
+    <span class="n">number_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ediff1d</span><span class="p">(</span><span class="n">ycdf</span><span class="p">)</span>
+    <span class="n">numFra_Dia</span> <span class="o">=</span> <span class="n">number_fraction</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span>      
+    
     <span class="c1"># Volume of each ellipsoid</span>
-    <span class="n">volume_array</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">eq_Dia</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">)</span>
-
+    <span class="n">volume_array</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">eq_Dia</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">)</span>        
+    
     <span class="c1"># Volume fraction for each ellipsoid</span>
     <span class="n">individualK</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">numFra_Dia</span><span class="p">,</span> <span class="n">volume_array</span><span class="p">)</span>
-    <span class="n">K</span> <span class="o">=</span> <span class="n">individualK</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">individualK</span><span class="p">)</span>
-
+    <span class="n">K</span> <span class="o">=</span> <span class="n">individualK</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">individualK</span><span class="p">)</span>                
+    
     <span class="c1"># Total number of ellipsoids</span>
     <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">K</span><span class="o">*</span><span class="p">(</span><span class="n">RVEsizeX</span><span class="o">*</span><span class="n">RVEsizeY</span><span class="o">*</span><span class="n">RVEsizeZ</span><span class="p">),</span> <span class="n">volume_array</span><span class="p">)</span>    
     <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">num</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>                  <span class="c1"># Round to the nearest integer    </span>
     <span class="n">totalEllipsoids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>                   <span class="c1"># Total number of ellipsoids</span>
-
+    
     <span class="c1"># Duplicate the diameter values</span>
-    <span class="n">eq_Dia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+    <span class="n">eq_Dia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>        
     
     <span class="c1"># Raise value error in case the RVE side length is too small to fit grains inside.</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;RVE volume too less to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!&#39;</span><span class="p">)</span>
+         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    RVE volume too less to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!&#39;</span><span class="p">)</span>
+         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
     
     <span class="c1"># Ellipsoid tilt angles</span>
     <span class="n">tilt_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mean_Ori</span><span class="p">,</span> <span class="n">sigma_Ori</span><span class="p">,</span> <span class="n">totalEllipsoids</span><span class="p">)</span>
@@ -292,8 +388,8 @@
     <span class="c1"># Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) &amp; b=c &amp; a=AR*b    </span>
     <span class="n">minDia</span> <span class="o">=</span> <span class="n">eq_Dia</span> <span class="o">/</span> <span class="p">(</span><span class="n">mean_AR</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>                          <span class="c1"># Minor axis length</span>
     <span class="n">majDia</span> <span class="o">=</span> <span class="n">minDia</span> <span class="o">*</span> <span class="n">mean_AR</span>                                   <span class="c1"># Major axis length    </span>
-    <span class="n">minDia2</span> <span class="o">=</span> <span class="n">minDia</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>                                     <span class="c1"># Minor2 axis length (assuming spheroid)</span>
-
+    <span class="n">minDia2</span> <span class="o">=</span> <span class="n">minDia</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>                                     <span class="c1"># Minor2 axis length (assuming spheroid)                                                       </span>
+                
     <span class="c1"># Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels</span>
     <span class="n">voxel_sizeX</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">RVEsizeX</span> <span class="o">/</span> <span class="n">Nx</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
     <span class="n">voxel_sizeY</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">RVEsizeY</span> <span class="o">/</span> <span class="n">Ny</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
@@ -309,40 +405,37 @@
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    The voxel resolution along (X,Y,Z): (</span><span class="si">{0:.4f}</span><span class="s2">,</span><span class="si">{1:.4f}</span><span class="s2">,</span><span class="si">{2:.4f}</span><span class="s2">) are not equal!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">voxel_sizeX</span><span class="p">,</span><span class="n">voxel_sizeY</span><span class="p">,</span> <span class="n">voxel_sizeZ</span><span class="p">))</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Change the RVE side lengths (OR) the voxel numbers</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
-    
+        
     <span class="c1"># raise value error in case the grains are not voxelated well</span>
     <span class="k">if</span> <span class="n">voxel_sizeX</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">minDia</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Grains will not be voxelated well!&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Please increase the voxel numbers (OR) decrease the RVE side lengths</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>                     
-   
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of grains        = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">))</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of grains        = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">)))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    RVE side lengths (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">RVEsizeX</span><span class="p">,</span> <span class="n">RVEsizeY</span><span class="p">,</span> <span class="n">RVEsizeZ</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Number of voxels (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="n">Nz</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Voxel resolution (X, Y, Z)    = </span><span class="si">{0:.4f}</span><span class="s1">, </span><span class="si">{1:.4f}</span><span class="s1">, </span><span class="si">{2:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">voxel_sizeX</span><span class="p">,</span> <span class="n">voxel_sizeY</span><span class="p">,</span> <span class="n">voxel_sizeZ</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of voxels (C3D8) = </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Nx</span><span class="o">*</span><span class="n">Ny</span><span class="o">*</span><span class="n">Nz</span><span class="p">))</span>
-    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of voxels (C3D8) = </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Nx</span><span class="o">*</span><span class="n">Ny</span><span class="o">*</span><span class="n">Nz</span><span class="p">))</span>                
+
     <span class="c1"># Create dictionaries to store the data generated</span>
     <span class="n">particle_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">),</span> <span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">),</span> <span class="s1">&#39;Major_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">majDia</span><span class="p">),</span>
                      <span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia</span><span class="p">),</span> <span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia2</span><span class="p">),</span> <span class="s1">&#39;Tilt angle&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">tilt_angle</span><span class="p">)}</span>
-
+                                       
     <span class="n">RVE_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;RVE_sizeX&#39;</span><span class="p">:</span> <span class="n">RVEsizeX</span><span class="p">,</span> <span class="s1">&#39;RVE_sizeY&#39;</span><span class="p">:</span> <span class="n">RVEsizeY</span><span class="p">,</span> <span class="s1">&#39;RVE_sizeZ&#39;</span><span class="p">:</span> <span class="n">RVEsizeZ</span><span class="p">,</span> 
                 <span class="s1">&#39;Voxel_numberX&#39;</span><span class="p">:</span> <span class="n">Nx</span><span class="p">,</span> <span class="s1">&#39;Voxel_numberY&#39;</span><span class="p">:</span> <span class="n">Ny</span><span class="p">,</span> <span class="s1">&#39;Voxel_numberZ&#39;</span><span class="p">:</span> <span class="n">Nz</span><span class="p">,</span>
                 <span class="s1">&#39;Voxel_resolutionX&#39;</span><span class="p">:</span> <span class="n">voxel_sizeX</span><span class="p">,</span><span class="s1">&#39;Voxel_resolutionY&#39;</span><span class="p">:</span> <span class="n">voxel_sizeY</span><span class="p">,</span> <span class="s1">&#39;Voxel_resolutionZ&#39;</span><span class="p">:</span> <span class="n">voxel_sizeZ</span><span class="p">}</span>
 
-    <span class="n">simulation_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Time steps&#39;</span><span class="p">:</span> <span class="n">nsteps</span><span class="p">,</span> <span class="s1">&#39;Periodicity&#39;</span><span class="p">:</span> <span class="n">periodicity</span><span class="p">,</span> <span class="s1">&#39;Output units&#39;</span><span class="p">:</span> <span class="n">output_units</span><span class="p">}</span>
-
-    <span class="c1"># Dump the Dictionaries as json files</span>
-    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>     
-    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
-
+    <span class="n">simulation_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Time steps&#39;</span><span class="p">:</span> <span class="n">nsteps</span><span class="p">,</span> <span class="s1">&#39;Periodicity&#39;</span><span class="p">:</span> <span class="n">periodicity</span><span class="p">,</span> <span class="s1">&#39;Output units&#39;</span><span class="p">:</span> <span class="n">output_units</span><span class="p">}</span>     
+        
+    <span class="c1"># Dump the Dictionaries as json files    </span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">json_dir</span><span class="p">):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">json_dir</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
-        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> 
+        
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
         <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
@@ -352,7 +445,7 @@
     <span class="k">return</span></div>
 
 
-<div class="viewcode-block" id="particleCreator"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.particleCreator">[docs]</a><span class="k">def</span> <span class="nf">particleCreator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">RVE_length</span><span class="p">,</span> <span class="n">Voxel_number</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;mm&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="particleCreator"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.particleCreator">[docs]</a><span class="k">def</span> <span class="nf">particleCreator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;mm&quot;</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generates ellipsoid particles based on user-defined inputs.</span>
 
@@ -400,27 +493,43 @@
     <span class="c1"># Volume of each ellipsoid       </span>
     <span class="n">volume_array</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">majDia</span><span class="o">*</span><span class="n">minDia</span><span class="o">*</span><span class="n">minDia2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">)</span>
     
+    <span class="c1"># Equivalent diameter of each ellipsoid</span>
+    <span class="n">eq_Dia</span> <span class="o">=</span> <span class="p">(</span><span class="n">majDia</span><span class="o">*</span><span class="n">minDia</span><span class="o">*</span><span class="n">minDia2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    
     <span class="c1"># RVE size: RVE volume = sum(ellipsoidal volume)</span>
-    <span class="n">RVEsize</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">volume_array</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">RVEvol</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">volume_array</span><span class="p">))</span>
+
+    <span class="c1"># Determine the RVE side lengths</span>
+    <span class="n">dia_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">majDia</span><span class="p">)</span>    
+    <span class="n">RVEsizeY</span> <span class="o">=</span> <span class="mf">1.5</span><span class="o">*</span><span class="n">dia_max</span>                 <span class="c1"># The Y-side length should accomodate the Biggest dimension of the biggest ellipsoid</span>
+    <span class="n">RVEsizeX</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">RVEvol</span><span class="o">/</span> <span class="n">RVEsizeY</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">RVEsizeZ</span> <span class="o">=</span> <span class="n">RVEsizeX</span> 
     
     <span class="c1"># Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels</span>
     <span class="n">voxel_size</span> <span class="o">=</span> <span class="mf">1.1</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">minDia</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">)</span>
-    <span class="n">voxel_per_side</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">RVEsize</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">))</span>  <span class="c1"># Number of voxel/RVE side                </span>
-    <span class="n">voxel_size</span> <span class="o">=</span> <span class="n">RVEsize</span> <span class="o">/</span> <span class="n">voxel_per_side</span>              <span class="c1"># Re-calculate</span>
-                        
+    <span class="n">Nx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">RVEsizeX</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">))</span>         <span class="c1"># Number of voxel/RVE side</span>
+    <span class="n">Ny</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">RVEsizeY</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">))</span>
+    <span class="n">Nz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">RVEsizeZ</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">))</span>    
+    
+    <span class="c1"># Re-calculate the voxel resolution</span>
+    <span class="n">voxel_sizeX</span> <span class="o">=</span> <span class="n">RVEsizeX</span> <span class="o">/</span> <span class="n">Nx</span>            
+    <span class="n">voxel_sizeY</span> <span class="o">=</span> <span class="n">RVEsizeY</span> <span class="o">/</span> <span class="n">Ny</span>
+    <span class="n">voxel_sizeZ</span> <span class="o">=</span> <span class="n">RVEsizeZ</span> <span class="o">/</span> <span class="n">Nz</span>
+    
     <span class="n">totalEllipsoids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">majDia</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of grains        = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    RVE side lengths (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">RVE_length</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">RVE_length</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">RVE_length</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Number of voxels (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Voxel_number</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Voxel_number</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">Voxel_number</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    RVE side lengths (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">RVEsizeX</span><span class="p">,</span> <span class="n">RVEsizeY</span><span class="p">,</span> <span class="n">RVEsizeZ</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Number of voxels (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="n">Nz</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Voxel resolution (X, Y, Z)    = </span><span class="si">{0:.4f}</span><span class="s1">, </span><span class="si">{1:.4f}</span><span class="s1">, </span><span class="si">{2:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">voxel_sizeX</span><span class="p">,</span> <span class="n">voxel_sizeY</span><span class="p">,</span> <span class="n">voxel_sizeZ</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of voxels (C3D8) = </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Nx</span><span class="o">*</span><span class="n">Ny</span><span class="o">*</span><span class="n">Nz</span><span class="p">))</span>        
         
     <span class="c1"># Create dictionaries to store the data generated</span>
-    <span class="n">particle_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">),</span> <span class="s1">&#39;Major_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">majDia</span><span class="p">),</span>
+    <span class="n">particle_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">),</span> <span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">),</span> <span class="s1">&#39;Major_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">majDia</span><span class="p">),</span>
                      <span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia</span><span class="p">),</span> <span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia2</span><span class="p">),</span> <span class="s1">&#39;Tilt angle&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">tilt_angle</span><span class="p">)}</span>
 
-    <span class="n">RVE_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;RVE_size&#39;</span><span class="p">:</span> <span class="n">RVEsize</span><span class="p">,</span> <span class="s1">&#39;Voxel_number_per_side&#39;</span><span class="p">:</span> <span class="n">voxel_per_side</span><span class="p">,</span>
-                <span class="s1">&#39;Voxel_resolution&#39;</span><span class="p">:</span> <span class="n">voxel_size</span><span class="p">}</span>
+    <span class="n">RVE_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;RVE_sizeX&#39;</span><span class="p">:</span> <span class="n">RVEsizeX</span><span class="p">,</span> <span class="s1">&#39;RVE_sizeY&#39;</span><span class="p">:</span> <span class="n">RVEsizeY</span><span class="p">,</span> <span class="s1">&#39;RVE_sizeZ&#39;</span><span class="p">:</span> <span class="n">RVEsizeZ</span><span class="p">,</span> 
+                <span class="s1">&#39;Voxel_numberX&#39;</span><span class="p">:</span> <span class="n">Nx</span><span class="p">,</span> <span class="s1">&#39;Voxel_numberY&#39;</span><span class="p">:</span> <span class="n">Ny</span><span class="p">,</span> <span class="s1">&#39;Voxel_numberZ&#39;</span><span class="p">:</span> <span class="n">Nz</span><span class="p">,</span>
+                <span class="s1">&#39;Voxel_resolutionX&#39;</span><span class="p">:</span> <span class="n">voxel_sizeX</span><span class="p">,</span><span class="s1">&#39;Voxel_resolutionY&#39;</span><span class="p">:</span> <span class="n">voxel_sizeY</span><span class="p">,</span> <span class="s1">&#39;Voxel_resolutionZ&#39;</span><span class="p">:</span> <span class="n">voxel_sizeZ</span><span class="p">}</span>                    
 
     <span class="n">simulation_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Time steps&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s1">&#39;Periodicity&#39;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">periodic</span><span class="p">),</span> <span class="s1">&#39;Output units&#39;</span><span class="p">:</span> <span class="n">units</span><span class="p">}</span>
 
@@ -512,7 +621,7 @@
                     <span class="n">RVE_minZ</span><span class="p">,</span> <span class="n">RVE_maxZ</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">valuesZ</span><span class="p">))</span>
 
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    .dump file not found, make sure &quot;packingRoutine()&quot; function is executed first!&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    .dump file not found, make sure &quot;Packing&quot; command is executed first!&#39;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
         
     <span class="c1"># Create an instance of simulation box</span>
@@ -591,7 +700,7 @@
                                         
 
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    .dump file not found, make sure &quot;packingRoutine()&quot; function is executed first!&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    .dump file not found, make sure &quot;Packing&quot; command is executed first!&#39;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
         
     <span class="n">par_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -660,7 +769,7 @@
             <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
 
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;voxelizationRoutine()&quot; function is executed first!&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;Voxelization&quot; command is executed first!&#39;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
 
     <span class="c1"># Factor used to generate nodal cordinates in &#39;mm&#39; or &#39;um&#39; scale</span>
@@ -766,7 +875,7 @@
             <span class="n">simulation_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>    
           
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;particleStatGenerator(), packingRoutine(), voxelizationRoutine()&quot; function is executed first!&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;Input statistics, Packing, &amp; Voxelization&quot; commands are executed first!&#39;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
     
     <span class="c1"># Extract from dictionaries</span>
@@ -800,18 +909,19 @@
             <span class="n">grain_dia</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">grain_vol</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
             <span class="n">grain_eqDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grain_dia</span><span class="p">)</span>
         
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing particle &amp; grain equivalent diameter to files&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Writing particle &amp; grain equivalent, major &amp; minor diameter to file (&#39;output_statistics.json&#39;)&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
             
         <span class="c1"># write out the particle and grain equivalent diameters to files            </span>
         <span class="n">par_eqDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
         <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
 
         <span class="c1"># Compute the L1-error</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Spheres&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">}}}</span>                
         <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 
         <span class="c1"># Create dictionaries to store the data generated</span>
         <span class="n">output_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number_of_particles/grains&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)),</span> 
+                       <span class="s1">&#39;Grain type&#39;</span><span class="p">:</span> <span class="s1">&#39;Spherical&#39;</span><span class="p">,</span>
                        <span class="s1">&#39;Unit_scale&#39;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span>
                        <span class="s1">&#39;L1-error&#39;</span><span class="p">:</span><span class="n">error</span><span class="p">,</span>                       
                        <span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> 
@@ -919,7 +1029,7 @@
             <span class="n">grain_majDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>                 <span class="c1"># update the major diameter list</span>
             <span class="n">grain_minDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>                 <span class="c1"># update the minor diameter list</span>
         
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing particle &amp; grain equivalent, major &amp; minor diameter to files&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Writing particle &amp; grain equivalent, major &amp; minor diameter to file (&#39;output_statistics.json&#39;)&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
         <span class="c1"># write out the particle and grain equivalent, major, minor diameters to file            </span>
         <span class="n">par_eqDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
@@ -932,13 +1042,16 @@
         <span class="n">grain_minDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">grain_minDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>                
         
         <span class="c1"># Compute the L1-error</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Ellipsoids&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">},</span>
+                                <span class="s1">&#39;Major diameter&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_majDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_majDia</span><span class="p">},</span>
+                                <span class="s1">&#39;Minor diameter&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_minDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_minDia</span><span class="p">}}}</span>  
         <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         
         <span class="c1"># Create dictionaries to store the data generated</span>
         <span class="n">output_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number_of_particles/grains&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)),</span> 
+                       <span class="s1">&#39;Grain type&#39;</span><span class="p">:</span> <span class="s1">&#39;Ellipsoidal&#39;</span><span class="p">,</span>
                        <span class="s1">&#39;Unit_scale&#39;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span>
-                       <span class="s1">&#39;L1-error&#39;</span><span class="p">:</span><span class="n">error</span><span class="p">,</span>
+                       <span class="s1">&#39;L1-error&#39;</span><span class="p">:</span> <span class="n">error</span><span class="p">,</span>
                        <span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> 
                        <span class="s1">&#39;Particle_Major_diameter&#39;</span><span class="p">:</span> <span class="n">par_majDia</span><span class="p">,</span>
                        <span class="s1">&#39;Particle_Minor_diameter&#39;</span><span class="p">:</span> <span class="n">par_minDia</span><span class="p">,</span>
@@ -966,27 +1079,251 @@
         
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span> 
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing the L1-error between input and output diameter distributions&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+   
+    <span class="k">if</span> <span class="s1">&#39;Spheres&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1"># Extract the values</span>
+        <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Spheres&#39;</span><span class="p">][</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">][</span><span class="s1">&#39;Particles&#39;</span><span class="p">])</span>
+        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Spheres&#39;</span><span class="p">][</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">][</span><span class="s1">&#39;Grains&#39;</span><span class="p">])</span>
+        
+        <span class="c1"># Concatenate both arrays to compute shared bins</span>
+        <span class="c1"># NOTE: &#39;doane&#39; produces better estimates for non-normal datasets</span>
+        <span class="n">total_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">])</span> 
+        <span class="n">shared_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">total_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;doane&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># Compute the histogram for particles and grains</span>
+        <span class="n">hist_par</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
+        <span class="n">hist_gr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
+        
+        <span class="c1"># Normalize the values</span>
+        <span class="n">hist_par</span> <span class="o">=</span> <span class="n">hist_par</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_par</span><span class="p">)</span>
+        <span class="n">hist_gr</span> <span class="o">=</span> <span class="n">hist_gr</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_gr</span><span class="p">)</span>
+        
+        <span class="c1"># Compute the L1-error between particles and grains    </span>
+        <span class="n">l1_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hist_par</span> <span class="o">-</span> <span class="n">hist_gr</span><span class="p">))</span>        
+        <span class="k">return</span> <span class="n">l1_value</span>
+
+    <span class="k">elif</span> <span class="s1">&#39;Ellipsoids&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1"># Extract the values</span>
+        <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Ellipsoids&#39;</span><span class="p">][</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">][</span><span class="s1">&#39;Particles&#39;</span><span class="p">])</span>
+        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Ellipsoids&#39;</span><span class="p">][</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">][</span><span class="s1">&#39;Grains&#39;</span><span class="p">])</span>
+        
+        <span class="c1"># Concatenate both arrays to compute shared bins</span>
+        <span class="c1"># NOTE: &#39;doane&#39; produces better estimates for non-normal datasets</span>
+        <span class="n">total_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">])</span> 
+        <span class="n">shared_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">total_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;doane&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># Compute the histogram for particles and grains</span>
+        <span class="n">hist_par</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
+        <span class="n">hist_gr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
+        
+        <span class="c1"># Normalize the values</span>
+        <span class="n">hist_par</span> <span class="o">=</span> <span class="n">hist_par</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_par</span><span class="p">)</span>
+        <span class="n">hist_gr</span> <span class="o">=</span> <span class="n">hist_gr</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_gr</span><span class="p">)</span>
+        
+        <span class="c1"># Compute the L1-error between particles and grains    </span>
+        <span class="n">l1_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hist_par</span> <span class="o">-</span> <span class="n">hist_gr</span><span class="p">))</span>        
+        <span class="k">return</span> <span class="n">l1_value</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    elif &#39;Ellipsoids&#39; in kwargs.keys():</span>
+<span class="sd">        # Extract the values       </span>
+<span class="sd">        par_majDia = np.asarray(kwargs[&#39;Ellipsoids&#39;][&#39;Major diameter&#39;][&#39;Particles&#39;])</span>
+<span class="sd">        grain_majDia = np.asarray(kwargs[&#39;Ellipsoids&#39;][&#39;Major diameter&#39;][&#39;Grains&#39;])</span>
+<span class="sd">        </span>
+<span class="sd">        par_minDia = np.asarray(kwargs[&#39;Ellipsoids&#39;][&#39;Minor diameter&#39;][&#39;Particles&#39;])</span>
+<span class="sd">        grain_minDia = np.asarray(kwargs[&#39;Ellipsoids&#39;][&#39;Minor diameter&#39;][&#39;Grains&#39;])</span>
+<span class="sd">        </span>
+<span class="sd">        # Concatenate corresponding arrays to compute shared bins</span>
+<span class="sd">        total_majDia = np.concatenate([par_majDia, grain_majDia]) </span>
+<span class="sd">        total_minDia = np.concatenate([par_minDia, grain_minDia])</span>
+<span class="sd">                                </span>
+<span class="sd">        # Find the corresponding shared bin edges </span>
+<span class="sd">        # NOTE: &#39;doane&#39; produces better estimates for non-normal datasets</span>
+<span class="sd">        shared_majDia = np.histogram_bin_edges(total_majDia, bins=&#39;doane&#39;)</span>
+<span class="sd">        shared_minDia = np.histogram_bin_edges(total_minDia, bins=&#39;doane&#39;) </span>
+<span class="sd">        </span>
+<span class="sd">        # Concatenate arrays along columns for creating multidimensional histogram</span>
+<span class="sd">        par_dd = np.c_[par_majDia, par_minDia]</span>
+<span class="sd">        grain_dd = np.c_[grain_majDia, grain_minDia]</span>
+<span class="sd">        </span>
+<span class="sd">        # Compute the multidimensional histogram for both: particles and grains</span>
+<span class="sd">        hist_par, _ = np.histogramdd(par_dd, bins=(shared_majDia, shared_minDia))</span>
+<span class="sd">        hist_gr, _ = np.histogramdd(grain_dd, bins=(shared_majDia, shared_minDia))        </span>
+<span class="sd">    </span>
+<span class="sd">        # Normalize the values</span>
+<span class="sd">        hist_par = hist_par/np.sum(hist_par)</span>
+<span class="sd">        hist_gr = hist_gr/np.sum(hist_gr)</span>
+<span class="sd">        </span>
+<span class="sd">        # Compute the L1-error between particles and grains    </span>
+<span class="sd">        l1_value = np.sum(np.abs(hist_par - hist_gr))                </span>
+<span class="sd">        return l1_value                     </span>
+<span class="sd">    &#39;&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="plot_output_stats"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.plot_output_stats">[docs]</a><span class="k">def</span> <span class="nf">plot_output_stats</span><span class="p">():</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates particle- and output RVE grain statistics with respect to Major, Minor &amp; Equivalent diameters and plots the distributions</span>
+
+<span class="sd">    .. note:: 1. Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.</span>
+<span class="sd">                 And RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.                                     </span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span> 
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Plotting input &amp; output statistics&#39;</span><span class="p">)</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/output_statistics.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">dataDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span> 
+          
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;Input statistics, Packing, Voxelization &amp; Output Statistics&quot; commands are executed first!&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
     
-    <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Particles&#39;</span><span class="p">])</span>
-    <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">])</span>
+    <span class="c1"># read the data from the file</span>
+    <span class="k">if</span> <span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Grain type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Spherical&#39;</span><span class="p">:</span>
     
-    <span class="c1"># Scale the array between &#39;0 &amp; 1&#39;                </span>
-    <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">par_eqDia</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)</span>                
-    <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">grain_eqDia</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">)</span>
+        <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">]))</span>
+        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Grain_Equivalent_diameter&#39;</span><span class="p">]))</span>
+
+        <span class="c1"># Convert to micro meter for plotting   </span>
+        <span class="k">if</span> <span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Unit_scale&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;mm&#39;</span><span class="p">:</span>            
+            <span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">par_eqDia</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="o">*</span><span class="mi">1000</span>
+        
+        <span class="c1"># Concatenate both arrays to compute shared bins</span>
+        <span class="c1"># NOTE: &#39;doane&#39; produces better estimates for non-normal datasets</span>
+        <span class="n">total_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">])</span> 
+        <span class="n">shared_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">total_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;doane&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Get the mean &amp; std of the underlying normal distribution</span>
+        <span class="n">par_data</span><span class="p">,</span> <span class="n">grain_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">)</span>
+        <span class="n">mu_par</span><span class="p">,</span> <span class="n">std_par</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">par_data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">par_data</span><span class="p">)</span>
+        <span class="n">mu_gr</span><span class="p">,</span> <span class="n">std_gr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">grain_data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">grain_data</span><span class="p">)</span>
+
+        <span class="c1"># Lognormal mean &amp; variance &amp; std  </span>
+        <span class="c1">#log_mean = np.exp(mean + (sd**2)/2.0)</span>
+        <span class="c1">#log_var = np.exp((sd**2)-1.0)*np.exp(2.0*mean + sd**2)        </span>
+        <span class="c1">#print(log_mean, (log_var)**0.5, log_var)</span>
+        
+        <span class="c1"># NOTE: lognorm takes mean &amp; std of normal distribution</span>
+        <span class="n">par_lognorm</span> <span class="o">=</span> <span class="n">lognorm</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">std_par</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mu_par</span><span class="p">))</span> 
+        <span class="n">grain_lognorm</span> <span class="o">=</span> <span class="n">lognorm</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">std_gr</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mu_gr</span><span class="p">))</span> 
+                        
+        <span class="c1"># Plot the histogram &amp; PDF</span>
+        <span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">color_codes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>        
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+
+        <span class="c1"># Plot histogram</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">shared_bins</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="s1">&#39;Output&#39;</span><span class="p">])</span>                 
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Equivalent diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        
+        <span class="c1"># Plot PDF                             </span>
+        <span class="n">ypdf1</span> <span class="o">=</span> <span class="n">par_lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)</span>
+        <span class="n">ypdf2</span> <span class="o">=</span> <span class="n">grain_lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">ypdf1</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">)</span>              
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ypdf1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">ypdf2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">)</span>              
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ypdf2</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> 
+                    
+        <span class="c1">#sns.distplot(ypdf1, hist = False, kde = True, </span>
+        <span class="c1">#             kde_kws = {&#39;shade&#39;: True, &#39;linewidth&#39;: 3}, </span>
+        <span class="c1">#             label = &#39;Input&#39;, ax=ax[1])</span>
+        <span class="c1">#sns.distplot(ypdf2, hist = False, kde = True, </span>
+        <span class="c1">#             kde_kws = {&#39;shade&#39;: True, &#39;linewidth&#39;: 3}, </span>
+        <span class="c1">#            label = &#39;Output&#39;, ax=ax[1])        </span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Equivalent diameter (μm)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Density&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>        
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s2">&quot;/Equivalent_diameter.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>                      
+                
+        
+    <span class="k">elif</span> <span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Grain type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Ellipsoidal&#39;</span><span class="p">:</span>
+        <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">]))</span>        
+        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Grain_Equivalent_diameter&#39;</span><span class="p">]))</span>
+            
+        <span class="n">par_majDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Particle_Major_diameter&#39;</span><span class="p">]))</span>
+        <span class="n">par_minDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Particle_Minor_diameter&#39;</span><span class="p">]))</span>
     
-    <span class="c1"># Calculate the multidimensional histogram</span>
-    <span class="n">hist_par</span><span class="p">,</span> <span class="n">edge_par</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogramdd</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),))</span>
-    <span class="n">hist_gr</span><span class="p">,</span> <span class="n">edge_gr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogramdd</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),))</span>
+        <span class="n">grain_majDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Grain_Major_diameter&#39;</span><span class="p">]))</span>
+        <span class="n">grain_minDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Grain_Minor_diameter&#39;</span><span class="p">]))</span>
+        
+        <span class="c1"># Convert to micro meter for plotting   </span>
+        <span class="k">if</span> <span class="n">dataDict</span><span class="p">[</span><span class="s1">&#39;Unit_scale&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;mm&#39;</span><span class="p">:</span>            
+            <span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">par_eqDia</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="o">*</span><span class="mi">1000</span>
+            <span class="n">par_majDia</span><span class="p">,</span> <span class="n">grain_majDia</span> <span class="o">=</span> <span class="n">par_majDia</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">grain_majDia</span><span class="o">*</span><span class="mi">1000</span>
+            <span class="n">par_minDia</span><span class="p">,</span> <span class="n">grain_minDia</span> <span class="o">=</span> <span class="n">par_minDia</span><span class="o">*</span><span class="mi">1000</span><span class="p">,</span> <span class="n">grain_minDia</span><span class="o">*</span><span class="mi">1000</span>        
+                
+        <span class="c1"># Concatenate corresponding arrays to compute shared bins</span>
+        <span class="n">total_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">])</span>                 
+        <span class="n">total_majDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">par_majDia</span><span class="p">,</span> <span class="n">grain_majDia</span><span class="p">])</span> 
+        <span class="n">total_minDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">par_minDia</span><span class="p">,</span> <span class="n">grain_minDia</span><span class="p">])</span>
+                                
+        <span class="c1"># Find the corresponding shared bin edges </span>
+        <span class="c1"># NOTE: &#39;doane&#39; produces better estimates for non-normal datasets</span>
+        <span class="n">shared_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">total_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;doane&#39;</span><span class="p">)</span>
+        <span class="n">shared_majDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">total_majDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;doane&#39;</span><span class="p">)</span>
+        <span class="n">shared_minDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">total_minDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;doane&#39;</span><span class="p">)</span>                                          
+        
+<span class="c1">#        loop_list = [(par_eqDia, grain_eqDia, len(shared_bins), &#39;Equivalent&#39;), </span>
+<span class="c1">#                     (par_majDia, grain_majDia, len(shared_majDia), &#39;Major&#39;), </span>
+<span class="c1">#                     (par_minDia, grain_minDia, len(shared_minDia), &#39;Minor&#39;)]</span>
+
+        <span class="n">loop_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">shared_bins</span><span class="p">),</span> <span class="s1">&#39;Equivalent&#39;</span><span class="p">)]</span>
+                               
+        <span class="k">for</span> <span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">grains</span><span class="p">,</span> <span class="n">binNum</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">loop_list</span><span class="p">:</span>
+        
+            <span class="c1"># Get the mean &amp; std of the underlying normal distribution</span>
+            <span class="n">par_data</span><span class="p">,</span> <span class="n">grain_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">particles</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">grains</span><span class="p">)</span>
+            <span class="n">mu_par</span><span class="p">,</span> <span class="n">std_par</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">par_data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">par_data</span><span class="p">)</span>
+            <span class="n">mu_gr</span><span class="p">,</span> <span class="n">std_gr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">grain_data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">grain_data</span><span class="p">)</span>
+            
+            <span class="c1"># Lognormal mean &amp; variance &amp; std  </span>
+            <span class="c1">#log_mean = np.exp(mean + (sd**2)/2.0)</span>
+            <span class="c1">#log_var = np.exp((sd**2)-1.0)*np.exp(2.0*mean + sd**2)        </span>
+            <span class="c1">#print(log_mean, (log_var)**0.5, log_var)</span>
+            
+            <span class="c1"># NOTE: lognorm takes mean &amp; std of normal distribution</span>
+            <span class="n">par_lognorm</span> <span class="o">=</span> <span class="n">lognorm</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">std_par</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mu_par</span><span class="p">))</span> 
+            <span class="n">grain_lognorm</span> <span class="o">=</span> <span class="n">lognorm</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">std_gr</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mu_gr</span><span class="p">))</span>         
+
+            <span class="c1"># Plot the histogram &amp; PDF        </span>
+            <span class="n">sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">color_codes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>                                      
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+            
+            <span class="c1"># Plot histogram</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">([</span><span class="n">particles</span><span class="p">,</span> <span class="n">grains</span><span class="p">],</span> <span class="n">density</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">binNum</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="s1">&#39;Output&#39;</span><span class="p">])</span>                 
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> diameter (μm)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Frequency&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+            
+            <span class="c1"># Plot PDF                             </span>
+            <span class="n">ypdf1</span> <span class="o">=</span> <span class="n">par_lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span>
+            <span class="n">ypdf2</span> <span class="o">=</span> <span class="n">grain_lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">grains</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">ypdf1</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">)</span>              
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ypdf1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">grains</span><span class="p">,</span> <span class="n">ypdf2</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">)</span>              
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">grains</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ypdf2</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span> 
+                        
+            <span class="c1">#sns.distplot(ypdf1, hist = False, kde = True, </span>
+            <span class="c1">#             kde_kws = {&#39;shade&#39;: True, &#39;linewidth&#39;: 3}, </span>
+            <span class="c1">#             label = &#39;Input&#39;, ax=ax[1])</span>
+            <span class="c1">#sns.distplot(ypdf2, hist = False, kde = True, </span>
+            <span class="c1">#             kde_kws = {&#39;shade&#39;: True, &#39;linewidth&#39;: 3}, </span>
+            <span class="c1">#            label = &#39;Output&#39;, ax=ax[1])        </span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> diameter (μm)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Density&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>        
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s2">&quot;/</span><span class="si">{0}</span><span class="s2">_diameter.png&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span> 
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    &#39;</span><span class="si">{0}</span><span class="s2">_diameter.png&#39; is placed in the current working directory</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----&gt;DONE!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>                          
+    <span class="k">return</span></div>
     
-    <span class="c1"># normalize the histogram</span>
-    <span class="n">hist_par</span> <span class="o">=</span> <span class="n">hist_par</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_par</span><span class="p">)</span>
-    <span class="n">hist_gr</span> <span class="o">=</span> <span class="n">hist_gr</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_gr</span><span class="p">)</span>
-    
-    <span class="c1"># Compute the L1-error</span>
-    <span class="n">l1_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hist_par</span> <span class="o">-</span> <span class="n">hist_gr</span><span class="p">))</span>    
-    <span class="k">return</span> <span class="n">l1_error</span>               </div>
-    
-    
+        
 <div class="viewcode-block" id="extract_volume_sharedGBarea"><a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.extract_volume_sharedGBarea">[docs]</a><span class="k">def</span> <span class="nf">extract_volume_sharedGBarea</span><span class="p">():</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluates the grain volume and the grain boundary shared surface area between neighbouring grains </span>
@@ -1020,7 +1357,7 @@
             <span class="n">RVE_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
                       
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;particleStatGenerator(), packingRoutine(), voxelizationRoutine()&quot; function is executed first!&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;Input statistics, Packing, Voxelization &amp; Output Statistics&quot; commands are executed first!&#39;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
                     
     <span class="n">voxel_size</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_resolutionX&#39;</span><span class="p">]</span>
@@ -1036,7 +1373,7 @@
     <span class="n">gv_sorted_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">grain_vol</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">grain_vol</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
     <span class="n">gv_sorted_values</span> <span class="o">=</span> <span class="p">[[</span><span class="n">grain_vol</span><span class="p">[</span><span class="n">gk</span><span class="p">]]</span> <span class="k">for</span> <span class="n">gk</span> <span class="ow">in</span> <span class="n">gv_sorted_keys</span><span class="p">]</span>            
 
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing grain volumes info. to file&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Writing grain volumes info. to file (&#39;grainVolumes.csv&#39;)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
         
     <span class="c1"># Write out grain volumes to a file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/grainVolumes.csv&#39;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -1083,7 +1420,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">continue</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing shared GB surface area info. to file&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Writing shared GB surface area info. to file (&#39;shared_surfaceArea.csv&#39;)&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     
     <span class="c1"># Write out shared grain boundary area to a file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/shared_surfaceArea.csv&#39;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>

@@ -12,7 +12,7 @@ from scipy.spatial import ConvexHull
 import kanapy
 from kanapy.voxelization import *
 from kanapy.entities import Ellipsoid, Simulation_Box
-from kanapy.input_output import particleStatGenerator
+from kanapy.input_output import RVEcreator
 from kanapy.input_output import write_dump
 from kanapy.packing import particle_generator
 
@@ -221,7 +221,7 @@ def test_voxelizationRoutine():
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2) 
 
-    particleStatGenerator(stat_inp)   
+    RVEcreator(stat_inp)   
 
     # create an temporary 'dump' directory for reading files from
     with open(json_dir + '/RVE_data.json') as json_file:
@@ -231,7 +231,7 @@ def test_voxelizationRoutine():
         particle_data = json.load(json_file)
                                     
     sim_box = Simulation_Box(RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ'])
-    sim_box.sim_ts = 580
+    sim_box.sim_ts = 650
     Particles = particle_generator(particle_data, sim_box)
     
     write_dump(Particles, sim_box, len(Particles))
@@ -242,6 +242,6 @@ def test_voxelizationRoutine():
     assert os.path.isfile(json_dir + '/elmtDict.json')
     assert os.path.isfile(json_dir + '/elmtSetDict.json')
 
-    os.remove(stat_inp)    
+    os.remove(stat_inp)  
     shutil.rmtree(json_dir)
     shutil.rmtree(dump_dir)

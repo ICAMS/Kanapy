@@ -17,40 +17,44 @@ details this as shown:
 
     $ conda activate knpy
     (knpy) $ kanapy --help
-              Usage: kanapy [OPTIONS] COMMAND [ARGS]...
-              Options:
-                --help  Show this message and exit.
-              
-              Commands:
-                abaqusoutput   Writes out the Abaqus (.inp) file for the generated RVE.
-                docs           Generates a HTML-based reference documentation.
-                install        Install kanapy's geometry packing module.
-                neperoutput    Writes out particle position and weights files required
-                               for...
-                outputstats    Writes out the particle- and grain diameter attributes for...
-                pack           Packs the particles into a simulation box.
-                reducetexture  Texture reduction algorithm with optional Misorientation...
-                setuptexture   Stores the user provided MATLAB & MTEX paths for texture...
-                statgenerate   Generates particle statistics based on the data provided
-                               in...
-                tests          Runs unittests built within kanapy.
-                voxelize       Generates the RVE by assigning voxels to grains.
+            Usage: kanapy [OPTIONS] COMMAND [ARGS]...
+
+            Options:
+              --help  Show this message and exit.
+
+            Commands:
+              abaqusOutput  Writes out the Abaqus (.inp) file for the generated RVE.
+              autoComplete  Kanapy bash auto completion.
+              genDocs       Generates a HTML-based reference documentation.
+              genRVE        Creates RVE based on the data provided in the input file.
+              genStats      Generates particle statistics based on the data provided in...
+              neperOutput   Writes out particle position and weights files required for...
+              outputStats   Writes out the particle- and grain diameter attributes for...
+              pack          Packs the particles into a simulation box.
+              plotStats     Plots the particle- and grain diameter attributes for...
+              readGrains    Generates particles based on the grain data provided in the...
+              reduceODF     Texture reduction algorithm with optional Misorientation...
+              runTests      Runs unittests built within kanapy.
+              setupTexture  Stores the user provided MATLAB & MTEX paths for texture...
+              voxelize      Generates the RVE by assigning voxels to grains.
+
   
 The functionality and the arguments of each command listed above can be requested. For example:
 
 .. code-block:: console
 
-    (knpy) $ kanapy neperoutput --help
-              Usage: kanapy neperoutput [OPTIONS]
+    (knpy) $ kanapy genStats --help
+            Usage: kanapy genStats [OPTIONS]
 
-                Writes out particle position and weights files required for tessellation
-                in Neper.
+              Generates particle statistics based on the data provided in the input
+              file.
 
-              Options:
-                --timestep TEXT  Time step for which Neper input files will be generated.
-                --help           Show this message and exit.
+            Options:
+              -f TEXT  Input statistics file name in the current directory.
+              --help   Show this message and exit.
 
-.. note:: Bash auto-completion option is avaiable for Kanapy's CLI commands. Run: :bash:`kanapy autocomplete` to set it up 
+
+.. note:: Bash auto-completion option is avaiable for Kanapy's CLI commands. Run: :bash:`kanapy autoComplete` to set it up 
 
 
 Detailed tutorial
@@ -87,10 +91,10 @@ An exemplary structure of the input file: ``stat_input.json`` is shown below:
     {
       "Equivalent diameter": 
         {
-          "std": 0.531055,
-          "mean": 2.76736,
-          "cutoff_min": 4.0,
-          "cutoff_max": 20.0
+          "std": 0.39,
+          "mean": 2.418,
+          "cutoff_min": 8.0,
+          "cutoff_max": 25.0
         },
       "Aspect ratio": 
         {
@@ -98,17 +102,17 @@ An exemplary structure of the input file: ``stat_input.json`` is shown below:
         },           
       "Tilt angle":
         {
-          "sigma": 28.8774,
+          "sigma": 60.8774,
           "mean": 87.4178    
         },
       "RVE": 
         {
-          "sideX": 60.9,
-          "sideY": 60.9,
-          "sideZ": 60.9,
-          "Nx": 45,
-          "Ny": 45,
-          "Nz": 45
+          "sideX": 85.9,
+          "sideY": 112.33076,
+          "sideZ": 85.9,
+          "Nx": 65,
+          "Ny": 85,
+          "Nz": 65
         },
       "Simulation":
         {
@@ -122,7 +126,7 @@ Tilt angle, RVE, Simulation``.
 
   - The keyword ``Equivalent diameter`` takes in four arguments to generate a 
     log-normal distribution for the particle's equivalent diameter; they are the 
-    `Log-normal distribution's`_ standard deviation and mean, and the minimum 
+    `Normal distribution's`_ standard deviation and mean, and the minimum 
     and maximum cut-off values for the diameter. The values should correspond to :math:`\mu m` scale.
   - The ``Aspect ratio`` takes only the mean value as input. If the resultant 
     microstructure contains equiaxed grains then this value should be set to `1`.
@@ -137,18 +141,20 @@ Tilt angle, RVE, Simulation``.
 
 .. note:: 1. The user may choose not to use the built-in voxelization (meshing) routine 
              for meshing the final RVE. Nevertheless, a value for `voxel_per_side` has to be provided.
-          2. A good estimation for `voxel_per_side` value can be made by keeping the 
+          2. A good estimation for `Nx, Ny & Nz` value can be made by keeping the 
              following point in mind: The smallest dimension of the smallest ellipsoid/sphere 
              should contain at least 3 voxels.
-          3. Particles grow during the simulation. At the start of the simulation, all particles 
+          3. The size of voxels should be the same along X, Y & Z directions (voxel_sizeX = voxel_sizeY = voxel_sizeZ). 
+             It is determined using: voxel size = RVE side length/Voxel per side. 
+          4. Particles grow during the simulation. At the start of the simulation, all particles 
              are initialized with null volume. At each time step, they grow in size by the 
              value: diameter/1000. Therefore, the last timestep would naturally contain particles 
              in their actual size. 
-          4. The input unit scale should be in :math:`\mu m` and the user can choose between 
+          5. The input unit scale should be in :math:`\mu m` and the user can choose between 
              :math:`mm` or :math:`\mu m` as the unit scale in which output the 
              ABAQUS .inp file will be written. 
 
-.. _Log-normal distribution's: https://en.wikipedia.org/wiki/Log-normal_distribution   
+.. _Normal distribution's: https://en.wikipedia.org/wiki/Normal_distribution   
 
 
 """""""""""""""""""""""""""""
@@ -177,22 +183,25 @@ file will be written out in either :math:`mm` or :math:`\mu m` scale.
 
     $ conda activate knpy
     (knpy) $ cd kanapy-master/examples/sphere_packing/
-    (knpy) $ kanapy statgenerate --filename stat_input.json
+    (knpy) $ kanapy genStats -f stat_input.json
+    (knpy) $ kanapy genRVE -f stat_input.json
     (knpy) $ kanapy pack
-    (knpy) $ kanapy neperoutput --timestep 750
+    (knpy) $ kanapy neperoutput -timestep 750
 
 After navigating to the directory where the input file ``stat_input.json`` is located, kanapy's CLI 
-command ``statgenerate`` is executed along with its argument (name of the input file). It generates the 
-necessary particle, RVE, and the simulation attributes, and it writes it to json files. Next the ``pack`` command is
-called to run the particle packing simulation. This command looks for the json files generated by ``statgenerate`` 
-and reads the files for extracting the information required for the packing simulation. At each time step of the 
-packing simulation, kanapy will write out a dump file containing information of particle positions and other attributes.
-Finally, the ``neperoutput`` command (Optional) can be called to write out the position and weights files 
-required for further post-processing. This function takes the specified timestep value as an input parameter 
-and reads the corresponding, previously generated dump file. By extracting the particle's position and dimensions, 
-it creates the ``sphere_positions.txt`` & ``sphere_weights.txt`` files.  
+command ``genStats`` is executed along with its argument (name of the input file). It creates an exemplary
+'Input_distribution.png' file depicting the Log-normal distribution corresponding to the input statistics defined in 
+``stat_input.json``. Modifications can be made to the input statistics based on this plot. Next the ``genRVE`` 
+command is executed to generate the necessary particle, RVE, and the simulation attributes, and it writes it 
+to json files. Next the ``pack`` command is called to run the particle packing simulation. This command looks 
+for the json files generated by ``genRVE`` and reads the files for extracting the information required for the 
+packing simulation. At each time step of the packing simulation, kanapy will write out a dump file containing 
+information of particle positions and other attributes. Finally, the ``neperOutput`` command (Optional) can be 
+called to write out the position and weights files required for further post-processing. This function takes 
+the specified timestep value as an input parameter and reads the corresponding, previously generated dump file. 
+By extracting the particle's position and dimensions, it creates the ``sphere_positions.txt`` & ``sphere_weights.txt`` files.  
 
-.. note:: 1. The ``neperoutput`` command requires the simulation timestep as input. The choice of the timestep is very important. 
+.. note:: 1. The ``neperOutput`` command requires the simulation timestep as input. The choice of the timestep is very important. 
              It is suggested to choose the time step at which the spheres are tightly packed and at which there is the least 
              amount of overlap. The remaining empty spaces will get assigned to the closest sphere when it is sent to the 
              tessellation and meshing routine. Please refer to :ref:`Microstructure with equiaxed grains` for more details.   
@@ -214,18 +223,19 @@ It populates the simulation box with voxels and assigns the voxels to the respec
 
     $ conda activate knpy
     (knpy) $ cd kanapy-master/examples/sphere_packing/
-    (knpy) $ kanapy statgenerate --filename stat_input.json
+    (knpy) $ kanapy genStats -f stat_input.json
+    (knpy) $ kanapy genRVE -f stat_input.json
     (knpy) $ kanapy pack
     (knpy) $ kanapy voxelize
-    (knpy) $ kanapy abaqusoutput
-    (knpy) $ kanapy outputstats    
+    (knpy) $ kanapy abaqusOutput
+    (knpy) $ kanapy outputStats    
     
 .. note:: 1. The Abaqus (.inp) file will be written out in either :math:`mm` or :math:`\mu m` scale, depending 
              on the user requirement specified in the input file.          
           2. For comparing the input and the output equivalent diameter statistics the ``outputstats`` command can be 
              called. This command writes the diameter values in either :math:`mm` or :math:`\mu m` scale, depending 
              on the user requirement specified in the input file.            
-          3. The ``outputstats`` command also writes out the L1-error between the input and output diameter distributions           
+          3. The ``outputStats`` command also writes out the L1-error between the input and output diameter distributions           
                   
 Storing information in json & dump files is effective in making the workflow stages independent of one another. 
 But the sequence of the workflow is important, for example: Running the packing routine before the statistics generation 
@@ -252,22 +262,23 @@ The :ref:`Module voxelization` will generate a hexahedral element (C3D8) mesh th
 
     $ conda activate knpy
     (knpy) $ cd kanapy-master/examples/ellipsoid_packing/
-    (knpy) $ kanapy statgenerate --filename stat_input.json
+    (knpy) $ kanapy genStats -f stat_input.json
+    (knpy) $ kanapy genRVE -f stat_input.json
     (knpy) $ kanapy pack
     (knpy) $ kanapy voxelize
     (knpy) $ kanapy abaqusoutput
     (knpy) $ kanapy outputstats
 
-The workflow is similar to the one described earlier for sphere packing. The only difference being, that the ``neperoutput``
-command is not applicable here. The ``outputstats`` command not only writes out the equivalent diameters, but also the 
+The workflow is similar to the one described earlier for sphere packing. The only difference being, that the ``neperOutput``
+command is not applicable here. The ``outputStats`` command not only writes out the equivalent diameters, but also the 
 major and minor diameters of the ellipsoidal particles and grains.
     
 .. note:: 1. A good estimation for the RVE side length values can be made by keeping the following point in mind: The 
-             biggest dimension of the biggest ellipsoid/sphere should be less than half of the corresponding RVE side length.
+             biggest dimension of the biggest ellipsoid/sphere should fit within the corresponding RVE side length.
           2. For comparing the input and output equivalent, major and minor diameter statistics, the command 
-             ``outputstats`` can be called. Kanapy writes the diameter values in either :math:`mm` or :math:`\mu m` scale, 
+             ``outputStats`` can be called. Kanapy writes the diameter values in either :math:`mm` or :math:`\mu m` scale, 
              depending on the user requirement specified in the input file.            
-          3. The ``outputstats`` command also writes out the L1-error between the input and output diameter distributions  
+          3. The ``outputStats`` command also writes out the L1-error between the input and output diameter distributions  
 
 ^^^^^^^^^^^^^^^^^
 Texture examples
@@ -278,7 +289,7 @@ installed in your system. If your kanapy is not configured for texture analysis,
 .. code-block:: console
 
     $ conda activate knpy
-    (knpy) $ kanapy setuptexture
+    (knpy) $ kanapy setupTexture
 
 .. note:: 1. Your MATLAB version must be 2015 and above.
           2. The required input files must be placed in the working directory from where the kanapy commands are run.
@@ -295,10 +306,10 @@ provided in the ``../kanapy-master/examples/ODF_reconstruction/`` folder.
 
     $ conda activate knpy
     (knpy) $ cd kanapy-master/examples/ODF_reconstruction/
-    (knpy) $ kanapy reducetexture --ebsd titanium.mat
+    (knpy) $ kanapy reduceODF -ebsd titanium.mat
     
 After navigating to the directory where the input file ``titanium.mat`` is located, kanapy's CLI 
-command ``reducetexture`` is executed along with its argument (name of the EBSD (.mat) file). If kanapy's 
+command ``reduceODF`` is executed along with its argument (name of the EBSD (.mat) file). If kanapy's 
 geometry module is executed already, then the number of reduced orientations are read directly. Else kanapy requests 
 the user to provide the number of reduced orientations required before calling the MATLAB ODF reconstruction algorithm. 
 
@@ -315,9 +326,9 @@ provided in the ``../kanapy-master/examples/ODF_reconstruction/`` folder. The wo
 
     $ conda activate knpy
     (knpy) $ cd kanapy-master/examples/ODF_reconstruction/
-    (knpy) $ kanapy reducetexture --ebsd titanium.mat --kernel 0.096
+    (knpy) $ kanapy reduceODF -ebsd titanium.mat -kernel 0.096
                                      (OR)
-    (knpy) $ kanapy reducetexture --ebsd titanium.mat --grains titanium_grains.mat
+    (knpy) $ kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat
 
 .. note:: 1. The output files are saved to the ``/mat_files`` folder under the current working directory. 
           2. The output (.txt) file contains the following information: :math:`L_1` error of ODF reconstruction, 
@@ -340,29 +351,30 @@ the grain boundary shared surface area file is created whilst generating an RVE 
 
     $ conda activate knpy
     (knpy) $ cd kanapy-master/examples/ODF_reconstruction_orientation_assignment/
-    (knpy) $ kanapy statgenerate --filename stat_input.json
+    (knpy) $ kanapy genStats -f stat_input.json
+    (knpy) $ kanapy genRVE -f stat_input.json
     (knpy) $ kanapy pack
     (knpy) $ kanapy voxelize    
-    (knpy) $ kanapy outputstats
-    (knpy) $ kanapy reducetexture --ebsd titanium.mat --grains titanium_grains.mat --fit_mad yes
+    (knpy) $ kanapy outputStats
+    (knpy) $ kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat -fit_mad yes
 
 After navigating to the directory where the input file ``titanium.mat`` is located, generate an RVE by calling kanapy's 
-geometry CLI commands: ``statgenerate``, ``pack`` & ``voxelize``. To generate the shared surface area file, 
-run ``outputstats`` command. Kanapy will write a ``shared_surfaceArea.csv`` 
+geometry CLI commands: ``genStats``, ``genRVE``, ``pack`` & ``voxelize``. To generate the shared surface area file, 
+run ``outputStats`` command. Kanapy will write a ``shared_surfaceArea.csv`` 
 file to the ``/json_files/`` folder. This file contains the grain boundary shared surface area 
-information between neighbouring grains. Now, kanapy's texture CLI command ``reducetexture`` can be called along with 
-its arguments (name of the EBSD, grains (.mat) files). The key ``--fit_mad`` must be used with this command to tell 
+information between neighbouring grains. Now, kanapy's texture CLI command ``reduceODF`` can be called along with 
+its arguments (name of the EBSD, grains (.mat) files). The key ``-fit_mad`` must be used with this command to tell 
 kanapy that orientation assignment to grains is required. Since kanapy's geometry module is executed already, kanapy recognizes 
 the number of reduced orientations required (=number of grains in the RVE). Else kanapy requests the user to provide 
 the number of reduced orientations required before calling the MATLAB functions. 
 
 .. note:: 1. The EBSD, grains (.mat) files and the grain boundary shared surface file are mandatory requirements for the 
              orientation assignment algorithm.          
-          2. The ``shared_surfaceArea.csv`` file is generated by running ``kanapy outputstats``.
+          2. The ``shared_surfaceArea.csv`` file is generated by running ``kanapy outputStats``.
           
 Additionally an optional input that can be provided is the grain volume information, which is used for weighting the 
 orientations after assignment and for estimating the ODF represented by the RVE. Kanapy also writes the grains volume file 
-(``grainsVolumes.csv``) to the ``/json_files/`` folder, when the ``outputstats`` command is executed after RVE generation. 
+(``grainsVolumes.csv``) to the ``/json_files/`` folder, when the ``outputStats`` command is executed after RVE generation. 
 
 .. note:: 1. The ``grainsVolumes.csv`` file lists the volume of each grain in the ascending order of the grain ID.
           2. Kanapy automatically detects the presence of the ``shared_surfaceArea.csv`` & ``grainsVolumes.csv`` files, 

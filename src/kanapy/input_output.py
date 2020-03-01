@@ -270,8 +270,8 @@ def RVEcreator(inputFile):
                 'Voxel_numberX': Nx, 'Voxel_numberY': Ny, 'Voxel_numberZ': Nz,
                 'Voxel_resolutionX': voxel_sizeX,'Voxel_resolutionY': voxel_sizeY, 'Voxel_resolutionZ': voxel_sizeZ}
 
-    simulation_data = {'Time steps': nsteps, 'Periodicity': periodicity, 'Output units': output_units}
-
+    simulation_data = {'Time steps': nsteps, 'Periodicity': periodicity, 'Output units': output_units}     
+        
     # Dump the Dictionaries as json files    
     if not os.path.exists(json_dir):
         os.makedirs(json_dir)

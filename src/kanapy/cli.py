@@ -92,8 +92,8 @@ def createRVE(ctx, f: str):
 
 @main.command(name='readGrains')
 @click.option('-f', default=None, help='Input file name in the current directory.')
-@click.option('--periodic', default='True', help='RVE periodicity status.')
-@click.option('--units', default='mm', help='Output unit format.')
+@click.option('-periodic', default='True', help='RVE periodicity status.')
+@click.option('-units', default='mm', help='Output unit format.')
 @click.pass_context
 def readGrains(ctx, f: str, periodic: str, units: str):    
     ''' Generates particles based on the grain data provided in the input file.'''
@@ -160,7 +160,7 @@ def plotstats(ctx):
 
                 
 @main.command(name='neperOutput')
-@click.option('--timestep', help='Time step for which Neper input files will be generated.')
+@click.option('-timestep', help='Time step for which Neper input files will be generated.')
 @click.pass_context
 def neperoutput(ctx, timestep: int):
     """ Writes out particle position and weights files required for tessellation in Neper."""
@@ -303,10 +303,10 @@ def setPaths():
 
 
 @main.command(name='reduceODF')
-@click.option('--ebsd', default=None, help='EBSD (.mat) file name located in the current directory.')
-@click.option('--grains', default=None, help='Grains (.mat) file name located in the current directory.')
-@click.option('--kernel', default=None, help='Optimum kernel shape factor as float (in radians).')
-@click.option('--fit_mad', default='no', help='Fit Misorientation Angle Distribution (yes/no).')
+@click.option('-ebsd', default=None, help='EBSD (.mat) file name located in the current directory.')
+@click.option('-grains', default=None, help='Grains (.mat) file name located in the current directory.')
+@click.option('-kernel', default=None, help='Optimum kernel shape factor as float (in radians).')
+@click.option('-fit_mad', default='no', help='Fit Misorientation Angle Distribution (yes/no).')
 @click.pass_context
 def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
     """ Texture reduction algorithm with optional Misorientation angle fitting."""

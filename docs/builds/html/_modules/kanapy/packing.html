@@ -316,7 +316,7 @@
                 <span class="n">simulation_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json files not found, make sure particle_Stat_Generator() function is executed first!&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json files not found, make sure &quot;RVE creator&quot; command is executed first!&#39;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
             
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating simulation box of required dimensions&#39;</span><span class="p">)</span>
