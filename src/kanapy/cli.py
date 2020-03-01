@@ -4,8 +4,9 @@ import shutil, json
 import click
 
 from kanapy.util import ROOT_DIR, MAIN_DIR 
-from kanapy.input_output import particleStatGenerator, particleCreator
-from kanapy.input_output import write_position_weights, write_abaqus_inp, write_output_stat
+from kanapy.input_output import particleStatGenerator, particleCreator, RVEcreator
+from kanapy.input_output import write_position_weights, write_abaqus_inp 
+from kanapy.input_output import write_output_stat, plot_output_stats
 from kanapy.input_output import extract_volume_sharedGBarea
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
@@ -17,7 +18,7 @@ def main(ctx):
     pass    
 
 
-@main.command()
+@main.command(name='autoComplete')
 @click.pass_context
 def autocomplete(ctx):    
     """ Kanapy bash auto completion.""" 
@@ -27,7 +28,7 @@ def autocomplete(ctx):
     os.system("echo '. {}' >> ~/.bashrc".format(ROOT_DIR+'/kanapy-complete.sh'))  
 
 
-@main.command()
+@main.command(name='runTests')
 @click.pass_context
 def tests(ctx):    
     """ Runs unittests built within kanapy."""    
@@ -37,7 +38,7 @@ def tests(ctx):
     click.echo('')    
         
     
-@main.command()
+@main.command(name='genDocs')
 @click.pass_context
 def docs(ctx):    
     """ Generates a HTML-based reference documentation."""
@@ -49,35 +50,55 @@ def docs(ctx):
     click.echo('')
     
        
-@main.command()
-@click.option('--filename', default=None, help='Input statistics file name in the current directory.')
+@main.command(name='genStats')
+@click.option('-f', default=None, help='Input statistics file name in the current directory.')
 @click.pass_context
-def statgenerate(ctx, filename: str):    
+def createStats(ctx, f: str):    
     """ Generates particle statistics based on the data provided in the input file."""
                 
-    if filename == None:
+    if f == None:
         click.echo('')
         click.echo('Please provide the name of the input file available in the current directory', err=True)
         click.echo('For more info. run: kanapy statgenerate --help\n', err=True)
         sys.exit(0)         
     else:
         cwd = os.getcwd()
-        if not os.path.exists(cwd + '/{}'.format(filename)):
+        if not os.path.exists(cwd + '/{}'.format(f)):
             click.echo('')
-            click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(filename), err=True)
+            click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(f), err=True)
             sys.exit(0)        
-        particleStatGenerator(cwd + '/' + filename)           
+        particleStatGenerator(cwd + '/' + f)           
 
-"""
-@main.command()
-@click.option('--filename', default=None, help='Input file name in the current directory.')
+
+@main.command(name='genRVE')
+@click.option('-f', default=None, help='Input statistics file name in the current directory.')
+@click.pass_context
+def createRVE(ctx, f: str):    
+    """ Creates RVE based on the data provided in the input file."""
+                
+    if f == None:
+        click.echo('')
+        click.echo('Please provide the name of the input file available in the current directory', err=True)
+        click.echo('For more info. run: kanapy statgenerate --help\n', err=True)
+        sys.exit(0)         
+    else:
+        cwd = os.getcwd()
+        if not os.path.exists(cwd + '/{}'.format(f)):
+            click.echo('')
+            click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(f), err=True)
+            sys.exit(0)        
+        RVEcreator(cwd + '/' + f)   
+                
+
+@main.command(name='readGrains')
+@click.option('-f', default=None, help='Input file name in the current directory.')
 @click.option('--periodic', default='True', help='RVE periodicity status.')
 @click.option('--units', default='mm', help='Output unit format.')
 @click.pass_context
-def readGrains(ctx, filename: str, periodic: str, units: str):    
+def readGrains(ctx, f: str, periodic: str, units: str):    
     ''' Generates particles based on the grain data provided in the input file.'''
     
-    if filename == None:
+    if f == None:
         click.echo('')
         click.echo('Please provide the name of the input file available in the current directory', err=True)
         click.echo('For more info. run: kanapy readgrains --help\n', err=True)
@@ -94,12 +115,12 @@ def readGrains(ctx, filename: str, periodic: str, units: str):
         sys.exit(0)                            
     else:
         cwd = os.getcwd()
-        if not os.path.exists(cwd + '/{}'.format(filename)):
+        if not os.path.exists(cwd + '/{}'.format(f)):
             click.echo('')
-            click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(filename), err=True)
+            click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(f), err=True)
             sys.exit(0)          
-        particleCreator(cwd + '/' + filename, RVE_length, Voxel_number, periodic=periodic, units=units)         
-"""        
+        particleCreator(cwd + '/' + f, periodic=periodic, units=units)         
+        
         
 @main.command()
 @click.pass_context
@@ -115,23 +136,30 @@ def voxelize(ctx):
     voxelizationRoutine()
         
 
-@main.command()
+@main.command(name='abaqusOutput')
 @click.pass_context
 def abaqusoutput(ctx):
     """ Writes out the Abaqus (.inp) file for the generated RVE."""    
     write_abaqus_inp()
     
         
-@main.command()
+@main.command(name='outputStats')
 @click.pass_context
 def outputstats(ctx):
     """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
     grain volumes and shared grain boundary surface areas info are written out as well."""
     write_output_stat()
     extract_volume_sharedGBarea()
-        
+
+
+@main.command(name='plotStats')
+@click.pass_context
+def plotstats(ctx):
+    """ Plots the particle- and grain diameter attributes for statistical comparison."""    
+    plot_output_stats()
+
                 
-@main.command()
+@main.command(name='neperOutput')
 @click.option('--timestep', help='Time step for which Neper input files will be generated.')
 @click.pass_context
 def neperoutput(ctx, timestep: int):
@@ -145,7 +173,7 @@ def neperoutput(ctx, timestep: int):
     write_position_weights(timestep)
 
 
-@main.command()
+@main.command(name='setupTexture')
 @click.pass_context
 def setupTexture(ctx):    
     """ Stores the user provided MATLAB & MTEX paths for texture analysis."""
@@ -274,7 +302,7 @@ def setPaths():
         click.echo('Kanapy is now configured for texture analysis!\n')
 
 
-@main.command()
+@main.command(name='reduceODF')
 @click.option('--ebsd', default=None, help='EBSD (.mat) file name located in the current directory.')
 @click.option('--grains', default=None, help='Grains (.mat) file name located in the current directory.')
 @click.option('--kernel', default=None, help='Optimum kernel shape factor as float (in radians).')

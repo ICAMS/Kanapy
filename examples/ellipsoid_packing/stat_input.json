@@ -1,28 +1,28 @@
 {
   "Equivalent diameter": 
     {
-      "std": 0.531055,
-      "mean": 2.76736,
-      "cutoff_min": 4.0,
-      "cutoff_max": 20.0
+      "std": 0.39,
+      "mean": 2.418,
+      "cutoff_min": 8.0,
+      "cutoff_max": 25.0
     },
   "Aspect ratio": 
     {
-      "mean": 1.0        
+      "mean": 3.0        
     },           
   "Tilt angle":
     {
-      "sigma": 28.8774,
+      "sigma": 15.8774,
       "mean": 87.4178    
     },
   "RVE": 
     {
-      "sideX": 60.9,
-      "sideY": 87.966,
-      "sideZ": 60.9,
-      "Nx": 45,
-      "Ny": 65,
-      "Nz": 45
+      "sideX": 85.9,
+      "sideY": 112.33076,
+      "sideZ": 85.9,
+      "Nx": 65,
+      "Ny": 85,
+      "Nz": 65
     },
   "Simulation":
     {

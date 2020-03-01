@@ -4,16 +4,121 @@ import re, json
 import csv, itertools
 
 import numpy as np
-from scipy.special import erfc
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import lognorm
 from scipy.spatial import ConvexHull 
 from scipy.spatial.distance import euclidean
-
+    
 from kanapy.entities import Ellipsoid, Cuboid
 
 
 def particleStatGenerator(inputFile):
     r"""
     Generates ellipsoid size distribution (Log-normal) based on user-defined statistics
+
+    :param inputFile: User-defined statistics file for ellipsoid generation.
+    :type inputFile: document
+
+    .. note:: 1. Input parameters provided by the user in the input file are:
+
+                * Standard deviation for ellipsoid equivalent diameter (Normal distribution)
+                * Mean value of ellipsoid equivalent diameter (Normal distribution)
+                * Minimum and Maximum cut-offs for ellipsoid equivalent diameters 
+                * Mean value for aspect ratio
+                * Mean value for ellipsoid tilt angles (Normal distribution)
+                * Standard deviation for ellipsoid tilt angles (Normal distribution)
+                * Side dimension of the RVE 
+                * Discretization along the RVE sides          
+
+              2. Particle, RVE and simulation data are written as JSON files in a folder in the current 
+                 working directory for later access.
+
+                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. 
+                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.
+                * Simulation attributes such as periodicity and output unit scale (:math:`mm` 
+                  or :math:`\mu m`) for ABAQUS .inp file.
+
+    """
+    print('')
+    print('------------------------------------------------------------------------')    
+    print('Welcome to KANAPY - A synthetic polycrystalline microstructure generator')
+    print('------------------------------------------------------------------------')
+    
+    print('Generating particle distribution based on user defined statistics')
+    
+    cwd = os.getcwd() 
+    # Open the user input statistics file and read the data
+    try:
+                
+        with open(inputFile) as json_file:  
+            stats_dict = json.load(json_file)    
+        
+        # Extract grain diameter statistics info from input file 
+        sd = stats_dict["Equivalent diameter"]["std"]
+        mean = stats_dict["Equivalent diameter"]["mean"]
+        dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
+        dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
+        
+        # Extract mean grain aspect ratio value info from input file 
+        mean_AR = stats_dict["Aspect ratio"]["mean"]
+
+        # Extract grain tilt angle statistics info from input file 
+        sigma_Ori = stats_dict["Tilt angle"]["sigma"]
+        mean_Ori = stats_dict["Tilt angle"]["mean"]        
+        
+        # Extract RVE side lengths and voxel numbers info from input file 
+        RVEsizeX = stats_dict["RVE"]["sideX"]
+        RVEsizeY = stats_dict["RVE"]["sideY"]
+        RVEsizeZ = stats_dict["RVE"]["sideZ"]        
+            
+    except FileNotFoundError:
+        print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
+        raise FileNotFoundError            
+
+    # NOTE: SCIPY's lognorm takes in sigma & mu of Normal distribution
+    # https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335
+       
+    # Compute the Log-normal PDF & CDF.              
+    frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
+    xaxis = np.linspace(0.1,200,1000)
+    ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
+        
+    # Find the location at which CDF > 0.99    
+    #cdf_idx = np.where(ycdf > 0.99)[0][0]
+    #x_lim = xaxis[cdf_idx]
+    x_lim = dia_cutoff_max + 20
+    
+    sns.set(color_codes=True)                                 
+    plt.figure(figsize=(12, 9))      
+    ax = plt.subplot(111)  
+    plt.ion()
+    plt.show()
+    
+    # Plot PDF                                  
+    plt.plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
+    ax.fill_between(xaxis, 0, ypdf, alpha=0.3) 
+    ax.set_xlim(left=0.0, right=x_lim)    
+    ax.set_xlabel('Equivalent diameter (μm)', fontsize=18)
+    ax.set_ylabel('Density', fontsize=18)
+    ax.tick_params(labelsize=14)
+    ax.axvline(dia_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(dia_cutoff_min))
+    ax.axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))    
+    plt.title("Log-normal distribution for grain equivalent diameter", fontsize=20)     
+    plt.legend(fontsize=16) 
+    plt.savefig(cwd + "/Input_distribution.png", bbox_inches="tight")  
+    plt.draw()
+    plt.pause(0.001)
+    print(' ') 
+    input("    Press [enter] to continue")     
+    print("    'Input_distribution.png' is placed in the current working directory\n")
+                                     
+    return
+
+
+def RVEcreator(inputFile):    
+    r"""
+    Creates an RVE based on user-defined statistics
 
     :param inputFile: User-defined statistics file for ellipsoid generation.
     :type inputFile: document
@@ -38,22 +143,20 @@ def particleStatGenerator(inputFile):
                   or :math:`\mu m`) for ABAQUS .inp file.
 
     """
-    print('')
-    print('------------------------------------------------------------------------')    
-    print('Welcome to KANAPY - A synthetic polycrystalline microstructure generator')
-    print('------------------------------------------------------------------------')
+    print('Creating an RVE based on user defined statistics')
     
-    print('Generating particle distribution based on user defined statistics')
-    
+    cwd = os.getcwd() 
+    json_dir = cwd + '/json_files'          # Folder to store the json files
+        
     # Open the user input statistics file and read the data
     try:
                 
         with open(inputFile) as json_file:  
-            stats_dict = json.load(json_file)    
-        
+            stats_dict = json.load(json_file)                         
+
         # Extract grain diameter statistics info from input file 
-        sd_lognormal = stats_dict["Equivalent diameter"]["std"]
-        mean_lognormal = stats_dict["Equivalent diameter"]["mean"]
+        sd = stats_dict["Equivalent diameter"]["std"]
+        mean = stats_dict["Equivalent diameter"]["mean"]
         dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
         dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
         
@@ -62,8 +165,8 @@ def particleStatGenerator(inputFile):
 
         # Extract grain tilt angle statistics info from input file 
         sigma_Ori = stats_dict["Tilt angle"]["sigma"]
-        mean_Ori = stats_dict["Tilt angle"]["mean"]        
-        
+        mean_Ori = stats_dict["Tilt angle"]["mean"] 
+                
         # Extract RVE side lengths and voxel numbers info from input file 
         RVEsizeX = stats_dict["RVE"]["sideX"]
         RVEsizeY = stats_dict["RVE"]["sideY"]
@@ -80,54 +183,47 @@ def particleStatGenerator(inputFile):
         # Raise ValueError if units are not specified as 'mm' or 'um'
         if output_units != 'mm':
             if output_units != 'um':
-                raise ValueError('Output units can only be "mm" or "um"!')
+                raise ValueError('Output units can only be "mm" or "um"!')        
             
     except FileNotFoundError:
         print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
         raise FileNotFoundError
-        
-    # Generate the x-gaussian
-    exp_array = np.arange(-10, +10, 0.01)
-    x_lognormal = np.exp(exp_array)
-    x_lognormal_mean = np.vstack([x_lognormal[1:], x_lognormal[:-1]]).mean(axis=0)
+
+    # Compute the Log-normal PDF & CDF.              
+    frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
+    xaxis = np.linspace(0.1,200,1000)
+    ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
+            
+    # Get the mean value for each pair of neighboring points                
+    xaxis = np.vstack([xaxis[1:], xaxis[:-1]]).mean(axis=0)
     
-    # Mean, variance for normal distribution (For back verification)
-    m = np.exp(mean_lognormal + (sd_lognormal**2)/2.0)                            
-    v = np.exp((sd_lognormal**2) - 1) * np.exp(2*mean_lognormal*(sd_lognormal**2))
-
-    # From wikipedia page for Log-normal distribution
-    # Calculate the CDF using the error function    
-    erfInput = -(np.log(x_lognormal) - mean_lognormal)/(np.sqrt(2.0)*sd_lognormal)
-    y_CDF = 0.5*erfc(erfInput)
-
-    # Calculate the number fraction
-    number_fraction = np.ediff1d(y_CDF)
-
     # Based on the cutoff specified, get the restricted distribution
-    index_array = np.where((x_lognormal_mean >= dia_cutoff_min) & (x_lognormal_mean <= dia_cutoff_max))    
-    eq_Dia = x_lognormal_mean[index_array]          # Selected diameters within the cutoff
+    index_array = np.where((xaxis >= dia_cutoff_min) & (xaxis <= dia_cutoff_max))    
+    eq_Dia = xaxis[index_array]          # Selected diameters within the cutoff            
     
-    # corresponding number fractions
-    numFra_Dia = number_fraction[index_array]
-
+    # Compute the number fractions and extract them based on the cut-off
+    number_fraction = np.ediff1d(ycdf)
+    numFra_Dia = number_fraction[index_array]      
+    
     # Volume of each ellipsoid
-    volume_array = (4/3)*np.pi*(eq_Dia**3)*(1/8)
-
+    volume_array = (4/3)*np.pi*(eq_Dia**3)*(1/8)        
+    
     # Volume fraction for each ellipsoid
     individualK = np.multiply(numFra_Dia, volume_array)
-    K = individualK/np.sum(individualK)
-
+    K = individualK/np.sum(individualK)                
+    
     # Total number of ellipsoids
     num = np.divide(K*(RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
     num = np.rint(num).astype(int)                  # Round to the nearest integer    
     totalEllipsoids = np.sum(num)                   # Total number of ellipsoids
-
+    
     # Duplicate the diameter values
-    eq_Dia = np.repeat(eq_Dia, num)
+    eq_Dia = np.repeat(eq_Dia, num)        
     
     # Raise value error in case the RVE side length is too small to fit grains inside.
     if len(eq_Dia) == 0:
-         raise ValueError('RVE volume too less to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
+         print('    RVE volume too less to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
+         sys.exit(0) 
     
     # Ellipsoid tilt angles
     tilt_angle = np.random.normal(mean_Ori, sigma_Ori, totalEllipsoids)
@@ -135,8 +231,8 @@ def particleStatGenerator(inputFile):
     # Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b    
     minDia = eq_Dia / (mean_AR)**(1/3)                          # Minor axis length
     majDia = minDia * mean_AR                                   # Major axis length    
-    minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)
-
+    minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)                                                       
+                
     # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
     voxel_sizeX = round(RVEsizeX / Nx, 4)
     voxel_sizeY = round(RVEsizeY / Ny, 4)
@@ -152,40 +248,37 @@ def particleStatGenerator(inputFile):
         print("    The voxel resolution along (X,Y,Z): ({0:.4f},{1:.4f},{2:.4f}) are not equal!".format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
         print("    Change the RVE side lengths (OR) the voxel numbers\n")
         sys.exit(0) 
-    
+        
     # raise value error in case the grains are not voxelated well
     if voxel_sizeX >= np.amin(minDia) / 3.:
         print(" ")
         print("    Grains will not be voxelated well!")
         print("    Please increase the voxel numbers (OR) decrease the RVE side lengths\n")
         sys.exit(0)                     
-   
-    print('    Total number of grains        = {}'.format(totalEllipsoids))
+    
+    print('    Total number of grains        = {}'.format(int(totalEllipsoids)))
     print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
     print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
     print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
-    print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))
-    
+    print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))                
+
     # Create dictionaries to store the data generated
     particle_data = {'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
                      'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
-
+                                       
     RVE_data = {'RVE_sizeX': RVEsizeX, 'RVE_sizeY': RVEsizeY, 'RVE_sizeZ': RVEsizeZ, 
                 'Voxel_numberX': Nx, 'Voxel_numberY': Ny, 'Voxel_numberZ': Nz,
                 'Voxel_resolutionX': voxel_sizeX,'Voxel_resolutionY': voxel_sizeY, 'Voxel_resolutionZ': voxel_sizeZ}
 
     simulation_data = {'Time steps': nsteps, 'Periodicity': periodicity, 'Output units': output_units}
 
-    # Dump the Dictionaries as json files
-    cwd = os.getcwd()     
-    json_dir = cwd + '/json_files'          # Folder to store the json files
-
+    # Dump the Dictionaries as json files    
     if not os.path.exists(json_dir):
         os.makedirs(json_dir)
 
     with open(json_dir + '/particle_data.json', 'w') as outfile:
-        json.dump(particle_data, outfile, indent=2)
-
+        json.dump(particle_data, outfile, indent=2) 
+        
     with open(json_dir + '/RVE_data.json', 'w') as outfile:
         json.dump(RVE_data, outfile, indent=2)
 
@@ -195,7 +288,7 @@ def particleStatGenerator(inputFile):
     return
 
 
-def particleCreator(inputFile, RVE_length, Voxel_number, periodic='True', units="mm"):
+def particleCreator(inputFile, periodic='True', units="mm"):
     r"""
     Generates ellipsoid particles based on user-defined inputs.
 
@@ -243,27 +336,43 @@ def particleCreator(inputFile, RVE_length, Voxel_number, periodic='True', units=
     # Volume of each ellipsoid       
     volume_array = (4/3)*np.pi*(majDia*minDia*minDia2)*(1/8)
     
+    # Equivalent diameter of each ellipsoid
+    eq_Dia = (majDia*minDia*minDia2)**(1/3)
+    
     # RVE size: RVE volume = sum(ellipsoidal volume)
-    RVEsize = (np.sum(volume_array))**(1/3)
+    RVEvol = (np.sum(volume_array))
+
+    # Determine the RVE side lengths
+    dia_max = np.amax(majDia)    
+    RVEsizeY = 1.5*dia_max                 # The Y-side length should accomodate the Biggest dimension of the biggest ellipsoid
+    RVEsizeX = round((RVEvol/ RVEsizeY)**0.5, 4)
+    RVEsizeZ = RVEsizeX 
     
     # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
     voxel_size = 1.1*(np.amin(minDia) / 3.)
-    voxel_per_side = int(round(RVEsize / voxel_size))  # Number of voxel/RVE side                
-    voxel_size = RVEsize / voxel_per_side              # Re-calculate
-                        
+    Nx = int(round(RVEsizeX / voxel_size))         # Number of voxel/RVE side
+    Ny = int(round(RVEsizeY / voxel_size))
+    Nz = int(round(RVEsizeZ / voxel_size))    
+    
+    # Re-calculate the voxel resolution
+    voxel_sizeX = RVEsizeX / Nx            
+    voxel_sizeY = RVEsizeY / Ny
+    voxel_sizeZ = RVEsizeZ / Nz
+    
     totalEllipsoids = len(majDia)
     print('    Total number of grains        = {}'.format(totalEllipsoids))
-    print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVE_length[0], RVE_length[1], RVE_length[2]))
-    print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Voxel_number[0], Voxel_number[1], Voxel_number[2]))
+    print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
+    print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
     print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
     print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))        
         
     # Create dictionaries to store the data generated
-    particle_data = {'Number': int(totalEllipsoids), 'Major_diameter': list(majDia),
+    particle_data = {'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
                      'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
 
-    RVE_data = {'RVE_size': RVEsize, 'Voxel_number_per_side': voxel_per_side,
-                'Voxel_resolution': voxel_size}
+    RVE_data = {'RVE_sizeX': RVEsizeX, 'RVE_sizeY': RVEsizeY, 'RVE_sizeZ': RVEsizeZ, 
+                'Voxel_numberX': Nx, 'Voxel_numberY': Ny, 'Voxel_numberZ': Nz,
+                'Voxel_resolutionX': voxel_sizeX,'Voxel_resolutionY': voxel_sizeY, 'Voxel_resolutionZ': voxel_sizeZ}                    
 
     simulation_data = {'Time steps': 1000, 'Periodicity': "{}".format(periodic), 'Output units': units}
 
@@ -355,7 +464,7 @@ def read_dump(dump_file):
                     RVE_minZ, RVE_maxZ = list(map(float, valuesZ))
 
     except FileNotFoundError:
-        print('    .dump file not found, make sure "packingRoutine()" function is executed first!')
+        print('    .dump file not found, make sure "Packing" command is executed first!')
         raise FileNotFoundError
         
     # Create an instance of simulation box
@@ -434,7 +543,7 @@ def write_position_weights(file_num):
                                         
 
     except FileNotFoundError:
-        print('    .dump file not found, make sure "packingRoutine()" function is executed first!')
+        print('    .dump file not found, make sure "Packing" command is executed first!')
         raise FileNotFoundError
         
     par_dict = dict()
@@ -503,7 +612,7 @@ def write_abaqus_inp():
             elmtSetDict = json.load(json_file)
 
     except FileNotFoundError:
-        print('Json file not found, make sure "voxelizationRoutine()" function is executed first!')
+        print('Json file not found, make sure "Voxelization" command is executed first!')
         raise FileNotFoundError
 
     # Factor used to generate nodal cordinates in 'mm' or 'um' scale
@@ -609,7 +718,7 @@ def write_output_stat():
             simulation_data = json.load(json_file)    
           
     except FileNotFoundError:
-        print('Json file not found, make sure "particleStatGenerator(), packingRoutine(), voxelizationRoutine()" function is executed first!')
+        print('Json file not found, make sure "Input statistics, Packing, & Voxelization" commands are executed first!')
         raise FileNotFoundError
     
     # Extract from dictionaries
@@ -643,18 +752,19 @@ def write_output_stat():
             grain_dia = 2 * (grain_vol * (3/(4*np.pi)))**(1/3)
             grain_eqDia.append(grain_dia)
         
-        print('Writing particle & grain equivalent diameter to files', end="")
+        print("Writing particle & grain equivalent, major & minor diameter to file ('output_statistics.json')", end="")
             
         # write out the particle and grain equivalent diameters to files            
         par_eqDia = list(np.array(par_eqDia)/divideBy)
         grain_eqDia = list(np.array(grain_eqDia)/divideBy)
 
         # Compute the L1-error
-        kwargs = {'Particles': par_eqDia, 'Grains': grain_eqDia}
+        kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia}}}                
         error = l1_error_est(**kwargs)
                 
         # Create dictionaries to store the data generated
         output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
+                       'Grain type': 'Spherical',
                        'Unit_scale': scale,
                        'L1-error':error,                       
                        'Particle_Equivalent_diameter': par_eqDia, 
@@ -762,7 +872,7 @@ def write_output_stat():
             grain_majDia.append(a2)                 # update the major diameter list
             grain_minDia.append(b2)                 # update the minor diameter list
         
-        print('Writing particle & grain equivalent, major & minor diameter to files', end="")
+        print("Writing particle & grain equivalent, major & minor diameter to file ('output_statistics.json')", end="")
 
         # write out the particle and grain equivalent, major, minor diameters to file            
         par_eqDia = list(np.array(par_eqDia)/divideBy)
@@ -775,13 +885,16 @@ def write_output_stat():
         grain_minDia = list(np.array(grain_minDia)/divideBy)                
         
         # Compute the L1-error
-        kwargs = {'Particles': par_eqDia, 'Grains': grain_eqDia}
+        kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
+                                'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
+                                'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}  
         error = l1_error_est(**kwargs)
         
         # Create dictionaries to store the data generated
         output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
+                       'Grain type': 'Ellipsoidal',
                        'Unit_scale': scale,
-                       'L1-error':error,
+                       'L1-error': error,
                        'Particle_Equivalent_diameter': par_eqDia, 
                        'Particle_Major_diameter': par_majDia,
                        'Particle_Minor_diameter': par_minDia,
@@ -809,27 +922,251 @@ def l1_error_est(**kwargs):
         
     print('') 
     print('Computing the L1-error between input and output diameter distributions', end="")
+   
+    if 'Spheres' in kwargs.keys():
+        # Extract the values
+        par_eqDia = np.asarray(kwargs['Spheres']['Equivalent']['Particles'])
+        grain_eqDia = np.asarray(kwargs['Spheres']['Equivalent']['Grains'])
+        
+        # Concatenate both arrays to compute shared bins
+        # NOTE: 'doane' produces better estimates for non-normal datasets
+        total_eqDia = np.concatenate([par_eqDia, grain_eqDia]) 
+        shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
+        
+        # Compute the histogram for particles and grains
+        hist_par, _ = np.histogram(par_eqDia, bins=shared_bins)
+        hist_gr, _ = np.histogram(grain_eqDia, bins=shared_bins)
+        
+        # Normalize the values
+        hist_par = hist_par/np.sum(hist_par)
+        hist_gr = hist_gr/np.sum(hist_gr)
+        
+        # Compute the L1-error between particles and grains    
+        l1_value = np.sum(np.abs(hist_par - hist_gr))        
+        return l1_value
+
+    elif 'Ellipsoids' in kwargs.keys():
+        # Extract the values
+        par_eqDia = np.asarray(kwargs['Ellipsoids']['Equivalent']['Particles'])
+        grain_eqDia = np.asarray(kwargs['Ellipsoids']['Equivalent']['Grains'])
+        
+        # Concatenate both arrays to compute shared bins
+        # NOTE: 'doane' produces better estimates for non-normal datasets
+        total_eqDia = np.concatenate([par_eqDia, grain_eqDia]) 
+        shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
+        
+        # Compute the histogram for particles and grains
+        hist_par, _ = np.histogram(par_eqDia, bins=shared_bins)
+        hist_gr, _ = np.histogram(grain_eqDia, bins=shared_bins)
+        
+        # Normalize the values
+        hist_par = hist_par/np.sum(hist_par)
+        hist_gr = hist_gr/np.sum(hist_gr)
+        
+        # Compute the L1-error between particles and grains    
+        l1_value = np.sum(np.abs(hist_par - hist_gr))        
+        return l1_value
+    '''
+    elif 'Ellipsoids' in kwargs.keys():
+        # Extract the values       
+        par_majDia = np.asarray(kwargs['Ellipsoids']['Major diameter']['Particles'])
+        grain_majDia = np.asarray(kwargs['Ellipsoids']['Major diameter']['Grains'])
+        
+        par_minDia = np.asarray(kwargs['Ellipsoids']['Minor diameter']['Particles'])
+        grain_minDia = np.asarray(kwargs['Ellipsoids']['Minor diameter']['Grains'])
+        
+        # Concatenate corresponding arrays to compute shared bins
+        total_majDia = np.concatenate([par_majDia, grain_majDia]) 
+        total_minDia = np.concatenate([par_minDia, grain_minDia])
+                                
+        # Find the corresponding shared bin edges 
+        # NOTE: 'doane' produces better estimates for non-normal datasets
+        shared_majDia = np.histogram_bin_edges(total_majDia, bins='doane')
+        shared_minDia = np.histogram_bin_edges(total_minDia, bins='doane') 
+        
+        # Concatenate arrays along columns for creating multidimensional histogram
+        par_dd = np.c_[par_majDia, par_minDia]
+        grain_dd = np.c_[grain_majDia, grain_minDia]
+        
+        # Compute the multidimensional histogram for both: particles and grains
+        hist_par, _ = np.histogramdd(par_dd, bins=(shared_majDia, shared_minDia))
+        hist_gr, _ = np.histogramdd(grain_dd, bins=(shared_majDia, shared_minDia))        
     
-    par_eqDia = np.asarray(kwargs['Particles'])
-    grain_eqDia = np.asarray(kwargs['Grains'])
+        # Normalize the values
+        hist_par = hist_par/np.sum(hist_par)
+        hist_gr = hist_gr/np.sum(hist_gr)
+        
+        # Compute the L1-error between particles and grains    
+        l1_value = np.sum(np.abs(hist_par - hist_gr))                
+        return l1_value                     
+    '''
+
+def plot_output_stats():
+    r"""
+    Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots the distributions
+
+    .. note:: 1. Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.
+                 And RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.                                     
+    """ 
+    print('') 
+    print('Plotting input & output statistics')
+    cwd = os.getcwd()
+    json_dir = cwd + '/json_files'          # Folder to store the json files
+    print(cwd)
+    try:
+        with open(json_dir + '/output_statistics.json') as json_file:
+            dataDict = json.load(json_file) 
+          
+    except FileNotFoundError:
+        print('Json file not found, make sure "Input statistics, Packing, Voxelization & Output Statistics" commands are executed first!')
+        raise FileNotFoundError
     
-    # Scale the array between '0 & 1'                
-    par_eqDia = par_eqDia/np.amax(par_eqDia)                
-    grain_eqDia = grain_eqDia/np.amax(grain_eqDia)
+    # read the data from the file
+    if dataDict['Grain type'] == 'Spherical':
     
-    # Calculate the multidimensional histogram
-    hist_par, edge_par = np.histogramdd(par_eqDia, bins=10, range=((0,1),))
-    hist_gr, edge_gr = np.histogramdd(grain_eqDia, bins=10, range=((0,1),))
+        par_eqDia = np.sort(np.asarray(dataDict['Particle_Equivalent_diameter']))
+        grain_eqDia = np.sort(np.asarray(dataDict['Grain_Equivalent_diameter']))
+
+        # Convert to micro meter for plotting   
+        if dataDict['Unit_scale'] == 'mm':            
+            par_eqDia, grain_eqDia = par_eqDia*1000, grain_eqDia*1000
+        
+        # Concatenate both arrays to compute shared bins
+        # NOTE: 'doane' produces better estimates for non-normal datasets
+        total_eqDia = np.concatenate([par_eqDia, grain_eqDia]) 
+        shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
+
+        # Get the mean & std of the underlying normal distribution
+        par_data, grain_data = np.log(par_eqDia), np.log(grain_eqDia)
+        mu_par, std_par = np.mean(par_data), np.std(par_data)
+        mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)
+
+        # Lognormal mean & variance & std  
+        #log_mean = np.exp(mean + (sd**2)/2.0)
+        #log_var = np.exp((sd**2)-1.0)*np.exp(2.0*mean + sd**2)        
+        #print(log_mean, (log_var)**0.5, log_var)
+        
+        # NOTE: lognorm takes mean & std of normal distribution
+        par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
+        grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr)) 
+                        
+        # Plot the histogram & PDF
+        sns.set(color_codes=True)        
+        fig, ax = plt.subplots(1, 2, figsize=(15, 9))
+
+        # Plot histogram
+        ax[0].hist([par_eqDia, grain_eqDia], density=False, bins=len(shared_bins), label=['Input', 'Output'])                 
+        ax[0].legend(loc="upper right", fontsize=16)
+        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
+        ax[0].set_ylabel('Frequency', fontsize=18)
+        ax[0].tick_params(labelsize=14)
+        
+        # Plot PDF                             
+        ypdf1 = par_lognorm.pdf(par_eqDia)
+        ypdf2 = grain_lognorm.pdf(grain_eqDia)
+        ax[1].plot(par_eqDia, ypdf1, linestyle='-', linewidth=3.0, label='Input')              
+        ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
+        ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label='Output')              
+        ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3) 
+                    
+        #sns.distplot(ypdf1, hist = False, kde = True, 
+        #             kde_kws = {'shade': True, 'linewidth': 3}, 
+        #             label = 'Input', ax=ax[1])
+        #sns.distplot(ypdf2, hist = False, kde = True, 
+        #             kde_kws = {'shade': True, 'linewidth': 3}, 
+        #            label = 'Output', ax=ax[1])        
+        ax[1].legend(loc="upper right", fontsize=16)
+        ax[1].set_xlabel('Equivalent diameter (μm)', fontsize=18)
+        ax[1].set_ylabel('Density', fontsize=18)
+        ax[1].tick_params(labelsize=14)        
+        plt.savefig(cwd + "/Equivalent_diameter.png", bbox_inches="tight")                      
+                
+        
+    elif dataDict['Grain type'] == 'Ellipsoidal':
+        par_eqDia = np.sort(np.asarray(dataDict['Particle_Equivalent_diameter']))        
+        grain_eqDia = np.sort(np.asarray(dataDict['Grain_Equivalent_diameter']))
+            
+        par_majDia = np.sort(np.asarray(dataDict['Particle_Major_diameter']))
+        par_minDia = np.sort(np.asarray(dataDict['Particle_Minor_diameter']))
     
-    # normalize the histogram
-    hist_par = hist_par/np.sum(hist_par)
-    hist_gr = hist_gr/np.sum(hist_gr)
+        grain_majDia = np.sort(np.asarray(dataDict['Grain_Major_diameter']))
+        grain_minDia = np.sort(np.asarray(dataDict['Grain_Minor_diameter']))
+        
+        # Convert to micro meter for plotting   
+        if dataDict['Unit_scale'] == 'mm':            
+            par_eqDia, grain_eqDia = par_eqDia*1000, grain_eqDia*1000
+            par_majDia, grain_majDia = par_majDia*1000, grain_majDia*1000
+            par_minDia, grain_minDia = par_minDia*1000, grain_minDia*1000        
+                
+        # Concatenate corresponding arrays to compute shared bins
+        total_eqDia = np.concatenate([par_eqDia, grain_eqDia])                 
+        total_majDia = np.concatenate([par_majDia, grain_majDia]) 
+        total_minDia = np.concatenate([par_minDia, grain_minDia])
+                                
+        # Find the corresponding shared bin edges 
+        # NOTE: 'doane' produces better estimates for non-normal datasets
+        shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
+        shared_majDia = np.histogram_bin_edges(total_majDia, bins='doane')
+        shared_minDia = np.histogram_bin_edges(total_minDia, bins='doane')                                          
+        
+#        loop_list = [(par_eqDia, grain_eqDia, len(shared_bins), 'Equivalent'), 
+#                     (par_majDia, grain_majDia, len(shared_majDia), 'Major'), 
+#                     (par_minDia, grain_minDia, len(shared_minDia), 'Minor')]
+
+        loop_list = [(par_eqDia, grain_eqDia, len(shared_bins), 'Equivalent')]
+                               
+        for (particles, grains, binNum, name) in loop_list:
+        
+            # Get the mean & std of the underlying normal distribution
+            par_data, grain_data = np.log(particles), np.log(grains)
+            mu_par, std_par = np.mean(par_data), np.std(par_data)
+            mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)
+            
+            # Lognormal mean & variance & std  
+            #log_mean = np.exp(mean + (sd**2)/2.0)
+            #log_var = np.exp((sd**2)-1.0)*np.exp(2.0*mean + sd**2)        
+            #print(log_mean, (log_var)**0.5, log_var)
+            
+            # NOTE: lognorm takes mean & std of normal distribution
+            par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
+            grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr))         
+
+            # Plot the histogram & PDF        
+            sns.set(color_codes=True)                                      
+            fig, ax = plt.subplots(1, 2, figsize=(15, 9))
+            
+            # Plot histogram
+            ax[0].hist([particles, grains], density=False, bins=binNum, label=['Input', 'Output'])                 
+            ax[0].legend(loc="upper right", fontsize=16)
+            ax[0].set_xlabel('{0} diameter (μm)'.format(name), fontsize=18)
+            ax[0].set_ylabel('Frequency', fontsize=18)
+            ax[0].tick_params(labelsize=14)
+            
+            # Plot PDF                             
+            ypdf1 = par_lognorm.pdf(particles)
+            ypdf2 = grain_lognorm.pdf(grains)
+            ax[1].plot(particles, ypdf1, linestyle='-', linewidth=3.0, label='Input')              
+            ax[1].fill_between(particles, 0, ypdf1, alpha=0.3)
+            ax[1].plot(grains, ypdf2, linestyle='-', linewidth=3.0, label='Output')              
+            ax[1].fill_between(grains, 0, ypdf2, alpha=0.3) 
+                        
+            #sns.distplot(ypdf1, hist = False, kde = True, 
+            #             kde_kws = {'shade': True, 'linewidth': 3}, 
+            #             label = 'Input', ax=ax[1])
+            #sns.distplot(ypdf2, hist = False, kde = True, 
+            #             kde_kws = {'shade': True, 'linewidth': 3}, 
+            #            label = 'Output', ax=ax[1])        
+            ax[1].legend(loc="upper right", fontsize=16)
+            ax[1].set_xlabel('{0} diameter (μm)'.format(name), fontsize=18)
+            ax[1].set_ylabel('Density', fontsize=18)
+            ax[1].tick_params(labelsize=14)        
+            plt.savefig(cwd + "/{0}_diameter.png".format(name), bbox_inches="tight") 
+            print("    '{0}_diameter.png' is placed in the current working directory\n".format(name))
+            
+    print('---->DONE!\n')                          
+    return
     
-    # Compute the L1-error
-    l1_error = np.sum(np.abs(hist_par - hist_gr))    
-    return l1_error               
-    
-    
+        
 def extract_volume_sharedGBarea():
     r"""
     Evaluates the grain volume and the grain boundary shared surface area between neighbouring grains 
@@ -863,7 +1200,7 @@ def extract_volume_sharedGBarea():
             RVE_data = json.load(json_file)
                       
     except FileNotFoundError:
-        print('Json file not found, make sure "particleStatGenerator(), packingRoutine(), voxelizationRoutine()" function is executed first!')
+        print('Json file not found, make sure "Input statistics, Packing, Voxelization & Output Statistics" commands are executed first!')
         raise FileNotFoundError
                     
     voxel_size = RVE_data['Voxel_resolutionX']
@@ -879,7 +1216,7 @@ def extract_volume_sharedGBarea():
     gv_sorted_keys = sorted(grain_vol, key=grain_vol.get)
     gv_sorted_values = [[grain_vol[gk]] for gk in gv_sorted_keys]            
 
-    print('Writing grain volumes info. to file', end="")
+    print("Writing grain volumes info. to file ('grainVolumes.csv')\n", end="")
         
     # Write out grain volumes to a file
     with open(json_dir + '/grainVolumes.csv', "w", newline="") as f:
@@ -926,7 +1263,7 @@ def extract_volume_sharedGBarea():
         else:
             continue
 
-    print('Writing shared GB surface area info. to file', end="")
+    print("Writing shared GB surface area info. to file ('shared_surfaceArea.csv')", end="")
     
     # Write out shared grain boundary area to a file
     with open(json_dir + '/shared_surfaceArea.csv', "w", newline="") as f:

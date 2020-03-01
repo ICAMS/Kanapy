@@ -8,4 +8,5 @@ sphinx
 sphinx_rtd_theme
 tqdm
 matplotlib
+seaborn
 click

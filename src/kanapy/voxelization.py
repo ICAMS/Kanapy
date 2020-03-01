@@ -351,7 +351,7 @@ def voxelizationRoutine():
         voxel_resX, voxel_resY, voxel_resZ = RVE_data['Voxel_resolutionX'], RVE_data['Voxel_resolutionY'], RVE_data['Voxel_resolutionZ']           
 
         # Read the required dump file
-        filename = cwd + '/dump_files/particle.{0}.dump'.format(580)            
+        filename = cwd + '/dump_files/particle.{0}.dump'.format(650)            
         sim_box, Ellipsoids = read_dump(filename)
         
         # create voxels inside the RVE
