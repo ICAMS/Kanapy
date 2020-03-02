@@ -1,4 +1,5 @@
 {
+  "Grain type": "Elongated",
   "Equivalent diameter": 
     {
       "std": 0.39,
@@ -8,12 +9,17 @@
     },
   "Aspect ratio": 
     {
-      "mean": 3.0        
+      "std": 0.3,
+      "mean": 0.918,
+      "cutoff_min": 1.0,
+      "cutoff_max": 4.0        
     },           
   "Tilt angle":
     {
-      "sigma": 15.8774,
-      "mean": 87.4178    
+      "std": 15.8774,
+      "mean": 87.4178, 
+      "cutoff_min": 75.0,
+      "cutoff_max": 105.0            
     },
   "RVE": 
     {

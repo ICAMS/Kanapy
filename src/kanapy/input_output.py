@@ -49,70 +49,135 @@ def particleStatGenerator(inputFile):
     
     cwd = os.getcwd() 
     # Open the user input statistics file and read the data
-    try:
-                
+    try:                
         with open(inputFile) as json_file:  
-            stats_dict = json.load(json_file)    
-        
-        # Extract grain diameter statistics info from input file 
-        sd = stats_dict["Equivalent diameter"]["std"]
-        mean = stats_dict["Equivalent diameter"]["mean"]
-        dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
-        dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
-        
-        # Extract mean grain aspect ratio value info from input file 
-        mean_AR = stats_dict["Aspect ratio"]["mean"]
-
-        # Extract grain tilt angle statistics info from input file 
-        sigma_Ori = stats_dict["Tilt angle"]["sigma"]
-        mean_Ori = stats_dict["Tilt angle"]["mean"]        
-        
-        # Extract RVE side lengths and voxel numbers info from input file 
-        RVEsizeX = stats_dict["RVE"]["sideX"]
-        RVEsizeY = stats_dict["RVE"]["sideY"]
-        RVEsizeZ = stats_dict["RVE"]["sideZ"]        
+            stats_dict = json.load(json_file)                   
             
     except FileNotFoundError:
         print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
         raise FileNotFoundError            
 
-    # NOTE: SCIPY's lognorm takes in sigma & mu of Normal distribution
-    # https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335
-       
-    # Compute the Log-normal PDF & CDF.              
-    frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
-    xaxis = np.linspace(0.1,200,1000)
-    ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
+    if stats_dict["Grain type"] == "Equiaxed":         
+        # Extract grain diameter statistics info from input file 
+        sd = stats_dict["Equivalent diameter"]["std"]
+        mean = stats_dict["Equivalent diameter"]["mean"]
+        dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
+        dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
+
+        # Extract RVE side lengths and voxel numbers info from input file 
+        RVEsizeX = stats_dict["RVE"]["sideX"]
+        RVEsizeY = stats_dict["RVE"]["sideY"]
+        RVEsizeZ = stats_dict["RVE"]["sideZ"]          
+            
+        ''' Equivalent diameter statistics'''
+        # NOTE: SCIPY's lognorm takes in sigma & mu of Normal distribution
+        # https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335
+           
+        # Compute the Log-normal PDF & CDF.              
+        frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
+        xaxis = np.linspace(0.1,200,1000)
+        ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
+            
+        # Find the location at which CDF > 0.99    
+        #cdf_idx = np.where(ycdf > 0.99)[0][0]
+        #x_lim = xaxis[cdf_idx]
+        x_lim = dia_cutoff_max + 20
+
+        sns.set(color_codes=True)                                 
+        plt.figure(figsize=(12, 9))      
+        ax = plt.subplot(111)  
+        plt.ion()
+        plt.show()
         
-    # Find the location at which CDF > 0.99    
-    #cdf_idx = np.where(ycdf > 0.99)[0][0]
-    #x_lim = xaxis[cdf_idx]
-    x_lim = dia_cutoff_max + 20
+        # Plot PDF                                  
+        plt.plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
+        ax.fill_between(xaxis, 0, ypdf, alpha=0.3) 
+        ax.set_xlim(left=0.0, right=x_lim)    
+        ax.set_xlabel('Equivalent diameter (μm)', fontsize=18)
+        ax.set_ylabel('Density', fontsize=18)
+        ax.tick_params(labelsize=14)
+        ax.axvline(dia_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(dia_cutoff_min))
+        ax.axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))    
+        plt.title("Grain equivalent diameter distribution", fontsize=20)     
+        plt.legend(fontsize=16) 
+        plt.savefig(cwd + "/Input_distribution.png", bbox_inches="tight")  
+        plt.draw()
+        plt.pause(0.001)
+        print(' ') 
+        input("    Press [enter] to continue")     
+        print("    'Input_distribution.png' is placed in the current working directory\n")
+
     
-    sns.set(color_codes=True)                                 
-    plt.figure(figsize=(12, 9))      
-    ax = plt.subplot(111)  
-    plt.ion()
-    plt.show()
-    
-    # Plot PDF                                  
-    plt.plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
-    ax.fill_between(xaxis, 0, ypdf, alpha=0.3) 
-    ax.set_xlim(left=0.0, right=x_lim)    
-    ax.set_xlabel('Equivalent diameter (μm)', fontsize=18)
-    ax.set_ylabel('Density', fontsize=18)
-    ax.tick_params(labelsize=14)
-    ax.axvline(dia_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(dia_cutoff_min))
-    ax.axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))    
-    plt.title("Log-normal distribution for grain equivalent diameter", fontsize=20)     
-    plt.legend(fontsize=16) 
-    plt.savefig(cwd + "/Input_distribution.png", bbox_inches="tight")  
-    plt.draw()
-    plt.pause(0.001)
-    print(' ') 
-    input("    Press [enter] to continue")     
-    print("    'Input_distribution.png' is placed in the current working directory\n")
-                                     
+    elif stats_dict["Grain type"] == "Elongated":       
+        # Extract grain diameter statistics info from input file 
+        sd = stats_dict["Equivalent diameter"]["std"]
+        mean = stats_dict["Equivalent diameter"]["mean"]
+        dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
+        dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
+
+        # Extract RVE side lengths and voxel numbers info from input file 
+        RVEsizeX = stats_dict["RVE"]["sideX"]
+        RVEsizeY = stats_dict["RVE"]["sideY"]
+        RVEsizeZ = stats_dict["RVE"]["sideZ"]     
+             
+        # Extract mean grain aspect ratio value info from input file 
+        sd_AR = stats_dict["Aspect ratio"]["std"]
+        mean_AR = stats_dict["Aspect ratio"]["mean"]        
+        ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
+        ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]  
+        
+        # Extract grain tilt angle statistics info from input file 
+        std_Ori = stats_dict["Tilt angle"]["std"]
+        mean_Ori = stats_dict["Tilt angle"]["mean"]  
+        ori_cutoff_min = stats_dict["Tilt angle"]["cutoff_min"]
+        ori_cutoff_max = stats_dict["Tilt angle"]["cutoff_max"] 
+        
+        ''' Equivalent diameter statistics'''           
+        # Compute the Log-normal PDF & CDF.              
+        frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
+        xaxis = np.linspace(0.1,200,1000)
+        ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
+            
+        # Find the location at which CDF > 0.99    
+        x_lim = dia_cutoff_max + 20
+
+        sns.set(color_codes=True)                                    
+        fig, ax = plt.subplots(2, 1, figsize=(9, 9))  
+        plt.ion()
+        plt.show()
+        
+        # Plot PDF                                  
+        ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
+        ax[0].fill_between(xaxis, 0, ypdf, alpha=0.3) 
+        ax[0].set_xlim(left=0.0, right=x_lim)    
+        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
+        ax[0].set_ylabel('Density', fontsize=18)
+        ax[0].tick_params(labelsize=14)
+        ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(dia_cutoff_min))
+        ax[0].axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))    
+        ax[0].legend(fontsize=14) 
+        
+        ''' Aspect ratio statistics'''     
+        # Compute the Log-normal PDF & CDF.              
+        frozen_lognorm = lognorm(s=sd_AR, scale=np.exp(mean_AR))
+        xaxis = np.linspace(0.1,20,1000)
+        ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)                                          
+        ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
+        ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)    
+        ax[1].set_xlabel('Aspect ratio', fontsize=18)
+        ax[1].set_ylabel('Density', fontsize=18)
+        ax[1].tick_params(labelsize=14)            
+        ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(ar_cutoff_min))
+        ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(ar_cutoff_max))    
+        ax[1].legend(fontsize=14)
+                   
+        plt.savefig(cwd + "/Input_distribution.png", bbox_inches="tight")  
+        plt.draw()
+        plt.pause(0.001)
+        print(' ') 
+        input("    Press [enter] to continue")     
+        print("    'Input_distribution.png' is placed in the current working directory\n")
+                                         
     return
 
 
@@ -152,20 +217,19 @@ def RVEcreator(inputFile):
     try:
                 
         with open(inputFile) as json_file:  
-            stats_dict = json.load(json_file)                         
+            stats_dict = json.load(json_file)                               
+            
+    except FileNotFoundError:
+        print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
+        raise FileNotFoundError
 
+    if stats_dict["Grain type"] == "Equiaxed":     
+    
         # Extract grain diameter statistics info from input file 
         sd = stats_dict["Equivalent diameter"]["std"]
         mean = stats_dict["Equivalent diameter"]["mean"]
         dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
-        dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
-        
-        # Extract mean grain aspect ratio value info from input file 
-        mean_AR = stats_dict["Aspect ratio"]["mean"]
-
-        # Extract grain tilt angle statistics info from input file 
-        sigma_Ori = stats_dict["Tilt angle"]["sigma"]
-        mean_Ori = stats_dict["Tilt angle"]["mean"] 
+        dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]    
                 
         # Extract RVE side lengths and voxel numbers info from input file 
         RVEsizeX = stats_dict["RVE"]["sideX"]
@@ -183,107 +247,254 @@ def RVEcreator(inputFile):
         # Raise ValueError if units are not specified as 'mm' or 'um'
         if output_units != 'mm':
             if output_units != 'um':
-                raise ValueError('Output units can only be "mm" or "um"!')        
-            
-    except FileNotFoundError:
-        print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
-        raise FileNotFoundError
-
-    # Compute the Log-normal PDF & CDF.              
-    frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
-    xaxis = np.linspace(0.1,200,1000)
-    ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
-            
-    # Get the mean value for each pair of neighboring points                
-    xaxis = np.vstack([xaxis[1:], xaxis[:-1]]).mean(axis=0)
-    
-    # Based on the cutoff specified, get the restricted distribution
-    index_array = np.where((xaxis >= dia_cutoff_min) & (xaxis <= dia_cutoff_max))    
-    eq_Dia = xaxis[index_array]          # Selected diameters within the cutoff            
-    
-    # Compute the number fractions and extract them based on the cut-off
-    number_fraction = np.ediff1d(ycdf)
-    numFra_Dia = number_fraction[index_array]      
-    
-    # Volume of each ellipsoid
-    volume_array = (4/3)*np.pi*(eq_Dia**3)*(1/8)        
-    
-    # Volume fraction for each ellipsoid
-    individualK = np.multiply(numFra_Dia, volume_array)
-    K = individualK/np.sum(individualK)                
-    
-    # Total number of ellipsoids
-    num = np.divide(K*(RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
-    num = np.rint(num).astype(int)                  # Round to the nearest integer    
-    totalEllipsoids = np.sum(num)                   # Total number of ellipsoids
-    
-    # Duplicate the diameter values
-    eq_Dia = np.repeat(eq_Dia, num)        
-    
-    # Raise value error in case the RVE side length is too small to fit grains inside.
-    if len(eq_Dia) == 0:
-         print('    RVE volume too less to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
-         sys.exit(0) 
-    
-    # Ellipsoid tilt angles
-    tilt_angle = np.random.normal(mean_Ori, sigma_Ori, totalEllipsoids)
-
-    # Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b    
-    minDia = eq_Dia / (mean_AR)**(1/3)                          # Minor axis length
-    majDia = minDia * mean_AR                                   # Major axis length    
-    minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)                                                       
+                raise ValueError('Output units can only be "mm" or "um"!')  
+                    
+        # Compute the Log-normal PDF & CDF.              
+        frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
+        xaxis = np.linspace(0.1,200,1000)
+        ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
                 
-    # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
-    voxel_sizeX = round(RVEsizeX / Nx, 4)
-    voxel_sizeY = round(RVEsizeY / Ny, 4)
-    voxel_sizeZ = round(RVEsizeZ / Nz, 4)
+        # Get the mean value for each pair of neighboring points                
+        xaxis = np.vstack([xaxis[1:], xaxis[:-1]]).mean(axis=0)
         
-    # raise value error if voxel sizes along the 3 directions are not equal
-    dif1 = np.abs(voxel_sizeX-voxel_sizeY)
-    dif2 = np.abs(voxel_sizeY-voxel_sizeZ)
-    dif3 = np.abs(voxel_sizeZ-voxel_sizeX)
+        # Based on the cutoff specified, get the restricted distribution
+        index_array = np.where((xaxis >= dia_cutoff_min) & (xaxis <= dia_cutoff_max))    
+        eq_Dia = xaxis[index_array]          # Selected diameters within the cutoff            
+        
+        # Compute the number fractions and extract them based on the cut-off
+        number_fraction = np.ediff1d(ycdf)
+        numFra_Dia = number_fraction[index_array]      
+        
+        # Volume of each ellipsoid
+        volume_array = (4/3)*np.pi*(eq_Dia**3)*(1/8)        
+        
+        # Volume fraction for each ellipsoid
+        individualK = np.multiply(numFra_Dia, volume_array)
+        K = individualK/np.sum(individualK)                
+        
+        # Total number of ellipsoids
+        num = np.divide(K*(RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
+        num = np.rint(num).astype(int)                  # Round to the nearest integer    
+        totalEllipsoids = np.sum(num)                   # Total number of ellipsoids
+        
+        # Duplicate the diameter values
+        eq_Dia = np.repeat(eq_Dia, num)        
+        
+        # Raise value error in case the RVE side length is too small to fit grains inside.
+        if len(eq_Dia) == 0:
+             print('    RVE volume too less to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
+             sys.exit(0)                                                   
+                    
+        # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
+        voxel_sizeX = round(RVEsizeX / Nx, 4)
+        voxel_sizeY = round(RVEsizeY / Ny, 4)
+        voxel_sizeZ = round(RVEsizeZ / Nz, 4)
+            
+        # raise value error if voxel sizes along the 3 directions are not equal
+        dif1 = np.abs(voxel_sizeX-voxel_sizeY)
+        dif2 = np.abs(voxel_sizeY-voxel_sizeZ)
+        dif3 = np.abs(voxel_sizeZ-voxel_sizeX)
 
-    if (dif1 > 1e-5) or (dif1 > 1e-5) or (dif1 > 1e-5):
-        print(" ")
-        print("    The voxel resolution along (X,Y,Z): ({0:.4f},{1:.4f},{2:.4f}) are not equal!".format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
-        print("    Change the RVE side lengths (OR) the voxel numbers\n")
-        sys.exit(0) 
+        if (dif1 > 1e-5) or (dif1 > 1e-5) or (dif1 > 1e-5):
+            print(" ")
+            print("    The voxel resolution along (X,Y,Z): ({0:.4f},{1:.4f},{2:.4f}) are not equal!".format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
+            print("    Change the RVE side lengths (OR) the voxel numbers\n")
+            sys.exit(0) 
+            
+        # raise value error in case the grains are not voxelated well
+        if voxel_sizeX >= np.amin(eq_Dia) / 3.:
+            print(" ")
+            print("    Grains will not be voxelated well!")
+            print("    Please increase the voxel numbers (OR) decrease the RVE side lengths\n")
+            sys.exit(0)                     
         
-    # raise value error in case the grains are not voxelated well
-    if voxel_sizeX >= np.amin(minDia) / 3.:
-        print(" ")
-        print("    Grains will not be voxelated well!")
-        print("    Please increase the voxel numbers (OR) decrease the RVE side lengths\n")
-        sys.exit(0)                     
+        print('    Total number of grains        = {}'.format(int(totalEllipsoids)))
+        print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
+        print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
+        print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
+        print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))                
+
+        # Create dictionaries to store the data generated
+        particle_data = {'Type': stats_dict["Grain type"], 'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia)}
+                                           
+        RVE_data = {'RVE_sizeX': RVEsizeX, 'RVE_sizeY': RVEsizeY, 'RVE_sizeZ': RVEsizeZ, 
+                    'Voxel_numberX': Nx, 'Voxel_numberY': Ny, 'Voxel_numberZ': Nz,
+                    'Voxel_resolutionX': voxel_sizeX,'Voxel_resolutionY': voxel_sizeY, 'Voxel_resolutionZ': voxel_sizeZ}
+
+        simulation_data = {'Time steps': nsteps, 'Periodicity': periodicity, 'Output units': output_units}     
+            
+        # Dump the Dictionaries as json files    
+        if not os.path.exists(json_dir):
+            os.makedirs(json_dir)
+
+        with open(json_dir + '/particle_data.json', 'w') as outfile:
+            json.dump(particle_data, outfile, indent=2) 
+            
+        with open(json_dir + '/RVE_data.json', 'w') as outfile:
+            json.dump(RVE_data, outfile, indent=2)
+
+        with open(json_dir + '/simulation_data.json', 'w') as outfile:
+            json.dump(simulation_data, outfile, indent=2)
+        
+        
+    elif stats_dict["Grain type"] == "Elongated":     
     
-    print('    Total number of grains        = {}'.format(int(totalEllipsoids)))
-    print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
-    print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
-    print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
-    print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))                
+        # Extract grain diameter statistics info from input file 
+        sd = stats_dict["Equivalent diameter"]["std"]
+        mean = stats_dict["Equivalent diameter"]["mean"]
+        dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
+        dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]    
+                
+        # Extract RVE side lengths and voxel numbers info from input file 
+        RVEsizeX = stats_dict["RVE"]["sideX"]
+        RVEsizeY = stats_dict["RVE"]["sideY"]
+        RVEsizeZ = stats_dict["RVE"]["sideZ"]        
+        Nx = int(stats_dict["RVE"]["Nx"]) 
+        Ny = int(stats_dict["RVE"]["Ny"]) 
+        Nz = int(stats_dict["RVE"]["Nz"]) 
 
-    # Create dictionaries to store the data generated
-    particle_data = {'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
-                     'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
-                                       
-    RVE_data = {'RVE_sizeX': RVEsizeX, 'RVE_sizeY': RVEsizeY, 'RVE_sizeZ': RVEsizeZ, 
-                'Voxel_numberX': Nx, 'Voxel_numberY': Ny, 'Voxel_numberZ': Nz,
-                'Voxel_resolutionX': voxel_sizeX,'Voxel_resolutionY': voxel_sizeY, 'Voxel_resolutionZ': voxel_sizeZ}
-
-    simulation_data = {'Time steps': nsteps, 'Periodicity': periodicity, 'Output units': output_units}     
+        # Extract mean grain aspect ratio value info from input file 
+        sd_AR = stats_dict["Aspect ratio"]["std"]
+        mean_AR = stats_dict["Aspect ratio"]["mean"]        
+        ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
+        ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]   
         
-    # Dump the Dictionaries as json files    
-    if not os.path.exists(json_dir):
-        os.makedirs(json_dir)
-
-    with open(json_dir + '/particle_data.json', 'w') as outfile:
-        json.dump(particle_data, outfile, indent=2) 
+        # Extract grain tilt angle statistics info from input file 
+        std_Ori = stats_dict["Tilt angle"]["std"]
+        mean_Ori = stats_dict["Tilt angle"]["mean"]  
+        ori_cutoff_min = stats_dict["Tilt angle"]["cutoff_min"]
+        ori_cutoff_max = stats_dict["Tilt angle"]["cutoff_max"] 
+                        
+        # Extract other simulation attributes from input file 
+        nsteps = 1000
+        periodicity = str(stats_dict["Simulation"]["periodicity"])       
+        output_units = str(stats_dict["Simulation"]["output_units"])                                                                                     
         
-    with open(json_dir + '/RVE_data.json', 'w') as outfile:
-        json.dump(RVE_data, outfile, indent=2)
+        # Raise ValueError if units are not specified as 'mm' or 'um'
+        if output_units != 'mm':
+            if output_units != 'um':
+                raise ValueError('Output units can only be "mm" or "um"!')  
+        
+        ''' Equivalent diameter statistics'''
+        # Compute the Log-normal PDF & CDF.              
+        frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
+        xaxis = np.linspace(0.1,200,1000)
+        ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
+                
+        # Get the mean value for each pair of neighboring points                
+        xaxis = np.vstack([xaxis[1:], xaxis[:-1]]).mean(axis=0)
+        
+        # Based on the cutoff specified, get the restricted distribution
+        index_array = np.where((xaxis >= dia_cutoff_min) & (xaxis <= dia_cutoff_max))    
+        eq_Dia = xaxis[index_array]          # Selected diameters within the cutoff            
+        
+        # Compute the number fractions and extract them based on the cut-off
+        number_fraction = np.ediff1d(ycdf)
+        numFra_Dia = number_fraction[index_array]      
+        
+        # Volume of each ellipsoid
+        volume_array = (4/3)*np.pi*(eq_Dia**3)*(1/8)        
+        
+        # Volume fraction for each ellipsoid
+        individualK = np.multiply(numFra_Dia, volume_array)
+        K = individualK/np.sum(individualK)                
+        
+        # Total number of ellipsoids
+        num = np.divide(K*(RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
+        num = np.rint(num).astype(int)                  # Round to the nearest integer    
+        totalEllipsoids = np.sum(num)                   # Total number of ellipsoids
+        
+        # Duplicate the diameter values
+        eq_Dia = np.repeat(eq_Dia, num)        
+        
+        # Raise value error in case the RVE side length is too small to fit grains inside.
+        if len(eq_Dia) == 0:
+             print('    RVE volume too less to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
+             sys.exit(0) 
+        
+        ''' Tilt angle statistics'''        
+        # Sample from Normal distribution: It takes mean and std of normal distribution                                                     
+        tilt_angle = []
+        num = int(totalEllipsoids)
+        while True:
+            tilt = np.random.normal(mean_Ori, std_Ori, num)
+            index_array = np.where((tilt >= ori_cutoff_min) & (tilt <= ori_cutoff_max))
+            TA = tilt[index_array].tolist()            
+            tilt_angle.extend(TA)                                                
+            num = int(totalEllipsoids) - len(tilt_angle)            
+            if len(tilt_angle) >= int(totalEllipsoids):
+                break  
+                
+        ''' Aspect ratio statistics'''     
+        # Sample from lognormal distribution: It takes mean and std of the underlying normal distribution                                                     
+        finalAR = []
+        num = int(totalEllipsoids)
+        while True:
+            ar = np.random.lognormal(mean_AR, sd_AR, num)  
+            index_array = np.where((ar >= ar_cutoff_min) & (ar <= ar_cutoff_max))
+            AR = ar[index_array].tolist()            
+            finalAR.extend(AR)                                                
+            num = int(totalEllipsoids) - len(finalAR)            
+            if len(finalAR) >= int(totalEllipsoids):
+                break                
+        finalAR = np.array(finalAR)
 
-    with open(json_dir + '/simulation_data.json', 'w') as outfile:
-        json.dump(simulation_data, outfile, indent=2)
+        # Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b    
+        minDia = eq_Dia / (finalAR)**(1/3)                          # Minor axis length
+        majDia = minDia * finalAR                                   # Major axis length    
+        minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)                                                       
+        
+        # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
+        voxel_sizeX = round(RVEsizeX / Nx, 4)
+        voxel_sizeY = round(RVEsizeY / Ny, 4)
+        voxel_sizeZ = round(RVEsizeZ / Nz, 4)
+            
+        # raise value error if voxel sizes along the 3 directions are not equal
+        dif1 = np.abs(voxel_sizeX-voxel_sizeY)
+        dif2 = np.abs(voxel_sizeY-voxel_sizeZ)
+        dif3 = np.abs(voxel_sizeZ-voxel_sizeX)
+
+        if (dif1 > 1e-5) or (dif1 > 1e-5) or (dif1 > 1e-5):
+            print(" ")
+            print("    The voxel resolution along (X,Y,Z): ({0:.4f},{1:.4f},{2:.4f}) are not equal!".format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
+            print("    Change the RVE side lengths (OR) the voxel numbers\n")
+            sys.exit(0) 
+            
+        # raise value error in case the grains are not voxelated well
+        if voxel_sizeX >= np.amin(minDia) / 3.:
+            print(" ")
+            print("    Grains will not be voxelated well!")
+            print("    Please increase the voxel numbers (OR) decrease the RVE side lengths\n")
+            sys.exit(0)                     
+        
+        print('    Total number of grains        = {}'.format(int(totalEllipsoids)))
+        print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
+        print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
+        print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
+        print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))                
+
+        # Create dictionaries to store the data generated
+        particle_data = {'Type': stats_dict["Grain type"], 'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
+                         'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
+                                           
+        RVE_data = {'RVE_sizeX': RVEsizeX, 'RVE_sizeY': RVEsizeY, 'RVE_sizeZ': RVEsizeZ, 
+                    'Voxel_numberX': Nx, 'Voxel_numberY': Ny, 'Voxel_numberZ': Nz,
+                    'Voxel_resolutionX': voxel_sizeX,'Voxel_resolutionY': voxel_sizeY, 'Voxel_resolutionZ': voxel_sizeZ}
+
+        simulation_data = {'Time steps': nsteps, 'Periodicity': periodicity, 'Output units': output_units}     
+            
+        # Dump the Dictionaries as json files    
+        if not os.path.exists(json_dir):
+            os.makedirs(json_dir)
+
+        with open(json_dir + '/particle_data.json', 'w') as outfile:
+            json.dump(particle_data, outfile, indent=2) 
+            
+        with open(json_dir + '/RVE_data.json', 'w') as outfile:
+            json.dump(RVE_data, outfile, indent=2)
+
+        with open(json_dir + '/simulation_data.json', 'w') as outfile:
+            json.dump(simulation_data, outfile, indent=2)
 
     return
 
@@ -722,11 +933,13 @@ def write_output_stat():
         raise FileNotFoundError
     
     # Extract from dictionaries
-    par_eqDia = particle_data['Equivalent_diameter']
-    par_majDia = particle_data['Major_diameter']
-    par_minDia = particle_data['Minor_diameter1']
+    par_eqDia = particle_data['Equivalent_diameter']    
     voxel_size = RVE_data['Voxel_resolutionX']
     RVE_sizeX, RVE_sizeY, RVE_sizeZ = RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ']
+    
+    if particle_data['Type'] == 'Elongated':
+        par_majDia = particle_data['Major_diameter']
+        par_minDia = particle_data['Minor_diameter1']   
     
     if simulation_data['Periodicity'] == 'True':
         periodic_status = True
@@ -742,7 +955,7 @@ def write_output_stat():
         divideBy = 1
                                            
     # Check if Equiaxed or elongated particles
-    if np.array_equal(par_majDia, par_minDia):          # Equiaxed grains (spherical particles)    
+    if particle_data['Type'] == 'Equiaxed':          # Equiaxed grains (spherical particles)    
         
         # Find each grain's equivalent diameter
         grain_eqDia = []    
@@ -764,7 +977,7 @@ def write_output_stat():
                 
         # Create dictionaries to store the data generated
         output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
-                       'Grain type': 'Spherical',
+                       'Grain type': particle_data['Type'],
                        'Unit_scale': scale,
                        'L1-error':error,                       
                        'Particle_Equivalent_diameter': par_eqDia, 
@@ -854,7 +1067,7 @@ def write_output_stat():
                     
         # For periodic & Non-periodic: create the convex hull and find the major & minor diameters
         for grain, points in grain_node.items():   
-            
+                        
             hull = ConvexHull(points)             
             hull_pts = points[hull.vertices]
             
@@ -867,8 +1080,14 @@ def write_output_stat():
             # Find the euclidean distance to all surface points from the center
             dists = [euclidean(center, pt) for pt in hull_pts]
             a2 = 2.0*np.amax(dists)
-            b2 = 2.0*np.amin(dists)
-
+            b2 = 2.0*np.amin(dists)            
+            
+            # Calculate ellipsoid dimensions using eigen values
+            #ellPoints = points.T            
+            #eigvals, eigvecs = np.linalg.eig(np.cov(ellPoints))
+            #eigvals = np.sort(eigvals)
+            #a2, b2 = eigvals[-1], eigvals[-2]            
+            
             grain_majDia.append(a2)                 # update the major diameter list
             grain_minDia.append(b2)                 # update the minor diameter list
         
@@ -892,7 +1111,7 @@ def write_output_stat():
         
         # Create dictionaries to store the data generated
         output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
-                       'Grain type': 'Ellipsoidal',
+                       'Grain type': particle_data['Type'],
                        'Unit_scale': scale,
                        'L1-error': error,
                        'Particle_Equivalent_diameter': par_eqDia, 
@@ -1012,7 +1231,7 @@ def plot_output_stats():
     print('Plotting input & output statistics')
     cwd = os.getcwd()
     json_dir = cwd + '/json_files'          # Folder to store the json files
-    print(cwd)
+
     try:
         with open(json_dir + '/output_statistics.json') as json_file:
             dataDict = json.load(json_file) 
@@ -1022,8 +1241,8 @@ def plot_output_stats():
         raise FileNotFoundError
     
     # read the data from the file
-    if dataDict['Grain type'] == 'Spherical':
-    
+    if dataDict['Grain type'] == 'Equiaxed':
+        
         par_eqDia = np.sort(np.asarray(dataDict['Particle_Equivalent_diameter']))
         grain_eqDia = np.sort(np.asarray(dataDict['Grain_Equivalent_diameter']))
 
@@ -1082,7 +1301,7 @@ def plot_output_stats():
         plt.savefig(cwd + "/Equivalent_diameter.png", bbox_inches="tight")                      
                 
         
-    elif dataDict['Grain type'] == 'Ellipsoidal':
+    elif dataDict['Grain type'] == 'Elongated':
         par_eqDia = np.sort(np.asarray(dataDict['Particle_Equivalent_diameter']))        
         grain_eqDia = np.sort(np.asarray(dataDict['Grain_Equivalent_diameter']))
             
@@ -1162,7 +1381,58 @@ def plot_output_stats():
             ax[1].tick_params(labelsize=14)        
             plt.savefig(cwd + "/{0}_diameter.png".format(name), bbox_inches="tight") 
             print("    '{0}_diameter.png' is placed in the current working directory\n".format(name))
-            
+        
+        
+        ''' Plot the aspect ratio comparison '''
+        par_AR = np.sort(np.asarray(dataDict['Particle_Major_diameter']) / np.asarray(dataDict['Particle_Minor_diameter']))
+        grain_AR = np.sort(np.asarray(dataDict['Grain_Major_diameter']) / np.asarray(dataDict['Grain_Minor_diameter']))
+
+        # Concatenate corresponding arrays to compute shared bins
+        total_AR = np.concatenate([par_AR, grain_AR])                         
+                                
+        # Find the corresponding shared bin edges
+        shared_AR = np.histogram_bin_edges(total_AR, bins='doane')
+        
+        # Get the mean & std of the underlying normal distribution
+        par_data, grain_data = np.log(par_AR), np.log(grain_AR)
+        mu_par, std_par = np.mean(par_data), np.std(par_data)
+        mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)        
+        
+        par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
+        grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr)) 
+        
+        # Plot the histogram & PDF        
+        sns.set(color_codes=True)                                      
+        fig, ax = plt.subplots(1, 2, figsize=(15, 9))
+        
+        # Plot histogram
+        ax[0].hist([par_AR, grain_AR], density=False, bins=len(shared_AR), label=['Input', 'Output'])                 
+        ax[0].legend(loc="upper right", fontsize=16)
+        ax[0].set_xlabel('Aspect ratio', fontsize=18)
+        ax[0].set_ylabel('Frequency', fontsize=18)
+        ax[0].tick_params(labelsize=14)
+        
+        # Plot PDF                             
+        ypdf1 = par_lognorm.pdf(par_AR)
+        ypdf2 = grain_lognorm.pdf(grain_AR)
+        ax[1].plot(par_AR, ypdf1, linestyle='-', linewidth=3.0, label='Input')              
+        ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
+        ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label='Output')              
+        ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3) 
+                    
+        #sns.distplot(ypdf1, hist = False, kde = True, 
+        #             kde_kws = {'shade': True, 'linewidth': 3}, 
+        #             label = 'Input', ax=ax[1])
+        #sns.distplot(ypdf2, hist = False, kde = True, 
+        #             kde_kws = {'shade': True, 'linewidth': 3}, 
+        #            label = 'Output', ax=ax[1])        
+        ax[1].legend(loc="upper right", fontsize=16)
+        ax[1].set_xlabel('Aspect ratio', fontsize=18)
+        ax[1].set_ylabel('Density', fontsize=18)
+        ax[1].tick_params(labelsize=14)        
+        plt.savefig(cwd + "/Aspect_ratio.png", bbox_inches="tight") 
+        print("    'Aspect_ratio.png' is placed in the current working directory\n".format(name))                                            
+        
     print('---->DONE!\n')                          
     return
     

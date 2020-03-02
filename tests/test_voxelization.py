@@ -213,11 +213,12 @@ def test_voxelizationRoutine():
     stat_inp = cwd + '/input_test.json'
             
     # create an temporary 'json' directory for reading files from
-    to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
-                'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4},
-                'RVE': {"sideX": 3,"sideY": 3,"sideZ": 3,"Nx": 10,"Ny": 10,"Nz": 10},
+    to_write = {'Grain type': 'Elongated', 'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
+                'Aspect ratio': {'std':0.3, 'mean': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0}, 'Tilt angle': {'std': 28.8, 'mean': 87.4, 
+                "cutoff_min": 75.0, "cutoff_max": 105.0}, 'RVE': {"sideX": 3,"sideY": 3,"sideZ": 3,"Nx": 15,"Ny": 15,"Nz": 15},
                 'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}
 
+                
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2) 
 
@@ -231,7 +232,7 @@ def test_voxelizationRoutine():
         particle_data = json.load(json_file)
                                     
     sim_box = Simulation_Box(RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ'])
-    sim_box.sim_ts = 650
+    sim_box.sim_ts = 500
     Particles = particle_generator(particle_data, sim_box)
     
     write_dump(Particles, sim_box, len(Particles))

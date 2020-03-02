@@ -266,12 +266,17 @@ of one another during execution.</p>
     <span class="o">}</span>,
   <span class="s2">&quot;Aspect ratio&quot;</span>:
     <span class="o">{</span>
-      <span class="s2">&quot;mean&quot;</span>: <span class="m">1</span>.0
+      <span class="s2">&quot;std&quot;</span>: <span class="m">0</span>.3,
+      <span class="s2">&quot;mean&quot;</span>: <span class="m">0</span>.918,
+      <span class="s2">&quot;cutoff_min&quot;</span>: <span class="m">1</span>.0,
+      <span class="s2">&quot;cutoff_max&quot;</span>: <span class="m">4</span>.0
     <span class="o">}</span>,
   <span class="s2">&quot;Tilt angle&quot;</span>:
     <span class="o">{</span>
-      <span class="s2">&quot;sigma&quot;</span>: <span class="m">60</span>.8774,
-      <span class="s2">&quot;mean&quot;</span>: <span class="m">87</span>.4178
+      <span class="s2">&quot;std&quot;</span>: <span class="m">15</span>.8774,
+      <span class="s2">&quot;mean&quot;</span>: <span class="m">87</span>.4178,
+      <span class="s2">&quot;cutoff_min&quot;</span>: <span class="m">75</span>.0,
+      <span class="s2">&quot;cutoff_max&quot;</span>: <span class="m">105</span>.0
     <span class="o">}</span>,
   <span class="s2">&quot;RVE&quot;</span>:
     <span class="o">{</span>
@@ -298,11 +303,12 @@ of one another during execution.</p>
 log-normal distribution for the particle’s equivalent diameter; they are the
 <a class="reference external" href="https://en.wikipedia.org/wiki/Normal_distribution">Normal distribution’s</a> standard deviation and mean, and the minimum
 and maximum cut-off values for the diameter. The values should correspond to <span class="math notranslate nohighlight">\(\mu m\)</span> scale.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Aspect</span> <span class="pre">ratio</span></code> takes only the mean value as input. If the resultant
-microstructure contains equiaxed grains then this value should be set to <cite>1</cite>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">Aspect</span> <span class="pre">ratio</span></code> takes the mean and the standard deviation value value as input. If the resultant
+microstructure contains equiaxed grains then this field is not necessary.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Tilt</span> <span class="pre">angle</span></code> keyword represents the tilt angle of particles with
 respect to the positive x-axis. Hence, to generate a distribution, it takes in
-two arguments: the normal distribution’s mean and the standard deviation.</p></li>
+two arguments: the normal distribution’s mean and the standard deviation. If the resultant
+microstructure contains equiaxed grains then this field is also not necessary.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">RVE</span></code> keyword takes two types of input: the side lengths of the final RVE
 required and the number of voxels per RVE side length.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">Simulation</span></code> keyword takes in two inputs: A boolean value for periodicity (True/False)
@@ -393,6 +399,7 @@ It populates the simulation box with voxels and assigns the voxels to the respec
 <span class="gp">(knpy) $</span> kanapy voxelize
 <span class="gp">(knpy) $</span> kanapy abaqusOutput
 <span class="gp">(knpy) $</span> kanapy outputStats
+<span class="gp">(knpy) $</span> kanapy plotStats
 </pre></div>
 </div>
 <div class="admonition note">
@@ -403,7 +410,8 @@ on the user requirement specified in the input file.</p></li>
 <li><p>For comparing the input and the output equivalent diameter statistics the <code class="docutils literal notranslate"><span class="pre">outputstats</span></code> command can be
 called. This command writes the diameter values in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, depending
 on the user requirement specified in the input file.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">outputStats</span></code> command also writes out the L1-error between the input and output diameter distributions</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">outputStats</span></code> command also writes out the L1-error between the input and output diameter distributions.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">plotStats</span></code> command outputs a figure comparing the input and output diameter distributions.</p></li>
 </ol>
 </div>
 <p>Storing information in json &amp; dump files is effective in making the workflow stages independent of one another.
@@ -428,6 +436,7 @@ The <a class="reference internal" href="kanapy.html#module-kanapy.voxelization">
 <span class="gp">(knpy) $</span> kanapy voxelize
 <span class="gp">(knpy) $</span> kanapy abaqusoutput
 <span class="gp">(knpy) $</span> kanapy outputstats
+<span class="gp">(knpy) $</span> kanapy plotStats
 </pre></div>
 </div>
 <p>The workflow is similar to the one described earlier for sphere packing. The only difference being, that the <code class="docutils literal notranslate"><span class="pre">neperOutput</span></code>
@@ -442,6 +451,7 @@ biggest dimension of the biggest ellipsoid/sphere should fit within the correspo
 <code class="docutils literal notranslate"><span class="pre">outputStats</span></code> can be called. Kanapy writes the diameter values in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale,
 depending on the user requirement specified in the input file.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">outputStats</span></code> command also writes out the L1-error between the input and output diameter distributions</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">plotStats</span></code> command outputs figures comparing the input and output diameter &amp; aspect ratio distributions.</p></li>
 </ol>
 </div>
 </div>

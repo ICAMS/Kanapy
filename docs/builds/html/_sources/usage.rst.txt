@@ -98,13 +98,18 @@ An exemplary structure of the input file: ``stat_input.json`` is shown below:
         },
       "Aspect ratio": 
         {
-          "mean": 1.0        
+          "std": 0.3,
+          "mean": 0.918,
+          "cutoff_min": 1.0,
+          "cutoff_max": 4.0        
         },           
       "Tilt angle":
         {
-          "sigma": 60.8774,
-          "mean": 87.4178    
-        },
+          "std": 15.8774,
+          "mean": 87.4178, 
+          "cutoff_min": 75.0,
+          "cutoff_max": 105.0            
+        },            
       "RVE": 
         {
           "sideX": 85.9,
@@ -128,11 +133,12 @@ Tilt angle, RVE, Simulation``.
     log-normal distribution for the particle's equivalent diameter; they are the 
     `Normal distribution's`_ standard deviation and mean, and the minimum 
     and maximum cut-off values for the diameter. The values should correspond to :math:`\mu m` scale.
-  - The ``Aspect ratio`` takes only the mean value as input. If the resultant 
-    microstructure contains equiaxed grains then this value should be set to `1`.
+  - The ``Aspect ratio`` takes the mean and the standard deviation value value as input. If the resultant 
+    microstructure contains equiaxed grains then this field is not necessary.
   - The ``Tilt angle`` keyword represents the tilt angle of particles with 
     respect to the positive x-axis. Hence, to generate a distribution, it takes in 
-    two arguments: the normal distribution's mean and the standard deviation. 
+    two arguments: the normal distribution's mean and the standard deviation. If the resultant 
+    microstructure contains equiaxed grains then this field is also not necessary. 
   - The ``RVE`` keyword takes two types of input: the side lengths of the final RVE 
     required and the number of voxels per RVE side length. 
   - The ``Simulation`` keyword takes in two inputs: A boolean value for periodicity (True/False) 
@@ -229,13 +235,15 @@ It populates the simulation box with voxels and assigns the voxels to the respec
     (knpy) $ kanapy voxelize
     (knpy) $ kanapy abaqusOutput
     (knpy) $ kanapy outputStats    
+    (knpy) $ kanapy plotStats      
     
 .. note:: 1. The Abaqus (.inp) file will be written out in either :math:`mm` or :math:`\mu m` scale, depending 
              on the user requirement specified in the input file.          
           2. For comparing the input and the output equivalent diameter statistics the ``outputstats`` command can be 
              called. This command writes the diameter values in either :math:`mm` or :math:`\mu m` scale, depending 
              on the user requirement specified in the input file.            
-          3. The ``outputStats`` command also writes out the L1-error between the input and output diameter distributions           
+          3. The ``outputStats`` command also writes out the L1-error between the input and output diameter distributions.
+          4. The ``plotStats`` command outputs a figure comparing the input and output diameter distributions.           
                   
 Storing information in json & dump files is effective in making the workflow stages independent of one another. 
 But the sequence of the workflow is important, for example: Running the packing routine before the statistics generation 
@@ -267,7 +275,8 @@ The :ref:`Module voxelization` will generate a hexahedral element (C3D8) mesh th
     (knpy) $ kanapy pack
     (knpy) $ kanapy voxelize
     (knpy) $ kanapy abaqusoutput
-    (knpy) $ kanapy outputstats
+    (knpy) $ kanapy outputstats    
+    (knpy) $ kanapy plotStats      
 
 The workflow is similar to the one described earlier for sphere packing. The only difference being, that the ``neperOutput``
 command is not applicable here. The ``outputStats`` command not only writes out the equivalent diameters, but also the 
@@ -279,7 +288,8 @@ major and minor diameters of the ellipsoidal particles and grains.
              ``outputStats`` can be called. Kanapy writes the diameter values in either :math:`mm` or :math:`\mu m` scale, 
              depending on the user requirement specified in the input file.            
           3. The ``outputStats`` command also writes out the L1-error between the input and output diameter distributions  
-
+          4. The ``plotStats`` command outputs figures comparing the input and output diameter & aspect ratio distributions.          
+          
 ^^^^^^^^^^^^^^^^^
 Texture examples
 ^^^^^^^^^^^^^^^^^

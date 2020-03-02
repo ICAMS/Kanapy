@@ -499,6 +499,9 @@
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
                 <span class="n">RVE_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
 
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+                <span class="n">particle_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+            
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;RVE_data.json&quot; file exists!&#39;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
@@ -508,7 +511,11 @@
         <span class="n">voxel_resX</span><span class="p">,</span> <span class="n">voxel_resY</span><span class="p">,</span> <span class="n">voxel_resZ</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_resolutionX&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_resolutionY&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_resolutionZ&#39;</span><span class="p">]</span>           
 
         <span class="c1"># Read the required dump file</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">650</span><span class="p">)</span>            
+        <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Equiaxed&#39;</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">800</span><span class="p">)</span>            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span>            
+
         <span class="n">sim_box</span><span class="p">,</span> <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="n">read_dump</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         
         <span class="c1"># create voxels inside the RVE</span>

@@ -342,6 +342,9 @@ def voxelizationRoutine():
             with open(json_dir + '/RVE_data.json') as json_file:
                 RVE_data = json.load(json_file)
 
+            with open(json_dir + '/particle_data.json') as json_file:  
+                particle_data = json.load(json_file)
+            
         except FileNotFoundError:
             print('Json file not found, make sure "RVE_data.json" file exists!')
             raise FileNotFoundError
@@ -351,7 +354,11 @@ def voxelizationRoutine():
         voxel_resX, voxel_resY, voxel_resZ = RVE_data['Voxel_resolutionX'], RVE_data['Voxel_resolutionY'], RVE_data['Voxel_resolutionZ']           
 
         # Read the required dump file
-        filename = cwd + '/dump_files/particle.{0}.dump'.format(650)            
+        if particle_data['Type'] == 'Equiaxed':
+            filename = cwd + '/dump_files/particle.{0}.dump'.format(800)            
+        else:
+            filename = cwd + '/dump_files/particle.{0}.dump'.format(500)            
+
         sim_box, Ellipsoids = read_dump(filename)
         
         # create voxels inside the RVE

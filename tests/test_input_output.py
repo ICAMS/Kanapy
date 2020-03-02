@@ -23,9 +23,10 @@ def test_particleStatGenerator():
     stat_inp = cwd + '/input_test.json'   
             
     # Test if ValueError is raised w.r.t output_units
-    to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
-                'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4},
-                'RVE': {'sideX': 8, 'sideY': 8, 'sideZ': 8, 'Nx': 15, 'Ny': 15, 'Nz': 15}, 'Simulation': {'periodicity': 'True', 'output_units': 'm'}}
+    to_write = {'Grain type': 'Elongated', 'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
+                'Aspect ratio': {'std':0.3, 'mean': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0}, 'Tilt angle': {'std': 28.8, 'mean': 87.4, 
+                "cutoff_min": 75.0, "cutoff_max": 105.0}, 'RVE': {'sideX': 8, 'sideY': 8, 'sideZ': 8, 'Nx': 15, 'Ny': 15, 'Nz': 15}, 
+                'Simulation': {'periodicity': 'True', 'output_units': 'm'}}
 
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2)       
@@ -35,9 +36,10 @@ def test_particleStatGenerator():
     os.remove(stat_inp)
                             
     # Test the remaining code
-    to_write = {'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
-                'Aspect ratio': {'mean': 2.5}, 'Tilt angle': {'sigma': 28.8, 'mean': 87.4}, 
-                'RVE': {'sideX': 8, 'sideY': 8, 'sideZ': 8, 'Nx': 15, 'Ny': 15, 'Nz': 15}, 'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}    
+    to_write = {'Grain type': 'Elongated', 'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
+                'Aspect ratio': {'std':0.3, 'mean': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0}, 'Tilt angle': {'std': 28.8, 'mean': 87.4, 
+                "cutoff_min": 75.0, "cutoff_max": 105.0}, 'RVE': {'sideX': 6, 'sideY': 6, 'sideZ': 6, 'Nx': 15, 'Ny': 15, 'Nz': 15}, 
+                'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}    
 
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2) 
@@ -54,48 +56,11 @@ def test_particleStatGenerator():
         sd = json.load(json_file)
 
     # Dictionaries to verify against
-    compare_pd = {'Number': 24, 'Equivalent_diameter': [2.40115115, 2.60125125, 2.80135135, 2.80135135, 
-                                                        3.00145145, 3.00145145, 3.20155155, 3.20155155, 
-                                                        3.20155155, 3.40165165, 3.40165165, 3.40165165,
-                                                        3.40165165, 3.60175175, 3.60175175, 3.60175175, 
-                                                        3.60175175, 3.60175175, 3.80185185, 3.80185185, 
-                                                        3.80185185, 3.80185185, 3.80185185, 3.80185185], 
-                                      'Major_diameter': [4.42295824, 4.79154577, 5.16013331, 5.16013331, 
-                                                         5.52872084, 5.52872084, 5.89730838, 5.89730838, 
-                                                         5.89730838, 6.26589592, 6.26589592, 6.26589592,
-                                                         6.26589592, 6.63448345, 6.63448345, 6.63448345, 
-                                                         6.63448345, 6.63448345, 7.00307099, 7.00307099, 
-                                                         7.00307099, 7.00307099, 7.00307099, 7.00307099], 
-                                      'Minor_diameter1': [1.76918329, 1.91661831, 2.06405332, 2.06405332, 
-                                                          2.21148834, 2.21148834, 2.35892335, 2.35892335, 
-                                                          2.35892335, 2.50635837, 2.50635837, 2.50635837,
-                                                          2.50635837, 2.65379338, 2.65379338, 2.65379338, 
-                                                          2.65379338, 2.65379338, 2.8012284,  2.8012284,  
-                                                          2.8012284,  2.8012284,  2.8012284,  2.8012284]
-, 
-                                      'Minor_diameter2': [1.76918329, 1.91661831, 2.06405332, 2.06405332, 
-                                                          2.21148834, 2.21148834, 2.35892335, 2.35892335, 
-                                                          2.35892335, 2.50635837, 2.50635837, 2.50635837,
-                                                          2.50635837, 2.65379338, 2.65379338, 2.65379338, 
-                                                          2.65379338, 2.65379338, 2.8012284,  2.8012284,  
-                                                          2.8012284,  2.8012284,  2.8012284,  2.8012284], 
-                                      'Tilt angle': [170.63255774, 108.28331475,  73.98372414, 121.98618725, 
-                                                     122.44510278, 99.04179073,  88.54744891, 151.2588459, 
-                                                     49.88890819,  81.84304922, 84.50969307,  91.7563626, 
-                                                     24.33452147, 116.01067169, 136.16885175, 128.17228745, 
-                                                     138.70051458,  88.15028231,  62.63411529,  98.05961456,
-                                                     94.73984753, 100.534356, 107.24572303,  62.93755017]}
-
-    compare_rd = {'RVE_sizeX': 8, 'RVE_sizeY': 8, 'RVE_sizeZ': 8, 'Voxel_numberX': 15, 'Voxel_numberY': 15, 'Voxel_numberZ': 15,
-                  'Voxel_resolutionX': round(8.0/15, 4), 'Voxel_resolutionY': round(8.0/15, 4), 
-                  'Voxel_resolutionZ': round(8.0/15, 4)}
+    compare_rd = {'RVE_sizeX': 6, 'RVE_sizeY': 6, 'RVE_sizeZ': 6, 'Voxel_numberX': 15, 'Voxel_numberY': 15, 
+                  'Voxel_numberZ': 15, 'Voxel_resolutionX': 0.4, 'Voxel_resolutionY': 0.4, 'Voxel_resolutionZ': 0.4}
     compare_sd = {'Time steps': 1000, 'Periodicity': 'True', 'Output units': 'mm'}
     
     # Verify
-    for k, v in pd.items():
-        if k != 'Tilt angle':              # Don't check for Tilt angles as it is random
-            assert np.allclose(np.array(pd[k]), np.array(compare_pd[k]), rtol=1e-5) 
-
     assert rd == compare_rd
     assert sd == compare_sd
 

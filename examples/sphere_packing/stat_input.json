@@ -1,19 +1,11 @@
 {
+  "Grain type": "Equiaxed",
   "Equivalent diameter": 
     {
       "std": 0.39,
       "mean": 2.418,
       "cutoff_min": 8.0,
       "cutoff_max": 25.0
-    },
-  "Aspect ratio": 
-    {
-      "mean": 1.0        
-    },           
-  "Tilt angle":
-    {
-      "sigma": 60.8774,
-      "mean": 87.4178    
     },
   "RVE": 
     {

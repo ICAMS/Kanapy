@@ -28,18 +28,26 @@ def particle_generator(particle_data, sim_box):
     for n in range(num_particles):
 
         iden = n+1                                                # ellipsoid 'id'
-        a = particle_data['Major_diameter'][n] / 2.               # Semi-major length
-        b = particle_data['Minor_diameter1'][n] / 2.              # Semi-minor length 1
-        c = particle_data['Minor_diameter2'][n] / 2.              # Semi-minor length 2
+        if particle_data['Type'] == 'Equiaxed':
+            a = particle_data['Equivalent_diameter'][n] / 2.
+            b = particle_data['Equivalent_diameter'][n] / 2.
+            c = particle_data['Equivalent_diameter'][n] / 2.
+        else:    
+            a = particle_data['Major_diameter'][n] / 2.               # Semi-major length
+            b = particle_data['Minor_diameter1'][n] / 2.              # Semi-minor length 1
+            c = particle_data['Minor_diameter2'][n] / 2.              # Semi-minor length 2
 
         # Random placement for ellipsoids
         x = random.uniform(c, sim_box.w - c)
         y = random.uniform(c, sim_box.h - c)
         z = random.uniform(c, sim_box.d - c)
 
-        # Angle represents inclination of Major axis w.r.t positive x-axis
-        
-        angle = np.radians(particle_data['Tilt angle'][n])         # Extract the angle        
+        # Angle represents inclination of Major axis w.r.t positive x-axis        
+        if particle_data['Type'] == 'Equiaxed':
+            angle = np.radians(90)
+        else:
+            angle = np.radians(particle_data['Tilt angle'][n])         # Extract the angle        
+            
         vec_a = np.array([a*np.cos(angle), a*np.sin(angle), 0.0])   # Tilt vector wrt (+ve) x axis        
         cross_a = np.cross(np.array([1, 0, 0]), vec_a)              # Do the cross product to find the quaternion axis        
         norm_cross_a = np.linalg.norm(cross_a, 2)                   # norm of the vector (Magnitude)        
