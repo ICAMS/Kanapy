@@ -80,7 +80,7 @@ a desired location and install.
     (knpy) $ conda install -y -c conda-forge --file requirements.txt
     (knpy) $ pip install -e .
 
-Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's texture module, link Kanapy with MATLAB_ and MTEX_ installations by running: :bash:`kanapy setuptexture` 
+Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's texture module, link Kanapy with MATLAB_ and MTEX_ installations by running: :bash:`kanapy setupTexture` 
 and follow the instructions.
 
 .. note:: 1. ``knpy`` can be replaced with any name for your environment.
@@ -95,11 +95,11 @@ and follow the instructions.
             
 Running tests
 --------------
-Kanapy uses pytest to perform all its unit testing. Run: :bash:`(knpy) $ kanapy tests`
+Kanapy uses pytest to perform all its unit testing. Run: :bash:`(knpy) $ kanapy runTests`
       
 Documentation build
 -------------------
-Documentation for kanapy is generated using Sphinx. Run: :bash:`(knpy) $ kanapy docs`.
+Documentation for kanapy is generated using Sphinx. Run: :bash:`(knpy) $ kanapy genDocs`.
 The HTML documentation can be found at *../kanapy-master/docs/index.html*.
 
 Dependencies

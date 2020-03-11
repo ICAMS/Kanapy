@@ -170,7 +170,7 @@ class Ellipsoid(object):
                                              [xZ-wY, yZ+wX, 1.0-(xX+yY)]])
 
         # Rotation matrix has to be transposed as OVITO uses the transposed matrix for visualization.
-        self.rotation_matrix = self.rotation_matrix.T
+        #self.rotation_matrix = self.rotation_matrix.T          # Not required, it's consistent!!!
 
     def surfacePointsGen(self):
         """
