@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -188,7 +188,7 @@ details this as shown:</p>
 this environment contains the installed kanapy and its required dependencies.</p>
 </div>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate knpy
-<span class="gp">(knpy) $</span> kanapy --help
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy --help
 <span class="go">        Usage: kanapy [OPTIONS] COMMAND [ARGS]...</span>
 
 <span class="go">        Options:</span>
@@ -212,7 +212,7 @@ this environment contains the installed kanapy and its required dependencies.</p
 </pre></div>
 </div>
 <p>The functionality and the arguments of each command listed above can be requested. For example:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(knpy) $</span> kanapy genStats --help
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genStats --help
 <span class="go">        Usage: kanapy genStats [OPTIONS]</span>
 
 <span class="go">          Generates particle statistics based on the data provided in the input</span>
@@ -350,11 +350,11 @@ and meshing software <a class="reference external" href="http://neper.sourceforg
 hexahedral element (C3D8) mesh that can be read by the commercial FEM software <a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>. The Abaqus .inp
 file will be written out in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate knpy
-<span class="gp">(knpy) $</span> <span class="nb">cd</span> kanapy-master/examples/sphere_packing/
-<span class="gp">(knpy) $</span> kanapy genStats -f stat_input.json
-<span class="gp">(knpy) $</span> kanapy genRVE -f stat_input.json
-<span class="gp">(knpy) $</span> kanapy pack
-<span class="gp">(knpy) $</span> kanapy neperoutput -timestep <span class="m">750</span>
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/examples/sphere_packing/
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genStats -f stat_input.json
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genRVE -f stat_input.json
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy pack
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy neperoutput -timestep <span class="m">750</span>
 </pre></div>
 </div>
 <p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> is located, kanapy’s CLI
@@ -392,14 +392,14 @@ particle’s equivalent diameter as input statistics.</p></li>
 It populates the simulation box with voxels and assigns the voxels to the respective particles (Spheres). The
 <code class="docutils literal notranslate"><span class="pre">abaqusoutput</span></code> command can be called to write out the Abaqus (.inp) input file. The workflow for this looks like:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate knpy
-<span class="gp">(knpy) $</span> <span class="nb">cd</span> kanapy-master/examples/sphere_packing/
-<span class="gp">(knpy) $</span> kanapy genStats -f stat_input.json
-<span class="gp">(knpy) $</span> kanapy genRVE -f stat_input.json
-<span class="gp">(knpy) $</span> kanapy pack
-<span class="gp">(knpy) $</span> kanapy voxelize
-<span class="gp">(knpy) $</span> kanapy abaqusOutput
-<span class="gp">(knpy) $</span> kanapy outputStats
-<span class="gp">(knpy) $</span> kanapy plotStats
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/examples/sphere_packing/
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genStats -f stat_input.json
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genRVE -f stat_input.json
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy pack
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy voxelize
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy abaqusOutput
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy outputStats
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy plotStats
 </pre></div>
 </div>
 <div class="admonition note">
@@ -429,14 +429,14 @@ in the sub-section <a class="reference internal" href="applications.html#microst
 the built-in voxelization routine has to be used due to the inavailability of anisotropic tessellation techniques.
 The <a class="reference internal" href="kanapy.html#module-kanapy.voxelization"><span class="std std-ref">Module voxelization</span></a> will generate a hexahedral element (C3D8) mesh that can be read by the commercial FEM software <a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate knpy
-<span class="gp">(knpy) $</span> <span class="nb">cd</span> kanapy-master/examples/ellipsoid_packing/
-<span class="gp">(knpy) $</span> kanapy genStats -f stat_input.json
-<span class="gp">(knpy) $</span> kanapy genRVE -f stat_input.json
-<span class="gp">(knpy) $</span> kanapy pack
-<span class="gp">(knpy) $</span> kanapy voxelize
-<span class="gp">(knpy) $</span> kanapy abaqusoutput
-<span class="gp">(knpy) $</span> kanapy outputstats
-<span class="gp">(knpy) $</span> kanapy plotStats
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/examples/ellipsoid_packing/
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genStats -f stat_input.json
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genRVE -f stat_input.json
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy pack
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy voxelize
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy abaqusoutput
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy outputstats
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy plotStats
 </pre></div>
 </div>
 <p>The workflow is similar to the one described earlier for sphere packing. The only difference being, that the <code class="docutils literal notranslate"><span class="pre">neperOutput</span></code>
@@ -461,7 +461,7 @@ depending on the user requirement specified in the input file.</p></li>
 <p>Both examples <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction</span></code> and <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction_with_orientation_assignment</span></code> require MATLAB &amp; MTEX to be
 installed in your system. If your kanapy is not configured for texture analysis, please run the following command:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate knpy
-<span class="gp">(knpy) $</span> kanapy setupTexture
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy setupTexture
 </pre></div>
 </div>
 <div class="admonition note">
@@ -478,8 +478,8 @@ in generating the reduced ODF is described in the sub-section <a class="referenc
 estimated using MTEX as input in the (.mat) file format. In this regard, an exemplary EBSD file (<cite>titanium.mat</cite>) is
 provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction/</span></code> folder.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate knpy
-<span class="gp">(knpy) $</span> <span class="nb">cd</span> kanapy-master/examples/ODF_reconstruction/
-<span class="gp">(knpy) $</span> kanapy reduceODF -ebsd titanium.mat
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/examples/ODF_reconstruction/
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy reduceODF -ebsd titanium.mat
 </pre></div>
 </div>
 <p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code> is located, kanapy’s CLI
@@ -499,10 +499,10 @@ if user specified. Else if the grains (.mat) file is provided, then the optimum 
 the mean orientation of the grains. In this regard, an exemplary grains file (<code class="docutils literal notranslate"><span class="pre">titanium_grains.mat</span></code>) is
 provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction/</span></code> folder. The workflow for this looks like:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate knpy
-<span class="gp">(knpy) $</span> <span class="nb">cd</span> kanapy-master/examples/ODF_reconstruction/
-<span class="gp">(knpy) $</span> kanapy reduceODF -ebsd titanium.mat -kernel <span class="m">0</span>.096
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/examples/ODF_reconstruction/
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy reduceODF -ebsd titanium.mat -kernel <span class="m">0</span>.096
 <span class="go">                                 (OR)</span>
-<span class="gp">(knpy) $</span> kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat
 </pre></div>
 </div>
 <div class="admonition note">
@@ -526,13 +526,13 @@ EBSD file (<code class="docutils literal notranslate"><span class="pre">titanium
 <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction_with_orientation_assignment/</span></code> folder. It is important to note that
 the grain boundary shared surface area file is created whilst generating an RVE by kanapy’s geometry module.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate knpy
-<span class="gp">(knpy) $</span> <span class="nb">cd</span> kanapy-master/examples/ODF_reconstruction_orientation_assignment/
-<span class="gp">(knpy) $</span> kanapy genStats -f stat_input.json
-<span class="gp">(knpy) $</span> kanapy genRVE -f stat_input.json
-<span class="gp">(knpy) $</span> kanapy pack
-<span class="gp">(knpy) $</span> kanapy voxelize
-<span class="gp">(knpy) $</span> kanapy outputStats
-<span class="gp">(knpy) $</span> kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat -fit_mad yes
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/examples/ODF_reconstruction_orientation_assignment/
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genStats -f stat_input.json
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genRVE -f stat_input.json
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy pack
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy voxelize
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy outputStats
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat -fit_mad yes
 </pre></div>
 </div>
 <p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code> is located, generate an RVE by calling kanapy’s

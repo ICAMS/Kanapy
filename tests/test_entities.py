@@ -116,7 +116,7 @@ def rot_surf():
                                 [xZ-wY, yZ+wX, 1.0-(xX+yY)]])
 
     # Rotation matrix has to be transposed as OVITO uses the transposed matrix for visualization.
-    rotation_matrix = rotation_matrix.T
+    #rotation_matrix = rotation_matrix.T
 
     # Points on the outer surface of Ellipsoid
     u = np.linspace(0, 2 * np.pi, 20)

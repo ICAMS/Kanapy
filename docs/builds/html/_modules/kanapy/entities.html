@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -160,7 +160,7 @@
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">kanapy.collision_detect_react</span> <span class="k">import</span> <span class="n">collision_routine</span>
+<span class="kn">from</span> <span class="nn">kanapy.collision_detect_react</span> <span class="kn">import</span> <span class="n">collision_routine</span>
 
 
 <div class="viewcode-block" id="cub_oct_split"><a class="viewcode-back" href="../../kanapy.html#kanapy.entities.cub_oct_split">[docs]</a><span class="k">def</span> <span class="nf">cub_oct_split</span><span class="p">(</span><span class="n">cub</span><span class="p">):</span>
@@ -209,7 +209,7 @@
 <span class="sd">    :type d: float   </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">w</span>           <span class="c1"># Width</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="n">h</span>           <span class="c1"># Height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">d</span>           <span class="c1"># Depth</span>
@@ -250,7 +250,7 @@
 <span class="sd">              3. An empty list for storing voxels belonging to the ellipsoid is initialized.                   </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">iden</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
@@ -324,10 +324,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="o">-</span><span class="p">(</span><span class="n">yY</span><span class="o">+</span><span class="n">zZ</span><span class="p">),</span> <span class="n">xY</span><span class="o">-</span><span class="n">wZ</span><span class="p">,</span> <span class="n">xZ</span><span class="o">+</span><span class="n">wY</span><span class="p">],</span>
                                              <span class="p">[</span><span class="n">xY</span><span class="o">+</span><span class="n">wZ</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">-</span><span class="p">(</span><span class="n">xX</span><span class="o">+</span><span class="n">zZ</span><span class="p">),</span> <span class="n">yZ</span><span class="o">-</span><span class="n">wX</span><span class="p">],</span>
-                                             <span class="p">[</span><span class="n">xZ</span><span class="o">-</span><span class="n">wY</span><span class="p">,</span> <span class="n">yZ</span><span class="o">+</span><span class="n">wX</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">-</span><span class="p">(</span><span class="n">xX</span><span class="o">+</span><span class="n">yY</span><span class="p">)]])</span>
+                                             <span class="p">[</span><span class="n">xZ</span><span class="o">-</span><span class="n">wY</span><span class="p">,</span> <span class="n">yZ</span><span class="o">+</span><span class="n">wX</span><span class="p">,</span> <span class="mf">1.0</span><span class="o">-</span><span class="p">(</span><span class="n">xX</span><span class="o">+</span><span class="n">yY</span><span class="p">)]])</span></div>
 
         <span class="c1"># Rotation matrix has to be transposed as OVITO uses the transposed matrix for visualization.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="o">.</span><span class="n">T</span></div>
+        <span class="c1">#self.rotation_matrix = self.rotation_matrix.T          # Not required, it&#39;s consistent!!!</span>
 
 <div class="viewcode-block" id="Ellipsoid.surfacePointsGen"><a class="viewcode-back" href="../../kanapy.html#kanapy.entities.Ellipsoid.surfacePointsGen">[docs]</a>    <span class="k">def</span> <span class="nf">surfacePointsGen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -785,7 +785,7 @@
 <span class="sd">    :type back: float   </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">front</span><span class="p">,</span> <span class="n">back</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">front</span><span class="p">,</span> <span class="n">back</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">left</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">top</span> <span class="o">=</span> <span class="n">top</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">right</span>
@@ -836,7 +836,7 @@
 <span class="sd">              3. **particles** list contains all the ellipsoids in the simulation domain for the tree trunk.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">cub</span><span class="p">,</span> <span class="n">particles</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">cub</span><span class="p">,</span> <span class="n">particles</span><span class="o">=</span><span class="p">[]):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">maxlevel</span> <span class="o">=</span> <span class="mi">3</span>           <span class="c1"># max number of subdivisions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">level</span>          <span class="c1"># current level of subdivision</span>

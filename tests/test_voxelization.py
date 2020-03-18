@@ -174,9 +174,9 @@ def test_assign_voxels_to_ellipsoid(dec_info):
 
     assign_voxels_to_ellipsoid(dec_info[2], ells, dec_info[1])
 
-    ref1 = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 19]
-    ref2 = [9, 12, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27]
-    
+    ref1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16]
+    ref2 = [14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
+
     assert set(ell1.inside_voxels) == set(ref1)
     assert set(ell2.inside_voxels) == set(ref2)
 
