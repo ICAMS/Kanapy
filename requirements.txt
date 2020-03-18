@@ -10,3 +10,5 @@ tqdm
 matplotlib
 seaborn
 click
+cmake
+visual-studio
