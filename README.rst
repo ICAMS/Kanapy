@@ -61,11 +61,9 @@ Features
    
 Installation
 ------------
-CMake is used for building extensions; if it is not installed on your machine, follow this 
-`CMake documentation`_ to install it. The preferred method to install kanapy is through 
+The preferred method to install kanapy is through 
 Anaconda or Miniconda Python distributions. If you do not have any, we suggest installing miniconda_. 
 
-.. _CMake documentation: https://cgold.readthedocs.io/en/latest/first-step/installation.html
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 
 Once done, create a virtual environment for Kanapy installation and clone the repository to 
