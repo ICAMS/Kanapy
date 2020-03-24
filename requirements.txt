@@ -11,4 +11,3 @@ matplotlib
 seaborn
 click
 cmake
-vs2015_runtime
