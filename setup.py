@@ -70,10 +70,11 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
     
+from subprocess import CalledProcessError
     
-setup(
+kwargs = dict(
     name='kanapy',
-    version='2.0.1',
+    version='2.1.1',
     author='Mahesh R.G Prasad',
     author_email='mahesh.prasad@rub.de',
     classifiers=[        
@@ -82,7 +83,7 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],     
     description="A python package for generating complex synthetic polycrystalline microstructures.",
-    long_description=readme + '\n\n' + history,
+    #long_description=readme + '\n\n' + history,
     packages=find_packages('src'),
     package_dir={'':'src'},
     license="MIT license",    
@@ -93,4 +94,10 @@ setup(
     entry_points={'console_scripts': ['kanapy = kanapy.cli:start']},    
     zip_safe=False,
 )
-      
+
+try:
+    setup(**kwargs)        
+except CalledProcessError:
+    print('Failed to build extension!')
+    del kwargs['ext_modules']
+    setup(**kwargs)      
