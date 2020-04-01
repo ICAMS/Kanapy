@@ -75,11 +75,18 @@ a desired location and install.
     $ conda activate knpy    
     (knpy) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
     (knpy) $ cd kanapy-master/
-    (knpy) $ conda install -y -c conda-forge --file requirements.txt
-    (knpy) $ pip install -e .
-
-Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's texture module, link Kanapy with MATLAB_ and MTEX_ installations by running: :bash:`kanapy setupTexture` 
-and follow the instructions.
+    (knpy) $ conda install -y -c conda-forge --file requirements.txt    
+    
+    For Linux and MacOS
+    (knpy) $ pip install -e .      
+    
+    For Windows
+    (knpy) $ pip install kanapy --no-deps       
+    
+    
+Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's 
+texture module, link Kanapy with MATLAB_ and MTEX_ installations by 
+running: :bash:`kanapy setupTexture` and follow the instructions.
 
 .. note:: 1. ``knpy`` can be replaced with any name for your environment.
           2. For older versions of anaconda/miniconda use: ``source activate knpy``
@@ -93,18 +100,40 @@ and follow the instructions.
             
 Running tests
 --------------
-Kanapy uses pytest to perform all its unit testing. Run: :bash:`(knpy) $ kanapy runTests`
+Kanapy uses pytest to perform all its unit testing.        
+ 
+.. code-block:: console  
+     
+    For Linux and MacOS
+    (knpy) $ kanapy runTests          
+    
+    For Windows
+    (knpy) $ cd kanapy-master/
+    (knpy) $ py.test tests/
+      
       
 Documentation build
 -------------------
-Documentation for kanapy is generated using Sphinx. Run: :bash:`(knpy) $ kanapy genDocs`.
-The HTML documentation can be found at *../kanapy-master/docs/index.html*.
+Documentation for kanapy is generated using Sphinx. The HTML documentation can be 
+found at *../kanapy-master/docs/builds/html/index.html*
+
+.. code-block:: console  
+    
+    For Linux and MacOS
+    (knpy) $ kanapy genDocs                    
+    
+    For Windows
+    (knpy) $ cd kanapy-master/docs/   
+    (knpy) $ make clean 
+    (knpy) $ make html    
+    
 
 Dependencies
 -------------
 
-Kanapy requires a working C/C++ compiler on your machine. On Linux/Mac OS,
-the gcc toolchain will work well. The lightweight header-only library pybind11 
+For Linux/Mac OS, Kanapy requires a working C/C++ compiler on your machine. The gcc 
+toolchain will work well. For Windows, Kanapy is installed as a pre-built distribution 
+(.whl file). In either case, the lightweight header-only library pybind11 
 is used to create Python bindings for the code written in C++.
 The C++ function will be complied by linking the Eigen library 
 (present in the directory *../kanapy-master/libs/*). CMake builds this extension.

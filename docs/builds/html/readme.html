@@ -217,11 +217,17 @@ a desired location and install.</p>
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> conda install -y -c conda-forge --file requirements.txt
+
+<span class="go">For Linux and MacOS</span>
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> pip install -e .
+
+<span class="go">For Windows</span>
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> pip install kanapy --no-deps
 </pre></div>
 </div>
-<p>Kanapy is now installed along with all its dependencies. If you intend to use Kanapy’s texture module, link Kanapy with <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> and <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> installations by running: <code class="code bash docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">setupTexture</span></code>
-and follow the instructions.</p>
+<p>Kanapy is now installed along with all its dependencies. If you intend to use Kanapy’s
+texture module, link Kanapy with <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> and <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> installations by
+running: <code class="code bash docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">setupTexture</span></code> and follow the instructions.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
@@ -236,17 +242,35 @@ and follow the instructions.</p>
 </div>
 <div class="section" id="running-tests">
 <h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
-<p>Kanapy uses pytest to perform all its unit testing. Run: <code class="code bash docutils literal notranslate"><span class="operator"><span class="pre">(</span></span><span class="pre">knpy</span><span class="operator"><span class="pre">)</span></span> <span class="pre">$</span> <span class="pre">kanapy</span> <span class="pre">runTests</span></code></p>
+<p>Kanapy uses pytest to perform all its unit testing.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">For Linux and MacOS</span>
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy runTests
+
+<span class="go">For Windows</span>
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> py.test tests/
+</pre></div>
+</div>
 </div>
 <div class="section" id="documentation-build">
 <h2>Documentation build<a class="headerlink" href="#documentation-build" title="Permalink to this headline">¶</a></h2>
-<p>Documentation for kanapy is generated using Sphinx. Run: <code class="code bash docutils literal notranslate"><span class="operator"><span class="pre">(</span></span><span class="pre">knpy</span><span class="operator"><span class="pre">)</span></span> <span class="pre">$</span> <span class="pre">kanapy</span> <span class="pre">genDocs</span></code>.
-The HTML documentation can be found at <em>../kanapy-master/docs/index.html</em>.</p>
+<p>Documentation for kanapy is generated using Sphinx. The HTML documentation can be
+found at <em>../kanapy-master/docs/builds/html/index.html</em></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">For Linux and MacOS</span>
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genDocs
+
+<span class="go">For Windows</span>
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/docs/
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> make clean
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> make html
+</pre></div>
+</div>
 </div>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
-<p>Kanapy requires a working C/C++ compiler on your machine. On Linux/Mac OS,
-the gcc toolchain will work well. The lightweight header-only library pybind11
+<p>For Linux/Mac OS, Kanapy requires a working C/C++ compiler on your machine. The gcc
+toolchain will work well. For Windows, Kanapy is installed as a pre-built distribution
+(.whl file). In either case, the lightweight header-only library pybind11
 is used to create Python bindings for the code written in C++.
 The C++ function will be complied by linking the Eigen library
 (present in the directory <em>../kanapy-master/libs/</em>). CMake builds this extension.</p>
