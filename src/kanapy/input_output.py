@@ -555,7 +555,7 @@ def particleCreator(inputFile, periodic='True', units="mm"):
 
     # Determine the RVE side lengths
     dia_max = np.amax(majDia)    
-    RVEsizeY = 1.5*dia_max                 # The Y-side length should accomodate the Biggest dimension of the biggest ellipsoid
+    RVEsizeY = 1.1*dia_max                 # The Y-side length should accomodate the Biggest dimension of the biggest ellipsoid
     RVEsizeX = round((RVEvol/ RVEsizeY)**0.5, 4)
     RVEsizeZ = RVEsizeX 
     
@@ -575,10 +575,10 @@ def particleCreator(inputFile, periodic='True', units="mm"):
     print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
     print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
     print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
-    print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))        
-        
+    print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))           
+                
     # Create dictionaries to store the data generated
-    particle_data = {'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
+    particle_data = {'Type': 'Elongated', 'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
                      'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
 
     RVE_data = {'RVE_sizeX': RVEsizeX, 'RVE_sizeY': RVEsizeY, 'RVE_sizeZ': RVEsizeZ, 
@@ -1481,11 +1481,12 @@ def extract_volume_sharedGBarea():
         # Convert to  
         gvol = len(elset) * (voxel_size**3)
         grain_vol[gid] = gvol 
-        
+
     # Sort the grain volumes in ascending order of grain IDs
     gv_sorted_keys = sorted(grain_vol, key=grain_vol.get)
     gv_sorted_values = [[grain_vol[gk]] for gk in gv_sorted_keys]            
-
+    gv_sorted_values = [[gk,gv] for gk,gv in grain_vol.items()]
+    
     print("Writing grain volumes info. to file ('grainVolumes.csv')\n", end="")
         
     # Write out grain volumes to a file
