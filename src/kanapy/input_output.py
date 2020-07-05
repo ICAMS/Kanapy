@@ -459,7 +459,7 @@ def RVEcreator(inputFile):
             print("    The voxel resolution along (X,Y,Z): ({0:.4f},{1:.4f},{2:.4f}) are not equal!".format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
             print("    Change the RVE side lengths (OR) the voxel numbers\n")
             sys.exit(0) 
-            
+ 
         # raise value error in case the grains are not voxelated well
         if voxel_sizeX >= np.amin(minDia) / 3.:
             print(" ")
