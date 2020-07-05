@@ -192,7 +192,7 @@ file will be written out in either :math:`mm` or :math:`\mu m` scale.
     (knpy) $ kanapy genStats -f stat_input.json
     (knpy) $ kanapy genRVE -f stat_input.json
     (knpy) $ kanapy pack
-    (knpy) $ kanapy neperoutput -timestep 750
+    (knpy) $ kanapy neperOutput -timestep 750
 
 After navigating to the directory where the input file ``stat_input.json`` is located, kanapy's CLI 
 command ``genStats`` is executed along with its argument (name of the input file). It creates an exemplary
@@ -223,7 +223,7 @@ By extracting the particle's position and dimensions, it creates the ``sphere_po
 
 If the built-in voxelization is prefered, then the ``voxelize`` command can be called to generate the hexahedral mesh. 
 It populates the simulation box with voxels and assigns the voxels to the respective particles (Spheres). The 
-``abaqusoutput`` command can be called to write out the Abaqus (.inp) input file. The workflow for this looks like:
+``abaqusOutput`` command can be called to write out the Abaqus (.inp) input file. The workflow for this looks like:
 
 .. code-block:: console
 
@@ -239,7 +239,7 @@ It populates the simulation box with voxels and assigns the voxels to the respec
     
 .. note:: 1. The Abaqus (.inp) file will be written out in either :math:`mm` or :math:`\mu m` scale, depending 
              on the user requirement specified in the input file.          
-          2. For comparing the input and the output equivalent diameter statistics the ``outputstats`` command can be 
+          2. For comparing the input and the output equivalent diameter statistics the ``outputStats`` command can be 
              called. This command writes the diameter values in either :math:`mm` or :math:`\mu m` scale, depending 
              on the user requirement specified in the input file.            
           3. The ``outputStats`` command also writes out the L1-error between the input and output diameter distributions.
@@ -274,8 +274,8 @@ The :ref:`Module voxelization` will generate a hexahedral element (C3D8) mesh th
     (knpy) $ kanapy genRVE -f stat_input.json
     (knpy) $ kanapy pack
     (knpy) $ kanapy voxelize
-    (knpy) $ kanapy abaqusoutput
-    (knpy) $ kanapy outputstats    
+    (knpy) $ kanapy abaqusOutput
+    (knpy) $ kanapy outputStats    
     (knpy) $ kanapy plotStats      
 
 The workflow is similar to the one described earlier for sphere packing. The only difference being, that the ``neperOutput``

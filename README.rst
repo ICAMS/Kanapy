@@ -10,7 +10,7 @@ Overview
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg
    :target: https://doi.org/10.5281/zenodo.3662366
    
-.. image:: https://img.shields.io/badge/Platform-Linux%2C%20MacOS-critical
+.. image:: https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical
    
 .. image:: https://img.shields.io/travis/mrgprasad/kanapy.svg
     :target: https://travis-ci.org/mrgprasad/kanapy
@@ -76,12 +76,7 @@ a desired location and install.
     (knpy) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
     (knpy) $ cd kanapy-master/
     (knpy) $ conda install -y -c conda-forge --file requirements.txt    
-    
-    For Linux and MacOS
-    (knpy) $ pip install -e .      
-    
-    For Windows
-    (knpy) $ pip install kanapy --no-deps       
+    (knpy) $ pip install -e .
     
     
 Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's 
@@ -104,12 +99,8 @@ Kanapy uses pytest to perform all its unit testing.
  
 .. code-block:: console  
      
-    For Linux and MacOS
     (knpy) $ kanapy runTests          
     
-    For Windows
-    (knpy) $ cd kanapy-master/
-    (knpy) $ py.test tests/
       
       
 Documentation build
@@ -119,15 +110,9 @@ found at *../kanapy-master/docs/builds/html/index.html*
 
 .. code-block:: console  
     
-    For Linux and MacOS
     (knpy) $ kanapy genDocs                    
+     
     
-    For Windows
-    (knpy) $ cd kanapy-master/docs/   
-    (knpy) $ make clean 
-    (knpy) $ make html    
-    
-
 Dependencies
 -------------
 
@@ -183,9 +168,34 @@ Citation
 ---------
 The preferred way to cite Kanapy is: 
 
-Prasad et al., (2019). Kanapy: A Python package for generating complex synthetic polycrystalline microstructures. Journal of Open Source Software, 4(43), 1732, https://doi.org/10.21105/joss.01732
+.. code-block:: bibtex
 
-Biswas, Abhishek, R.G. Prasad, Mahesh, Vajragupta, Napat, & Hartmaier, Alexander. (2020, February 11). Kanapy: Synthetic polycrystalline microstructure generator with geometry and texture (Version v2.0.0). Zenodo. http://doi.org/10.5281/zenodo.3662366
+  @article{Prasad2019,
+    doi = {10.21105/joss.01732},
+    url = {https://doi.org/10.21105/joss.01732},
+    year = {2019},
+    publisher = {The Open Journal},
+    volume = {4},
+    number = {43},
+    pages = {1732},
+    author = {Mahesh R.G. Prasad and Napat Vajragupta and Alexander Hartmaier},
+    title = {Kanapy: A Python package for generating complex synthetic polycrystalline microstructures},
+    journal = {Journal of Open Source Software}
+  }
+
+
+Related works and applications
+------------------------------
+* Prasad et al., (2019). Kanapy: A Python package for generating complex synthetic polycrystalline microstructures. Journal of Open Source Software, 4(43), 1732. https://doi.org/10.21105/joss.01732
+
+* Biswas, Abhishek, R.G. Prasad, Mahesh, Vajragupta, Napat, & Hartmaier, Alexander. (2020, February 11). Kanapy: Synthetic polycrystalline microstructure generator with geometry and texture (Version v2.0.0). Zenodo. http://doi.org/10.5281/zenodo.3662366
+
+* Biswas, A., Prasad, M.R.G., Vajragupta, N., ul Hassan, H., Brenne, F., Niendorf, T. and Hartmaier, A. (2019), Influence of Microstructural Features on the Strain Hardening Behavior of Additively Manufactured Metallic Components. Adv. Eng. Mater., 21: 1900275. http://doi.org/10.1002/adem.201900275
+
+* Biswas, A., Vajragupta, N., Hielscher, R. & Hartmaier, A. (2020). J. Appl. Cryst. 53, 178-187. https://doi.org/10.1107/S1600576719017138
+
+* Biswas, A., Prasad, M.R.G., Vajragupta, N., Kostka, A., Niendorf, T. and Hartmaier, A. (2020), Effect of Grain Statistics on Micromechanical Modeling: The Example of Additively Manufactured Materials Examined by Electron Backscatter Diffraction. Adv. Eng. Mater., 22: 1901416. http://doi.org/10.1002/adem.201901416
+
 
 License
 --------

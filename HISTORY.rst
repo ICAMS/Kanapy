@@ -30,3 +30,4 @@ History
 ------------------
 
 * Second release on GitHub.
+

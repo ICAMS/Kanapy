@@ -354,7 +354,7 @@ file will be written out in either <span class="math notranslate nohighlight">\(
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genStats -f stat_input.json
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genRVE -f stat_input.json
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy pack
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy neperoutput -timestep <span class="m">750</span>
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy neperOutput -timestep <span class="m">750</span>
 </pre></div>
 </div>
 <p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> is located, kanapy’s CLI
@@ -390,7 +390,7 @@ particle’s equivalent diameter as input statistics.</p></li>
 </div>
 <p>If the built-in voxelization is prefered, then the <code class="docutils literal notranslate"><span class="pre">voxelize</span></code> command can be called to generate the hexahedral mesh.
 It populates the simulation box with voxels and assigns the voxels to the respective particles (Spheres). The
-<code class="docutils literal notranslate"><span class="pre">abaqusoutput</span></code> command can be called to write out the Abaqus (.inp) input file. The workflow for this looks like:</p>
+<code class="docutils literal notranslate"><span class="pre">abaqusOutput</span></code> command can be called to write out the Abaqus (.inp) input file. The workflow for this looks like:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda activate knpy
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/examples/sphere_packing/
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genStats -f stat_input.json
@@ -407,7 +407,7 @@ It populates the simulation box with voxels and assigns the voxels to the respec
 <ol class="arabic simple">
 <li><p>The Abaqus (.inp) file will be written out in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, depending
 on the user requirement specified in the input file.</p></li>
-<li><p>For comparing the input and the output equivalent diameter statistics the <code class="docutils literal notranslate"><span class="pre">outputstats</span></code> command can be
+<li><p>For comparing the input and the output equivalent diameter statistics the <code class="docutils literal notranslate"><span class="pre">outputStats</span></code> command can be
 called. This command writes the diameter values in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, depending
 on the user requirement specified in the input file.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">outputStats</span></code> command also writes out the L1-error between the input and output diameter distributions.</p></li>
@@ -434,8 +434,8 @@ The <a class="reference internal" href="kanapy.html#module-kanapy.voxelization">
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genRVE -f stat_input.json
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy pack
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy voxelize
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy abaqusoutput
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy outputstats
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy abaqusOutput
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy outputStats
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy plotStats
 </pre></div>
 </div>

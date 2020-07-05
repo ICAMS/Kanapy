@@ -98,6 +98,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#citation">Citation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#related-works-and-applications">Related works and applications</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#license">License</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#about">About</a></li>
 </ul>
@@ -177,7 +178,7 @@
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://doi.org/10.21105/joss.01732"><img alt="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" src="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" /></a>
 <a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3662366"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg" /></a>
-<img alt="https://img.shields.io/badge/Platform-Linux%2C%20MacOS-critical" src="https://img.shields.io/badge/Platform-Linux%2C%20MacOS-critical" />
+<img alt="https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical" src="https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical" />
 <a class="reference external image-reference" href="https://travis-ci.org/mrgprasad/kanapy"><img alt="https://img.shields.io/travis/mrgprasad/kanapy.svg" src="https://img.shields.io/travis/mrgprasad/kanapy.svg" /></a>
 <a class="reference external image-reference" href="https://codecov.io/gh/mrgprasad/kanapy"><img alt="https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg" src="https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg" /></a>
 <a class="reference external image-reference" href="https://opensource.org/licenses/MIT"><img alt="https://img.shields.io/badge/License-MIT-blue.svg" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
@@ -217,12 +218,7 @@ a desired location and install.</p>
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> conda install -y -c conda-forge --file requirements.txt
-
-<span class="go">For Linux and MacOS</span>
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> pip install -e .
-
-<span class="go">For Windows</span>
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> pip install kanapy --no-deps
 </pre></div>
 </div>
 <p>Kanapy is now installed along with all its dependencies. If you intend to use Kanapy’s
@@ -243,12 +239,7 @@ running: <code class="code bash docutils literal notranslate"><span class="pre">
 <div class="section" id="running-tests">
 <h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
 <p>Kanapy uses pytest to perform all its unit testing.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">For Linux and MacOS</span>
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy runTests
-
-<span class="go">For Windows</span>
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> py.test tests/
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy runTests
 </pre></div>
 </div>
 </div>
@@ -256,13 +247,7 @@ running: <code class="code bash docutils literal notranslate"><span class="pre">
 <h2>Documentation build<a class="headerlink" href="#documentation-build" title="Permalink to this headline">¶</a></h2>
 <p>Documentation for kanapy is generated using Sphinx. The HTML documentation can be
 found at <em>../kanapy-master/docs/builds/html/index.html</em></p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">For Linux and MacOS</span>
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genDocs
-
-<span class="go">For Windows</span>
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/docs/
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> make clean
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> make html
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genDocs
 </pre></div>
 </div>
 </div>
@@ -305,8 +290,30 @@ Make sure to use MATLAB v2015a and above.</p>
 <div class="section" id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Permalink to this headline">¶</a></h2>
 <p>The preferred way to cite Kanapy is:</p>
-<p>Prasad et al., (2019). Kanapy: A Python package for generating complex synthetic polycrystalline microstructures. Journal of Open Source Software, 4(43), 1732, <a class="reference external" href="https://doi.org/10.21105/joss.01732">https://doi.org/10.21105/joss.01732</a></p>
-<p>Biswas, Abhishek, R.G. Prasad, Mahesh, Vajragupta, Napat, &amp; Hartmaier, Alexander. (2020, February 11). Kanapy: Synthetic polycrystalline microstructure generator with geometry and texture (Version v2.0.0). Zenodo. <a class="reference external" href="http://doi.org/10.5281/zenodo.3662366">http://doi.org/10.5281/zenodo.3662366</a></p>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@article</span><span class="p">{</span><span class="nl">Prasad2019</span><span class="p">,</span>
+  <span class="na">doi</span> <span class="p">=</span> <span class="s">{10.21105/joss.01732}</span><span class="p">,</span>
+  <span class="na">url</span> <span class="p">=</span> <span class="s">{https://doi.org/10.21105/joss.01732}</span><span class="p">,</span>
+  <span class="na">year</span> <span class="p">=</span> <span class="s">{2019}</span><span class="p">,</span>
+  <span class="na">publisher</span> <span class="p">=</span> <span class="s">{The Open Journal}</span><span class="p">,</span>
+  <span class="na">volume</span> <span class="p">=</span> <span class="s">{4}</span><span class="p">,</span>
+  <span class="na">number</span> <span class="p">=</span> <span class="s">{43}</span><span class="p">,</span>
+  <span class="na">pages</span> <span class="p">=</span> <span class="s">{1732}</span><span class="p">,</span>
+  <span class="na">author</span> <span class="p">=</span> <span class="s">{Mahesh R.G. Prasad and Napat Vajragupta and Alexander Hartmaier}</span><span class="p">,</span>
+  <span class="na">title</span> <span class="p">=</span> <span class="s">{Kanapy: A Python package for generating complex synthetic polycrystalline microstructures}</span><span class="p">,</span>
+  <span class="na">journal</span> <span class="p">=</span> <span class="s">{Journal of Open Source Software}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="related-works-and-applications">
+<h2>Related works and applications<a class="headerlink" href="#related-works-and-applications" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Prasad et al., (2019). Kanapy: A Python package for generating complex synthetic polycrystalline microstructures. Journal of Open Source Software, 4(43), 1732. <a class="reference external" href="https://doi.org/10.21105/joss.01732">https://doi.org/10.21105/joss.01732</a></p></li>
+<li><p>Biswas, Abhishek, R.G. Prasad, Mahesh, Vajragupta, Napat, &amp; Hartmaier, Alexander. (2020, February 11). Kanapy: Synthetic polycrystalline microstructure generator with geometry and texture (Version v2.0.0). Zenodo. <a class="reference external" href="http://doi.org/10.5281/zenodo.3662366">http://doi.org/10.5281/zenodo.3662366</a></p></li>
+<li><p>Biswas, A., Prasad, M.R.G., Vajragupta, N., ul Hassan, H., Brenne, F., Niendorf, T. and Hartmaier, A. (2019), Influence of Microstructural Features on the Strain Hardening Behavior of Additively Manufactured Metallic Components. Adv. Eng. Mater., 21: 1900275. <a class="reference external" href="http://doi.org/10.1002/adem.201900275">http://doi.org/10.1002/adem.201900275</a></p></li>
+<li><p>Biswas, A., Vajragupta, N., Hielscher, R. &amp; Hartmaier, A. (2020). J. Appl. Cryst. 53, 178-187. <a class="reference external" href="https://doi.org/10.1107/S1600576719017138">https://doi.org/10.1107/S1600576719017138</a></p></li>
+<li><p>Biswas, A., Prasad, M.R.G., Vajragupta, N., Kostka, A., Niendorf, T. and Hartmaier, A. (2020), Effect of Grain Statistics on Micromechanical Modeling: The Example of Additively Manufactured Materials Examined by Electron Backscatter Diffraction. Adv. Eng. Mater., 22: 1901416. <a class="reference external" href="http://doi.org/10.1002/adem.201901416">http://doi.org/10.1002/adem.201901416</a></p></li>
+</ul>
 </div>
 <div class="section" id="license">
 <h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
