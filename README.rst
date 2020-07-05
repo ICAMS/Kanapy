@@ -1,9 +1,5 @@
 .. highlight:: shell
 
-=========
-Overview
-=========
-
 .. image:: https://joss.theoj.org/papers/10.21105/joss.01732/status.svg
    :target: https://doi.org/10.21105/joss.01732
 
@@ -31,14 +27,9 @@ Kanapy is a python package for generating complex synthetic polycrystalline micr
 .. _MATLAB: https://www.mathworks.com/products/matlab.html
 .. _MTEX: https://mtex-toolbox.github.io/
 
-Motivation
-----------
-An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed to model simple and complex grain morphologies and to systematically incorporate texture data directly from experiments concurrently maintaining the numerical efficiency of the micromechanical model. Kanapy is developed to overcome the limitations of spatial tessellation methods and to provide an alternative to the existing Random Sequential Addition technique of microstructure geometry generation. 
-
 .. figure:: /docs/figs/Kanapy_graphical_abstract.png
     :align: center
     
-    **Figure**: Kanapy workflow.
     
 Features
 --------
@@ -83,13 +74,6 @@ Kanapy is now installed along with all its dependencies. If you intend to use Ka
 texture module, link Kanapy with MATLAB_ and MTEX_ installations by 
 running: :bash:`kanapy setupTexture` and follow the instructions.
 
-.. note:: 1. ``knpy`` can be replaced with any name for your environment.
-          2. For older versions of anaconda/miniconda use: ``source activate knpy``
-                    
-.. tip:: To learn more about managing environments see Anaconda documentation_.
-
-.. _documentation: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html    
-.. _Github repo: https://github.com/mrgprasad/kanapy
 .. _MATLAB: https://www.mathworks.com/products/matlab.html
 .. _MTEX: https://mtex-toolbox.github.io/
             
@@ -101,8 +85,7 @@ Kanapy uses pytest to perform all its unit testing.
      
     (knpy) $ kanapy runTests          
     
-      
-      
+            
 Documentation build
 -------------------
 Documentation for kanapy is generated using Sphinx. The HTML documentation can be 
@@ -111,58 +94,7 @@ found at *../kanapy-master/docs/builds/html/index.html*
 .. code-block:: console  
     
     (knpy) $ kanapy genDocs                    
-     
-    
-Dependencies
--------------
-
-For Linux/Mac OS, Kanapy requires a working C/C++ compiler on your machine. The gcc 
-toolchain will work well. For Windows, Kanapy is installed as a pre-built distribution 
-(.whl file). In either case, the lightweight header-only library pybind11 
-is used to create Python bindings for the code written in C++.
-The C++ function will be complied by linking the Eigen library 
-(present in the directory *../kanapy-master/libs/*). CMake builds this extension.
-
-Kanapy's texture module requires MATLAB_ and MTEX_ to be installed on your machine.         
-Make sure to use MATLAB v2015a and above.
-
-.. _MATLAB: https://www.mathworks.com/products/matlab.html
-.. _MTEX: https://mtex-toolbox.github.io/
-
-^^^^^^^^^^^^^^^^^^
-Core dependencies
-^^^^^^^^^^^^^^^^^^
-
-Below are the listed dependencies for running kanapy:
-
-  - NumPy_ for array manipulation.
-  - Scipy_ for functionalities like Convexhull.
-  - pybind11_ for creating python bindings for C++ code.
-  - Eigen_ for C++ linear algebra operations.
-  - pytest_ for running kanapy unit tests.
-  - sphinx_ for generating documentation.
-  - MATLAB_ for texture modules.
-  - MTEX_ for texture modules.
-  
-.. _NumPy: http://numpy.scipy.org
-.. _Scipy: https://www.scipy.org/
-.. _pybind11: https://pybind11.readthedocs.io/en/stable/
-.. _Eigen: http://eigen.tuxfamily.org/index.php?title=Main_Page
-.. _pytest: https://www.pytest.org
-.. _sphinx: http://www.sphinx-doc.org/en/master/
-.. _MATLAB: https://www.mathworks.com/products/matlab.html
-.. _MTEX: https://mtex-toolbox.github.io/
-
-^^^^^^^^^^^^^^^^^^^^^^
-Optional dependencies
-^^^^^^^^^^^^^^^^^^^^^^
-
-  - Matplotlib_ for plotting and visualizing.
-  - OVITO_ for visualizing simulation data. 
-
-.. _Matplotlib: https://matplotlib.org/
-.. _OVITO: https://ovito.org/
-
+        
 
 Citation
 ---------
