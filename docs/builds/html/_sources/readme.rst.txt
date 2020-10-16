@@ -18,8 +18,8 @@ Overview
 .. image:: https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/mrgprasad/kanapy
     
-.. image:: https://img.shields.io/badge/License-MIT-blue.svg
-   :target: https://opensource.org/licenses/MIT
+.. image:: https://img.shields.io/badge/License-GNU%20AGPLv3-blue
+   :target: https://www.gnu.org/licenses/agpl-3.0.html
 
 .. image:: https://img.shields.io/github/v/release/mrgprasad/kanapy
 
@@ -196,12 +196,15 @@ Related works and applications
 
 * Biswas, A., Prasad, M.R.G., Vajragupta, N., Kostka, A., Niendorf, T. and Hartmaier, A. (2020), Effect of Grain Statistics on Micromechanical Modeling: The Example of Additively Manufactured Materials Examined by Electron Backscatter Diffraction. Adv. Eng. Mater., 22: 1901416. http://doi.org/10.1002/adem.201901416
 
+* R.G. Prasad, M., Biswas, A., Geenen, K., Amin, W., Gao, S., Lian, J., Röttger, A., Vajragupta, N. and Hartmaier, A. (2020), Influence of Pore Characteristics on Anisotropic Mechanical Behavior of Laser Powder Bed Fusion–Manufactured Metal by Micromechanical Modeling. Adv. Eng. Mater., https://doi.org/10.1002/adem.202000641
+
 
 License
 --------
-Kanapy is made available under the MIT license_.
+Kanapy is made available under the GNU AGPLv3 license_.
 
-.. _license: https://opensource.org/licenses/MIT
+.. _license: https://www.gnu.org/licenses/agpl-3.0.html
+
 
 
 About
