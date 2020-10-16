@@ -18,8 +18,8 @@ Overview
 .. image:: https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/mrgprasad/kanapy
     
-.. image:: https://img.shields.io/badge/License-MIT-blue.svg
-   :target: https://opensource.org/licenses/MIT
+.. image:: https://img.shields.io/badge/License-GNU%20AGPLv3-blue
+   :target: https://www.gnu.org/licenses/agpl-3.0.html
 
 .. image:: https://img.shields.io/github/v/release/mrgprasad/kanapy
 
