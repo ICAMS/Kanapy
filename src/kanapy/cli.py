@@ -11,6 +11,7 @@ from kanapy.input_output import extract_volume_sharedGBarea
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.analyze_texture import textureReduction
+from kanapy.smoothingGB import smoothingRoutine
 
 @click.group()
 @click.pass_context
@@ -134,6 +135,13 @@ def pack(ctx):
 def voxelize(ctx):
     """ Generates the RVE by assigning voxels to grains."""        
     voxelizationRoutine()
+
+
+@main.command()
+@click.pass_context
+def smoothen(ctx):
+    """ Generates smoothed grain boundary from a voxelated mesh."""        
+    smoothingRoutine()    
         
 
 @main.command(name='abaqusOutput')

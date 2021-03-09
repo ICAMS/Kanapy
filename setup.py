@@ -74,7 +74,7 @@ from subprocess import CalledProcessError
     
 kwargs = dict(
     name='kanapy',
-    version='2.0.1',
+    version='2.1.1',
     author='Mahesh R.G Prasad',
     author_email='mahesh.prasad@rub.de',
     classifiers=[        

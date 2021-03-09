@@ -31,3 +31,9 @@ History
 
 * Second release on GitHub.
 
+2.1.1 (2021-03-09)
+------------------
+
+* Grain boundary (GB) smoothing code implemented in Kanapy
+* New CLI commands for GB smoothing 
+

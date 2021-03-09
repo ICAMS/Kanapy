@@ -23,11 +23,11 @@
     },
   "RVE": 
     {
-      "sideX": 85.9,
-      "sideY": 112.33076,
-      "sideZ": 85.9,
+      "sideX": 86,
+      "sideY": 86,
+      "sideZ": 86,
       "Nx": 65,
-      "Ny": 85,
+      "Ny": 65,
       "Nz": 65
     },
   "Simulation":
