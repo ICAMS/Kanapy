@@ -190,7 +190,7 @@ def setupTexture(ctx):
 
 def chkVersion(matlab):
     ''' Read the version of Matlab'''
-    output = os.popen('{} -r quit -nojvm | grep "R201[0-9][ab]"'.format(matlab)).read()                
+    output = os.popen('{} -r quit -nojvm | grep "R20[0-9][0-9][ab]"'.format(matlab)).read()     
         
     try:                                  # Find the matlab version available in the system
         version = output.split()[0]
