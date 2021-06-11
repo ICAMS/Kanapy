@@ -61,7 +61,7 @@ else
     % index reset
     index([i2 i1]) = index([i1 i2]);
     orilist([i2 i1]) = orilist([i1 i2]);
-    rep_cout=rep_count+1;
+    rep_count=rep_count+1;
 end
 
 if rep_count>rep_count_lim
