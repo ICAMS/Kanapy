@@ -364,7 +364,7 @@ else
         fprintf(fileID,...
             'L1 error ODF reconstruction error = %4.5f\n',ero);
         fprintf(fileID,...
-         'L1 error miasorientation angle distribution = %4.5f\n',mdf_err);
+         'L1 error misorientation angle distribution = %4.5f\n',mdf_err);
         fprintf(fileID,'Initial Kernel shape factor = %4.5f\n',kappa);
         fprintf(fileID,'Final Kernel shape factor = %4.5f\n',ohw);
         fprintf(fileID,'****************************************\n');
