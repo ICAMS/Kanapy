@@ -64,7 +64,7 @@ a desired location and install.
 
     $ conda create -y -n knpy python=3.6 pip git
     $ conda activate knpy    
-    (knpy) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
+    (knpy) $ git clone https://github.com/ICAMS/Kanapy.git <location to clone>/kanapy-master
     (knpy) $ cd kanapy-master/
     (knpy) $ conda install -y -c conda-forge --file requirements.txt    
     (knpy) $ pip install -e .
@@ -143,3 +143,16 @@ About
 The name kanapy is derived from the sanskrit word káṇa_ meaning particle. Kanapy is primarily developed at the `Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany <http://www.icams.de/content/>`__. Our goal is to build a complete synthetic microstructure generation tool for research and industry use. 
 
 .. _káṇa: https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3
+
+
+Disclaimer
+----------
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY 
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL 
+THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR 
+TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
