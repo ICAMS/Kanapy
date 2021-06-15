@@ -62,7 +62,7 @@ a desired location and install.
 
 .. code-block:: console
 
-    $ conda create -y -n knpy python=3.6 pip git
+    $ conda create -y -n knpy python pip git
     $ conda activate knpy    
     (knpy) $ git clone https://github.com/ICAMS/Kanapy.git <location to clone>/kanapy-master
     (knpy) $ cd kanapy-master/
