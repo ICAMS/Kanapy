@@ -11,6 +11,3 @@ matplotlib
 seaborn
 click
 cmake
-jupyter
-
-
