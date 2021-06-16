@@ -57,8 +57,8 @@ Anaconda or Miniconda Python distributions. If you do not have any, we suggest i
 
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 
-Once done, create a virtual environment for Kanapy installation and clone the repository to 
-a desired location and install.
+Once done, clone the repository to a desired location, create a conda environment for 
+the Kanapy installation and install.
 
 .. code-block:: 
 
