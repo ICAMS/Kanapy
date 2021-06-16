@@ -62,11 +62,10 @@ a desired location and install.
 
 .. code-block:: console
 
-    $ git clone https://github.com/ICAMS/Kanapy.git <location to clone>/kanapy-master
-    $ cd kanapy-master
+    $ git clone https://github.com/ICAMS/Kanapy.git ./kanapy
+    $ cd kanapy
     $ conda env create -f environment.yml
     $ conda activate knpy
-    (knpy) $ conda install -y -c conda-forge --file requirements.txt    
     (knpy) $ pip install -e .
     
     
