@@ -60,7 +60,7 @@ Anaconda or Miniconda Python distributions. If you do not have any, we suggest i
 Once done, create a virtual environment for Kanapy installation and clone the repository to 
 a desired location and install.
 
-.. code-block:: console
+.. code-block:: 
 
     $ git clone https://github.com/ICAMS/Kanapy.git ./kanapy
     $ cd kanapy
