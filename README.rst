@@ -27,7 +27,7 @@ Kanapy is a python package for generating complex synthetic polycrystalline micr
 .. _MATLAB: https://www.mathworks.com/products/matlab.html
 .. _MTEX: https://mtex-toolbox.github.io/
 
-.. figure:: /docs/figs/Kanapy_graphical_abstract.png
+.. figure:: /docs/figs/Kanapy_graphical_abstract.svg
     :align: center
     
     
