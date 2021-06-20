@@ -12,8 +12,8 @@
 
 ![image](https://img.shields.io/github/v/release/mrgprasad/kanapy)
 
-Kanapy is a python package for generating complex synthetic
-polycrystalline microstructures. Kanapy offers tools to analyze The
+Kanapy is a python package for generating complex three-dimensional (3D) synthetic
+polycrystalline microstructures that are built based on statistical information about grain geometry, given as grain size distribution and aspect ratio of grains, and crystallographic texture, given in form of orientation distribution functions (ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze the geometry and texture of microstructures given by EBSD maps to generate 3D synthetic microstructures mimicking real ones in a statistical sense. The
 general implementation is done in [Python](http://www.python.org) with
 the performance critical part for the geometry module implemented in
 C++. The Python bindings for the code written in C++ are generated using
@@ -27,7 +27,7 @@ is implemented as
 also utilizes several algorithms implemented in
 [MTEX](https://mtex-toolbox.github.io/) for texture analysis.
 
-![](/docs/figs/Kanapy_graphical_abstract.svg){.align-center}
+![](docs/figs/kanapy_graphical_abstract.png)
 
 # Features
 
