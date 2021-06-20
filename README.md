@@ -1,15 +1,9 @@
 [![image](https://joss.theoj.org/papers/10.21105/joss.01732/status.svg)](https://doi.org/10.21105/joss.01732)
-
 [![image](https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg)](https://doi.org/10.5281/zenodo.3662366)
-
 ![image](https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical)
-
 [![image](https://img.shields.io/travis/mrgprasad/kanapy.svg)](https://travis-ci.org/mrgprasad/kanapy)
-
 [![image](https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg)](https://codecov.io/gh/mrgprasad/kanapy)
-
 [![image](https://img.shields.io/badge/License-GNU%20AGPLv3-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
-
 ![image](https://img.shields.io/github/v/release/mrgprasad/kanapy)
 
 Kanapy is a python package for generating complex three-dimensional (3D) synthetic
@@ -85,15 +79,19 @@ Kanapy uses pytest to perform all its unit testing.
 (knpy) $ kanapy runTests          
 ```
 
-# Documentation build
+# Documentation
 
-Documentation for kanapy is generated using Sphinx. The HTML
-documentation can be found at
-*../kanapy-master/docs/builds/html/index.html*
+The complete documentation for kanapy is available online on GitHub Pages: [https://icams.github.io/Kanapy/](https://icams.github.io/Kanapy/)
+
+Documentation for kanapy is generated using Sphinx. You can create or update your local documentation with the command
 
 ``` console
 (knpy) $ kanapy genDocs                    
 ```
+
+The HTML
+documentation can be found at
+*../kanapy/docs/builds/html/index.html*
 
 # Citation
 
