@@ -1,39 +1,44 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Overview &mdash; kanapy 2.0.1 documentation</title>
+  <title>Overview &mdash; kanapy 2.1.1 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Applications" href="applications.html" />
@@ -61,7 +66,7 @@
             
             
               <div class="version">
-                2.0.1
+                2.1.1
               </div>
             
           
@@ -78,6 +83,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -107,14 +113,13 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="method.html">Modeling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kanapy.html">Code documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a></li>
-<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
 </ul>
 
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -149,18 +154,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Overview</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/readme.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -188,8 +195,7 @@
 <h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
 <p>An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed to model simple and complex grain morphologies and to systematically incorporate texture data directly from experiments concurrently maintaining the numerical efficiency of the micromechanical model. Kanapy is developed to overcome the limitations of spatial tessellation methods and to provide an alternative to the existing Random Sequential Addition technique of microstructure geometry generation.</p>
 <div class="figure align-center" id="id10">
-<img alt="_images/Kanapy_graphical_abstract.png" src="_images/Kanapy_graphical_abstract.png" />
-<p class="caption"><span class="caption-text"><strong>Figure</strong>: Kanapy workflow.</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+<img alt="_images/Kanapy_graphical_abstract.svg" src="_images/Kanapy_graphical_abstract.svg" /><p class="caption"><span class="caption-text"><strong>Figure</strong>: Kanapy workflow.</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
 </div>
 </div>
 <div class="section" id="features">
@@ -213,12 +219,11 @@
 Anaconda or Miniconda Python distributions. If you do not have any, we suggest installing <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.</p>
 <p>Once done, create a virtual environment for Kanapy installation and clone the repository to
 a desired location and install.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -y -n knpy <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6 pip git
-<span class="gp">$</span> conda activate knpy
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> git clone https://github.com/mrgprasad/kanapy.git &lt;location to clone&gt;/kanapy-master
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> <span class="nb">cd</span> kanapy-master/
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> conda install -y -c conda-forge --file requirements.txt
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> pip install -e .
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone https://github.com/ICAMS/Kanapy.git &lt;location to clone&gt;/kanapy-master
+<span class="gp">$ </span><span class="nb">cd</span> kanapy-master/
+<span class="gp">$ </span>conda env create -f environment.yml
+<span class="gp">$ </span>conda activate knpy
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>pip install -e .
 </pre></div>
 </div>
 <p>Kanapy is now installed along with all its dependencies. If you intend to use Kanapy’s
@@ -239,7 +244,7 @@ running: <code class="code bash docutils literal notranslate"><span class="pre">
 <div class="section" id="running-tests">
 <h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
 <p>Kanapy uses pytest to perform all its unit testing.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy runTests
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy runTests
 </pre></div>
 </div>
 </div>
@@ -247,7 +252,7 @@ running: <code class="code bash docutils literal notranslate"><span class="pre">
 <h2>Documentation build<a class="headerlink" href="#documentation-build" title="Permalink to this headline">¶</a></h2>
 <p>Documentation for kanapy is generated using Sphinx. The HTML documentation can be
 found at <em>../kanapy-master/docs/builds/html/index.html</em></p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$</span> kanapy genDocs
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy genDocs
 </pre></div>
 </div>
 </div>
@@ -331,29 +336,29 @@ Make sure to use MATLAB v2015a and above.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="applications.html" class="btn btn-neutral float-right" title="Applications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to kanapy’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="applications.html" class="btn btn-neutral float-right" title="Applications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to kanapy’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Mahesh R.G Prasad
+        &#169; Copyright 2019, Mahesh R.G Prasad.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -361,7 +366,6 @@ Make sure to use MATLAB v2015a and above.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

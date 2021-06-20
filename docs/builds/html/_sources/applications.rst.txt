@@ -152,29 +152,29 @@ Since both these algorithms are implemented as MATLAB functions that calls other
 ODF reconstruction
 ^^^^^^^^^^^^^^^^^^^
 
-To use the ODF reconstruction algorithm, the EBSD data estimated using MTEX must be given as input in the form of (.mat) file. By providing the number of discrete orientations (:math:`N^\prime`) required, the algorithm can be used in the minimum possible configuration. Note here the value of :math:`\kappa` is set to a default value of :math:`0.0873` rad. Figure 3 depicts the pole figure (plotted using MTEX) estimated from the experiment EBSD data file provided and Figure 4 depicts the pole figure for 250 discrete orientations obtained as output with the default :math:`\kappa` value.
+To use the ODF reconstruction algorithm, the EBSD data estimated using MTEX must be given as input in the form of (.mat) file. By providing the number of discrete orientations (:math:`N^\prime`) required, the algorithm can be used in the minimum possible configuration. Note here the value of :math:`\kappa` is set to a default value of :math:`0.0873` rad. Figure 3 depicts the pole figure (plotted using MTEX) estimated from the experiment EBSD data file provided and Figure 4 depicts the pole figure for 30 discrete orientations obtained as output with the default :math:`\kappa` value.
 
-.. figure:: /figs/odf_titanium_5degkappa_exp.png
+.. figure:: /figs/odf.png
     :align: center
 
     **Figure 3**: Plot depicting the pole figure obtained from EBSD data analysis.
 
-.. figure:: /figs/odf_titanium_5degkappa_250.png
+.. figure:: /figs/odfred30_defKernel.png
     :align: center
 
-    **Figure 4**: Plot depicting the pole figure obtained from 250 discrete orientation with default :math:`\kappa` value of :math:`0.0873` rad.
+    **Figure 4**: Plot depicting the pole figure obtained from 30 discrete orientation with default :math:`\kappa` value of :math:`0.0873` rad.
 
-Alternately, the initial :math:`\kappa` value can be specified (in radians) or the grains estimated using MTEX can be provided as an input in the (.mat) file format. If the grains (.mat) file is provided, then the optimum :math:`\kappa` is estimated using the mean orientation of the grains (by an MTEX function). Figure 5 shows the pole figure (plotted using MTEX) estimated from EBSD data analysis and Figure 6 shows the pole figure for 250 discrete orientations obtained as output with :math:`\kappa` value estimated using grain mean orientation.
+Alternately, the initial :math:`\kappa` value can be specified (in radians) or the grains estimated using MTEX can be provided as an input in the (.mat) file format. If the grains (.mat) file is provided, then the optimum :math:`\kappa` is estimated using the mean orientation of the grains (by an MTEX function). Figure 5 shows the pole figure (plotted using MTEX) estimated from EBSD data analysis and Figure 6 shows the pole figure for 30 discrete orientations obtained as output with :math:`\kappa` value estimated using grain mean orientation.
 
-.. figure:: /figs/odf_titanium_grainoptkappa_exp.png
+.. figure:: /figs/odf.png
     :align: center        
 
     **Figure 5**: Plot depicting the pole figure of ODF data obtained from EBSD data analysis.
 
-.. figure:: /figs/odf_titanium_grainoptkappa_250.png
+.. figure:: /figs/odfred30_optKernel.png
     :align: center
 
-    **Figure 6**: Plot depicting the pole figure of reconstructed ODF of 250 discrete orientation with :math:`\kappa` value estimated using grain mean orientations.
+    **Figure 6**: Plot depicting the pole figure of reconstructed ODF of 30 discrete orientation with :math:`\kappa` value estimated using grain mean orientations.
 
 The output from the ODF reconstruction algorithm is written to a (.txt) file, which consists of the :math:`L_1` error of ODF reconstruction, the initial (:math:`\kappa`) and the optimized (:math:`\kappa^\prime`) values, and a list of the discrete orientations.
 
@@ -184,12 +184,12 @@ ODF reconstruction with orientation assignment
 
 In addition to the ODF reconstruction, kanapy's texture module can also be used to determine the optimal assignment of orientations to the grains. The orientation assignment algorithm can be used in this regard. The EBSD and the grain (.mat) files, along with the grain boundary shared surface area information are the required mandatory inputs. The grain boundary shared surface area is the output that is available after generating the RVE using kanapy's geometry module. As explained earlier the surface area is used as weights for estimating the disorientation angle distribution.
 
-An optional input that can be provided is the grain volume information, which is used for weighting the orientations after assignment and for estimating the ODF represented by the RVE. Figure 7 shows the ODF reconstructed using 250 discrete orientations weighted as per the grain volume (obtained from kanapy's geometry module) and Figure 8 shows the comparison of the disorientation angle distribution between the EBSD data and the RVE (after orientation assignment).
+An optional input that can be provided is the grain volume information, which is used for weighting the orientations after assignment and for estimating the ODF represented by the RVE. Figure 7 shows the ODF reconstructed using 40 discrete orientations weighted as per the grain volume (obtained from kanapy's geometry module) and Figure 8 shows the comparison of the disorientation angle distribution between the EBSD data and the RVE (after orientation assignment).
 
-.. figure:: /figs/odf_titanium_grainoptkappa_250_MDF_odfcor.png
+.. figure:: /figs/odfred40_odfcor.png
     :align: center
 
-    **Figure 7**: Pole figure of the ODF estimated after reconstruction with 250 discrete orientation weighted as per the grain volume and assigned using the orientation assignment algorithm.
+    **Figure 7**: Pole figure of the ODF estimated after reconstruction with 40 discrete orientation weighted as per the grain volume and assigned using the orientation assignment algorithm.
 
 .. figure:: /figs/disorientation_fitting.png
     :align: center

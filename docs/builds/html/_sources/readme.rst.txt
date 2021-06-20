@@ -35,7 +35,7 @@ Motivation
 ----------
 An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed to model simple and complex grain morphologies and to systematically incorporate texture data directly from experiments concurrently maintaining the numerical efficiency of the micromechanical model. Kanapy is developed to overcome the limitations of spatial tessellation methods and to provide an alternative to the existing Random Sequential Addition technique of microstructure geometry generation. 
 
-.. figure:: /figs/Kanapy_graphical_abstract.png
+.. figure:: /figs/Kanapy_graphical_abstract.svg
     :align: center
     
     **Figure**: Kanapy workflow.
@@ -71,11 +71,10 @@ a desired location and install.
 
 .. code-block:: console
 
-    $ conda create -y -n knpy python=3.6 pip git
-    $ conda activate knpy    
-    (knpy) $ git clone https://github.com/mrgprasad/kanapy.git <location to clone>/kanapy-master
-    (knpy) $ cd kanapy-master/
-    (knpy) $ conda install -y -c conda-forge --file requirements.txt    
+    $ git clone https://github.com/ICAMS/Kanapy.git <location to clone>/kanapy-master
+    $ cd kanapy-master/
+    $ conda env create -f environment.yml
+    $ conda activate knpy
     (knpy) $ pip install -e .
     
     
