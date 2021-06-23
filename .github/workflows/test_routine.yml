@@ -28,11 +28,11 @@ jobs:
         conda --version
         which python
         conda config --set always_yes yes --set changeps1 no
-        conda install -c conda-forge numpy matplotlib scipy codecov pytest pytest-mock
+        conda install -c conda-forge numpy matplotlib scipy codecov pytest pytest-mock pytest-cov
         conda update -q conda
         pip install -e .
 
     - name: run tests
       run: |
-        pytest tests/test_entities.py
+        pytest tests/test_entities.py tests/test_collide_detect_react.py tests/test_input_output.py tests/test_packing.py tests/test_voxelization.py
  
