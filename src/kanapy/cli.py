@@ -263,10 +263,12 @@ def setPaths():
             else:
                 userpath1 = userinput
                     
-                    
+        
         # For MTEX installation path
+        userpath2 = MAIN_DIR+'/libs/mtex-5.5.2/'
+        '''                    
         click.echo('')
-        status2 = input('Is MTEX installed in this system (yes/no): ')
+        #status2 = input('Is MTEX installed in this system (yes/no): ')
 
         if status2 == 'yes' or status2 == 'y' or status2 == 'Y' or status2 == 'YES':                    
             userpath2 = input('Please provide the path to MTEX installation: ')
@@ -284,7 +286,7 @@ def setPaths():
         else:
             click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
             sys.exit(0)  
-        
+        '''
                      
     elif status1 == 'no' or status1 == 'n' or status1 == 'N' or status1 == 'NO':
         click.echo("Kanapy's texture analysis code requires MATLAB. Please install it.")

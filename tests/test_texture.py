@@ -43,17 +43,17 @@ def test_analyzeTexture():
     filelist = ['ODF_reduction_algo.m','splitMean.m','odfEst.m','mdf_Anglefitting_algo_MC.m']
     for i in filelist:
         shutil.copy2(ROOT_DIR+'/'+i, testDir)
-        
-    filelist_ex = ['ebsd_316L.mat','grains_316L.mat'] 
-    for i in filelist_ex:
-        shutil.copy2(MAIN_DIR+'/examples/ODF_reconstruction_with_orientation_assignment/'+i, testDir)    
 
     # Create a temporary matlab script file that runs Texture reduction algorithm      
     TRfile = testDir+'/runUnitTest.m'           # Temporary '.m' file
-    
+
     with open (TRfile,'w') as f:
         f.write("MTEXpath='{}';\n".format(path_dict['MTEXpath']))
         f.write("run([MTEXpath 'install_mtex.m'])\n")
+        f.write('\n')
+        f.write("mtexdata('titanium')\n")
+        f.write("mtexdata('alu')\n")
+        f.write("mtexdata('epidote')\n")
         f.write('\n')
         f.write("result = runtests('{0}');\n".format(utFile))
         f.write("T=table(result)\n")  
@@ -73,9 +73,6 @@ def test_analyzeTexture():
     # Remove the files once done! 
     os.remove(TRfile)        
     for i in filelist:
-        os.remove(testDir+'/'+i)
-    
-    for i in filelist_ex:
         os.remove(testDir+'/'+i)
     
     # Read the tabulated result written by MATLAB

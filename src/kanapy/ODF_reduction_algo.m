@@ -134,14 +134,14 @@ if length(varargin)>2
                         flag = flag-1;
                     case 'kernel'
                         assert(isa(varargin{loc+1},...
-                            'deLaValeePoussinKernel'),...
+                            'deLaValleePoussinKernel'),...
                             'ODF_reduction_algo:e7',...
                             'Invalid kernel use deLaValeePoussinKernel')
                         psi = varargin{loc+1};
                         
                         flag = flag-1;
                     case 'kernelShape'
-                        psi = deLaValeePoussinKernel('halfwidth',...
+                        psi = deLaValleePoussinKernel('halfwidth',...
                             varargin{loc+1});
                         flag = flag-1;
                         
@@ -157,7 +157,7 @@ end
 
 assert(flag>=0,'ODF_reduction_algo:e4','Multiple options for same input')
 if flag==1 
-    psi = deLaValeePoussinKernel('halfwidth',5*degree);
+    psi = deLaValleePoussinKernel('halfwidth',5*degree);
     disp(['Default initial kernel shape factor: ',num2str(5),' degree'])
 end
 
