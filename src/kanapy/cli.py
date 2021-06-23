@@ -265,7 +265,7 @@ def setPaths():
                     
         
         # For MTEX installation path
-        userpath2 = MAIN_DIR+'/libs/mtex-5.5.2/'
+        userpath2 = MAIN_DIR+'/libs/mtex/'
         '''                    
         click.echo('')
         #status2 = input('Is MTEX installed in this system (yes/no): ')
