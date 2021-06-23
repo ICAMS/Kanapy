@@ -1,0 +1,160 @@
+{
+
+"crystalSymmetry":
+{
+    "inputs":
+    [
+        {"name":"pointGroup", "kind":"required", "type":"choices={'1','211','121','112','222','3','321','312','4','422','6','622','23','432'}"},
+	{"name":"mineral", "kind":"namevalue", "type":"char"}
+     ]
+},
+
+"vector3d":
+{
+    "inputs":
+    [
+        {"name":"x", "kind":"ordered",   "type":"double"},
+        {"name":"y", "kind":"ordered",   "type":"double"},
+        {"name":"z", "kind":"ordered",   "type":"double"},
+        {"name":"antipodal_flag", "kind":"flag", "type":"choices={'antipodal'}"}
+    ]
+},
+
+
+"vector3d.load":
+{
+    "inputs":
+    [
+        {"name":"filename1", "kind":"required",   "type":"filepath"},
+        {"name":"columnNames", "kind":"namevalue", "type":"cell"},
+      	{"name":"columns", "kind":"namevalue", "type":"double"}
+    ]
+},
+
+"crystalSymmetry.load":
+{
+    "inputs":
+    [
+        {"name":"filename1", "kind":"required", "type":"choices=arrayfun(@(x) getfield(x,'name'),dir([mtexCifPath filesep '*.cif']),'uniformOutput',false)"}
+     ]
+},
+
+"orientation":
+{
+    "inputs":
+    [
+        {"name":"map", "kind":"namevalue", "type":"vector3d"},
+        {"name":"Euler", "kind":"namevalue", "type":"double"},
+        {"name":"axis", "kind":"namevalue", "type":"double"},
+        {"name":"angle", "kind":"namevalue", "type":"double"},
+        {"name":"matrix", "kind":"namevalue", "type":"double"},
+        {"name":"reflection", "kind":"namevalue", "type":"double"},
+        {"name":"mirroring", "kind":"namevalue", "type":"double"},
+        {"name":"inversion", "kind":"namevalue", "type":"double"},
+        {"name":"rodrigues", "kind":"namevalue", "type":"double"},
+        {"name":"antipodal", "kind":"flag", "type":"choices={'antipodal'}"}
+    ]
+},
+"rotation":
+{
+    "inputs":
+    [
+        {"name":"map", "kind":"namevalue", "type":"vector3d"},
+        {"name":"Euler", "kind":"namevalue", "type":"double"},
+        {"name":"axis", "kind":"namevalue", "type":"double"},
+        {"name":"angle", "kind":"namevalue", "type":"double"},
+        {"name":"matrix", "kind":"namevalue", "type":"double"},
+        {"name":"reflection", "kind":"namevalue", "type":"double"},
+        {"name":"mirroring", "kind":"namevalue", "type":"double"},
+        {"name":"inversion", "kind":"namevalue", "type":"double"},
+        {"name":"rodrigues", "kind":"namevalue", "type":"double"},
+        {"name":"antipodal", "kind":"flag", "type":"choices={'antipodal'}"}
+    ]
+},
+"calcODF":
+{
+    "inputs":
+    [
+        {"name":"ori", "kind":"required",   "type":"orientation"},
+        {"name":"halfwidth", "kind":"namevalue", "type":"double"},
+        {"name":"kernel", "kind":"namevalue", "type":"kernel"},
+        {"name":"weights", "kind":"namevalue", "type":"double"},
+        {"name":"resolution", "kind":"namevalue", "type":"double"},
+        {"name":"order", "kind":"namevalue", "type":"double"},
+        {"name":"method", "kind":"flag", "type":"choices={'Fourier', 'Bingham', 'noFourier'}"},
+        {"name":"method2", "kind":"flag", "type":"choices={'exact'}"}
+    ]
+},
+"plot":
+{
+    "inputs":
+    [
+        {"name":"ori", "kind":"required",   "type":"orientation"},
+        {"name":"antipodal", "kind":"flag", "type":"choices={'antipodal'}"},
+        {"name":"MarkerColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerFaceColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerEdgeColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerEdgeAlpha", "kind":"namevalue", "type":"double"},
+        {"name":"MarkerFaceAlpha", "kind":"namevalue", "type":"double"},
+        {"name":"MarkerSize", "kind":"namevalue", "type":"int8"},
+        {"name":"Marker", "kind":"namevalue", "type":"choices={'o', '.','none','x','s','d','p'}"},
+        {"name":"label", "kind":"namevalue", "type":"string"},
+        {"name":"backgroundColor", "kind":"namevalue", "type":"choices=str2rgb"}
+    ]
+},
+"plot":
+{
+    "inputs":
+    [
+        {"name":"vec", "kind":"required", "type":"vector3d"},
+        {"name":"antipodal", "kind":"flag"},
+        {"name":"contourf", "kind":"flag"},
+        {"name":"MarkerColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerFaceColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerEdgeColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerEdgeAlpha", "kind":"namevalue", "type":"double"},
+        {"name":"MarkerFaceAlpha", "kind":"namevalue", "type":"double"},
+        {"name":"MarkerSize", "kind":"namevalue", "type":"int8"},
+        {"name":"Marker", "kind":"namevalue", "type":"choices={'o', '.','none','x','s','d','p'}"},
+        {"name":"label", "kind":"namevalue", "type":"string"},
+        {"name":"backgroundColor", "kind":"namevalue", "type":"choices=str2rgb"},
+	      {"name":"grid", "kind":"flag"},
+	      {"name":"hemisphere", "kind":"flag", "type":"choices={'upper','lower'}"}
+    ]
+},
+"plotPDF":
+{
+    "inputs":
+    [
+        {"name":"ori", "kind":"required",   "type":"orientation"},
+        {"name":"antipodal", "kind":"flag", "type":"choices={'antipodal'}"},
+        {"name":"MarkerColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerFaceColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerEdgeColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerSize", "kind":"namevalue", "type":"int8"},
+        {"name":"MarkerEdgeAlpha", "kind":"namevalue", "type":"double"},
+        {"name":"MarkerFaceAlpha", "kind":"namevalue", "type":"double"},
+        {"name":"Marker", "kind":"namevalue", "type":"choices={'o', '.','none','x','s','d','p'}"},
+        {"name":"label", "kind":"namevalue", "type":"string"},
+        {"name":"backgroundColor", "kind":"namevalue", "type":"choices=str2rgb"}
+    ]
+},
+"plotIPDF":
+{
+    "inputs":
+    [
+        {"name":"ori", "kind":"required",   "type":"orientation"},
+        {"name":"antipodal", "kind":"flag", "type":"choices={'antipodal'}"},
+        {"name":"MarkerColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerFaceColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerEdgeColor", "kind":"namevalue", "type":"choices=str2rgb"},
+        {"name":"MarkerSize", "kind":"namevalue", "type":"int8"},
+        {"name":"MarkerEdgeAlpha", "kind":"namevalue", "type":"double"},
+        {"name":"MarkerFaceAlpha", "kind":"namevalue", "type":"double"},
+        {"name":"Marker", "kind":"namevalue", "type":"choices={'o', '.','none','x','s','d','p'}"},
+        {"name":"label", "kind":"namevalue", "type":"string"},
+        {"name":"backgroundColor", "kind":"namevalue", "type":"choices=str2rgb"}
+    ]
+}
+
+}

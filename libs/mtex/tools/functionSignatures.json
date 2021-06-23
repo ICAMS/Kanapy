@@ -1,0 +1,9 @@
+{
+"mtexdata":
+{
+    "inputs":
+    [
+        {"name":"data", "kind":"flag",   "type":"choices=mtexdata"}
+     ]
+}
+}
