@@ -66,10 +66,15 @@ $ conda activate knpy
 ```
 
 Kanapy is now installed along with all its dependencies. If you intend
-to use Kanapy\'s texture module, link Kanapy with
+to use Kanapy's texture module, link Kanapy with
 [MATLAB](https://www.mathworks.com/products/matlab.html) and
 [MTEX](https://mtex-toolbox.github.io/) installations by running:
-`kanapy setupTexture`{.bash} and follow the instructions.
+
+```
+(knpy) $ kanapy setupTexture
+```
+
+and follow the instructions.
 
 # Running tests
 
