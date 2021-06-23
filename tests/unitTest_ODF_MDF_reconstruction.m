@@ -16,12 +16,7 @@ classdef unitTest_ODF_MDF_reconstruction < matlab.unittest.TestCase
             testCase.verifyError(...
             @() ODF_reduction_algo(r,40),'ODF_reduction_algo:e2')
         end 
-        
-        function testEBSDMatfileread(testCase,r)
-            testCase.verifyError(...
-            @() ODF_reduction_algo(r,40,'ebsdMatFile',...
-            [r '/data' '/epidote.mat']),'ODF_reduction_algo:e3')
-        end         
+          
         
         function testInvalidOption1(testCase,r)
             testCase.verifyError(...
@@ -69,7 +64,12 @@ classdef unitTest_ODF_MDF_reconstruction < matlab.unittest.TestCase
         function testMDFInput1(testCase,r)     
             
             ebsd = importdata('ebsd_316L.mat');  
-            k = deLaValeePoussinKernel('halfwidth',5*degree);
+            try
+                k = deLaValeePoussinKernel('halfwidth',5*degree);
+            catch
+                warning('off')
+                psi = deLaValleePoussinKernel('halfwidth',5*degree);
+            end
             testCase.verifyError(...
             @() ODF_reduction_algo(r,40,'ebsd',ebsd,...
             'MisAngDist'),'ODF_reduction_algo:e8')
