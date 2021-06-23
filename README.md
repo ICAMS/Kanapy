@@ -93,6 +93,46 @@ The HTML
 documentation can be found at
 *../kanapy/docs/builds/html/index.html*
 
+# Dependencies
+
+For Linux/Mac OS, Kanapy requires a working C/C++ compiler on your
+machine. The gcc toolchain will work well. For Windows, Kanapy is
+installed as a pre-built distribution (.whl file). In either case, the
+lightweight header-only library pybind11 is used to create Python
+bindings for the code written in C++. The C++ function will be complied
+by linking the Eigen library (present in the directory
+*../kanapy-master/libs/*). CMake builds this extension.
+
+Kanapy\'s texture module requires
+[MATLAB](https://www.mathworks.com/products/matlab.html) and
+[MTEX](https://mtex-toolbox.github.io/) to be installed on your machine.
+Make sure to use MATLAB v2015a and above.
+
+### Core dependencies
+
+Below are the listed dependencies for running kanapy:
+
+> -   [NumPy](http://numpy.scipy.org) for array manipulation.
+> -   [Scipy](https://www.scipy.org/) for functionalities like
+>     Convexhull.
+> -   [pybind11](https://pybind11.readthedocs.io/en/stable/) for
+>     creating python bindings for C++ code.
+> -   [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for
+>     C++ linear algebra operations.
+> -   [pytest](https://www.pytest.org) for running kanapy unit tests.
+> -   [sphinx](http://www.sphinx-doc.org/en/master/) for generating
+>     documentation.
+> -   [MATLAB](https://www.mathworks.com/products/matlab.html) for
+>     texture modules.
+> -   [MTEX](https://mtex-toolbox.github.io/) for texture modules.
+
+### Optional dependencies
+
+> -   [Matplotlib](https://matplotlib.org/) for plotting and
+>     visualizing.
+> -   [OVITO](https://ovito.org/) for visualizing simulation data.
+
+
 # Citation
 
 The preferred way to cite Kanapy is:
