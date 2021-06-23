@@ -1,3 +1,0 @@
-%% Specimen Symmetry
-%
-%%

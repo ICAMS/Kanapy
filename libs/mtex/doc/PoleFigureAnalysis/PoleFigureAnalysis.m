@@ -1,3 +1,0 @@
-%% Pole Figure Analysis
-%
-%%

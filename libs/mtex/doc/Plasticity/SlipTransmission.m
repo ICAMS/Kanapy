@@ -1,3 +1,0 @@
-%% Slip Transmission
-%
-%%

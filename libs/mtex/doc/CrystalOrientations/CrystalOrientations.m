@@ -1,4 +1,0 @@
-%% Crystal Orientations
-%
-%%
-%
