@@ -28,7 +28,7 @@ jobs:
         conda --version
         which python
         conda config --set always_yes yes --set changeps1 no
-        conda install -c conda-forge numpy matplotlib scipy codecov pytest pytest-mock pytest-cov
+        conda install -c conda-forge numpy matplotlib scipy codecov pytest pytest-mock pytest-cov seaborn
         conda update -q conda
         pip install -e .
 
