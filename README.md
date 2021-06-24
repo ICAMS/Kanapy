@@ -55,7 +55,7 @@ Python distributions. If you do not have any, we suggest installing
 Once done, clone the repository to a desired location, create a conda
 environment for the Kanapy installation and install.
 
-``` console
+```
 $ git clone https://github.com/ICAMS/Kanapy.git ./kanapy
 $ cd kanapy
 $ conda env create -f environment.yml
@@ -67,7 +67,7 @@ Kanapy is now installed along with all its dependencies. If you intend
 to use Kanapy's texture module, a
 [MATLAB](https://www.mathworks.com/products/matlab.html) installation is required because the texture module is based on [MTEX](https://mtex-toolbox.github.io/) functions. If MATLAB is available on your system, the texture module is initialized by the command
 
-``` console
+``` 
 (knpy) $ kanapy setupTexture
 ```
 
@@ -75,7 +75,7 @@ to use Kanapy's texture module, a
 
 Kanapy uses pytest to perform all its unit testing.
 
-``` console
+```
 (knpy) $ kanapy runTests          
 ```
 
@@ -85,7 +85,7 @@ The complete documentation for kanapy is available online on GitHub Pages: [http
 
 Documentation for kanapy is generated using Sphinx. You can create or update your local documentation with the command
 
-``` console
+```
 (knpy) $ kanapy genDocs                    
 ```
 
