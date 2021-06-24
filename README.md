@@ -1,10 +1,7 @@
 [![image](https://joss.theoj.org/papers/10.21105/joss.01732/status.svg)](https://doi.org/10.21105/joss.01732)
 [![image](https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg)](https://doi.org/10.5281/zenodo.3662366)
 ![image](https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical)
-[![image](https://img.shields.io/travis/mrgprasad/kanapy.svg)](https://travis-ci.org/mrgprasad/kanapy)
-[![image](https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg)](https://codecov.io/gh/mrgprasad/kanapy)
 [![image](https://img.shields.io/badge/License-GNU%20AGPLv3-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
-![image](https://img.shields.io/github/v/release/mrgprasad/kanapy)
 
 Kanapy is a python package for generating complex three-dimensional (3D) synthetic
 polycrystalline microstructures that are built based on statistical information about grain geometry, given as grain size distribution and aspect ratio of grains, and crystallographic texture, given in form of orientation distribution functions (ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze the geometry and texture of microstructures given by EBSD maps to generate 3D synthetic microstructures mimicking real ones in a statistical sense. The
@@ -17,26 +14,27 @@ the implementation utilizes the
 [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) library
 for efficient linear algebra calculations. The texture module of Kanapy
 is implemented as
-[MATLAB](https://www.mathworks.com/products/matlab.html) functions. It
-also utilizes several algorithms implemented in
+[MATLAB](https://www.mathworks.com/products/matlab.html) functions using several algorithms implemented in
 [MTEX](https://mtex-toolbox.github.io/) for texture analysis.
 
 ![](docs/figs/kanapy_graphical_abstract.png)
 
 # Features
 
--   User interface to kanapy through CLI.
--   Efficient collision handling of particles through a two-layer
-    collision detection method employing the Octree spatial data
-    structure and the bounding sphere hierarchy.
--   Efficient ODF reconstruction directly using orientations from
-    experimantal data.
--   Optimal orientaion assignment based on Measured misorientation
-    distribution.
+-   Kanapy is used through Command Line Interface (CLI).
+-   Possibility to analyze experimental microstructures based on [MTEX](https://mtex-toolbox.github.io/) functions.
+-   Generation of microstructure geometry based on statistical features as grain size distribution and grain aspect ratio distribution.
+-   Crystallographic texture reconstruction using orientations from
+    experimental data in form of Orientation Distribution Function (ODF).
+-   Optimal orientaion assignment based on measured Misorientation Distribution Function (MDF) that maintains correct statistical description of high-angle or low-angle grain boundary characteristics.
 -   Independent execution of individual modules through easy data
     storage and handling.
 -   In-built hexahedral mesh generator for complex polycrystalline
     microstructures.
+-   Efficient generation of space filling structures by particle dynamics method.
+-   Collision handling of particles through a two-layer
+    collision detection method employing the Octree spatial data
+    structure and the bounding sphere hierarchy.
 -   Flexibility in the choice of the particle packing time step to be
     sent for voxelization (meshing).
 -   Option to generate spherical particle position- and radius files
@@ -57,7 +55,7 @@ Python distributions. If you do not have any, we suggest installing
 Once done, clone the repository to a desired location, create a conda
 environment for the Kanapy installation and install.
 
-``` 
+``` console
 $ git clone https://github.com/ICAMS/Kanapy.git ./kanapy
 $ cd kanapy
 $ conda env create -f environment.yml
@@ -66,15 +64,12 @@ $ conda activate knpy
 ```
 
 Kanapy is now installed along with all its dependencies. If you intend
-to use Kanapy's texture module, link Kanapy with
-[MATLAB](https://www.mathworks.com/products/matlab.html) and
-[MTEX](https://mtex-toolbox.github.io/) installations by running:
+to use Kanapy's texture module, a
+[MATLAB](https://www.mathworks.com/products/matlab.html) installation is required because the texture module is based on [MTEX](https://mtex-toolbox.github.io/) functions. If MATLAB is available on your system, the texture module is initialized by the command
 
-```
+``` console
 (knpy) $ kanapy setupTexture
 ```
-
-and follow the instructions.
 
 # Running tests
 
@@ -96,7 +91,7 @@ Documentation for kanapy is generated using Sphinx. You can create or update you
 
 The HTML
 documentation can be found at
-*../kanapy/docs/builds/html/index.html*
+*kanapy/docs/builds/html/index.html*
 
 # Dependencies
 
@@ -106,12 +101,10 @@ installed as a pre-built distribution (.whl file). In either case, the
 lightweight header-only library pybind11 is used to create Python
 bindings for the code written in C++. The C++ function will be complied
 by linking the Eigen library (present in the directory
-*../kanapy-master/libs/*). CMake builds this extension.
+*kanapy/libs/*). CMake builds this extension.
 
-Kanapy\'s texture module requires
-[MATLAB](https://www.mathworks.com/products/matlab.html) and
-[MTEX](https://mtex-toolbox.github.io/) to be installed on your machine.
-Make sure to use MATLAB v2015a and above.
+Kanapy's texture module requires
+[MATLAB](https://www.mathworks.com/products/matlab.html) to be installed on your machine. Make sure to use MATLAB v2015a and above. The module uses a local version of [MTEX](https://mtex-toolbox.github.io/) contained in *kanapy/libs* and does not interfere with other installations of MTEX.
 
 ### Core dependencies
 
@@ -128,8 +121,8 @@ Below are the listed dependencies for running kanapy:
 > -   [sphinx](http://www.sphinx-doc.org/en/master/) for generating
 >     documentation.
 > -   [MATLAB](https://www.mathworks.com/products/matlab.html) for
->     texture modules.
-> -   [MTEX](https://mtex-toolbox.github.io/) for texture modules.
+>     texture module.
+> -   [MTEX](https://mtex-toolbox.github.io/) for texture module.
 
 ### Optional dependencies
 
@@ -143,17 +136,13 @@ Below are the listed dependencies for running kanapy:
 The preferred way to cite Kanapy is:
 
 ``` bibtex
-@article{Prasad2019,
-  doi = {10.21105/joss.01732},
-  url = {https://doi.org/10.21105/joss.01732},
-  year = {2019},
-  publisher = {The Open Journal},
-  volume = {4},
-  number = {43},
-  pages = {1732},
-  author = {Mahesh R.G. Prasad and Napat Vajragupta and Alexander Hartmaier},
-  title = {Kanapy: A Python package for generating complex synthetic polycrystalline microstructures},
-  journal = {Journal of Open Source Software}
+@article{Biswas2020,
+  doi = {10.5281/zenodo.3662366},
+  url = {https://doi.org/10.5281/zenodo.3662366},
+  author = {Abhishek Biswas and Mahesh R.G. Prasad and Napat Vajragupta and Alexander Hartmaier},
+  title = {Kanapy: Synthetic polycrystalline microstructure generator with geometry and texture},
+  journal = {Zenodo},
+  year = {2020}
 }
 ```
 
@@ -201,8 +190,8 @@ synthetic microstructure generation tool for research and industry use.
 
 # Disclaimer
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS
-IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
 TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
 PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
