@@ -21,12 +21,12 @@ is implemented as
 
 # Features
 
--   Kanapy is used through Command Line Interface (CLI).
+-   Kanapy is used through a Command Line Interface (CLI).
 -   Possibility to analyze experimental microstructures based on [MTEX](https://mtex-toolbox.github.io/) functions.
 -   Generation of microstructure geometry based on statistical features as grain size distribution and grain aspect ratio distribution.
 -   Crystallographic texture reconstruction using orientations from
     experimental data in form of Orientation Distribution Function (ODF).
--   Optimal orientaion assignment based on measured Misorientation Distribution Function (MDF) that maintains correct statistical description of high-angle or low-angle grain boundary characteristics.
+-   Optimal orientation assignment based on measured Misorientation Distribution Function (MDF) that maintains correct statistical description of high-angle or low-angle grain boundary characteristics.
 -   Independent execution of individual modules through easy data
     storage and handling.
 -   In-built hexahedral mesh generator for complex polycrystalline
