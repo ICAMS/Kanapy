@@ -188,6 +188,12 @@ for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum -
 Germany](http://www.icams.de/content/). Our goal is to build a complete
 synthetic microstructure generation tool for research and industry use.
 
+# Authors
+
+Mahesh R.G Prasad, Abhishek Biswas, Napat Vajragupta, Alexander Hartmaier  
+[ICAMS](http://www.icams.de/content/) / [Ruhr-Universität Bochum](https://www.ruhr-uni-bochum.de/en), Germany 
+
+
 # Disclaimer
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
