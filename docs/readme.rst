@@ -4,60 +4,79 @@
 Overview
 =========
 
-.. image:: https://joss.theoj.org/papers/10.21105/joss.01732/status.svg
-   :target: https://doi.org/10.21105/joss.01732
-
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg
    :target: https://doi.org/10.5281/zenodo.3662366
    
-.. image:: https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical
-   
-.. image:: https://img.shields.io/travis/mrgprasad/kanapy.svg
-    :target: https://travis-ci.org/mrgprasad/kanapy
+.. image:: https://joss.theoj.org/papers/10.21105/joss.01732/status.svg
+   :target: https://doi.org/10.21105/joss.01732
 
-.. image:: https://codecov.io/gh/mrgprasad/kanapy/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/mrgprasad/kanapy
+.. image:: https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical
     
 .. image:: https://img.shields.io/badge/License-GNU%20AGPLv3-blue
    :target: https://www.gnu.org/licenses/agpl-3.0.html
 
-.. image:: https://img.shields.io/github/v/release/mrgprasad/kanapy
-
-Kanapy is a python package for generating complex synthetic polycrystalline microstructures. The general implementation is done in Python_ with the performance critical part for the geometry module implemented in C++. The Python bindings for the code written in C++ are generated using the lightweight header-only library pybind11_. The C++ part of the implementation utilizes the Eigen_ library for efficient linear algebra calculations. The texture module of Kanapy is implemented as MATLAB_ functions. It also utilizes several algorithms implemented in MTEX_ for texture analysis. 
-
-.. _Python: http://www.python.org
-.. _pybind11: https://pybind11.readthedocs.io/en/stable/
-.. _Eigen: http://eigen.tuxfamily.org/index.php?title=Main_Page
-.. _MATLAB: https://www.mathworks.com/products/matlab.html
-.. _MTEX: https://mtex-toolbox.github.io/
+Kanapy is a python package for generating complex three-dimensional (3D)
+synthetic polycrystalline microstructures that are built based on
+statistical information about grain geometry, given as grain size
+distribution and aspect ratio of grains, and crystallographic texture,
+given in form of orientation distribution functions (ODF) and
+misorientation distribution functions (MDF). Kanapy offers tools to
+analyze the geometry and texture of microstructures given by EBSD maps
+to generate 3D synthetic microstructures mimicking real ones in a
+statistical sense. The general implementation is done in
+`Python <http://www.python.org>`__ with the performance critical part
+for the geometry module implemented in C++. The Python bindings for the
+code written in C++ are generated using the lightweight header-only
+library `pybind11 <https://pybind11.readthedocs.io/en/stable/>`__. The
+C++ part of the implementation utilizes the
+`Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`__ library
+for efficient linear algebra calculations. The texture module of Kanapy
+is implemented as
+`MATLAB <https://www.mathworks.com/products/matlab.html>`__ functions
+using several algorithms implemented in
+`MTEX <https://mtex-toolbox.github.io/>`__ for texture analysis.
 
 Motivation
 ----------
 An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed to model simple and complex grain morphologies and to systematically incorporate texture data directly from experiments concurrently maintaining the numerical efficiency of the micromechanical model. Kanapy is developed to overcome the limitations of spatial tessellation methods and to provide an alternative to the existing Random Sequential Addition technique of microstructure geometry generation. 
 
-.. figure:: /figs/Kanapy_graphical_abstract.svg
+.. figure:: /figs/kanapy_graphical_abstract.png
     :align: center
     
     **Figure**: Kanapy workflow.
     
 Features
 --------
-* User interface to kanapy through CLI.   
-* Efficient collision handling of particles through a two-layer collision detection method employing the Octree spatial data structure and the bounding sphere hierarchy. 
-* Efficient ODF reconstruction directly using orientations from experimantal data.
-* Optimal orientaion assignment based on Measured misorientation distribution.
-* Independent execution of individual modules through easy data storage and handling.
-* In-built hexahedral mesh generator for complex polycrystalline microstructures.        
-* Flexibility in the choice of the particle packing time step to be sent for voxelization (meshing).
-* Option to generate spherical particle position- and radius files that can be read by the Voronoi tessellation software Neper_.
-* Option to generate input files for the commercial finite-element software Abaqus_.    
-* High-performance for the critical part of the geometry code using Python-C++ bindings.  
-
-.. _Neper: http://neper.sourceforge.net/
-.. _Abaqus: https://www.3ds.com/products-services/simulia/products/abaqus/
-
-.. role:: bash(code)
-   :language: bash
+-  Kanapy is used through a Command Line Interface (CLI).
+-  Possibility to analyze experimental microstructures based on
+   `MTEX <https://mtex-toolbox.github.io/>`__ functions.
+-  Generation of microstructure geometry based on statistical features
+   as grain size distribution and grain aspect ratio distribution.
+-  Crystallographic texture reconstruction using orientations from
+   experimental data in form of Orientation Distribution Function (ODF).
+-  Optimal orientation assignment based on measured Misorientation
+   Distribution Function (MDF) that maintains correct statistical
+   description of high-angle or low-angle grain boundary
+   characteristics.
+-  Independent execution of individual modules through easy data storage
+   and handling.
+-  In-built hexahedral mesh generator for complex polycrystalline
+   microstructures.
+-  Efficient generation of space filling structures by particle dynamics
+   method.
+-  Collision handling of particles through a two-layer collision
+   detection method employing the Octree spatial data structure and the
+   bounding sphere hierarchy.
+-  Flexibility in the choice of the particle packing time step to be
+   sent for voxelization (meshing).
+-  Option to generate spherical particle position- and radius files that
+   can be read by the Voronoi tessellation software
+   `Neper <http://neper.sourceforge.net/>`__.
+-  Option to generate input files for the commercial finite-element
+   software
+   `Abaqus <https://www.3ds.com/products-services/simulia/products/abaqus/>`__.
+-  High-performance for the critical part of the geometry code using
+   Python-C++ bindings.
    
 Installation
 ------------
@@ -79,8 +98,14 @@ a desired location and install.
     
     
 Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's 
-texture module, link Kanapy with MATLAB_ and MTEX_ installations by 
-running: :bash:`kanapy setupTexture` and follow the instructions.
+texture module, a MATLAB_ installation
+is required because the texture module is based on MTEX_ functions. If MATLAB is
+available on your system, the texture module is initialized by the
+command
+
+.. code-block:: console
+
+   (knpy) $ kanapy setupTexture
 
 .. note:: 1. ``knpy`` can be replaced with any name for your environment.
           2. For older versions of anaconda/miniconda use: ``source activate knpy``
@@ -104,26 +129,32 @@ Kanapy uses pytest to perform all its unit testing.
       
 Documentation build
 -------------------
-Documentation for kanapy is generated using Sphinx. The HTML documentation can be 
-found at *../kanapy-master/docs/builds/html/index.html*
+The complete documentation for kanapy is available online on GitHub
+Pages: https://icams.github.io/Kanapy/
+
+Documentation for kanapy is generated using Sphinx. You can create or
+update your local documentation with the command 
 
 .. code-block:: console  
     
     (knpy) $ kanapy genDocs                    
      
-    
+The HTML documentation is then found at *kanapy/docs/builds/html/index.html*
+
 Dependencies
--------------
+------------
 
 For Linux/Mac OS, Kanapy requires a working C/C++ compiler on your machine. The gcc 
 toolchain will work well. For Windows, Kanapy is installed as a pre-built distribution 
 (.whl file). In either case, the lightweight header-only library pybind11 
 is used to create Python bindings for the code written in C++.
 The C++ function will be complied by linking the Eigen library 
-(present in the directory *../kanapy-master/libs/*). CMake builds this extension.
+(present in the directory *kanapy/libs/*). CMake builds this extension.
 
-Kanapy's texture module requires MATLAB_ and MTEX_ to be installed on your machine.         
-Make sure to use MATLAB v2015a and above.
+Kanapy’s texture module requires MATLAB_ to be
+installed on your machine. Make sure to use MATLAB v2015a and above. The
+module uses a local version of MTEX_ contained in *kanapy/libs*
+and does not interfere with other installations of MTEX.
 
 .. _MATLAB: https://www.mathworks.com/products/matlab.html
 .. _MTEX: https://mtex-toolbox.github.io/
@@ -164,7 +195,7 @@ Optional dependencies
 
 
 Citation
----------
+--------
 The preferred way to cite Kanapy is: 
 
 .. code-block:: bibtex
@@ -196,7 +227,7 @@ Related works and applications
 
 
 License
---------
+-------
 Kanapy is made available under the GNU AGPLv3 license_.
 
 .. _license: https://www.gnu.org/licenses/agpl-3.0.html
@@ -204,7 +235,22 @@ Kanapy is made available under the GNU AGPLv3 license_.
 
 
 About
--------
+-----
 The name kanapy is derived from the sanskrit word káṇa_ meaning particle. Kanapy is primarily developed at the `Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany <http://www.icams.de/content/>`__. Our goal is to build a complete synthetic microstructure generation tool for research and industry use. 
 
 .. _káṇa: https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3
+
+Disclaimer
+----------
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS
+IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
