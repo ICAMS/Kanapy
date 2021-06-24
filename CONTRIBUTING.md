@@ -9,7 +9,7 @@ You can contribute in many ways:
 
 ### Report Bugs
 
-Report bugs at <https://github.com/mrgprasad/kanapy/issues>.
+Report bugs at <https://github.com/ICAMS/Kanapy/issues>.
 
 If you are reporting a bug, please include:
 
@@ -38,7 +38,7 @@ articles, and alike.
 ### Submit Feedback
 
 The best way to send feedback is to file an issue at
-<https://github.com/mrgprasad/kanapy/issues>.
+<https://github.com/ICAMS/Kanapy/issues>.
 
 If you are proposing a feature:
 
