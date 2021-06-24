@@ -79,7 +79,7 @@ class CMakeBuild(build_ext):
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.md') as history_file:
+with open('docs/HISTORY.rst') as history_file:
     history = history_file.read()
     
 from subprocess import CalledProcessError
@@ -87,8 +87,8 @@ from subprocess import CalledProcessError
 kwargs = dict(
     name='kanapy',
     version='2.1.1',
-    author='Mahesh R.G Prasad',
-    author_email='mahesh.prasad@rub.de',
+    author='Mahesh R.G. Prasad, Abhishek Biswas, Napat Vajragupta, Alexander Hartmaier',
+    author_email='alexander.hartmaier@rub.de',
     classifiers=[        
         'License :: GNU AFFERO GENERAL PUBLIC LICENSE v3',
         'Natural Language :: English',
