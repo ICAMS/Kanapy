@@ -169,18 +169,15 @@ The preferred way to cite Kanapy is:
 
 .. code-block:: bibtex
 
-  @article{Prasad2019,
-    doi = {10.21105/joss.01732},
-    url = {https://doi.org/10.21105/joss.01732},
-    year = {2019},
-    publisher = {The Open Journal},
-    volume = {4},
-    number = {43},
-    pages = {1732},
-    author = {Mahesh R.G. Prasad and Napat Vajragupta and Alexander Hartmaier},
-    title = {Kanapy: A Python package for generating complex synthetic polycrystalline microstructures},
-    journal = {Journal of Open Source Software}
+  @article{Biswas2020,
+    doi = {10.5281/zenodo.3662366},
+    url = {https://doi.org/10.5281/zenodo.3662366},
+    author = {Abhishek Biswas and Mahesh R.G. Prasad and Napat Vajragupta and Alexander Hartmaier},
+    title = {Kanapy: Synthetic polycrystalline microstructure generator with geometry and texture},
+    journal = {Zenodo},
+    year = {2020}
   }
+
 
 
 Related works and applications
