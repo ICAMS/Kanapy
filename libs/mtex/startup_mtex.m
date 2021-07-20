@@ -81,10 +81,10 @@ p();
 
 % make help searchable
 if ~isdeployed
-    if isempty(dir(fullfile(local_path,'doc','html','helpsearch*')))
-      disp('Creating search data base for MTEX documentation.')
-      builddocsearchdb(fullfile(local_path,'doc','html'));
-    end
+    %if isempty(dir(fullfile(local_path,'doc','html','helpsearch*')))
+    %  disp('Creating search data base for MTEX documentation.')
+    %  builddocsearchdb(fullfile(local_path,'doc','html'));
+    %end
 end
 
 % finish
