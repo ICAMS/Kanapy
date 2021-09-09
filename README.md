@@ -81,17 +81,18 @@ Kanapy uses pytest to perform all its unit testing.
 
 # Documentation
 
-The complete documentation for kanapy is available online on GitHub Pages: [https://icams.github.io/Kanapy/](https://icams.github.io/Kanapy/)
+Open *kanapy/docs/index.html* in a browser to access the complete documentation for kanapy.
 
-Documentation for kanapy is generated using Sphinx. You can create or update your local documentation with the command
+The documentation is also available online on GitHub Pages: [https://icams.github.io/Kanapy/](https://icams.github.io/Kanapy/)
+
+The documentation for kanapy is generated using [Sphinx](http://www.sphinx-doc.org/en/master/). You can create or update your local documentation with the command
 
 ```
 (knpy) $ kanapy genDocs                    
 ```
 
-The HTML
-documentation can be found at
-*kanapy/docs/builds/html/index.html*
+The updated HTML documentation can then be found at
+*kanapy/docs/builds/html*.
 
 # Dependencies
 
