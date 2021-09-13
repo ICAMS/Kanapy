@@ -309,16 +309,15 @@ Workflow for ODF reconstruction
 """"""""""""""""""""""""""""""""
 This example demonstrates the workflow for reconstructing ODF from experimental EBSD data. The principle involved 
 in generating the reduced ODF is described in the sub-section :ref:`ODF reconstruction`. Kanapy requires the EBSD data 
-estimated using MTEX as input in the (.mat) file format. In this regard, an exemplary EBSD file (`titanium.mat`) is
-provided in the ``../kanapy-master/examples/ODF_reconstruction/`` folder.
+saved as (.mat) file format. In this regard, an exemplary EBSD file (`ebsd_316L.mat`) is provided in the ``../kanapy-master/examples/ODF_reconstruction/`` folder.
 
 .. code-block:: console
 
     $ conda activate knpy
     (knpy) $ cd kanapy-master/examples/ODF_reconstruction/
-    (knpy) $ kanapy reduceODF -ebsd titanium.mat
+    (knpy) $ kanapy reduceODF -ebsd ebsd_316L.mat
     
-After navigating to the directory where the input file ``titanium.mat`` is located, kanapy's CLI 
+After navigating to the directory where ``ebsd_316L.mat`` is located, kanapy's CLI 
 command ``reduceODF`` is executed along with its argument (name of the EBSD (.mat) file). If kanapy's 
 geometry module is executed already, then the number of reduced orientations are read directly. Else kanapy requests 
 the user to provide the number of reduced orientations required before calling the MATLAB ODF reconstruction algorithm. 
@@ -329,16 +328,16 @@ the user to provide the number of reduced orientations required before calling t
 Alternatly, an initial kernel shape parameter (:math:`\kappa`) can be specified as an user input (OR) the grains 
 estimated using MTEX can be provided as an input in the (.mat) file format. The value of :math:`\kappa` must be in radians, 
 if user specified. Else if the grains (.mat) file is provided, then the optimum :math:`\kappa` is estimated by kanapy using 
-the mean orientation of the grains. In this regard, an exemplary grains file (``titanium_grains.mat``) is
+the mean orientation of the grains. In this regard, an exemplary grains file (``grains_316L.mat``) is
 provided in the ``../kanapy-master/examples/ODF_reconstruction/`` folder. The workflow for this looks like: 
 
 .. code-block:: console
 
     $ conda activate knpy
     (knpy) $ cd kanapy-master/examples/ODF_reconstruction/
-    (knpy) $ kanapy reduceODF -ebsd titanium.mat -kernel 0.096
+    (knpy) $ kanapy reduceODF -ebsd ebsd_316L.mat -kernel 0.096
                                      (OR)
-    (knpy) $ kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat
+    (knpy) $ kanapy reduceODF -ebsd ebsd_316L.mat -grains grains_316L.mat
 
 .. note:: 1. The output files are saved to the ``/mat_files`` folder under the current working directory. 
           2. The output (.txt) file contains the following information: :math:`L_1` error of ODF reconstruction, 
@@ -353,7 +352,7 @@ This example demonstrates the workflow for reconstructing ODF from experimental 
 assignment of orientations to RVE grains. The principle involved in optimal orientation assignment is described in the 
 sub-section :ref:`ODF reconstruction with orientation assignment`. In addition to the EBSD data, Kanapy requires 
 grain (.mat) file, and the grain boundary shared surface area information as input. In this regard, an exemplary 
-EBSD file (``titanium.mat``), and a grains file (``titanium_grains.mat``) are provided in the 
+EBSD file (``ebsd_316L.mat``), and a grains file (``grains_316L.mat``) are provided in the 
 ``../kanapy-master/examples/ODF_reconstruction_with_orientation_assignment/`` folder. It is important to note that 
 the grain boundary shared surface area file is created whilst generating an RVE by kanapy's geometry module.
 
@@ -366,9 +365,9 @@ the grain boundary shared surface area file is created whilst generating an RVE 
     (knpy) $ kanapy pack
     (knpy) $ kanapy voxelize    
     (knpy) $ kanapy outputStats
-    (knpy) $ kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat -fit_mad yes
+    (knpy) $ kanapy reduceODF -ebsd ebsd_316L.mat -grains grains_316L.mat -fit_mad yes
 
-After navigating to the directory where the input file ``titanium.mat`` is located, generate an RVE by calling kanapy's 
+After navigating to the directory where the input file ``ebsd_316L.mat`` is located, generate an RVE by calling kanapy's 
 geometry CLI commands: ``genStats``, ``genRVE``, ``pack`` & ``voxelize``. To generate the shared surface area file, 
 run ``outputStats`` command. Kanapy will write a ``shared_surfaceArea.csv`` 
 file to the ``/json_files/`` folder. This file contains the grain boundary shared surface area 
@@ -395,7 +394,7 @@ orientations after assignment and for estimating the ODF represented by the RVE.
              (:math:`\kappa`) and the optimized (:math:`\kappa^\prime`) values, and a list of discrete orientations each 
              with a specific grain number that it should be assigned to.
           5. Additionaly kanapy saves the reduced ODF and the reduced orientations (.mat) files in this folder.
-          6. Kanapy writes a log file (``kanapyTexture.log``) in the current working directory for possible errors and warnings debugging.             
+          6. Kanapy writes a log file (``kanapyTexture.log``) in the current working directory for possible errors and warnings debugging.           
 
 
 """""""""""""""""""""""""""""""""
