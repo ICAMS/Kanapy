@@ -485,14 +485,13 @@ installed in your system. If your kanapy is not configured for texture analysis,
 <h4>Workflow for ODF reconstruction<a class="headerlink" href="#workflow-for-odf-reconstruction" title="Permalink to this headline">¶</a></h4>
 <p>This example demonstrates the workflow for reconstructing ODF from experimental EBSD data. The principle involved
 in generating the reduced ODF is described in the sub-section <a class="reference internal" href="applications.html#odf-reconstruction"><span class="std std-ref">ODF reconstruction</span></a>. Kanapy requires the EBSD data
-estimated using MTEX as input in the (.mat) file format. In this regard, an exemplary EBSD file (<cite>titanium.mat</cite>) is
-provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction/</span></code> folder.</p>
+saved as (.mat) file format. In this regard, an exemplary EBSD file (<cite>ebsd_316L.mat</cite>) is provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction/</span></code> folder.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda activate knpy
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span><span class="nb">cd</span> kanapy-master/examples/ODF_reconstruction/
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy reduceODF -ebsd titanium.mat
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy reduceODF -ebsd ebsd_316L.mat
 </pre></div>
 </div>
-<p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code> is located, kanapy’s CLI
+<p>After navigating to the directory where <code class="docutils literal notranslate"><span class="pre">ebsd_316L.mat</span></code> is located, kanapy’s CLI
 command <code class="docutils literal notranslate"><span class="pre">reduceODF</span></code> is executed along with its argument (name of the EBSD (.mat) file). If kanapy’s
 geometry module is executed already, then the number of reduced orientations are read directly. Else kanapy requests
 the user to provide the number of reduced orientations required before calling the MATLAB ODF reconstruction algorithm.</p>
@@ -506,13 +505,13 @@ the user to provide the number of reduced orientations required before calling t
 <p>Alternatly, an initial kernel shape parameter (<span class="math notranslate nohighlight">\(\kappa\)</span>) can be specified as an user input (OR) the grains
 estimated using MTEX can be provided as an input in the (.mat) file format. The value of <span class="math notranslate nohighlight">\(\kappa\)</span> must be in radians,
 if user specified. Else if the grains (.mat) file is provided, then the optimum <span class="math notranslate nohighlight">\(\kappa\)</span> is estimated by kanapy using
-the mean orientation of the grains. In this regard, an exemplary grains file (<code class="docutils literal notranslate"><span class="pre">titanium_grains.mat</span></code>) is
+the mean orientation of the grains. In this regard, an exemplary grains file (<code class="docutils literal notranslate"><span class="pre">grains_316L.mat</span></code>) is
 provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction/</span></code> folder. The workflow for this looks like:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda activate knpy
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span><span class="nb">cd</span> kanapy-master/examples/ODF_reconstruction/
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy reduceODF -ebsd titanium.mat -kernel <span class="m">0</span>.096
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy reduceODF -ebsd ebsd_316L.mat -kernel <span class="m">0</span>.096
 <span class="go">                                 (OR)</span>
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy reduceODF -ebsd ebsd_316L.mat -grains grains_316L.mat
 </pre></div>
 </div>
 <div class="admonition note">
@@ -532,7 +531,7 @@ the initial (<span class="math notranslate nohighlight">\(\kappa\)</span>) and t
 assignment of orientations to RVE grains. The principle involved in optimal orientation assignment is described in the
 sub-section <a class="reference internal" href="applications.html#odf-reconstruction-with-orientation-assignment"><span class="std std-ref">ODF reconstruction with orientation assignment</span></a>. In addition to the EBSD data, Kanapy requires
 grain (.mat) file, and the grain boundary shared surface area information as input. In this regard, an exemplary
-EBSD file (<code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code>), and a grains file (<code class="docutils literal notranslate"><span class="pre">titanium_grains.mat</span></code>) are provided in the
+EBSD file (<code class="docutils literal notranslate"><span class="pre">ebsd_316L.mat</span></code>), and a grains file (<code class="docutils literal notranslate"><span class="pre">grains_316L.mat</span></code>) are provided in the
 <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction_with_orientation_assignment/</span></code> folder. It is important to note that
 the grain boundary shared surface area file is created whilst generating an RVE by kanapy’s geometry module.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda activate knpy
@@ -542,10 +541,10 @@ the grain boundary shared surface area file is created whilst generating an RVE 
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy pack
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy voxelize
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy outputStats
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy reduceODF -ebsd titanium.mat -grains titanium_grains.mat -fit_mad yes
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy reduceODF -ebsd ebsd_316L.mat -grains grains_316L.mat -fit_mad yes
 </pre></div>
 </div>
-<p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">titanium.mat</span></code> is located, generate an RVE by calling kanapy’s
+<p>After navigating to the directory where the input file <code class="docutils literal notranslate"><span class="pre">ebsd_316L.mat</span></code> is located, generate an RVE by calling kanapy’s
 geometry CLI commands: <code class="docutils literal notranslate"><span class="pre">genStats</span></code>, <code class="docutils literal notranslate"><span class="pre">genRVE</span></code>, <code class="docutils literal notranslate"><span class="pre">pack</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">voxelize</span></code>. To generate the shared surface area file,
 run <code class="docutils literal notranslate"><span class="pre">outputStats</span></code> command. Kanapy will write a <code class="docutils literal notranslate"><span class="pre">shared_surfaceArea.csv</span></code>
 file to the <code class="docutils literal notranslate"><span class="pre">/json_files/</span></code> folder. This file contains the grain boundary shared surface area
