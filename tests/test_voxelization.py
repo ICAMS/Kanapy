@@ -222,7 +222,7 @@ def test_voxelizationRoutine():
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2) 
 
-    RVEcreator(stat_inp)   
+    RVEcreator(to_write, save_files=True)   
 
     # create an temporary 'dump' directory for reading files from
     with open(json_dir + '/RVE_data.json') as json_file:

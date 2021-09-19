@@ -67,8 +67,16 @@ def createStats(ctx, f: str):
         if not os.path.exists(cwd + '/{}'.format(f)):
             click.echo('')
             click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(f), err=True)
-            sys.exit(0)        
-        particleStatGenerator(cwd + '/' + f)           
+            sys.exit(0)     
+        # Open the user input statistics file and read the data
+        try:                
+            with open(cwd + '/' + f) as json_file:  
+                 stats_dict = json.load(json_file)                   
+                 
+        except FileNotFoundError:
+            print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
+            raise FileNotFoundError  
+        particleStatGenerator(stats_dict)           
 
 
 @main.command(name='genRVE')
@@ -87,8 +95,16 @@ def createRVE(ctx, f: str):
         if not os.path.exists(cwd + '/{}'.format(f)):
             click.echo('')
             click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(f), err=True)
-            sys.exit(0)        
-        RVEcreator(cwd + '/' + f)   
+            sys.exit(0)
+        # Open the user input statistics file and read the data
+        try:
+            with open(cwd + '/' + f) as json_file:  
+                stats_dict = json.load(json_file)                               
+                 
+        except FileNotFoundError:
+            print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
+            raise FileNotFoundError
+        RVEcreator(stats_dict, save_files=True)   
                 
 
 @main.command(name='readGrains')
