@@ -80,7 +80,7 @@ def temp_dump():
 
     # Inititalize the simulation box
     sbox = Simulation_Box(10, 10, 10)
-    write_dump(ells, sbox, len(ells))
+    write_dump(ells, sbox)
     return sbox
 
 
