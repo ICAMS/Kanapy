@@ -4,10 +4,9 @@ import shutil, json
 import click
 
 from kanapy.util import ROOT_DIR, MAIN_DIR 
-from kanapy.input_output import particleStatGenerator, particleCreator, RVEcreator
-from kanapy.input_output import write_position_weights, write_abaqus_inp 
-from kanapy.input_output import write_output_stat, plot_output_stats
-from kanapy.input_output import extract_volume_sharedGBarea
+from kanapy.input_output import particleStatGenerator, particleCreator, RVEcreator, \
+    write_position_weights, write_abaqus_inp, write_output_stat, plot_output_stats, \
+    extract_volume_sharedGBarea, read_dump
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.analyze_texture import textureReduction
@@ -143,14 +142,56 @@ def readGrains(ctx, f: str, periodic: str, units: str):
 @click.pass_context
 def pack(ctx):
     """ Packs the particles into a simulation box."""
-    packingRoutine()
-
+    try:
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'          # Folder to store the json files
+    
+        try:
+            # Load the dictionaries from json files
+            with open(json_dir + '/particle_data.json') as json_file:
+                particle_data = json.load(json_file)
+    
+            with open(json_dir + '/RVE_data.json') as json_file:
+                RVE_data = json.load(json_file)
+    
+            with open(json_dir + '/simulation_data.json') as json_file:
+                simulation_data = json.load(json_file)
+    
+        except:
+            raise FileNotFoundError('Json files not found, make sure "RVE creator" command is executed first!')
+        packingRoutine(particle_data, RVE_data, simulation_data, save_files=True)
+    except KeyboardInterrupt:
+        sys.exit(0)
 
 @main.command()
 @click.pass_context
 def voxelize(ctx):
-    """ Generates the RVE by assigning voxels to grains."""        
-    voxelizationRoutine()
+    """ Generates the RVE by assigning voxels to grains."""
+    try:
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'          # Folder to store the json files
+    
+        try:
+            with open(json_dir + '/RVE_data.json') as json_file:
+                RVE_data = json.load(json_file)
+    
+            with open(json_dir + '/particle_data.json') as json_file:  
+                particle_data = json.load(json_file)
+            
+        except FileNotFoundError:
+            print('Json file not found, make sure "RVE_data.json" file exists!')
+            raise FileNotFoundError
+        
+        # Read the required dump file
+        if particle_data['Type'] == 'Equiaxed':
+            filename = cwd + '/dump_files/particle.{0}.dump'.format(800)            
+        else:
+            filename = cwd + '/dump_files/particle.{0}.dump'.format(500) 
+    
+        sim_box, Ellipsoids = read_dump(filename)  
+        voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files=True)
+    except KeyboardInterrupt:
+        sys.exit(0)
 
 
 @main.command()

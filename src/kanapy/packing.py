@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
-import json
+#import os
+#import sys
+#import json
 import random
 from tqdm import tqdm
 
@@ -73,7 +73,7 @@ def particle_generator(particle_data, sim_box):
     return Ellipsoids
 
 
-def particle_grow(sim_box, Ellipsoids, periodicity, nsteps):
+def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, dump=False):
     """
     Initializes the :class:`entities.Octree` class and performs recursive subdivision with 
     collision checks and response for the ellipsoids. At each time step of the simulation it 
@@ -103,17 +103,15 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps):
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
                                 sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
         tree.update()
-
-        # Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)
-        write_dump(Ellipsoids, sim_box, len(Ellipsoids))
+        
+        if dump:
+            # Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)
+            write_dump(Ellipsoids, sim_box)
 
         # Delete duplicates if existing (Active only if periodicity is True)
         # find all the items which are not duplicates
         inter_ell = [ell for ell in Ellipsoids if not isinstance(ell.id, str)]
         Ellipsoids = inter_ell
-
-        # Dump the ellipsoid information to be read by OVITO (Doesn't include duplicates at periodic boundaries)
-        #write_dump(Ellipsoids, sim_box, len(Ellipsoids))
 
         dups = []
         # Loop over the ellipsoids: move, set Bbox, & check for wall collision / PBC
@@ -134,10 +132,10 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps):
         # Update the simulation time
         sim_box.sim_ts += 1
         
-    return
+    return Ellipsoids, sim_box
 
 
-def packingRoutine(particle_data=None, RVE_data=None, simulation_data=None):
+def packingRoutine(particle_data, RVE_data, simulation_data, save_files=False):
     """
     The main function that controls the particle packing routine using: :meth:`particle_grow` & :meth:`particle_generator`
     
@@ -148,25 +146,7 @@ def packingRoutine(particle_data=None, RVE_data=None, simulation_data=None):
               * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.
               * Simulation attributes such as total number of timesteps and periodicity.                         
     """
-    print('Starting particle simulation')
-    if RVE_data is None:
-        cwd = os.getcwd()
-        json_dir = cwd + '/json_files'          # Folder to store the json files
-
-        try:
-            # Load the dictionaries from json files
-            with open(json_dir + '/particle_data.json') as json_file:
-                particle_data = json.load(json_file)
-
-            with open(json_dir + '/RVE_data.json') as json_file:
-                RVE_data = json.load(json_file)
-
-            with open(json_dir + '/simulation_data.json') as json_file:
-                simulation_data = json.load(json_file)
-
-        except:
-            raise FileNotFoundError('Json files not found, make sure "RVE creator" command is executed first!')
-            
+    print('Starting particle simulation')     
     print('    Creating simulation box of required dimensions')
     # Create an instance of simulation box
     sim_box = Simulation_Box(RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ'])
@@ -185,7 +165,10 @@ def packingRoutine(particle_data=None, RVE_data=None, simulation_data=None):
     else:
         raise ValueError('Wrong value for periodicity in packingRoutine')   
         
-    particle_grow(sim_box, Particles, periodic_status, simulation_data['Time steps'])
+    particles, simbox = particle_grow(sim_box, Particles, periodic_status, \
+                                      simulation_data['Time steps'], dump=save_files)
     
     print('Completed particle packing')
     print('')
+    
+    return particles, simbox

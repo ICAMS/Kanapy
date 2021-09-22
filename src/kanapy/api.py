@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import json
-from kanapy.input_output import particleStatGenerator, RVEcreator
+from kanapy.input_output import particleStatGenerator, RVEcreator, write_abaqus_inp 
 from kanapy.packing import packingRoutine
+from kanapy.voxelization import voxelizationRoutine
+from kanapy.smoothingGB import smoothingRoutine
 
 class Microstructure:
     '''Define class for synthetic microstructures'''
@@ -41,9 +43,32 @@ class Microstructure:
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))  
         particleStatGenerator(descriptor)
         
-    def pack(self):
-        packingRoutine(self.particle_data, self.RVE_data, self.simulation_data)
+    def pack(self, pd=None, rd=None, sd=None):
+        """ Packs the particles into a simulation box."""
+        if pd is None:
+            pd = self.particle_data
+        if rd is None:
+            rd = self.RVE_data
+        if sd is None:
+            sd = self.simulation_data
+        self.particles, self.simbox = packingRoutine(pd, rd, sd)
+        
+    def voxelize(self, pd=None, rd=None, kana=None, sb=None):
+        """ Generates the RVE by assigning voxels to grains."""   
+        if pd is None:
+            pd = self.particle_data
+        if rd is None:
+            rd = self.RVE_data
+        if kana is None:
+            kana = self.particles
+        if sb is None:
+            sb = self.simbox
+        self.nodeDict, self.elmtDict, self.elmtSetDict = voxelizationRoutine(pd, rd, kana, sb)
 
-ms = Microstructure()
-ms.create_RVE(file='../../examples/ellipsoid_packing/stat_input.json')
-ms.pack()
+    def smoothen(self):
+        """ Generates smoothed grain boundary from a voxelated mesh."""
+        smoothingRoutine()    
+            
+    def abq_output(self):
+        """ Writes out the Abaqus (.inp) file for the generated RVE."""    
+        write_abaqus_inp()

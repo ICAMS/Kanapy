@@ -9,7 +9,7 @@ from collections import defaultdict
 import numpy as np
 from scipy.spatial import ConvexHull
 
-from kanapy.input_output import read_dump, write_output_stat
+#from kanapy.input_output import read_dump, write_output_stat
 
 
 def points_in_convexHull(Points, hull):
@@ -305,9 +305,8 @@ def reassign_shared_voxels(cooDict, Ellipsoids):
                 clo_ells[0].inside_voxels.append(vox)
             # Else: Determine the smallest and assign to it
             else:
-                clo_vol = np.array([ce.get_volume() for ce in clo_ells])    # Determine the volumes
-        
-                small_loc = np.where(clo_vol == clo_vol.min())[0]     # Smallest ellipsoid index
+                #clo_vol = np.array([ce.get_volume() for ce in clo_ells])    # Determine the volumes
+                #small_loc = np.where(clo_vol == clo_vol.min())[0]     # Smallest ellipsoid index
                 small_ells = [ells[loc] for loc in clo_loc]           # Smallest ellipsoids
             
                 # assign to the smallest one regardless how many are of the same volume
@@ -317,7 +316,7 @@ def reassign_shared_voxels(cooDict, Ellipsoids):
     return
     
 
-def voxelizationRoutine():
+def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files=False):
     """
     The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`, :meth:`create_voxels`
     , :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`
@@ -331,66 +330,46 @@ def voxelizationRoutine():
                 * Element set dictionary containing element set ID and group of 
                   elements each representing a grain of the RVE.                                 
     """
-    try:
-        print('')
-        print('Starting RVE voxelization')
+    print('')
+    print('Starting RVE voxelization')
+    
+    #RVE_sizeX, RVE_sizeY, RVE_sizeZ = RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ']
+    voxX, voxY, voxZ = RVE_data['Voxel_numberX'], RVE_data['Voxel_numberY'], RVE_data['Voxel_numberZ']        
+    #voxel_resX, voxel_resY, voxel_resZ = RVE_data['Voxel_resolutionX'], RVE_data['Voxel_resolutionY'], RVE_data['Voxel_resolutionZ']           
 
+    # create voxels inside the RVE
+    nodeDict, elmtDict, vox_centerDict = create_voxels(sim_box, (voxX,voxY,voxZ))              
+
+    # Find the voxels belonging to each grain by growing ellipsoid each time
+    assign_voxels_to_ellipsoid(vox_centerDict, Ellipsoids, elmtDict)
+
+    # Create element sets
+    elmtSetDict = {}
+    for ellipsoid in Ellipsoids:
+        if ellipsoid.inside_voxels:
+            # If the ellipsoid is a duplicate add the voxels to the original ellipsoid
+            if ellipsoid.duplicate:
+                if int(ellipsoid.duplicate) not in elmtSetDict:
+                    elmtSetDict[int(ellipsoid.duplicate)] = [int(iv) for iv in ellipsoid.inside_voxels]
+                else:
+                    elmtSetDict[int(ellipsoid.duplicate)].extend(
+                        [int(iv) for iv in ellipsoid.inside_voxels])
+            # Else it is the original ellipsoid
+            else:
+                elmtSetDict[int(ellipsoid.id)] = [int(iv) for iv in ellipsoid.inside_voxels]
+        else:
+            continue
+            # If ellipsoid does'nt contain any voxel inside
+            print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissable'.format(
+                int(ellipsoid.id)))
+            sys.exit(0)
+
+    print('Completed RVE voxelization')
+    print('')
+    
+    if save_files:
         cwd = os.getcwd()
         json_dir = cwd + '/json_files'          # Folder to store the json files
-
-        try:
-            with open(json_dir + '/RVE_data.json') as json_file:
-                RVE_data = json.load(json_file)
-
-            with open(json_dir + '/particle_data.json') as json_file:  
-                particle_data = json.load(json_file)
-            
-        except FileNotFoundError:
-            print('Json file not found, make sure "RVE_data.json" file exists!')
-            raise FileNotFoundError
-        
-        RVE_sizeX, RVE_sizeY, RVE_sizeZ = RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ']
-        voxX, voxY, voxZ = RVE_data['Voxel_numberX'], RVE_data['Voxel_numberY'], RVE_data['Voxel_numberZ']        
-        voxel_resX, voxel_resY, voxel_resZ = RVE_data['Voxel_resolutionX'], RVE_data['Voxel_resolutionY'], RVE_data['Voxel_resolutionZ']           
-
-        # Read the required dump file
-        if particle_data['Type'] == 'Equiaxed':
-            filename = cwd + '/dump_files/particle.{0}.dump'.format(800)            
-        else:
-            filename = cwd + '/dump_files/particle.{0}.dump'.format(500)            
-
-        sim_box, Ellipsoids = read_dump(filename)
-        
-        # create voxels inside the RVE
-        nodeDict, elmtDict, vox_centerDict = create_voxels(sim_box, (voxX,voxY,voxZ))              
-
-        # Find the voxels belonging to each grain by growing ellipsoid each time
-        assign_voxels_to_ellipsoid(vox_centerDict, Ellipsoids, elmtDict)
-
-        # Create element sets
-        elmtSetDict = {}
-        for ellipsoid in Ellipsoids:
-            if ellipsoid.inside_voxels:
-                # If the ellipsoid is a duplicate add the voxels to the original ellipsoid
-                if ellipsoid.duplicate:
-                    if int(ellipsoid.duplicate) not in elmtSetDict:
-                        elmtSetDict[int(ellipsoid.duplicate)] = [int(iv) for iv in ellipsoid.inside_voxels]
-                    else:
-                        elmtSetDict[int(ellipsoid.duplicate)].extend(
-                            [int(iv) for iv in ellipsoid.inside_voxels])
-                # Else it is the original ellipsoid
-                else:
-                    elmtSetDict[int(ellipsoid.id)] = [int(iv) for iv in ellipsoid.inside_voxels]
-            else:
-                continue
-                # If ellipsoid does'nt contain any voxel inside
-                print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissable'.format(
-                    int(ellipsoid.id)))
-                sys.exit(0)
-
-        print('Completed RVE voxelization')
-        print('')
-        
         if not os.path.exists(json_dir):
             os.makedirs(json_dir)
 
@@ -403,10 +382,6 @@ def voxelizationRoutine():
 
         with open(json_dir + '/elmtSetDict.json', 'w') as outfile:
             json.dump(elmtSetDict, outfile, indent=2)  
-                                                                                       
-        return
-
-    except KeyboardInterrupt:
-        sys.exit(0)
-        return
+                                                                                   
+    return nodeDict, elmtDict, elmtSetDict
         

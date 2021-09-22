@@ -93,7 +93,7 @@ class Ellipsoid(object):
               3. An empty list for storing voxels belonging to the ellipsoid is initialized.                   
     """
 
-    def __init__(self, iden, x, y, z, a, b, c, quat):
+    def __init__(self, iden, x, y, z, a, b, c, quat, dup=None):
         self.id = iden
         self.x = x
         self.y = y
@@ -110,7 +110,7 @@ class Ellipsoid(object):
         self.surfacePointsGen()    # Initialize surface points for the ellipsoid
         self.inside_voxels = []    # List that stores voxels belonging to the ellipsoid
         self.set_cub()             # sets particle cuboid for collision testing with octree boxes
-        self.duplicate = None      # Duplicate status used for voxelization
+        self.duplicate = dup      # Duplicate status used for voxelization
         
     def get_pos(self):
         """
@@ -336,124 +336,124 @@ class Ellipsoid(object):
             if sum([left, top, right, bottom, front, back]) == 3:
                 if left and top and front:
                     p1 = Ellipsoid(str(self.id)+'_RTF', self.x+sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z, self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_RBF', self.x+sim_width, self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_LBF', self.x,           self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z, self.a, self.b, self.c, self.quat, dup=self.id)
                     p4 = Ellipsoid(str(self.id)+'_LTB', self.x,           self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p5 = Ellipsoid(str(self.id)+'_RTB', self.x+sim_width, self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p6 = Ellipsoid(str(self.id)+'_RBB', self.x+sim_width, self.y +
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p7 = Ellipsoid(str(self.id)+'_LBB', self.x,           self.y +
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif right and top and front:
                     p1 = Ellipsoid(str(self.id)+'_RBF', self.x,           self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_LBF', self.x-sim_width, self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_LTF', self.x-sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p4 = Ellipsoid(str(self.id)+'_RTB', self.x,           self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p5 = Ellipsoid(str(self.id)+'_RBB', self.x,           self.y +
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p6 = Ellipsoid(str(self.id)+'_LBB', self.x-sim_width, self.y +
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p7 = Ellipsoid(str(self.id)+'_LTB', self.x-sim_width, self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif right and bottom and front:
                     p1 = Ellipsoid(str(self.id)+'_LBF', self.x-sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_LTF', self.x-sim_width, self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_RTF', self.x,           self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p4 = Ellipsoid(str(self.id)+'_RBB', self.x,           self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p5 = Ellipsoid(str(self.id)+'_LBB', self.x-sim_width, self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p6 = Ellipsoid(str(self.id)+'_LTB', self.x-sim_width, self.y -
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p7 = Ellipsoid(str(self.id)+'_RTB', self.x,           self.y -
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif left and bottom and front:
                     p1 = Ellipsoid(str(self.id)+'_LTF', self.x,           self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_RTF', self.x+sim_width, self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_RBF', self.x+sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p4 = Ellipsoid(str(self.id)+'_LBB', self.x,           self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p5 = Ellipsoid(str(self.id)+'_LTB', self.x,           self.y -
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p6 = Ellipsoid(str(self.id)+'_RTB', self.x+sim_width, self.y -
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p7 = Ellipsoid(str(self.id)+'_RBB', self.x+sim_width, self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif left and top and back:
                     p1 = Ellipsoid(str(self.id)+'_RTB', self.x+sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_RBB', self.x+sim_width, self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_LBB', self.x,           self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p4 = Ellipsoid(str(self.id)+'_LTF', self.x,           self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p5 = Ellipsoid(str(self.id)+'_RTF', self.x+sim_width, self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p6 = Ellipsoid(str(self.id)+'_RBF', self.x+sim_width, self.y +
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p7 = Ellipsoid(str(self.id)+'_LBF', self.x,           self.y +
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif right and top and back:
                     p1 = Ellipsoid(str(self.id)+'_RBB', self.x,           self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_LBB', self.x-sim_width, self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_LTB', self.x-sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p4 = Ellipsoid(str(self.id)+'_RTF', self.x,           self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p5 = Ellipsoid(str(self.id)+'_RBF', self.x,           self.y +
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p6 = Ellipsoid(str(self.id)+'_LBF', self.x-sim_width, self.y +
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p7 = Ellipsoid(str(self.id)+'_LTF', self.x-sim_width, self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif right and bottom and back:
                     p1 = Ellipsoid(str(self.id)+'_LBB', self.x-sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_LTB', self.x-sim_width, self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_RTB', self.x,           self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p4 = Ellipsoid(str(self.id)+'_RBF', self.x,           self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p5 = Ellipsoid(str(self.id)+'_LBF', self.x-sim_width, self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p6 = Ellipsoid(str(self.id)+'_LTF', self.x-sim_width, self.y -
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p7 = Ellipsoid(str(self.id)+'_RTF', self.x,           self.y -
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif left and bottom and back:
                     p1 = Ellipsoid(str(self.id)+'_LTB', self.x,           self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_RTB', self.x+sim_width, self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_RBB', self.x+sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p4 = Ellipsoid(str(self.id)+'_LBF', self.x,           self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p5 = Ellipsoid(str(self.id)+'_LTF', self.x,           self.y -
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p6 = Ellipsoid(str(self.id)+'_RTF', self.x+sim_width, self.y -
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p7 = Ellipsoid(str(self.id)+'_RBF', self.x+sim_width, self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
 
                 duplicates.extend([p1, p2, p3, p4, p5, p6, p7])
                 return duplicates
@@ -462,88 +462,88 @@ class Ellipsoid(object):
             elif sum([left, top, right, bottom, front, back]) == 2:
                 if left and top:
                     p1 = Ellipsoid(str(self.id)+'_RT', self.x+sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_LB', self.x,           self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_RB', self.x+sim_width, self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                 elif right and top:
                     p1 = Ellipsoid(str(self.id)+'_LT', self.x-sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_LB', self.x-sim_width, self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_RB', self.x,           self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                 elif left and bottom:
                     p1 = Ellipsoid(str(self.id)+'_RB', self.x+sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_LT', self.x,           self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_RT', self.x+sim_width, self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                 elif right and bottom:
                     p1 = Ellipsoid(str(self.id)+'_LB', self.x-sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_RT', self.x,           self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_LT', self.x-sim_width, self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                 elif front and top:
                     p1 = Ellipsoid(str(self.id)+'_FB', self.x,           self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_BT', self.x,           self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_BB', self.x,           self.y +
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif front and bottom:
                     p1 = Ellipsoid(str(self.id)+'_FT', self.x,           self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_BT', self.x,           self.y -
-                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_BB', self.x,           self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif back and top:
                     p1 = Ellipsoid(str(self.id)+'_BB', self.x,           self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_FT', self.x,           self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_FB', self.x,           self.y +
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif back and bottom:
                     p1 = Ellipsoid(str(self.id)+'_BT', self.x,           self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_FT', self.x,           self.y -
-                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_FB', self.x,           self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif front and right:
                     p1 = Ellipsoid(str(self.id)+'_FL', self.x-sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_BR', self.x,           self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_BL', self.x-sim_width, self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif front and left:
                     p1 = Ellipsoid(str(self.id)+'_FR', self.x+sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_BL', self.x,           self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_BR', self.x+sim_width, self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif back and right:
                     p1 = Ellipsoid(str(self.id)+'_BL', self.x-sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_FR', self.x,           self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_FL', self.x-sim_width, self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif back and left:
                     p1 = Ellipsoid(str(self.id)+'_BR', self.x+sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                     p2 = Ellipsoid(str(self.id)+'_FL', self.x,           self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p3 = Ellipsoid(str(self.id)+'_FR', self.x+sim_width, self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 duplicates.extend([p1, p2, p3])
                 return duplicates
 
@@ -551,22 +551,22 @@ class Ellipsoid(object):
             elif sum([left, top, right, bottom, front, back]) == 1:
                 if left:
                     p1 = Ellipsoid(str(self.id)+'_R', self.x+sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                 elif right:
                     p1 = Ellipsoid(str(self.id)+'_L', self.x-sim_width, self.y,
-                                   self.z,           self.a, self.b, self.c, self.quat)
+                                   self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                 elif bottom:
                     p1 = Ellipsoid(str(self.id)+'_T', self.x,           self.y -
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                 elif top:
                     p1 = Ellipsoid(str(self.id)+'_B', self.x,           self.y +
-                                   sim_height, self.z,           self.a, self.b, self.c, self.quat)
+                                   sim_height, self.z,           self.a, self.b, self.c, self.quat, dup=self.id)
                 elif front:
                     p1 = Ellipsoid(str(self.id)+'_Ba', self.x,          self.y,
-                                   self.z+sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z+sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 elif back:
                     p1 = Ellipsoid(str(self.id)+'_F', self.x,           self.y,
-                                   self.z-sim_depth, self.a, self.b, self.c, self.quat)
+                                   self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
 
                 duplicates.append(p1)
                 return duplicates
