@@ -2,6 +2,8 @@
 
 """Top-level package for kanapy."""
 
-__author__ = """Mahesh R.G Prasad"""
-__email__ = 'mahesh.prasad@rub.de'
-__version__ = '2.1.1'
+from kanapy.api import Microstructure
+
+__author__ = """Mahesh R.G Prasad, Abhishek Biswas, Alexander Hartmaier"""
+__email__ = 'alexander.hartmaier@rub.de'
+__version__ = '3.1.1'
