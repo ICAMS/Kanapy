@@ -7,15 +7,8 @@ from kanapy.smoothingGB import smoothingRoutine
 
 class Microstructure:
     '''Define class for synthetic microstructures'''
-    def __init__(self, name='Microstructure'):
+    def __init__(self, descriptor=None, file=None, name='Microstructure'):
         self.name = name
-        
-    def pname(self):
-        print(self.name)
-    
-    def create_RVE(self, descriptor=None, file=None):    
-        """ Creates RVE based on the data provided in the input file."""
-        
         if descriptor is None:
             if file is None:
                 raise ValueError('Please provide either a dictionary with statistics or an input file name')
@@ -23,24 +16,24 @@ class Microstructure:
             # Open the user input statistics file and read the data
             try:
                 with open(file) as json_file:  
-                     descriptor = json.load(json_file)
+                     self.descriptor = json.load(json_file)
             except:
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
-
+        else:
+            self.descriptor = descriptor
+            if file is not None:
+                print('WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
+    
+    def create_RVE(self, descriptor=None):    
+        """ Creates RVE based on the data provided in the input file."""
+        if descriptor is None:
+            descriptor = self.descriptor  
         self.particle_data, self.RVE_data, self.simulation_data = RVEcreator(descriptor)
             
-    def create_stats(self, descriptor=None, file=None):    
+    def create_stats(self, descriptor=None, ):    
         """ Generates particle statistics based on the data provided in the input file."""
-                    
         if descriptor is None:
-            if file is None:
-                raise ValueError('Please provide either a dictionary with statistics or an input file name')
-            # Open the user input statistics file and read the data
-            try:
-                with open(file) as json_file:  
-                     descriptor = json.load(json_file)
-            except:
-                raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))  
+            descriptor = self.descriptor  
         particleStatGenerator(descriptor)
         
     def pack(self, pd=None, rd=None, sd=None):
