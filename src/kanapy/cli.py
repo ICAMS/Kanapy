@@ -75,7 +75,7 @@ def createStats(ctx, f: str):
         except FileNotFoundError:
             print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
             raise FileNotFoundError  
-        particleStatGenerator(stats_dict)           
+        particleStatGenerator(stats_dict, save_files=True)           
 
 
 @main.command(name='genRVE')

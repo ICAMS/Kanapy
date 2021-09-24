@@ -135,7 +135,7 @@ def particleStatGenerator(stats_dict, save_files=False):
         sns.set(color_codes=True)                                    
         fig, ax = plt.subplots(2, 1, figsize=(9, 9))  
         plt.ion()
-        plt.show()
+        #plt.show()
         
         # Plot PDF                                  
         ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
@@ -161,14 +161,15 @@ def particleStatGenerator(stats_dict, save_files=False):
         ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(ar_cutoff_min))
         ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(ar_cutoff_max))    
         ax[1].legend(fontsize=14)
+        plt.show()
                    
         if save_files:
             plt.savefig("Input_distribution.png", bbox_inches="tight")  
-        plt.draw()
-        plt.pause(0.001)
-        print(' ') 
-        input("    Press [enter] to continue")     
-        print("    'Input_distribution.png' is placed in the current working directory\n")
+            plt.draw()
+            plt.pause(0.001)
+            print(' ') 
+            input("    Press [enter] to continue")     
+            print("    'Input_distribution.png' is placed in the current working directory\n")
                                          
     return
 
