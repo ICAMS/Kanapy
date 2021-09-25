@@ -24,17 +24,17 @@ class Microstructure:
             if file is not None:
                 print('WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
     
-    def create_RVE(self, descriptor=None):    
+    def create_RVE(self, descriptor=None, save_files=False):    
         """ Creates RVE based on the data provided in the input file."""
         if descriptor is None:
             descriptor = self.descriptor  
-        self.particle_data, self.RVE_data, self.simulation_data = RVEcreator(descriptor)
+        self.particle_data, self.RVE_data, self.simulation_data = RVEcreator(descriptor, save_files=save_files)
             
-    def create_stats(self, descriptor=None, ):    
+    def create_stats(self, descriptor=None, save_files=False):    
         """ Generates particle statistics based on the data provided in the input file."""
         if descriptor is None:
             descriptor = self.descriptor  
-        particleStatGenerator(descriptor)
+        particleStatGenerator(descriptor, save_files=save_files)
         
     def pack(self, pd=None, rd=None, sd=None):
         """ Packs the particles into a simulation box."""
