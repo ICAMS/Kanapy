@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
-from kanapy.input_output import particleStatGenerator, RVEcreator, write_abaqus_inp 
+from kanapy.input_output import particleStatGenerator, RVEcreator, \
+    write_abaqus_inp, write_position_weights
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
@@ -9,6 +10,10 @@ class Microstructure:
     '''Define class for synthetic microstructures'''
     def __init__(self, descriptor=None, file=None, name='Microstructure'):
         self.name = name
+        self.particle_data = None
+        self.RVE_data = None
+        self.simulation_data = None
+        self.allNodes = None
         if descriptor is None:
             if file is None:
                 raise ValueError('Please provide either a dictionary with statistics or an input file name')
@@ -28,7 +33,8 @@ class Microstructure:
         """ Creates RVE based on the data provided in the input file."""
         if descriptor is None:
             descriptor = self.descriptor  
-        self.particle_data, self.RVE_data, self.simulation_data = RVEcreator(descriptor, save_files=save_files)
+        self.particle_data, self.RVE_data, self.simulation_data = \
+            RVEcreator(descriptor, save_files=save_files)
             
     def create_stats(self, descriptor=None, save_files=False):    
         """ Generates particle statistics based on the data provided in the input file."""
@@ -36,32 +42,48 @@ class Microstructure:
             descriptor = self.descriptor  
         particleStatGenerator(descriptor, save_files=save_files)
         
-    def pack(self, pd=None, rd=None, sd=None):
+    def pack(self, particle_data=None, RVE_data=None, simulation_data=None):
         """ Packs the particles into a simulation box."""
-        if pd is None:
-            pd = self.particle_data
-        if rd is None:
-            rd = self.RVE_data
-        if sd is None:
-            sd = self.simulation_data
-        self.particles, self.simbox = packingRoutine(pd, rd, sd)
+        if particle_data is None:
+            particle_data = self.particle_data
+        if RVE_data is None:
+            RVE_data = self.RVE_data
+        if simulation_data is None:
+            simulation_data = self.simulation_data
+        self.particles, self.simbox = \
+            packingRoutine(particle_data, RVE_data, simulation_data)
         
-    def voxelize(self, pd=None, rd=None, kana=None, sb=None):
+    def voxelize(self, particle_data=None, RVE_data=None, particles=None, simbox=None):
         """ Generates the RVE by assigning voxels to grains."""   
-        if pd is None:
-            pd = self.particle_data
-        if rd is None:
-            rd = self.RVE_data
-        if kana is None:
-            kana = self.particles
-        if sb is None:
-            sb = self.simbox
-        self.nodeDict, self.elmtDict, self.elmtSetDict = voxelizationRoutine(pd, rd, kana, sb)
+        if particle_data is None:
+            particle_data = self.particle_data
+        if RVE_data is None:
+            RVE_data = self.RVE_data
+        if particles is None:
+            particles = self.particles
+        if simbox is None:
+            simbox = self.simbox
+        self.nodeDict, self.elmtDict, self.elmtSetDict = \
+            voxelizationRoutine(particle_data, RVE_data, particles, simbox)
 
-    def smoothen(self):
+    def smoothen(self, nodeDict=None, elmtDict=None, elmtSetDict=None, save_files=False):
         """ Generates smoothed grain boundary from a voxelated mesh."""
-        smoothingRoutine()    
+        if nodeDict is None:
+            nodeDict = self.nodeDict
+        if elmtDict is None:
+            elmtDict = self.elmtDict
+        if elmtSetDict is None:
+            elmtSetDict = self.elmtSetDict
             
+        self.allNodes, self.grain_facesDict = \
+            smoothingRoutine(nodeDict, elmtDict, elmtSetDict, save_files) 
+    
+    # the following subroutines are not yet adapted as API
+    # futher subroutines for visualization are required
     def abq_output(self):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""    
         write_abaqus_inp()
+        
+    def neperoutput(ctx, timestep=None):
+        """ Writes out particle position and weights files required for tessellation in Neper."""
+        write_position_weights(timestep)

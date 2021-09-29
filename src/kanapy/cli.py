@@ -197,9 +197,32 @@ def voxelize(ctx):
 @main.command()
 @click.pass_context
 def smoothen(ctx):
-    """ Generates smoothed grain boundary from a voxelated mesh."""        
-    smoothingRoutine()    
+    """ Generates smoothed grain boundary from a voxelated mesh."""    
+    try:
+        print('')
+        print('Starting Grain boundary smoothing')
+            
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'
         
+        try:                
+            with open(json_dir + '/nodeDict.json') as json_file: 
+                nodeDict = {int(k):v for k,v in json.load(json_file).items()}
+                    
+            with open(json_dir + '/elmtDict.json') as json_file:
+                elmtDict = {int(k):v for k,v in json.load(json_file).items()}
+
+            with open(json_dir + '/elmtSetDict.json') as json_file:    
+                elmtSetDict = {int(k):v for k,v in json.load(json_file).items()}
+            
+        except FileNotFoundError:
+            print('Json files not found, make sure "nodeDict.json", "elmtDict.json" and "elmtSetDict.json" files exist!')
+            raise FileNotFoundError
+        smoothingRoutine(nodeDict, elmtDict, elmtSetDict, save_files=True)    
+    except KeyboardInterrupt:
+        sys.exit(0)
+    
+    return  
 
 @main.command(name='abaqusOutput')
 @click.pass_context

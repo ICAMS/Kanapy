@@ -24,5 +24,5 @@ ms.create_stats()
 ms.create_RVE(save_files=False)
 ms.pack()
 ms.voxelize()
-#ms.smoothen()
+ms.smoothen()
 #ms.abq_output
