@@ -158,12 +158,13 @@ def packingRoutine(particle_data, RVE_data, simulation_data, save_files=False):
     # Growth of particle at each time step
     print('    Particle packing by growth simulation')
     
+    
     if simulation_data['Periodicity'] == 'True':
         periodic_status = True
     elif simulation_data['Periodicity'] == 'False':
         periodic_status = False
     else:
-        raise ValueError('Wrong value for periodicity in packingRoutine')   
+        raise ValueError('packingRoutine: Wrong value for periodicity in simulation_data')   
         
     particles, simbox = particle_grow(sim_box, Particles, periodic_status, \
                                       simulation_data['Time steps'], dump=save_files)
