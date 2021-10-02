@@ -143,7 +143,7 @@ class Ellipsoid(object):
         :rtype: numpy array
         """
 
-        FLOAT_EPS = np.finfo(np.float).eps
+        FLOAT_EPS = np.finfo(float).eps
 
         w, x, y, z = self.quat
         Nq = w*w + x*x + y*y + z*z
@@ -454,9 +454,7 @@ class Ellipsoid(object):
                                    sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                     p7 = Ellipsoid(str(self.id)+'_RBF', self.x+sim_width, self.y,
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
-
                 duplicates.extend([p1, p2, p3, p4, p5, p6, p7])
-                #return duplicates
 
             # If it collides with any two faces: Create 3 duplicates
             elif sum([left, top, right, bottom, front, back]) == 2:
@@ -545,7 +543,6 @@ class Ellipsoid(object):
                     p3 = Ellipsoid(str(self.id)+'_FR', self.x+sim_width, self.y,
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 duplicates.extend([p1, p2, p3])
-                #return duplicates
 
             # If it collides with any single face: Create 1 duplicate
             elif sum([left, top, right, bottom, front, back]) == 1:
@@ -567,16 +564,9 @@ class Ellipsoid(object):
                 elif back:
                     p1 = Ellipsoid(str(self.id)+'_F', self.x,           self.y,
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
-
                 duplicates.append(p1)
-                #return duplicates
-
-            # If it doesn't collide with any face
-            #else:
-            #    return duplicates
-
         else:
-
+            # no periodicity
             if self.bbox_xmin < sim_box.left:
                 diff = sim_box.left - self.bbox_xmin
                 # move the ellipsoid in opposite direction after bouncing
