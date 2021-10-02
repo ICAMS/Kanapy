@@ -284,7 +284,7 @@ class Ellipsoid(object):
         """
         duplicates = []
         # for periodic boundaries
-        if periodicity == True:
+        if periodicity:
             # Check if particle's center is inside or outside the box
             if sim_box.right > self.x > sim_box.left and sim_box.bottom > self.y > sim_box.top and sim_box.back > self.z > sim_box.front:
                 # If inside: Check which face the particle collides with
@@ -456,7 +456,7 @@ class Ellipsoid(object):
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
 
                 duplicates.extend([p1, p2, p3, p4, p5, p6, p7])
-                return duplicates
+                #return duplicates
 
             # If it collides with any two faces: Create 3 duplicates
             elif sum([left, top, right, bottom, front, back]) == 2:
@@ -545,7 +545,7 @@ class Ellipsoid(object):
                     p3 = Ellipsoid(str(self.id)+'_FR', self.x+sim_width, self.y,
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
                 duplicates.extend([p1, p2, p3])
-                return duplicates
+                #return duplicates
 
             # If it collides with any single face: Create 1 duplicate
             elif sum([left, top, right, bottom, front, back]) == 1:
@@ -569,13 +569,13 @@ class Ellipsoid(object):
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id)
 
                 duplicates.append(p1)
-                return duplicates
+                #return duplicates
 
             # If it doesn't collide with any face
-            else:
-                return duplicates
+            #else:
+            #    return duplicates
 
-        elif periodicity == False:
+        else:
 
             if self.bbox_xmin < sim_box.left:
                 diff = sim_box.left - self.bbox_xmin
@@ -607,8 +607,7 @@ class Ellipsoid(object):
                 diff = self.bbox_zmax - sim_box.back
                 self.z -= diff
                 self.speedz *= -1
-            
-            return duplicates
+        return duplicates
 
 class Cuboid(object):
     """

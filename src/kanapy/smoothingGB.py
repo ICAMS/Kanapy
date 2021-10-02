@@ -272,57 +272,36 @@ def writeOutput(typeGB,fileName,allNodes,nodeDict,grain_facesDict):
     return
     
     
-def smoothingRoutine():
+def smoothingRoutine(nodeDict, elmtDict, elmtSetDict, save_files=False):
 
-    try:
-        print('')
-        print('Starting Grain boundary smoothing')
+    total_grains = len(elmtSetDict)
+
+    coords = np.array(list(nodeDict.values()))
+    xvals, yvals, zvals = coords[:,0], coords[:,1], coords[:,2]
+    RVE_xmin, RVE_xmax = min(xvals), max(xvals)
+    RVE_ymin, RVE_ymax = min(yvals), max(yvals)
+    RVE_zmin, RVE_zmax = min(zvals), max(zvals)
+    
+    # Find each grain's outer face ids and its nodal connectivities
+    grain_facesDict = readGrainFaces(nodeDict,elmtDict,elmtSetDict,
+                        RVE_xmin, RVE_xmax, RVE_ymin, RVE_ymax,
+                        RVE_zmin, RVE_zmax)
+    
+    # Initialize the spring-mass-anchor system
+    allNodes,anchDict = initalizeSystem(nodeDict,grain_facesDict)
+    
+    # Run the simulation
+    dt = 0.2   # time-step
+    N = 100    # total steps
+    k = 10     # spring constant
+    c = 10     # damping constant
+    allNodes = relaxSystem(allNodes,anchDict,dt,N,k,c,RVE_xmin,
+                           RVE_xmax,RVE_ymin, RVE_ymax,RVE_zmin,RVE_zmax)
             
-        cwd = os.getcwd()
-        json_dir = cwd + '/json_files'
-        
-        try:                
-            with open(json_dir + '/nodeDict.json') as json_file: 
-                nodeDict = {int(k):v for k,v in json.load(json_file).items()}
-                    
-            with open(json_dir + '/elmtDict.json') as json_file:
-                elmtDict = {int(k):v for k,v in json.load(json_file).items()}
-
-            with open(json_dir + '/elmtSetDict.json') as json_file:    
-                elmtSetDict = {int(k):v for k,v in json.load(json_file).items()}
-            
-        except FileNotFoundError:
-            print('Json files not found, make sure "nodeDict.json", "elmtDict.json" and "elmtSetDict.json" files exist!')
-            raise FileNotFoundError
-        
-        
-        total_grains = len(elmtSetDict)
-
-        coords = np.array(list(nodeDict.values()))
-        xvals, yvals, zvals = coords[:,0], coords[:,1], coords[:,2]
-        RVE_xmin, RVE_xmax = min(xvals), max(xvals)
-        RVE_ymin, RVE_ymax = min(yvals), max(yvals)
-        RVE_zmin, RVE_zmax = min(zvals), max(zvals)
-        
-        # Find each grain's outer face ids and its nodal connectivities
-        grain_facesDict = readGrainFaces(nodeDict,elmtDict,elmtSetDict,
-                            RVE_xmin, RVE_xmax, RVE_ymin, RVE_ymax,
-                            RVE_zmin, RVE_zmax)
-        
-        # Initialize the spring-mass-anchor system
-        allNodes,anchDict = initalizeSystem(nodeDict,grain_facesDict)
-        
-        # Run the simulation
-        dt = 0.2   # time-step
-        N = 100    # total steps
-        k = 10     # spring constant
-        c = 10     # damping constant
-        allNodes = relaxSystem(allNodes,anchDict,dt,N,k,c,RVE_xmin,
-                               RVE_xmax,RVE_ymin, RVE_ymax,RVE_zmin,RVE_zmax)
-                
+    if save_files:
         # Write out voxelated & smoothed ABAQUS (.inp) files
         print('    Writing voxelated and smoothed GB ABAQUS (.inp) files')    
-        
+        cwd = os.getcwd()
         typeGB = 'voxelated'
         voxName = cwd + '/kanapy_{0}grainsVoxelatedGB.inp'.format(total_grains)
         writeOutput(typeGB,voxName,allNodes,nodeDict,grain_facesDict)
@@ -330,13 +309,5 @@ def smoothingRoutine():
         typeGB = 'smoothed'
         smoothName = cwd + '/kanapy_{0}grainsSmoothedGB.inp'.format(total_grains)
         writeOutput(typeGB,smoothName,allNodes,nodeDict,grain_facesDict)    
-                
-        print('Completed Grain boundary smoothing')
-        print('')
-        return 
-    
-    except KeyboardInterrupt:
-        sys.exit(0)
-        return  
-
- 
+            
+    return allNodes, grain_facesDict
