@@ -129,10 +129,10 @@ def test_packingRoutine():
 
     # Test if the 'particle_generator' function is called once
     with mock.patch('kanapy.packing.particle_generator') as mocked_method:
-        packingRoutine(pd, rd, sd, save_files=True)
+        packingRoutine(pd, rd, sd, save_files=False)
         assert mocked_method.call_count == 1
 
     # Test if the 'particle_grow' function is called once
     with mock.patch('kanapy.packing.particle_grow', return_value=(None, None)) as mocked_method:
-        packingRoutine(pd, rd, sd, save_files=True)
+        packingRoutine(pd, rd, sd, save_files=False)
         assert mocked_method.call_count == 1
