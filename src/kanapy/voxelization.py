@@ -383,5 +383,5 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
         with open(json_dir + '/elmtSetDict.json', 'w') as outfile:
             json.dump(elmtSetDict, outfile, indent=2)  
                                                                                    
-    return nodeDict, elmtDict, elmtSetDict
+    return nodeDict, elmtDict, elmtSetDict, vox_centerDict
         

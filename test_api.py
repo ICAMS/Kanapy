@@ -24,5 +24,6 @@ ms.create_stats()
 ms.create_RVE(save_files=False)
 ms.pack()
 ms.voxelize()
+ms.plot_3D()
 ms.smoothen()
 #ms.abq_output

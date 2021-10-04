@@ -3,6 +3,7 @@
 """Top-level package for kanapy."""
 
 from kanapy.api import Microstructure
+from kanapy.plotting import plot_microstructure_3D
 
 __author__ = """Mahesh R.G Prasad, Abhishek Biswas, Alexander Hartmaier"""
 __email__ = 'alexander.hartmaier@rub.de'
