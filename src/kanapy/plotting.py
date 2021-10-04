@@ -73,4 +73,3 @@ def plot_microstructure_3D(ms=None, voxels=None, sliced=True, dual_phase=False, 
     ax.set_ylim(top=Ny)
     ax.set_zlim(top=Nz)
     plt.show()
-    return cm
