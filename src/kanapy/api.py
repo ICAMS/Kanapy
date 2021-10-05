@@ -19,6 +19,8 @@ class Microstructure:
         self.simbox = None
         self.allNodes = None
         self.nodeDict = None
+        self.elmtSetDict = None
+        self.res_data = None
         if descriptor is None:
             if file is None:
                 raise ValueError('Please provide either a dictionary with statistics or an input file name')
@@ -82,7 +84,7 @@ class Microstructure:
         if nodeDict is None:
             nodeDict = self.nodeDict
             if nodeDict is None:
-                raise ValueError('No nodeDict in smoothen. Run voxelize first')
+                raise ValueError('No nodeDict in smoothen. Run voxelize first.')
         if elmtDict is None:
             elmtDict = self.elmtDict
         if elmtSetDict is None:
@@ -91,24 +93,50 @@ class Microstructure:
             smoothingRoutine(nodeDict, elmtDict, elmtSetDict, save_files=save_files)
             
     def plot_3D(self, sliced=True, dual_phase=False, cmap='prism', test=False):
+        """ Generate 3D plot of grains in voxelized microstructure. """
+        if self.elmtSetDict is None:
+            raise ValueError('No voxels or elements to plot. Run voxelize first.')
         plot_microstructure_3D(ms=self,sliced=sliced, dual_phase=dual_phase, \
                                cmap=cmap, test=test)
+
+    def output_stats(self, nodeDict=None, elmtDict=None, elmtSetDict=None, \
+                     particle_data=None, RVE_data=None, simulation_data=None, save_files=False):
+        """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
+        grain volumes and shared grain boundary surface areas info are written out as well."""
+        if nodeDict is None:
+            nodeDict = self.nodeDict
+        if elmtDict is None:
+            elmtDict = self.elmtDict
+        if elmtSetDict is None:
+            elmtSetDict = self.elmtSetDict
+        if particle_data is None:
+            particle_data = self.particle_data
+        if RVE_data is None:
+            RVE_data = self.RVE_data
+        if simulation_data is None:
+            simulation_data = self.simulation_data
+            
+        if nodeDict is None:
+            raise ValueError('No information about voxelized microstructure. Run voxelize first.')
+        if particle_data is None:
+            raise ValueError('No particles created yet. Run create_RVE, pack and voxelize first.')
+            
+        self.res_data = write_output_stat(nodeDict, elmtDict, elmtSetDict, particle_data, RVE_data, \
+                          simulation_data, save_files=save_files)
+        #self.gv_sorted_values, self.shared_area = \
+        #    extract_volume_sharedGBarea(nodeDict, elmtDict, elmtSetDict, RVE_data, save_files=save_files)
         
+    def plot_stats(self, data=None, save_files=False):
+        """ Plots the particle- and grain diameter attributes for statistical comparison."""   
+        if data is None:
+            data = self.res_data
+        plot_output_stats(data, save_files=save_files)
+
     # the following subroutines are not yet adapted as API
     # futher subroutines for visualization are required
     def output_abq(self):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""    
         write_abaqus_inp()
-
-    def output_stats(self):
-        """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
-        grain volumes and shared grain boundary surface areas info are written out as well."""
-        write_output_stat()
-        extract_volume_sharedGBarea()
-
-    def plot_stats(sekf):
-        """ Plots the particle- and grain diameter attributes for statistical comparison."""    
-        plot_output_stats()
 
     def output_neper(self, timestep=None):
         """ Writes out particle position and weights files required for tessellation in Neper."""

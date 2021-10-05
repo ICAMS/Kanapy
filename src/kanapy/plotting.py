@@ -23,17 +23,14 @@ def plot_microstructure_3D(ms=None, voxels=None, sliced=True, dual_phase=False, 
         Nz = int(ms.RVE_data['Voxel_numberZ'])
         Ngr = int(ms.particle_data['Number'])
         hh = np.zeros(Nx*Ny*Nz)
-        for ir in range(ms.particle_data['Number']):
-            ih = ir + 1
-            il = np.array(ms.elmtSetDict[ih]) - 1
+        for ih, il in ms.elmtSetDict.items():
+            il = np.array(il) - 1
             hh[il] = ih
         voxels = np.reshape(hh, (Nx,Ny,Nz), order='F')
         
         if test:
             # test consistency of voxel array with Element dict
-            for ir in range(Ngr):
-                igr = ir + 1
-                iel = ms.elmtSetDict[igr]
+            for igr, iel in ms.elmtSetDict.items():
                 ic = 0
                 for i in iel:
                     iv = ms.vox_centerDict[i]
@@ -43,7 +40,7 @@ def plot_microstructure_3D(ms=None, voxels=None, sliced=True, dual_phase=False, 
                     else:
                         ic += 1
                 if ic==len(iel):
-                    print('Correct voxel assignment to grain',igr)
+                    print('Correct voxel assignment to grain:',igr)
     else:
         Nx = voxels.shape[0]
         Ny = voxels.shape[1]
