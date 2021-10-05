@@ -29,7 +29,7 @@ def plot_microstructure_3D(ms=None, voxels=None, sliced=True, dual_phase=False, 
         voxels = np.reshape(hh, (Nx,Ny,Nz), order='F')
         
         if test:
-            # test consistency of voxel array with Element dict
+            # test consistency of voxel array with element dict
             for igr, iel in ms.elmtSetDict.items():
                 ic = 0
                 for i in iel:

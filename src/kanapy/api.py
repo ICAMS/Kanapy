@@ -123,8 +123,8 @@ class Microstructure:
             
         self.res_data = write_output_stat(nodeDict, elmtDict, elmtSetDict, particle_data, RVE_data, \
                           simulation_data, save_files=save_files)
-        #self.gv_sorted_values, self.shared_area = \
-        #    extract_volume_sharedGBarea(nodeDict, elmtDict, elmtSetDict, RVE_data, save_files=save_files)
+        self.gv_sorted_values, self.shared_area = \
+            extract_volume_sharedGBarea(nodeDict, elmtDict, elmtSetDict, RVE_data, save_files=save_files)
         
     def plot_stats(self, data=None, save_files=False):
         """ Plots the particle- and grain diameter attributes for statistical comparison."""   

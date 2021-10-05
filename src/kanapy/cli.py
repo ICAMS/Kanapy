@@ -242,16 +242,19 @@ def outputstats(ctx):
     """
     cwd = os.getcwd()
     json_dir = cwd + '/json_files'          # Folder to store the json files
-
+    
     try:
         with open(json_dir + '/nodeDict.json') as json_file:
-            nodeDict = json.load(json_file)
+            inpDict = json.load(json_file)
+            nodeDict = dict([int(a), x] for a, x in inpDict.items())
 
         with open(json_dir + '/elmtDict.json') as json_file:
-            elmtDict = json.load(json_file)
+            inpDict = json.load(json_file)
+            elmtDict =dict([int(a), x] for a, x in inpDict.items())
 
         with open(json_dir + '/elmtSetDict.json') as json_file:
-            elmtSetDict = json.load(json_file)
+            inpDict = json.load(json_file)
+            elmtSetDict = dict([int(a), x] for a, x in inpDict.items())
 
         with open(json_dir + '/particle_data.json') as json_file:  
             particle_data = json.load(json_file)
@@ -265,7 +268,7 @@ def outputstats(ctx):
     except FileNotFoundError:
         print('Json file not found, make sure "Input statistics, Packing, & Voxelization" commands are executed first!')
         raise FileNotFoundError
-        
+
     write_output_stat(nodeDict, elmtDict, elmtSetDict, particle_data, RVE_data, \
                       simulation_data, save_files=True)
     extract_volume_sharedGBarea(nodeDict, elmtDict, elmtSetDict, RVE_data, save_files=True)

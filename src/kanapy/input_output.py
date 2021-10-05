@@ -805,13 +805,13 @@ def write_output_stat(nodeDict, elmtDict, elmtSetDict, particle_data, RVE_data, 
             # All nodes belonging to grain                                     
             nodeset = set()
             for el in v:
-                nodes = elmtDict[str(el)]
+                nodes = elmtDict[el]
                 for n in nodes:
                     if n not in nodeset:
                         nodeset.add(n)
             
             # Get the coordinates as an array 
-            points = [nodeDict[str(n)] for n in nodeset]
+            points = [nodeDict[n] for n in nodeset]
             points = np.asarray(points)                  
             grain_node[k] = points
         
@@ -872,31 +872,28 @@ def write_output_stat(nodeDict, elmtDict, elmtSetDict, particle_data, RVE_data, 
                     
         # For periodic & Non-periodic: create the convex hull and find the major & minor diameters
         for grain, points in grain_node.items():   
-            try:
-                hull = ConvexHull(points)             
-                hull_pts = points[hull.vertices]
-                
-                # Find the approximate center of the grain using extreme surface points
-                xmin, xmax = np.amin(points[:, 0]), np.amax(points[:, 0])
-                ymin, ymax = np.amin(points[:, 1]), np.amax(points[:, 1])
-                zmin, zmax = np.amin(points[:, 2]), np.amax(points[:, 2])             
-                center = np.array([xmin + (xmax-xmin)/2.0, ymin + (ymax-ymin)/2.0, zmin + (zmax-zmin)/2.0])
-                
-                # Find the euclidean distance to all surface points from the center
-                dists = [euclidean(center, pt) for pt in hull_pts]
-                a2 = 2.0*np.amax(dists)
-                b2 = 2.0*np.amin(dists)            
-                
-                # Calculate ellipsoid dimensions using eigen values
-                #ellPoints = points.T            
-                #eigvals, eigvecs = np.linalg.eig(np.cov(ellPoints))
-                #eigvals = np.sort(eigvals)
-                #a2, b2 = eigvals[-1], eigvals[-2]            
-                
-                grain_majDia.append(a2)                 # update the major diameter list
-                grain_minDia.append(b2)                 # update the minor diameter list
-            except:
-                print('Error in qhull.pyx ConvexHull')
+            hull = ConvexHull(points)             
+            hull_pts = points[hull.vertices]
+            
+            # Find the approximate center of the grain using extreme surface points
+            xmin, xmax = np.amin(points[:, 0]), np.amax(points[:, 0])
+            ymin, ymax = np.amin(points[:, 1]), np.amax(points[:, 1])
+            zmin, zmax = np.amin(points[:, 2]), np.amax(points[:, 2])             
+            center = np.array([xmin + (xmax-xmin)/2.0, ymin + (ymax-ymin)/2.0, zmin + (zmax-zmin)/2.0])
+            
+            # Find the euclidean distance to all surface points from the center
+            dists = [euclidean(center, pt) for pt in hull_pts]
+            a2 = 2.0*np.amax(dists)
+            b2 = 2.0*np.amin(dists)            
+            
+            # Calculate ellipsoid dimensions using eigen values
+            #ellPoints = points.T            
+            #eigvals, eigvecs = np.linalg.eig(np.cov(ellPoints))
+            #eigvals = np.sort(eigvals)
+            #a2, b2 = eigvals[-1], eigvals[-2]            
+            
+            grain_majDia.append(a2)                 # update the major diameter list
+            grain_minDia.append(b2)                 # update the minor diameter list
         
         # write out the particle and grain equivalent, major, minor diameters to file            
         par_eqDia = list(np.array(par_eqDia)/divideBy)
@@ -904,13 +901,9 @@ def write_output_stat(nodeDict, elmtDict, elmtSetDict, particle_data, RVE_data, 
 
         par_majDia = list(np.array(par_majDia)/divideBy)
         grain_majDia = list(np.array(grain_majDia)/divideBy)
-        if grain_majDia==[]:
-            grain_majDia = grain_eqDia
 
         par_minDia = list(np.array(par_minDia)/divideBy)
         grain_minDia = list(np.array(grain_minDia)/divideBy)
-        if grain_minDia==[]:
-            grain_minDia = grain_eqDia
         
         # Compute the L1-error
         kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
@@ -1279,7 +1272,7 @@ def extract_volume_sharedGBarea(nodeDict, elmtDict, elmtSetDict, RVE_data, save_
     grain_facesDict = dict()
     for gid, elset in elmtSetDict.items():               
         outer_faces = set()    
-        nodeConn = [elmtDict[str(el)] for el in elset]        # For each voxel/element get node connectivity
+        nodeConn = [elmtDict[el] for el in elset]        # For each voxel/element get node connectivity
         
         # create the 6 faces of the voxel
         for nc in nodeConn:
