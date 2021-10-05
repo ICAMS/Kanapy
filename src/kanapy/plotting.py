@@ -15,10 +15,13 @@ def plot_microstructure_3D(ms=None, voxels=None, sliced=True, dual_phase=False, 
     if voxels is None:
         if ms is None:
             raise ValueError('Either microstructure instance (ms) or voxel array must be given for plotting.')
-        Nx = ms.RVE_data['RVE_sizeX']
-        Ny = ms.RVE_data['RVE_sizeY']
-        Nz = ms.RVE_data['RVE_sizeZ']
-        Ngr = ms.particle_data['Number']
+        lx = int(ms.RVE_data['RVE_sizeX'])
+        ly = int(ms.RVE_data['RVE_sizeY'])
+        lz = int(ms.RVE_data['RVE_sizeZ'])
+        Nx = int(ms.RVE_data['Voxel_numberX'])
+        Ny = int(ms.RVE_data['Voxel_numberY'])
+        Nz = int(ms.RVE_data['Voxel_numberZ'])
+        Ngr = int(ms.particle_data['Number'])
         hh = np.zeros(Nx*Ny*Nz)
         for ir in range(ms.particle_data['Number']):
             ih = ir + 1
@@ -34,8 +37,9 @@ def plot_microstructure_3D(ms=None, voxels=None, sliced=True, dual_phase=False, 
                 ic = 0
                 for i in iel:
                     iv = ms.vox_centerDict[i]
-                    if voxels[int(iv[0]), int(iv[1]), int(iv[2])] != igr:
-                        print('Wrong voxel number',ih, i, iv)
+                    ih = voxels[int(Nx*iv[0]/lx), int(Ny*iv[1]/ly), int(Nz*iv[2]/lz)]
+                    if ih != igr:
+                        print('Wrong voxel number',igr, ih, i, iv)
                     else:
                         ic += 1
                 if ic==len(iel):
@@ -73,3 +77,5 @@ def plot_microstructure_3D(ms=None, voxels=None, sliced=True, dual_phase=False, 
     ax.set_ylim(top=Ny)
     ax.set_zlim(top=Nz)
     plt.show()
+
+    return 
