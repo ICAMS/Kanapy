@@ -33,7 +33,7 @@ function [orired_f,odfred_f,ero,varargout]=...
 % 
 %% input fields and checks
     
-run('/home/users/biswaa5w/mtex-5.5.2/install_mtex.m')
+run('../../libs/mtex/install_mtex.m')
  
 options = {'ebsdMatFile','ebsd','orientation'};
 flag = 1; 

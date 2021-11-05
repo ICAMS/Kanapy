@@ -11,8 +11,9 @@ import numpy as np
 #from kanapy.util import ROOT_DIR    
 
 eng = matlab.engine.start_matlab()
-path = '/home/users/biswaa5w/mtex-5.5.2'
+#path = '/home/users/biswaa5w/mtex-5.5.2'
 #path = ROOT_DIR+'/libs/mtex'
+path = '../..libs/mtex/'
 eng.addpath(path,nargout=0)
 eng.startup(nargout=0)
 
@@ -64,11 +65,13 @@ class Texture:
         
                
 d = Texture()
-d.ebsd  = 'ebsd_316L.mat'
-d.grain = 'grains_316L.mat'
+d.ebsd  = '../../examples/ODF_reconstruction/ebsd_316L.mat'
+d.grain = '../../examples/ODF_reconstruction/grains_316L.mat'
 #d.grain = 10*np.pi/180.0
 a,b,c = d.textureReconstruction(96)
 
+'''This reference to an existing file must be replaced by a function call to the kanapy Python API
+You can import kanapy as knpy to get all functions here'''
 fl = np.genfromtxt('shared_surfaceArea.csv',delimiter=',',skip_header=1)
 
 e,f,g,h = d.gb_texture(a,12,fl)
