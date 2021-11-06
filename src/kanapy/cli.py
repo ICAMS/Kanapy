@@ -331,6 +331,7 @@ def setPaths():
     ''' Requests user input for MATLAB & MTEX installation paths'''
     
     # For MATLAB executable
+    cwd = os.getcwd()
     click.echo('')
     status1 = input('Is MATLAB installed in this system (yes/no): ')
     
@@ -393,27 +394,6 @@ def setPaths():
         
         # For MTEX installation path
         userpath2 = MAIN_DIR+'/libs/mtex/'
-        '''                    
-        click.echo('')
-        #status2 = input('Is MTEX installed in this system (yes/no): ')
-
-        if status2 == 'yes' or status2 == 'y' or status2 == 'Y' or status2 == 'YES':                    
-            userpath2 = input('Please provide the path to MTEX installation: ')
-            if not os.path.exists(userpath2):
-                click.echo('')
-                click.echo("Mentioned path: '{}' does not exist in your system!\n".format(userpath2), err=True)
-                sys.exit(0)            
-            else:
-                userpath2 = os.path.join(userpath2, '')     # Add string to PATH
-                
-        elif status2 == 'no' or status2 == 'n' or status2 == 'N' or status2 == 'NO':
-            click.echo("Kanapy's texture analysis code requires MTEX. Please install it from: https://mtex-toolbox.github.io/download.")
-            click.echo('')
-            userpath2 = False
-        else:
-            click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
-            sys.exit(0)  
-        '''
                      
     elif status1 == 'no' or status1 == 'n' or status1 == 'N' or status1 == 'NO':
         click.echo("Kanapy's texture analysis code requires MATLAB. Please install it.")
@@ -435,8 +415,14 @@ def setPaths():
         with open(path_path,'w') as outfile:
             json.dump(pathDict, outfile, indent=2)                
         
+        os.chdir('{}extern/engines/python'.format(userpath1[0:-10])) # remove bin/matlab from matlab path
+        os.system('python setup.py install')
+        path = os.path.abspath(__file__)[0:-7] # remove /cli.py from kanapy path
+        os.chdir(path)
+        os.system('python setup_mtex.py')
         click.echo('')
         click.echo('Kanapy is now configured for texture analysis!\n')
+        # store paths in Python API?
 
 
 @main.command(name='reduceODF')

@@ -13,9 +13,9 @@ import numpy as np
 eng = matlab.engine.start_matlab()
 #path = '/home/users/biswaa5w/mtex-5.5.2'
 #path = ROOT_DIR+'/libs/mtex'
-path = '../..libs/mtex/'
-eng.addpath(path,nargout=0)
-eng.startup(nargout=0)
+#path = '../../libs/mtex/'
+#eng.addpath(path,nargout=0)
+#eng.startup(nargout=0)
 
 class Texture:
     
