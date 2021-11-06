@@ -331,7 +331,6 @@ def setPaths():
     ''' Requests user input for MATLAB & MTEX installation paths'''
     
     # For MATLAB executable
-    cwd = os.getcwd()
     click.echo('')
     status1 = input('Is MATLAB installed in this system (yes/no): ')
     
@@ -345,7 +344,7 @@ def setPaths():
             if decision1 == 'yes' or decision1 == 'y' or decision1 == 'Y' or decision1 == 'YES':                
 
                 version = chkVersion(MATLAB)        # Get the MATLAB version
-                if version == None:
+                if version is None:
                     click.echo('')
                     click.echo('MATLAB installation: {} is corrupted!\n'.format(MATLAB), err=True)
                     sys.exit(0)
@@ -360,7 +359,7 @@ def setPaths():
                 userinput = input('Please provide the path to MATLAB executable: ')
                 
                 version = chkVersion(userinput)
-                if version == None:
+                if version is None:
                     click.echo('')
                     click.echo('MATLAB installation: {} is corrupted!\n'.format(userinput), err=True)
                     sys.exit(0)
@@ -380,7 +379,7 @@ def setPaths():
             userinput = input('Please provide the path to MATLAB executable: ')
             
             version = chkVersion(userinput)
-            if version == None:
+            if version is None:
                 click.echo('')
                 click.echo('MATLAB installation: {} is corrupted!\n'.format(userinput), err=True)
                 sys.exit(0)
@@ -442,7 +441,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
     else:
         cwd = os.getcwd()
         arg_dict = {}           
-        if ebsd != None:
+        if ebsd is not None:
             if not os.path.exists(cwd + '/{}'.format(ebsd)):
                 click.echo('')
                 click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(ebsd), err=True)
@@ -450,7 +449,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
             else:
                 arg_dict['ebsdMatFile'] = cwd + '/{}'.format(ebsd)
 
-        if grains != None:
+        if grains is not None:
             if not os.path.exists(cwd + '/{}'.format(grains)):
                 click.echo('')
                 click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(grains), err=True)
@@ -458,7 +457,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
             else:        
                 arg_dict['grainsMatFile'] = cwd + '/{}'.format(grains)
                 
-        if kernel != None:
+        if kernel is not None:
             arg_dict['kernelShape'] = kernel        
             
         if fit_mad == 'yes' or fit_mad == 'y' or fit_mad == 'Y' or fit_mad == 'YES': 
