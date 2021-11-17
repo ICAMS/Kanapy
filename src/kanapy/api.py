@@ -6,7 +6,7 @@ from kanapy.input_output import particleStatGenerator, RVEcreator, \
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
-from kanapy.plotting import plot_microstructure_3D
+from kanapy.plotting import plot_microstructure_3D, plot_ellipsoids
 
 class Microstructure:
     '''Define class for synthetic microstructures'''
@@ -62,6 +62,12 @@ class Microstructure:
             simulation_data = self.simulation_data
         self.particles, self.simbox = \
             packingRoutine(particle_data, RVE_data, simulation_data, save_files=save_files)
+    
+    def plot_ellipsoids(self, cmap='prism', test=False):
+        """ Generates plot of particles"""
+        if self.particles is None:
+            raise ValueError('No particle to plot. Run pack first.')
+        plot_ellipsoids(ms=self, cmap=cmap, test=test)
         
     def voxelize(self, particle_data=None, RVE_data=None, particles=None, 
                  simbox=None, save_files=False):
