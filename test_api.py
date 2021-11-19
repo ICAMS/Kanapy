@@ -39,5 +39,6 @@ ms.voxelize()
 ms.plot_3D()
 ms.output_stats()
 ms.plot_stats()
-#ms.smoothen()
-#ms.abq_output
+ms.smoothen()
+ms.abq_output()
+ms.output_neper()
