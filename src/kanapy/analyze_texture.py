@@ -202,7 +202,7 @@ def textureReduction(kdict):
                 sys.exit(0)
             
     # Create a temporary matlab script file that runs Texture reduction algorithm    
-    TRfile = ROOT_DIR+'/textureReduction.m'      # Temporary '.m' file
+    TRfile = cwd+'/textureReduction.m'      # Temporary '.m' file witten in cwd
     logFile = cwd + '/kanapyTexture.log'        # Log file.
     
     with open (TRfile,'w') as f:
@@ -229,7 +229,8 @@ def textureReduction(kdict):
         f.write("outputPath='{}';\n".format(cwd))
         
         f.write("\n")
-        f.write('addpath {0}\n'.format(ROOT_DIR))                        
+        f.write('addpath {0}\n'.format(cwd))
+        f.write('addpath {0}\n'.format(ROOT_DIR)) # add also this dir for the ODF_red.. function                       
         
         command = "ODF_reduction_algo(MTEXpath,ori_num,"
         if "ebsdMatFile" in kdict.keys():
