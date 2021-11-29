@@ -15,8 +15,8 @@ from kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
 def test_particleStatGenerator():
 
     # Test if FileNotFoundError is raised
-    with pytest.raises(FileNotFoundError):        
-        particleStatGenerator('inp.json')
+    #with pytest.raises(FileNotFoundError):        
+    #    particleStatGenerator('inp.json')
 
     # create an temporary input file for user defined statistics
     cwd = os.getcwd()
@@ -32,7 +32,7 @@ def test_particleStatGenerator():
         json.dump(to_write, outfile, indent=2)       
 
     with pytest.raises(ValueError):            
-        RVEcreator(stat_inp)
+        RVEcreator(to_write, save_files=True)
     os.remove(stat_inp)
                             
     # Test the remaining code
@@ -44,7 +44,7 @@ def test_particleStatGenerator():
     with open(stat_inp, 'w') as outfile:
         json.dump(to_write, outfile, indent=2) 
     
-    RVEcreator(stat_inp)
+    RVEcreator(to_write, save_files=True)
 
     # Read the json files written by the function
     json_dir = cwd + '/json_files'
@@ -80,7 +80,7 @@ def temp_dump():
 
     # Inititalize the simulation box
     sbox = Simulation_Box(10, 10, 10)
-    write_dump(ells, sbox, len(ells))
+    write_dump(ells, sbox)
     return sbox
 
 

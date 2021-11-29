@@ -10,7 +10,7 @@ __pycache__/
 *.egg*
 
 # C extensions
-#*.so
+*.so
 
 # Distribution / packaging
 .Python

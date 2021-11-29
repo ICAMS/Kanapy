@@ -105,7 +105,7 @@ def test_particle_grow(rot_surf):
     ells = [ell1, ell2]
     sb = Simulation_Box(10, 10, 10)
 
-    particle_grow(sb, ells, True, 10)
+    particle_grow(sb, ells, True, 10, dump=True)
 
     assert round(ell1.x, 6) == 0.78
     assert round(ell1.y, 6) == 1.325
@@ -127,35 +127,12 @@ def test_packingRoutine():
 
     sd = {'Time steps': 2, 'Periodicity': 'True'}
 
-    # Dump the Dictionaries as json files
-    cwd = os.getcwd()
-    json_dir = cwd + '/json_files'          # Folder to store the json files
-
-    if not os.path.exists(json_dir):
-        os.makedirs(json_dir)
-
-    with open(json_dir + '/particle_data.json', 'w') as outfile:
-        json.dump(pd, outfile)
-
-    with open(json_dir + '/RVE_data.json', 'w') as outfile:
-        json.dump(rd, outfile)
-
-    with open(json_dir + '/simulation_data.json', 'w') as outfile:
-        json.dump(sd, outfile)
-
     # Test if the 'particle_generator' function is called once
     with mock.patch('kanapy.packing.particle_generator') as mocked_method:
-        packingRoutine()
+        packingRoutine(pd, rd, sd, save_files=False)
         assert mocked_method.call_count == 1
 
     # Test if the 'particle_grow' function is called once
-    with mock.patch('kanapy.packing.particle_grow') as mocked_method:
-        packingRoutine()
+    with mock.patch('kanapy.packing.particle_grow', return_value=(None, None)) as mocked_method:
+        packingRoutine(pd, rd, sd, save_files=False)
         assert mocked_method.call_count == 1
-
-    shutil.rmtree(json_dir)
-    shutil.rmtree(cwd + '/dump_files')
-
-    # Test if FileNotFoundError is raised
-    with pytest.raises(FileNotFoundError):
-        packingRoutine()

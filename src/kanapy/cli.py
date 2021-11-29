@@ -4,10 +4,9 @@ import shutil, json
 import click
 
 from kanapy.util import ROOT_DIR, MAIN_DIR 
-from kanapy.input_output import particleStatGenerator, particleCreator, RVEcreator
-from kanapy.input_output import write_position_weights, write_abaqus_inp 
-from kanapy.input_output import write_output_stat, plot_output_stats
-from kanapy.input_output import extract_volume_sharedGBarea
+from kanapy.input_output import particleStatGenerator, particleCreator, RVEcreator, \
+    write_position_weights, write_abaqus_inp, write_output_stat, plot_output_stats, \
+    extract_volume_sharedGBarea, read_dump
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.analyze_texture import textureReduction
@@ -67,8 +66,16 @@ def createStats(ctx, f: str):
         if not os.path.exists(cwd + '/{}'.format(f)):
             click.echo('')
             click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(f), err=True)
-            sys.exit(0)        
-        particleStatGenerator(cwd + '/' + f)           
+            sys.exit(0)     
+        # Open the user input statistics file and read the data
+        try:                
+            with open(cwd + '/' + f) as json_file:  
+                 stats_dict = json.load(json_file)                   
+                 
+        except FileNotFoundError:
+            print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
+            raise FileNotFoundError  
+        particleStatGenerator(stats_dict, save_files=True)           
 
 
 @main.command(name='genRVE')
@@ -87,8 +94,16 @@ def createRVE(ctx, f: str):
         if not os.path.exists(cwd + '/{}'.format(f)):
             click.echo('')
             click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(f), err=True)
-            sys.exit(0)        
-        RVEcreator(cwd + '/' + f)   
+            sys.exit(0)
+        # Open the user input statistics file and read the data
+        try:
+            with open(cwd + '/' + f) as json_file:  
+                stats_dict = json.load(json_file)                               
+                 
+        except FileNotFoundError:
+            print('Input file not found, make sure "stat_input.json" file is present in the working directory!')
+            raise FileNotFoundError
+        RVEcreator(stats_dict, save_files=True)   
                 
 
 @main.command(name='readGrains')
@@ -127,22 +142,87 @@ def readGrains(ctx, f: str, periodic: str, units: str):
 @click.pass_context
 def pack(ctx):
     """ Packs the particles into a simulation box."""
-    packingRoutine()
-
+    try:
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'          # Folder to store the json files
+    
+        try:
+            # Load the dictionaries from json files
+            with open(json_dir + '/particle_data.json') as json_file:
+                particle_data = json.load(json_file)
+    
+            with open(json_dir + '/RVE_data.json') as json_file:
+                RVE_data = json.load(json_file)
+    
+            with open(json_dir + '/simulation_data.json') as json_file:
+                simulation_data = json.load(json_file)
+    
+        except:
+            raise FileNotFoundError('Json files not found, make sure "RVE creator" command is executed first!')
+        packingRoutine(particle_data, RVE_data, simulation_data, save_files=True)
+    except KeyboardInterrupt:
+        sys.exit(0)
 
 @main.command()
 @click.pass_context
 def voxelize(ctx):
-    """ Generates the RVE by assigning voxels to grains."""        
-    voxelizationRoutine()
+    """ Generates the RVE by assigning voxels to grains."""
+    try:
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'          # Folder to store the json files
+    
+        try:
+            with open(json_dir + '/RVE_data.json') as json_file:
+                RVE_data = json.load(json_file)
+    
+            with open(json_dir + '/particle_data.json') as json_file:  
+                particle_data = json.load(json_file)
+            
+        except FileNotFoundError:
+            print('Json file not found, make sure "RVE_data.json" file exists!')
+            raise FileNotFoundError
+        
+        # Read the required dump file
+        if particle_data['Type'] == 'Equiaxed':
+            filename = cwd + '/dump_files/particle.{0}.dump'.format(800)            
+        else:
+            filename = cwd + '/dump_files/particle.{0}.dump'.format(500) 
+    
+        sim_box, Ellipsoids = read_dump(filename)  
+        voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files=True)
+    except KeyboardInterrupt:
+        sys.exit(0)
 
 
 @main.command()
 @click.pass_context
 def smoothen(ctx):
-    """ Generates smoothed grain boundary from a voxelated mesh."""        
-    smoothingRoutine()    
+    """ Generates smoothed grain boundary from a voxelated mesh."""    
+    try:
+        print('')
+        print('Starting Grain boundary smoothing')
+            
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'
         
+        try:                
+            with open(json_dir + '/nodeDict.json') as json_file: 
+                nodeDict = {int(k):v for k,v in json.load(json_file).items()}
+                    
+            with open(json_dir + '/elmtDict.json') as json_file:
+                elmtDict = {int(k):v for k,v in json.load(json_file).items()}
+
+            with open(json_dir + '/elmtSetDict.json') as json_file:    
+                elmtSetDict = {int(k):v for k,v in json.load(json_file).items()}
+            
+        except FileNotFoundError:
+            print('Json files not found, make sure "nodeDict.json", "elmtDict.json" and "elmtSetDict.json" files exist!')
+            raise FileNotFoundError
+        smoothingRoutine(nodeDict, elmtDict, elmtSetDict, save_files=True)    
+    except KeyboardInterrupt:
+        sys.exit(0)
+    
+    return  
 
 @main.command(name='abaqusOutput')
 @click.pass_context
@@ -155,16 +235,63 @@ def abaqusoutput(ctx):
 @click.pass_context
 def outputstats(ctx):
     """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
-    grain volumes and shared grain boundary surface areas info are written out as well."""
-    write_output_stat()
-    extract_volume_sharedGBarea()
+    grain volumes and shared grain boundary surface areas info are written out as well.
+    
+    .. note:: Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.
+              RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.
+    """
+    cwd = os.getcwd()
+    json_dir = cwd + '/json_files'          # Folder to store the json files
+    
+    try:
+        with open(json_dir + '/nodeDict.json') as json_file:
+            inpDict = json.load(json_file)
+            nodeDict = dict([int(a), x] for a, x in inpDict.items())
+
+        with open(json_dir + '/elmtDict.json') as json_file:
+            inpDict = json.load(json_file)
+            elmtDict =dict([int(a), x] for a, x in inpDict.items())
+
+        with open(json_dir + '/elmtSetDict.json') as json_file:
+            inpDict = json.load(json_file)
+            elmtSetDict = dict([int(a), x] for a, x in inpDict.items())
+
+        with open(json_dir + '/particle_data.json') as json_file:  
+            particle_data = json.load(json_file)
+        
+        with open(json_dir + '/RVE_data.json') as json_file:  
+            RVE_data = json.load(json_file)
+
+        with open(json_dir + '/simulation_data.json') as json_file:  
+            simulation_data = json.load(json_file)    
+          
+    except FileNotFoundError:
+        print('Json file not found, make sure "Input statistics, Packing, & Voxelization" commands are executed first!')
+        raise FileNotFoundError
+
+    write_output_stat(nodeDict, elmtDict, elmtSetDict, particle_data, RVE_data, \
+                      simulation_data, save_files=True)
+    extract_volume_sharedGBarea(nodeDict, elmtDict, elmtSetDict, RVE_data, save_files=True)
 
 
 @main.command(name='plotStats')
 @click.pass_context
 def plotstats(ctx):
-    """ Plots the particle- and grain diameter attributes for statistical comparison."""    
-    plot_output_stats()
+    """ Plots the particle- and grain diameter attributes for statistical comparison.
+    
+    .. note:: Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.
+    """   
+    cwd = os.getcwd()
+    json_dir = cwd + '/json_files'          # Folder to store the json files
+
+    try:
+        with open(json_dir + '/output_statistics.json') as json_file:
+            data_dict = json.load(json_file) 
+          
+    except FileNotFoundError:
+        print('Json file not found, make sure "Input statistics, Packing, Voxelization & Output Statistics" commands are executed first!')
+        raise FileNotFoundError
+    plot_output_stats(data_dict, save_files=True)
 
                 
 @main.command(name='neperOutput')
@@ -217,7 +344,7 @@ def setPaths():
             if decision1 == 'yes' or decision1 == 'y' or decision1 == 'Y' or decision1 == 'YES':                
 
                 version = chkVersion(MATLAB)        # Get the MATLAB version
-                if version == None:
+                if version is None:
                     click.echo('')
                     click.echo('MATLAB installation: {} is corrupted!\n'.format(MATLAB), err=True)
                     sys.exit(0)
@@ -232,7 +359,7 @@ def setPaths():
                 userinput = input('Please provide the path to MATLAB executable: ')
                 
                 version = chkVersion(userinput)
-                if version == None:
+                if version is None:
                     click.echo('')
                     click.echo('MATLAB installation: {} is corrupted!\n'.format(userinput), err=True)
                     sys.exit(0)
@@ -252,7 +379,7 @@ def setPaths():
             userinput = input('Please provide the path to MATLAB executable: ')
             
             version = chkVersion(userinput)
-            if version == None:
+            if version is None:
                 click.echo('')
                 click.echo('MATLAB installation: {} is corrupted!\n'.format(userinput), err=True)
                 sys.exit(0)
@@ -266,27 +393,6 @@ def setPaths():
         
         # For MTEX installation path
         userpath2 = MAIN_DIR+'/libs/mtex/'
-        '''                    
-        click.echo('')
-        #status2 = input('Is MTEX installed in this system (yes/no): ')
-
-        if status2 == 'yes' or status2 == 'y' or status2 == 'Y' or status2 == 'YES':                    
-            userpath2 = input('Please provide the path to MTEX installation: ')
-            if not os.path.exists(userpath2):
-                click.echo('')
-                click.echo("Mentioned path: '{}' does not exist in your system!\n".format(userpath2), err=True)
-                sys.exit(0)            
-            else:
-                userpath2 = os.path.join(userpath2, '')     # Add string to PATH
-                
-        elif status2 == 'no' or status2 == 'n' or status2 == 'N' or status2 == 'NO':
-            click.echo("Kanapy's texture analysis code requires MTEX. Please install it from: https://mtex-toolbox.github.io/download.")
-            click.echo('')
-            userpath2 = False
-        else:
-            click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
-            sys.exit(0)  
-        '''
                      
     elif status1 == 'no' or status1 == 'n' or status1 == 'N' or status1 == 'NO':
         click.echo("Kanapy's texture analysis code requires MATLAB. Please install it.")
@@ -308,8 +414,14 @@ def setPaths():
         with open(path_path,'w') as outfile:
             json.dump(pathDict, outfile, indent=2)                
         
+        os.chdir('{}extern/engines/python'.format(userpath1[0:-10])) # remove bin/matlab from matlab path
+        os.system('python setup.py install')
+        path = os.path.abspath(__file__)[0:-7] # remove /cli.py from kanapy path
+        os.chdir(path)
+        os.system('python setup_mtex.py')
         click.echo('')
         click.echo('Kanapy is now configured for texture analysis!\n')
+        # store paths in Python API?
 
 
 @main.command(name='reduceODF')
@@ -329,7 +441,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
     else:
         cwd = os.getcwd()
         arg_dict = {}           
-        if ebsd != None:
+        if ebsd is not None:
             if not os.path.exists(cwd + '/{}'.format(ebsd)):
                 click.echo('')
                 click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(ebsd), err=True)
@@ -337,7 +449,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
             else:
                 arg_dict['ebsdMatFile'] = cwd + '/{}'.format(ebsd)
 
-        if grains != None:
+        if grains is not None:
             if not os.path.exists(cwd + '/{}'.format(grains)):
                 click.echo('')
                 click.echo("Mentioned file: '{}' does not exist in the current working directory!\n".format(grains), err=True)
@@ -345,7 +457,7 @@ def reducetexture(ctx, ebsd: str, grains: str, kernel: float, fit_mad: bool):
             else:        
                 arg_dict['grainsMatFile'] = cwd + '/{}'.format(grains)
                 
-        if kernel != None:
+        if kernel is not None:
             arg_dict['kernelShape'] = kernel        
             
         if fit_mad == 'yes' or fit_mad == 'y' or fit_mad == 'Y' or fit_mad == 'YES': 

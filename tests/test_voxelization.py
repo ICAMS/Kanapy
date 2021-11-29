@@ -219,10 +219,10 @@ def test_voxelizationRoutine():
                 'Simulation': {'periodicity': 'True', 'output_units': 'mm'}}
 
                 
-    with open(stat_inp, 'w') as outfile:
-        json.dump(to_write, outfile, indent=2) 
+    #with open(stat_inp, 'w') as outfile:
+    #    json.dump(to_write, outfile, indent=2) 
 
-    RVEcreator(stat_inp)   
+    RVEcreator(to_write, save_files=True)   
 
     # create an temporary 'dump' directory for reading files from
     with open(json_dir + '/RVE_data.json') as json_file:
@@ -235,14 +235,14 @@ def test_voxelizationRoutine():
     sim_box.sim_ts = 500
     Particles = particle_generator(particle_data, sim_box)
     
-    write_dump(Particles, sim_box, len(Particles))
+    #write_dump(Particles, sim_box)
     
-    voxelizationRoutine()
+    voxelizationRoutine(particle_data, RVE_data, Particles, sim_box, save_files=True)
 
     assert os.path.isfile(json_dir + '/nodeDict.json')
     assert os.path.isfile(json_dir + '/elmtDict.json')
     assert os.path.isfile(json_dir + '/elmtSetDict.json')
 
-    os.remove(stat_inp)  
+    #os.remove(stat_inp)  
     shutil.rmtree(json_dir)
     shutil.rmtree(dump_dir)
