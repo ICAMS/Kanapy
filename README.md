@@ -191,7 +191,7 @@ synthetic microstructure generation tool for research and industry use.
 
 # Authors
 
-Mahesh R.G Prasad, Abhishek Biswas, Napat Vajragupta, Alexander Hartmaier  
+Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Napat Vajragupta, Alexander Hartmaier  
 [ICAMS](http://www.icams.de/content/) / [Ruhr-Universität Bochum](https://www.ruhr-uni-bochum.de/en), Germany 
 
 

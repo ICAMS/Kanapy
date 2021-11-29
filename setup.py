@@ -86,16 +86,15 @@ from subprocess import CalledProcessError
     
 kwargs = dict(
     name='kanapy',
-    version='3.1.1',
-    author='Mahesh R.G. Prasad, Abhishek Biswas, Napat Vajragupta, Alexander Hartmaier',
+    version='3.2.0',
+    author='Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Napat Vajragupta, Alexander Hartmaier',
     author_email='alexander.hartmaier@rub.de',
     classifiers=[        
         'License :: GNU AFFERO GENERAL PUBLIC LICENSE v3',
         'Natural Language :: English',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.8'
     ],     
     description="A python package for generating complex synthetic polycrystalline microstructures.",
     #long_description=readme + '\n\n' + history,

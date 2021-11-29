@@ -1,75 +1,34 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>kanapy.packing &mdash; kanapy 2.1.1 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>kanapy.packing &mdash; kanapy 3.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../index.html" class="icon icon-home"> kanapy
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
-                2.1.1
+                3.2.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,18 +36,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../readme.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
@@ -100,74 +48,35 @@
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">History</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">kanapy</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../index.html">Module code</a> &raquo;</li>
-        
       <li>kanapy.packing</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for kanapy.packing</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">json</span>
+<span class="c1">#import os</span>
+<span class="c1">#import sys</span>
+<span class="c1">#import json</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
@@ -239,7 +148,7 @@
     <span class="k">return</span> <span class="n">Ellipsoids</span></div>
 
 
-<div class="viewcode-block" id="particle_grow"><a class="viewcode-back" href="../../kanapy.html#kanapy.packing.particle_grow">[docs]</a><span class="k">def</span> <span class="nf">particle_grow</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">):</span>
+<div class="viewcode-block" id="particle_grow"><a class="viewcode-back" href="../../kanapy.html#kanapy.packing.particle_grow">[docs]</a><span class="k">def</span> <span class="nf">particle_grow</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">,</span> <span class="n">dump</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initializes the :class:`entities.Octree` class and performs recursive subdivision with </span>
 <span class="sd">    collision checks and response for the ellipsoids. At each time step of the simulation it </span>
@@ -269,17 +178,15 @@
         <span class="n">tree</span> <span class="o">=</span> <span class="n">Octree</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Cuboid</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">top</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
                                 <span class="n">sim_box</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">front</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">back</span><span class="p">),</span> <span class="n">Ellipsoids</span><span class="p">)</span>
         <span class="n">tree</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-
-        <span class="c1"># Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)</span>
-        <span class="n">write_dump</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">dump</span><span class="p">:</span>
+            <span class="c1"># Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)</span>
+            <span class="n">write_dump</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">)</span>
 
         <span class="c1"># Delete duplicates if existing (Active only if periodicity is True)</span>
         <span class="c1"># find all the items which are not duplicates</span>
         <span class="n">inter_ell</span> <span class="o">=</span> <span class="p">[</span><span class="n">ell</span> <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="n">Ellipsoids</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ell</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)]</span>
         <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="n">inter_ell</span>
-
-        <span class="c1"># Dump the ellipsoid information to be read by OVITO (Doesn&#39;t include duplicates at periodic boundaries)</span>
-        <span class="c1">#write_dump(Ellipsoids, sim_box, len(Ellipsoids))</span>
 
         <span class="n">dups</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># Loop over the ellipsoids: move, set Bbox, &amp; check for wall collision / PBC</span>
@@ -300,110 +207,74 @@
         <span class="c1"># Update the simulation time</span>
         <span class="n">sim_box</span><span class="o">.</span><span class="n">sim_ts</span> <span class="o">+=</span> <span class="mi">1</span>
         
-    <span class="k">return</span></div>
+    <span class="k">return</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span></div>
 
 
-<div class="viewcode-block" id="packingRoutine"><a class="viewcode-back" href="../../kanapy.html#kanapy.packing.packingRoutine">[docs]</a><span class="k">def</span> <span class="nf">packingRoutine</span><span class="p">():</span>
+<div class="viewcode-block" id="packingRoutine"><a class="viewcode-back" href="../../kanapy.html#kanapy.packing.packingRoutine">[docs]</a><span class="k">def</span> <span class="nf">packingRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">simulation_data</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The main function that controls the particle packing routine using: :meth:`particle_grow` &amp; :meth:`particle_generator`</span>
-
+<span class="sd">    </span>
 <span class="sd">    .. note:: Particle, RVE and simulation data are read from the JSON files generated by :meth:`kanapy.input_output.particleStatGenerator`.</span>
 <span class="sd">              They contain the following information:</span>
-
+<span class="sd">    </span>
 <span class="sd">              * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. </span>
 <span class="sd">              * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
 <span class="sd">              * Simulation attributes such as total number of timesteps and periodicity.                         </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting particle simulation&#39;</span><span class="p">)</span>
-
-        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Load the dictionaries from json files</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
-                <span class="n">particle_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
-
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
-                <span class="n">RVE_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
-
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
-                <span class="n">simulation_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
-
-        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json files not found, make sure &quot;RVE creator&quot; command is executed first!&#39;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
-            
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating simulation box of required dimensions&#39;</span><span class="p">)</span>
-        <span class="c1"># Create an instance of simulation box</span>
-        <span class="n">sim_box</span> <span class="o">=</span> <span class="n">Simulation_Box</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeX&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeY&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeZ&#39;</span><span class="p">])</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating particles from distribution statistics&#39;</span><span class="p">)</span>
-        <span class="c1"># Create instances for particles</span>
-        <span class="n">Particles</span> <span class="o">=</span> <span class="n">particle_generator</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">)</span>
-
-        <span class="c1"># Growth of particle at each time step</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Particle packing by growth simulation&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting particle simulation&#39;</span><span class="p">)</span>     
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating simulation box of required dimensions&#39;</span><span class="p">)</span>
+    <span class="c1"># Create an instance of simulation box</span>
+    <span class="n">sim_box</span> <span class="o">=</span> <span class="n">Simulation_Box</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeX&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeY&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeZ&#39;</span><span class="p">])</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating particles from distribution statistics&#39;</span><span class="p">)</span>
+    <span class="c1"># Create instances for particles</span>
+    <span class="n">Particles</span> <span class="o">=</span> <span class="n">particle_generator</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">)</span>
+    
+    <span class="c1"># Growth of particle at each time step</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Particle packing by growth simulation&#39;</span><span class="p">)</span>
+    
+    
+    <span class="k">if</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">:</span>
+        <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;False&#39;</span><span class="p">:</span>
+        <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;packingRoutine: Wrong value for periodicity in simulation_data&#39;</span><span class="p">)</span>   
         
-        <span class="k">if</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">:</span>
-            <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;False&#39;</span><span class="p">:</span>
-            <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span>        
-            
-        <span class="n">particle_grow</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">Particles</span><span class="p">,</span> <span class="n">periodic_status</span><span class="p">,</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Time steps&#39;</span><span class="p">])</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Completed particle packing&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-        
-    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+    <span class="n">particles</span><span class="p">,</span> <span class="n">simbox</span> <span class="o">=</span> <span class="n">particle_grow</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">Particles</span><span class="p">,</span> <span class="n">periodic_status</span><span class="p">,</span> \
+                                      <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Time steps&#39;</span><span class="p">],</span> <span class="n">dump</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Completed particle packing&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">particles</span><span class="p">,</span> <span class="n">simbox</span></div>
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright This work is published under a CC BY-SA 4.0 license.
-
-    </p>
+    <p>&#169; Copyright This work is published under a CC BY-SA 4.0 license.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
