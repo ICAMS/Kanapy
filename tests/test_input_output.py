@@ -3,15 +3,11 @@
 
 import os
 import shutil
-
 import pytest
 import numpy as np
-
 import kanapy
 from kanapy.input_output import *
 from kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
-from kanapy.cli import abaqusoutput
-
 
 def test_particleStatGenerator():
 
