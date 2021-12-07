@@ -87,9 +87,13 @@ def create_voxels(sim_box, voxNums):
                 elmtDict[elmt_count].append(verticesDict[coo])
 
     # node dictionary
-    nodeDict = {v: k for k, v in verticesDict.items()}
-
-    return nodeDict, elmtDict, vox_centerDict
+    #nodes_v = {v: k for k, v in verticesDict.items()}
+    nodes_v = np.zeros((node_count,3))
+    print('### create voxels', node_count, nodes_v.shape)
+    for pos, i in verticesDict.items():
+        #print('***   ', i, pos)
+        nodes_v[i-1,:] = pos
+    return nodes_v, elmtDict, vox_centerDict
 
 
 def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
@@ -338,7 +342,7 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
     #voxel_resX, voxel_resY, voxel_resZ = RVE_data['Voxel_resolutionX'], RVE_data['Voxel_resolutionY'], RVE_data['Voxel_resolutionZ']           
 
     # create voxels inside the RVE
-    nodeDict, elmtDict, vox_centerDict = create_voxels(sim_box, (voxX,voxY,voxZ))              
+    nodes_v, elmtDict, vox_centerDict = create_voxels(sim_box, (voxX,voxY,voxZ))              
 
     # Find the voxels belonging to each grain by growing ellipsoid each time
     assign_voxels_to_ellipsoid(vox_centerDict, Ellipsoids, elmtDict)
@@ -363,7 +367,27 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
             print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissable'.format(
                 int(ellipsoid.id)))
             sys.exit(0)
-
+    
+    # generate array of voxelized structure
+    hh = np.zeros(voxX*voxY*voxZ)
+    for ih, il in elmtSetDict.items():
+        il = np.array(il) - 1
+        hh[il] = ih
+    voxels = np.reshape(hh, (voxX,voxY,voxZ), order='F')
+    
+    # test consistency of voxel array with element dict
+    '''for igr, iel in elmtSetDict.items():
+        ic = 0
+        for i in iel:
+            iv = vox_centerDict[i]
+            ih = voxels[int(voxX*iv[0]/lx), int(voxY*iv[1]/ly), int(voxZ*iv[2]/lz)]
+            if ih != igr:
+                print('Wrong voxel number',igr, ih, i, iv)
+            else:
+                ic += 1
+        if ic==len(iel):
+            print('Correct voxel assignment to grain:',igr)'''
+            
     print('Completed RVE voxelization')
     print('')
     
@@ -374,8 +398,9 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
             os.makedirs(json_dir)
 
         # Dump the Dictionaries as json files
-        with open(json_dir + '/nodeDict.json', 'w') as outfile:
-            json.dump(nodeDict, outfile, indent=2)
+        with open(json_dir + '/nodes_v.csv', 'w') as f:
+            for v in nodes_v:
+                f.write('{0}, {1}, {2}\n'.format(v[0], v[1], v[2]))
 
         with open(json_dir + '/elmtDict.json', 'w') as outfile:
             json.dump(elmtDict, outfile, indent=2)
@@ -383,5 +408,5 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
         with open(json_dir + '/elmtSetDict.json', 'w') as outfile:
             json.dump(elmtSetDict, outfile, indent=2)  
                                                                                    
-    return nodeDict, elmtDict, elmtSetDict, vox_centerDict
+    return nodes_v, elmtDict, elmtSetDict, vox_centerDict, voxels
         

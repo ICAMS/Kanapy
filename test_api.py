@@ -29,6 +29,7 @@ ms_ex_ellips = {"Grain type": "Elongated",
   "RVE": {"sideX": 86, "sideY": 86, "sideZ": 86, "Nx": 65, "Ny": 65, "Nz": 65},
   "Simulation":{"periodicity": "True", "output_units": "mm"}}
 
+
 ms = knpy.Microstructure(ms_elong)
 #ms = knpy.Microstructure(file="examples/ellipsoid_packing/stat_input.json")
 ms.create_stats()
@@ -40,5 +41,5 @@ ms.plot_3D()
 ms.output_stats()
 ms.plot_stats()
 ms.smoothen()
-ms.abq_output()
+ms.output_abq()
 ms.output_neper()

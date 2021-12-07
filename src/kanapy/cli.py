@@ -5,12 +5,13 @@ import click
 
 from kanapy.util import ROOT_DIR, MAIN_DIR 
 from kanapy.input_output import particleStatGenerator, particleCreator, RVEcreator, \
-    write_position_weights, write_abaqus_inp, write_output_stat, plot_output_stats, \
-    extract_volume_sharedGBarea, read_dump
+    write_position_weights, write_output_stat, plot_output_stats, \
+    extract_volume_sharedGBarea, read_dump, export2abaqus
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.analyze_texture import textureReduction
 from kanapy.smoothingGB import smoothingRoutine
+from numpy import asarray
 
 @click.group()
 @click.pass_context
@@ -179,8 +180,7 @@ def voxelize(ctx):
                 particle_data = json.load(json_file)
             
         except FileNotFoundError:
-            print('Json file not found, make sure "RVE_data.json" file exists!')
-            raise FileNotFoundError
+            raise FileNotFoundError('Json file not found, make sure "RVE_data.json" file exists!')
         
         # Read the required dump file
         if particle_data['Type'] == 'Equiaxed':
@@ -206,8 +206,13 @@ def smoothen(ctx):
         json_dir = cwd + '/json_files'
         
         try:                
-            with open(json_dir + '/nodeDict.json') as json_file: 
-                nodeDict = {int(k):v for k,v in json.load(json_file).items()}
+            with open(json_dir + '/nodes_v.csv', 'r') as f:
+                hh = f.read()
+            hx = hh.split('\n')
+            hs = []
+            for hy in hx[0:-1]:
+                hs.append(hy.split(', '))
+            nodes_v = asarray(hs, dtype=float)
                     
             with open(json_dir + '/elmtDict.json') as json_file:
                 elmtDict = {int(k):v for k,v in json.load(json_file).items()}
@@ -216,9 +221,9 @@ def smoothen(ctx):
                 elmtSetDict = {int(k):v for k,v in json.load(json_file).items()}
             
         except FileNotFoundError:
-            print('Json files not found, make sure "nodeDict.json", "elmtDict.json" and "elmtSetDict.json" files exist!')
+            print('Json files not found, make sure "nodes_v.json", "elmtDict.json" and "elmtSetDict.json" files exist!')
             raise FileNotFoundError
-        smoothingRoutine(nodeDict, elmtDict, elmtSetDict, save_files=True)    
+        smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=True)    
     except KeyboardInterrupt:
         sys.exit(0)
     
@@ -227,9 +232,79 @@ def smoothen(ctx):
 @main.command(name='abaqusOutput')
 @click.pass_context
 def abaqusoutput(ctx):
-    """ Writes out the Abaqus (.inp) file for the generated RVE."""    
-    write_abaqus_inp()
+    """ Writes out the Abaqus (.inp) file for the voxelized RVE."""
+    try:
+        print('\nStarting Abaqus export for voxelized structure')
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'          # Folder to store the json files   
+            
+        try:
+            with open(json_dir + '/simulation_data.json') as json_file:  
+                simulation_data = json.load(json_file)     
+        
+            with open(json_dir + '/nodes_v.csv', 'r') as f:
+                hh = f.read()
+            hx = hh.split('\n')
+            hs = []
+            for hy in hx[0:-1]:
+                hs.append(hy.split(', '))
+            nodes_v = asarray(hs, dtype=float)
     
+            with open(json_dir + '/elmtDict.json') as json_file:
+                elmtDict = json.load(json_file)
+    
+            with open(json_dir + '/elmtSetDict.json') as json_file:
+                elmtSetDict = json.load(json_file)
+    
+        except FileNotFoundError:
+            raise FileNotFoundError('Json file not found, make sure "kanapy voxelize" command is executed first!')
+
+        name = cwd + '/kanapy_{0}grains_voxels.inp'.format(len(elmtSetDict))
+        if os.path.exists(name):
+            os.remove(name)                  # remove old file if it exists
+        export2abaqus(nodes_v, name, simulation_data, elmtSetDict, elmtDict, grain_facesDict=None)
+    except KeyboardInterrupt:
+        sys.exit(0)
+        
+@main.command(name='abaqusOutput-smooth')
+@click.pass_context
+def abaqusoutput_smooth(ctx):
+    """ Writes out the Abaqus (.inp) file for the smoothened RVE."""
+    try:
+        print('\nStarting Abaqus export for smoothened structure')
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'          # Folder to store the json files   
+            
+        try:
+            with open(json_dir + '/simulation_data.json') as json_file:  
+                simulation_data = json.load(json_file)     
+        
+            with open(json_dir + '/nodes_s.csv', 'r') as f:
+                hh = f.read()
+            hx = hh.split('\n')
+            hs = []
+            for hy in hx[0:-1]:
+                hs.append(hy.split(', '))
+            nodes_v = asarray(hs, dtype=float)
+    
+            with open(json_dir + '/elmtDict.json') as json_file:
+                elmtDict = json.load(json_file)
+    
+            with open(json_dir + '/elmtSetDict.json') as json_file:
+                elmtSetDict = json.load(json_file)
+                
+            with open(json_dir + '/grain_facesDict.json') as json_file:
+                grain_facesDict = json.load(json_file)
+    
+        except FileNotFoundError:
+            raise FileNotFoundError('Json file not found, make sure "kanapy smoothen" command is executed first!')
+
+        name = cwd + '/kanapy_{0}grains_smooth.inp'.format(len(elmtSetDict))
+        if os.path.exists(name):
+            os.remove(name)                  # remove old file if it exists
+        export2abaqus(nodes_v, name, simulation_data, elmtSetDict, elmtDict, grain_facesDict=grain_facesDict)
+    except KeyboardInterrupt:
+        sys.exit(0)
         
 @main.command(name='outputStats')
 @click.pass_context
@@ -244,9 +319,13 @@ def outputstats(ctx):
     json_dir = cwd + '/json_files'          # Folder to store the json files
     
     try:
-        with open(json_dir + '/nodeDict.json') as json_file:
-            inpDict = json.load(json_file)
-            nodeDict = dict([int(a), x] for a, x in inpDict.items())
+        with open(json_dir + '/nodes_v.csv', 'r') as f:
+            hh = f.read()
+        hx = hh.split('\n')
+        hs = []
+        for hy in hx[0:-1]:
+            hs.append(hy.split(', '))
+        nodes_v = asarray(hs, dtype=float)
 
         with open(json_dir + '/elmtDict.json') as json_file:
             inpDict = json.load(json_file)
@@ -269,9 +348,9 @@ def outputstats(ctx):
         print('Json file not found, make sure "Input statistics, Packing, & Voxelization" commands are executed first!')
         raise FileNotFoundError
 
-    write_output_stat(nodeDict, elmtDict, elmtSetDict, particle_data, RVE_data, \
+    write_output_stat(nodes_v, elmtDict, elmtSetDict, particle_data, RVE_data, \
                       simulation_data, save_files=True)
-    extract_volume_sharedGBarea(nodeDict, elmtDict, elmtSetDict, RVE_data, save_files=True)
+    extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=True)
 
 
 @main.command(name='plotStats')

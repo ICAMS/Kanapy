@@ -2,8 +2,8 @@
 import os
 import json
 from kanapy.input_output import particleStatGenerator, RVEcreator, \
-    write_abaqus_inp, write_position_weights, extract_volume_sharedGBarea, \
-    write_output_stat, plot_output_stats
+    extract_volume_sharedGBarea, write_output_stat, plot_output_stats,\
+    export2abaqus
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
@@ -18,8 +18,10 @@ class Microstructure:
         self.simulation_data = None
         self.particles = None
         self.simbox = None
-        self.allNodes = None
-        self.nodeDict = None
+        self.nodes_s = None
+        self.nodes_v = None
+        self.voxels = None
+        self.grain_facesDict = None
         self.elmtSetDict = None
         self.res_data = None
         if descriptor is None:
@@ -68,7 +70,7 @@ class Microstructure:
         """ Generates plot of particles"""
         if self.particles is None:
             raise ValueError('No particle to plot. Run pack first.')
-        plot_ellipsoids(ms=self, cmap=cmap, test=test)
+        plot_ellipsoids(self.particles, cmap=cmap, test=test)
         
     def voxelize(self, particle_data=None, RVE_data=None, particles=None, 
                  simbox=None, save_files=False):
@@ -83,35 +85,36 @@ class Microstructure:
                 raise ValueError('No particles in voxelize. Run pack first.')
         if simbox is None:
             simbox = self.simbox
-        self.nodeDict, self.elmtDict, self.elmtSetDict, self.vox_centerDict = \
+        self.nodes_v, self.elmtDict, self.elmtSetDict, self.vox_centerDict, self.voxels = \
             voxelizationRoutine(particle_data, RVE_data, particles, simbox, save_files=save_files)
 
-    def smoothen(self, nodeDict=None, elmtDict=None, elmtSetDict=None, save_files=False):
+    def smoothen(self, nodes_v=None, elmtDict=None, elmtSetDict=None, save_files=False):
         """ Generates smoothed grain boundary from a voxelated mesh."""
-        if nodeDict is None:
-            nodeDict = self.nodeDict
-            if nodeDict is None:
-                raise ValueError('No nodeDict in smoothen. Run voxelize first.')
+        if nodes_v is None:
+            nodes_v = self.nodes_v
+            if nodes_v is None:
+                raise ValueError('No nodes_v in smoothen. Run voxelize first.')
         if elmtDict is None:
             elmtDict = self.elmtDict
         if elmtSetDict is None:
             elmtSetDict = self.elmtSetDict
-        self.allNodes, self.grain_facesDict = \
-            smoothingRoutine(nodeDict, elmtDict, elmtSetDict, save_files=save_files)
+        self.nodes_s, self.grain_facesDict = \
+            smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=save_files)
+        
             
     def plot_3D(self, sliced=True, dual_phase=False, cmap='prism', test=False):
         """ Generate 3D plot of grains in voxelized microstructure. """
-        if self.elmtSetDict is None:
+        if self.voxels is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
-        plot_microstructure_3D(ms=self,sliced=sliced, dual_phase=dual_phase, \
+        plot_microstructure_3D(self.voxels, Ngr=self.particle_data['Number'], sliced=sliced, dual_phase=dual_phase, \
                                cmap=cmap, test=test)
 
-    def output_stats(self, nodeDict=None, elmtDict=None, elmtSetDict=None, \
+    def output_stats(self, nodes_v=None, elmtDict=None, elmtSetDict=None, \
                      particle_data=None, RVE_data=None, simulation_data=None, save_files=False):
         """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
         grain volumes and shared grain boundary surface areas info are written out as well."""
-        if nodeDict is None:
-            nodeDict = self.nodeDict
+        if nodes_v is None:
+            nodes_v = self.nodes_v
         if elmtDict is None:
             elmtDict = self.elmtDict
         if elmtSetDict is None:
@@ -123,15 +126,15 @@ class Microstructure:
         if simulation_data is None:
             simulation_data = self.simulation_data
             
-        if nodeDict is None:
+        if nodes_v is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
         if particle_data is None:
             raise ValueError('No particles created yet. Run create_RVE, pack and voxelize first.')
             
-        self.res_data = write_output_stat(nodeDict, elmtDict, elmtSetDict, particle_data, RVE_data, \
+        self.res_data = write_output_stat(nodes_v, elmtDict, elmtSetDict, particle_data, RVE_data, \
                           simulation_data, save_files=save_files)
         self.gv_sorted_values, self.shared_area = \
-            extract_volume_sharedGBarea(nodeDict, elmtDict, elmtSetDict, RVE_data, save_files=save_files)
+            extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=save_files)
         
     def plot_stats(self, data=None, save_files=False):
         """ Plots the particle- and grain diameter attributes for statistical comparison."""   
@@ -139,95 +142,51 @@ class Microstructure:
             data = self.res_data
         plot_output_stats(data, save_files=save_files)
 
-    # the following subroutines are not yet adapted as API
-    # futher subroutines for visualization are required
-    def output_abq(self, simulation_data=None, nodeDict=None, elmtDict=None, elmtSetDict=None,):
+    def output_abq(self, nodes=None, name=None, simulation_data=None, elmtDict=None, elmtSetDict=None, faces=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""    
         #write_abaqus_inp()
         if simulation_data is None:
             simulation_data = self.simulation_data
-        if nodeDict is None:
-            nodeDict = self.nodeDict
+        if nodes is None:
+            if self.nodes_s is not None and self.grain_facesDict is not None:
+                print('\nWarning: No information about nodes is given, will write smoothened structure')
+                nodes = self.nodes_s
+                faces = self.grain_facesDict
+                ntag = 'smooth'
+            elif self.nodes_v is not None:
+                print('\nWarning: No information about nodes is given, will write voxelized structure')
+                nodes = self.nodes_v
+                faces = None
+                ntag = 'voxels'
+            else:
+                raise ValueError('No information about voxelized microstructure. Run voxelize first.')
+        elif nodes=='smooth' or nodes=='s':
+            if self.nodes_s is not None and self.grain_facesDict is not None:
+                nodes = self.nodes_s
+                faces = self.grain_facesDict
+                ntag = 'smooth'
+            else:
+                raise ValueError('No information about smoothed microstructure. Run smoothen first.')
+        elif nodes=='voxels' or nodes=='v':
+            if self.nodes_v is not None:
+                nodes = self.nodes_v
+                faces = None
+                ntag = 'voxels'
+            else:
+                raise ValueError('No information about voxelized microstructure. Run voxelize first.')
+            
         if elmtDict is None:
             elmtDict = self.elmtDict
         if elmtSetDict is None:
             elmtSetDict = self.elmtSetDict
-            
-        if nodeDict is None:
-            raise ValueError('No information about voxelized microstructure. Run voxelize first.')
         if simulation_data is None:
             raise ValueError('No simulation data exists. Run create_RVE, pack and voxelize first.')
- 
-        print('')
-        print('Writing ABAQUS (.inp) file', end="")
-
-        cwd = os.getcwd()
-
-        # Factor used to generate nodal cordinates in 'mm' or 'um' scale
-        if simulation_data['Output units'] == 'mm':
-            scale = 'mm'
-            divideBy = 1000
-        elif simulation_data['Output units'] == 'um':
-            scale = 'um'
-            divideBy = 1
-                    
-        abaqus_file = cwd + '/kanapy_{0}grains.inp'.format(len(elmtSetDict))
-        if os.path.exists(abaqus_file):
-            os.remove(abaqus_file)                  # remove old file if it exists
-
-        with open(abaqus_file, 'w') as f:
-            f.write('** Input file generated by kanapy\n')
-            f.write('** Nodal coordinates scale in {0}\n'.format(scale))
-            f.write('*HEADING\n')
-            f.write('*PREPRINT,ECHO=NO,HISTORY=NO,MODEL=NO,CONTACT=NO\n')
-            f.write('**\n')
-            f.write('** PARTS\n')
-            f.write('**\n')
-            f.write('*Part, name=PART-1\n')
-            f.write('*Node\n')
-
-            # Create nodes
-            for k, v in nodeDict.items():
-                # Write out coordinates in 'mm' or 'um'
-                f.write('{0}, {1}, {2}, {3}\n'.format(k, v[0]/divideBy, v[1]/divideBy, v[2]/divideBy))
-
-            # Create Elements
-            f.write('*ELEMENT, TYPE=C3D8\n')
-            for k, v in elmtDict.items():
-                f.write('{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}\n'.format(
-                    k, v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]))
-
-            # Create element sets
-            for k, v in elmtSetDict.items():
-                f.write('*ELSET, ELSET=Grain{0}_set\n'.format(k))
-                for enum, el in enumerate(v, 1):
-                    if enum % 16 != 0:
-                        if enum == len(v):
-                            f.write('%d\n' % el)
-                        else:
-                            f.write('%d, ' % el)
-                    else:
-                        if enum == len(v):
-                            f.write('%d\n' % el)
-                        else:
-                            f.write('%d\n' % el)
-
-            # Create sections
-            for k, v in elmtSetDict.items():
-                f.write(
-                    '*Solid Section, elset=Grain{0}_set, material=Grain{1}_mat\n'.format(k, k))
-            f.write('*End Part\n')
-            f.write('**\n')
-            f.write('**\n')
-            f.write('** ASSEMBLY\n')
-            f.write('**\n')
-            f.write('*Assembly, name=Assembly\n')
-            f.write('**\n')
-            f.write('*Instance, name=PART-1-1, part=PART-1\n')
-            f.write('*End Instance\n')
-            f.write('*End Assembly\n')
-        print('---->DONE!\n') 
-
+        if name is None:
+            cwd = os.getcwd()
+            name = cwd + '/kanapy_{0}grains_{1}.inp'.format(len(elmtSetDict),ntag)
+            if os.path.exists(name):
+                os.remove(name)                  # remove old file if it exists
+        export2abaqus(nodes, name, simulation_data, elmtSetDict, elmtDict, grain_facesDict=faces)
 
     #def output_neper(self, timestep=None):
     def output_neper(self):

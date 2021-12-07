@@ -10,6 +10,7 @@ import numpy as np
 import kanapy
 from kanapy.input_output import *
 from kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
+from kanapy.cli import abaqusoutput
 
 
 def test_particleStatGenerator():
@@ -123,24 +124,18 @@ def test_write_position_weights(temp_dump):
     os.remove(cwd + '/sphere_weights.txt')
 
 
-def test_write_abaqus_inp():
+def test_export_abaqus():
 
-    nd = {1: (1.0, 0.0, 1.0), 2: (1.0, 0.0, 0.0), 3: (0.0, 0.0, 0.0), 4: (0.0, 0.0, 1.0),
-          5: (1.0, 1.0, 1.0), 6: (1.0, 1.0, 0.0), 7: (0.0, 1.0, 0.0), 8: (0.0, 1.0, 1.0),
-          9: (2.0, 0.0, 1.0), 10: (2.0, 0.0, 0.0), 11: (2.0, 1.0, 1.0), 12: (2.0, 1.0, 0.0),
-          13: (3.0, 0.0, 1.0), 14: (3.0, 0.0, 0.0), 15: (3.0, 1.0, 1.0), 16: (3.0, 1.0, 0.0),
-          17: (1.0, 2.0, 1.0), 18: (1.0, 2.0, 0.0), 19: (0.0, 2.0, 0.0), 20: (0.0, 2.0, 1.0),
-          21: (2.0, 2.0, 1.0), 22: (2.0, 2.0, 0.0), 23: (3.0, 2.0, 1.0), 24: (3.0, 2.0, 0.0),
-          25: (1.0, 3.0, 1.0), 26: (1.0, 3.0, 0.0), 27: (0.0, 3.0, 0.0), 28: (0.0, 3.0, 1.0),
-          29: (2.0, 3.0, 1.0), 30: (2.0, 3.0, 0.0), 31: (3.0, 3.0, 1.0), 32: (3.0, 3.0, 0.0),
-          33: (1.0, 0.0, 2.0), 34: (0.0, 0.0, 2.0), 35: (1.0, 1.0, 2.0), 36: (0.0, 1.0, 2.0),
-          37: (2.0, 0.0, 2.0), 38: (2.0, 1.0, 2.0), 39: (3.0, 0.0, 2.0), 40: (3.0, 1.0, 2.0),
-          41: (1.0, 2.0, 2.0), 42: (0.0, 2.0, 2.0), 43: (2.0, 2.0, 2.0), 44: (3.0, 2.0, 2.0),
-          45: (1.0, 3.0, 2.0), 46: (0.0, 3.0, 2.0), 47: (2.0, 3.0, 2.0), 48: (3.0, 3.0, 2.0),
-          49: (1.0, 0.0, 3.0), 50: (0.0, 0.0, 3.0), 51: (1.0, 1.0, 3.0), 52: (0.0, 1.0, 3.0),
-          53: (2.0, 0.0, 3.0), 54: (2.0, 1.0, 3.0), 55: (3.0, 0.0, 3.0), 56: (3.0, 1.0, 3.0),
-          57: (1.0, 2.0, 3.0), 58: (0.0, 2.0, 3.0), 59: (2.0, 2.0, 3.0), 60: (3.0, 2.0, 3.0),
-          61: (1.0, 3.0, 3.0), 62: (0.0, 3.0, 3.0), 63: (2.0, 3.0, 3.0), 64: (3.0, 3.0, 3.0)}
+    nodes = [[1., 0., 1.], [1., 0., 0.], [0., 0., 0.], [0., 0., 1.], [1., 1., 1.], [1., 1., 0.], [0., 1., 0.], 
+             [0., 1., 1.], [2., 0., 1.], [2., 0., 0.], [2., 1., 1.], [2., 1., 0.], [3., 0., 1.], [3., 0., 0.], 
+             [3., 1., 1.], [3., 1., 0.], [1., 2., 1.], [1., 2., 0.], [0., 2., 0.], [0., 2., 1.], [2., 2., 1.], 
+             [2., 2., 0.], [3., 2., 1.], [3., 2., 0.], [1., 3., 1.], [1., 3., 0.], [0., 3., 0.], [0., 3., 1.],
+             [2., 3., 1.], [2., 3., 0.], [3., 3., 1.], [3., 3., 0.], [1., 0., 2.], [0., 0., 2.], [1., 1., 2.], 
+             [0., 1., 2.], [2., 0., 2.], [2., 1., 2.], [3., 0., 2.], [3., 1., 2.], [1., 2., 2.], [0., 2., 2.], 
+             [2., 2., 2.], [3., 2., 2.], [1., 3., 2.], [0., 3., 2.], [2., 3., 2.], [3., 3., 2.], [1., 0., 3.], 
+             [0., 0., 3.], [1., 1., 3.], [0., 1., 3.], [2., 0., 3.], [2., 1., 3.], [3., 0., 3.], [3., 1., 3.], 
+             [1., 2., 3.], [0., 2., 3.], [2., 2., 3.], [3., 2., 3.], [1., 3., 3.], [0., 3., 3.], [2., 3., 3.], 
+             [3., 3., 3.]]
 
     ed = {1: [1, 2, 3, 4, 5, 6, 7, 8], 2: [9, 10, 2, 1, 11, 12, 6, 5], 3: [13, 14, 10, 9, 15, 16, 12, 11],
           4: [5, 6, 7, 8, 17, 18, 19, 20], 5: [11, 12, 6, 5, 21, 22, 18, 17], 6: [15, 16, 12, 11, 23, 24, 22, 21],
@@ -157,12 +152,21 @@ def test_write_abaqus_inp():
 
     simData = {'Periodicity': 'True', 'Output units': 'mm'}
     
+    name ='/kanapy_{0}grains.inp'.format(len(esd))
+    
     cwd = os.getcwd()
     json_dir = cwd + '/json_files'
 
     # Test if FileNotFoundError is raised
-    with pytest.raises(FileNotFoundError):
-        write_abaqus_inp()
+    #with pytest.raises(FileNotFoundError):
+    #    abaqusoutput()
+        
+    export2abaqus(nodes, cwd+name, simData, esd, ed)
+    assert os.path.isfile(cwd + name)
+    os.remove(cwd + name)
+    
+    '''
+    CLI function cannot be tested properly in current setting
     
     # Test the remainder of the code
     if not os.path.exists(json_dir):
@@ -171,8 +175,9 @@ def test_write_abaqus_inp():
     with open(json_dir + '/simulation_data.json', 'w') as outfile:
         json.dump(simData, outfile)
         
-    with open(json_dir + '/nodeDict.json', 'w') as outfile:
-        json.dump(nd, outfile)
+    with open(json_dir + '/nodes_v.csv', 'w') as f:
+        for v in nodes:
+            f.write('{0}, {1}, {2}\n'.format(v[0], v[1], v[2]))
 
     with open(json_dir + '/elmtDict.json', 'w') as outfile:
         json.dump(ed, outfile)
@@ -180,7 +185,11 @@ def test_write_abaqus_inp():
     with open(json_dir + '/elmtSetDict.json', 'w') as outfile:
         json.dump(esd, outfile)
 
-    write_abaqus_inp()
-    assert os.path.isfile(cwd + '/kanapy_{0}grains.inp'.format(len(esd)))
-    os.remove(cwd + '/kanapy_{0}grains.inp'.format(len(esd)))
+    
+    abaqusoutput()
+    assert os.path.isfile(cwd + name)
+    os.remove(cwd + name)'''
+
+    
+    
 
