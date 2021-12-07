@@ -657,7 +657,7 @@ def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain
         # Create nodes
         for k, v in enumerate(nodes):
             # Write out coordinates in 'mm' or 'um'
-            f.write('{0}, {1}, {2}, {3}\n'.format(k, v[0]/divideBy, v[1]/divideBy, v[2]/divideBy))
+            f.write('{0}, {1}, {2}, {3}\n'.format(k+1, v[0]/divideBy, v[1]/divideBy, v[2]/divideBy))
 
         if grain_facesDict is None:
             # write voxelized structure with regular hex mesh
