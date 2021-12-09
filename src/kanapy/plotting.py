@@ -75,7 +75,7 @@ def plot_ellipsoids(particles, cmap='prism', test=False):
         x = (points_global[:,0] + np.ones_like(points_global[:,0])*x_c).reshape((100,100))
         y = (points_global[:,1] + np.ones_like(points_global[:,1])*y_c).reshape((100,100))
         z = (points_global[:,2] + np.ones_like(points_global[:,2])*z_c).reshape((100,100))
-        ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='b', linewidth=.0001)
+        ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='b', linewidth=0)
     plt.show()
 
         

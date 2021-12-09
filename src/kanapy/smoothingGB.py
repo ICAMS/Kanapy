@@ -129,7 +129,7 @@ def readGrainFaces(nodes_v,elmtDict,elmtSetDict,RVE_xmin,RVE_xmax, RVE_ymin,RVE_
 def initalizeSystem(nodes_v,grain_facesDict):
     
     # Initialize all nodes as masses
-    allNodes = [Node(nid,coords[0],coords[1],coords[2]) for nid,coords in enumerate(nodes_v)]  
+    allNodes = [Node(nid+1,coords[0],coords[1],coords[2]) for nid,coords in enumerate(nodes_v)]  
     
     # Create anchors at each face center    
     print('    Creating anchors for the spring-mass system')
@@ -229,6 +229,7 @@ def smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=False):
                            RVE_xmax,RVE_ymin, RVE_ymax,RVE_zmin,RVE_zmax)
             
     nodes_s = np.array([(n.px, n.py, n.pz) for n in allNodes])
+    
     if save_files:
         cwd = os.getcwd()
         json_dir = cwd + '/json_files'          # Folder to store the json files
@@ -241,5 +242,5 @@ def smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=False):
             
         with open(json_dir + '/grain_facesDict.json', 'w') as outfile:
             json.dump(grain_facesDict, outfile, indent=2)
-    
+               
     return nodes_s, grain_facesDict
