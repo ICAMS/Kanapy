@@ -1,0 +1,85 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Spherical Approximation and Interpolation ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: S2FunApproximationInterpolation -->
+      <!-- HEADSTUFF: S2FunApproximationInterpolation -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:S2FunApproximationInterpolation">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Spherical Approximation and Interpolation</h1>
+         <div class="subheading"></div>
+         <p>On this page, we want to cover the topic of function approximation from discrete values on the sphere. To simulate this, we
+            have stored some nodes and corresponding function values which we can load. The csv-file contains the <img src="S2FunApproximationInterpolation_eq12428413953531653171.png"> -, <img src="S2FunApproximationInterpolation_eq08830444604280721118.png"> -, and <img src="S2FunApproximationInterpolation_eq17119888974628994297.png"> -component of the nodes and the function value in the fourth column. Lets import these data using the function <a href="vector3d.load.html"><tt>load</tt></a></p><pre class="codeinput">fname = fullfile(mtexDataPath, <span class="string">'vector3d'</span>, <span class="string">'smiley.csv'</span>);
+[nodes, S] = vector3d.load(fname,<span class="string">'columnNames'</span>,{<span class="string">'x'</span>,<span class="string">'y'</span>,<span class="string">'z'</span>,<span class="string">'values'</span>});</pre><p>The second output <tt>S</tt> is a struct that contains a field <tt>S.values</tt> with the function values from the fourth column. Next, we can make a scatter plot to see, what we are dealing with
+         </p><pre class="codeinput">scatter(nodes, S.values, <span class="string">'upper'</span>);</pre><img src="S2FunApproximationInterpolation_01.png"> <p>Now, we want to find a function which coincides with the given function values in the nodes reasonably well.</p>
+         <h2>Interpolation<a name="4"> </a></h2>
+         <p>The idea of the first approach is fairly simple. We create a function which has <b>exaclty</b> the value of the given data in the nodes. But we still have to decide what happens inbetween these nodes. For that, we linearly
+            interpolate between them, similarly as Matlat plots a one-dimensional function
+         </p><pre class="codeinput">close <span class="string">all</span>
+plot(rand(10,1), <span class="string">'.-'</span>,<span class="string">'linewidth'</span>,2)</pre><img src="S2FunApproximationInterpolation_02.png"> <p>With some mathematics we can lift this concept to the sphere. This is done by the <a href="vector3d.interp"><tt>interp</tt></a> command of the class <a href="vector3d.vector3d"><tt>vector3d</tt></a> when the argument <tt>'linear'</tt> is given
+         </p><pre class="codeinput">sFTri = interp(nodes, S.values, <span class="string">'linear'</span>);</pre><p>To see that we realy have the exact function values, we can evaluate <tt>sFTri</tt> of type <a href="S2FunTri.S2FunTri"><tt>S2FunTri</tt></a> and compare it with the original data values.
+         </p><pre class="codeinput">norm(eval(sFTri, nodes) - S.values)</pre><pre class="codeoutput">ans =
+   8.4129e-15
+</pre><p>Indeed, the error is within machine precision. Now we can work with the function defined on the whole sphere. We can, for
+            instance, plot it
+         </p><pre class="codeinput">contourf(sFTri, <span class="string">'upper'</span>);</pre><img src="S2FunApproximationInterpolation_03.png"> <p>That does not look like the happy smiley face we had in mind. There are other variants to fill the gaps between the data nodes,
+            still preserving the interpolation property, which may improve the result. But if we don't restrict ourselfs to the given
+            function values in the nodes, we have more freedom, which can be seen in the case of approximation.
+         </p>
+         <h2>Approximation<a name="10"> </a></h2>
+         <p>In contrast to interpolation we are now not restricted to the function values in the nodes but still want to keep the error
+            reasonably small. One way to achieve this is to approximate it with a series of spherical harmonics. We don't take as many
+            spherical harmonics as there are nodes, such that we are in the overdetermined case. In that way we don't have a chance of
+            getting the error in the nodes zero but hope for a smoother approximation. This can be achieved by the <a href="vector3d.interp"><tt>interp</tt></a> command of the class <a href="vector3d.vector3d"><tt>vector3d</tt></a> when the argument <tt>'harmnicApproximation'</tt></p><pre class="codeinput">sF = interp(nodes, S.values, <span class="string">'harmonicApproximation'</span>);
+contourf(sF, <span class="string">'upper'</span>);</pre><img src="S2FunApproximationInterpolation_04.png"> <p>Plotting this function, we can immidiately see, that we have a much smoother function. But one has to keep in mind that the
+            error in the data nodes is not zero as in the case of interpolation.
+         </p><pre class="codeinput">norm(eval(sF, nodes) - S.values)</pre><pre class="codeoutput">ans =
+    0.0606
+</pre><p>But this may not be of great importance like in the case of function approximation from noisy function values, where we don't
+            know the exact function values anyways.
+         </p>
+         <p>The strategy underlying the <tt>interp(...,'harmonicApproximation')</tt>-command to obtain such an approximation works via spherical harmonics (<a href="S2FunHarmonicRepresentation">Basics of spherical harmonics</a>). For that, we seek for so-called Fourier-coefficients <img src="S2FunApproximationInterpolation_eq04709227244918925271.png">  such that
+         </p>
+         <p><img src="S2FunApproximationInterpolation_eq05988222900342699238.png"> </p>
+         <p>approximates our function. A basic strategy to achieve this is through least squares, where we minimize the functional</p>
+         <p><img src="S2FunApproximationInterpolation_eq01352763972028051437.png"> </p>
+         <p>for the data nodes <img src="S2FunApproximationInterpolation_eq08064257365002422487.png"> , <img src="S2FunApproximationInterpolation_eq07710141230993437949.png"> , <img src="S2FunApproximationInterpolation_eq09421588773943226644.png">  the target function values and <img src="S2FunApproximationInterpolation_eq17152385268655187882.png">  our approximation evaluated in the given data nodes.
+         </p>
+         <p>This can be done by the <tt>lsqr</tt> function of Matlab, which efficiently seeks for roots of the derivative of the given functional (also known as normal equation).
+            In the process we compute the matrix-vector product with the Fourier-matrix multible times, where the Fourier-matrix is given
+            by
+         </p>
+         <p><img src="S2FunApproximationInterpolation_eq17442220960550767857.png"> </p>
+         <p>This matrix-vector product can be computed efficiently with the use of the nonequispaced spherical Fourier transform <a href="https://www-user.tu-chemnitz.de/~potts/nfft/nfsft.php">NFSFT</a>.
+         </p>
+         <p>We end up with the Fourier-coefficients of our approximation <img src="S2FunApproximationInterpolation_eq07585311203459331132.png"> , which describe our approximation.
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

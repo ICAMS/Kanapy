@@ -1,0 +1,142 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Plot seismic wave velocities and polarization directions for aggregates ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: CPOSeismicProperties -->
+      <!-- HEADSTUFF: CPOSeismicProperties -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:CPOSeismicProperties">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Plot seismic wave velocities and polarization directions for aggregates</h1>
+         <div class="subheading"></div>
+         <p>In this section we will calculate the elastic properties of an aggregate and plot its seismic properties in pole figures that
+            can be directly compare to the pole figures for CPO
+         </p>
+         <p>Let's first import an example dataset from the MTEX toolbox</p><pre class="codeinput">mtexdata <span class="string">forsterite</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0   58485 (24%)  notIndexed                                                 
+     1  152345 (62%)  Forsterite  LightSkyBlue       mmm                         
+     2   26058 (11%)   Enstatite  DarkSeaGreen       mmm                         
+     3   9064 (3.7%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><p>This dataset consists of the three main phases, olivine, enstatite and diopside. As we want to plot the seismic properties
+            of this aggregate, we need (i) the modal proportions of each phase in this sample, (ii) their orientations, which is given
+            by their ODFs, (iii) the elastic constants of the minerals and (iv) their densities. One can use the modal proportions that
+            appear in the command window (ol=62 %, en=11%, dio=4%), but there is a lot of non-indexed data. You can recalculate the data
+            only for the indexed data
+         </p>
+         <h2>Correct EBSD spatial coordinates<a name="3"> </a></h2>
+         <p>This EBSD dataset has the foliation N-S, but standard CPO plots and physical properties in geosciences use an external reference
+            frame where the foliation is vertical E-W and the lineation is also E-W but horizontal. We can correct the data by rotating
+            the whole dataset by 90 degree around the z-axis
+         </p><pre class="codeinput">ebsd = rotate(ebsd,rotation(<span class="string">'axis'</span>,-zvector,<span class="string">'angle'</span>,90*degree));
+
+plot(ebsd)</pre><img src="CPOSeismicProperties_01.png"> <h2>Import the elastic stiffness tensors<a name="4"> </a></h2>
+         <p>The elastic stiffness tensor of Olivine was reported in Abramson et al., 1997 (Journal of Geophysical Research) with respect
+            to the crystal reference frame
+         </p><pre class="codeinput">CS_Tensor_olivine = crystalSymmetry(<span class="string">'222'</span>, [4.762 10.225 5.994],<span class="keyword">...</span>
+    <span class="string">'mineral'</span>, <span class="string">'olivine'</span>, <span class="string">'color'</span>, <span class="string">'light red'</span>);</pre><p>and the density in g/cm^3</p><pre class="codeinput">rho_olivine = 3.3550;</pre><p>by the coefficients <img src="CPOSeismicProperties_eq10784031483346188340.png">  in Voigt matrix notation
+         </p><pre class="codeinput">Cij = [[320.5  68.15  71.6     0     0     0];<span class="keyword">...</span>
+  [ 68.15  196.5  76.8     0     0     0];<span class="keyword">...</span>
+  [  71.6   76.8 233.5     0     0     0];<span class="keyword">...</span>
+  [   0      0      0     64     0     0];<span class="keyword">...</span>
+  [   0      0      0      0    77     0];<span class="keyword">...</span>
+  [   0      0      0      0     0  78.7]];</pre><p>In order to define the stiffness tensor as an MTEX variable we use the command <a href="stiffnessTensor.stiffnessTensor.html">stiffnessTensor</a>.
+         </p><pre class="codeinput">C_olivine = stiffnessTensor(Cij,CS_Tensor_olivine,<span class="string">'density'</span>,rho_olivine);</pre><p>Note that when defining a single crystal tensor we shall always specify the crystal reference system which has been used to
+            represent the tensor by its coordinates <img src="CPOSeismicProperties_eq00665534697902993324.png"> .
+         </p>
+         <p>Now we define the stiffness tensor of enstatite, reported by Chai et al. 1997 (Journal of Geophysical Research)</p><pre class="codeinput"><span class="comment">% the crystal reference system</span>
+cs_Tensor_opx = crystalSymmetry(<span class="string">'mmm'</span>,[ 18.2457  8.7984  5.1959],<span class="keyword">...</span>
+  [  90.0000  90.0000  90.0000]*degree,<span class="string">'x||a'</span>,<span class="string">'z||c'</span>,<span class="keyword">...</span>
+  <span class="string">'mineral'</span>,<span class="string">'Enstatite'</span>);
+
+<span class="comment">% the density</span>
+rho_opx = 3.3060;
+
+<span class="comment">% the tensor coefficients</span>
+Cij =<span class="keyword">...</span><span class="comment">.</span>
+  [[  236.90   79.60   63.20    0.00    0.00    0.00];<span class="keyword">...</span>
+  [    79.60  180.50   56.80    0.00    0.00    0.00];<span class="keyword">...</span>
+  [    63.20   56.80  230.40    0.00    0.00    0.00];<span class="keyword">...</span>
+  [     0.00    0.00    0.00   84.30    0.00    0.00];<span class="keyword">...</span>
+  [     0.00    0.00    0.00    0.00   79.40    0.00];<span class="keyword">...</span>
+  [     0.00    0.00    0.00    0.00    0.00   80.10]];
+
+<span class="comment">% define the tensor</span>
+C_opx = stiffnessTensor(Cij,cs_Tensor_opx,<span class="string">'density'</span>,rho_opx);</pre><p>For Diopside coefficients where reported in Isaak et al., 2005 - Physics and Chemistry of Minerals)</p><pre class="codeinput"><span class="comment">% the crystal reference system</span>
+cs_Tensor_cpx = crystalSymmetry(<span class="string">'121'</span>,[9.585  8.776  5.26],<span class="keyword">...</span>
+  [90.0000 105.8600  90.0000]*degree,<span class="string">'x||a*'</span>,<span class="string">'z||c'</span>,<span class="keyword">...</span>
+  <span class="string">'mineral'</span>,<span class="string">'Diopside'</span>);
+
+<span class="comment">% the density</span>
+rho_cpx = 3.2860;
+
+<span class="comment">% the tensor coefficients</span>
+Cij =<span class="keyword">...</span><span class="comment">.</span>
+  [[  228.10   78.80   70.20    0.00    7.90    0.00];<span class="keyword">...</span>
+  [    78.80  181.10   61.10    0.00    5.90    0.00];<span class="keyword">...</span>
+  [    70.20   61.10  245.40    0.00   39.70    0.00];<span class="keyword">...</span>
+  [     0.00    0.00    0.00   78.90    0.00    6.40];<span class="keyword">...</span>
+  [     7.90    5.90   39.70    0.00   68.20    0.00];<span class="keyword">...</span>
+  [     0.00    0.00    0.00    6.40    0.00   78.10]];
+
+<span class="comment">% define the tensor</span>
+C_cpx = stiffnessTensor(Cij,cs_Tensor_cpx,<span class="string">'density'</span>,rho_cpx);</pre><h2>Single crystal seismic velocities<a name="10"> </a></h2>
+         <p>The single crystal seismic velocites can be computed by the command <a href="stiffnessTensor.velocity.html"><tt>velocity</tt></a> and are explained in more detail <a href="WaveVelocities.html">here</a>. At this point we simply use the command <a href="stiffnessTensor.plotSeismicVelocities.html"><tt>plotSeismicVelocities</tt></a> to get an overview of the single crystal seismic properties.
+         </p><pre class="codeinput">plotSeismicVelocities(C_olivine)
+
+<span class="comment">% lets add the crystal axes to the second plot</span>
+nextAxis(1,2)
+hold <span class="string">on</span>
+text(Miller({1,0,0},{0,1,0},{0,0,1},CS_Tensor_olivine),<span class="keyword">...</span>
+  {<span class="string">'[100]'</span>,<span class="string">'[010]'</span>,<span class="string">'[001]'</span>},<span class="string">'backgroundColor'</span>,<span class="string">'w'</span>)
+hold <span class="string">off</span></pre><img src="CPOSeismicProperties_02.png"> <h2>Bulk elastic tensor from EBSD data<a name="11"> </a></h2>
+         <p>Combining the EBSD data and the single crystal stiffness tensors we can estimate an bulk stiffness tensor by computing Voigt,
+            Reuss or Hill averages. Tensor averages are explained in more detail in <a href="TensorAverage.html">this section</a>. Here we use the command <a href="EBSD.calcTensor.html">calcTensor</a></p><pre class="codeinput">[CVoigt, CReuss, CHill] = calcTensor(ebsd,C_olivine,C_opx,C_cpx);</pre><p>For visualizing the polycrystal wave velocities we again use the command <a href="stiffnessTensor.plotSeismicVelocities.html"><tt>plotSeismicVelocities</tt></a></p><pre class="codeinput">plotSeismicVelocities(CHill)</pre><img src="CPOSeismicProperties_03.png"> <h2>Bulk elastic tensor from ODFs<a name="13"> </a></h2>
+         <p>For large data sets the computation of the average stiffness tensor from the EBSD data might be slow. In such cases it can
+            be faster to first estimate an ODF for each individual phase
+         </p><pre class="codeinput">odf_ol = calcDensity(ebsd(<span class="string">'f'</span>).orientations,<span class="string">'halfwidth'</span>,10*degree);
+odf_opx = calcDensity(ebsd(<span class="string">'e'</span>).orientations,<span class="string">'halfwidth'</span>,10*degree);
+odf_cpx = calcDensity(ebsd(<span class="string">'d'</span>).orientations,<span class="string">'halfwidth'</span>,10*degree);</pre><p>Note that you do don't need to write the full name of each phase, only the initial, that works when phases start with different
+            letters. Also note that although we use an EBSD dataset in this example, you can perform the same calculations with CPO data
+            obtain by other methods (e.g. x-ray/neutron diffraction) as you only need the ODF variable for the calculations
+         </p>
+         <p>To calculate the average stiffness tensor from the ODFs we first compute them from each phase seperately</p><pre class="codeinput">[CVoigt_ol, CReuss_ol, CHill_ol]    = mean(C_olivine,odf_ol);
+[CVoigt_opx, CReuss_opx, CHill_opx] = mean(C_opx,odf_opx);
+[CVoigt_cpx, CReuss_cpx, CHill_cpx] = mean(C_cpx,odf_cpx);</pre><p>and then take their average weighted according the volume of each phase</p><pre class="codeinput">vol_ol  = length(ebsd(<span class="string">'f'</span>)) ./ length(ebsd(<span class="string">'indexed'</span>));
+vol_opx = length(ebsd(<span class="string">'e'</span>)) ./ length(ebsd(<span class="string">'indexed'</span>));
+vol_cpx = length(ebsd(<span class="string">'d'</span>)) ./ length(ebsd(<span class="string">'indexed'</span>));
+
+CHill = vol_ol * CHill_ol + vol_opx * CHill_opx + vol_cpx * CHill_cpx;</pre><p>Finally, we visualize the polycrystal wave velocities as above</p><pre class="codeinput">plotSeismicVelocities(CHill)</pre><img src="CPOSeismicProperties_04.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

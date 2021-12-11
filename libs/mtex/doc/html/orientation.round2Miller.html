@@ -1,0 +1,147 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>round2Miller ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: orientation.round2Miller -->
+      <!-- HEADSTUFF: orientation.round2Miller -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:orientation.round2Miller">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit orientation/round2Miller">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">round2Miller</h1>
+         <div class="subheading"></div>
+         <p>find lattice alignements for arbitrary orientations and misorientations</p>
+         <h2>Description<a name="3"> </a></h2>
+         <p>Given an orienation ori find [hkl](uvw) such that ori * [hkl] = Z and ori * (uvw) = X.</p>
+         <p>Given a misorientation mori find corresponding face normals n1, n2 and crystal directions d1, d2, i.e., such that mori * n1
+            = n2 and mori * d1 = d2.
+         </p>
+         <h2>Syntax<a name="4"> </a></h2><pre class="codeinput">[uvw,hkl] = round2Miller(ori)</pre><pre class="codeinput">[n1,n2,d1,d2] = round2Miller(mori)
+[n1,n2,d1,d2] = round2Miller(mori,<span class="string">'penalty'</span>,0.01)
+[n1,n2,d1,d2] = round2Miller(mori,<span class="string">'maxIndex'</span>,6)</pre><h2>Input<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ori</tt>
+            </td>
+            <td>
+            <tt><a href="orientation.orientation.html">orientation</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>mori</tt>
+            </td>
+            <td>
+            <tt>mis<a href="orientation.orientation.html">orientation</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>uvw,hkl</tt>
+            </td>
+            <td>
+            <tt><a href="Miller.Miller.html">Miller</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>n1,n2,d1,d2</tt>
+            </td>
+            <td>
+            <tt><a href="Miller.Miller.html">Miller</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="7"> </a></h2><pre class="codeinput"><span class="comment">% revert sigma3 misorientation relationship</span>
+[n1,n2,d1,d2] = round2Miller(CSL(3,crystalSymmetry(<span class="string">'432'</span>)))</pre><pre class="codeoutput"> 
+n1 = Miller  
+ symmetry: 432
+  h k l
+  1 1 1
+ 
+n2 = Miller  
+ symmetry: 432
+  h k l
+  1 1 1
+ 
+d1 = Miller  
+ symmetry: 432
+  u  v  w
+  0  1 -1
+ 
+d2 = Miller  
+ symmetry: 432
+   u  v  w
+  -1  1  0
+</pre><pre class="codeinput"><span class="comment">% revert back Bain misorientation ship</span>
+cs_alpha = crystalSymmetry(<span class="string">'m-3m'</span>, [2.866 2.866 2.866], <span class="string">'mineral'</span>, <span class="string">'Ferrite'</span>);
+cs_gamma = crystalSymmetry(<span class="string">'m-3m'</span>, [3.66 3.66 3.66], <span class="string">'mineral'</span>, <span class="string">'Austenite'</span>);
+mori = orientation.Bain(cs_alpha,cs_gamma)
+[n_gamma,n_alpha,d_gamma,d_alpha] = round2Miller(mori)</pre><pre class="codeoutput"> 
+mori = misorientation (Ferrite -&gt; Austenite)
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+     0   45    0    0
+ 
+ 
+n_gamma = Miller  
+ mineral: Ferrite (m-3m)
+  h k l
+  1 0 0
+ 
+n_alpha = Miller  
+ mineral: Austenite (m-3m)
+  h k l
+  1 0 0
+ 
+d_gamma = Miller  
+ mineral: Ferrite (m-3m)
+  u v w
+  0 1 0
+ 
+d_alpha = Miller  
+ mineral: Austenite (m-3m)
+  u v w
+  0 1 1
+</pre><h3 class="seealso">See also</h3>
+         <p><a href="CSL.html">CSL</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

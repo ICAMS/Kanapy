@@ -1,0 +1,138 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>rotation ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: rotation.rotation -->
+      <!-- HEADSTUFF: rotation.rotation -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:rotation.rotation">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit rotation/rotation">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">rotation</h1>
+         <div class="subheading"></div>
+         <p>The class <b>rotation</b> allows to work with three dimensional orthogonal matrices.
+         </p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">rot = rotation.byEuler(phi1,Phi,phi2)
+rot = rotation.byEuler(alpha,beta,gamma,<span class="string">'ZYZ'</span>)
+rot = rotation.byAxisAngle(v,omega)
+rot = rotation.byMatrix(A)
+rot = rotation.map(u1,v1)
+rot = rotation.map(u1,v1,u2,v2)
+rot = reflection(b)
+rot = rotation.inversion
+rot = reflection(n)
+rot = rotation.byRodrigues(v)
+rot = rotation(fibre(u1,v1),<span class="string">'resolution'</span>,5*degree)
+rot = rotation(quaternion(a,b,c,d))</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>phi1, Phi, phi2</tt>
+            </td>
+            <td>
+            <tt>Euler angles</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>u1, u2</tt>
+            </td>
+            <td>
+            <tt><a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>v, v1, v2</tt>
+            </td>
+            <td>
+            <tt><a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>n</tt>
+            </td>
+            <td>
+            <tt><a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>rot</tt>
+            </td>
+            <td>
+            <tt><a href="rotation.rotation.html">rotation</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Class Properties<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>phi1, Phi, phi2</tt>
+            </td>
+            <td>
+            <tt>Euler angles</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>i</tt>
+            </td>
+            <td>
+            <tt>inversion</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>a, b, c, d</tt>
+            </td>
+            <td>
+            <tt>quaternion components</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="RotationDefinition.html">RotationDefinition</a>, <a href=".html"></a>, <a href="RotationOperations.html">RotationOperations</a>, <a href="RotationPlotting.html">RotationPlotting</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

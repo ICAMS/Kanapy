@@ -1,0 +1,248 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>mtexFigure ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: mtexFigure.mtexFigure -->
+      <!-- HEADSTUFF: mtexFigure.mtexFigure -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:mtexFigure.mtexFigure">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit mtexFigure/mtexFigure">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">mtexFigure</h1>
+         <div class="subheading"></div>
+         <p>a class to handles figures equaly sized axes with the following features</p>
+         <div>
+            <ul type="square">
+               <li>nicely resize axes</li>
+               <li>global or individual colorbars *</li>
+            </ul>
+         </div>
+         <h2>Description<a name="3"> </a></h2>
+         <p>The calculation of the layout is initiated by the command <a href="mtexFigure.drawNow.html">drawNow</a>. This involves calls to the following functions:
+         </p><pre>drawNow
+  |  |
+  V  |
+calcTightInset -> compute width of boundary around each axis
+     |
+     V
+updateLayout
+     |
+     V
+calcPartition -> compute partition (nrows, ncols)
+     |
+     V
+calcAxesSize  -> compute axes size</pre><p>A mtexFigure may have the following children</p>
+         <div>
+            <ul type="square">
+               <li><a href="mapPlot.html">mapPlot</a> -> micronbar
+               </li>
+               <li><a href="sphericalPlot.html">sphericalPlot</a> (stored in appdata of axes handle)
+               </li>
+               <li>pfPlot [CS,SS,h]</li>
+               <li>ipdfPlot [CS]</li>
+               <li>MillerPlot [r,SS]</li>
+            </ul>
+         </div>
+         <h2>Syntax<a name="4"> </a></h2><pre class="codeinput">newMTEXFigure</pre><h2>Class Properties<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>parent</tt>
+            </td>
+            <td>
+            <tt>handle of the parent figure</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>children</tt>
+            </td>
+            <td>
+            <tt>handles to all axes</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>cBarAxis</tt>
+            </td>
+            <td>
+            <tt>handles to all colorbar axes</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>innerPlotSpacing</tt>
+            </td>
+            <td>
+            <tt/>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>keepAspectRatio</tt>
+            </td>
+            <td>
+            <tt/>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>nrows = 1</tt>
+            </td>
+            <td>
+            <tt>number of rows</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>ncols = 1</tt>
+            </td>
+            <td>
+            <tt>number of columns</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>axisWidth</tt>
+            </td>
+            <td>
+            <tt>width of an individual axis</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>axisHeight</tt>
+            </td>
+            <td>
+            <tt>height of an individual axis</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>cbx = 0</tt>
+            </td>
+            <td>
+            <tt>colorbar width</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>cby = 0</tt>
+            </td>
+            <td>
+            <tt>colorbar height</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>tightInset</tt>
+            </td>
+            <td>
+            <tt>is added to axisSize</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>figTightInset</tt>
+            </td>
+            <td>
+            <tt>is added to figSize</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>layoutMode</tt>
+            </td>
+            <td>
+            <tt>'auto' or 'user'</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Dependent Class Properties<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>currentAxes</tt>
+            </td>
+            <td>
+            <tt>handle of the current axis</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>currentId</tt>
+            </td>
+            <td>
+            <tt>id of te current axis</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>axesWidth</tt>
+            </td>
+            <td>
+            <tt/>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>axesHeight</tt>
+            </td>
+            <td>
+            <tt/>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>outerPlotSpacing</tt>
+            </td>
+            <td>
+            <tt/>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>dataCursorMenu</tt>
+            </td>
+            <td>
+            <tt>handle of the data cursor context menu</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href=".html"></a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

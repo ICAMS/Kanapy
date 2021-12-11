@@ -1,0 +1,130 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>RK_symmetrised ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: kernel.RK_symmetrised -->
+      <!-- HEADSTUFF: kernel.RK_symmetrised -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:kernel.RK_symmetrised">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit kernel/RK_symmetrised">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">RK_symmetrised</h1>
+         <div class="subheading"></div>
+         <p>sum Radon trasformed kernel</p>
+         <h2>Description<a name="3"> </a></h2>
+         <p>formulae</p>
+         <p><img src="kernel.RK_symmetrised_eq03519561261931719489.png"> </p>
+         <p><img src="kernel.RK_symmetrised_eq08245992877529295712.png"> </p>
+         <h2>Syntax<a name="4"> </a></h2><pre class="codeinput">f = RK_symmetrised(psi,g,h,r,c,CS,SS,varargin) -</pre><h2>Input<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>psi</tt>
+            </td>
+            <td>
+            <tt><a href="kernel.kernel.html">kernel</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>g</tt>
+            </td>
+            <td>
+            <tt><a href="quaternion.quaternion.html">quaternion</a>(s)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>h</tt>
+            </td>
+            <td>
+            <tt>list of crystal directions</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>r</tt>
+            </td>
+            <td>
+            <tt>list of ein specimen directions</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>c</tt>
+            </td>
+            <td>
+            <tt>coefficients</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>CS,SS</tt>
+            </td>
+            <td>
+            <tt>crystal, specimen <a href="symmetry.symmetry.html">symmetry</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>matrix</tt>
+            </td>
+            <td>
+            <tt>1. dim --&gt; g, 2.dim --&gt; r</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="7"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>antipodal</tt>
+            </td>
+            <td>
+            <tt>antipodal Radon transform $P(h,r) = (\mathcal{R}f(h,r) + \mathcal{R}f(--h,r))/2$</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="kernel.k.html">kernel.k</a>, <a href="kernel.rkk.html">kernel.rkk</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

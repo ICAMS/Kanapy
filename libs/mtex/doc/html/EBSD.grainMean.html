@@ -1,0 +1,130 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>grainMean ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: EBSD.grainMean -->
+      <!-- HEADSTUFF: EBSD.grainMean -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:EBSD.grainMean">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit EBSD/grainMean">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">grainMean</h1>
+         <div class="subheading"></div>
+         <p>grain average property from ebsd properties</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput"><span class="comment">% recover grains and store grainId</span>
+[grains,ebsd.grainId]=calcGrains(ebsd)</pre><pre class="codeinput"><span class="comment">% compute average grain property</span>
+meanProp = grainMean(ebsd, ebsd.ci);
+plot(grains,meanProp(grains.id))</pre><pre class="codeinput"><span class="comment">% ensures meanProp has the same ordering as grains</span>
+meanProp = grainMean(ebsd, ebsd.ci, grains);</pre><pre class="codeinput"><span class="comment">% take not the mean but the maximum per grain</span>
+meanProp = grainMean(ebsd, ebsd.ci, @max);</pre><pre class="codeinput"><span class="comment">% full syntax</span>
+meanProp = grainMean(ebsd, prop, grains, method)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ebsd</tt>
+            </td>
+            <td>
+            <tt><a href="EBSD.EBSD.html">EBSD</a> (which must contain a grainId)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>prop</tt>
+            </td>
+            <td>
+            <tt>property to average, same size as ebsd</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>grains</tt>
+            </td>
+            <td>
+            <tt><a href="grain2d.grain2d.html">grain2d</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>method</tt>
+            </td>
+            <td>
+            <tt>function_handle</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>meanProp</tt>
+            </td>
+            <td>
+            <tt>average property, sorted by grainId</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>meanProp</tt>
+            </td>
+            <td>
+            <tt>average property, same size as grains (if specified)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ulim</tt>
+            </td>
+            <td>
+            <tt>upper limit to consider (upper limit)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>llim</tt>
+            </td>
+            <td>
+            <tt>lower limit to consider (lower limit)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

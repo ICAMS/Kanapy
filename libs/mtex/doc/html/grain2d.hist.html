@@ -1,0 +1,66 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>hist ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: grain2d.hist -->
+      <!-- HEADSTUFF: grain2d.hist -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:grain2d.hist">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit grain2d/hist">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">hist</h1>
+         <div class="subheading"></div>
+         <p>plot a grain size histogram</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">hist(grains)
+hist(grains,n) <span class="comment">% specify the number of bins</span></pre><pre class="codeinput"><span class="comment">% use an arbitrary property for the histogramm</span>
+hist(grains,grains.equivalentRadius)</pre><pre class="codeinput">binId = hist(grains) <span class="comment">% returns the bin for each grain</span></pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>grains</tt>
+            </td>
+            <td>
+            <tt><a href="grain2d.grain2d.html">grain2d</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>n</tt>
+            </td>
+            <td>
+            <tt>number of bins, default ist 15</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

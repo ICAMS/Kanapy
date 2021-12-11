@@ -1,0 +1,132 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>ODF Characteristics ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: ODFCharacteristics -->
+      <!-- HEADSTUFF: ODFCharacteristics -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:ODFCharacteristics">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">ODF Characteristics</h1>
+         <div class="subheading"></div>
+         <p>Let us first begin with some constructed ODFs to be analyzed below</p>
+         <p>A bimodal ODF:</p><pre class="codeinput">cs = crystalSymmetry(<span class="string">'mmm'</span>);
+odf1 = unimodalODF(orientation.byEuler(0,0,0,cs)) + <span class="keyword">...</span>
+  unimodalODF(orientation.byEuler(30*degree,0,0,cs))</pre><pre class="codeoutput"> 
+odf1 = ODF  
+  crystal symmetry : mmm
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    center: (0&deg;,0&deg;,0&deg;)
+    weight: 1
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    center: (30&deg;,0&deg;,0&deg;)
+    weight: 1
+ 
+</pre><p>A fibre ODF:</p><pre class="codeinput">odf2 = fibreODF(Miller(0,0,1,cs),xvector)</pre><pre class="codeoutput"> 
+odf2 = ODF  
+  crystal symmetry : mmm
+ 
+  Fibre symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    fibre: (001) - 1,0,0
+    weight: 1
+ 
+</pre><p>An ODF estimated from diffraction data</p><pre class="codeinput">mtexdata <span class="string">dubna</span>
+
+odf3 = calcODF(pf,<span class="string">'resolution'</span>,5*degree,<span class="string">'zero_Range'</span>)</pre><pre class="codeoutput"> 
+pf = PoleFigure  
+  crystal symmetry : Quartz (321, X||a*, Y||b, Z||c*)
+  specimen symmetry: 1
+ 
+  h = (02-21), r = 72 x 19 points
+  h = (10-10), r = 72 x 19 points
+  h = (10-11)(01-11), r = 72 x 19 points
+  h = (10-12), r = 72 x 19 points
+  h = (11-20), r = 72 x 19 points
+  h = (11-21), r = 72 x 19 points
+  h = (11-22), r = 72 x 19 points
+ 
+odf3 = ODF  
+  crystal symmetry : Quartz (321, X||a*, Y||b, Z||c*)
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 5&deg;
+    center: 19836 orientations, resolution: 5&deg;
+    weight: 1
+ 
+</pre><h2>Modal Orientations<a name="5"> </a></h2>
+         <p>The modal orientation of an ODF is the crystallographic prefered orientation <tt>ori_pref</tt> of the texture. It is characterized as the maximum of the ODF. In MTEX it is returned as the second output argument of the
+            command <a href="ODF.max.html"><tt>max</tt></a></p><pre class="codeinput">[~,ori_pref] = max(odf3)</pre><pre class="codeoutput"> 
+ori_pref = orientation (Quartz -&gt; xyz)
+ 
+  Bunge Euler angles in degree
+     phi1     Phi    phi2    Inv.
+  132.867 34.7888 207.108       0
+ 
+</pre><p>Lets mark this prefered orientation in the pole figures</p><pre class="codeinput">plotPDF(odf3,pf.allH,<span class="string">'antipodal'</span>,<span class="string">'superposition'</span>,pf.c);
+annotate(ori_pref,<span class="string">'marker'</span>,<span class="string">'s'</span>,<span class="string">'MarkerFaceColor'</span>,<span class="string">'black'</span>)</pre><img src="ODFCharacteristics_01.png"> <h2>Texture Characteristics<a name="7"> </a></h2>
+         <p>Texture characteristics are used for a rough classification of ODF into sharp and weak ones. The two most common texture characteristics
+            are the <a href="ODF.entropy.html">entropy</a> and the <a href="ODF.textureindex.html">texture index</a>.
+         </p>
+         <p>Compute the texture index:</p><pre class="codeinput">textureindex(odf1)</pre><pre class="codeoutput">ans =
+  288.6802
+</pre><p>Compute the entropy:</p><pre class="codeinput">entropy(odf2)</pre><pre class="codeoutput">ans =
+   -2.8402
+</pre><h2>Volume Portions<a name="10"> </a></h2>
+         <p>Volume portions describes the relative volume of crystals having a certain orientation. The relative volume of crystals having
+            a orientation close to a given orientation is computed by the command <a href="ODF.volume.html">volume</a> and the relative volume of crystals having a orientation close to a given fibre is computed by the command <a href="ODF.fibreVolume.html">fibreVolume</a></p>
+         <p>The relative volume in percent of crystals with missorientation maximum 30 degree from the preferred orientation <tt>ori_pref</tt>:
+         </p><pre class="codeinput">volume(odf3, ori_pref, 30*degree) * 100</pre><pre class="codeoutput">ans =
+   35.6781
+</pre><p>The relative volume of crystals with missorientation maximum 20 degree from the prefered fibre in percent: TODO</p><pre class="codeinput"><span class="comment">%fibreVolume(odf2,Miller(0,0,1),xvector,20*degree) * 100</span></pre><h2>Extract Internal Representation<a name="13"> </a></h2>
+         <p>The internal representation of the ODF can be addressed by the command</p><pre class="codeinput">properties(odf3.components{1})</pre><pre class="codeoutput">Properties for class unimodalComponent:
+    center
+    psi
+    weights
+    CS
+    SS
+    antipodal
+    bandwidth
+</pre><p>The properties in this list can be accessed by</p><pre class="codeinput">odf3.components{1}.center
+
+odf3.components{1}.psi</pre><pre class="codeoutput"> 
+ans = SO3Grid  
+  symmetry: "321" - "1"
+  grid    : 19836 orientations, resolution: 5&deg;
+ 
+ans = deLaValleePoussinKernel  
+  bandwidth: 48
+  halfwidth: 5&deg;
+ 
+</pre><p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

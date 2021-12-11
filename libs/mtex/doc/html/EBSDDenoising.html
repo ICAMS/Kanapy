@@ -1,0 +1,224 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Denoising Orientation Maps ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: EBSDDenoising -->
+      <!-- HEADSTUFF: EBSDDenoising -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:EBSDDenoising">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Denoising Orientation Maps</h1>
+         <div class="subheading">
+            <p>Orientation maps determined by EBSD or any other technique are, as all experimental data, effected by measurement errors.
+               Those measurement errors can be divided into systematic errors and random errors. Systematic errors mostly occur due to a
+               bad calibration of the EBSD system and require additional knowledge to be corrected. Deviations from the true orientation
+               due to noisy Kikuchi pattern or tolerances of the indecing algorithm can be modeled as random errors. In this section we demonstrate
+               how random errors can be significantly reduced using denoising techniques.
+            </p>
+            <p>Simultanously while denoising orientation maps one can also fill not indexed pixels. This is explained in the section <a href="EBSDFilling.html">Fill Missing Data</a>.
+            </p>
+         </div>
+         <p>We shall demonstrate the denoising capabilities of MTEX at the hand of an orientation map of deformed Magnesium.</p><pre class="codeinput"><span class="comment">% import the data</span>
+mtexdata <span class="string">twins</span>
+
+<span class="comment">% consider only indexed data</span>
+ebsd = ebsd(<span class="string">'indexed'</span>);
+
+<span class="comment">% reconstruct the grain structure</span>
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd,<span class="string">'angle'</span>,10*degree);
+
+<span class="comment">% remove some very small grains</span>
+ebsd(grains(grains.grainSize&lt;5)) = [];
+
+<span class="comment">% redo grain segementation</span>
+[grains,ebsd.grainId] = calcGrains(ebsd,<span class="string">'angle'</span>,10*degree);
+
+<span class="comment">% smooth grain boundaries</span>
+grains = smooth(grains,5);
+
+<span class="comment">% plot the orientation map</span>
+ipfKey = ipfColorKey(ebsd.CS.properGroup);
+plot(ebsd,ipfKey.orientation2color(ebsd.orientations))
+
+<span class="comment">% and on top the grain boundaries</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0     46 (0.2%)  notIndexed                                                 
+     1  22833 (100%)   Magnesium  LightSkyBlue     6/mmm       X||a*, Y||b, Z||c*
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="EBSDDenoising_01.png"> <p>At the first glance, the orientation data look not noisy at all. However, if we look at orientation changes within the grains
+            the noise we become clearly visible. To do so we colorize the orientation data with respect to their misorientation to the
+            grain mean orientation
+         </p><pre class="codeinput"><span class="comment">% the axisAngleColorKey colorizes misorientation according to their axis</span>
+<span class="comment">% and angle</span>
+colorKey = axisAngleColorKey;
+
+<span class="comment">% we need to set the reference orientations are the mean orientation of</span>
+<span class="comment">% each grain</span>
+colorKey.oriRef = grains(ebsd.grainId).meanOrientation;
+
+<span class="comment">% lets plot the result</span>
+plot(ebsd,colorKey.orientation2color(ebsd.orientations))
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="EBSDDenoising_02.png"> <p>We clearly observe some deformation gradients withing the grains which are superposed by random noise.</p>
+         <h2>The Mean Filter<a name="4"> </a></h2>
+         <p>The simplest filter to apply to orientation data is the @meanFilter which replaces all orientations by the mean of all neighboring
+            orientations.
+         </p><pre class="codeinput"><span class="comment">% define the meanFilter</span>
+F = meanFilter;
+F.numNeighbours = 1;
+
+<span class="comment">% smooth the data</span>
+ebsdS = smooth(ebsd,F);
+ebsdS = ebsdS(<span class="string">'indexed'</span>);
+
+<span class="comment">% plot the smoothed data</span>
+colorKey.oriRef = grains(ebsdS.grainId).meanOrientation;
+plot(ebsdS, colorKey.orientation2color(ebsdS.orientations))
+
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="EBSDDenoising_03.png"> <p>We clearly see how the noise has been reduces. In order to further reduce the noise we may increase the number of neighbours
+            that are taken into account.
+         </p><pre class="codeinput">F.numNeighbours = 3;
+
+<span class="comment">% smooth the data</span>
+ebsdS = smooth(ebsd,F);
+ebsdS = ebsdS(<span class="string">'indexed'</span>);
+
+<span class="comment">% plot the smoothed data</span>
+colorKey.oriRef = grains(ebsdS.grainId).meanOrientation;
+plot(ebsdS,colorKey.orientation2color(ebsdS.orientations))
+
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="EBSDDenoising_04.png"> <h2>The Median Filter<a name="6"> </a></h2>
+         <p>The disadvantage of the mean filter is that is smoothes away all subgrain boundaries and is quite sensitive against outliers.
+            A more robust filter which also preserves subgrain boundaries is the median filter
+         </p><pre class="codeinput">F = medianFilter;
+
+<span class="comment">% define the size of the window to be used for finding the median</span>
+F.numNeighbours = 3; <span class="comment">% this corresponds to a 7x7 window</span>
+
+<span class="comment">% smooth the data</span>
+ebsdS = smooth(ebsd,F);
+ebsdS = ebsdS(<span class="string">'indexed'</span>);
+
+<span class="comment">% plot the smoothed data</span>
+colorKey.oriRef = grains(ebsdS.grainId).meanOrientation;
+plot(ebsdS,colorKey.orientation2color(ebsdS.orientations))
+
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="EBSDDenoising_05.png"> <p>The disadvantage of the median filter is that it leads to cartoon like images which suffer from the staircase effect.</p>
+         <h2>The Kuwahara Filter<a name="8"> </a></h2>
+         <p>Another filter that was designed to be robust against outliers and does not smooth away subgrain boundaries is the Kuwahara
+            filter. However, in practical applications the results are often not satisfactory.
+         </p><pre class="codeinput">F = KuwaharaFilter;
+F.numNeighbours = 5;
+
+<span class="comment">% smooth the data</span>
+ebsdS = smooth(ebsd,F);
+ebsdS = ebsdS(<span class="string">'indexed'</span>);
+
+<span class="comment">% plot the smoothed data</span>
+colorKey.oriRef = grains(ebsdS.grainId).meanOrientation;
+plot(ebsdS,colorKey.orientation2color(ebsdS.orientations))
+
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="EBSDDenoising_06.png"> <h2>The Smoothing Spline Filter<a name="9"> </a></h2>
+         <p>All the above filters are so called sliding windows filters which consider for the denoising operation only neighboring orientations
+            within a certain window. The next filters belong to the class of variational filters which determine the denoised orientation
+            map as the solution of an minimization problem that is simultanously close to the original map and "smooth". The resulting
+            orientation map heavily depends on the specific definition of "smooth" and on the regularization parameter which controls
+            the trade of between fitting the original data and forcing the resulting map to be smooth.
+         </p>
+         <p>The @splineFilter uses as definition of smoothnes the curvature of the orientation map. As a cosequence, the denoised images
+            are very "round" and similarly as for the @meanFilter subgrain boundaries will be smoothed away. On the positive side the
+            @meanFilter is up to now the only filter that automatically calibrates the regularization parameter.
+         </p><pre class="codeinput">F = splineFilter;
+
+<span class="comment">% smooth the data</span>
+ebsdS = smooth(ebsd,F);
+ebsdS = ebsdS(<span class="string">'indexed'</span>);
+
+<span class="comment">% plot the smoothed data</span>
+colorKey.oriRef = grains(ebsdS.grainId).meanOrientation;
+plot(ebsdS,colorKey.orientation2color(ebsdS.orientations))
+
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span>
+
+<span class="comment">% the smoothing parameter determined during smoothing is</span>
+F.alpha</pre><pre class="codeoutput">ans =
+    4.6123
+</pre><img src="EBSDDenoising_07.png"> <h2>The Halfquadratic Filter<a name="10"> </a></h2>
+         <p>In the default setting the @halfQuadraticFilter uses definition of smoothnes the <a href="https://en.wikipedia.org/wiki/Total_variation_denoising">total variation</a> functional. This functional was developed to preserve subgrain boundaries. Similarly as the @medianFilter it tends to carton
+            like images and staircasing.
+         </p><pre class="codeinput">F = halfQuadraticFilter;
+
+<span class="comment">% smooth the data</span>
+ebsdS = smooth(ebsd,F);
+ebsdS = ebsdS(<span class="string">'indexed'</span>);
+
+<span class="comment">% plot the smoothed data</span>
+colorKey.oriRef = grains(ebsdS.grainId).meanOrientation;
+plot(ebsdS,colorKey.orientation2color(ebsdS.orientations))
+
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="EBSDDenoising_08.png"> <h2>The Infimal Convolution Filter<a name="11"> </a></h2>
+         <p>The infimal convolution filter was designed as a compromise between the @splineFilter and the @halfQuadraticFilter. It is
+            still under deveopment and its use is not recommendet.
+         </p><pre class="codeinput">F = infimalConvolutionFilter;
+F.lambda = 0.01; <span class="comment">% sssmoothing parameter for the gradient</span>
+F.mu = 0.005;    <span class="comment">% smoothing parameter for the hessian</span>
+
+<span class="comment">% smooth the data</span>
+ebsdS = smooth(ebsd,F);
+ebsdS = ebsdS(<span class="string">'indexed'</span>);
+
+<span class="comment">% plot the smoothed data</span>
+colorKey.oriRef = grains(ebsdS.grainId).meanOrientation;
+plot(ebsdS,colorKey.orientation2color(ebsdS.orientations))
+
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="EBSDDenoising_09.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

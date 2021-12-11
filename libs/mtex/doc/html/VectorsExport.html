@@ -1,0 +1,43 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Exporting Vectors ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: VectorsExport -->
+      <!-- HEADSTUFF: VectorsExport -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:VectorsExport">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Exporting Vectors</h1>
+         <div class="subheading"></div>
+         <p>Large lists of vectors can be imported from a text file by the command</p><pre class="codeinput">fname = fullfile(mtexDataPath,<span class="string">'vector3d'</span>,<span class="string">'vectors.txt'</span>);
+v = vector3d.load(fname,<span class="string">'ColumnNames'</span>,{<span class="string">'polar angle'</span>,<span class="string">'azimuth angle'</span>})</pre><pre class="codeoutput"> 
+v = vector3d  
+ size: 1000 x 1
+</pre><p>and exported by the command</p><pre class="codeinput">export(v,fname,<span class="string">'polar'</span>)</pre><p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

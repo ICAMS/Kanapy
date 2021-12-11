@@ -1,0 +1,178 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>calcDensity ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: orientation.calcDensity -->
+      <!-- HEADSTUFF: orientation.calcDensity -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:orientation.calcDensity">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit orientation/calcDensity">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">calcDensity</h1>
+         <div class="subheading"></div>
+         <p>computes an ODF from individuel orientations</p>
+         <p>The function <b>calcDensity</b> applies one of the following algorithms to compute an ODF from a list of orientations.
+         </p>
+         <div>
+            <ol>
+               <li>direct kernel density estimation</li>
+               <li>kernel density estimation via Fourier series</li>
+               <li>Bingham estimation</li>
+            </ol>
+         </div>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput"><span class="comment">% use kernel density estimation with a 10 degree kernel</span>
+odf = calcDensity(ori,<span class="string">'halfwidth'</span>,10*degree)</pre><pre class="codeinput"><span class="comment">% use grain area as weights for the orientations</span>
+odf = calcDensity(grains.meanOrientation,<span class="string">'weights'</span>,grains.area)</pre><pre class="codeinput"><span class="comment">% use a specific kernel</span>
+psi = AbelPoissonKernel(<span class="string">'halfwidth'</span>,10*degree)
+odf = calcDensity(ori,<span class="string">'kernel'</span>,psi)</pre><pre class="codeinput"><span class="comment">% compute the ODF as a Fourier series of order 16</span>
+odf = calcDensity(ori,<span class="string">'order'</span>,16)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ori</tt>
+            </td>
+            <td>
+            <tt><a href="orientation.orientation.html">orientation</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>odf</tt>
+            </td>
+            <td>
+            <tt><a href="ODF.ODF.html">ODF</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>weights</tt>
+            </td>
+            <td>
+            <tt>list of weights for the orientations</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>halfwidth</tt>
+            </td>
+            <td>
+            <tt>halfwidth of the kernel function</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>resolution</tt>
+            </td>
+            <td>
+            <tt>resolution of the grid where the ODF is approximated</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>kernel</tt>
+            </td>
+            <td>
+            <tt>kernel function (default -- de la Valee Poussin kernel)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>order</tt>
+            </td>
+            <td>
+            <tt>order up to which Fourier coefficients are calculated</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Flags<a name="7"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>silent</tt>
+            </td>
+            <td>
+            <tt>no output</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>exact</tt>
+            </td>
+            <td>
+            <tt>no approximation to a corser grid</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>Fourier</tt>
+            </td>
+            <td>
+            <tt>force Fourier method</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>Bingham</tt>
+            </td>
+            <td>
+            <tt>model bingham odf</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>noFourier</tt>
+            </td>
+            <td>
+            <tt>no Fourier method</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="orientation.calcFourierODF.html">orientation.calcFourierODF</a>, <a href="orientation.calcKernelODF.html">orientation.calcKernelODF</a>, <a href="orientation.calcBinghamODF.html">orientation.calcBinghamODF</a>, <a href="ebsd_demo.html">ebsd_demo</a>, <a href="EBSD2odf.html">EBSD2odf</a>, <a href="EBSDSimulation_demo.html">EBSDSimulation_demo</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

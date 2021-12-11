@@ -1,0 +1,107 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>fitEllipse ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: grain2d.fitEllipse -->
+      <!-- HEADSTUFF: grain2d.fitEllipse -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:grain2d.fitEllipse">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit grain2d/fitEllipse">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">fitEllipse</h1>
+         <div class="subheading"></div>
+         <p>fit ellipses to grains using the method described in Mulchrone& Choudhury,2004 (<a href="https://doi.org/10.1016/S0191-8141(03)00093-2">https://doi.org/10.1016/S0191-8141(03)00093-2</a>)
+         </p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">[omega,a,b] = fitEllipse(grains);
+plotEllipse(grains.centroid,a,b,omega,<span class="string">'lineColor'</span>,<span class="string">'r'</span>)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>grains</tt>
+            </td>
+            <td>
+            <tt><a href="grain2d.grain2d.html">grain2d</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>omega</tt>
+            </td>
+            <td>
+            <tt>angle giving trend of ellipse long axis</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>a</tt>
+            </td>
+            <td>
+            <tt>long axis radius</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>b</tt>
+            </td>
+            <td>
+            <tt>short axis radius</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>boundary</tt>
+            </td>
+            <td>
+            <tt>scale to fit boundary length</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="7"> </a></h2>
+         <p>mtexdata csl grains = calcGrains(ebsd('indexed')) grains = smooth(grains,10) plot(ebsd('indexed'),ebsd('indexed').orientations,'micronbar','off')
+            hold on plot(grains.boundary,'lineWidth',2) grains = grains(grains.grainSize>20) [omega,a,b] = fitEllipse(grains(grains));
+            plotEllipse(grains.centroid,a,b,omega,'lineColor','w','linewidth',2) hold off
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,83 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Inverse Pole Figures ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: ODFInversePoleFigure -->
+      <!-- HEADSTUFF: ODFInversePoleFigure -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:ODFInversePoleFigure">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Inverse Pole Figures</h1>
+         <div class="subheading"></div>
+         <h2>Theory<a name="1"> </a></h2>
+         <p>For an orientation distribution function (ODF) <img src="ODFInversePoleFigure_eq04406653145646248364.png">  the inverse pole density function <img src="ODFInversePoleFigure_eq00735368335751007232.png">  with respect to a fixed specimen direction <img src="ODFInversePoleFigure_eq05669888182876799870.png">  is spherical function defined as the integral
+         </p>
+         <p><img src="ODFInversePoleFigure_eq00798048172175267935.png"> </p>
+         <p>The pole density function <img src="ODFInversePoleFigure_eq05202187548805443979.png">  evaluated at a crystal direction <img src="ODFInversePoleFigure_eq10646037873041631757.png">  can be interpreted as the volume percentage of crystals with the crystal lattice planes <img src="ODFInversePoleFigure_eq10646037873041631757.png">  beeing normal to the specimen direction <img src="ODFInversePoleFigure_eq05669888182876799870.png"> .
+         </p>
+         <p>In order to illustrate the concept of inverse pole figures at an example lets us first define a model ODF to be plotted later
+            on.
+         </p><pre class="codeinput">cs = crystalSymmetry(<span class="string">'32'</span>);
+mod1 = orientation.byEuler(90*degree,40*degree,110*degree,<span class="string">'ZYZ'</span>,cs);
+mod2 = orientation.byEuler(50*degree,30*degree,-30*degree,<span class="string">'ZYZ'</span>,cs);
+
+odf = 0.2*unimodalODF(mod1) <span class="keyword">...</span>
+  + 0.3*unimodalODF(mod2) <span class="keyword">...</span>
+  + 0.5*fibreODF(Miller(0,0,1,cs),vector3d(1,0,0),<span class="string">'halfwidth'</span>,10*degree)
+
+<span class="comment">%odf = 0.2*unimodalODF(mod2)</span></pre><pre class="codeoutput"> 
+odf = ODF  
+  crystal symmetry : 321, X||a*, Y||b, Z||c*
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    center: (180&deg;,40&deg;,20&deg;)
+    weight: 0.2
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    center: (140&deg;,30&deg;,240&deg;)
+    weight: 0.3
+ 
+  Fibre symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    fibre: (0001) - 1,0,0
+    weight: 0.5
+ 
+</pre><p>and lets switch to the LaboTex colormap</p><pre class="codeinput">setMTEXpref(<span class="string">'defaultColorMap'</span>,LaboTeXColorMap);
+
+<span class="comment">% Plotting inverse pole figures is analogously to plotting pole figures</span>
+<span class="comment">% with the only difference that you have to use the command</span>
+<span class="comment">% &lt;ODF.plotIPDF.html plotIPDF&gt; and you to specify specimen directions and</span>
+<span class="comment">% not crystal directions.</span>
+
+plotIPDF(odf,[xvector,zvector])</pre><img src="ODFInversePoleFigure_01.png"> <p>Imposing antipodal symmetry to the inverse pole figures halfes the fundamental region</p><pre class="codeinput">plotIPDF(odf,[xvector,zvector],<span class="string">'antipodal'</span>)</pre><img src="ODFInversePoleFigure_02.png"> <p>By default MTEX always plots only the fundamental region with respect to the crystal symmetry. In order to plot the complete
+            inverse pole figure you have to use the option <b>complete</b>.
+         </p><pre class="codeinput">plotIPDF(odf,[xvector,zvector],<span class="string">'complete'</span>,<span class="string">'upper'</span>)</pre><img src="ODFInversePoleFigure_03.png"> <p>This illustrates also more clearly the effect of the antipodal symmetry</p><pre class="codeinput">plotIPDF(odf,[xvector,zvector],<span class="string">'complete'</span>,<span class="string">'antipodal'</span>,<span class="string">'upper'</span>)</pre><img src="ODFInversePoleFigure_04.png"> <p>Finally, lets set back the default colormap.</p><pre class="codeinput">setMTEXpref(<span class="string">'defaultColorMap'</span>,WhiteJetColorMap);</pre><p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

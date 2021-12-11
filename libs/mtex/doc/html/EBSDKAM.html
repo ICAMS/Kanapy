@@ -1,0 +1,165 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Kernel Average Misorientation (KAM) ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: EBSDKAM -->
+      <!-- HEADSTUFF: EBSDKAM -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:EBSDKAM">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Kernel Average Misorientation (KAM)</h1>
+         <div class="subheading"></div>
+         <p>The kernel average misorientation (KAM) is a measure of local grain misorientation that is usually derived from EBSD data.
+            For formaly defining the KAM we denote by <img src="EBSDKAM_eq15351793512778321533.png">  the orientations at pixel position <img src="EBSDKAM_eq04298392924420710570.png">  and by <img src="EBSDKAM_eq00963346965822853067.png">  the set of all neighboring pixels. Then the kernel average misorientation <img src="EBSDKAM_eq04885534834080348151.png">  at pixel position <img src="EBSDKAM_eq04298392924420710570.png">  is defined as
+         </p>
+         <p><img src="EBSDKAM_eq14201740878883638512.png"> </p>
+         <p>Here $\lvert N(i,j) \rvert$ denotes the number of all neighboring pixels taking into account and <img src="EBSDKAM_eq08880492707317373784.png">  the disorientation angle between the orientation <img src="EBSDKAM_eq07485384707562362937.png">  in the center and the neighbouring orientation <img src="EBSDKAM_eq11627046717471767405.png"> . The specific choice of the set <img src="EBSDKAM_eq00963346965822853067.png">  of neighboring pixels is crucial for the compution of the KAM. Most commonly the following additional constrains are made
+         </p><pre class="error">Error updating Text.
+
+ String scalar or character vector must have valid interpreter syntax: 
+$\lvert N(i,j) \rvert$
+</pre><div>
+            <ul type="square">
+               <li>consider neighbors up to order <img src="EBSDKAM_eq08984225997457563733.png"> , e.g. <img src="EBSDKAM_eq03522757740840820202.png"> </li>
+               <li>consider only neighbors belonging to the same grain</li>
+               <li>consider only neighbors with a misorientation angle smaller than a threshold angle <img src="EBSDKAM_eq06646721004341227832.png"> </li>
+            </ul>
+         </div>
+         <p>In the case of sqaure and hexagonal grids the order of neighbors is illustrated below</p><pre class="codeinput">plotSquareNeighbours; nextAxis; plotHexNeighbours</pre><img src="EBSDKAM_01.png"> <h2>A Deformed Ferrite Specimen<a name="2"> </a></h2>
+         <p>Let us demonstrate the computation of the KAM at the example of a deformed Ferrite specimen. Lets import the data first and
+            reconstruct the grain structure
+         </p><pre class="codeinput">mtexdata <span class="string">ferrite</span>
+
+[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+<span class="comment">% remove one-three pixel grains</span>
+ebsd(grains(grains.grainSize &lt;= 3)) = [];
+[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+
+grains = smooth(grains,5);
+
+plot(ebsd(<span class="string">'indexed'</span>),ebsd(<span class="string">'indexed'</span>).orientations)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,1.5)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+    -1   136 (0.22%)  notIndexed                                                 
+     0  63044 (100%)     Ferrite  LightSkyBlue       432                         
+ 
+ Properties: ci, fit, iq, sem_signal, x, y, oldId
+ Scan unit : um
+ 
+</pre><img src="EBSDKAM_02.png"> <p>Although MTEX allows the computation of the KAM from arbitrarily sampled EBSD maps the algorithms are much faster an memory
+            efficient if the maps are measured on regular hexagonal or rectangular grid - as it is standard in most applications. The
+            command <a href="EBSD.gridify.html"><tt>gridify</tt></a> makes MTEX aware of such an underlying regular measurement grid.
+         </p><pre class="codeinput">ebsd = ebsd.gridify;</pre><p>The kernel average misorientation is computed by the command <a href="EBSD.KAM.html"><tt>ebsd.KAM</tt></a>. As all MTEX commands it return the mean disorientation angle in radiant. Hence, dividing by the constant <tt>degree</tt> gives the result in degree.
+         </p><pre class="codeinput">kam = ebsd.KAM / degree;
+
+<span class="comment">% lets plot it</span>
+plot(ebsd,kam,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+caxis([0,15])
+mtexColorbar
+mtexColorMap <span class="string">LaboTeX</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,1.5)
+hold <span class="string">off</span></pre><img src="EBSDKAM_03.png"> <p>When computed with default parameters in MTEX neighbors up to order 1 are considered and no threshold angle <img src="EBSDKAM_eq06646721004341227832.png">  is applied. If grains have been reconstructed and the property <tt>ebsd.grainId</tt> has been set (as we did above) only misorientations within the same grain are considered. As a consequence the resulting
+            KAM map is dominated by the orientation gradients at the subgrain boundaries.
+         </p>
+         <p>Specifying a reasonable small theshold angle <img src="EBSDKAM_eq00309171199608036689.png">  the subgrain boundaries can be effectively removed from the KAM.
+         </p><pre class="codeinput">plot(ebsd,ebsd.KAM(<span class="string">'threshold'</span>,2.5*degree) ./ degree,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+caxis([0,2])
+mtexColorbar
+mtexColorMap <span class="string">LaboTeX</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,1.5)
+hold <span class="string">off</span></pre><img src="EBSDKAM_04.png"> <p>Unfortunately, the remaining KAM becomes very sensitve to measurement errors and is often very noisy. The noise can be  reduced
+            by considering heigher order neighbors
+         </p><pre class="codeinput">plot(ebsd,ebsd.KAM(<span class="string">'threshold'</span>,2.5*degree,<span class="string">'order'</span>,5) ./ degree,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+caxis([0,2])
+mtexColorbar
+mtexColorMap <span class="string">LaboTeX</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,1.5)
+hold <span class="string">off</span></pre><img src="EBSDKAM_05.png"> <p>Although this reduced noise it also smoothes away local dislocation structures. A much more effective way to reduce the effect
+            of measurement errors to the kernel average misorientation is to denoise the EBSD map first and compute than the KAM from
+            the first order neighbors.
+         </p><pre class="codeinput"><span class="comment">% chose a denoising filter</span>
+F = halfQuadraticFilter;
+F.alpha = 0.5;
+
+<span class="comment">% denoise the orientation map</span>
+ebsdS = smooth(ebsd,F,<span class="string">'fill'</span>,grains);
+
+<span class="comment">% plot the first order KAM</span>
+plot(ebsdS,ebsdS.KAM(<span class="string">'threshold'</span>,2.5*degree) ./ degree,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+caxis([0,2])
+mtexColorbar
+mtexColorMap <span class="string">LaboTeX</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,1.5)
+hold <span class="string">off</span></pre><img src="EBSDKAM_06.png"> <p>We observe that the KAM is not longer related to subgrain boundaries and nicely revalves local dislocation structures of the
+            deformed material.
+         </p>
+         <h2>Some helper functions<a name="9"> </a></h2>
+         <p>The functions below where only used to generate the neighborhood pictures of the first paragraph</p><pre class="codeinput"><span class="keyword">function</span> plotSquareNeighbours
+
+N = [4 3 2 3 4;<span class="keyword">...</span>
+  3 2 1 2 3;<span class="keyword">...</span>
+  2 1 0 1 2;<span class="keyword">...</span>
+  3 2 1 2 3;<span class="keyword">...</span>
+  4 3 2 3 4];
+
+cs = crystalSymmetry;
+ebsd = EBSDsquare(rotation.nan(5,5),N,0:4,{cs,cs,cs,cs,cs},[10 10]);
+plot(ebsd,<span class="string">'EdgeColor'</span>,<span class="string">'black'</span>,<span class="string">'micronbar'</span>,<span class="string">'off'</span>,<span class="string">'figSize'</span>,<span class="string">'small'</span>)
+legend <span class="string">off</span>
+
+text(ebsd,N)
+
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> plotHexNeighbours
+
+N = [3 2 2 2 3;<span class="keyword">...</span>
+  2 1 1 2 3;<span class="keyword">...</span>
+  2 1 0 1 2;<span class="keyword">...</span>
+  2 1 1 2 3;<span class="keyword">...</span>
+  3 2 2 2 3;<span class="keyword">...</span>
+  3 3 3 3 4];
+
+cs = crystalSymmetry;
+ebsd = EBSDhex(rotation.nan(6,5),N,0:4,{cs,cs,cs,cs,cs},10,1,1);
+plot(ebsd,<span class="string">'edgecolor'</span>,<span class="string">'k'</span>,<span class="string">'micronbar'</span>,<span class="string">'off'</span>,<span class="string">'figSize'</span>,<span class="string">'small'</span>)
+legend <span class="string">off</span>
+text(ebsd,N)
+axis <span class="string">off</span>
+
+<span class="keyword">end</span></pre><p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

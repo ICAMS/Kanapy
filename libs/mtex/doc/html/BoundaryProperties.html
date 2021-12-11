@@ -1,0 +1,300 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Grain Boundary Properties ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: BoundaryProperties -->
+      <!-- HEADSTUFF: BoundaryProperties -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:BoundaryProperties">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Grain Boundary Properties</h1>
+         <div class="subheading"></div>
+         <p>In this section we discus geometric properties that can be derived from grain boundaries. Lets start by importing some EBSD
+            data and computing grain boundaries.
+         </p><pre class="codeinput"><span class="comment">% load some example data</span>
+mtexdata <span class="string">twins</span>
+ebsd.prop = rmfield(ebsd.prop,{<span class="string">'error'</span>,<span class="string">'bands'</span>});
+
+<span class="comment">% detect grains</span>
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+
+<span class="comment">% smooth them</span>
+grains = grains.smooth;
+
+<span class="comment">% visualize the grains</span>
+plot(grains,grains.meanOrientation)
+
+<span class="comment">% extract all grain boundaries</span>
+gB = grains.boundary;
+
+hold <span class="string">on</span>
+plot(gB,<span class="string">'LineWidth'</span>,2)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0     46 (0.2%)  notIndexed                                                 
+     1  22833 (100%)   Magnesium  LightSkyBlue     6/mmm       X||a*, Y||b, Z||c*
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="BoundaryProperties_01.png"> <h2>Property overview<a name="2"> </a></h2>
+         <p>A variable of type <a href="grainBoundary.grainBoundary.html">grainBoundary</a> contains the following properties
+         </p>
+         <p>
+            <table class="usertable">
+            <tr>
+            <td>
+            <p>
+            <tt>ebsdId</tt>
+            </p>
+            </td>
+            <td>
+            <p>neighboring pixel ids</p>
+            </td>
+            <td>
+            <p>
+            <tt>phaseId</tt>
+            </p>
+            </td>
+            <td>
+            <p>neighboring phase ids</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <tt>grainId</tt>
+            </p>
+            </td>
+            <td>
+            <p>neighboring grain ids</p>
+            </td>
+            <td>
+            <p>
+            <tt>F</tt>
+            </p>
+            </td>
+            <td>
+            <p>vertices ids of the segments</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="grainBoundary.segLength.html">
+            <tt>segLength</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>length of each segment</p>
+            </td>
+            <td>
+            <p>
+            <tt>direction</tt>
+            </p>
+            </td>
+            <td>
+            <p>direction of each segment</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <tt>midPoint</tt>
+            </p>
+            </td>
+            <td>
+            <p>mid point of the segment</p>
+            </td>
+            <td>
+            <p>
+            <a href="grainBoundary.curvature.html">
+            <tt>curvature</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>curvature of each segment</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <tt>misorientation</tt>
+            </p>
+            </td>
+            <td>
+            <p>between <tt>ebsdId(:,1)</tt> and  <tt>ebsdId(:,2)</tt>
+            </p>
+            </td>
+            <td>
+            <p/>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <tt>componentId</tt>
+            </p>
+            </td>
+            <td>
+            <p>connected component id</p>
+            </td>
+            <td>
+            <p>
+            <tt>componentSize</tt>
+            </p>
+            </td>
+            <td>
+            <p>connected component size</p>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p>The first three properties refer to <img src="BoundaryProperties_eq14601011969126028329.png">  matrices where <img src="BoundaryProperties_eq03672095713503266041.png">  is the number of boundary segments. Each row of these matrices contains the information about the EBSD data, and grain data
+            on both sides of the grain boundary. To illustrate this consider the grain boundary of one specific grain
+         </p><pre class="codeinput">gB8 = grains(8).boundary</pre><pre class="codeoutput"> 
+gB8 = grainBoundary  
+ 
+ Segments  mineral 1  mineral 2
+        8  Magnesium  Magnesium
+</pre><p>This boundary consists of 8 segemts and hence ebsdId forms a 8x2 matrix</p><pre class="codeinput">gB8.ebsdId</pre><pre class="codeoutput">ans =
+        1010        1009
+         843         842
+         843         676
+         843         844
+        1011         844
+        1011        1012
+        1011        1178
+        1010        1177
+</pre><p>It is important to understand that the <b>id</b> is not neccesarily the same as the index in the list. In order to index an variable of type EBSD by id and not by index the
+            following syntax has to be used
+         </p><pre class="codeinput">ebsd(<span class="string">'id'</span>,gB8.ebsdId)</pre><pre class="codeoutput"> 
+ans = EBSD  
+ 
+ Phase  Orientations    Mineral         Color  Symmetry  Crystal reference frame
+     1     16 (100%)  Magnesium  LightSkyBlue     6/mmm       X||a*, Y||b, Z||c*
+ 
+   Id   Phase   phi1   Phi   phi2    bc    bs   mad     x     y   grainId   phi1   Phi   phi2
+ 1010       1    114    16    219   164   158   0.5   2.1   1.8         8    217     0    143
+  843       1    115    16    218   170   176   0.7   2.1   1.5         8     56     0    304
+  843       1    115    16    218   170   176   0.7   2.1   1.5         8     56     0    304
+  843       1    115    16    218   170   176   0.7   2.1   1.5         8     56     0    304
+ 1011       1    115    16    219   182   174   0.5   2.4   1.8         8    340     0     20
+ 1011       1    115    16    219   182   174   0.5   2.4   1.8         8    340     0     20
+ 1011       1    115    16    219   182   174   0.5   2.4   1.8         8    340     0     20
+ 1010       1    114    16    219   164   158   0.5   2.1   1.8         8    217     0    143
+ 1009       1      5    81    195   156   160   0.4   1.8   1.8        21    335     3     23
+  842       1      5    80    195   167   170   0.5   1.8   1.5        21    340     3     18
+  676       1      5    80    195   176   196   0.5   2.1   1.2        21    340     3     18
+  844       1      4    81    195   174   197   0.3   2.4   1.5        21    332     3     27
+  844       1      4    81    195   174   197   0.3   2.4   1.5        21    332     3     27
+ 1012       1      4    81    195   176   168   0.4   2.7   1.8        21    332     3     26
+ 1178       1      5    81    195   174   181   0.5   2.4   2.1        21    337     3     21
+ 1177       1      5    81    195   168   171   0.3   2.1   2.1        21    334     3     24
+ Scan unit : um
+ Grid size (square): 8 x 2
+ 
+</pre><p>Similarly</p><pre class="codeinput">gB8.grainId</pre><pre class="codeoutput">ans =
+     8    21
+     8    21
+     8    21
+     8    21
+     8    21
+     8    21
+     8    21
+     8    21
+</pre><p>results in 8x2 matrix indicating that grain 8 is an inclusion of grain 21.</p><pre class="codeinput">plot(grains(8),<span class="string">'FaceColor'</span>,<span class="string">'DarkBlue'</span>,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+hold <span class="string">on</span>
+plot(grains(21),<span class="string">'FaceColor'</span>,<span class="string">'LightCoral'</span>)
+hold <span class="string">off</span></pre><img src="BoundaryProperties_02.png"> <h2>Grain boundary misorientations<a name="7"> </a></h2>
+         <p>The grain boundary misorientation defined as the misorientation between the orientations corresponding to ids in first and
+            second column of ebsdId, i.e. following two commands should give the same result
+         </p><pre class="codeinput">gB8(1).misorientation
+
+inv(ebsd(<span class="string">'id'</span>,gB8.ebsdId(1,2)).orientations) .* ebsd(<span class="string">'id'</span>,gB8.ebsdId(1,1)).orientations</pre><pre class="codeoutput"> 
+ans = misorientation (Magnesium -&gt; Magnesium)
+  antipodal:         true
+ 
+  Bunge Euler angles in degree
+     phi1     Phi    phi2    Inv.
+  329.888 86.0353 150.145       0
+ 
+ 
+ans = misorientation (Magnesium -&gt; Magnesium)
+ 
+  Bunge Euler angles in degree
+     phi1     Phi    phi2    Inv.
+  329.888 86.0353 150.145       0
+ 
+</pre><p>Note that in the first result the antipodal flag is true while it is false in the second result.</p>
+         <p>Obviously, misorientations of a list of grain boundaries can only be extracted if all of them have the same type of phase
+            transition. Let us consider only Magnesium to Magnesium grain boundaries, i.e., ommit all grain boundaries to an not indexed
+            region.
+         </p><pre class="codeinput">gB_Mg = gB(<span class="string">'Magnesium'</span>,<span class="string">'Magnesium'</span>)</pre><pre class="codeoutput"> 
+gB_Mg = grainBoundary  
+ 
+ Segments  mineral 1  mineral 2
+     3219  Magnesium  Magnesium
+</pre><p>Then the misorientation angles can be plotted by</p><pre class="codeinput">plot(gB_Mg,gB_Mg.misorientation.angle./degree,<span class="string">'linewidth'</span>,4)
+mtexColorbar(<span class="string">'title'</span>,<span class="string">'misorientation angle (&deg;)'</span>)</pre><img src="BoundaryProperties_03.png"> <h2>Geometric properties<a name="10"> </a></h2>
+         <p>The <b>direction</b> property of the boundary segments is usefull when checking for tilt and twist boundaries, i.e., when we want to compare the
+            misorientation axis with the interface between the grains
+         </p><pre class="codeinput"><span class="comment">% compute misorientation axes in specimen coordinates</span>
+ori = ebsd(<span class="string">'id'</span>,gB_Mg.ebsdId).orientations;
+axes = axis(ori(:,1),ori(:,2),<span class="string">'antipodal'</span>)
+
+<span class="comment">% plot the angle between the misorientation axis and the boundary direction</span>
+plot(gB_Mg,angle(gB_Mg.direction,axes),<span class="string">'linewidth'</span>,4)</pre><pre class="codeoutput"> 
+axes = vector3d  
+ size: 3219 x 1
+ antipodal: true
+</pre><img src="BoundaryProperties_04.png"> <p>We observe that the angle is quite oscilatory. This is because of the stair casing effect when reconstructing grains from
+            gridded EBSD data. The weaken this effect we may average the segment directions using the command <a href="grainBoundary.calcMeanDirection.html">calcMeanDirection</a></p><pre class="codeinput"><span class="comment">% plot the angle between the misorientation axis and the boundary direction</span>
+plot(gB_Mg,angle(gB_Mg.calcMeanDirection(4),axes),<span class="string">'linewidth'</span>,4)</pre><img src="BoundaryProperties_05.png"> <p>The <b>midPoint</b> property is usefull when  TODO:
+         </p>
+         <p>While the command</p><pre class="codeinput">length(gB_Mg)</pre><pre class="codeoutput">ans =
+        3219
+</pre><p>gives us the total number of all Magnesium to Magnesium grain boundary segements the following command gives us its their
+            total length in um.
+         </p><pre class="codeinput">sum(gB_Mg.segLength)</pre><pre class="codeoutput">ans =
+  837.4641
+</pre><h2>Connected components<a name="15"> </a></h2>
+         <p>TODO: explain this in more detail</p><pre class="codeinput">components = unique(gB.componentId);
+<span class="keyword">for</span> cId = components.'
+  plot(gB(gB.componentId == cId),<span class="string">'lineColor'</span>,ind2color(cId),<span class="keyword">...</span>
+    <span class="string">'micronbar'</span>,<span class="string">'off'</span>,<span class="string">'lineWidth'</span>,4,<span class="string">'displayName'</span>,num2str(cId))
+  hold <span class="string">on</span>
+<span class="keyword">end</span>
+hold <span class="string">off</span></pre><img src="BoundaryProperties_06.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

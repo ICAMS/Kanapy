@@ -1,0 +1,174 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Vector Operations ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: VectorsOperations -->
+      <!-- HEADSTUFF: VectorsOperations -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:VectorsOperations">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Vector Operations</h1>
+         <div class="subheading"></div>
+         <p>In MTEX, one can calculate with three dimensional directions as with ordinary numbers, i.e. we can use the predefined vectors
+            <a href="xvector.html">vector3d.X</a>, <a href="yvector.html">vector3d.Y</a>, and <a href="zvector.html">vector3d.Z</a> and set
+         </p><pre class="codeinput">v = vector3d.X + 2*vector3d.Y</pre><pre class="codeoutput"> 
+v = vector3d  
+  x y z
+  1 2 0
+</pre><p>Moreover, all basic vector operations as <a href="vector3d.plus.html">"+"</a>, <a href="vector3d.minus.html">"-"</a>, <a href="vector3d.times.html">"*"</a>, <a href="vector3d.dot.html">inner product</a>, <a href="vector3d.cross.html">cross product</a> are implemented in MTEX.
+         </p><pre class="codeinput">u = dot(v,vector3d.Y) * vector3d.Y + 2 * cross(v,vector3d.Z)</pre><pre class="codeoutput"> 
+u = vector3d  
+  x y z
+  4 0 0
+</pre><p>Besides the standard linear algebra operations, there are also the following functions available in MTEX.</p>
+         <p>
+            <table class="usertable">
+            <tr>
+            <td>
+            <p>
+            <a href="vector3d.angle.html">angle(v1,v2)</a>
+            </p>
+            </td>
+            <td>
+            <p>angle between two specimen directions</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="vector3d.dot.html">dot(v1,v2)</a>
+            </p>
+            </td>
+            <td>
+            <p>inner product</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="vector3d.cross.html">cross(v1,v2)</a>
+            </p>
+            </td>
+            <td>
+            <p>cross product</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="vector3d.norm.html">norm(v)</a>
+            </p>
+            </td>
+            <td>
+            <p>length of the specimen directions</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="vector3d.normalize.html">normalize(v)</a>
+            </p>
+            </td>
+            <td>
+            <p>normalize length to 1</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="vector3d.sum.html">sum(v)</a>
+            </p>
+            </td>
+            <td>
+            <p>sum over all specimen directions in v</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="vector3d.mean.html">mean(v)</a>
+            </p>
+            </td>
+            <td>
+            <p>mean over all specimen directions in v</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="vector3d.polar.html">polar(v)</a>
+            </p>
+            </td>
+            <td>
+            <p>conversion to spherical coordinates</p>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p>A simple example for applying the norm function is to normalize a set of specimen directions</p><pre class="codeinput">u = u ./ norm(u)</pre><pre class="codeoutput"> 
+u = vector3d  
+  x y z
+  1 0 0
+</pre><h2>Lists of vectors<a name="4"> </a></h2>
+         <p>As any other MTEX variable you can combine several vectors to a list of vectors and all bevor mentioned operators operations
+            will work elementwise on a list of vectors. See <a href="ListsAndIndexing.html">Working with lists</a> on how to manipulate lists in Matlab.
+         </p>
+         <p>Using the brackets <tt>v = [v1,v2]</tt> two lists of vectors can be joined to a single list. Now each single vector is accesable via <tt>v(1)</tt> and <tt>v(2)</tt>.
+         </p><pre class="codeinput">w = [v,u];
+w(1)
+w(2)</pre><pre class="codeoutput"> 
+ans = vector3d  
+  x y z
+  1 2 0
+ 
+ans = vector3d  
+  x y z
+  1 0 0
+</pre><p>When calculating with concatenated specimen directions all operations are performed componentwise for each specimen direction.</p><pre class="codeinput">w = w + v;</pre><p>A list of vectors can be indexed directly by specifying the ids of the vectors one is interested in, e.g.</p><pre class="codeinput"><span class="comment">% import many vectors from a file</span>
+fname = fullfile(mtexDataPath,<span class="string">'vector3d'</span>,<span class="string">'vectors.txt'</span>);
+v = vector3d.load(fname,<span class="string">'ColumnNames'</span>,{<span class="string">'polar angle'</span>,<span class="string">'azimuth angle'</span>})
+
+<span class="comment">% extract vectors 1 to 5</span>
+v(1:5)</pre><pre class="codeoutput"> 
+v = vector3d  
+ size: 1000 x 1
+ 
+ans = vector3d  
+ size: 5 x 1
+           x          y          z
+    0.174067   0.983688  0.0453682
+  0.00905843   0.821965   0.569466
+    0.430105   0.900869  0.0586948
+   -0.447234  0.0186977   0.894221
+   -0.139746   0.555614   0.819612
+</pre><p>gives the first 5 vectors from the list, or by logical indexing. The following command plots all vectors with an polar angle
+            smaller then 60 degree
+         </p><pre class="codeinput">scatter(v(v.theta&lt;60*degree),<span class="string">'grid'</span>,<span class="string">'on'</span>)</pre><img src="VectorsOperations_01.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

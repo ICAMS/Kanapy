@@ -1,0 +1,158 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Advanced Color Keys ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: EBSDAdvancedMaps -->
+      <!-- HEADSTUFF: EBSDAdvancedMaps -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:EBSDAdvancedMaps">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Advanced Color Keys</h1>
+         <div class="subheading"></div>
+         <p>In order to visualize orientation maps one has to assign a color to each possible orientation. As an example, one may think
+            of representing an orientation by its Euler angles ph1, Phi, phi2 and taking these as the RGB values of a color. Of course,
+            there are many other ways to do this. Before presenting all the possibilities MTEX offers to assign a color to each orientation
+            let us shortly summarize what properties we expect from such an assignment.
+         </p>
+         <div>
+            <ol>
+               <li>crystallographic equivalent orientations should have the same color</li>
+               <li>similar orientations should have similar colors</li>
+               <li>different orientations should have different colors</li>
+               <li>the whole colorspace should be used for full contrast</li>
+               <li>if the orientations are concentrated in a small region of the orientation space, the colorspace should be exhaust by this
+                  region
+               </li>
+            </ol>
+         </div>
+         <p>It should be noted that it is impossible to have all the 4 points mentioned above be satisfied by a single colorcoding. Hence,
+            some compromises have to be accepted and some assumptions have to be made. While the traditional <a href="EBSDAdvancedMaps.html#2">Euler angle coloring</a> will assign different colors to similar orientations, i.e. will introduce color jumps and break with the first requirement
+            the default <a href="ipfHSVKey.html">MTEX color key</a> will assign the same color to different orientations.
+         </p>
+         <p>Hence, there is no perfect color key, but it should be chosen depending on the information one want to extract from the orientation
+            data. To do so MTEX offers the following possibilities:
+         </p>
+         <div>
+            <ul type="square">
+               <li><a href="ipfHSVKey.html">ipfHSVKey</a> the default color key
+               </li>
+               <li><a href="ipfTSLKey.html">ipfTSLKey</a></li>
+               <li><a href="ipfHKLKey.html">ipfHKLKey</a></li>
+               <li><a href="BungeColorKey.html">BungeColorKey</a></li>
+               <li><a href="PatalaColorKey.PatalaColorKey.html">PatalaColorKey</a></li>
+               <li><a href="axisAngleColorKey.html">axisAngleColorKey</a></li>
+               <li><a href="spotColorKey.html">spotColorKey</a></li>
+               <li><a href="ipfSpotKey.html">ipfSpotKey</a></li>
+            </ul>
+         </div>
+         <p>In order to demonstrate these color keys we first import some toy data set.</p><pre class="codeinput">close <span class="string">all</span>; plotx2east
+mtexdata <span class="string">forsterite</span>
+csFo = ebsd(<span class="string">'Forsterite'</span>).CS;</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0   58485 (24%)  notIndexed                                                 
+     1  152345 (62%)  Forsterite  LightSkyBlue       mmm                         
+     2   26058 (11%)   Enstatite  DarkSeaGreen       mmm                         
+     3   9064 (3.7%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><h2>Euler Angle Coloring<a name="2"> </a></h2>
+         <p>The oldest way to colorize orientations is to simply map the three Euler angles into the RGB values. This can be done by</p><pre class="codeinput">colorKey = BungeColorKey(csFo);
+
+plot(ebsd(<span class="string">'fo'</span>),colorKey.orientation2color(ebsd(<span class="string">'fo'</span>).orientations))</pre><img src="EBSDAdvancedMaps_01.png"> <pre class="codeinput">plot(colorKey)</pre><img src="EBSDAdvancedMaps_02.png"> <p>Although this visualization looks very smooth, the orientation map using Euler angles introduces many of color jumps. This
+            becomes obvious when plotting the colors as <a href="SigmaSections.html">sigma sections</a>, i.e., for fixed differences <img src="EBSDAdvancedMaps_eq13264926642850675753.png"> </p><pre class="codeinput">plot(colorKey,<span class="string">'sections'</span>,6,<span class="string">'sigma'</span>)</pre><img src="EBSDAdvancedMaps_03.png"> <h2>Coloring certain orientations<a name="5"> </a></h2>
+         <p>We might be interested in locating some special orientation in our orientation map. The definition of colors for certain orientations
+            is carried out similarly as in the case of fibres
+         </p><pre class="codeinput">colorKey = spotColorKey(ebsd(<span class="string">'Fo'</span>));
+colorKey.center = mean(ebsd(<span class="string">'Forsterite'</span>).orientations,<span class="string">'robust'</span>);
+colorKey.color = [0,0,1];
+colorKey.psi = deLaValleePoussinKernel(<span class="string">'halfwidth'</span>,20*degree);
+
+plot(ebsd(<span class="string">'fo'</span>),colorKey.orientation2color(ebsd(<span class="string">'fo'</span>).orientations))
+
+<span class="comment">% and the correspoding colormap</span>
+figure(2)
+plot(colorKey,<span class="string">'sections'</span>,9,<span class="string">'sigma'</span>)</pre><img src="EBSDAdvancedMaps_04.png"> <img src="EBSDAdvancedMaps_05.png"> <p>the area of the colored EBSD data in the map corresponds to the volume portion (in percent)</p><pre class="codeinput">vol = 100 * volume(ebsd(<span class="string">'fo'</span>).orientations,colorKey.center,20*degree)</pre><pre class="codeoutput">vol =
+   12.1409
+</pre><p>actually, the colored measurements stress a peak in the ODF</p><pre class="codeinput">close <span class="string">all</span>
+odf = calcDensity(ebsd(<span class="string">'fo'</span>).orientations,<span class="string">'halfwidth'</span>,10*degree,<span class="string">'silent'</span>);
+plot(odf,<span class="string">'sections'</span>,9,<span class="string">'silent'</span>,<span class="string">'sigma'</span>)
+mtexColorbar</pre><img src="EBSDAdvancedMaps_06.png"> <h2>Coloring fibres<a name="8"> </a></h2>
+         <p>To color a fibre, one has to specify the crystal direction <tt>h</tt> together with its RGB color and the specimen direction <tt>r</tt>, which should be marked.
+         </p><pre class="codeinput"><span class="comment">% define a fibre</span>
+f = fibre(Miller(1,1,1,csFo),zvector);
+
+<span class="comment">% set up coloring</span>
+colorKey = ipfSpotKey(csFo);
+colorKey.inversePoleFigureDirection = f.r;
+colorKey.center = f.h;
+colorKey.color = [0 0 1];
+colorKey.psi = S2DeLaValleePoussin(<span class="string">'halfwidth'</span>,7.5*degree);
+
+plot(ebsd(<span class="string">'fo'</span>),colorKey.orientation2color(ebsd(<span class="string">'fo'</span>).orientations))</pre><img src="EBSDAdvancedMaps_07.png"> <p>the option <tt>'halfwidth'</tt> controls half of the intensity of the color at a given distance. Here we have chosen the (111)[001] fibre to be drawn in
+            blue, and at 7.5 degrees, where the blue should be only lighter.
+         </p><pre class="codeinput">plot(colorKey)
+hold <span class="string">on</span>
+circle(f.h.project2FundamentalRegion,15*degree,<span class="string">'linewidth'</span>,2)</pre><img src="EBSDAdvancedMaps_08.png"> <p>the percentage of blue colored area in the map is equivalent to the fibre volume</p><pre class="codeinput">vol = volume(ebsd(<span class="string">'fo'</span>).orientations,f,15*degree)
+
+plotIPDF(ebsd(<span class="string">'fo'</span>).orientations,zvector,<span class="string">'markercolor'</span>,<span class="string">'k'</span>,<span class="string">'marker'</span>,<span class="string">'x'</span>,<span class="string">'points'</span>,200)
+hold <span class="string">off</span></pre><pre class="codeoutput">vol =
+    0.2480
+  I'm plotting 200 random orientations out of 152345 given orientations
+</pre><img src="EBSDAdvancedMaps_09.png"> <p>we can easily extend the colorcoding</p><pre class="codeinput"><span class="comment">% the centers in the inverse pole figure</span>
+colorKey.center = Miller({0 0 1},{0 1 1},{1 1 1},{11 4 4},{5 0 2},{5 5 2},csFo);
+
+<span class="comment">% the correspnding collors</span>
+colorKey.color = [[1 0 0];[0 1 0];[0 0 1];[1 0 1];[1 1 0];[0 1 1]];
+
+<span class="comment">% plot the key</span>
+plot(colorKey)
+hold <span class="string">on</span>
+plot(ebsd(<span class="string">'fo'</span>).orientations,<span class="string">'MarkerFaceColor'</span>,<span class="string">'none'</span>,<span class="string">'MarkerEdgeColor'</span>,<span class="string">'k'</span>,<span class="string">'MarkerSize'</span>,3,<span class="string">'points'</span>,1000)
+hold <span class="string">off</span></pre><pre class="codeoutput">  I'm plotting 1000 random orientations out of 152345 given orientations
+</pre><img src="EBSDAdvancedMaps_10.png"> <pre class="codeinput">close <span class="string">all</span>;
+plot(ebsd(<span class="string">'fo'</span>),colorKey.orientation2color(ebsd(<span class="string">'fo'</span>).orientations))</pre><img src="EBSDAdvancedMaps_11.png"> <h2>Combining different plots<a name="13"> </a></h2>
+         <p>Combining different plots can be done either by plotting only subsets of the EBSD data or via the option <tt>'faceAlpha'</tt>. Note that the option <tt>'faceAlpha'</tt> requires the renderer of the figure to be set to <tt>'opengl'</tt>.
+         </p><pre class="codeinput">close <span class="string">all</span>;
+plot(ebsd,ebsd.bc,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+mtexColorMap <span class="string">black2white</span>
+
+colorKey = ipfSpotKey(csFo);
+colorKey.inversePoleFigureDirection = zvector;
+colorKey.center = Miller(1,1,1,csFo);
+colorKey.color = [0 0 1];
+colorKey.psi = S2DeLaValleePoussin(<span class="string">'halfwidth'</span>,7.5*degree);
+
+hold <span class="string">on</span>
+plot(ebsd(<span class="string">'fo'</span>),colorKey.orientation2color(ebsd(<span class="string">'fo'</span>).orientations),<span class="string">'FaceAlpha'</span>,0.5)
+hold <span class="string">off</span></pre><img src="EBSDAdvancedMaps_12.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,91 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>loadTensor_mpod ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: loadTensor_mpod -->
+      <!-- HEADSTUFF: loadTensor_mpod -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:loadTensor_mpod">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit loadTensor_mpod">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">loadTensor_mpod</h1>
+         <div class="subheading">
+            <p>import Tensor data</p>
+         </div>
+         <h2>Description<a name="2"> </a></h2>
+         <p><b>loadTensor_mod</b> is a high level method for importing Tensor data from external files. <a href="http://www.materialproperties.org/data/">Material Properties Open Database</a></p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">T = loadTensor_mpod(fname,cs,ss)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>fname</tt>
+            </td>
+            <td>
+            <tt>filename</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>cs, ss</tt>
+            </td>
+            <td>
+            <tt>crystal, specimen <a href="symmetry.symmetry.html">symmetry</a> (optional)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="5"> </a></h2>
+         <p>download form MPOD</p><pre class="codeinput">T = loadTensor_mpod(1000055)
+T = loadTensor_mpod(<span class="string">'1000055.mpod'</span>)</pre><pre class="codeoutput">Warning: Quartz Tensor does not pose the
+right symmetry 
+Deviation:36
+Warning: Quartz Tensor does not pose the
+right symmetry 
+Deviation:0.3
+T =
+  2&times;1 cell array
+    {1&times;1 tensor}
+    {1&times;1 tensor}
+Warning: Quartz Tensor does not pose the
+right symmetry 
+Deviation:36
+Warning: Quartz Tensor does not pose the
+right symmetry 
+Deviation:0.3
+T =
+  2&times;1 cell array
+    {1&times;1 tensor}
+    {1&times;1 tensor}
+</pre><h3 class="seealso">See also</h3>
+         <p><a href="loadTensor.html">loadTensor</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

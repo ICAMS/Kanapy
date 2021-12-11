@@ -1,0 +1,128 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Interpolating EBSD Data ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: EBSDInter -->
+      <!-- HEADSTUFF: EBSDInter -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:EBSDInter">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Interpolating EBSD Data</h1>
+         <div class="subheading"></div>
+         <p>In the section <a href="EBSDDenoising.html">Denoising</a> and <a href="EBSDFilling.html">Filling Missing Data</a> we have discussed how to work with noisy EBSD data the contained non indexed pixels. Hereby, we made the assumption that
+            the grid before and after the operations is the same.
+         </p>
+         <p>In this section we explain how to interpolate an EBSD map at positions that do not belong to the grid. Lets us consider a
+            simple example
+         </p><pre class="codeinput">mtexdata <span class="string">twins</span>;
+
+[grains, ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+
+<span class="comment">% this command here is important :)</span>
+ebsd = ebsd.project2FundamentalRegion(grains);
+
+plot(ebsd(<span class="string">'indexed'</span>),ebsd(<span class="string">'indexed'</span>).orientations)</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0     46 (0.2%)  notIndexed                                                 
+     1  22833 (100%)   Magnesium  LightSkyBlue     6/mmm       X||a*, Y||b, Z||c*
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="EBSDInter_01.png"> <p>Now we can use the command <a href="EBSD.interp.html"><tt>interp</tt></a> to interpolate the orientation at arbitrary coordinates <tt>x</tt> and <tt>y</tt>.
+         </p><pre class="codeinput">x = 30.5; y = 5.5;
+e1 = interp(ebsd,x,y)</pre><pre class="codeoutput"> 
+e1 = EBSD  
+ 
+ Phase  Orientations    Mineral         Color  Symmetry  Crystal reference frame
+     1      1 (100%)  Magnesium  LightSkyBlue     6/mmm       X||a*, Y||b, Z||c*
+ 
+ Id   Phase   phi1   Phi   phi2      x     y   bands    bc    bs   error   mad   grainId   oldId
+  1       1    163   112    186   30.5   5.5      10   160   255       0   0.4        36    3109
+ Scan unit : um
+ 
+</pre><p>By default the command <a href="EBSD.interp.html"><tt>interp</tt></a> performs inverse distance interpolation. This is different to
+         </p><pre class="codeinput">e2 = ebsd(<span class="string">'xy'</span>,x,y)</pre><pre class="codeoutput"> 
+e2 = EBSD  
+ 
+ Phase  Orientations    Mineral         Color  Symmetry  Crystal reference frame
+     1      1 (100%)  Magnesium  LightSkyBlue     6/mmm       X||a*, Y||b, Z||c*
+ 
+   Id   Phase   phi1   Phi   phi2   bands    bc    bs   error   mad      x     y   grainId
+ 3109       1    163   112    186      10   160   255       0   0.4   30.6   5.4        36
+ Scan unit : um
+ 
+</pre><p>which returns the nearest neighbour EBSD measurement. Lets have a look at the difference</p><pre class="codeinput">angle(e1.orientations,e2.orientations)./degree</pre><pre class="codeoutput">ans =
+    0.1508
+</pre><h2>Change of the measurement grid<a name="5"> </a></h2>
+         <p>The command <a href="EBSD.interp.html"><tt>interp</tt></a> can be used to evaluate the EBSD map on a different grid, which might have higher or lower resolution or might even be rotated.
+            Lets demonstrate this
+         </p><pre class="codeinput"><span class="comment">% define a rotated coarse grid</span>
+omega = 5*degree;
+[xmin, xmax, ymin, ymax] = ebsd.extend;
+x = linspace(xmin-cos(omega)*ymax,xmax,100);
+y = linspace(ymin-sin(omega)*xmax,ymax,50);
+[x,y] = meshgrid(x,y);
+
+xy = [cos(omega) -sin(omega); sin(omega) cos(omega) ] * [x(:),y(:)].';
+
+<span class="comment">% define the EBSD data set on this new grid</span>
+ebsdNewGrid = interp(ebsd,xy(1,:),xy(2,:))
+
+<span class="comment">% plot the regridded EBSD data set</span>
+plot(ebsdNewGrid(<span class="string">'indexed'</span>),ebsdNewGrid(<span class="string">'indexed'</span>).orientations)</pre><pre class="codeoutput"> 
+ebsdNewGrid = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0    2624 (52%)  notIndexed                                                 
+     1    2376 (48%)   Magnesium  LightSkyBlue     6/mmm       X||a*, Y||b, Z||c*
+ 
+ Properties: x, y, bands, bc, bs, error, mad, grainId, oldId
+ Scan unit : um
+ 
+</pre><img src="EBSDInter_02.png"> <p>Note, that we have not rotated the EBSD data but only the grid. All orientations as well as the position of all grains remains
+            unchanged.
+         </p>
+         <p>Another example is the change from a square to an hexagonal grid or vice versa. In this case the command <a href="EBSD.interp.html"><tt>interp</tt></a> is implicitely called by the command <a href="EBSD.gridify.html"><tt>gridify</tt></a>. In order to demonstrate this functionality we start by EBSD data on a hex grid
+         </p><pre class="codeinput">mtexdata <span class="string">ferrite</span> <span class="string">silent</span>
+
+plot(ebsd,ebsd.orientations)</pre><img src="EBSDInter_03.png"> <p>and resample the data on a square grid. To do so we first define a smaller square unit cell corresponding to the hexagonal
+            unit cell
+         </p><pre class="codeinput"><span class="comment">% define a square unit cell</span>
+hexUnitCell = abs(round(ebsd.unitCell,4));
+minUnit = min(hexUnitCell(hexUnitCell&gt;0));
+squnitCell = minUnit * [-1 -1;-1 1; 1 1; 1 -1];
+
+<span class="comment">% use the square unit cell for gridify</span>
+ebsd = ebsd.gridify(<span class="string">'unitCell'</span>,squnitCell);
+
+plot(ebsd,ebsd.orientations)</pre><img src="EBSDInter_04.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

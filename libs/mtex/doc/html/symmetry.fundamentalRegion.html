@@ -1,0 +1,118 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>fundamentalRegion ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: symmetry.fundamentalRegion -->
+      <!-- HEADSTUFF: symmetry.fundamentalRegion -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:symmetry.fundamentalRegion">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit symmetry/fundamentalRegion">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">fundamentalRegion</h1>
+         <div class="subheading"></div>
+         <p>fundamental region in orientation space for a (pair) of symmetries</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">oR = fundamentalRegion(cs)
+oR = fundamentalRegion(cs1,cs2)
+[oR,dcs,nSym] = fundamentalRegion(cs1,cs2)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>cs,cs1,cs2</tt>
+            </td>
+            <td>
+            <tt><a href="symmetry.symmetry.html">symmetry</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>sR</tt>
+            </td>
+            <td>
+            <tt><a href="orientationRegion.orientationRegion.html">orientationRegion</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>dc</tt>
+            </td>
+            <td>
+            <tt><a href="symmetry.symmetry.html">symmetry</a> intersection between cs1 and cs2</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>nSym</tt>
+            </td>
+            <td>
+            <tt>number of disjoined symmetry elements in cs2 * cs1</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>antipodal</tt>
+            </td>
+            <td>
+            <tt>grain exchange symmetry, i.e.,  mori == inv(mori)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>LaueGroup</tt>
+            </td>
+            <td>
+            <tt>consider only Laue groups (default)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>pointGroup</tt>
+            </td>
+            <td>
+            <tt>consider point groups</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

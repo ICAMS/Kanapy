@@ -1,0 +1,89 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>plotFibre ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: ODF.plotFibre -->
+      <!-- HEADSTUFF: ODF.plotFibre -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:ODF.plotFibre">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit ODF/plotFibre">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">plotFibre</h1>
+         <div class="subheading"></div>
+         <p>plot odf along a fibre</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">plotFibre(odf,f);</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>odf</tt>
+            </td>
+            <td>
+            <tt><a href="ODF.ODF.html">ODF</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>f</tt>
+            </td>
+            <td>
+            <tt><a href="fibre.fibre.html">fibre</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>resolution</tt>
+            </td>
+            <td>
+            <tt>resolution of each plot</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="6"> </a></h2><pre class="codeinput">odf = SantaFe;
+f = fibre.gamma(odf.CS,odf.SS)
+plotFibre(SantaFe,f)</pre><pre class="codeoutput"> 
+f = fibre  
+ size: 1 x 1
+ crystal symmetry:  m-3m
+ specimen symmetry: 222
+ h || r: (111) || (0,0,1)
+ o1 -&gt; o2: (180&deg;,54.7&deg;,45&deg;) -&gt; (270&deg;,54.7&deg;,45&deg;)
+</pre><img src="ODF.plotFibre_01.png"> <h3 class="seealso">See also</h3>
+         <p><a href="S2Grid.plot.html">S2Grid.plot</a>, <a href="savefigure.html">savefigure</a>, <a href="Plotting.html">Plotting</a>, <a href="Annotations_demo.html">Annotations_demo</a>, <a href="ColorCoding_demo.html">ColorCoding_demo</a>, <a href="PlotTypes_demo.html">PlotTypes_demo</a>, <a href="SphericalProjection_demo.html">SphericalProjection_demo</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

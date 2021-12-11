@@ -1,0 +1,85 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Random Sampling ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: RandomSampling -->
+      <!-- HEADSTUFF: RandomSampling -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:RandomSampling">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Random Sampling</h1>
+         <div class="subheading"></div>
+         <p>Assume an arbitrary <a href="ODFTheorie.html">ODF</a> either from texture modelling or recovered from XRD pole figure measurements a common problem is the simulation of random
+            individual orientations that are distributed according the given ODF. This is helpful crucial in many application, e.g., for
+            running plastic deformation models like VPSC or verifying the accuracy <a href="DensityEstimation.html">density estimation methods</a>. Here we start with a trigonal alpha-fibre ODF which we define by
+         </p><pre class="codeinput">cs = crystalSymmetry(<span class="string">'32'</span>);
+fibre_odf = 0.5*uniformODF(cs) + 0.5*fibreODF(fibre.alpha(cs),<span class="string">'halfwidth'</span>,20*degree);
+
+plot(fibre_odf,<span class="string">'sections'</span>,6,<span class="string">'silent'</span>)
+mtexColorbar</pre><img src="RandomSampling_01.png"> <h2>Computing Random Orientations<a name="2"> </a></h2>
+         <p>In order to compute <img src="RandomSampling_eq09813297978606313732.png">  random orientation from the ODF <tt>fibre_odf</tt> we use the command <tt><a href="ODF.discreteSample.html">discreteSample</a></tt>.
+         </p><pre class="codeinput">ori = fibre_odf.discreteSample(50000)
+
+<span class="comment">% plot the orientations into the Bunge sections</span>
+hold <span class="string">on</span>
+plot(ori,<span class="string">'MarkerFaceColor'</span>,<span class="string">'none'</span>,<span class="string">'MarkerEdgeAlpha'</span>,0.5,<span class="string">'all'</span>,<span class="string">'MarkerEdgeColor'</span>,<span class="string">'k'</span>,<span class="string">'MarkerSize'</span>,4)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+ori = orientation (321 -&gt; xyz)
+  size: 50000 x 1
+</pre><img src="RandomSampling_02.png"> <p>From the above plot it is very hard to judge whether the orientations are indeed distributed according to the given ODF. The
+            reason for this is the not volume preserving projection of the Bunge sections. A better ODF representation for this purpose
+            are <a href="SigmaSections.html">sigma sections</a></p><pre class="codeinput"><span class="comment">% plot the ODF in sigma sections</span>
+plot(fibre_odf,<span class="string">'sections'</span>,6,<span class="string">'silent'</span>,<span class="string">'sigma'</span>,<span class="string">'contour'</span>,<span class="string">'linewidth'</span>,2)
+
+<span class="comment">% plot the orientations into the sigma sections</span>
+hold <span class="string">on</span>
+plot(ori,<span class="string">'MarkerFaceColor'</span>,<span class="string">'none'</span>,<span class="string">'MarkerEdgeAlpha'</span>,0.5,<span class="string">'all'</span>,<span class="string">'MarkerEdgeColor'</span>,<span class="string">'k'</span>,<span class="string">'MarkerSize'</span>,4)
+hold <span class="string">off</span></pre><img src="RandomSampling_03.png"> <h2>ODF Estimation from Random Orientations<a name="4"> </a></h2>
+         <p>From the last plot we clearly see that the orientations are more dense close to the alpha fibre. In order more quantitative
+            meaure for how well do the orientations approximate the ODF we may use the orientations to <a href="DensityEstimation.html">estimate a new ODF</a> and compare the fit of this estimate ODF with the initial ODF.
+         </p><pre class="codeinput"><span class="comment">% estimate an ODF from the random orientations</span>
+odf_rec = calcDensity(ori)
+
+<span class="comment">% plot the estimated ODF</span>
+plot(odf_rec,<span class="string">'sections'</span>,6,<span class="string">'silent'</span>)</pre><pre class="codeoutput"> 
+odf_rec = ODF  
+  crystal symmetry : 321, X||a*, Y||b, Z||c*
+ 
+  Harmonic portion:
+    degree: 25
+    weight: 1
+ 
+</pre><img src="RandomSampling_04.png"> <p>We may now compare the original model ODF <tt>fibre_odf</tt> with the reconstructed ODF <tt>odf_rec</tt>.
+         </p><pre class="codeinput">calcError(odf_rec,fibre_odf)</pre><pre class="codeoutput">ans =
+    0.0560
+</pre><h2>Exporting Random Orientations<a name="6"> </a></h2>
+         <p>In order to make use of the sampled orientations you pronbably want to <a href="OrientationExport.html">export</a> them as <a href="RotationDefinition.html">Euler angles</a> into a text files. This can be done using the commands <tt><a href="quaternion.export.html">export</a></tt> and <tt><a href="orientation.export_VPSC.html">export_VPSC</a></tt>.
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

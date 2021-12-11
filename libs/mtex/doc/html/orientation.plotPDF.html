@@ -1,0 +1,180 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>plotPDF ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: orientation.plotPDF -->
+      <!-- HEADSTUFF: orientation.plotPDF -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:orientation.plotPDF">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit orientation/plotPDF">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">plotPDF</h1>
+         <div class="subheading"></div>
+         <p>plot orientations into pole figures</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">plotPDF(ori,[h1,h2,h3])
+plotPDF(ori,[h1,h2,h3],<span class="string">'points'</span>,100)
+plotPDF(ori,[h1,h2,h3],<span class="string">'points'</span>,<span class="string">'all'</span>)
+plotPDF(ori,[h1,h2,h3],<span class="string">'contourf'</span>)
+plotPDF(ori,[h1,h2,h3],<span class="string">'antipodal'</span>)
+plotPDF(ori,[h1,h2,h3],<span class="string">'superposition'</span>,{1,[1.5 0.5]})
+plotPDF(ori,data,[h1,h2,h3])</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ori</tt>
+            </td>
+            <td>
+            <tt><a href="orientation.orientation.html">orientation</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>h</tt>
+            </td>
+            <td>
+            <tt><a href="Miller.Miller.html">Miller</a> crystallographic directions</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>superposition</tt>
+            </td>
+            <td>
+            <tt>plot superposed pole figures</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>points</tt>
+            </td>
+            <td>
+            <tt>number of points to be plotted</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>MarkerSize</tt>
+            </td>
+            <td>
+            <tt/>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>MarkerFaceColor</tt>
+            </td>
+            <td>
+            <tt/>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>MarkerEdgeColor</tt>
+            </td>
+            <td>
+            <tt/>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Flags<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>noTitle</tt>
+            </td>
+            <td>
+            <tt>suppress the Miller indices at the top</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>noSymmetry</tt>
+            </td>
+            <td>
+            <tt>ignore symmetricaly equivalent points</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>antipodal</tt>
+            </td>
+            <td>
+            <tt>include <a href="VectorsAxes.html">antipodal symmetry</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>complete</tt>
+            </td>
+            <td>
+            <tt>ignore fundamental region</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>upper</tt>
+            </td>
+            <td>
+            <tt>restrict to upper hemisphere</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>lower</tt>
+            </td>
+            <td>
+            <tt>restrict to lower hemisphere</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>filled</tt>
+            </td>
+            <td>
+            <tt>fill the marker with current color</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="orientation.plotIPDF.html">orientation.plotIPDF</a>, <a href="S2Grid.plot.html">S2Grid.plot</a>, <a href="savefigure.html">savefigure</a>, <a href="Plotting.html">Plotting</a>, <a href="Annotations_demo.html">Annotations_demo</a>, <a href="ColorCoding_demo.html">ColorCoding_demo</a>, <a href="PlotTypes_demo.html">PlotTypes_demo</a>, <a href="SphericalProjection_demo.html">SphericalProjection_demo</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

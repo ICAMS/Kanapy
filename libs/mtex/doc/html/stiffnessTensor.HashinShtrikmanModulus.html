@@ -1,0 +1,106 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>HashinShtrikmanModulus ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: stiffnessTensor.HashinShtrikmanModulus -->
+      <!-- HEADSTUFF: stiffnessTensor.HashinShtrikmanModulus -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:stiffnessTensor.HashinShtrikmanModulus">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit stiffnessTensor/HashinShtrikmanModulus">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">HashinShtrikmanModulus</h1>
+         <div class="subheading"></div>
+         <p>Hashin Shtrikman moduli</p>
+         <h2>Description<a name="3"> </a></h2>
+         <p>The equations are from Peselnick and Meister 1965 through Watt and Peselnick 1980 which are based on Hashin and Shtrikman
+            1963 JMB 8/2013
+         </p>
+         <h2>Syntax<a name="4"> </a></h2><pre class="codeinput">[khs, ghs, def] = HashinShtrikmanModulus(C,Ko,Go)</pre><h2>Input<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>C</tt>
+            </td>
+            <td>
+            <tt><a href="stiffnessTensor.stiffnessTensor.html">stiffnessTensor</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>Ko</tt>
+            </td>
+            <td>
+            <tt>bulk modulus of the reference isotropic material</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>Go</tt>
+            </td>
+            <td>
+            <tt>shear modulus of the reference isotropic material</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>khs</tt>
+            </td>
+            <td>
+            <tt>Hashin Shtrikman bulk modulus</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>ghs</tt>
+            </td>
+            <td>
+            <tt>Hashin Shtrikman shear modulus</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>def</tt>
+            </td>
+            <td>
+            <tt>+1 positive definite, -1 for negative definite R</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

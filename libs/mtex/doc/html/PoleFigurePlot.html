@@ -1,0 +1,76 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Plotting of Pole Figures ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: PoleFigurePlot -->
+      <!-- HEADSTUFF: PoleFigurePlot -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:PoleFigurePlot">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Plotting of Pole Figures</h1>
+         <div class="subheading"></div>
+         <p>This section describes various possibilities to visualize pole figure data. Lets start by loading some XRD data</p><pre class="codeinput">mtexdata <span class="string">ptx</span></pre><pre class="codeoutput"> 
+pf = PoleFigure  
+  crystal symmetry : mmm
+  specimen symmetry: 1
+ 
+  h = (104), r = 72 x 17 points
+  h = (110), r = 72 x 17 points
+  h = (202), r = 72 x 17 points
+</pre><p>By default MTEX plots pole figures by drawing a circle at every measurement position of a pole figure and coloring it corresponding
+            to the measured intensity.
+         </p><pre class="codeinput">plot(pf)
+mtexColorbar</pre><img src="PoleFigurePlot_01.png"> <p>MTEX tries to guess the right size of the circle in order to produce a pleasing result. However, you can adjust this size
+            using the option <b>MarkerSize</b>.
+         </p><pre class="codeinput">plot(pf,<span class="string">'MarkerSize'</span>,4)
+mtexColorbar</pre><img src="PoleFigurePlot_02.png"> <h2>Contour Plots<a name="4"> </a></h2>
+         <p>Some people like to have their raw pole figures to be drawn as contour plots. This feature is not yet generally supported
+            by MTEX. Note that measured pole figure may be given at a very irregular grid which would make it necessary to interpolate
+            before drawing contours. In this case, however, it seems to be more reasonable to first compute an ODF and than to draw contour
+            plots of the recalculated pole figures.
+         </p>
+         <p>Nevertheless, MTEX offers basic contour plots in the case of regular measurement grids.</p><pre class="codeinput">plot(pf,<span class="string">'contourf'</span>)
+mtexColorbar
+mtexColorMap <span class="string">parula</span></pre><img src="PoleFigurePlot_03.png"> <p>When drawing a colorbar next to the pole figure plots it is necessary to have the same color coding in all plots. This can
+            be done as following
+         </p><pre class="codeinput">mtexColorbar <span class="comment">% remove colorbars</span>
+CLim(gcm,<span class="string">'equal'</span>);
+mtexColorbar <span class="comment">% add a single colorbar</span></pre><img src="PoleFigurePlot_04.png"> <h2>Plotting Recalculated Pole Figures<a name="6"> </a></h2>
+         <p>In order to draw recalculated one first needs to compute an ODF.</p><pre class="codeinput">odf = calcODF(pf,<span class="string">'silent'</span>)</pre><pre class="codeoutput"> 
+odf = ODF  
+  crystal symmetry : mmm
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 5&deg;
+    center: 29724 orientations, resolution: 5&deg;
+    weight: 1
+ 
+</pre><p>Now smooth pole figures can be plotted for arbitrary crystallographic directions.</p><pre class="codeinput">plotPDF(odf,pf.h,<span class="string">'antipodal'</span>)
+mtexColorMap <span class="string">parula</span></pre><img src="PoleFigurePlot_05.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

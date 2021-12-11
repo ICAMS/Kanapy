@@ -1,0 +1,118 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>birefringence ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: refractiveIndexTensor.birefringence -->
+      <!-- HEADSTUFF: refractiveIndexTensor.birefringence -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:refractiveIndexTensor.birefringence">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit refractiveIndexTensor/birefringence">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">birefringence</h1>
+         <div class="subheading"></div>
+         <p>birefringence from refractive index tensor</p>
+         <h2>Description<a name="3"> </a></h2>
+         <p>Birefringence is the difference in light speed in anisotropic material. When entering an anisotrpic media plane polarised
+            light migrating along the propagation direction vprop is split into two orthogonally vibrating waves that moves at different
+            speed, the slowest with nmax and the faster wave with nmax. The values of nmin and nmax can be calculated from the refractive
+            index tensor containg the three pricipal refractive index of the mineral, nalpha, nbeta and ngamma and the ligth propagation
+            direction (vprop)  with repect to the crystal reference frame. The birefringence varies as function of the vprop and for each
+            vprop coressponds to nmax-nmin.
+         </p>
+         <h2>Syntax<a name="4"> </a></h2><pre class="codeinput">[n,nMin,nMax] = birefringence(rI,vprop)</pre><h2>Input<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>rI</tt>
+            </td>
+            <td>
+            <tt><a href="refractiveIndexTensor.refractiveIndexTensor.html">refractiveIndexTensor</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>vprop</tt>
+            </td>
+            <td>
+            <tt>propagation direction <a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>nMin</tt>
+            </td>
+            <td>
+            <tt>lowest refractive index for a given propagation direction</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>nMax</tt>
+            </td>
+            <td>
+            <tt>highest refractive index for a given propagation direction</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>n</tt>
+            </td>
+            <td>
+            <tt>difference between nMax and nMin</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>pMin</tt>
+            </td>
+            <td>
+            <tt><a href="vector3d.vector3d.html">vector3d</a> polarization direction with the lowest refractive index</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>pMax</tt>
+            </td>
+            <td>
+            <tt><a href="vector3d.vector3d.html">vector3d</a> polarization direction with the highest refractive index</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

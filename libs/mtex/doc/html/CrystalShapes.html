@@ -1,0 +1,234 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Crystal Shapes ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: CrystalShapes -->
+      <!-- HEADSTUFF: CrystalShapes -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:CrystalShapes">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Crystal Shapes</h1>
+         <div class="subheading"></div>
+         <p>Crystal Shapes are used to visualize crystal orientations, twinning or lattice planes.</p>
+         <h2>Simple crystal shapes<a name="2"> </a></h2>
+         <p>In the case of cubic or hexagonal materials the corresponding crystal are often represented as cubes or hexagons, where the
+            faces correspond to the lattice planes {100} in the cubic case and {1,0,-1,0},{0,0,0,1} in the hexagonal case. Such simple
+            crystal shapes may be created in MTEX with the commands
+         </p><pre class="codeinput"><span class="comment">% import some hexagonal data</span>
+mtexdata <span class="string">titanium</span>;
+
+<span class="comment">% define a simple hexagonal crystal shape</span>
+cS = crystalShape.hex(ebsd.CS)
+
+<span class="comment">% and plot it</span>
+close <span class="string">all</span>
+plot(cS)</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations           Mineral         Color  Symmetry  Crystal reference frame
+     0   8100 (100%)  Titanium (Alpha)  LightSkyBlue       622       X||a, Y||b*, Z||c*
+ 
+ Properties: ci, grainid, iq, sem_signal, x, y
+ Scan unit : um
+ 
+ 
+cS = crystalShape  
+ mineral: Titanium (Alpha) (622, X||a, Y||b*, Z||c*)
+ vertices: 12
+ faces: 8
+</pre><img src="CrystalShapes_01.png"> <p>Internally, a crystal shape is represented as a list of faces which are bounded by a list of vertices</p><pre class="codeinput">cS.V</pre><pre class="codeoutput"> 
+ans = vector3d  
+ size: 12 x 1
+          x         y         z
+  -0.393614         0 -0.308331
+  -0.393614         0  0.308331
+  -0.196807  -0.34088  0.308331
+  -0.196807   0.34088 -0.308331
+  -0.196807  -0.34088 -0.308331
+  -0.196807   0.34088  0.308331
+   0.196807  -0.34088  0.308331
+   0.196807   0.34088 -0.308331
+   0.196807  -0.34088 -0.308331
+   0.196807   0.34088  0.308331
+   0.393614         0 -0.308331
+   0.393614         0  0.308331
+</pre><h2>Calculating with crystal shapes<a name="4"> </a></h2>
+         <p>Crystal shapes are defined in crystal coordinates. Thus applying an orientation rotates them into specimen coordinates. This
+            functionality can be used to visualize crystal orientations in EBSD maps
+         </p><pre class="codeinput"><span class="comment">% plot an EBSD map</span>
+clf <span class="comment">% clear current figure</span>
+plot(ebsd,ebsd.orientations)
+
+hold <span class="string">on</span>
+scaling = 100; <span class="comment">% scale the crystal shape to have a nice size</span>
+
+<span class="comment">% plot at position (500,500) the orientatation of the corresponding crystal</span>
+plot(500,500,50, ebsd(500,500).orientations * cS * scaling)
+hold <span class="string">off</span></pre><img src="CrystalShapes_02.png"> <p>As we have seen in the previous section we can apply several operations on crystal shapes. These include</p>
+         <div>
+            <ul type="square">
+               <li><tt>factor * cS</tt> scales the crystal shape in size
+               </li>
+               <li><tt>ori * cS</tt> rotates the crystal shape in the defined orientation
+               </li>
+               <li><tt>[xy] + cS</tt> or <tt>[xyz] + cS</tt> shifts the crystal shape in the specified positions
+               </li>
+            </ul>
+         </div>
+         <p>At this point it comes into help that MTEX supports lists of crystal shapes, i.e., whenever one of the operations listed above
+            includes a list (e.g. a list of orientations) the multiplication will yield a list of crystal shapes. Lets illustrate this
+         </p><pre class="codeinput"><span class="comment">% compute some grains</span>
+grains = calcGrains(ebsd);
+grains = smooth(grains,5);
+
+<span class="comment">% and plot them</span>
+plot(grains,grains.meanOrientation)
+
+<span class="comment">% find the big ones</span>
+isBig = grains.grainSize&gt;50;
+
+<span class="comment">% define a list of crystal shape that is oriented as the grain mean</span>
+<span class="comment">% orientation and scaled according to the grain area</span>
+cSGrains = grains(isBig).meanOrientation * cS * 0.7 * sqrt(grains(isBig).area);
+
+<span class="comment">% now we can plot these crystal shapes at the grain centers</span>
+hold <span class="string">on</span>
+plot(grains(isBig).centroid + cSGrains)
+hold <span class="string">off</span></pre><img src="CrystalShapes_03.png"> <h2>Plotting crystal shapes<a name="6"> </a></h2>
+         <p>The above can be accomplished a bit more directly and a bit more nice with</p><pre class="codeinput"><span class="comment">% plot a grain map</span>
+plot(grains,grains.meanOrientation)
+
+<span class="comment">% and on top for each large grain a crystal shape</span>
+hold <span class="string">on</span>
+plot(grains(isBig),0.7*cS,<span class="string">'FaceColor'</span>,<span class="string">'none'</span>,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="CrystalShapes_04.png"> <p>In the same waywe may visualize grain orientations and grains size within pole figures</p><pre class="codeinput">plotPDF(grains(isBig).meanOrientation,Miller({1,0,-1,0},{0,0,0,1},ebsd.CS),<span class="string">'contour'</span>)
+plot(grains(isBig).meanOrientation,0.002*cSGrains,<span class="string">'add2all'</span>)</pre><img src="CrystalShapes_05.png"> <p>or even within ODF sections</p><pre class="codeinput"><span class="comment">% compute the odf</span>
+odf = calcDensity(ebsd.orientations);
+
+<span class="comment">% plot the odf in sigma sections</span>
+plotSection(odf,<span class="string">'sigma'</span>,<span class="string">'contour'</span>)
+
+<span class="comment">% and on top of it the crystal shapes</span>
+plot(grains(isBig).meanOrientation,0.002*cSGrains,<span class="string">'add2all'</span>)</pre><img src="CrystalShapes_06.png"> <h2>Twinning relationships<a name="9"> </a></h2>
+         <p>We may also you crystal shapes to illustrate twinning relation ships</p><pre class="codeinput"><span class="comment">% define some twinning misorientation</span>
+mori = orientation.byAxisAngle(Miller({1 0-1 0},ebsd.CS),34.9*degree)
+
+<span class="comment">% plot the crystal in ideal orientation</span>
+close <span class="string">all</span>
+plot(cS,<span class="string">'FaceAlpha'</span>,0.5)
+
+<span class="comment">% and on top of it in twinning orientation</span>
+hold <span class="string">on</span>
+plot(mori * cS *0.9,<span class="string">'FaceColor'</span>,<span class="string">'orange'</span>)
+hold <span class="string">off</span>
+view(45,20)</pre><pre class="codeoutput"> 
+mori = misorientation (Titanium (Alpha) -&gt; Titanium (Alpha))
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+   330 34.9   30    0
+ 
+</pre><img src="CrystalShapes_07.png"> <h2>Defining complicated crystal shapes<a name="10"> </a></h2>
+         <p>For symmetries other then hexagonal or cubic one would like to have more complicated crystal shape representing the true appearance.
+            To this end one has to include more faces into the representation and carefuly adjust their distance to the origin.
+         </p>
+         <p>Lets consider a quartz crystal.</p><pre class="codeinput">cs = loadCIF(<span class="string">'quartz'</span>)</pre><pre class="codeoutput"> 
+cs = crystalSymmetry  
+ 
+  mineral        : Quartz            
+  symmetry       : 321               
+  elements       : 6                 
+  a, b, c        : 4.9, 4.9, 5.4     
+  reference frame: X||a*, Y||b, Z||c*
+ 
+</pre><p>Its shape is mainly bounded by the following faces</p><pre class="codeinput">m = Miller({1,0,-1,0},cs);  <span class="comment">% hexagonal prism</span>
+r = Miller({1,0,-1,1},cs);  <span class="comment">% positive rhomboedron, usally bigger then z</span>
+z = Miller({0,1,-1,1},cs);  <span class="comment">% negative rhomboedron</span>
+s1 = Miller({2,-1,-1,1},cs);<span class="comment">% left tridiagonal bipyramid</span>
+s2 = Miller({1,1,-2,1},cs); <span class="comment">% right tridiagonal bipyramid</span>
+x1 = Miller({6,-1,-5,1},cs);<span class="comment">% left positive Trapezohedron</span>
+x2 = Miller({5,1,-6,1},cs); <span class="comment">% right positive Trapezohedron</span></pre><p>If we take only the first three faces we end up with</p><pre class="codeinput">N = [m,r,z];
+cS = crystalShape(N)
+
+plot(cS)</pre><pre class="codeoutput"> 
+cS = crystalShape  
+ mineral: Quartz (321, X||a*, Y||b, Z||c*)
+ vertices: 8
+ faces: 18
+</pre><img src="CrystalShapes_08.png"> <p>i.e. we see only  the possitive and negative rhomboedrons, but the hexagonal prism are to far away from the origin to cut
+            the shape. We may decrease the distance, by multiplying the coresponding normal with a factor larger then 1.
+         </p><pre class="codeinput">N = [2*m,r,z];
+
+cS = crystalShape(N);
+plot(cS)</pre><img src="CrystalShapes_09.png"> <p>Next in a typical Quartz crystal the negativ rhomboedron is a bit smaller then the positiv rhomboedron. Lets correct for this.</p><pre class="codeinput"><span class="comment">% collect the face normal with the right scalling</span>
+N = [2*m,r,0.9*z];
+
+cS = crystalShape(N);
+plot(cS)</pre><img src="CrystalShapes_10.png"> <p>Finaly, we add the tridiagonal bipyramid and the positive Trapezohedron</p><pre class="codeinput"><span class="comment">% collect the face normal with the right scalling</span>
+N = [2*m,r,0.9*z,0.7*s1,0.3*x1];
+
+cS = crystalShape(N);
+plot(cS)</pre><img src="CrystalShapes_11.png"> <h2>Marking crystal faces<a name="17"> </a></h2>
+         <p>We may colorize the faces according to their lattice planes using the command</p><pre class="codeinput">plot(cS,<span class="string">'colored'</span>)</pre><img src="CrystalShapes_12.png"> <p>or even label the faces directly</p><pre class="codeinput">plot(cS)
+N = unique(cS.N.symmetrise,<span class="string">'noSymmetry'</span>,<span class="string">'stable'</span>);
+fC = cS.faceCenter;
+
+<span class="keyword">for</span> i = 1:length(N)
+  text3(fC(i),char(round(N(i)),<span class="string">'latex'</span>),<span class="string">'scaling'</span>,1.1,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>)
+<span class="keyword">end</span></pre><img src="CrystalShapes_13.png"> <h2>Defining complicated crystals more simple<a name="19"> </a></h2>
+         <p>We see that defining a complicated crystal shape is a tedious work. To this end MTEX allows to model the shape with a habitus
+            and a extension parameter. This approach has been developed by J. Enderlein in <a href="https://library.wolfram.com/infocenter/Articles/3279">A package for displaying crystal morphology. Mathematica Journal, 7(1), 1997</a>. The two parameters are used to model the distance of a face from the origin. Setting all parameters to one we obtain
+         </p><pre class="codeinput"><span class="comment">% take the face normals unscaled</span>
+N = [m,r,z,s2,x2];
+
+habitus = 1;
+extension = [1 1 1];
+cS = crystalShape(N,habitus,extension);
+plot(cS,<span class="string">'colored'</span>)</pre><img src="CrystalShapes_14.png"> <p>The scale parameter models the inverse extension of the crystal in each dimension. In order to make the crystal a bit longer
+            and the negative rhomboedrons smaller we could do
+         </p><pre class="codeinput">extension = [0.9 1.1 1];
+cS = crystalShape(N,habitus,extension);
+plot(cS,<span class="string">'colored'</span>)</pre><img src="CrystalShapes_15.png"> <p>Next the habitus parameter describes how close faces with mixed hkl are to the origin. If we increase the habitus parameter
+            the trapezohedron and the bipyramid become more and more dominant
+         </p><pre class="codeinput">habitus = 1.1;
+cS = crystalShape(N,habitus,extension);
+plot(cS,<span class="string">'colored'</span>), snapnow
+
+habitus = 1.2;
+cS = crystalShape(N,habitus,extension);
+plot(cS,<span class="string">'colored'</span>), snapnow
+
+habitus = 1.3;
+cS = crystalShape(N,habitus,extension);
+plot(cS,<span class="string">'colored'</span>)</pre><img src="CrystalShapes_16.png"> <img src="CrystalShapes_17.png"> <img src="CrystalShapes_18.png"> <h2>Select faces<a name="22"> </a></h2>
+         <p>A specific face of the crystal shape may be selected by its normal vector</p><pre class="codeinput">plot(cS)
+hold <span class="string">on</span>
+plot(cS(Miller(0,-1,1,0,cs)),<span class="string">'FaceColor'</span>,<span class="string">'DarkRed'</span>)
+hold <span class="string">off</span></pre><img src="CrystalShapes_19.png"> <h2>Gallery of hardcoded crystal shapes<a name="23"> </a></h2><pre class="codeinput">plot(crystalShape.olivine,<span class="string">'colored'</span>)</pre><img src="CrystalShapes_20.png"> <pre class="codeinput">plot(crystalShape.garnet,<span class="string">'colored'</span>)</pre><img src="CrystalShapes_21.png"> <pre class="codeinput">plot(crystalShape.topaz,<span class="string">'colored'</span>)</pre><img src="CrystalShapes_22.png"> <pre class="codeinput">plot(crystalShape.plagioclase,<span class="string">'colored'</span>)</pre><img src="CrystalShapes_23.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

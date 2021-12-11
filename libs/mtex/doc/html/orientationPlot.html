@@ -1,0 +1,76 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>orientationPlot ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: orientationPlot -->
+      <!-- HEADSTUFF: orientationPlot -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:orientationPlot">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit orientationPlot">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">orientationPlot</h1>
+         <div class="subheading">
+            <p>ODFSECTIONS</p>
+         </div>
+         <h2>Syntax<a name="2"> </a></h2><pre class="codeinput">oP = orientationPlot(ax,CS1,varargin)</pre><h2>Example<a name="3"> </a></h2><pre class="codeinput">cs = crystalSymmetry(<span class="string">'mmm'</span>)
+oS = axisAngleSections(cs,cs)
+ori = oS.makeGrid(<span class="string">'resolution'</span>,2*degree);
+oM = PatalaColorKey(cs,cs)
+rgb = oM.orientation2color(ori);
+plot(oS,rgb,<span class="string">'surf'</span>)</pre><pre class="codeoutput"> 
+cs = crystalSymmetry  
+ 
+  symmetry: mmm    
+  elements: 8      
+  a, b, c : 1, 1, 1
+ 
+oS = 
+  axisAngleSections with properties:
+
+           angles: [1&times;12 double]
+      axesSectors: {1&times;12 cell}
+          jointCS: [1&times;1 crystalSymmetry]
+               oR: [1&times;1 orientationRegion]
+    volumeScaling: 1
+              CS1: [1&times;1 crystalSymmetry]
+              CS2: [1&times;1 crystalSymmetry]
+              tol: 0.0831
+         plotGrid: []
+         gridSize: []
+               CS: [1&times;1 crystalSymmetry]
+               SS: [1&times;1 crystalSymmetry]
+oM = 
+  PatalaColorKey with properties:
+
+          CS1: [1&times;1 crystalSymmetry]
+          CS2: [1&times;1 crystalSymmetry]
+    antipodal: 1
+</pre><img src="orientationPlot_01.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

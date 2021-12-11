@@ -1,0 +1,121 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>calcError ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: ODF.calcError -->
+      <!-- HEADSTUFF: ODF.calcError -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:ODF.calcError">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit ODF/calcError">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">calcError</h1>
+         <div class="subheading"></div>
+         <p>calculate approximation error between two ODFs</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">e = calcError(odf1,odf2)
+e = calcError(odf,pf,<span class="string">'RP'</span>)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>odf1, odf2</tt>
+            </td>
+            <td>
+            <tt><a href="ODF.ODF.html">ODF</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>pf</tt>
+            </td>
+            <td>
+            <tt><a href="PoleFigure.PoleFigure.html">PoleFigure</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>S3G</tt>
+            </td>
+            <td>
+            <tt><a href="SO3Grid.SO3Grid.html">SO3Grid</a> of quadrature nodes (optional)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>L0</tt>
+            </td>
+            <td>
+            <tt>measure of the orientation space where $|odf1 -- odf2|&gt;\epsilon|</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>L1</tt>
+            </td>
+            <td>
+            <tt>L^1 error</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>L2</tt>
+            </td>
+            <td>
+            <tt>L^2 error</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>RP</tt>
+            </td>
+            <td>
+            <tt>RP  error (default)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>resolution</tt>
+            </td>
+            <td>
+            <tt>resolution used for calculation of the error</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="PoleFigure.calcODF.html">PoleFigure.calcODF</a>, <a href="PoleFigure.calcError.html">PoleFigure.calcError</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

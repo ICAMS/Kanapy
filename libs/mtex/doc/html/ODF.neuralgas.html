@@ -1,0 +1,136 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>neuralgas ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: ODF.neuralgas -->
+      <!-- HEADSTUFF: ODF.neuralgas -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:ODF.neuralgas">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit ODF/neuralgas">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">neuralgas</h1>
+         <div class="subheading"></div>
+         <p>attempt to distribute measure-sites equally according to invers polefigure density (experimental)</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">S2G = neuralgas(odf,Miller(1,0,0,cs),<span class="string">'points'</span>,500,<span class="string">'epoches'</span>,25)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>odf</tt>
+            </td>
+            <td>
+            <tt><a href="ODF.ODF.html">ODF</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>h</tt>
+            </td>
+            <td>
+            <tt><a href="Miller.Miller.html">Miller</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>Grid</tt>
+            </td>
+            <td>
+            <tt><a href="S2Grid.S2Grid.html">S2Grid</a>, reference Grid to evaluate PDF</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>resolution</tt>
+            </td>
+            <td>
+            <tt>Grid Resolution</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>maxtheta</tt>
+            </td>
+            <td>
+            <tt>max Theta of Grid</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>Points</tt>
+            </td>
+            <td>
+            <tt>number of Points</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>epoches</tt>
+            </td>
+            <td>
+            <tt>number of Iterations</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>eta</tt>
+            </td>
+            <td>
+            <tt>'learing--rate' as vector: [eta_start eta_stop], default [0.1 0.02]</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>lambda</tt>
+            </td>
+            <td>
+            <tt>stimuli of</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>verbose</tt>
+            </td>
+            <td>
+            <tt>display points during optimisation</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="S2Grid.refine.html">S2Grid.refine</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

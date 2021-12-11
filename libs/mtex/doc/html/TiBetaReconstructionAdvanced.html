@@ -1,0 +1,279 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Parent Beta Phase Reconstruction in Titanium Alloys ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: TiBetaReconstructionAdvanced -->
+      <!-- HEADSTUFF: TiBetaReconstructionAdvanced -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:TiBetaReconstructionAdvanced">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Parent Beta Phase Reconstruction in Titanium Alloys</h1>
+         <div class="subheading"></div>
+         <p>In this section we discuss parent grain reconstruction at the example of a titanium alloy. Lets start by importing a sample
+            data set
+         </p><pre class="codeinput">mtexdata <span class="string">alphaBetaTitanium</span>
+
+<span class="comment">% the phase names for the alpha and beta phases</span>
+alphaName = <span class="string">'Ti (alpha)'</span>;
+betaName = <span class="string">'Ti (Beta)'</span>;
+
+<span class="comment">% and plot the alpha phase as an inverse pole figure map</span>
+plot(ebsd(alphaName),ebsd(alphaName).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0  10449 (5.3%)  notIndexed                                                 
+     1   437 (0.22%)   Ti (BETA)  LightSkyBlue       432                         
+     2  185722 (94%)  Ti (alpha)  DarkSeaGreen       622       X||a*, Y||b, Z||c*
+ 
+ Properties: bands, bc, bs, error, mad, reliabilityindex, x, y
+ Scan unit : um
+ 
+</pre><img src="TiBetaReconstructionAdvanced_01.png"> <p>The data set contains 99.8 percent alpha titanium and 0.2 percent beta titanium. Our goal is to reconstuct the original beta
+            phase. The original grain structure appears almost visible for human eyes. Our computations will be based on the Burgers orientation
+            relationship
+         </p><pre class="codeinput">beta2alpha = orientation.Burgers(ebsd(betaName).CS,ebsd(alphaName).CS);
+round2Miller(beta2alpha)</pre><pre class="codeoutput"> 
+ plane parallel   direction parallel    fit
+(110) || (0001)   [-11-1] || [2-1-10]     0&deg;
+ 
+</pre><p>that alligns (110) plane of the beta phase with the (0001) plane of the alpha phase and the [1-11] direction of the beta phase
+            with the [2110] direction of the alpha phase.
+         </p>
+         <p>Note that all MTEX functions for parent grain reconstruction expect the orientation relationship as parent to child and not
+            as child to parent.
+         </p>
+         <h2>Detecting triple points that belong to the same parent orientation<a name="4"> </a></h2>
+         <p>In a first step we want to identify triple junctions that have misorientations that are compatible with a common parent orientations.
+            To this end we first compute alpha grains using the option <a href="QuadruplePoints.html"><tt>removeQuadruplePoints</tt></a> which turn all quadruple junctions into 2 triple junctions. Furthermore, we choose a very small threshold of 1.5 degree for
+            the identification of grain boundaries to avoid alpha orientations that belong to different beta grains get merged into the
+            same alpha grain.
+         </p><pre class="codeinput"><span class="comment">% reconstruct grains</span>
+[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'threshold'</span>,1.5*degree,<span class="keyword">...</span>
+  <span class="string">'removeQuadruplePoints'</span>);
+grains = smooth(grains,1,<span class="string">'moveTriplePoints'</span>);
+
+<span class="comment">% plot all alpha pixels</span>
+region = [299 401 -500 -440];
+plot(ebsd(alphaName),ebsd(alphaName).orientations,<span class="keyword">...</span>
+  <span class="string">'region'</span>,region,<span class="string">'micronbar'</span>,<span class="string">'off'</span>,<span class="string">'figSize'</span>,<span class="string">'large'</span>);
+
+<span class="comment">% and on top the grain boundaries</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2 ,<span class="string">'region'</span>,region);
+hold <span class="string">off</span></pre><img src="TiBetaReconstructionAdvanced_02.png"> <p>Above we have plotted only a very small subregion of the original data set to make the seperation of the qudruple junctions
+            better visible.
+         </p>
+         <p>Next we extract all alpha - alpha - alpha triple junctions and use the command <a href="calcParent.html"><tt>calcParent</tt></a> to find for each of these triple junctions the best fitting parent orientations.
+         </p><pre class="codeinput"><span class="comment">% extract all alpha - alpha - alpha triple points</span>
+tP = grains.triplePoints(alphaName,alphaName,alphaName)
+
+<span class="comment">% compute for each triple point the best fitting parentId and how well the fit is</span>
+tPori = grains(tP.grainId).meanOrientation;
+[parentId, fit] = calcParent(tPori,beta2alpha,<span class="string">'numFit'</span>,2,<span class="string">'id'</span>,<span class="string">'threshold'</span>,5*degree);</pre><pre class="codeoutput"> 
+tP = triplePointList  
+ 
+ points   mineral 1   mineral 2   mineral 3
+  93929  Ti (alpha)  Ti (alpha)  Ti (alpha)
+</pre><p>The command <tt>calcParent</tt> returns for each child orientation a <tt>parentId</tt> which allows us later to compute the parent orientation from the child orientation. Furthermore, the command return for each
+            triple junction the misfit between the adjecent parent orientations in radiant. Finally, the option <tt>'numFit',2</tt> causes <tt>calcParent</tt> to return not only the best fit but also the second best fit. This will be used later. First we simple colorize the triple
+            junctions according to the best fit.
+         </p><pre class="codeinput">hold <span class="string">on</span>
+plot(tP,fit(:,1) ./ degree,<span class="string">'MarkerEdgecolor'</span>,<span class="string">'k'</span>,<span class="string">'MarkerSize'</span>,10,<span class="string">'region'</span>,region)
+setColorRange([0,5])
+mtexColorMap <span class="string">LaboTeX</span>
+mtexColorbar
+hold <span class="string">off</span></pre><img src="TiBetaReconstructionAdvanced_03.png"> <p>Next we select those triple junctions as reliable that have a fit less than 2.5 degree and second best fit that is larger
+            than  2.5 degree
+         </p><pre class="codeinput">consistenTP = fit(:,1) &lt; 2.5*degree &amp; fit(:,2) &gt; 2.5*degree;
+
+<span class="comment">% marke these triple points by a red cicle</span>
+hold <span class="string">on</span>
+plot(tP(consistenTP),<span class="string">'MarkerEdgecolor'</span>,<span class="string">'r'</span>,<span class="string">'MarkerSize'</span>,10,<span class="keyword">...</span>
+  <span class="string">'MarkerFaceColor'</span>,<span class="string">'none'</span>,<span class="string">'linewidth'</span>,2,<span class="string">'region'</span>,region)
+hold <span class="string">off</span></pre><img src="TiBetaReconstructionAdvanced_04.png"> <h2>Recover beta grains from consistent triple junctions<a name="8"> </a></h2>
+         <p>We observe that despite the quite sharp threshold we have many consistent triple points. In the next step we check wether
+            all consistent triple junctions of a grain vote for the same parent orientation. Such a check for consistent votes can be
+            computed by the command <a href="majorityVote.html"><tt>majorityVote</tt></a> using the option <tt>strict</tt>.
+         </p><pre class="codeinput"><span class="comment">% get a unique parentId vote for each grain</span>
+[parentId, numVotes] = majorityVote( tP(consistenTP).grainId, <span class="keyword">...</span>
+  parentId(consistenTP,:,1), max(grains.id),<span class="string">'strict'</span>);</pre><p>The command <tt>majorityVote</tt> returns for each grain with consistent parentId votes this unique parentId and for all other grains <tt>NaN</tt>. The second  output argument gives the number of these votes
+         </p>
+         <p>For all grains with at least 3 unique vote we now use the command <a href="variants.html"><tt>variants</tt></a> to compute the parent orientation corresponding to the <tt>parentId</tt>. This parent orientations we assign as new <tt>meanOrientation</tt> to our grains.
+         </p><pre class="codeinput"><span class="comment">% lets store the parent grains into a new variable</span>
+parentGrains = grains;
+
+<span class="comment">% change orientations of consistent grains from child to parent</span>
+parentGrains(numVotes&gt;2).meanOrientation = <span class="keyword">...</span>
+  variants(beta2alpha,grains(numVotes&gt;2).meanOrientation,parentId(numVotes&gt;2));
+
+<span class="comment">% update all grain properties that are related to the mean orientation</span>
+parentGrains = parentGrains.update;</pre><p>Lets plot map of these reconstructed beta grains</p><pre class="codeinput"><span class="comment">% define a color key</span>
+ipfKey = ipfColorKey(ebsd(betaName));
+ipfKey.inversePoleFigureDirection = vector3d.Y;
+
+<span class="comment">% and plot</span>
+plot(parentGrains(betaName), <span class="keyword">...</span>
+  ipfKey.orientation2color(parentGrains(betaName).meanOrientation),<span class="string">'figSize'</span>,<span class="string">'large'</span>)</pre><img src="TiBetaReconstructionAdvanced_05.png"> <p>We observe that this first step already results in very many Beta grains. However, the grain boundaries are still the boundaries
+            of the original alpha grains. To overcome this, we merge all Beta grains that have a misorientation angle smaller then 2.5
+            degree.
+         </p>
+         <p>As an additional consistency check we verify that each parent grain has been reconstructed from at least 2 child grains. To
+            this end we first make a testrun the merge operation and then revert all parent grains that that have less then two childs.
+            This step may not nessesary in many case.
+         </p><pre class="codeinput"><span class="comment">% test run of the merge operation</span>
+[~,parentId] = merge(parentGrains,<span class="string">'threshold'</span>,2.5*degree,<span class="string">'testRun'</span>);
+
+<span class="comment">% count the number of neighbouring child that would get merged with each child</span>
+counts = accumarray(parentId,1);
+
+<span class="comment">% revert all beta grains back to alpha grains if they would get merged with</span>
+<span class="comment">% less then 1 other child grains</span>
+setBack = counts(parentId) &lt; 2 &amp; grains.phaseId == grains.name2id(alphaName);
+parentGrains(setBack).meanOrientation = grains(setBack).meanOrientation;
+parentGrains = parentGrains.update;</pre><p>Now we perform the actual merge and the reconstruction of the parent grain boundaries.</p><pre class="codeinput"><span class="comment">% merge beta grains</span>
+[parentGrains,parentId] = merge(parentGrains,<span class="string">'threshold'</span>,2.5*degree);
+
+<span class="comment">% set up a EBSD map for the parent phase</span>
+parentEBSD = ebsd;
+
+<span class="comment">% and store there the grainIds of the parent grains</span>
+parentEBSD(<span class="string">'indexed'</span>).grainId = parentId(ebsd(<span class="string">'indexed'</span>).grainId);
+
+plot(parentGrains(betaName), <span class="keyword">...</span>
+  ipfKey.orientation2color(parentGrains(betaName).meanOrientation),<span class="string">'figSize'</span>,<span class="string">'large'</span>)</pre><img src="TiBetaReconstructionAdvanced_06.png"> <h2>Merge alpha grains to beta grains<a name="13"> </a></h2>
+         <p>After the first two steps we have quite some alpha grains have not yet transformed into beta grains. In order to merge those
+            left over alpha grains we check whether their misorientation with one of the neighbouring beta grains coincides with the parent
+            to grain orientation relationship and if yes merge them evantually with the already reconstructed beta grains.
+         </p>
+         <p>First extract a list of all neighbouring alpha - beta grains</p><pre class="codeinput"><span class="comment">% all neighbouring alpha - beta grains</span>
+grainPairs = neighbors(parentGrains(alphaName), parentGrains(betaName));</pre><p>and check how well they fit to a common parent orientation</p><pre class="codeinput"><span class="comment">% extract the corresponding meanorientations</span>
+oriAlpha = parentGrains( grainPairs(:,1) ).meanOrientation;
+oriBeta = parentGrains( grainPairs(:,2) ).meanOrientation;
+
+<span class="comment">% compute for each alpha / beta pair of grains the best fitting parentId</span>
+[parentId, fit] = calcParent(oriAlpha,oriBeta,beta2alpha,<span class="string">'numFit'</span>,2,<span class="string">'id'</span>);</pre><p>Similarly, as in the first step the command <a href="calcParent.html"><tt>calcParent</tt></a> returns a list of <tt>parentId</tt> that allows the convert the child orientations into parent orientations using the command <a href="variants.html"><tt>variants</tt></a> and the fitting to the given parent orientation. Similarly, as for the triple point we select only those alpha beta pairs
+            such that the fit is below the threshold of 2.5 degree and at the same time the second best fit is above 2.5 degree.
+         </p><pre class="codeinput"><span class="comment">% consistent pairs are those with a very small misfit</span>
+consistenPairs = fit(:,1) &lt; 5*degree &amp; fit(:,2) &gt; 5*degree;</pre><p>Next we compute for all alpha grains the majority vote of the surounding beta grains and change their orientation from alpha
+            to beta
+         </p><pre class="codeinput">parentId = majorityVote( grainPairs(consistenPairs,1), <span class="keyword">...</span>
+  parentId(consistenPairs,1), max(parentGrains.id));
+
+<span class="comment">% change grains from child to parent</span>
+hasVote = ~isnan(parentId);
+parentGrains(hasVote).meanOrientation = <span class="keyword">...</span>
+  variants(beta2alpha, parentGrains(hasVote).meanOrientation, parentId(hasVote));
+
+<span class="comment">% update grain boundaries</span>
+parentGrains = parentGrains.update;
+
+<span class="comment">% merge new beta grains into the old beta grains</span>
+[parentGrains,parentId] = merge(parentGrains,<span class="string">'threshold'</span>,5*degree);
+
+<span class="comment">% update grainId in the ebsd map</span>
+parentEBSD(<span class="string">'indexed'</span>).grainId = parentId(parentEBSD(<span class="string">'indexed'</span>).grainId);
+
+<span class="comment">% plot the result</span>
+color = ipfKey.orientation2color(parentGrains(betaName).meanOrientation);
+plot(parentGrains(betaName),color,<span class="string">'linewidth'</span>,2)</pre><img src="TiBetaReconstructionAdvanced_07.png"> <p>The above step has merged</p><pre class="codeinput">sum(hasVote)</pre><pre class="codeoutput">ans =
+       15656
+</pre><p>alpha grains into the already reconstructed beta grain. This reduces the amount of grains not yet reconstructed to</p><pre class="codeinput">sum(parentGrains(<span class="string">'Ti (alpha'</span>).grainSize) ./ sum(parentGrains.grainSize)*100</pre><pre class="codeoutput">ans =
+    1.2291
+</pre><p>percent. One way to proceed would be to repeat the steps of this section multiple time, maybe with increasing threshold, until
+            the percentage of reconstructed beta grains is sufficiently high. Another approach in to consider the left over alpha grains
+            as noise and use denoising techniques to replace them with beta orientations. This will be done in the last section.
+         </p>
+         <h2>Reconstruct beta orientations in EBSD map<a name="20"> </a></h2>
+         <p>Until now we have only recovered the beta orientations as the mean orientations of the beta grains. In this section we want
+            to set up the EBSD variable <tt>parentEBSD</tt> to contain for each pixel a reconstruction of the parent phase orientation.
+         </p>
+         <p>Therefore, we first identify all pixels that previously have been alpha titanium but now belong to a beta grain.</p><pre class="codeinput"><span class="comment">% consider only original alpha pixels that now belong to beta grains</span>
+
+isNowBeta = parentGrains.phaseId(max(1,parentEBSD.grainId)) == ebsd.name2id(betaName) &amp;<span class="keyword">...</span>
+  parentEBSD.phaseId == ebsd.name2id(alphaName);</pre><p>Next we can use once again the function <a href="calcParent.html"><tt>calcParent</tt></a> to recover the original beta orientation from the measured alpha orientation giving the mean beta orientation of the grain.
+         </p><pre class="codeinput"><span class="comment">% update beta orientation</span>
+[parentEBSD(isNowBeta).orientations, fit] = calcParent(parentEBSD(isNowBeta).orientations,<span class="keyword">...</span>
+  parentGrains(parentEBSD(isNowBeta).grainId).meanOrientation,beta2alpha);</pre><p>We obtain even a measure <tt>fit</tt> for the corespondence between the beta orientation reconstructed for a single pixel and the beta orientation of the grain.
+            Lets visualize this measure of fit
+         </p><pre class="codeinput"><span class="comment">% the beta phase</span>
+plot(parentEBSD(isNowBeta),fit ./ degree,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+mtexColorbar
+setColorRange([0,5])
+mtexColorMap(<span class="string">'LaboTeX'</span>)
+
+hold <span class="string">on</span>
+plot(parentGrains.boundary,<span class="string">'lineWidth'</span>,2)
+hold <span class="string">off</span></pre><img src="TiBetaReconstructionAdvanced_08.png"> <p>Lets finaly plot the reconstructed beta phase</p><pre class="codeinput">plot(parentEBSD(betaName),ipfKey.orientation2color(parentEBSD(betaName).orientations),<span class="string">'figSize'</span>,<span class="string">'large'</span>)</pre><img src="TiBetaReconstructionAdvanced_09.png"> <h2>Denoising of the reconstructed beta phase<a name="24"> </a></h2>
+         <p>As promised we end our discussion by applying denoising techniques to fill the remaining holes of alpha grains. To this end
+            we first reconstruct grains from the parent orientations and throw away all small grains
+         </p><pre class="codeinput">[parentGrains,parentEBSD.grainId] = calcGrains(parentEBSD(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,5*degree);
+
+<span class="comment">% remove all the small grains</span>
+parentEBSD = parentEBSD(parentGrains(parentGrains.grainSize &gt; 15));
+
+<span class="comment">% redo grain reconstruction</span>
+[parentGrains,parentEBSD.grainId] = calcGrains(parentEBSD(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,5*degree);
+
+<span class="comment">% smooth the grains a bit</span>
+parentGrains = smooth(parentGrains,5);</pre><p>Finally, we denoise the remaining beta orientations and at the same time fill the empty holes. We choose a very small smoothing
+            parameter <tt>alpha</tt> to keep as many details as possible.
+         </p><pre class="codeinput">F= halfQuadraticFilter;
+F.alpha = 0.1;
+parentEBSD = smooth(parentEBSD,F,<span class="string">'fill'</span>,parentGrains);
+
+<span class="comment">% plot the resulting beta phase</span>
+plot(parentEBSD(betaName),ipfKey.orientation2color(parentEBSD(betaName).orientations),<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+
+hold <span class="string">on</span>
+plot(parentGrains.boundary,<span class="string">'lineWidth'</span>,3)
+hold <span class="string">off</span></pre><img src="TiBetaReconstructionAdvanced_10.png"> <p>For comparison the map with original alpha phase and on top the recovered beta grain boundaries</p><pre class="codeinput">plot(ebsd(alphaName),ebsd(alphaName).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+
+hold <span class="string">on</span>
+plot(parentGrains.boundary,<span class="string">'lineWidth'</span>,3)
+hold <span class="string">off</span></pre><img src="TiBetaReconstructionAdvanced_11.png"> <h2>Summary of relevant thresholds<a name="27"> </a></h2>
+         <p>In parent grain reconstruction several parameters are involve are decicive for the success of the reconstruction</p>
+         <div>
+            <ul type="square">
+               <li>threshold for initial grain segmentation (1.5*degree)</li>
+               <li>maximum misfit at triple junctions (2.5 degree)</li>
+               <li>minimal misfit of the second best solution at triple junctions (2.5 degree)</li>
+               <li>minimum number of consistent votes (2)</li>
+               <li>threshold for merging beta grains (can be skipped)</li>
+               <li>threshold for merging alpha and beta grains (2.5 degree)</li>
+            </ul>
+         </div>
+         <p>Visualize the misorientation to the mean reveals quite some fine structure in the reconstructed parent orientations.</p><pre class="codeinput">cKey = axisAngleColorKey;
+color = cKey.orientation2color(parentEBSD(betaName).orientations, parentGrains(parentEBSD(betaName).grainId).meanOrientation);
+plot(parentEBSD(betaName),color)
+
+hold <span class="string">on</span>
+plot(parentGrains.boundary,<span class="string">'lineWidth'</span>,3)
+hold <span class="string">off</span></pre><img src="TiBetaReconstructionAdvanced_12.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,99 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>The Spherical Bingham Distribution ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: S2FunBingham -->
+      <!-- HEADSTUFF: S2FunBingham -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:S2FunBingham">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">The Spherical Bingham Distribution</h1>
+         <div class="subheading"></div>
+         <p>The Bingham distribution on the sphere is an antipodal symmetric distribution (Bingham, 1974) with a probabiliy density function
+            given by
+         </p>
+         <p><img src="S2FunBingham_eq14797696958592296987.png"> </p>
+         <p>where <img src="S2FunBingham_eq05147331747641807187.png">  is an orthognal covariance matrix, and <img src="S2FunBingham_eq05013124788323701083.png">  a concentration matrix with <img src="S2FunBingham_eq02587373517082466763.png">  with <img src="S2FunBingham_eq15065425265083699199.png"> .
+         </p>
+         <p>In mtex <img src="S2FunBingham_eq05013124788323701083.png">  is given by <tt>Z = [k1,k2,k3]</tt> with <tt>k3 = 0</tt> and <img src="S2FunBingham_eq05147331747641807187.png">  is given by three orthognal vectors.
+         </p>
+         <p><a href="https://www.jstor.org/stable/2958339">Bingham, C., An Antipodally Symmetric Distribution on the Sphere, The Annals of Statistics Vol. 2, No. 6 (Nov., 1974), pp.
+               1201-1225</a></p><pre class="codeinput"><span class="comment">% A simple example:</span>
+Z = [-10 -4 0]
+a = rotation.rand(1).*vector3d([xvector yvector zvector])
+bs2 = BinghamS2(Z,a);
+plot(bs2)</pre><pre class="codeoutput">Z =
+   -10    -4     0
+ 
+a = vector3d  
+ size: 1 x 3
+           x          y          z
+    0.936489  -0.283284  -0.206733
+  -0.0396795  -0.671298   0.740125
+   -0.348445  -0.684916  -0.639903
+</pre><img src="S2FunBingham_01.png"> <h2>Meaning of <img src="S2FunBingham_eq05013124788323701083.png"> <a name="2"> </a></h2>
+         <p><img src="S2FunBingham_eq17849047336115541980.png">  defines a rotationally symmetric point maximum and <img src="S2FunBingham_eq15074469217648866065.png">  defines a girdle distribution.
+         </p><pre class="codeinput">close
+kappa = [0 4 8 12 24];
+mtexFig = newMtexFigure(<span class="string">'layout'</span>,[length(kappa) length(kappa)]);
+<span class="keyword">for</span> k2 = kappa
+  <span class="keyword">for</span> k1 = kappa
+    <span class="keyword">if</span> k1 &gt;= k2
+      bs=BinghamS2([-k1 -k2 0]);
+      plot(bs,<span class="string">'colorRange'</span>,[0,25],<span class="string">'TR'</span>,[{<span class="string">'$\kappa_1 :$'</span>} ; num2str(k1)],<span class="string">'BR'</span>,[{<span class="string">'$\kappa_2 :$'</span>} ; num2str(k2)])
+<span class="comment">%       mtexTitle(['$\kappa_1 :$' num2str(k1)  '  ' '$\kappa_2 :$' num2str(k2)],'FontSize',14)</span>
+      nextAxis
+    <span class="keyword">else</span>
+      nextAxis
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+CLim(mtexFig,<span class="string">'equal'</span>)
+mtexFig.drawNow;</pre><img src="S2FunBingham_02.png"> <h2>Drawing a random sample of the Bingham distribution<a name="3"> </a></h2><pre class="codeinput">close
+v = bs2.discreteSample(500)
+plot(bs2)
+hold <span class="string">on</span>
+plot(v,<span class="string">'MarkerFaceColor'</span>,<span class="string">'k'</span>)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+v = vector3d  
+ size: 500 x 1
+ antipodal: true
+</pre><img src="S2FunBingham_03.png"> <h2>Estimating a spherical Bingham distribution from discrete data<a name="4"> </a></h2>
+         <p>Given arbitrarily scattered data <tt>v</tt> on the sphere we can estimate the best fitting Bingham distribution by
+         </p><pre class="codeinput"><span class="comment">% estimate a Bingham distribution</span>
+bs = BinghamS2.fit(v,<span class="string">'confElli'</span>,0.99)</pre><pre class="codeoutput"> 
+bs = BinghamS2  
+</pre><p>Lets plot the fitted distribution with the data</p><pre class="codeinput">plot(bs)
+hold <span class="string">on</span>
+plot(v,<span class="string">'MarkerFaceColor'</span>,<span class="string">'Black'</span>)
+hold <span class="string">off</span></pre><img src="S2FunBingham_04.png"> <p>Under the assumption of sufficiently many and sufficently concetrated data we may also estimate a confidence ellipse for the
+            mean direction (default p = 0.95). The center of the ellipse is given by the largest principle vector stored in <tt>bs.a(3)</tt></p><pre class="codeinput">annotate(bs.a(3),<span class="string">'MarkerFaceColor'</span>,<span class="string">'red'</span>,<span class="string">'MarkerSize'</span>,10)</pre><img src="S2FunBingham_05.png"> <p>The orientation of the ellipse is specified by all the principle vectors <tt>bs.a</tt> and the a and b axes are computed by the command <tt>cEllipse</tt></p><pre class="codeinput"><span class="comment">% annotate the ellipse</span>
+ellipse(rotation(<span class="string">'matrix'</span>,bs.a.xyz'),bs.cEllipse(1),bs.cEllipse(2), <span class="keyword">...</span>
+    <span class="string">'linewidth'</span>,2,<span class="string">'lineColor'</span>,<span class="string">'r'</span>,<span class="string">'linestyle'</span>,<span class="string">'-.'</span>)</pre><img src="S2FunBingham_06.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

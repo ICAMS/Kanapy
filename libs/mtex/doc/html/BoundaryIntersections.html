@@ -1,0 +1,69 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Line intersections ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: BoundaryIntersections -->
+      <!-- HEADSTUFF: BoundaryIntersections -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:BoundaryIntersections">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Line intersections</h1>
+         <div class="subheading"></div>
+         <p>In this section we discus how to analyze grain boundary by intersecting them with certain lines. Lets start by importing some
+            EBSD data and computing grain boundaries.
+         </p><pre class="codeinput"><span class="comment">% load some example data</span>
+mtexdata <span class="string">twins</span> <span class="string">silent</span>
+
+<span class="comment">% detect grains</span>
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+
+<span class="comment">% smooth them</span>
+grains = grains.smooth;
+
+<span class="comment">% visualize the grains</span>
+plot(grains,grains.meanOrientation)
+
+<span class="comment">% extract all grain boundaries</span>
+gB = grains.boundary;
+
+hold <span class="string">on</span>
+plot(gB,<span class="string">'LineWidth'</span>,2)
+hold <span class="string">off</span></pre><img src="BoundaryIntersections_01.png"> <p>Let start by defining some line by its endpoints and plot in on top of the boundary plot</p><pre class="codeinput">xy1 = [10,10];   <span class="comment">% staring point</span>
+xy2 = [41,41]; <span class="comment">% end point</span>
+
+line([xy1(1);xy2(1)],[xy1(2);xy2(2)],<span class="string">'linestyle'</span>,<span class="string">':'</span>,<span class="string">'linewidth'</span>,4,<span class="string">'color'</span>,<span class="string">'white'</span>)</pre><img src="BoundaryIntersections_02.png"> <p>The command <a href="grainBoundary.intersect.html">intersect</a> computes the intersections of all boundary segments with the given line
+         </p><pre class="codeinput">[x,y] = grains.boundary.intersect(xy1,xy2);
+hold <span class="string">on</span>
+scatter(x,y,<span class="string">'blue'</span>,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span>
+<span class="comment">% find the number of intersection points</span>
+sum(~isnan(x))</pre><pre class="codeoutput">ans =
+    28
+</pre><img src="BoundaryIntersections_03.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

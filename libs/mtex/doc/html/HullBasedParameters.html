@@ -1,0 +1,88 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Convex Hull Based Shape Parameters ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: HullBasedParameters -->
+      <!-- HEADSTUFF: HullBasedParameters -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:HullBasedParameters">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Convex Hull Based Shape Parameters</h1>
+         <div class="subheading"></div>
+         <p>In this section we discuss geometric properties of grains that are related to the convex hull of the grains. In the follwing
+            we illustarte these properties with some artificial grain shapes
+         </p><pre class="codeinput"><span class="comment">% import the artificial grain shapes</span>
+mtexdata <span class="string">testgrains</span> <span class="string">silent</span>
+
+<span class="comment">% select and smooth a few interesting grains</span>
+grains = smooth(grains(<span class="string">'id'</span>,[2 3 9 11 15 16 18 23 31 33 38 40]),3);</pre><p><a href="grain2d.smooth.html">Smoothing</a> of grains is necessary since otherwise many grain segments are either vertical or horizontal (for a square grid) and perimeters
+            rather measure the "cityblock" distance. See also <a href="https://t.co/1vQ3SR8noy?amp=1">https://t.co/1vQ3SR8noy?amp=1</a> for examples. Note, that for very small grains, the error between the smoothed grains and their convex hull may lead to unsatisfactory
+            results.
+         </p>
+         <p>The convex hull of a list of grains can be computed by the command <a href="grain2d.hull.html"><tt>hull</tt></a>. The result is a list of convex grains which can be analyzed almost analogously like the original list of grains.
+         </p><pre class="codeinput"><span class="comment">% compute convex hull grains</span>
+chGrains = grains.hull;
+
+<span class="comment">% plot the original grains</span>
+plot(grains,<span class="string">'micronbar'</span>,<span class="string">'off'</span>), legend <span class="string">off</span>
+
+<span class="comment">% and on top of them the convex hull</span>
+hold <span class="string">on</span>
+plot(chGrains.boundary,<span class="string">'lineWidth'</span>,2,<span class="string">'lineColor'</span>,<span class="string">'r'</span>)
+hold <span class="string">off</span></pre><img src="HullBasedParameters_01.png"> <p>One major difference is that grains may now overlap but their convex hulls usually do. Accordingly, the boundaries of the
+            convex hull grains are not a boundaries between adjecent grains and, therefore, the second phase in all convex hull boundary
+            segments is set to <tt>'notIndexed'</tt>.
+         </p>
+         <h2>Deviation from fully convex shapes<a name="4"> </a></h2>
+         <p>There are various measures to describe the deviation from fully convex shapes, i.e. the lobateness of grains. Many of these
+            are based on the differences between the convex hull of the grain and the grain itself. Depending on the type of deviation
+            from the fully convex shape, some measures might be more appropriate over others.
+         </p>
+         <p>One measure is the relative difference between the grain perimeter and the perimeter of the convex hull. It most strongly
+            discriminizes grains with thin, narrow indenting parts, e.g. fracture which not entirely dissect a grain.
+         </p><pre class="codeinput">deltaP = 100 * (grains.perimeter-chGrains.perimeter) ./ grains.perimeter;</pre><p>A similar measure is the <a href="grain2d.paris.html">paris</a> which stands for Percentile Average Relative Indented Surface and gives the difference between the actual perimeter and the
+            perimeter of the convex hull, relative to the convex hull.
+         </p><pre class="codeinput">paris = 200 * (grains.perimeter - chGrains.perimeter) ./ chGrains.perimeter;</pre><p>The relative difference between the grain area and the area within the convex hull is more indicative for a broad lobateness
+            of grains
+         </p><pre class="codeinput">deltaA = 100 * (chGrains.area - grains.area) ./ chGrains.area;</pre><p>The total deviation from the fully convex shape can be expressed by</p><pre class="codeinput">radiusD = sqrt(deltaP.^2 + deltaA.^2);</pre><p>Lets visualize all these shape parameters in one plot</p><pre class="codeinput">plot(grains,deltaP,<span class="string">'layout'</span>,[2 2],<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+mtexTitle(<span class="string">'deltaP'</span>)
+
+nextAxis
+plot(grains,grains.paris,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+mtexTitle(<span class="string">'paris'</span>)
+
+nextAxis
+plot(grains,deltaA,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+mtexTitle(<span class="string">'deltaA'</span>)
+
+nextAxis
+plot(grains,radiusD,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+mtexTitle(<span class="string">'radiusD'</span>)
+mtexColorbar</pre><img src="HullBasedParameters_02.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

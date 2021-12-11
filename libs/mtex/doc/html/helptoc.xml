@@ -1,0 +1,1894 @@
+<?xml version="1.0" encoding="utf-8"?>
+<toc>
+   <tocitem target="DocumentationMatlab.html">MTEX Toolbox<tocitem target="Tutorials.html">Tutorials<tocitem target="EBSDTutorial.html">EBSD</tocitem>
+         <tocitem target="GrainTutorial.html">Grains</tocitem>
+         <tocitem target="PoleFigureTutorial.html">Pole Figure Data</tocitem>
+         <tocitem target="ODFTutorial.html">ODFs</tocitem>
+         <tocitem target="ImportFromVPSC.html">Import from VPSC</tocitem>
+      </tocitem>
+      <tocitem target="GeneralConcepts.html">General Concepts<tocitem target="changelog.html">MTEX Changelog</tocitem>
+         <tocitem target="ListsAndIndexing.html">Lists and Indexing</tocitem>
+         <tocitem target="GeneralConceptsConfiguration.html">Configuration</tocitem>
+         <tocitem target="GeneralConceptsOptions.html">Options</tocitem>
+         <tocitem target="Properties.html">Properties</tocitem>
+         <tocitem target="DensityEstimation.html">Density Estimation</tocitem>
+         <tocitem target="OptimalKernel.html">Optimal Kernel Selection</tocitem>
+         <tocitem target="ClusterDemo.html">Cluster demo</tocitem>
+      </tocitem>
+      <tocitem target="Vectors.html">Vectors<tocitem target="VectorsDefinition.html">Definition</tocitem>
+         <tocitem target="VectorsImport.html">Import</tocitem>
+         <tocitem target="VectorsExport.html">Export</tocitem>
+         <tocitem target="VectorsOperations.html">Operations</tocitem>
+         <tocitem target="VectorsDensityEstimation.html">Density Estimation</tocitem>
+         <tocitem target="VectorsAxes.html">Axes</tocitem>
+         <tocitem target="VectorGrids.html">Spherical Grids</tocitem>
+      </tocitem>
+      <tocitem target="Rotations.html">Rotations<tocitem target="RotationDefinition.html">Definition</tocitem>
+         <tocitem target="RotationImproper.html">Improper Rotations</tocitem>
+         <tocitem target="RotationOperations.html">Operations</tocitem>
+         <tocitem target="RotationPlotting.html">Plotting</tocitem>
+         <tocitem target="RotationImport.html">Import</tocitem>
+         <tocitem target="RotationExport.html">Export</tocitem>
+         <tocitem target="RotationFibre.html">Fibres</tocitem>
+         <tocitem target="RotationSpinTensor.html">Spin Tensor</tocitem>
+      </tocitem>
+      <tocitem target="CrystalGeometry.html">Crystal Geometry<tocitem target="CrystalSymmetries.html">Crystal Symmetries</tocitem>
+         <tocitem target="CrystalDirections.html">Miller Indicies</tocitem>
+         <tocitem target="CrystalOperations.html">Operations</tocitem>
+         <tocitem target="CrystalReferenceSystem.html">Reference System</tocitem>
+         <tocitem target="SymmetryAlignment.html">Crystal Axes Alignment</tocitem>
+         <tocitem target="CrystalShapes.html">Crystal Shapes</tocitem>
+         <tocitem target="CrystalShapeSmorf.html">Advanced Crystal Shapes</tocitem>
+         <tocitem target="FundamentalSector.html">Fundamental Sector</tocitem>
+         <tocitem target="QuasiCrystals.html">Quasi Symmetries</tocitem>
+      </tocitem>
+      <tocitem target="CrystalOrientations.html">Orientations<tocitem target="OrientationDefinition.html">Definition</tocitem>
+         <tocitem target="DefinitionAsCoordinateTransform.html">Theory</tocitem>
+         <tocitem target="OrientationSymmetry.html">Symmetry</tocitem>
+         <tocitem target="OrientationStandard.html">Standard Orientations</tocitem>
+         <tocitem target="MTEXvsBungeConvention.html">MTEX vs. Bunge Convention</tocitem>
+         <tocitem target="OrientationPoleFigure.html">Pole Figures</tocitem>
+         <tocitem target="OrientationInversePoleFigure.html">Inverse Pole Figure</tocitem>
+         <tocitem target="OrientationVisualization3d.html">3D Plots</tocitem>
+         <tocitem target="OrientationVisualizationSections.html">Section Plots</tocitem>
+         <tocitem target="OrientationFundamentalRegion.html">Fundamenal Region</tocitem>
+         <tocitem target="SpecimenSymmetry.html">Specimen Symmetry</tocitem>
+         <tocitem target="OrientationGrid.html">Grids</tocitem>
+         <tocitem target="OrientationFibre.html">Fibres</tocitem>
+         <tocitem target="OrientationImport.html">Import</tocitem>
+         <tocitem target="OrientationExport.html">Export</tocitem>
+         <tocitem target="OrientationEmbeddings.html">Embeddings</tocitem>
+      </tocitem>
+      <tocitem target="Misorientations.html">Misorientations<tocitem target="MisorientationTheory.html">Theory</tocitem>
+         <tocitem target="Twinning.html">Twinning</tocitem>
+         <tocitem target="MisorientationDistributionFunction.html">Misorientation Distribution Function</tocitem>
+         <tocitem target="AxisDistributionFunction.html">Axis Distribution Function</tocitem>
+         <tocitem target="AngleDistributionFunction.html">Angle Distribution Function</tocitem>
+      </tocitem>
+      <tocitem target="ODFAnalysis.html">ODF<tocitem target="ODFTheory.html">Theory</tocitem>
+         <tocitem target="ODFModeling.html">Calculations</tocitem>
+         <tocitem target="ODFPlot.html">Plot</tocitem>
+         <tocitem target="ODFPoleFigure.html">Pole Figures</tocitem>
+         <tocitem target="ODFInversePoleFigure.html">Inverse Pole Figures</tocitem>
+         <tocitem target="EulerAngleSections.html">Euler Angle Section</tocitem>
+         <tocitem target="SigmaSections.html">Sigma Sections</tocitem>
+         <tocitem target="ODFComponents.html">Components</tocitem>
+         <tocitem target="ODFCharacteristics.html">Properties</tocitem>
+         <tocitem target="UnimodalODFs.html">UnimodalODFs</tocitem>
+         <tocitem target="FibreODFs.html">Fibre ODF</tocitem>
+         <tocitem target="BinghamODFs.html">Bingham ODF</tocitem>
+         <tocitem target="HarmonicODFs.html">Series Expansion</tocitem>
+         <tocitem target="ODFImport.html">Import</tocitem>
+         <tocitem target="ODFExport.html">Export</tocitem>
+         <tocitem target="RandomSampling.html">Random Sampling</tocitem>
+         <tocitem target="DensityEstimation.html">Density Estimation</tocitem>
+         <tocitem target="DetectionOfSampleSymmetry.html">Sample Symmetry</tocitem>
+         <tocitem target="ODFShapes.html">Shapes</tocitem>
+      </tocitem>
+      <tocitem target="PoleFigureAnalysis.html">Pole Figures<tocitem target="PoleFigureImport.html">Import</tocitem>
+         <tocitem target="PoleFigurePlot.html">Plot</tocitem>
+         <tocitem target="PoleFigureCorrection.html">Modify</tocitem>
+         <tocitem target="PoleFigure2ODF.html">ODF Reconstruction</tocitem>
+         <tocitem target="PoleFigureSimulation.html">Simulation</tocitem>
+         <tocitem target="PoleFigure2ODFAmbiguity.html">The Gost Effect</tocitem>
+         <tocitem target="PoleFigure2ODFGhostCorrection.html">Ghost Correction</tocitem>
+         <tocitem target="PoleFigureSantaFe.html">Santa Fe Example</tocitem>
+         <tocitem target="PoleFigureDubna.html">Dubna Example</tocitem>
+         <tocitem target="PoleFigureExport.html">Export</tocitem>
+      </tocitem>
+      <tocitem target="EBSDAnalysis.html">EBSD<tocitem target="EBSDImport.html">Import</tocitem>
+         <tocitem target="EBSDReferenceFrame.html">Reference Frame</tocitem>
+         <tocitem target="EBSDPlotting.html">Plot</tocitem>
+         <tocitem target="EBSDIPFMap.html">IPF Maps</tocitem>
+         <tocitem target="EBSDOrientationPlots.html">Orientation Plots</tocitem>
+         <tocitem target="EBSDSelect.html">Select</tocitem>
+         <tocitem target="EBSDIndex.html">Select by Index</tocitem>
+         <tocitem target="EBSDOrientationAnalysis.html">Orientation Analysis</tocitem>
+         <tocitem target="GrainReconstruction.html">Grain Reconstruction</tocitem>
+         <tocitem target="EBSDGrid.html">Square and Hex Grids</tocitem>
+         <tocitem target="EBSDDenoising.html">Denoising</tocitem>
+         <tocitem target="EBSDFilling.html">Filling Missing Data</tocitem>
+         <tocitem target="EBSDInter.html">Regridding and Interpolation</tocitem>
+         <tocitem target="EBSD2ODF.html">ODF Estimation</tocitem>
+         <tocitem target="EBSDOrientationPlots.html">Orientation Plots</tocitem>
+         <tocitem target="EBSDSharpPlot.html">Sharp Color Keys</tocitem>
+         <tocitem target="EBSDAdvancedMaps.html">Advanced Plotting</tocitem>
+         <tocitem target="EBSDKAM.html">KAM</tocitem>
+         <tocitem target="EBSDGROD.html">Mis2Mean / GROD</tocitem>
+         <tocitem target="EBSDProfile.html">Profiles</tocitem>
+         <tocitem target="EBSDSimulation.html">Simulation</tocitem>
+         <tocitem target="EBSDExport.html">Export</tocitem>
+      </tocitem>
+      <tocitem target="Grains.html">Grains<tocitem target="GrainReconstruction.html">Reconstruction</tocitem>
+         <tocitem target="GrainSpatialPlots.html">Plot</tocitem>
+         <tocitem target="SelectingGrains.html">Select</tocitem>
+         <tocitem target="ShapeParameters.html">Shape Parameters</tocitem>
+         <tocitem target="EllipseBasedParameters.html">Ellipse Fitting</tocitem>
+         <tocitem target="HullBasedParameters.html">Convex Hull Parameters</tocitem>
+         <tocitem target="ProjectionBasedParameters.html">Projection Parameters</tocitem>
+         <tocitem target="GrainOrientationParameters.html">Orientation Parameters</tocitem>
+         <tocitem target="GrainNeighbours.html">Neighbours</tocitem>
+         <tocitem target="GrainMerge.html">Merge</tocitem>
+         <tocitem target="GrainReconstructionAdvanced.html">Advanced Reconstruction</tocitem>
+         <tocitem target="GrainExport.html">Export</tocitem>
+      </tocitem>
+      <tocitem target="GrainBoundaries.html">Grain Boundaries<tocitem target="BoundarySelect.html">Select</tocitem>
+         <tocitem target="BoundaryPlots.html">Plot</tocitem>
+         <tocitem target="BoundaryProperties.html">Properties</tocitem>
+         <tocitem target="SubGrainBoundaries.html">Subgrain Boundaries</tocitem>
+         <tocitem target="TiltAndTwistBoundaries.html">Twist and Tilt</tocitem>
+         <tocitem target="CSLBoundaries.html">CSL</tocitem>
+         <tocitem target="BoundaryCurvature.html">Curvature</tocitem>
+         <tocitem target="GrainSmoothing.html">Smoothing</tocitem>
+         <tocitem target="TwinningBoundaries.html">Twinning</tocitem>
+         <tocitem target="TriplePoints.html">Triple Points</tocitem>
+         <tocitem target="BoundaryIntersections.html">Intersections</tocitem>
+      </tocitem>
+      <tocitem target="Tensors.html">Tensors<tocitem target="TensorDefinition.html">Definition</tocitem>
+         <tocitem target="TensorImport.html">Import</tocitem>
+         <tocitem target="TensorArithmetics.html">Arithmethics</tocitem>
+         <tocitem target="TensorVisualisation.html">Plotting</tocitem>
+         <tocitem target="TensorAverage.html">Averages</tocitem>
+         <tocitem target="PiezoElectricity.html">Piezo Electricity</tocitem>
+         <tocitem target="BirefringenceDemo.html">Birefringence</tocitem>
+         <tocitem target="MagneticAnisotropy.html">Magnetic Anisotropy</tocitem>
+      </tocitem>
+      <tocitem target="Elasticity.html">Elasticity<tocitem target="IsotropicTheory.html">Isotropic Theory</tocitem>
+         <tocitem target="AnisotropicTheory.html">Anisotropic Elasticity</tocitem>
+         <tocitem target="WaveVelocities.html">Wave Velocities</tocitem>
+         <tocitem target="CPOSeismicProperties.html">Plot seismic wave velocities and polarization directions for aggregates</tocitem>
+      </tocitem>
+      <tocitem target="Plasticity.html">Plasticity<tocitem target="SlipSystems.html">Slip Systems</tocitem>
+         <tocitem target="SchmidtFactor.html">The Schmid Factor</tocitem>
+         <tocitem target="TaylorModel.html">Taylor Model</tocitem>
+         <tocitem target="TaylorHex.html">Texture evolution in rolled magnesium during uniaxial tension</tocitem>
+         <tocitem target="SachsModel.html">Sachs Model</tocitem>
+         <tocitem target="SlipTransmission.html">Slip Transmission</tocitem>
+         <tocitem target="GND.html">Geometrically Necessary Dislocations</tocitem>
+         <tocitem target="VPSCImport.html">Import from VPSC</tocitem>
+         <tocitem target="TextureEvolution.html">Texture Evolution</tocitem>
+         <tocitem target="TaylorHex.html">Texture evolution in rolled magnesium during uniaxial tension</tocitem>
+      </tocitem>
+      <tocitem target="PhaseTransitions.html">Phase Transitions<tocitem target="ParentChildVariants.html">Parent Child Variants</tocitem>
+         <tocitem target="MartensiteVariants.html">Martensite Variants</tocitem>
+         <tocitem target="TiBetaReconstruction.html">Parent Beta Phase Reconstruction in Titanium Alloys</tocitem>
+         <tocitem target="MaParentGrainReconstruction.html">Martensite Parent Grain Reconstruction</tocitem>
+         <tocitem target="TransformationTexture.html">Transformation Texture</tocitem>
+         <tocitem target="TiBetaReconstructionAdvanced.html">Parent Beta Phase Reconstruction in Titanium Alloys</tocitem>
+         <tocitem target="MaParentGrainReconstructionAdvanced.html">Martensite Parent Grain Reconstruction</tocitem>
+         <tocitem target="GrainMerge.html">Merging Grains</tocitem>
+      </tocitem>
+      <tocitem target="SphericalFunctions.html">Spherical Functions<tocitem target="S2FunConcept.html">Concept</tocitem>
+         <tocitem target="S2FunOperations.html">Operations</tocitem>
+         <tocitem target="S2FunPlotting.html">Plotting</tocitem>
+         <tocitem target="S2FunApproximationInterpolation.html">Approximation and Interpolation</tocitem>
+         <tocitem target="S2FunHarmonicRepresentation.html">Harmonic Representation</tocitem>
+         <tocitem target="S2FunBingham.html">Bingham Distribution</tocitem>
+         <tocitem target="S2FunRadon.html">Radon Transform</tocitem>
+         <tocitem target="S2FunVectorField.html">Vector Field</tocitem>
+         <tocitem target="S2FunAxisField.html">Axis Field</tocitem>
+         <tocitem target="S2FunSym.html">Symmetric Function</tocitem>
+         <tocitem target="S2FunMultivariate.html">Multivariate Functions</tocitem>
+      </tocitem>
+      <tocitem target="Plotting.html">Plotting<tocitem target="PlotTypes.html">Plot Types</tocitem>
+         <tocitem target="AxesAlignment.html">Axes Alignment</tocitem>
+         <tocitem target="CombinedPlots.html">Combined Plots</tocitem>
+         <tocitem target="Multiplot.html">Multiplot</tocitem>
+         <tocitem target="Annotations.html">Annotations</tocitem>
+         <tocitem target="PlottingExport.html">Export</tocitem>
+         <tocitem target="SphericalProjections.html">Spherical Projections</tocitem>
+         <tocitem target="Legends.html">Legends</tocitem>
+         <tocitem target="ColorMaps.html">Color Mapping</tocitem>
+         <tocitem target="ContourPlots.html">Contour Plots</tocitem>
+         <tocitem target="TransparencyDemo.html">Transparencys</tocitem>
+      </tocitem>
+      <tocitem target="FunctionReference.html">Function Reference<tocitem target="geometry_index.html">Geometry<tocitem target="GeometryOverview.html">Overview</tocitem>
+            <tocitem target="vector3d_index.html">vector3d<tocitem target="vector3d.vector3d.html">vector3d</tocitem>
+               <tocitem target="vector3d.abs.html">abs</tocitem>
+               <tocitem target="vector3d.accumarray.html">accumarray</tocitem>
+               <tocitem target="vector3d.angle.html">angle</tocitem>
+               <tocitem target="vector3d.angle_outer.html">angle_outer</tocitem>
+               <tocitem target="vector3d.arrow3d.html">arrow3d</tocitem>
+               <tocitem target="vector3d.byPolar.html">byPolar</tocitem>
+               <tocitem target="vector3d.calcCluster.html">calcCluster</tocitem>
+               <tocitem target="vector3d.calcDelaunay.html">calcDelaunay</tocitem>
+               <tocitem target="vector3d.calcDensity.html">calcDensity</tocitem>
+               <tocitem target="vector3d.calcQuadratureWeights.html">calcQuadratureWeights</tocitem>
+               <tocitem target="vector3d.calcVoronoi.html">calcVoronoi</tocitem>
+               <tocitem target="vector3d.calcVoronoiArea.html">calcVoronoiArea</tocitem>
+               <tocitem target="vector3d.cat.html">cat</tocitem>
+               <tocitem target="vector3d.centroid.html">centroid</tocitem>
+               <tocitem target="vector3d.char.html">char</tocitem>
+               <tocitem target="vector3d.circle.html">circle</tocitem>
+               <tocitem target="vector3d.contour.html">contour</tocitem>
+               <tocitem target="vector3d.contourf.html">contourf</tocitem>
+               <tocitem target="vector3d.cross.html">cross</tocitem>
+               <tocitem target="vector3d.cross_outer.html">cross_outer</tocitem>
+               <tocitem target="vector3d.ctranspose.html">ctranspose</tocitem>
+               <tocitem target="vector3d.det.html">det</tocitem>
+               <tocitem target="vector3d.display.html">display</tocitem>
+               <tocitem target="vector3d.dot.html">dot</tocitem>
+               <tocitem target="vector3d.dot_outer.html">dot_outer</tocitem>
+               <tocitem target="vector3d.double.html">double</tocitem>
+               <tocitem target="vector3d.dyad.html">dyad</tocitem>
+               <tocitem target="vector3d.eig.html">eig</tocitem>
+               <tocitem target="vector3d.end.html">end</tocitem>
+               <tocitem target="vector3d.eq.html">eq</tocitem>
+               <tocitem target="vector3d.exp.html">exp</tocitem>
+               <tocitem target="vector3d.export.html">export</tocitem>
+               <tocitem target="vector3d.find.html">find</tocitem>
+               <tocitem target="vector3d.gridify.html">gridify</tocitem>
+               <tocitem target="vector3d.histogram.html">histogram</tocitem>
+               <tocitem target="vector3d.horzcat.html">horzcat</tocitem>
+               <tocitem target="vector3d.interp.html">interp</tocitem>
+               <tocitem target="vector3d.isPerp.html">isPerp</tocitem>
+               <tocitem target="vector3d.isempty.html">isempty</tocitem>
+               <tocitem target="vector3d.length.html">length</tocitem>
+               <tocitem target="vector3d.line.html">line</tocitem>
+               <tocitem target="vector3d.load.html">load</tocitem>
+               <tocitem target="vector3d.matrix.html">matrix</tocitem>
+               <tocitem target="vector3d.mean.html">mean</tocitem>
+               <tocitem target="vector3d.minus.html">minus</tocitem>
+               <tocitem target="vector3d.mpower.html">mpower</tocitem>
+               <tocitem target="vector3d.mrdivide.html">mrdivide</tocitem>
+               <tocitem target="vector3d.mtimes.html">mtimes</tocitem>
+               <tocitem target="vector3d.nan.html">nan</tocitem>
+               <tocitem target="vector3d.nan2zero.html">nan2zero</tocitem>
+               <tocitem target="vector3d.nansum.html">nansum</tocitem>
+               <tocitem target="vector3d.ndims.html">ndims</tocitem>
+               <tocitem target="vector3d.ne.html">ne</tocitem>
+               <tocitem target="vector3d.norm.html">norm</tocitem>
+               <tocitem target="vector3d.normalize.html">normalize</tocitem>
+               <tocitem target="vector3d.ones.html">ones</tocitem>
+               <tocitem target="vector3d.orth.html">orth</tocitem>
+               <tocitem target="vector3d.orthProj.html">orthProj</tocitem>
+               <tocitem target="vector3d.pcolor.html">pcolor</tocitem>
+               <tocitem target="vector3d.perp.html">perp</tocitem>
+               <tocitem target="vector3d.planeIntersect.html">planeIntersect</tocitem>
+               <tocitem target="vector3d.plot.html">plot</tocitem>
+               <tocitem target="vector3d.plot3d.html">plot3d</tocitem>
+               <tocitem target="vector3d.plotCustom.html">plotCustom</tocitem>
+               <tocitem target="vector3d.plus.html">plus</tocitem>
+               <tocitem target="vector3d.polar.html">polar</tocitem>
+               <tocitem target="vector3d.polyArea.html">polyArea</tocitem>
+               <tocitem target="vector3d.project2FundamentalRegion.html">project2FundamentalRegion</tocitem>
+               <tocitem target="vector3d.quiver.html">quiver</tocitem>
+               <tocitem target="vector3d.quiver3.html">quiver3</tocitem>
+               <tocitem target="vector3d.rand.html">rand</tocitem>
+               <tocitem target="vector3d.rank.html">rank</tocitem>
+               <tocitem target="vector3d.rdivide.html">rdivide</tocitem>
+               <tocitem target="vector3d.refine.html">refine</tocitem>
+               <tocitem target="vector3d.region.html">region</tocitem>
+               <tocitem target="vector3d.repmat.html">repmat</tocitem>
+               <tocitem target="vector3d.reshape.html">reshape</tocitem>
+               <tocitem target="vector3d.rotate.html">rotate</tocitem>
+               <tocitem target="vector3d.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="vector3d.round.html">round</tocitem>
+               <tocitem target="vector3d.scatter.html">scatter</tocitem>
+               <tocitem target="vector3d.scatter3d.html">scatter3d</tocitem>
+               <tocitem target="vector3d.setdiff.html">setdiff</tocitem>
+               <tocitem target="vector3d.size.html">size</tocitem>
+               <tocitem target="vector3d.smooth.html">smooth</tocitem>
+               <tocitem target="vector3d.sparse.html">sparse</tocitem>
+               <tocitem target="vector3d.subSet.html">subSet</tocitem>
+               <tocitem target="vector3d.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="vector3d.subsref.html">subsref</tocitem>
+               <tocitem target="vector3d.sum.html">sum</tocitem>
+               <tocitem target="vector3d.surf.html">surf</tocitem>
+               <tocitem target="vector3d.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="vector3d.text.html">text</tocitem>
+               <tocitem target="vector3d.text3.html">text3</tocitem>
+               <tocitem target="vector3d.times.html">times</tocitem>
+               <tocitem target="vector3d.transpose.html">transpose</tocitem>
+               <tocitem target="vector3d.uminus.html">uminus</tocitem>
+               <tocitem target="vector3d.unique.html">unique</tocitem>
+               <tocitem target="vector3d.vertcat.html">vertcat</tocitem>
+               <tocitem target="vector3d.zeros.html">zeros</tocitem>
+            </tocitem>
+            <tocitem target="Miller_index.html">Miller<tocitem target="Miller.Miller.html">Miller</tocitem>
+               <tocitem target="Miller.calcDensity.html">calcDensity</tocitem>
+               <tocitem target="Miller.cat.html">cat</tocitem>
+               <tocitem target="Miller.char.html">char</tocitem>
+               <tocitem target="Miller.cross.html">cross</tocitem>
+               <tocitem target="Miller.display.html">display</tocitem>
+               <tocitem target="Miller.dot.html">dot</tocitem>
+               <tocitem target="Miller.dot_outer.html">dot_outer</tocitem>
+               <tocitem target="Miller.dspacing.html">dspacing</tocitem>
+               <tocitem target="Miller.exp.html">exp</tocitem>
+               <tocitem target="Miller.gridify.html">gridify</tocitem>
+               <tocitem target="Miller.mean.html">mean</tocitem>
+               <tocitem target="Miller.multiplicity.html">multiplicity</tocitem>
+               <tocitem target="Miller.perp.html">perp</tocitem>
+               <tocitem target="Miller.project2FundamentalRegion.html">project2FundamentalRegion</tocitem>
+               <tocitem target="Miller.region.html">region</tocitem>
+               <tocitem target="Miller.rotate.html">rotate</tocitem>
+               <tocitem target="Miller.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="Miller.round.html">round</tocitem>
+               <tocitem target="Miller.scatter.html">scatter</tocitem>
+               <tocitem target="Miller.smooth.html">smooth</tocitem>
+               <tocitem target="Miller.surf.html">surf</tocitem>
+               <tocitem target="Miller.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="Miller.text.html">text</tocitem>
+               <tocitem target="Miller.transformReferenceFrame.html">transformReferenceFrame</tocitem>
+               <tocitem target="Miller.unique.html">unique</tocitem>
+            </tocitem>
+            <tocitem target="symmetry_index.html">symmetry<tocitem target="symmetry.symmetry.html">symmetry</tocitem>
+               <tocitem target="symmetry.Laue.html">Laue</tocitem>
+               <tocitem target="symmetry.LaueName.html">LaueName</tocitem>
+               <tocitem target="symmetry.calcAngleDistribution.html">calcAngleDistribution</tocitem>
+               <tocitem target="symmetry.calcAxisDistribution.html">calcAxisDistribution</tocitem>
+               <tocitem target="symmetry.check.html">check</tocitem>
+               <tocitem target="symmetry.disjoint.html">disjoint</tocitem>
+               <tocitem target="symmetry.elements.html">elements</tocitem>
+               <tocitem target="symmetry.ensureCS.html">ensureCS</tocitem>
+               <tocitem target="symmetry.eq.html">eq</tocitem>
+               <tocitem target="symmetry.factor.html">factor</tocitem>
+               <tocitem target="symmetry.fundamentalRegion.html">fundamentalRegion</tocitem>
+               <tocitem target="symmetry.fundamentalRegionEuler.html">fundamentalRegionEuler</tocitem>
+               <tocitem target="symmetry.fundamentalSector.html">fundamentalSector</tocitem>
+               <tocitem target="symmetry.isLaue.html">isLaue</tocitem>
+               <tocitem target="symmetry.isProper.html">isProper</tocitem>
+               <tocitem target="symmetry.maxAngle.html">maxAngle</tocitem>
+               <tocitem target="symmetry.mtimes.html">mtimes</tocitem>
+               <tocitem target="symmetry.multiplicityPerpZ.html">multiplicityPerpZ</tocitem>
+               <tocitem target="symmetry.multiplicityZ.html">multiplicityZ</tocitem>
+               <tocitem target="symmetry.ne.html">ne</tocitem>
+               <tocitem target="symmetry.nfold.html">nfold</tocitem>
+               <tocitem target="symmetry.numProper.html">numProper</tocitem>
+               <tocitem target="symmetry.numSym.html">numSym</tocitem>
+               <tocitem target="symmetry.plot.html">plot</tocitem>
+               <tocitem target="symmetry.properGroup.html">properGroup</tocitem>
+               <tocitem target="symmetry.properSubGroup.html">properSubGroup</tocitem>
+               <tocitem target="symmetry.quaternion.html">quaternion</tocitem>
+               <tocitem target="symmetry.rotation.html">rotation</tocitem>
+               <tocitem target="symmetry.rotation_special.html">rotation_special</tocitem>
+               <tocitem target="symmetry.union.html">union</tocitem>
+            </tocitem>
+            <tocitem target="crystalSymmetry_index.html">crystalSymmetry<tocitem target="crystalSymmetry.crystalSymmetry.html">crystalSymmetry</tocitem>
+               <tocitem target="crystalSymmetry.add.html">add</tocitem>
+               <tocitem target="crystalSymmetry.alignment.html">alignment</tocitem>
+               <tocitem target="crystalSymmetry.axesDual.html">axesDual</tocitem>
+               <tocitem target="crystalSymmetry.basicHKL.html">basicHKL</tocitem>
+               <tocitem target="crystalSymmetry.byElements.html">byElements</tocitem>
+               <tocitem target="crystalSymmetry.char.html">char</tocitem>
+               <tocitem target="crystalSymmetry.dispLine.html">dispLine</tocitem>
+               <tocitem target="crystalSymmetry.display.html">display</tocitem>
+               <tocitem target="crystalSymmetry.eq.html">eq</tocitem>
+               <tocitem target="crystalSymmetry.load.html">load</tocitem>
+               <tocitem target="crystalSymmetry.plotHKL.html">plotHKL</tocitem>
+               <tocitem target="crystalSymmetry.plotUVW.html">plotUVW</tocitem>
+               <tocitem target="crystalSymmetry.transformationMatrix.html">transformationMatrix</tocitem>
+            </tocitem>
+            <tocitem target="specimenSymmetry_index.html">specimenSymmetry<tocitem target="specimenSymmetry.specimenSymmetry.html">specimenSymmetry</tocitem>
+               <tocitem target="specimenSymmetry.char.html">char</tocitem>
+               <tocitem target="specimenSymmetry.dispLine.html">dispLine</tocitem>
+            </tocitem>
+            <tocitem target="crystalShape_index.html">crystalShape<tocitem target="crystalShape.crystalShape.html">crystalShape</tocitem>
+               <tocitem target="albite.html">albite</tocitem>
+               <tocitem target="amphibole.html">amphibole</tocitem>
+               <tocitem target="analcime.html">analcime</tocitem>
+               <tocitem target="andalusite.html">andalusite</tocitem>
+               <tocitem target="anorthite.html">anorthite</tocitem>
+               <tocitem target="antigorite.html">antigorite</tocitem>
+               <tocitem target="apatite.html">apatite</tocitem>
+               <tocitem target="aragonite.html">aragonite</tocitem>
+               <tocitem target="augite.html">augite</tocitem>
+               <tocitem target="biotite.html">biotite</tocitem>
+               <tocitem target="brucite.html">brucite</tocitem>
+               <tocitem target="calcite.html">calcite</tocitem>
+               <tocitem target="chromite.html">chromite</tocitem>
+               <tocitem target="clinochlore.html">clinochlore</tocitem>
+               <tocitem target="cordierite.html">cordierite</tocitem>
+               <tocitem target="corundum.html">corundum</tocitem>
+               <tocitem target="diamond.html">diamond</tocitem>
+               <tocitem target="diopside.html">diopside</tocitem>
+               <tocitem target="dolomite.html">dolomite</tocitem>
+               <tocitem target="enstatite.html">enstatite</tocitem>
+               <tocitem target="epidote.html">epidote</tocitem>
+               <tocitem target="fluorite.html">fluorite</tocitem>
+               <tocitem target="fluorite_complex.html">fluorite_complex</tocitem>
+               <tocitem target="forsterite.html">forsterite</tocitem>
+               <tocitem target="garnet.html">garnet</tocitem>
+               <tocitem target="gypsum.html">gypsum</tocitem>
+               <tocitem target="halite.html">halite</tocitem>
+               <tocitem target="ice_VI.html">ice_VI</tocitem>
+               <tocitem target="ilmenite.html">ilmenite</tocitem>
+               <tocitem target="kyanite.html">kyanite</tocitem>
+               <tocitem target="magnesite.html">magnesite</tocitem>
+               <tocitem target="magnetite.html">magnetite</tocitem>
+               <tocitem target="microcline.html">microcline</tocitem>
+               <tocitem target="monazite.html">monazite</tocitem>
+               <tocitem target="muscovite.html">muscovite</tocitem>
+               <tocitem target="olivine.html">olivine</tocitem>
+               <tocitem target="orthoclase.html">orthoclase</tocitem>
+               <tocitem target="plagioclase.html">plagioclase</tocitem>
+               <tocitem target="quartz.html">quartz</tocitem>
+               <tocitem target="rutile.html">rutile</tocitem>
+               <tocitem target="spinel.html">spinel</tocitem>
+               <tocitem target="staurolite.html">staurolite</tocitem>
+               <tocitem target="titanite.html">titanite</tocitem>
+               <tocitem target="topaz.html">topaz</tocitem>
+               <tocitem target="tourmaline.html">tourmaline</tocitem>
+               <tocitem target="zircon.html">zircon</tocitem>
+               <tocitem target="zoisite.html">zoisite</tocitem>
+               <tocitem target="crystalShape.display.html">display</tocitem>
+               <tocitem target="crystalShape.fitArea.html">fitArea</tocitem>
+               <tocitem target="crystalShape.length.html">length</tocitem>
+               <tocitem target="crystalShape.mtimes.html">mtimes</tocitem>
+               <tocitem target="crystalShape.plot.html">plot</tocitem>
+               <tocitem target="crystalShape.plus.html">plus</tocitem>
+               <tocitem target="crystalShape.repmat.html">repmat</tocitem>
+               <tocitem target="crystalShape.reshape.html">reshape</tocitem>
+               <tocitem target="crystalShape.rotate.html">rotate</tocitem>
+               <tocitem target="crystalShape.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="crystalShape.size.html">size</tocitem>
+               <tocitem target="crystalShape.subSet.html">subSet</tocitem>
+               <tocitem target="crystalShape.subsref.html">subsref</tocitem>
+               <tocitem target="crystalShape.times.html">times</tocitem>
+            </tocitem>
+            <tocitem target="rotation_index.html">rotation<tocitem target="rotation.rotation.html">rotation</tocitem>
+               <tocitem target="rotation.byAxisAngle.html">byAxisAngle</tocitem>
+               <tocitem target="rotation.byEuler.html">byEuler</tocitem>
+               <tocitem target="rotation.byMatrix.html">byMatrix</tocitem>
+               <tocitem target="rotation.byRodrigues.html">byRodrigues</tocitem>
+               <tocitem target="rotation.cat.html">cat</tocitem>
+               <tocitem target="rotation.char.html">char</tocitem>
+               <tocitem target="rotation.display.html">display</tocitem>
+               <tocitem target="rotation.dot.html">dot</tocitem>
+               <tocitem target="rotation.dot_outer.html">dot_outer</tocitem>
+               <tocitem target="rotation.double.html">double</tocitem>
+               <tocitem target="rotation.fit.html">fit</tocitem>
+               <tocitem target="rotation.getMinAxes.html">getMinAxes</tocitem>
+               <tocitem target="rotation.isImproper.html">isImproper</tocitem>
+               <tocitem target="rotation.line.html">line</tocitem>
+               <tocitem target="rotation.load.html">load</tocitem>
+               <tocitem target="rotation.map.html">map</tocitem>
+               <tocitem target="rotation.matrix.html">matrix</tocitem>
+               <tocitem target="rotation.mldivide.html">mldivide</tocitem>
+               <tocitem target="rotation.mtimes.html">mtimes</tocitem>
+               <tocitem target="rotation.permute.html">permute</tocitem>
+               <tocitem target="rotation.plotSection.html">plotSection</tocitem>
+               <tocitem target="rotation.power.html">power</tocitem>
+               <tocitem target="rotation.project2FundamentalRegion.html">project2FundamentalRegion</tocitem>
+               <tocitem target="rotation.repmat.html">repmat</tocitem>
+               <tocitem target="rotation.reshape.html">reshape</tocitem>
+               <tocitem target="rotation.subSet.html">subSet</tocitem>
+               <tocitem target="rotation.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="rotation.subsref.html">subsref</tocitem>
+               <tocitem target="rotation.times.html">times</tocitem>
+               <tocitem target="rotation.transpose.html">transpose</tocitem>
+               <tocitem target="rotation.uminus.html">uminus</tocitem>
+               <tocitem target="rotation.unique.html">unique</tocitem>
+            </tocitem>
+            <tocitem target="orientation_index.html">orientation<tocitem target="orientation.orientation.html">orientation</tocitem>
+               <tocitem target="orientation.BCV.html">BCV</tocitem>
+               <tocitem target="orientation.KLCV.html">KLCV</tocitem>
+               <tocitem target="orientation.LSCV.html">LSCV</tocitem>
+               <tocitem target="orientation.accumarray.html">accumarray</tocitem>
+               <tocitem target="orientation.angle.html">angle</tocitem>
+               <tocitem target="orientation.axis.html">axis</tocitem>
+               <tocitem target="orientation.bingham_test.html">bingham_test</tocitem>
+               <tocitem target="orientation.byAxisAngle.html">byAxisAngle</tocitem>
+               <tocitem target="orientation.byEuler.html">byEuler</tocitem>
+               <tocitem target="orientation.byMatrix.html">byMatrix</tocitem>
+               <tocitem target="orientation.byMiller.html">byMiller</tocitem>
+               <tocitem target="orientation.calcAngleDistribution.html">calcAngleDistribution</tocitem>
+               <tocitem target="orientation.calcBinghamODF.html">calcBinghamODF</tocitem>
+               <tocitem target="orientation.calcCluster.html">calcCluster</tocitem>
+               <tocitem target="orientation.calcDensity.html">calcDensity</tocitem>
+               <tocitem target="orientation.calcFourierODF.html">calcFourierODF</tocitem>
+               <tocitem target="orientation.calcInvTaylor.html">calcInvTaylor</tocitem>
+               <tocitem target="orientation.calcKernel.html">calcKernel</tocitem>
+               <tocitem target="orientation.calcKernelODF.html">calcKernelODF</tocitem>
+               <tocitem target="orientation.calcMIndex.html">calcMIndex</tocitem>
+               <tocitem target="orientation.calcTensor.html">calcTensor</tocitem>
+               <tocitem target="orientation.char.html">char</tocitem>
+               <tocitem target="orientation.crossCorrelation.html">crossCorrelation</tocitem>
+               <tocitem target="orientation.ctranspose.html">ctranspose</tocitem>
+               <tocitem target="orientation.display.html">display</tocitem>
+               <tocitem target="orientation.doHClustering.html">doHClustering</tocitem>
+               <tocitem target="orientation.dot.html">dot</tocitem>
+               <tocitem target="orientation.dot_outer.html">dot_outer</tocitem>
+               <tocitem target="orientation.exp.html">exp</tocitem>
+               <tocitem target="orientation.export_VPSC.html">export_VPSC</tocitem>
+               <tocitem target="orientation.fibreVolume.html">fibreVolume</tocitem>
+               <tocitem target="orientation.fit.html">fit</tocitem>
+               <tocitem target="orientation.getFundamentalRegion.html">getFundamentalRegion</tocitem>
+               <tocitem target="orientation.gridify.html">gridify</tocitem>
+               <tocitem target="orientation.isMisorientation.html">isMisorientation</tocitem>
+               <tocitem target="orientation.ldivide.html">ldivide</tocitem>
+               <tocitem target="orientation.load.html">load</tocitem>
+               <tocitem target="orientation.log.html">log</tocitem>
+               <tocitem target="orientation.logm.html">logm</tocitem>
+               <tocitem target="orientation.map.html">map</tocitem>
+               <tocitem target="orientation.mean.html">mean</tocitem>
+               <tocitem target="orientation.mldivide.html">mldivide</tocitem>
+               <tocitem target="orientation.mtimes.html">mtimes</tocitem>
+               <tocitem target="orientation.multiplicity.html">multiplicity</tocitem>
+               <tocitem target="orientation.niceEuler.html">niceEuler</tocitem>
+               <tocitem target="orientation.parents.html">parents</tocitem>
+               <tocitem target="orientation.plot.html">plot</tocitem>
+               <tocitem target="orientation.plotIPDF.html">plotIPDF</tocitem>
+               <tocitem target="orientation.plotPDF.html">plotPDF</tocitem>
+               <tocitem target="orientation.plotSection.html">plotSection</tocitem>
+               <tocitem target="orientation.power.html">power</tocitem>
+               <tocitem target="orientation.project2EulerFR.html">project2EulerFR</tocitem>
+               <tocitem target="orientation.project2FundamentalRegion.html">project2FundamentalRegion</tocitem>
+               <tocitem target="orientation.qqplot.html">qqplot</tocitem>
+               <tocitem target="orientation.quiver.html">quiver</tocitem>
+               <tocitem target="orientation.quiverSection.html">quiverSection</tocitem>
+               <tocitem target="orientation.round2Miller.html">round2Miller</tocitem>
+               <tocitem target="orientation.scatter.html">scatter</tocitem>
+               <tocitem target="orientation.sphereVolume.html">sphereVolume</tocitem>
+               <tocitem target="orientation.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="orientation.times.html">times</tocitem>
+               <tocitem target="orientation.transformReferenceFrame.html">transformReferenceFrame</tocitem>
+               <tocitem target="orientation.unique.html">unique</tocitem>
+               <tocitem target="orientation.variants.html">variants</tocitem>
+               <tocitem target="orientation.volume.html">volume</tocitem>
+               <tocitem target="MoritoOrder.html">MoritoOrder</tocitem>
+               <tocitem target="calcP2CFit.html">calcP2CFit</tocitem>
+               <tocitem target="calcParent.html">calcParent</tocitem>
+               <tocitem target="calcParent2Child.html">calcParent2Child</tocitem>
+               <tocitem target="calcParent2Child2.html">calcParent2Child2</tocitem>
+               <tocitem target="calcVariantId.html">calcVariantId</tocitem>
+               <tocitem target="fitP2C.html">fitP2C</tocitem>
+               <tocitem target="plotVariants.html">plotVariants</tocitem>
+            </tocitem>
+            <tocitem target="orientationRegion_index.html">orientationRegion<tocitem target="orientationRegion.orientationRegion.html">orientationRegion</tocitem>
+               <tocitem target="orientationRegion.axisSector.html">axisSector</tocitem>
+               <tocitem target="orientationRegion.calcAngleDistribution.html">calcAngleDistribution</tocitem>
+               <tocitem target="orientationRegion.calcAxisDistribution.html">calcAxisDistribution</tocitem>
+               <tocitem target="orientationRegion.checkInside.html">checkInside</tocitem>
+               <tocitem target="orientationRegion.cleanUp.html">cleanUp</tocitem>
+               <tocitem target="orientationRegion.display.html">display</tocitem>
+               <tocitem target="orientationRegion.eq.html">eq</tocitem>
+               <tocitem target="orientationRegion.horzcat.html">horzcat</tocitem>
+               <tocitem target="orientationRegion.maxAngle.html">maxAngle</tocitem>
+               <tocitem target="orientationRegion.minAngle.html">minAngle</tocitem>
+               <tocitem target="orientationRegion.ne.html">ne</tocitem>
+               <tocitem target="orientationRegion.plot.html">plot</tocitem>
+               <tocitem target="orientationRegion.rotate.html">rotate</tocitem>
+               <tocitem target="orientationRegion.volume.html">volume</tocitem>
+            </tocitem>
+            <tocitem target="sphericalRegion_index.html">sphericalRegion<tocitem target="sphericalRegion.sphericalRegion.html">sphericalRegion</tocitem>
+               <tocitem target="sphericalRegion.boundary.html">boundary</tocitem>
+               <tocitem target="sphericalRegion.byVertices.html">byVertices</tocitem>
+               <tocitem target="sphericalRegion.char.html">char</tocitem>
+               <tocitem target="sphericalRegion.checkInside.html">checkInside</tocitem>
+               <tocitem target="sphericalRegion.cleanUp.html">cleanUp</tocitem>
+               <tocitem target="sphericalRegion.display.html">display</tocitem>
+               <tocitem target="sphericalRegion.eq.html">eq</tocitem>
+               <tocitem target="sphericalRegion.horzcat.html">horzcat</tocitem>
+               <tocitem target="sphericalRegion.isLower.html">isLower</tocitem>
+               <tocitem target="sphericalRegion.isUpper.html">isUpper</tocitem>
+               <tocitem target="sphericalRegion.ne.html">ne</tocitem>
+               <tocitem target="sphericalRegion.plot.html">plot</tocitem>
+               <tocitem target="sphericalRegion.polarCoordinates.html">polarCoordinates</tocitem>
+               <tocitem target="sphericalRegion.restrict2Lower.html">restrict2Lower</tocitem>
+               <tocitem target="sphericalRegion.restrict2Upper.html">restrict2Upper</tocitem>
+               <tocitem target="sphericalRegion.rhoRange.html">rhoRange</tocitem>
+               <tocitem target="sphericalRegion.rotate.html">rotate</tocitem>
+               <tocitem target="sphericalRegion.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="sphericalRegion.triangle.html">triangle</tocitem>
+               <tocitem target="sphericalRegion.volume.html">volume</tocitem>
+            </tocitem>
+            <tocitem target="fibre_index.html">fibre<tocitem target="fibre.fibre.html">fibre</tocitem>
+               <tocitem target="fibre.angle.html">angle</tocitem>
+               <tocitem target="fibre.cat.html">cat</tocitem>
+               <tocitem target="fibre.display.html">display</tocitem>
+               <tocitem target="fibre.end.html">end</tocitem>
+               <tocitem target="fibre.eq.html">eq</tocitem>
+               <tocitem target="fibre.horzcat.html">horzcat</tocitem>
+               <tocitem target="fibre.isempty.html">isempty</tocitem>
+               <tocitem target="fibre.length.html">length</tocitem>
+               <tocitem target="fibre.multiplicity.html">multiplicity</tocitem>
+               <tocitem target="fibre.ne.html">ne</tocitem>
+               <tocitem target="fibre.orientation.html">orientation</tocitem>
+               <tocitem target="fibre.plot.html">plot</tocitem>
+               <tocitem target="fibre.plotIPDF.html">plotIPDF</tocitem>
+               <tocitem target="fibre.plotPDF.html">plotPDF</tocitem>
+               <tocitem target="fibre.rotation.html">rotation</tocitem>
+               <tocitem target="fibre.size.html">size</tocitem>
+               <tocitem target="fibre.subSet.html">subSet</tocitem>
+               <tocitem target="fibre.subsref.html">subsref</tocitem>
+               <tocitem target="fibre.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="fibre.transpose.html">transpose</tocitem>
+               <tocitem target="fibre.vertcat.html">vertcat</tocitem>
+            </tocitem>
+            <tocitem target="slipSystem_index.html">slipSystem<tocitem target="slipSystem.slipSystem.html">slipSystem</tocitem>
+               <tocitem target="slipSystem.SchmidFactor.html">SchmidFactor</tocitem>
+               <tocitem target="slipSystem.SchmidTensor.html">SchmidTensor</tocitem>
+               <tocitem target="slipSystem.cat.html">cat</tocitem>
+               <tocitem target="slipSystem.deformationTensor.html">deformationTensor</tocitem>
+               <tocitem target="slipSystem.end.html">end</tocitem>
+               <tocitem target="slipSystem.eq.html">eq</tocitem>
+               <tocitem target="slipSystem.horzcat.html">horzcat</tocitem>
+               <tocitem target="slipSystem.isempty.html">isempty</tocitem>
+               <tocitem target="slipSystem.length.html">length</tocitem>
+               <tocitem target="slipSystem.mPrime.html">mPrime</tocitem>
+               <tocitem target="slipSystem.mtimes.html">mtimes</tocitem>
+               <tocitem target="slipSystem.ne.html">ne</tocitem>
+               <tocitem target="slipSystem.residualBurgersVector.html">residualBurgersVector</tocitem>
+               <tocitem target="slipSystem.rotate.html">rotate</tocitem>
+               <tocitem target="slipSystem.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="slipSystem.size.html">size</tocitem>
+               <tocitem target="slipSystem.subSet.html">subSet</tocitem>
+               <tocitem target="slipSystem.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="slipSystem.subsref.html">subsref</tocitem>
+               <tocitem target="slipSystem.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="slipSystem.trace.html">trace</tocitem>
+               <tocitem target="slipSystem.transpose.html">transpose</tocitem>
+               <tocitem target="slipSystem.uminus.html">uminus</tocitem>
+               <tocitem target="slipSystem.vertcat.html">vertcat</tocitem>
+            </tocitem>
+            <tocitem target="dislocationSystem_index.html">dislocationSystem<tocitem target="dislocationSystem.dislocationSystem.html">dislocationSystem</tocitem>
+               <tocitem target="dislocationSystem.cat.html">cat</tocitem>
+               <tocitem target="dislocationSystem.end.html">end</tocitem>
+               <tocitem target="dislocationSystem.eq.html">eq</tocitem>
+               <tocitem target="dislocationSystem.horzcat.html">horzcat</tocitem>
+               <tocitem target="dislocationSystem.isempty.html">isempty</tocitem>
+               <tocitem target="dislocationSystem.length.html">length</tocitem>
+               <tocitem target="dislocationSystem.ne.html">ne</tocitem>
+               <tocitem target="dislocationSystem.rotate.html">rotate</tocitem>
+               <tocitem target="dislocationSystem.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="dislocationSystem.size.html">size</tocitem>
+               <tocitem target="dislocationSystem.subSet.html">subSet</tocitem>
+               <tocitem target="dislocationSystem.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="dislocationSystem.subsref.html">subsref</tocitem>
+               <tocitem target="dislocationSystem.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="dislocationSystem.tensor.html">tensor</tocitem>
+               <tocitem target="dislocationSystem.transpose.html">transpose</tocitem>
+               <tocitem target="dislocationSystem.uminus.html">uminus</tocitem>
+               <tocitem target="dislocationSystem.vertcat.html">vertcat</tocitem>
+            </tocitem>
+            <tocitem target="quaternion_index.html">quaternion<tocitem target="quaternion.quaternion.html">quaternion</tocitem>
+               <tocitem target="quaternion.Euler.html">Euler</tocitem>
+               <tocitem target="quaternion.Rodrigues.html">Rodrigues</tocitem>
+               <tocitem target="quaternion.accumarray.html">accumarray</tocitem>
+               <tocitem target="quaternion.angle.html">angle</tocitem>
+               <tocitem target="quaternion.angle_outer.html">angle_outer</tocitem>
+               <tocitem target="quaternion.axis.html">axis</tocitem>
+               <tocitem target="quaternion.calcVoronoi.html">calcVoronoi</tocitem>
+               <tocitem target="quaternion.cat.html">cat</tocitem>
+               <tocitem target="quaternion.char.html">char</tocitem>
+               <tocitem target="quaternion.cross.html">cross</tocitem>
+               <tocitem target="quaternion.ctranspose.html">ctranspose</tocitem>
+               <tocitem target="quaternion.cubochoric.html">cubochoric</tocitem>
+               <tocitem target="quaternion.display.html">display</tocitem>
+               <tocitem target="quaternion.dot.html">dot</tocitem>
+               <tocitem target="quaternion.dot_angle.html">dot_angle</tocitem>
+               <tocitem target="quaternion.dot_outer.html">dot_outer</tocitem>
+               <tocitem target="quaternion.double.html">double</tocitem>
+               <tocitem target="quaternion.end.html">end</tocitem>
+               <tocitem target="quaternion.eq.html">eq</tocitem>
+               <tocitem target="quaternion.export.html">export</tocitem>
+               <tocitem target="quaternion.find.html">find</tocitem>
+               <tocitem target="quaternion.geodesic.html">geodesic</tocitem>
+               <tocitem target="quaternion.homochoric.html">homochoric</tocitem>
+               <tocitem target="quaternion.horzcat.html">horzcat</tocitem>
+               <tocitem target="quaternion.inv.html">inv</tocitem>
+               <tocitem target="quaternion.isempty.html">isempty</tocitem>
+               <tocitem target="quaternion.isnan.html">isnan</tocitem>
+               <tocitem target="quaternion.itimes.html">itimes</tocitem>
+               <tocitem target="quaternion.length.html">length</tocitem>
+               <tocitem target="quaternion.log.html">log</tocitem>
+               <tocitem target="quaternion.logm.html">logm</tocitem>
+               <tocitem target="quaternion.matrix.html">matrix</tocitem>
+               <tocitem target="quaternion.mean.html">mean</tocitem>
+               <tocitem target="quaternion.mean_CS.html">mean_CS</tocitem>
+               <tocitem target="quaternion.minus.html">minus</tocitem>
+               <tocitem target="quaternion.mldivide.html">mldivide</tocitem>
+               <tocitem target="quaternion.mpower.html">mpower</tocitem>
+               <tocitem target="quaternion.mrdivide.html">mrdivide</tocitem>
+               <tocitem target="quaternion.mtimes.html">mtimes</tocitem>
+               <tocitem target="quaternion.ndims.html">ndims</tocitem>
+               <tocitem target="quaternion.ne.html">ne</tocitem>
+               <tocitem target="quaternion.norm.html">norm</tocitem>
+               <tocitem target="quaternion.normalize.html">normalize</tocitem>
+               <tocitem target="quaternion.permute.html">permute</tocitem>
+               <tocitem target="quaternion.perturbe.html">perturbe</tocitem>
+               <tocitem target="quaternion.plot.html">plot</tocitem>
+               <tocitem target="quaternion.plus.html">plus</tocitem>
+               <tocitem target="quaternion.power.html">power</tocitem>
+               <tocitem target="quaternion.prod.html">prod</tocitem>
+               <tocitem target="quaternion.project2EulerFR.html">project2EulerFR</tocitem>
+               <tocitem target="quaternion.project2FundamentalRegion.html">project2FundamentalRegion</tocitem>
+               <tocitem target="quaternion.qmatrix.html">qmatrix</tocitem>
+               <tocitem target="quaternion.qq.html">qq</tocitem>
+               <tocitem target="quaternion.rdivide.html">rdivide</tocitem>
+               <tocitem target="quaternion.real.html">real</tocitem>
+               <tocitem target="quaternion.repmat.html">repmat</tocitem>
+               <tocitem target="quaternion.reshape.html">reshape</tocitem>
+               <tocitem target="quaternion.scatter.html">scatter</tocitem>
+               <tocitem target="quaternion.setSubSet.html">setSubSet</tocitem>
+               <tocitem target="quaternion.size.html">size</tocitem>
+               <tocitem target="quaternion.std.html">std</tocitem>
+               <tocitem target="quaternion.subSet.html">subSet</tocitem>
+               <tocitem target="quaternion.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="quaternion.subsref.html">subsref</tocitem>
+               <tocitem target="quaternion.sum.html">sum</tocitem>
+               <tocitem target="quaternion.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="quaternion.times.html">times</tocitem>
+               <tocitem target="quaternion.transpose.html">transpose</tocitem>
+               <tocitem target="quaternion.uminus.html">uminus</tocitem>
+               <tocitem target="quaternion.unique.html">unique</tocitem>
+               <tocitem target="quaternion.vertcat.html">vertcat</tocitem>
+            </tocitem>
+            <tocitem target="S1Grid_index.html">S1Grid<tocitem target="S1Grid.S1Grid.html">S1Grid</tocitem>
+               <tocitem target="S1Grid.GridLength.html">GridLength</tocitem>
+               <tocitem target="S1Grid.coarser.html">coarser</tocitem>
+               <tocitem target="S1Grid.delete.html">delete</tocitem>
+               <tocitem target="S1Grid.display.html">display</tocitem>
+               <tocitem target="S1Grid.dist.html">dist</tocitem>
+               <tocitem target="S1Grid.dist_outer.html">dist_outer</tocitem>
+               <tocitem target="S1Grid.double.html">double</tocitem>
+               <tocitem target="S1Grid.eq.html">eq</tocitem>
+               <tocitem target="S1Grid.find.html">find</tocitem>
+               <tocitem target="S1Grid.max.html">max</tocitem>
+               <tocitem target="S1Grid.min.html">min</tocitem>
+               <tocitem target="S1Grid.minus.html">minus</tocitem>
+               <tocitem target="S1Grid.plot.html">plot</tocitem>
+               <tocitem target="S1Grid.plus.html">plus</tocitem>
+               <tocitem target="S1Grid.refine.html">refine</tocitem>
+               <tocitem target="S1Grid.shift.html">shift</tocitem>
+               <tocitem target="S1Grid.subGrid.html">subGrid</tocitem>
+            </tocitem>
+            <tocitem target="S2Grid_index.html">S2Grid<tocitem target="S2Grid.S2Grid.html">S2Grid</tocitem>
+               <tocitem target="S2Grid.cat.html">cat</tocitem>
+               <tocitem target="S2Grid.copy.html">copy</tocitem>
+               <tocitem target="S2Grid.cross.html">cross</tocitem>
+               <tocitem target="S2Grid.delete.html">delete</tocitem>
+               <tocitem target="S2Grid.display.html">display</tocitem>
+               <tocitem target="S2Grid.find.html">find</tocitem>
+               <tocitem target="S2Grid.getdata.html">getdata</tocitem>
+               <tocitem target="S2Grid.mtimes.html">mtimes</tocitem>
+               <tocitem target="S2Grid.plus.html">plus</tocitem>
+               <tocitem target="S2Grid.polar.html">polar</tocitem>
+               <tocitem target="S2Grid.refine.html">refine</tocitem>
+               <tocitem target="S2Grid.subGrid.html">subGrid</tocitem>
+               <tocitem target="S2Grid.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="S2Grid.subsref.html">subsref</tocitem>
+               <tocitem target="S2Grid.times.html">times</tocitem>
+            </tocitem>
+            <tocitem target="S2Triangulation_index.html">S2Triangulation<tocitem target="S2Triangulation.S2Triangulation.html">S2Triangulation</tocitem>
+               <tocitem target="S2Triangulation.calcBario.html">calcBario</tocitem>
+               <tocitem target="S2Triangulation.checkInside.html">checkInside</tocitem>
+               <tocitem target="S2Triangulation.plot.html">plot</tocitem>
+               <tocitem target="S2Triangulation.rotate.html">rotate</tocitem>
+            </tocitem>
+            <tocitem target="SO3Grid_index.html">SO3Grid<tocitem target="SO3Grid.SO3Grid.html">SO3Grid</tocitem>
+               <tocitem target="SO3Grid.char.html">char</tocitem>
+               <tocitem target="SO3Grid.copy.html">copy</tocitem>
+               <tocitem target="SO3Grid.delete.html">delete</tocitem>
+               <tocitem target="SO3Grid.display.html">display</tocitem>
+               <tocitem target="SO3Grid.dot_outer.html">dot_outer</tocitem>
+               <tocitem target="SO3Grid.find.html">find</tocitem>
+               <tocitem target="SO3Grid.mtimes.html">mtimes</tocitem>
+               <tocitem target="SO3Grid.spy.html">spy</tocitem>
+               <tocitem target="SO3Grid.subGrid.html">subGrid</tocitem>
+               <tocitem target="SO3Grid.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="SO3Grid.subsref.html">subsref</tocitem>
+            </tocitem>
+            <tocitem target="embedding_index.html">embedding<tocitem target="embedding.embedding.html">embedding</tocitem>
+               <tocitem target="embedding.cat.html">cat</tocitem>
+               <tocitem target="embedding.dot.html">dot</tocitem>
+               <tocitem target="embedding.double.html">double</tocitem>
+               <tocitem target="embedding.horzcat.html">horzcat</tocitem>
+               <tocitem target="embedding.mean.html">mean</tocitem>
+               <tocitem target="embedding.minus.html">minus</tocitem>
+               <tocitem target="embedding.mtimes.html">mtimes</tocitem>
+               <tocitem target="embedding.norm.html">norm</tocitem>
+               <tocitem target="embedding.normalize.html">normalize</tocitem>
+               <tocitem target="embedding.orientation.html">orientation</tocitem>
+               <tocitem target="embedding.plot.html">plot</tocitem>
+               <tocitem target="embedding.plus.html">plus</tocitem>
+               <tocitem target="embedding.project.html">project</tocitem>
+               <tocitem target="embedding.rdivide.html">rdivide</tocitem>
+               <tocitem target="embedding.rotate.html">rotate</tocitem>
+               <tocitem target="embedding.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="embedding.setDouble.html">setDouble</tocitem>
+               <tocitem target="embedding.sum.html">sum</tocitem>
+               <tocitem target="embedding.sym.html">sym</tocitem>
+               <tocitem target="embedding.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="embedding.times.html">times</tocitem>
+               <tocitem target="embedding.vertcat.html">vertcat</tocitem>
+            </tocitem>
+            <tocitem target="geometry_tools_index.html">misc functions<tocitem target="CSL.html">CSL</tocitem>
+               <tocitem target="EulerAngleConvention.html">EulerAngleConvention</tocitem>
+               <tocitem target="HEALPixS2Grid.html">HEALPixS2Grid</tocitem>
+               <tocitem target="axis2quat.html">axis2quat</tocitem>
+               <tocitem target="axis2quat_outer.html">axis2quat_outer</tocitem>
+               <tocitem target="checkEulerAngleConvention.html">checkEulerAngleConvention</tocitem>
+               <tocitem target="cubo2homo.html">cubo2homo</tocitem>
+               <tocitem target="doHClustering.html">doHClustering</tocitem>
+               <tocitem target="equispacedS2Grid.html">equispacedS2Grid</tocitem>
+               <tocitem target="equispacedSO3Grid.html">equispacedSO3Grid</tocitem>
+               <tocitem target="euler2quat.html">euler2quat</tocitem>
+               <tocitem target="expquat.html">expquat</tocitem>
+               <tocitem target="extractSphericalRegion.html">extractSphericalRegion</tocitem>
+               <tocitem target="fibre2quat.html">fibre2quat</tocitem>
+               <tocitem target="hexNeighbors.html">hexNeighbors</tocitem>
+               <tocitem target="homo2cubo.html">homo2cubo</tocitem>
+               <tocitem target="hr2quat.html">hr2quat</tocitem>
+               <tocitem target="isLaue.html">isLaue</tocitem>
+               <tocitem target="isProper.html">isProper</tocitem>
+               <tocitem target="loadCIF.html">loadCIF</tocitem>
+               <tocitem target="loadPHL.html">loadPHL</tocitem>
+               <tocitem target="localOrientationGrid.html">localOrientationGrid</tocitem>
+               <tocitem target="mat2quat.html">mat2quat</tocitem>
+               <tocitem target="plotS2Grid.html">plotS2Grid</tocitem>
+               <tocitem target="plotSO3Grid.html">plotSO3Grid</tocitem>
+               <tocitem target="quadratureS2Grid.html">quadratureS2Grid</tocitem>
+               <tocitem target="reflection.html">reflection</tocitem>
+               <tocitem target="regularS2Grid.html">regularS2Grid</tocitem>
+               <tocitem target="regularSO3Grid.html">regularSO3Grid</tocitem>
+               <tocitem target="squareNeighbors.html">squareNeighbors</tocitem>
+               <tocitem target="squareNeighbors2.html">squareNeighbors2</tocitem>
+               <tocitem target="xvector.html">xvector</tocitem>
+               <tocitem target="yvector.html">yvector</tocitem>
+               <tocitem target="zvector.html">zvector</tocitem>
+            </tocitem>
+            <tocitem target="misorientation_index.html">Phase Transistion Analysis<tocitem target="MoritoOrder.html">MoritoOrder</tocitem>
+               <tocitem target="calcP2CFit.html">calcP2CFit</tocitem>
+               <tocitem target="calcParent.html">calcParent</tocitem>
+               <tocitem target="calcParent2Child.html">calcParent2Child</tocitem>
+               <tocitem target="calcParent2Child2.html">calcParent2Child2</tocitem>
+               <tocitem target="calcVariantId.html">calcVariantId</tocitem>
+               <tocitem target="fitP2C.html">fitP2C</tocitem>
+               <tocitem target="plotVariants.html">plotVariants</tocitem>
+            </tocitem>
+         </tocitem>
+         <tocitem target="EBSDAnalysis_index.html">EBSD Analysis<tocitem target="EBSDOverview.html">Overview</tocitem>
+            <tocitem target="EBSD_index.html">EBSD<tocitem target="EBSD.EBSD.html">EBSD</tocitem>
+               <tocitem target="EBSD.KAM.html">KAM</tocitem>
+               <tocitem target="EBSD.affinetrans.html">affinetrans</tocitem>
+               <tocitem target="EBSD.calcGROD.html">calcGROD</tocitem>
+               <tocitem target="EBSD.calcGrains.html">calcGrains</tocitem>
+               <tocitem target="EBSD.calcGrains_mod.html">calcGrains_mod</tocitem>
+               <tocitem target="EBSD.calcMisorientation.html">calcMisorientation</tocitem>
+               <tocitem target="EBSD.calcTensor.html">calcTensor</tocitem>
+               <tocitem target="EBSD.cat.html">cat</tocitem>
+               <tocitem target="EBSD.char.html">char</tocitem>
+               <tocitem target="EBSD.curvature.html">curvature</tocitem>
+               <tocitem target="EBSD.display.html">display</tocitem>
+               <tocitem target="EBSD.export.html">export</tocitem>
+               <tocitem target="EBSD.export_ang.html">export_ang</tocitem>
+               <tocitem target="EBSD.export_crc.html">export_crc</tocitem>
+               <tocitem target="EBSD.export_ctf.html">export_ctf</tocitem>
+               <tocitem target="EBSD.export_h5.html">export_h5</tocitem>
+               <tocitem target="EBSD.extend.html">extend</tocitem>
+               <tocitem target="EBSD.fill.html">fill</tocitem>
+               <tocitem target="EBSD.fillByGrainId.html">fillByGrainId</tocitem>
+               <tocitem target="EBSD.findByLocation.html">findByLocation</tocitem>
+               <tocitem target="EBSD.findByOrientation.html">findByOrientation</tocitem>
+               <tocitem target="EBSD.fliplr.html">fliplr</tocitem>
+               <tocitem target="EBSD.flipud.html">flipud</tocitem>
+               <tocitem target="EBSD.grainMean.html">grainMean</tocitem>
+               <tocitem target="EBSD.gridify.html">gridify</tocitem>
+               <tocitem target="EBSD.id2ind.html">id2ind</tocitem>
+               <tocitem target="EBSD.inpolygon.html">inpolygon</tocitem>
+               <tocitem target="EBSD.interp.html">interp</tocitem>
+               <tocitem target="EBSD.isnan.html">isnan</tocitem>
+               <tocitem target="EBSD.load.html">load</tocitem>
+               <tocitem target="EBSD.minus.html">minus</tocitem>
+               <tocitem target="EBSD.plot.html">plot</tocitem>
+               <tocitem target="EBSD.plotUnitCells.html">plotUnitCells</tocitem>
+               <tocitem target="EBSD.plus.html">plus</tocitem>
+               <tocitem target="EBSD.project2FundamentalRegion.html">project2FundamentalRegion</tocitem>
+               <tocitem target="EBSD.quiver.html">quiver</tocitem>
+               <tocitem target="EBSD.reduce.html">reduce</tocitem>
+               <tocitem target="EBSD.reshape.html">reshape</tocitem>
+               <tocitem target="EBSD.rotate.html">rotate</tocitem>
+               <tocitem target="EBSD.selectInteractive.html">selectInteractive</tocitem>
+               <tocitem target="EBSD.shift.html">shift</tocitem>
+               <tocitem target="EBSD.smooth.html">smooth</tocitem>
+               <tocitem target="EBSD.spatialProfile.html">spatialProfile</tocitem>
+               <tocitem target="EBSD.subSet.html">subSet</tocitem>
+               <tocitem target="EBSD.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="EBSD.subsind.html">subsind</tocitem>
+               <tocitem target="EBSD.subsref.html">subsref</tocitem>
+               <tocitem target="EBSD.text.html">text</tocitem>
+               <tocitem target="EBSD.updateUnitCell.html">updateUnitCell</tocitem>
+            </tocitem>
+            <tocitem target="EBSDsquare_index.html">EBSDsquare<tocitem target="EBSDsquare.EBSDsquare.html">EBSDsquare</tocitem>
+               <tocitem target="EBSDsquare.KAM.html">KAM</tocitem>
+               <tocitem target="EBSDsquare.calcGND.html">calcGND</tocitem>
+               <tocitem target="EBSDsquare.interp.html">interp</tocitem>
+               <tocitem target="EBSDsquare.plotUnitCells.html">plotUnitCells</tocitem>
+               <tocitem target="EBSDsquare.spatialProfile.html">spatialProfile</tocitem>
+               <tocitem target="EBSDsquare.subsind.html">subsind</tocitem>
+               <tocitem target="EBSDsquare.xy2ind.html">xy2ind</tocitem>
+            </tocitem>
+            <tocitem target="EBSDhex_index.html">EBSDhex<tocitem target="EBSDhex.EBSDhex.html">EBSDhex</tocitem>
+               <tocitem target="EBSDhex.KAM.html">KAM</tocitem>
+               <tocitem target="EBSDhex.interp.html">interp</tocitem>
+               <tocitem target="EBSDhex.plotUnitCells.html">plotUnitCells</tocitem>
+               <tocitem target="EBSDhex.reduce.html">reduce</tocitem>
+               <tocitem target="EBSDhex.subsind.html">subsind</tocitem>
+            </tocitem>
+            <tocitem target="grain2d_index.html">grain2d<tocitem target="grain2d.grain2d.html">grain2d</tocitem>
+               <tocitem target="grain2d.area.html">area</tocitem>
+               <tocitem target="grain2d.aspectRatio.html">aspectRatio</tocitem>
+               <tocitem target="grain2d.boundarySize.html">boundarySize</tocitem>
+               <tocitem target="grain2d.caliper.html">caliper</tocitem>
+               <tocitem target="grain2d.cat.html">cat</tocitem>
+               <tocitem target="grain2d.centroid.html">centroid</tocitem>
+               <tocitem target="grain2d.checkInside.html">checkInside</tocitem>
+               <tocitem target="grain2d.convexhullProps.html">convexhullProps</tocitem>
+               <tocitem target="grain2d.diameter.html">diameter</tocitem>
+               <tocitem target="grain2d.display.html">display</tocitem>
+               <tocitem target="grain2d.eq.html">eq</tocitem>
+               <tocitem target="grain2d.equivalentPerimeter.html">equivalentPerimeter</tocitem>
+               <tocitem target="grain2d.equivalentRadius.html">equivalentRadius</tocitem>
+               <tocitem target="grain2d.findByLocation.html">findByLocation</tocitem>
+               <tocitem target="grain2d.findByOrientation.html">findByOrientation</tocitem>
+               <tocitem target="grain2d.fitEllipse.html">fitEllipse</tocitem>
+               <tocitem target="grain2d.hasHole.html">hasHole</tocitem>
+               <tocitem target="grain2d.hist.html">hist</tocitem>
+               <tocitem target="grain2d.histogram.html">histogram</tocitem>
+               <tocitem target="grain2d.hull.html">hull</tocitem>
+               <tocitem target="grain2d.id2ind.html">id2ind</tocitem>
+               <tocitem target="grain2d.inpolygon.html">inpolygon</tocitem>
+               <tocitem target="grain2d.isBoundary.html">isBoundary</tocitem>
+               <tocitem target="grain2d.isInclusion.html">isInclusion</tocitem>
+               <tocitem target="grain2d.longAxis.html">longAxis</tocitem>
+               <tocitem target="grain2d.merge.html">merge</tocitem>
+               <tocitem target="grain2d.minus.html">minus</tocitem>
+               <tocitem target="grain2d.ne.html">ne</tocitem>
+               <tocitem target="grain2d.neighbors.html">neighbors</tocitem>
+               <tocitem target="grain2d.numNeighbors.html">numNeighbors</tocitem>
+               <tocitem target="grain2d.paris.html">paris</tocitem>
+               <tocitem target="grain2d.paror.html">paror</tocitem>
+               <tocitem target="grain2d.perimeter.html">perimeter</tocitem>
+               <tocitem target="grain2d.plot.html">plot</tocitem>
+               <tocitem target="grain2d.plus.html">plus</tocitem>
+               <tocitem target="grain2d.principalComponents.html">principalComponents</tocitem>
+               <tocitem target="grain2d.quiver.html">quiver</tocitem>
+               <tocitem target="grain2d.rotate.html">rotate</tocitem>
+               <tocitem target="grain2d.selectInteractive.html">selectInteractive</tocitem>
+               <tocitem target="grain2d.shapeFactor.html">shapeFactor</tocitem>
+               <tocitem target="grain2d.shortAxis.html">shortAxis</tocitem>
+               <tocitem target="grain2d.smooth.html">smooth</tocitem>
+               <tocitem target="grain2d.subBoundaryLength.html">subBoundaryLength</tocitem>
+               <tocitem target="grain2d.subBoundarySize.html">subBoundarySize</tocitem>
+               <tocitem target="grain2d.subSet.html">subSet</tocitem>
+               <tocitem target="grain2d.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="grain2d.subsref.html">subsref</tocitem>
+               <tocitem target="grain2d.text.html">text</tocitem>
+            </tocitem>
+            <tocitem target="grainBoundary_index.html">grainBoundary<tocitem target="grainBoundary.grainBoundary.html">grainBoundary</tocitem>
+               <tocitem target="grainBoundary.calcMeanDirection.html">calcMeanDirection</tocitem>
+               <tocitem target="grainBoundary.calcTriplePoints.html">calcTriplePoints</tocitem>
+               <tocitem target="grainBoundary.curvature.html">curvature</tocitem>
+               <tocitem target="grainBoundary.display.html">display</tocitem>
+               <tocitem target="grainBoundary.flip.html">flip</tocitem>
+               <tocitem target="grainBoundary.inpolygon.html">inpolygon</tocitem>
+               <tocitem target="grainBoundary.intersect.html">intersect</tocitem>
+               <tocitem target="grainBoundary.isTwinning.html">isTwinning</tocitem>
+               <tocitem target="grainBoundary.minus.html">minus</tocitem>
+               <tocitem target="grainBoundary.perimeter.html">perimeter</tocitem>
+               <tocitem target="grainBoundary.plot.html">plot</tocitem>
+               <tocitem target="grainBoundary.plus.html">plus</tocitem>
+               <tocitem target="grainBoundary.quiver.html">quiver</tocitem>
+               <tocitem target="grainBoundary.reduce.html">reduce</tocitem>
+               <tocitem target="grainBoundary.reorder.html">reorder</tocitem>
+               <tocitem target="grainBoundary.rotate.html">rotate</tocitem>
+               <tocitem target="grainBoundary.segLength.html">segLength</tocitem>
+               <tocitem target="grainBoundary.selectByGrainId.html">selectByGrainId</tocitem>
+               <tocitem target="grainBoundary.subSet.html">subSet</tocitem>
+               <tocitem target="grainBoundary.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="grainBoundary.subsref.html">subsref</tocitem>
+               <tocitem target="grainBoundary.surfor.html">surfor</tocitem>
+            </tocitem>
+            <tocitem target="triplePointList_index.html">triplePointList<tocitem target="triplePointList.triplePointList.html">triplePointList</tocitem>
+               <tocitem target="triplePointList.display.html">display</tocitem>
+               <tocitem target="triplePointList.minus.html">minus</tocitem>
+               <tocitem target="triplePointList.plot.html">plot</tocitem>
+               <tocitem target="triplePointList.plus.html">plus</tocitem>
+               <tocitem target="triplePointList.rotate.html">rotate</tocitem>
+               <tocitem target="triplePointList.subSet.html">subSet</tocitem>
+               <tocitem target="triplePointList.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="triplePointList.subsref.html">subsref</tocitem>
+            </tocitem>
+            <tocitem target="parentGrainReconstructor_index.html">parentGrainReconstructor<tocitem target="parentGrainReconstructor.parentGrainReconstructor.html">parentGrainReconstructor</tocitem>
+               <tocitem target="parentGrainReconstructor.calcGBFit.html">calcGBFit</tocitem>
+               <tocitem target="parentGrainReconstructor.calcGBVotes.html">calcGBVotes</tocitem>
+               <tocitem target="parentGrainReconstructor.calcGraph.html">calcGraph</tocitem>
+               <tocitem target="parentGrainReconstructor.calcParent2Child.html">calcParent2Child</tocitem>
+               <tocitem target="parentGrainReconstructor.calcParentEBSD.html">calcParentEBSD</tocitem>
+               <tocitem target="parentGrainReconstructor.calcParentFromGraph.html">calcParentFromGraph</tocitem>
+               <tocitem target="parentGrainReconstructor.calcParentFromVote.html">calcParentFromVote</tocitem>
+               <tocitem target="parentGrainReconstructor.calcTPVotes.html">calcTPVotes</tocitem>
+               <tocitem target="parentGrainReconstructor.calcVariants.html">calcVariants</tocitem>
+               <tocitem target="parentGrainReconstructor.clusterGraph.html">clusterGraph</tocitem>
+               <tocitem target="parentGrainReconstructor.display.html">display</tocitem>
+               <tocitem target="parentGrainReconstructor.mergeByGraph.html">mergeByGraph</tocitem>
+               <tocitem target="parentGrainReconstructor.mergeInclusions.html">mergeInclusions</tocitem>
+               <tocitem target="parentGrainReconstructor.mergeSimilar.html">mergeSimilar</tocitem>
+               <tocitem target="parentGrainReconstructor.parent2ChildInfo.html">parent2ChildInfo</tocitem>
+               <tocitem target="parentGrainReconstructor.plotGraph.html">plotGraph</tocitem>
+               <tocitem target="parentGrainReconstructor.plotVariantPF.html">plotVariantPF</tocitem>
+               <tocitem target="parentGrainReconstructor.revert.html">revert</tocitem>
+            </tocitem>
+         </tocitem>
+         <tocitem target="ODFAnalysis_index.html">ODF Analysis<tocitem target="ODFOverview.html">Overview</tocitem>
+            <tocitem target="ODF_index.html">ODF<tocitem target="ODF.ODF.html">ODF</tocitem>
+               <tocitem target="ODF.FourierODF.html">FourierODF</tocitem>
+               <tocitem target="ODF.bandwidth.html">bandwidth</tocitem>
+               <tocitem target="ODF.calcAngleDistribution.html">calcAngleDistribution</tocitem>
+               <tocitem target="ODF.calcAxisDistribution.html">calcAxisDistribution</tocitem>
+               <tocitem target="ODF.calcAxisVolume.html">calcAxisVolume</tocitem>
+               <tocitem target="ODF.calcComponents.html">calcComponents</tocitem>
+               <tocitem target="ODF.calcError.html">calcError</tocitem>
+               <tocitem target="ODF.calcFourier.html">calcFourier</tocitem>
+               <tocitem target="ODF.calcMDF.html">calcMDF</tocitem>
+               <tocitem target="ODF.calcMIndex.html">calcMIndex</tocitem>
+               <tocitem target="ODF.calcModes.html">calcModes</tocitem>
+               <tocitem target="ODF.calcOrientations.html">calcOrientations</tocitem>
+               <tocitem target="ODF.calcPDF.html">calcPDF</tocitem>
+               <tocitem target="ODF.calcPoleFigure.html">calcPoleFigure</tocitem>
+               <tocitem target="ODF.calcTensor.html">calcTensor</tocitem>
+               <tocitem target="ODF.centerSpecimen.html">centerSpecimen</tocitem>
+               <tocitem target="ODF.char.html">char</tocitem>
+               <tocitem target="ODF.concentration.html">concentration</tocitem>
+               <tocitem target="ODF.conv.html">conv</tocitem>
+               <tocitem target="ODF.discreteSample.html">discreteSample</tocitem>
+               <tocitem target="ODF.display.html">display</tocitem>
+               <tocitem target="ODF.entropy.html">entropy</tocitem>
+               <tocitem target="ODF.eval.html">eval</tocitem>
+               <tocitem target="ODF.export.html">export</tocitem>
+               <tocitem target="ODF.export_VPSC.html">export_VPSC</tocitem>
+               <tocitem target="ODF.export_generic.html">export_generic</tocitem>
+               <tocitem target="ODF.export_mtex.html">export_mtex</tocitem>
+               <tocitem target="ODF.fibreVolume.html">fibreVolume</tocitem>
+               <tocitem target="ODF.grad.html">grad</tocitem>
+               <tocitem target="ODF.hist.html">hist</tocitem>
+               <tocitem target="ODF.interp.html">interp</tocitem>
+               <tocitem target="ODF.isFourier.html">isFourier</tocitem>
+               <tocitem target="ODF.load.html">load</tocitem>
+               <tocitem target="ODF.max.html">max</tocitem>
+               <tocitem target="ODF.mean.html">mean</tocitem>
+               <tocitem target="ODF.minus.html">minus</tocitem>
+               <tocitem target="ODF.mrdivide.html">mrdivide</tocitem>
+               <tocitem target="ODF.mtimes.html">mtimes</tocitem>
+               <tocitem target="ODF.neuralgas.html">neuralgas</tocitem>
+               <tocitem target="ODF.norm.html">norm</tocitem>
+               <tocitem target="ODF.plot.html">plot</tocitem>
+               <tocitem target="ODF.plot3d.html">plot3d</tocitem>
+               <tocitem target="ODF.plotDiff.html">plotDiff</tocitem>
+               <tocitem target="ODF.plotFibre.html">plotFibre</tocitem>
+               <tocitem target="ODF.plotFourier.html">plotFourier</tocitem>
+               <tocitem target="ODF.plotIPDF.html">plotIPDF</tocitem>
+               <tocitem target="ODF.plotPDF.html">plotPDF</tocitem>
+               <tocitem target="ODF.plotSection.html">plotSection</tocitem>
+               <tocitem target="ODF.plus.html">plus</tocitem>
+               <tocitem target="ODF.quantile.html">quantile</tocitem>
+               <tocitem target="ODF.rdivide.html">rdivide</tocitem>
+               <tocitem target="ODF.rotate.html">rotate</tocitem>
+               <tocitem target="ODF.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="ODF.slope.html">slope</tocitem>
+               <tocitem target="ODF.smooth.html">smooth</tocitem>
+               <tocitem target="ODF.steepestDescent.html">steepestDescent</tocitem>
+               <tocitem target="ODF.steepestDescentX.html">steepestDescentX</tocitem>
+               <tocitem target="ODF.textureindex.html">textureindex</tocitem>
+               <tocitem target="ODF.times.html">times</tocitem>
+               <tocitem target="ODF.uminus.html">uminus</tocitem>
+               <tocitem target="ODF.volume.html">volume</tocitem>
+            </tocitem>
+            <tocitem target="uniformComponent_index.html">uniformComponent<tocitem target="uniformComponent.uniformComponent.html">uniformComponent</tocitem>
+               <tocitem target="uniformComponent.calcFourier.html">calcFourier</tocitem>
+               <tocitem target="uniformComponent.calcPDF.html">calcPDF</tocitem>
+               <tocitem target="uniformComponent.char.html">char</tocitem>
+               <tocitem target="uniformComponent.discreteSample.html">discreteSample</tocitem>
+               <tocitem target="uniformComponent.display.html">display</tocitem>
+               <tocitem target="uniformComponent.eval.html">eval</tocitem>
+               <tocitem target="uniformComponent.grad.html">grad</tocitem>
+               <tocitem target="uniformComponent.rotate.html">rotate</tocitem>
+               <tocitem target="uniformComponent.smooth.html">smooth</tocitem>
+               <tocitem target="uniformComponent.volume.html">volume</tocitem>
+            </tocitem>
+            <tocitem target="unimodalComponent_index.html">unimodalComponent<tocitem target="unimodalComponent.unimodalComponent.html">unimodalComponent</tocitem>
+               <tocitem target="unimodalComponent.calcFourier.html">calcFourier</tocitem>
+               <tocitem target="unimodalComponent.calcMDF.html">calcMDF</tocitem>
+               <tocitem target="unimodalComponent.calcModes.html">calcModes</tocitem>
+               <tocitem target="unimodalComponent.calcPDF.html">calcPDF</tocitem>
+               <tocitem target="unimodalComponent.char.html">char</tocitem>
+               <tocitem target="unimodalComponent.discreteSample.html">discreteSample</tocitem>
+               <tocitem target="unimodalComponent.display.html">display</tocitem>
+               <tocitem target="unimodalComponent.eval.html">eval</tocitem>
+               <tocitem target="unimodalComponent.grad.html">grad</tocitem>
+               <tocitem target="unimodalComponent.rotate.html">rotate</tocitem>
+               <tocitem target="unimodalComponent.smooth.html">smooth</tocitem>
+               <tocitem target="unimodalComponent.volume.html">volume</tocitem>
+            </tocitem>
+            <tocitem target="fibreComponent_index.html">fibreComponent<tocitem target="fibreComponent.fibreComponent.html">fibreComponent</tocitem>
+               <tocitem target="fibreComponent.calcFourier.html">calcFourier</tocitem>
+               <tocitem target="fibreComponent.calcModes.html">calcModes</tocitem>
+               <tocitem target="fibreComponent.calcPDF.html">calcPDF</tocitem>
+               <tocitem target="fibreComponent.discreteSample.html">discreteSample</tocitem>
+               <tocitem target="fibreComponent.display.html">display</tocitem>
+               <tocitem target="fibreComponent.eval.html">eval</tocitem>
+               <tocitem target="fibreComponent.grad.html">grad</tocitem>
+               <tocitem target="fibreComponent.rotate.html">rotate</tocitem>
+               <tocitem target="fibreComponent.smooth.html">smooth</tocitem>
+            </tocitem>
+            <tocitem target="FourierComponent_index.html">FourierComponent<tocitem target="FourierComponent.FourierComponent.html">FourierComponent</tocitem>
+               <tocitem target="FourierComponent.ChebCoeff.html">ChebCoeff</tocitem>
+               <tocitem target="FourierComponent.Fourier.html">Fourier</tocitem>
+               <tocitem target="FourierComponent.calcFourier.html">calcFourier</tocitem>
+               <tocitem target="FourierComponent.calcMDF.html">calcMDF</tocitem>
+               <tocitem target="FourierComponent.calcPDF.html">calcPDF</tocitem>
+               <tocitem target="FourierComponent.conv.html">conv</tocitem>
+               <tocitem target="FourierComponent.display.html">display</tocitem>
+               <tocitem target="FourierComponent.eval.html">eval</tocitem>
+               <tocitem target="FourierComponent.grad.html">grad</tocitem>
+               <tocitem target="FourierComponent.norm.html">norm</tocitem>
+               <tocitem target="FourierComponent.rotate.html">rotate</tocitem>
+               <tocitem target="FourierComponent.smooth.html">smooth</tocitem>
+            </tocitem>
+            <tocitem target="BinghamComponent_index.html">BinghamComponent<tocitem target="BinghamComponent.BinghamComponent.html">BinghamComponent</tocitem>
+               <tocitem target="BinghamComponent.calcFourier.html">calcFourier</tocitem>
+               <tocitem target="BinghamComponent.calcModes.html">calcModes</tocitem>
+               <tocitem target="BinghamComponent.calcPDF.html">calcPDF</tocitem>
+               <tocitem target="BinghamComponent.display.html">display</tocitem>
+               <tocitem target="BinghamComponent.eval.html">eval</tocitem>
+               <tocitem target="BinghamComponent.rotate.html">rotate</tocitem>
+               <tocitem target="BinghamComponent.smooth.html">smooth</tocitem>
+            </tocitem>
+            <tocitem target="standardODFs_index.html">Standard ODFs<tocitem target="BinghamODF.html">BinghamODF</tocitem>
+               <tocitem target="FourierODF.html">FourierODF</tocitem>
+               <tocitem target="SantaFe.html">SantaFe</tocitem>
+               <tocitem target="femODF.html">femODF</tocitem>
+               <tocitem target="fibreODF.html">fibreODF</tocitem>
+               <tocitem target="mix2.html">mix2</tocitem>
+               <tocitem target="uniformODF.html">uniformODF</tocitem>
+               <tocitem target="unimodalODF.html">unimodalODF</tocitem>
+            </tocitem>
+            <tocitem target="kernel_index.html">kernel<tocitem target="kernel.kernel.html">kernel</tocitem>
+               <tocitem target="kernel.K_symmetrised.html">K_symmetrised</tocitem>
+               <tocitem target="kernel.RK_symmetrised.html">RK_symmetrised</tocitem>
+               <tocitem target="kernel.plot.html">plot</tocitem>
+               <tocitem target="kernel.plotFourier.html">plotFourier</tocitem>
+               <tocitem target="kernel.plotPDF.html">plotPDF</tocitem>
+               <tocitem target="kernel.volume.html">volume</tocitem>
+            </tocitem>
+         </tocitem>
+         <tocitem target="PoleFigureAnalysis_index.html">Pole Figures<tocitem target="PoleFigureOverview.html">Overview</tocitem>
+            <tocitem target="PoleFigure_index.html">poleFigure<tocitem target="PoleFigure.PoleFigure.html">PoleFigure</tocitem>
+               <tocitem target="PoleFigure.calcError.html">calcError</tocitem>
+               <tocitem target="PoleFigure.calcErrorPF.html">calcErrorPF</tocitem>
+               <tocitem target="PoleFigure.calcFEMODF.html">calcFEMODF</tocitem>
+               <tocitem target="PoleFigure.calcNormalization.html">calcNormalization</tocitem>
+               <tocitem target="PoleFigure.calcODF.html">calcODF</tocitem>
+               <tocitem target="PoleFigure.calcPoleFigure.html">calcPoleFigure</tocitem>
+               <tocitem target="PoleFigure.cat.html">cat</tocitem>
+               <tocitem target="PoleFigure.char.html">char</tocitem>
+               <tocitem target="PoleFigure.correct.html">correct</tocitem>
+               <tocitem target="PoleFigure.display.html">display</tocitem>
+               <tocitem target="PoleFigure.export.html">export</tocitem>
+               <tocitem target="PoleFigure.findOutlier.html">findOutlier</tocitem>
+               <tocitem target="PoleFigure.isOutlier.html">isOutlier</tocitem>
+               <tocitem target="PoleFigure.isempty.html">isempty</tocitem>
+               <tocitem target="PoleFigure.load.html">load</tocitem>
+               <tocitem target="PoleFigure.max.html">max</tocitem>
+               <tocitem target="PoleFigure.mean.html">mean</tocitem>
+               <tocitem target="PoleFigure.min.html">min</tocitem>
+               <tocitem target="PoleFigure.minus.html">minus</tocitem>
+               <tocitem target="PoleFigure.mrdivide.html">mrdivide</tocitem>
+               <tocitem target="PoleFigure.mtimes.html">mtimes</tocitem>
+               <tocitem target="PoleFigure.noisepf.html">noisepf</tocitem>
+               <tocitem target="PoleFigure.normalize.html">normalize</tocitem>
+               <tocitem target="PoleFigure.plot.html">plot</tocitem>
+               <tocitem target="PoleFigure.plotDiff.html">plotDiff</tocitem>
+               <tocitem target="PoleFigure.plus.html">plus</tocitem>
+               <tocitem target="PoleFigure.rdivide.html">rdivide</tocitem>
+               <tocitem target="PoleFigure.rotate.html">rotate</tocitem>
+               <tocitem target="PoleFigure.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="PoleFigure.scale.html">scale</tocitem>
+               <tocitem target="PoleFigure.select.html">select</tocitem>
+               <tocitem target="PoleFigure.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="PoleFigure.subsref.html">subsref</tocitem>
+               <tocitem target="PoleFigure.times.html">times</tocitem>
+               <tocitem target="PoleFigure.uminus.html">uminus</tocitem>
+               <tocitem target="PoleFigure.union.html">union</tocitem>
+               <tocitem target="PoleFigure.unique.html">unique</tocitem>
+            </tocitem>
+            <tocitem target="MLSSolver_index.html">MLSSolver<tocitem target="MLSSolver.MLSSolver.html">MLSSolver</tocitem>
+               <tocitem target="MLSSolver.Mtv.html">Mtv</tocitem>
+               <tocitem target="MLSSolver.Mv.html">Mv</tocitem>
+               <tocitem target="MLSSolver.calcODF.html">calcODF</tocitem>
+               <tocitem target="MLSSolver.doIter.html">doIter</tocitem>
+               <tocitem target="MLSSolver.doZeroRange.html">doZeroRange</tocitem>
+               <tocitem target="MLSSolver.free_nfft.html">free_nfft</tocitem>
+               <tocitem target="MLSSolver.init.html">init</tocitem>
+               <tocitem target="MLSSolver.initIter.html">initIter</tocitem>
+            </tocitem>
+            <tocitem target="zeroRangeMethod_index.html">zeroRangeMethod<tocitem target="zeroRangeMethod.zeroRangeMethod.html">zeroRangeMethod</tocitem>
+               <tocitem target="zeroRangeMethod.checkZeroRange.html">checkZeroRange</tocitem>
+               <tocitem target="zeroRangeMethod.init.html">init</tocitem>
+               <tocitem target="zeroRangeMethod.plot.html">plot</tocitem>
+            </tocitem>
+            <tocitem target="dubna_tools_index.html">Dubna Tools<tocitem target="DubnaGrid.html">DubnaGrid</tocitem>
+               <tocitem target="DubnaPoleFigure.html">DubnaPoleFigure</tocitem>
+               <tocitem target="calc_background.html">calc_background</tocitem>
+               <tocitem target="loadallspectra.html">loadallspectra</tocitem>
+               <tocitem target="loadspectra.html">loadspectra</tocitem>
+               <tocitem target="plot_spectra.html">plot_spectra</tocitem>
+               <tocitem target="proceed_spectra.html">proceed_spectra</tocitem>
+            </tocitem>
+         </tocitem>
+         <tocitem target="TensorAnalysis_index.html">Tensors<tocitem target="TensorAnalysisOverview.html">Overview</tocitem>
+            <tocitem target="tensor_index.html">tensor<tocitem target="tensor.tensor.html">tensor</tocitem>
+               <tocitem target="tensor.EinsteinSum.html">EinsteinSum</tocitem>
+               <tocitem target="tensor.Fourier.html">Fourier</tocitem>
+               <tocitem target="tensor.Voigt.html">Voigt</tocitem>
+               <tocitem target="tensor.antiSym.html">antiSym</tocitem>
+               <tocitem target="tensor.cat.html">cat</tocitem>
+               <tocitem target="tensor.char.html">char</tocitem>
+               <tocitem target="tensor.checkSymmetry.html">checkSymmetry</tocitem>
+               <tocitem target="tensor.colon.html">colon</tocitem>
+               <tocitem target="tensor.conj.html">conj</tocitem>
+               <tocitem target="tensor.ctranspose.html">ctranspose</tocitem>
+               <tocitem target="tensor.det.html">det</tocitem>
+               <tocitem target="tensor.diag.html">diag</tocitem>
+               <tocitem target="tensor.directionalMagnitude.html">directionalMagnitude</tocitem>
+               <tocitem target="tensor.display.html">display</tocitem>
+               <tocitem target="tensor.double.html">double</tocitem>
+               <tocitem target="tensor.eig.html">eig</tocitem>
+               <tocitem target="tensor.end.html">end</tocitem>
+               <tocitem target="tensor.eq.html">eq</tocitem>
+               <tocitem target="tensor.expm.html">expm</tocitem>
+               <tocitem target="tensor.export.html">export</tocitem>
+               <tocitem target="tensor.horzcat.html">horzcat</tocitem>
+               <tocitem target="tensor.inv.html">inv</tocitem>
+               <tocitem target="tensor.length.html">length</tocitem>
+               <tocitem target="tensor.load.html">load</tocitem>
+               <tocitem target="tensor.logm.html">logm</tocitem>
+               <tocitem target="tensor.matrix.html">matrix</tocitem>
+               <tocitem target="tensor.max.html">max</tocitem>
+               <tocitem target="tensor.mean.html">mean</tocitem>
+               <tocitem target="tensor.min.html">min</tocitem>
+               <tocitem target="tensor.minus.html">minus</tocitem>
+               <tocitem target="tensor.mpower.html">mpower</tocitem>
+               <tocitem target="tensor.mrdivide.html">mrdivide</tocitem>
+               <tocitem target="tensor.mtimes.html">mtimes</tocitem>
+               <tocitem target="tensor.ndims.html">ndims</tocitem>
+               <tocitem target="tensor.ne.html">ne</tocitem>
+               <tocitem target="tensor.norm.html">norm</tocitem>
+               <tocitem target="tensor.numel.html">numel</tocitem>
+               <tocitem target="tensor.plot.html">plot</tocitem>
+               <tocitem target="tensor.plus.html">plus</tocitem>
+               <tocitem target="tensor.polar.html">polar</tocitem>
+               <tocitem target="tensor.quadric.html">quadric</tocitem>
+               <tocitem target="tensor.rdivide.html">rdivide</tocitem>
+               <tocitem target="tensor.real.html">real</tocitem>
+               <tocitem target="tensor.reshape.html">reshape</tocitem>
+               <tocitem target="tensor.rotate.html">rotate</tocitem>
+               <tocitem target="tensor.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="tensor.rotation.html">rotation</tocitem>
+               <tocitem target="tensor.size.html">size</tocitem>
+               <tocitem target="tensor.sqrtm.html">sqrtm</tocitem>
+               <tocitem target="tensor.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="tensor.subsref.html">subsref</tocitem>
+               <tocitem target="tensor.sum.html">sum</tocitem>
+               <tocitem target="tensor.svd.html">svd</tocitem>
+               <tocitem target="tensor.sym.html">sym</tocitem>
+               <tocitem target="tensor.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="tensor.tensorSize.html">tensorSize</tocitem>
+               <tocitem target="tensor.times.html">times</tocitem>
+               <tocitem target="tensor.trace.html">trace</tocitem>
+               <tocitem target="tensor.transformReferenceFrame.html">transformReferenceFrame</tocitem>
+               <tocitem target="tensor.transpose.html">transpose</tocitem>
+               <tocitem target="tensor.uminus.html">uminus</tocitem>
+               <tocitem target="tensor.vector3d.html">vector3d</tocitem>
+               <tocitem target="tensor.vertcat.html">vertcat</tocitem>
+            </tocitem>
+            <tocitem target="stressTensor_index.html">stressTensor<tocitem target="stressTensor.stressTensor.html">stressTensor</tocitem>
+               <tocitem target="stressTensor.calcShearStress.html">calcShearStress</tocitem>
+               <tocitem target="stressTensor.deviatoricStress.html">deviatoricStress</tocitem>
+               <tocitem target="stressTensor.equivalentStress.html">equivalentStress</tocitem>
+               <tocitem target="stressTensor.meanStress.html">meanStress</tocitem>
+               <tocitem target="stressTensor.normalize.html">normalize</tocitem>
+            </tocitem>
+            <tocitem target="strainTensor_index.html">strainTensor<tocitem target="strainTensor.strainTensor.html">strainTensor</tocitem>
+               <tocitem target="strainTensor.axisRatios.html">axisRatios</tocitem>
+               <tocitem target="strainTensor.calcTaylor.html">calcTaylor</tocitem>
+               <tocitem target="strainTensor.deviatoricStrain.html">deviatoricStrain</tocitem>
+               <tocitem target="strainTensor.ellipsoid.html">ellipsoid</tocitem>
+               <tocitem target="strainTensor.equivalentStrain.html">equivalentStrain</tocitem>
+               <tocitem target="strainTensor.octahedralStrain.html">octahedralStrain</tocitem>
+            </tocitem>
+            <tocitem target="strainRateTensor_index.html">strainRateTensor<tocitem target="strainRateTensor.strainRateTensor.html">strainRateTensor</tocitem>
+            </tocitem>
+            <tocitem target="complianceTensor_index.html">complianceTensor<tocitem target="complianceTensor.complianceTensor.html">complianceTensor</tocitem>
+               <tocitem target="complianceTensor.ChristoffelTensor.html">ChristoffelTensor</tocitem>
+               <tocitem target="complianceTensor.PoissonRatio.html">PoissonRatio</tocitem>
+               <tocitem target="complianceTensor.YoungsModulus.html">YoungsModulus</tocitem>
+               <tocitem target="complianceTensor.bulkModulus.html">bulkModulus</tocitem>
+               <tocitem target="complianceTensor.colon.html">colon</tocitem>
+               <tocitem target="complianceTensor.inv.html">inv</tocitem>
+               <tocitem target="complianceTensor.linearCompressibility.html">linearCompressibility</tocitem>
+               <tocitem target="complianceTensor.mtimes.html">mtimes</tocitem>
+               <tocitem target="complianceTensor.shearModulus.html">shearModulus</tocitem>
+               <tocitem target="complianceTensor.velocity.html">velocity</tocitem>
+               <tocitem target="complianceTensor.volumeCompressibility.html">volumeCompressibility</tocitem>
+            </tocitem>
+            <tocitem target="stiffnessTensor_index.html">stiffnessTensor<tocitem target="stiffnessTensor.stiffnessTensor.html">stiffnessTensor</tocitem>
+               <tocitem target="stiffnessTensor.ChristoffelTensor.html">ChristoffelTensor</tocitem>
+               <tocitem target="stiffnessTensor.HashinShtrikmanModulus.html">HashinShtrikmanModulus</tocitem>
+               <tocitem target="stiffnessTensor.PoissonRatio.html">PoissonRatio</tocitem>
+               <tocitem target="stiffnessTensor.YoungsModulus.html">YoungsModulus</tocitem>
+               <tocitem target="stiffnessTensor.bulkModulus.html">bulkModulus</tocitem>
+               <tocitem target="stiffnessTensor.colon.html">colon</tocitem>
+               <tocitem target="stiffnessTensor.energyVector.html">energyVector</tocitem>
+               <tocitem target="stiffnessTensor.inv.html">inv</tocitem>
+               <tocitem target="stiffnessTensor.linearCompressibility.html">linearCompressibility</tocitem>
+               <tocitem target="stiffnessTensor.mtimes.html">mtimes</tocitem>
+               <tocitem target="stiffnessTensor.plotSeismicVelocities.html">plotSeismicVelocities</tocitem>
+               <tocitem target="stiffnessTensor.shearModulus.html">shearModulus</tocitem>
+               <tocitem target="stiffnessTensor.velocity.html">velocity</tocitem>
+               <tocitem target="stiffnessTensor.volumeCompressibility.html">volumeCompressibility</tocitem>
+            </tocitem>
+            <tocitem target="refractiveIndexTensor_index.html">refractiveIndexTensor<tocitem target="refractiveIndexTensor.refractiveIndexTensor.html">refractiveIndexTensor</tocitem>
+               <tocitem target="refractiveIndexTensor.birefringence.html">birefringence</tocitem>
+               <tocitem target="refractiveIndexTensor.opticalAxis.html">opticalAxis</tocitem>
+               <tocitem target="refractiveIndexTensor.refractiveIndex.html">refractiveIndex</tocitem>
+               <tocitem target="refractiveIndexTensor.spectralTransmission.html">spectralTransmission</tocitem>
+            </tocitem>
+            <tocitem target="curvatureTensor_index.html">curvatureTensor<tocitem target="curvatureTensor.curvatureTensor.html">curvatureTensor</tocitem>
+               <tocitem target="curvatureTensor.dislocationDensity.html">dislocationDensity</tocitem>
+               <tocitem target="curvatureTensor.fitDislocationSystems.html">fitDislocationSystems</tocitem>
+            </tocitem>
+            <tocitem target="spinTensor_index.html">spinTensor<tocitem target="spinTensor.spinTensor.html">spinTensor</tocitem>
+            </tocitem>
+            <tocitem target="ChristoffelTensor_index.html">ChristoffelTensor<tocitem target="ChristoffelTensor.ChristoffelTensor.html">ChristoffelTensor</tocitem>
+            </tocitem>
+            <tocitem target="velocityGradientTensor_index.html">velocityGradientTensor<tocitem target="velocityGradientTensor.velocityGradientTensor.html">velocityGradientTensor</tocitem>
+               <tocitem target="velocityGradientTensor.FCE.html">FCE</tocitem>
+               <tocitem target="velocityGradientTensor.angularVelocityVector.html">angularVelocityVector</tocitem>
+               <tocitem target="velocityGradientTensor.axisRatios.html">axisRatios</tocitem>
+               <tocitem target="velocityGradientTensor.calcTaylor.html">calcTaylor</tocitem>
+               <tocitem target="velocityGradientTensor.compressionDirection.html">compressionDirection</tocitem>
+               <tocitem target="velocityGradientTensor.equivalentStrain.html">equivalentStrain</tocitem>
+               <tocitem target="velocityGradientTensor.expm.html">expm</tocitem>
+               <tocitem target="velocityGradientTensor.extensionDirection.html">extensionDirection</tocitem>
+               <tocitem target="velocityGradientTensor.finiteStrain.html">finiteStrain</tocitem>
+               <tocitem target="velocityGradientTensor.normalDirection.html">normalDirection</tocitem>
+               <tocitem target="velocityGradientTensor.polar.html">polar</tocitem>
+               <tocitem target="velocityGradientTensor.pureShear.html">pureShear</tocitem>
+               <tocitem target="velocityGradientTensor.rotationRate.html">rotationRate</tocitem>
+               <tocitem target="velocityGradientTensor.shearDirection.html">shearDirection</tocitem>
+               <tocitem target="velocityGradientTensor.simpleShear.html">simpleShear</tocitem>
+               <tocitem target="velocityGradientTensor.strainRate.html">strainRate</tocitem>
+               <tocitem target="velocityGradientTensor.uniaxial.html">uniaxial</tocitem>
+               <tocitem target="velocityGradientTensor.vorticity.html">vorticity</tocitem>
+            </tocitem>
+            <tocitem target="deformationGradientTensor_index.html">deformationGradientTensor<tocitem target="deformationGradientTensor.deformationGradientTensor.html">deformationGradientTensor</tocitem>
+               <tocitem target="deformationGradientTensor.CauchyStrain.html">CauchyStrain</tocitem>
+               <tocitem target="deformationGradientTensor.GreenStrain.html">GreenStrain</tocitem>
+               <tocitem target="deformationGradientTensor.logm.html">logm</tocitem>
+               <tocitem target="deformationGradientTensor.pureShear.html">pureShear</tocitem>
+               <tocitem target="deformationGradientTensor.simpleShear.html">simpleShear</tocitem>
+               <tocitem target="deformationGradientTensor.uniaxial.html">uniaxial</tocitem>
+            </tocitem>
+            <tocitem target="dislocationDensityTensor_index.html">dislocationDensityTensor<tocitem target="dislocationDensityTensor.dislocationDensityTensor.html">dislocationDensityTensor</tocitem>
+               <tocitem target="dislocationDensityTensor.curvature.html">curvature</tocitem>
+            </tocitem>
+         </tocitem>
+         <tocitem target="SphericalFunctions_index.html">Spherical Functions<tocitem target="SphericalFunctionsOverview.html">Overview</tocitem>
+            <tocitem target="S2Fun_index.html">S2Fun<tocitem target="S2Fun.S2Fun.html">S2Fun</tocitem>
+               <tocitem target="S2Fun.abs.html">abs</tocitem>
+               <tocitem target="S2Fun.contour.html">contour</tocitem>
+               <tocitem target="S2Fun.contourf.html">contourf</tocitem>
+               <tocitem target="S2Fun.discreteSample.html">discreteSample</tocitem>
+               <tocitem target="S2Fun.display.html">display</tocitem>
+               <tocitem target="S2Fun.grad.html">grad</tocitem>
+               <tocitem target="S2Fun.max.html">max</tocitem>
+               <tocitem target="S2Fun.mean.html">mean</tocitem>
+               <tocitem target="S2Fun.min.html">min</tocitem>
+               <tocitem target="S2Fun.minus.html">minus</tocitem>
+               <tocitem target="S2Fun.pcolor.html">pcolor</tocitem>
+               <tocitem target="S2Fun.plot.html">plot</tocitem>
+               <tocitem target="S2Fun.plot3d.html">plot3d</tocitem>
+               <tocitem target="S2Fun.plotSection.html">plotSection</tocitem>
+               <tocitem target="S2Fun.quiver3.html">quiver3</tocitem>
+               <tocitem target="S2Fun.quiverSection.html">quiverSection</tocitem>
+               <tocitem target="S2Fun.rotate.html">rotate</tocitem>
+               <tocitem target="S2Fun.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="S2Fun.smiley.html">smiley</tocitem>
+               <tocitem target="S2Fun.sum.html">sum</tocitem>
+               <tocitem target="S2Fun.surf.html">surf</tocitem>
+               <tocitem target="S2Fun.unimodal.html">unimodal</tocitem>
+               <tocitem target="S2BumpKernel.html">S2BumpKernel</tocitem>
+               <tocitem target="SchulzDefousingKernel.html">SchulzDefousingKernel</tocitem>
+            </tocitem>
+            <tocitem target="S2FunHandle_index.html">S2FunHandle<tocitem target="S2FunHandle.S2FunHandle.html">S2FunHandle</tocitem>
+               <tocitem target="S2FunHandle.rotate_outer.html">rotate_outer</tocitem>
+            </tocitem>
+            <tocitem target="S2FunTri_index.html">S2FunTri<tocitem target="S2FunTri.S2FunTri.html">S2FunTri</tocitem>
+               <tocitem target="S2FunTri.abs.html">abs</tocitem>
+               <tocitem target="S2FunTri.display.html">display</tocitem>
+               <tocitem target="S2FunTri.eval.html">eval</tocitem>
+               <tocitem target="S2FunTri.grad.html">grad</tocitem>
+               <tocitem target="S2FunTri.le.html">le</tocitem>
+               <tocitem target="S2FunTri.max.html">max</tocitem>
+               <tocitem target="S2FunTri.mean.html">mean</tocitem>
+               <tocitem target="S2FunTri.min.html">min</tocitem>
+               <tocitem target="S2FunTri.mtimes.html">mtimes</tocitem>
+               <tocitem target="S2FunTri.plot.html">plot</tocitem>
+               <tocitem target="S2FunTri.plus.html">plus</tocitem>
+               <tocitem target="S2FunTri.power.html">power</tocitem>
+               <tocitem target="S2FunTri.rdivide.html">rdivide</tocitem>
+               <tocitem target="S2FunTri.rotate.html">rotate</tocitem>
+               <tocitem target="S2FunTri.times.html">times</tocitem>
+               <tocitem target="S2FunTri.uminus.html">uminus</tocitem>
+               <tocitem target="S2FunTri.volume.html">volume</tocitem>
+            </tocitem>
+            <tocitem target="BinghamS2_index.html">BinghamS2<tocitem target="BinghamS2.BinghamS2.html">BinghamS2</tocitem>
+               <tocitem target="BinghamS2.fit.html">fit</tocitem>
+               <tocitem target="BinghamS2.rotate.html">rotate</tocitem>
+            </tocitem>
+            <tocitem target="S2FunHarmonic_index.html">S2FunHarmonic<tocitem target="S2FunHarmonic.S2FunHarmonic.html">S2FunHarmonic</tocitem>
+               <tocitem target="S2FunHarmonic.abs.html">abs</tocitem>
+               <tocitem target="S2FunHarmonic.acos.html">acos</tocitem>
+               <tocitem target="S2FunHarmonic.approximation.html">approximation</tocitem>
+               <tocitem target="S2FunHarmonic.cat.html">cat</tocitem>
+               <tocitem target="S2FunHarmonic.conj.html">conj</tocitem>
+               <tocitem target="S2FunHarmonic.conv.html">conv</tocitem>
+               <tocitem target="S2FunHarmonic.cos.html">cos</tocitem>
+               <tocitem target="S2FunHarmonic.ctranspose.html">ctranspose</tocitem>
+               <tocitem target="S2FunHarmonic.display.html">display</tocitem>
+               <tocitem target="S2FunHarmonic.dot.html">dot</tocitem>
+               <tocitem target="S2FunHarmonic.eig.html">eig</tocitem>
+               <tocitem target="S2FunHarmonic.end.html">end</tocitem>
+               <tocitem target="S2FunHarmonic.entropy.html">entropy</tocitem>
+               <tocitem target="S2FunHarmonic.eval.html">eval</tocitem>
+               <tocitem target="S2FunHarmonic.even.html">even</tocitem>
+               <tocitem target="S2FunHarmonic.grad.html">grad</tocitem>
+               <tocitem target="S2FunHarmonic.horzcat.html">horzcat</tocitem>
+               <tocitem target="S2FunHarmonic.isempty.html">isempty</tocitem>
+               <tocitem target="S2FunHarmonic.le.html">le</tocitem>
+               <tocitem target="S2FunHarmonic.length.html">length</tocitem>
+               <tocitem target="S2FunHarmonic.log.html">log</tocitem>
+               <tocitem target="S2FunHarmonic.mean.html">mean</tocitem>
+               <tocitem target="S2FunHarmonic.min.html">min</tocitem>
+               <tocitem target="S2FunHarmonic.mtimes.html">mtimes</tocitem>
+               <tocitem target="S2FunHarmonic.norm.html">norm</tocitem>
+               <tocitem target="S2FunHarmonic.plotSpektra.html">plotSpektra</tocitem>
+               <tocitem target="S2FunHarmonic.plus.html">plus</tocitem>
+               <tocitem target="S2FunHarmonic.power.html">power</tocitem>
+               <tocitem target="S2FunHarmonic.quadrature.html">quadrature</tocitem>
+               <tocitem target="S2FunHarmonic.radon.html">radon</tocitem>
+               <tocitem target="S2FunHarmonic.rdivide.html">rdivide</tocitem>
+               <tocitem target="S2FunHarmonic.regularisation.html">regularisation</tocitem>
+               <tocitem target="S2FunHarmonic.reshape.html">reshape</tocitem>
+               <tocitem target="S2FunHarmonic.rotate.html">rotate</tocitem>
+               <tocitem target="S2FunHarmonic.rotate_outer.html">rotate_outer</tocitem>
+               <tocitem target="S2FunHarmonic.simultaniousCG.html">simultaniousCG</tocitem>
+               <tocitem target="S2FunHarmonic.sqrt.html">sqrt</tocitem>
+               <tocitem target="S2FunHarmonic.steepestDescent.html">steepestDescent</tocitem>
+               <tocitem target="S2FunHarmonic.subsasgn.html">subsasgn</tocitem>
+               <tocitem target="S2FunHarmonic.subsref.html">subsref</tocitem>
+               <tocitem target="S2FunHarmonic.sum.html">sum</tocitem>
+               <tocitem target="S2FunHarmonic.symmetrise.html">symmetrise</tocitem>
+               <tocitem target="S2FunHarmonic.times.html">times</tocitem>
+               <tocitem target="S2FunHarmonic.transpose.html">transpose</tocitem>
+               <tocitem target="S2FunHarmonic.truncate.html">truncate</tocitem>
+               <tocitem target="S2FunHarmonic.uminus.html">uminus</tocitem>
+               <tocitem target="S2FunHarmonic.vertcat.html">vertcat</tocitem>
+               <tocitem target="S2FunHarmonic.volume.html">volume</tocitem>
+            </tocitem>
+            <tocitem target="S2FunHarmonicSym_index.html">S2FunHarmonicSym<tocitem target="S2FunHarmonicSym.S2FunHarmonicSym.html">S2FunHarmonicSym</tocitem>
+               <tocitem target="S2FunHarmonicSym.display.html">display</tocitem>
+               <tocitem target="S2FunHarmonicSym.plot.html">plot</tocitem>
+               <tocitem target="S2FunHarmonicSym.plus.html">plus</tocitem>
+               <tocitem target="S2FunHarmonicSym.power.html">power</tocitem>
+               <tocitem target="S2FunHarmonicSym.quadrature.html">quadrature</tocitem>
+               <tocitem target="S2FunHarmonicSym.rdivide.html">rdivide</tocitem>
+               <tocitem target="S2FunHarmonicSym.steepestDescent.html">steepestDescent</tocitem>
+               <tocitem target="S2FunHarmonicSym.times.html">times</tocitem>
+            </tocitem>
+            <tocitem target="S2AxisField_index.html">S2AxisField<tocitem target="S2AxisField.S2AxisField.html">S2AxisField</tocitem>
+               <tocitem target="S2AxisField.angle.html">angle</tocitem>
+               <tocitem target="S2AxisField.plot.html">plot</tocitem>
+               <tocitem target="S2AxisField.quiver.html">quiver</tocitem>
+               <tocitem target="S2AxisField.quiver3.html">quiver3</tocitem>
+            </tocitem>
+            <tocitem target="S2AxisFieldTri_index.html">S2AxisFieldTri<tocitem target="S2AxisFieldTri.S2AxisFieldTri.html">S2AxisFieldTri</tocitem>
+               <tocitem target="S2AxisFieldTri.angle.html">angle</tocitem>
+               <tocitem target="S2AxisFieldTri.cross.html">cross</tocitem>
+               <tocitem target="S2AxisFieldTri.dot.html">dot</tocitem>
+               <tocitem target="S2AxisFieldTri.eval.html">eval</tocitem>
+            </tocitem>
+            <tocitem target="S2AxisFieldHarmonic_index.html">S2AxisFieldHarmonic<tocitem target="S2AxisFieldHarmonic.S2AxisFieldHarmonic.html">S2AxisFieldHarmonic</tocitem>
+               <tocitem target="S2AxisFieldHarmonic.approximation.html">approximation</tocitem>
+               <tocitem target="S2AxisFieldHarmonic.cross.html">cross</tocitem>
+               <tocitem target="S2AxisFieldHarmonic.display.html">display</tocitem>
+               <tocitem target="S2AxisFieldHarmonic.dot.html">dot</tocitem>
+               <tocitem target="S2AxisFieldHarmonic.eval.html">eval</tocitem>
+               <tocitem target="S2AxisFieldHarmonic.quadrature.html">quadrature</tocitem>
+            </tocitem>
+            <tocitem target="S2VectorField_index.html">S2VectorField<tocitem target="S2VectorField.S2VectorField.html">S2VectorField</tocitem>
+               <tocitem target="S2VectorField.angle.html">angle</tocitem>
+               <tocitem target="S2VectorField.display.html">display</tocitem>
+               <tocitem target="S2VectorField.n.html">n</tocitem>
+               <tocitem target="S2VectorField.normal.html">normal</tocitem>
+               <tocitem target="S2VectorField.normalize.html">normalize</tocitem>
+               <tocitem target="S2VectorField.plot.html">plot</tocitem>
+               <tocitem target="S2VectorField.plotSection.html">plotSection</tocitem>
+               <tocitem target="S2VectorField.polar.html">polar</tocitem>
+               <tocitem target="S2VectorField.quiver.html">quiver</tocitem>
+               <tocitem target="S2VectorField.quiver3.html">quiver3</tocitem>
+               <tocitem target="S2VectorField.quiverSection.html">quiverSection</tocitem>
+               <tocitem target="S2VectorField.rho.html">rho</tocitem>
+               <tocitem target="S2VectorField.sigma.html">sigma</tocitem>
+               <tocitem target="S2VectorField.theta.html">theta</tocitem>
+            </tocitem>
+            <tocitem target="S2VectorFieldHarmonic_index.html">S2VectorFieldHarmonic<tocitem target="S2VectorFieldHarmonic.S2VectorFieldHarmonic.html">S2VectorFieldHarmonic</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.approximation.html">approximation</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.cross.html">cross</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.display.html">display</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.dot.html">dot</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.eval.html">eval</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.mean.html">mean</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.minus.html">minus</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.mtimes.html">mtimes</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.norm.html">norm</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.plus.html">plus</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.quadrature.html">quadrature</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.rdivide.html">rdivide</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.rotate.html">rotate</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.times.html">times</tocitem>
+               <tocitem target="S2VectorFieldHarmonic.uminus.html">uminus</tocitem>
+            </tocitem>
+            <tocitem target="S2VectorFieldTri_index.html">S2VectorFieldTri<tocitem target="S2VectorFieldTri.S2VectorFieldTri.html">S2VectorFieldTri</tocitem>
+               <tocitem target="S2VectorFieldTri.angle.html">angle</tocitem>
+               <tocitem target="S2VectorFieldTri.cross.html">cross</tocitem>
+               <tocitem target="S2VectorFieldTri.display.html">display</tocitem>
+               <tocitem target="S2VectorFieldTri.dot.html">dot</tocitem>
+               <tocitem target="S2VectorFieldTri.eval.html">eval</tocitem>
+               <tocitem target="S2VectorFieldTri.minus.html">minus</tocitem>
+               <tocitem target="S2VectorFieldTri.norm.html">norm</tocitem>
+               <tocitem target="S2VectorFieldTri.plus.html">plus</tocitem>
+               <tocitem target="S2VectorFieldTri.rdivide.html">rdivide</tocitem>
+               <tocitem target="S2VectorFieldTri.times.html">times</tocitem>
+               <tocitem target="S2VectorFieldTri.uminus.html">uminus</tocitem>
+            </tocitem>
+            <tocitem target="S2Kernel_index.html">S2Kernel<tocitem target="S2Kernel.S2Kernel.html">S2Kernel</tocitem>
+            </tocitem>
+            <tocitem target="S2DeLaValleePoussin_index.html">de S2DeLaValleePoussin<tocitem target="S2DeLaValleePoussin.S2DeLaValleePoussin.html">S2DeLaValleePoussin</tocitem>
+            </tocitem>
+         </tocitem>
+         <tocitem target="plotting_index.html">Plotting<tocitem target="plottingOverview.html">Overview</tocitem>
+            <tocitem target="mapPlot.html">mapPlot</tocitem>
+            <tocitem target="scaleBar.html">scaleBar</tocitem>
+            <tocitem target="sphericalPlot.html">sphericalPlot</tocitem>
+            <tocitem target="mtexFigure_index.html">mtexFigure<tocitem target="mtexFigure.mtexFigure.html">mtexFigure</tocitem>
+               <tocitem target="mtexFigure.CLim.html">CLim</tocitem>
+               <tocitem target="mtexFigure.adjustFigurePosition.html">adjustFigurePosition</tocitem>
+               <tocitem target="mtexFigure.colorbar.html">colorbar</tocitem>
+               <tocitem target="mtexFigure.drawNow.html">drawNow</tocitem>
+               <tocitem target="mtexFigure.getDataCursorPos.html">getDataCursorPos</tocitem>
+               <tocitem target="mtexFigure.nextAxis.html">nextAxis</tocitem>
+            </tocitem>
+            <tocitem target="sphericalProjections_index.html">spherical Projections<tocitem target="eangleProjection.html">eangleProjection</tocitem>
+               <tocitem target="eareaProjection.html">eareaProjection</tocitem>
+               <tocitem target="edistProjection.html">edistProjection</tocitem>
+               <tocitem target="gnonomicProjection.html">gnonomicProjection</tocitem>
+               <tocitem target="orthographicProjection.html">orthographicProjection</tocitem>
+               <tocitem target="plainProjection.html">plainProjection</tocitem>
+               <tocitem target="sphericalProjection.html">sphericalProjection</tocitem>
+               <tocitem target="squareProjection.html">squareProjection</tocitem>
+            </tocitem>
+            <tocitem target="orientationPlot_index.html">orientation plots<tocitem target="orientationPlot.html">orientationPlot</tocitem>
+               <tocitem target="BungePlot.html">BungePlot</tocitem>
+               <tocitem target="RodriguesPlot.html">RodriguesPlot</tocitem>
+               <tocitem target="axisAnglePlot.html">axisAnglePlot</tocitem>
+               <tocitem target="conformalPlot.html">conformalPlot</tocitem>
+               <tocitem target="cubochoricPlot.html">cubochoricPlot</tocitem>
+               <tocitem target="homochoricPlot.html">homochoricPlot</tocitem>
+               <tocitem target="newOrientationPlot.html">newOrientationPlot</tocitem>
+               <tocitem target="quaternionPlot.html">quaternionPlot</tocitem>
+            </tocitem>
+            <tocitem target="ODFSections_index.html">Euler space sections<tocitem target="ODFSections.ODFSections.html">ODFSections</tocitem>
+               <tocitem target="ODFSections.plot.html">plot</tocitem>
+               <tocitem target="ODFSections.quiver.html">quiver</tocitem>
+               <tocitem target="PhiSections.html">PhiSections</tocitem>
+               <tocitem target="axisAngleSections.html">axisAngleSections</tocitem>
+               <tocitem target="gammaSections.html">gammaSections</tocitem>
+               <tocitem target="ipfSections.html">ipfSections</tocitem>
+               <tocitem target="omegaSections.html">omegaSections</tocitem>
+               <tocitem target="pfSections.html">pfSections</tocitem>
+               <tocitem target="phi1Sections.html">phi1Sections</tocitem>
+               <tocitem target="phi2Sections.html">phi2Sections</tocitem>
+               <tocitem target="sigmaSections.html">sigmaSections</tocitem>
+            </tocitem>
+            <tocitem target="colormaps_index.html">colormaps<tocitem target="LaboTeXColorMap.html">LaboTeXColorMap</tocitem>
+               <tocitem target="WhiteJetColorMap.html">WhiteJetColorMap</tocitem>
+               <tocitem target="black2whiteColorMap.html">black2whiteColorMap</tocitem>
+               <tocitem target="blue2redColorMap.html">blue2redColorMap</tocitem>
+               <tocitem target="coolColorMap.html">coolColorMap</tocitem>
+               <tocitem target="hotColorMap.html">hotColorMap</tocitem>
+               <tocitem target="hsvColorMap.html">hsvColorMap</tocitem>
+               <tocitem target="infernoColorMap.html">infernoColorMap</tocitem>
+               <tocitem target="magmaColorMap.html">magmaColorMap</tocitem>
+               <tocitem target="parulaColorMap.html">parulaColorMap</tocitem>
+               <tocitem target="plasmaColorMap.html">plasmaColorMap</tocitem>
+               <tocitem target="red2blueColorMap.html">red2blueColorMap</tocitem>
+               <tocitem target="viridisColorMap.html">viridisColorMap</tocitem>
+               <tocitem target="white2blackColorMap.html">white2blackColorMap</tocitem>
+            </tocitem>
+            <tocitem target="directionColorKeys_index.html">directional color keys<tocitem target="HKLDirectionKey.html">HKLDirectionKey</tocitem>
+               <tocitem target="HSVDirectionKey.html">HSVDirectionKey</tocitem>
+               <tocitem target="TSLDirectionKey.html">TSLDirectionKey</tocitem>
+               <tocitem target="directionColorKey.html">directionColorKey</tocitem>
+            </tocitem>
+            <tocitem target="orientationColorKeys_index.html">orientation color keys<tocitem target="BungeColorKey.html">BungeColorKey</tocitem>
+               <tocitem target="axisAngleColorKey.html">axisAngleColorKey</tocitem>
+               <tocitem target="ipfColorKey.html">ipfColorKey</tocitem>
+               <tocitem target="ipfHKLKey.html">ipfHKLKey</tocitem>
+               <tocitem target="ipfHSVKey.html">ipfHSVKey</tocitem>
+               <tocitem target="ipfSpotKey.html">ipfSpotKey</tocitem>
+               <tocitem target="ipfTSLKey.html">ipfTSLKey</tocitem>
+               <tocitem target="orientationColorKey.html">orientationColorKey</tocitem>
+               <tocitem target="spectralTransmissionColorKey.html">spectralTransmissionColorKey</tocitem>
+               <tocitem target="spotColorKey.html">spotColorKey</tocitem>
+            </tocitem>
+            <tocitem target="plotting_tools_index.html">tools<tocitem target="annotate.html">annotate</tocitem>
+               <tocitem target="ar2rgb.html">ar2rgb</tocitem>
+               <tocitem target="contour3s.html">contour3s</tocitem>
+               <tocitem target="convertFigureRGB2ind.html">convertFigureRGB2ind</tocitem>
+               <tocitem target="ellipse.html">ellipse</tocitem>
+               <tocitem target="gcm.html">gcm</tocitem>
+               <tocitem target="getCamera.html">getCamera</tocitem>
+               <tocitem target="getColormaps.html">getColormaps</tocitem>
+               <tocitem target="getHoldState.html">getHoldState</tocitem>
+               <tocitem target="getUnitScale.html">getUnitScale</tocitem>
+               <tocitem target="hsl2hsv.html">hsl2hsv</tocitem>
+               <tocitem target="ind2color.html">ind2color</tocitem>
+               <tocitem target="isRGB.html">isRGB</tocitem>
+               <tocitem target="makeColorMap.html">makeColorMap</tocitem>
+               <tocitem target="mtexColorMap.html">mtexColorMap</tocitem>
+               <tocitem target="mtexColorbar.html">mtexColorbar</tocitem>
+               <tocitem target="newMapPlot.html">newMapPlot</tocitem>
+               <tocitem target="newMtexFigure.html">newMtexFigure</tocitem>
+               <tocitem target="newODFSectionPlot.html">newODFSectionPlot</tocitem>
+               <tocitem target="newSphericalPlot.html">newSphericalPlot</tocitem>
+               <tocitem target="nextAxis.html">nextAxis</tocitem>
+               <tocitem target="nextstyle.html">nextstyle</tocitem>
+               <tocitem target="optiondraw.html">optiondraw</tocitem>
+               <tocitem target="optionplot.html">optionplot</tocitem>
+               <tocitem target="plotEllipse.html">plotEllipse</tocitem>
+               <tocitem target="plotEmptySphere.html">plotEmptySphere</tocitem>
+               <tocitem target="plota2east.html">plota2east</tocitem>
+               <tocitem target="plota2north.html">plota2north</tocitem>
+               <tocitem target="plota2south.html">plota2south</tocitem>
+               <tocitem target="plota2west.html">plota2west</tocitem>
+               <tocitem target="plotaStar2east.html">plotaStar2east</tocitem>
+               <tocitem target="plotb2east.html">plotb2east</tocitem>
+               <tocitem target="plotb2north.html">plotb2north</tocitem>
+               <tocitem target="plotb2south.html">plotb2south</tocitem>
+               <tocitem target="plotb2west.html">plotb2west</tocitem>
+               <tocitem target="plotx2east.html">plotx2east</tocitem>
+               <tocitem target="plotx2north.html">plotx2north</tocitem>
+               <tocitem target="plotx2south.html">plotx2south</tocitem>
+               <tocitem target="plotx2west.html">plotx2west</tocitem>
+               <tocitem target="plotzIntoPlane.html">plotzIntoPlane</tocitem>
+               <tocitem target="plotzOutOfPlane.html">plotzOutOfPlane</tocitem>
+               <tocitem target="rgb2str.html">rgb2str</tocitem>
+               <tocitem target="saveFigure.html">saveFigure</tocitem>
+               <tocitem target="sectionLabels.html">sectionLabels</tocitem>
+               <tocitem target="selectPolygon.html">selectPolygon</tocitem>
+               <tocitem target="setCamera.html">setCamera</tocitem>
+               <tocitem target="setColorRange.html">setColorRange</tocitem>
+               <tocitem target="simulateClick.html">simulateClick</tocitem>
+               <tocitem target="str2rgb.html">str2rgb</tocitem>
+               <tocitem target="switchUnit.html">switchUnit</tocitem>
+               <tocitem target="zUpDown.html">zUpDown</tocitem>
+            </tocitem>
+         </tocitem>
+         <tocitem target="tools_index.html">Tools<tocitem target="toolsOverview.html">Overview</tocitem>
+            <tocitem target="option_tools_index.html">options<tocitem target="NWSE.html">NWSE</tocitem>
+               <tocitem target="UpDown.html">UpDown</tocitem>
+               <tocitem target="argin_check.html">argin_check</tocitem>
+               <tocitem target="calc_flags.html">calc_flags</tocitem>
+               <tocitem target="checkOption.html">checkOption</tocitem>
+               <tocitem target="check_option.html">check_option</tocitem>
+               <tocitem target="delete_option.html">delete_option</tocitem>
+               <tocitem target="displayClass.html">displayClass</tocitem>
+               <tocitem target="extract_SO3grid.html">extract_SO3grid</tocitem>
+               <tocitem target="extract_argoption.html">extract_argoption</tocitem>
+               <tocitem target="extract_data.html">extract_data</tocitem>
+               <tocitem target="extract_option.html">extract_option</tocitem>
+               <tocitem target="find_option.html">find_option</tocitem>
+               <tocitem target="find_type.html">find_type</tocitem>
+               <tocitem target="getClass.html">getClass</tocitem>
+               <tocitem target="getMTEXpref.html">getMTEXpref</tocitem>
+               <tocitem target="get_flag.html">get_flag</tocitem>
+               <tocitem target="get_obj_fields.html">get_obj_fields</tocitem>
+               <tocitem target="get_option.html">get_option</tocitem>
+               <tocitem target="mtex_path.html">mtex_path</tocitem>
+               <tocitem target="option2str.html">option2str</tocitem>
+               <tocitem target="rmallappdata.html">rmallappdata</tocitem>
+               <tocitem target="setMTEXpref.html">setMTEXpref</tocitem>
+               <tocitem target="setOption.html">setOption</tocitem>
+               <tocitem target="set_default_option.html">set_default_option</tocitem>
+               <tocitem target="set_option.html">set_option</tocitem>
+               <tocitem target="setappdata.html">setappdata</tocitem>
+            </tocitem>
+            <tocitem target="math_tools_index.html">math<tocitem target="ClebschGordan.html">ClebschGordan</tocitem>
+               <tocitem target="ClebschGordanTensor.html">ClebschGordanTensor</tocitem>
+               <tocitem target="ClenshawL.html">ClenshawL</tocitem>
+               <tocitem target="Wigner3j.html">Wigner3j</tocitem>
+               <tocitem target="Wigner3jPrecomputed.html">Wigner3jPrecomputed</tocitem>
+               <tocitem target="Wigner3j_new.html">Wigner3j_new</tocitem>
+               <tocitem target="WignerD.html">WignerD</tocitem>
+               <tocitem target="allPairs.html">allPairs</tocitem>
+               <tocitem target="allTriple.html">allTriple</tocitem>
+               <tocitem target="bresenham.html">bresenham</tocitem>
+               <tocitem target="deg2dim.html">deg2dim</tocitem>
+               <tocitem target="det3.html">det3</tocitem>
+               <tocitem target="dim2deg.html">dim2deg</tocitem>
+               <tocitem target="discreteSample.html">discreteSample</tocitem>
+               <tocitem target="eig2.html">eig2</tocitem>
+               <tocitem target="eig3.html">eig3</tocitem>
+               <tocitem target="ensureNonNeg.html">ensureNonNeg</tocitem>
+               <tocitem target="evalkappa.html">evalkappa</tocitem>
+               <tocitem target="fclencurt.html">fclencurt</tocitem>
+               <tocitem target="findJumps.html">findJumps</tocitem>
+               <tocitem target="legendre0.html">legendre0</tocitem>
+               <tocitem target="mhyper.html">mhyper</tocitem>
+               <tocitem target="nadjacent.html">nadjacent</tocitem>
+               <tocitem target="nanmax.html">nanmax</tocitem>
+               <tocitem target="nanmean.html">nanmean</tocitem>
+               <tocitem target="nanmeanWeights.html">nanmeanWeights</tocitem>
+               <tocitem target="nanmedian.html">nanmedian</tocitem>
+               <tocitem target="nanmin.html">nanmin</tocitem>
+               <tocitem target="nanplus.html">nanplus</tocitem>
+               <tocitem target="nansum.html">nansum</tocitem>
+               <tocitem target="rhoInside.html">rhoInside</tocitem>
+               <tocitem target="smoothn.html">smoothn</tocitem>
+               <tocitem target="sphericalClebschGordan.html">sphericalClebschGordan</tocitem>
+               <tocitem target="sphericalY.html">sphericalY</tocitem>
+               <tocitem target="times_outer.html">times_outer</tocitem>
+               <tocitem target="wignerD2.html">wignerD2</tocitem>
+            </tocitem>
+            <tocitem target="statistic_tools_index.html">statistics<tocitem target="Gaussian.html">Gaussian</tocitem>
+               <tocitem target="cMeans.html">cMeans</tocitem>
+               <tocitem target="c_hat.html">c_hat</tocitem>
+               <tocitem target="calcDensity.html">calcDensity</tocitem>
+               <tocitem target="kMeans.html">kMeans</tocitem>
+               <tocitem target="majorityVote.html">majorityVote</tocitem>
+               <tocitem target="quantile.html">quantile</tocitem>
+               <tocitem target="randp.html">randp</tocitem>
+               <tocitem target="range.html">range</tocitem>
+            </tocitem>
+            <tocitem target="graph_tools_index.html">graphs<tocitem target="EulerCycles.html">EulerCycles</tocitem>
+               <tocitem target="EulerCycles2.html">EulerCycles2</tocitem>
+               <tocitem target="EulerTours.html">EulerTours</tocitem>
+               <tocitem target="connectedComponents.html">connectedComponents</tocitem>
+               <tocitem target="mclComponents.html">mclComponents</tocitem>
+            </tocitem>
+            <tocitem target="kernelFunctions_index.html">kernel functions<tocitem target="AbelPoissonKernel.html">AbelPoissonKernel</tocitem>
+               <tocitem target="DirichletKernel.html">DirichletKernel</tocitem>
+               <tocitem target="GaussWeierstrassKernel.html">GaussWeierstrassKernel</tocitem>
+               <tocitem target="LaplaceKernel.html">LaplaceKernel</tocitem>
+               <tocitem target="SobolevKernel.html">SobolevKernel</tocitem>
+               <tocitem target="SquareSingularityKernel.html">SquareSingularityKernel</tocitem>
+               <tocitem target="bumpKernel.html">bumpKernel</tocitem>
+               <tocitem target="customKernel.html">customKernel</tocitem>
+               <tocitem target="deLaValleePoussinKernel.html">deLaValleePoussinKernel</tocitem>
+               <tocitem target="fibreVonMisesFisherKernel.html">fibreVonMisesFisherKernel</tocitem>
+               <tocitem target="vonMisesFisherKernel.html">vonMisesFisherKernel</tocitem>
+            </tocitem>
+            <tocitem target="file_tools_index.html">files<tocitem target="apply_recursivly.html">apply_recursivly</tocitem>
+               <tocitem target="assertExt.html">assertExt</tocitem>
+               <tocitem target="cell2file.html">cell2file</tocitem>
+               <tocitem target="cprproject_read.html">cprproject_read</tocitem>
+               <tocitem target="efopen.html">efopen</tocitem>
+               <tocitem target="file2cell.html">file2cell</tocitem>
+               <tocitem target="getFileNames.html">getFileNames</tocitem>
+               <tocitem target="getSubDirs.html">getSubDirs</tocitem>
+               <tocitem target="h5group2struct.html">h5group2struct</tocitem>
+               <tocitem target="load_generic.html">load_generic</tocitem>
+               <tocitem target="parseXML.html">parseXML</tocitem>
+               <tocitem target="restrictEBSD_ang.html">restrictEBSD_ang</tocitem>
+               <tocitem target="save_sparse.html">save_sparse</tocitem>
+               <tocitem target="touch.html">touch</tocitem>
+               <tocitem target="write_cell.html">write_cell</tocitem>
+               <tocitem target="writedouble.html">writedouble</tocitem>
+            </tocitem>
+            <tocitem target="pathes_index.html">pathes<tocitem target="mtexCifPath.html">mtexCifPath</tocitem>
+               <tocitem target="mtexDataPath.html">mtexDataPath</tocitem>
+               <tocitem target="mtexEBSDPath.html">mtexEBSDPath</tocitem>
+               <tocitem target="mtexExamplePath.html">mtexExamplePath</tocitem>
+               <tocitem target="mtexODFPath.html">mtexODFPath</tocitem>
+               <tocitem target="mtexPoleFigurePath.html">mtexPoleFigurePath</tocitem>
+               <tocitem target="mtexTensorPath.html">mtexTensorPath</tocitem>
+            </tocitem>
+            <tocitem target="dubna_tools_index.html">dubna xrd<tocitem target="DubnaGrid.html">DubnaGrid</tocitem>
+               <tocitem target="DubnaPoleFigure.html">DubnaPoleFigure</tocitem>
+               <tocitem target="calc_background.html">calc_background</tocitem>
+               <tocitem target="loadallspectra.html">loadallspectra</tocitem>
+               <tocitem target="loadspectra.html">loadspectra</tocitem>
+               <tocitem target="plot_spectra.html">plot_spectra</tocitem>
+               <tocitem target="proceed_spectra.html">proceed_spectra</tocitem>
+            </tocitem>
+            <tocitem target="misc_tools_index.html">misc<tocitem target="MTEXmenu.html">MTEXmenu</tocitem>
+               <tocitem target="binsearch.html">binsearch</tocitem>
+               <tocitem target="bucketSearch.html">bucketSearch</tocitem>
+               <tocitem target="calcTDF.html">calcTDF</tocitem>
+               <tocitem target="characteristicShape.html">characteristicShape</tocitem>
+               <tocitem target="check_installation.html">check_installation</tocitem>
+               <tocitem target="choose.html">choose</tocitem>
+               <tocitem target="circdensity.html">circdensity</tocitem>
+               <tocitem target="closeAllButCurrentFiles.html">closeAllButCurrentFiles</tocitem>
+               <tocitem target="cprintf.html">cprintf</tocitem>
+               <tocitem target="cunion.html">cunion</tocitem>
+               <tocitem target="cut2unitI.html">cut2unitI</tocitem>
+               <tocitem target="degree.html">degree</tocitem>
+               <tocitem target="dispStruct.html">dispStruct</tocitem>
+               <tocitem target="doclink.html">doclink</tocitem>
+               <tocitem target="docmethods.html">docmethods</tocitem>
+               <tocitem target="ensurecell.html">ensurecell</tocitem>
+               <tocitem target="equal.html">equal</tocitem>
+               <tocitem target="fillStr.html">fillStr</tocitem>
+               <tocitem target="getmem.html">getmem</tocitem>
+               <tocitem target="ind2char.html">ind2char</tocitem>
+               <tocitem target="isOctave.html">isOctave</tocitem>
+               <tocitem target="isappr.html">isappr</tocitem>
+               <tocitem target="isempty_cell.html">isempty_cell</tocitem>
+               <tocitem target="iseven.html">iseven</tocitem>
+               <tocitem target="isnull.html">isnull</tocitem>
+               <tocitem target="ispos.html">ispos</tocitem>
+               <tocitem target="logAxis.html">logAxis</tocitem>
+               <tocitem target="mtex_assert.html">mtex_assert</tocitem>
+               <tocitem target="n2str.html">n2str</tocitem>
+               <tocitem target="newer_version.html">newer_version</tocitem>
+               <tocitem target="pauseline.html">pauseline</tocitem>
+               <tocitem target="plotTDF.html">plotTDF</tocitem>
+               <tocitem target="progress.html">progress</tocitem>
+               <tocitem target="pullTemp.html">pullTemp</tocitem>
+               <tocitem target="pushTemp.html">pushTemp</tocitem>
+               <tocitem target="qwarning.html">qwarning</tocitem>
+               <tocitem target="repcell.html">repcell</tocitem>
+               <tocitem target="selectMaxbyColumn.html">selectMaxbyColumn</tocitem>
+               <tocitem target="selectMaxbyRow.html">selectMaxbyRow</tocitem>
+               <tocitem target="selectMinbyColumn.html">selectMinbyColumn</tocitem>
+               <tocitem target="selectMinbyRow.html">selectMinbyRow</tocitem>
+               <tocitem target="setFont.html">setFont</tocitem>
+               <tocitem target="setNull.html">setNull</tocitem>
+               <tocitem target="size2str.html">size2str</tocitem>
+               <tocitem target="sparseConcat.html">sparseConcat</tocitem>
+               <tocitem target="splitdata.html">splitdata</tocitem>
+               <tocitem target="submatrix.html">submatrix</tocitem>
+               <tocitem target="varlink.html">varlink</tocitem>
+               <tocitem target="vdisp.html">vdisp</tocitem>
+               <tocitem target="vec2cell.html">vec2cell</tocitem>
+               <tocitem target="xnum2str.html">xnum2str</tocitem>
+            </tocitem>
+         </tocitem>
+      </tocitem>
+   </tocitem>
+</toc>

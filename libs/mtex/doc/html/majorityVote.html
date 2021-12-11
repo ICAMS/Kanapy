@@ -1,0 +1,112 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>majorityVote ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: majorityVote -->
+      <!-- HEADSTUFF: majorityVote -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:majorityVote">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit majorityVote">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">majorityVote</h1>
+         <div class="subheading">
+            <p>returns</p>
+         </div>
+         <h2>Syntax<a name="2"> </a></h2><pre class="codeinput">[vote, numVotes] = majorityVote(idList,voteList)</pre><h2>Input<a name="3"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>idList</tt>
+            </td>
+            <td>
+            <tt>list of ids</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>voteList</tt>
+            </td>
+            <td>
+            <tt>list of votes</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>vote</tt>
+            </td>
+            <td>
+            <tt>most frequent vote in voteList(idList == id) for each id</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>numVotes</tt>
+            </td>
+            <td>
+            <tt>number occurences of vote in voteList(idList == id) for each id</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>strict</tt>
+            </td>
+            <td>
+            <tt>only assign a vote if all votes coincide, otherwise set in to nan</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="6"> </a></h2><pre class="codeinput">idList = [1 1 1 1 1 2 3 2 3 2 3];
+voteList = [5 9 5 9 9 4 1 4 2 4 1];</pre><pre class="codeinput">majorityVote(idList,voteList)</pre><pre class="codeoutput">ans =
+     9
+     4
+     1
+</pre><pre class="codeinput">majorityVote(idList,voteList,<span class="string">'strict'</span>)</pre><pre class="codeoutput">ans =
+   NaN
+     4
+   NaN
+</pre><h3 class="seealso">See also</h3>
+         <p><a href=".html"></a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

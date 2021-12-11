@@ -1,0 +1,73 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Unimodal ODF Shapes ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: ODFShapes -->
+      <!-- HEADSTUFF: ODFShapes -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:ODFShapes">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1>Unimodal ODF Shapes</h1>
+         <p>In order to control the shape of unimodal ODF The class <b>kernel</b> is needed in MTEX to define the specific form of unimodal and fibre symmetric ODFs. It has to be passed as an argument when
+            calling the methods <a href="uniformODF.html">uniformODF</a> and <a href="fibreODF.html">fibreODF</a>.
+         </p>
+         <p>A kernel is defined by specifying its name and its free parameter. Alternatively one can also specify the halfwidth of the
+            kernel. Below you find a list of all kernel functions supported by MTEX.
+         </p><pre class="codeinput">psi{1} = AbelPoissonKernel(0.79);
+psi{2} = deLaValleePoussinKernel(13);
+psi{3} = bumpKernel(35*degree);
+psi{4} = DirichletKernel(3);
+psi{5} = vonMisesFisherKernel(7.5);
+psi{6} = GaussWeierstrassKernel(0.07);
+psi{7} = fibreVonMisesFisherKernel(7.2);
+psi{8} = SquareSingularityKernel(0.72);</pre><p>Lets visualize these kernel functions as one dimensional sections through the orientation space</p><pre class="codeinput"><span class="comment">% the kernel on SO(3)</span>
+close;
+figure(<span class="string">'position'</span>,[100,100,1000,450])
+hold <span class="string">all</span>
+<span class="keyword">for</span> i = 1:numel(psi)
+  plot(psi{i},<span class="string">'DisplayName'</span>,class(psi{i}));
+<span class="keyword">end</span>
+hold <span class="string">off</span>
+legend(gca,<span class="string">'show'</span>,<span class="string">'Location'</span>,<span class="string">'eastoutside'</span>)</pre><img src="ODFShapes_01.png"> <p>one dimensional sections through the corresponding PDF</p><pre class="codeinput">close; figure(<span class="string">'position'</span>,[100,100,1000,450])
+hold <span class="string">all</span>
+<span class="keyword">for</span> i = 1:numel(psi)
+  plotPDF(psi{i},<span class="string">'RK'</span>,<span class="string">'DisplayName'</span>,class(psi{i}));
+<span class="keyword">end</span>
+hold <span class="string">off</span>
+
+ylim([-5,20])
+
+legend(gca,<span class="string">'show'</span>,<span class="string">'Location'</span>,<span class="string">'eastoutside'</span>)</pre><img src="ODFShapes_02.png"> <p>the Fourier coefficients of the kernels</p><pre class="codeinput">close; figure(<span class="string">'position'</span>,[100,100,500,450])
+hold <span class="string">all</span>
+<span class="keyword">for</span> i = 1:numel(psi)
+  plotFourier(psi{i},<span class="string">'bandwidth'</span>,32,<span class="string">'linewidth'</span>,2,<span class="string">'DisplayName'</span>,class(psi{i}));
+<span class="keyword">end</span>
+hold <span class="string">off</span>
+legend(gca,<span class="string">'show'</span>)</pre><img src="ODFShapes_03.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

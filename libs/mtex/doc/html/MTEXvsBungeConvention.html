@@ -1,0 +1,142 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>MTEX vs. Bunge Convention ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: MTEXvsBungeConvention -->
+      <!-- HEADSTUFF: MTEXvsBungeConvention -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:MTEXvsBungeConvention">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">MTEX vs. Bunge Convention</h1>
+         <div class="subheading"></div>
+         <p>For historical reasons MTEX defines orientations in a slightly different way than they have been defined by Bunge. As explained
+            in topic <a href="CrystalOrientations.html">orientations</a> MTEX defines them as coordinate transformations from the crystal reference frame into the specimen reference frame. In contrast
+            to this Bunge orientations are coordinate transformations from the specimen reference frame into the crystal reference frame.
+            Lets demonstrate this by a simple example:
+         </p><pre class="codeinput"><span class="comment">% consider cubic symmetry</span>
+cs = crystalSymmetry(<span class="string">'cubic'</span>)
+
+<span class="comment">% and a random orientation</span>
+ori = orientation.rand(cs)</pre><pre class="codeoutput"> 
+cs = crystalSymmetry  
+ 
+  symmetry: m-3m   
+  elements: 48     
+  a, b, c : 1, 1, 1
+ 
+ 
+ori = orientation (m-3m -&gt; xyz)
+ 
+  Bunge Euler angles in degree
+     phi1     Phi    phi2    Inv.
+  271.332 109.537 143.767       0
+ 
+</pre><p>This is now an MTEX orientation and can be used to translate crystal coordinates, i.e., Miller indices into specimen coordinates,</p><pre class="codeinput"><span class="comment">% either by multiplying from the left</span>
+r = ori * Miller({1,0,0},cs)
+
+<span class="comment">% or using the command rotate</span>
+rotate(Miller({1,0,0},cs),ori)</pre><pre class="codeoutput"> 
+r = vector3d  
+          x         y         z
+  -0.216356  0.801812  0.557035
+ 
+ans = vector3d  
+          x         y         z
+  -0.216356  0.801812  0.557035
+</pre><p>A Bunge orientation is exactly the inverse of an MTEX orientation, i.e.,</p><pre class="codeinput">ori_Bunge = inv(ori)</pre><pre class="codeoutput"> 
+ori_Bunge = orientation (xyz -&gt; m-3m)
+ 
+  Bunge Euler angles in degree
+     phi1     Phi    phi2    Inv.
+  36.2325 109.537 268.668       0
+ 
+</pre><p>and translates specimen coordinates into Miller indices</p><pre class="codeinput">ori_Bunge * r</pre><pre class="codeoutput"> 
+ans = Miller  
+ symmetry: m-3m
+  h k l
+  1 0 0
+</pre><h2>Euler angles<a name="5"> </a></h2>
+         <p>Since the Euler angles are the most common way to describe orientations MTEX implements them such that the Euler angles of
+            an MTEX orientation coincide with the Euler angles of a Bunge orientation. Thus the Euler angles of orientations in MTEX agree
+            with the Euler angles reported by all common EBSD devices, simulation software, text books and paper.
+         </p>
+         <h2>Matrix notation<a name="6"> </a></h2>
+         <p>Due to the above explained inverse relationship of orientations defined in MTEX and in Bunge convention, a matrix generated
+            from an orientation in MTEX is the inverse, or equivallently, the transpose of the matrix in Bunge notation.
+         </p><pre class="codeinput">ori.matrix
+ori_Bunge.matrix^(-1)
+ori_Bunge.matrix'</pre><pre class="codeoutput">ans =
+   -0.2164    0.2559   -0.9422
+    0.8018    0.5972   -0.0219
+    0.5570   -0.7602   -0.3344
+ans =
+   -0.2164    0.2559   -0.9422
+    0.8018    0.5972   -0.0219
+    0.5570   -0.7602   -0.3344
+ans =
+   -0.2164    0.2559   -0.9422
+    0.8018    0.5972   -0.0219
+    0.5570   -0.7602   -0.3344
+</pre><h2>Misorientations<a name="7"> </a></h2>
+         <p>Since, MTEX orientations translates crystal to specimen coordinates misorientations are defined by the formula</p><pre class="codeinput">ori1 = orientation.rand(cs);
+ori2 = orientation.rand(cs);
+
+mori = inv(ori1) * ori2</pre><pre class="codeoutput"> 
+mori = misorientation (m-3m -&gt; m-3m)
+ 
+  Bunge Euler angles in degree
+    phi1     Phi    phi2    Inv.
+  239.31 114.236 39.3491       0
+ 
+</pre><p>as they are commonly defined coordinate transformations from crystal to crystal coordinates. This formula is different to
+            the misorientation formula for Bunge orientations
+         </p><pre class="codeinput">ori1_Bunge = inv(ori1);
+ori2_Bunge = inv(ori2);
+
+mori = ori1_Bunge * inv(ori2_Bunge)</pre><pre class="codeoutput"> 
+mori = misorientation (m-3m -&gt; m-3m)
+ 
+  Bunge Euler angles in degree
+    phi1     Phi    phi2    Inv.
+  239.31 114.236 39.3491       0
+ 
+</pre><p>However, both formula result in exactly the same misorientation.</p>
+         <h2>Summary<a name="10"> </a></h2>
+         <p>This list summarizes the differences between MTEX orientations and Bunge orientations.</p>
+         <div>
+            <ul type="square">
+               <li>formulas involving orientations - invert orientation</li>
+               <li>orientation Euler angles - unchanged</li>
+               <li>orientation matrix - transpose matrix</li>
+               <li>misorientations - unchanged</li>
+               <li>misorientation Euler angles - take Euler angles of inverse misorientation</li>
+            </ul>
+         </div>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

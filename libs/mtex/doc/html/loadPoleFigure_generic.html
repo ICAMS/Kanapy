@@ -1,0 +1,124 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>loadPoleFigure_generic ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: loadPoleFigure_generic -->
+      <!-- HEADSTUFF: loadPoleFigure_generic -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:loadPoleFigure_generic">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit loadPoleFigure_generic">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">loadPoleFigure_generic</h1>
+         <div class="subheading">
+            <p>load pole figure data from (theta,rho,intensity) files</p>
+         </div>
+         <h2>Description<a name="2"> </a></h2>
+         <p><b>loadPoleFigure_generic</b> is a generic function that reads any txt files of diffraction intensities that are of the following format
+         </p><pre>theta_1 rho_1 intensity_1
+theta_2 rho_2 intensity_2
+theta_3 rho_3 intensity_3
+.      .       .
+.      .       .
+.      .       .
+theta_M rho_M intensity_M</pre><p>The actual order of the columns in the file can be specified by the options <tt>ColumnNames</tt> and <tt>Columns</tt>. Furthermore, the files can be contain any number of header lines to be ignored using the option <tt>HEADER</tt>.
+         </p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">[pf,varargin] = loadPoleFigure_generic(fname,varargin)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>fname</tt>
+            </td>
+            <td>
+            <tt>file name (text files only)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ColumnNames</tt>
+            </td>
+            <td>
+            <tt>content of the columns to be imported</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>Columns</tt>
+            </td>
+            <td>
+            <tt>positions of the columns to be imported</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>RADIANS</tt>
+            </td>
+            <td>
+            <tt>treat input in radians</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>DELIMITER</tt>
+            </td>
+            <td>
+            <tt>delimiter between numbers</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>HEADER</tt>
+            </td>
+            <td>
+            <tt>number of header lines</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="6"> </a></h2><pre class="codeinput">fname = [mtexDataPath <span class="string">'/PoleFigure/nja/seifert-111.nja'</span>];
+pf = loadPoleFigure_generic(fname,<span class="string">'HEADER'</span>,21,<span class="string">'degree'</span>,<span class="keyword">...</span>
+<span class="string">'ColumnNames'</span>,{<span class="string">'polar angle'</span>,<span class="string">'azimuth angle'</span>,<span class="string">'intensity'</span>},<span class="keyword">...</span>
+<span class="string">'Columns'</span>,[1 2 3])</pre><pre class="codeoutput"> 
+pf = PoleFigure  
+  crystal symmetry : m-3m
+  specimen symmetry: 1
+ 
+  h = (111), r = 2120 x 1 points
+</pre><h3 class="seealso">See also</h3>
+         <p><a href="ImportPoleFigureData.html">ImportPoleFigureData</a>, <a href="loadPoleFigure.html">loadPoleFigure</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

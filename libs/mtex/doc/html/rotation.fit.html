@@ -1,0 +1,89 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>fit ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: rotation.fit -->
+      <!-- HEADSTUFF: rotation.fit -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:rotation.fit">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit rotation/fit">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">fit</h1>
+         <div class="subheading"></div>
+         <p>find rotation rot such that rot * l ~ r f</p>
+         <h2>Description<a name="3"> </a></h2>
+         <p>Find the rotation that best maps all the vectors <tt>l</tt> onto the vectors <tt>r</tt>.
+         </p>
+         <h2>Syntax<a name="4"> </a></h2><pre class="codeinput">rot = rotation.fit(l,r)
+rot = rotation.fit(l,r,<span class="string">'weights'</span>,w)</pre><h2>Input<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>l, r</tt>
+            </td>
+            <td>
+            <tt><a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>rot</tt>
+            </td>
+            <td>
+            <tt><a href="rotation.rotation.html">rotation</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>References<a name="7"> </a></h2>
+         <div>
+            <ul type="square">
+               <li>W. Kabsch, A solution for the best rotation to relate two sets of vectors, Acta Cryst. (1976). A32, 922.</li>
+            </ul>
+         </div>
+         <div>
+            <ul type="square">
+               <li>B. K. P. Horn, Closed-form solution of absolute orientation using unit quaternions, Journal of the Optical Society of America
+                  A (1987), Vol, 4, 629.
+               </li>
+            </ul>
+         </div>
+         <h3 class="seealso">See also</h3>
+         <p><a href="rotation.rotation.html">rotation.rotation</a>, <a href="rotation.byMatrix.html">rotation.byMatrix</a>, <a href="rotation.byAxisAngle.html">rotation.byAxisAngle</a>, <a href="rotation.byEuler.html">rotation.byEuler</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,104 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>regularisation ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: S2FunHarmonic.regularisation -->
+      <!-- HEADSTUFF: S2FunHarmonic.regularisation -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:S2FunHarmonic.regularisation">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit S2FunHarmonic/regularisation">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">regularisation</h1>
+         <div class="subheading"></div>
+         <p>computes a regularisation</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">sF = S2FunHarmonic.regularisation(S2Grid,f,lambda)
+sF = S2FunHarmonic.regularisation(S2Grid,f,lambda,<span class="string">'bandwidth'</span>,
+     bandwidth,<span class="string">'node_weights'</span>,W,<span class="string">'fourier_weights'</span>,What)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>S2Grid</tt>
+            </td>
+            <td>
+            <tt>grid on the sphere</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>f</tt>
+            </td>
+            <td>
+            <tt>function values on the grid (may be multidimensional)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>lambda</tt>
+            </td>
+            <td>
+            <tt>parameter for regularisation</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>bandwidth</tt>
+            </td>
+            <td>
+            <tt>maximum harmonic degree</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>W</tt>
+            </td>
+            <td>
+            <tt>weight w_n for the node nodes (default: Voronoi weights)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>What</tt>
+            </td>
+            <td>
+            <tt>weight what_{m,l} for the Fourier space (default Sobolev weights for s = 2)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

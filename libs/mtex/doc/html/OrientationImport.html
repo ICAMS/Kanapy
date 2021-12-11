@@ -1,0 +1,55 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Importing Crystal Orientations ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: OrientationImport -->
+      <!-- HEADSTUFF: OrientationImport -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:OrientationImport">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Importing Crystal Orientations</h1>
+         <div class="subheading"></div>
+         <p>In order to import orientation data from a text file we first need to defined the corresponding <a href="CrystalSymmetries.html">crystal symmetry</a>, e.g. by a cif file
+         </p><pre class="codeinput">cs = crystalSymmetry.load(<span class="string">'quartz.cif'</span>)</pre><pre class="codeoutput"> 
+cs = crystalSymmetry  
+ 
+  mineral        : Quartz            
+  symmetry       : 321               
+  elements       : 6                 
+  a, b, c        : 4.9, 4.9, 5.4     
+  reference frame: X||a*, Y||b, Z||c*
+ 
+</pre><p>In the second step we may use the command <a href="orientation.load.html"><tt>orientation.load</tt></a> to load the data. This function requires that one specifies the meaning of the column of the import file by the option <tt>columnNames</tt>.
+         </p><pre class="codeinput">fname = fullfile(mtexDataPath,<span class="string">'orientation'</span>,<span class="string">'Tongue_Quartzite_Bunge_Euler'</span>);
+ori = orientation.load(fname,<span class="string">'columnNames'</span>,{<span class="string">'phi1'</span>,<span class="string">'Phi'</span>,<span class="string">'phi2'</span>},cs)</pre><pre class="codeoutput"> 
+ori = orientation (Quartz -&gt; xyz)
+  size: 382 x 1
+</pre><p>This creates a variable of type <a href="orientation.orientation.html">orientation</a> which can be used for further analysis, e.g. to plot pole figures
+         </p><pre class="codeinput">plotPDF(ori,Miller({0,0,0,1},{1,0,-1,0},cs))</pre><img src="OrientationImport_01.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

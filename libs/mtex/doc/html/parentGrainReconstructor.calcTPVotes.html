@@ -1,0 +1,118 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>calcTPVotes ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: parentGrainReconstructor.calcTPVotes -->
+      <!-- HEADSTUFF: parentGrainReconstructor.calcTPVotes -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:parentGrainReconstructor.calcTPVotes">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit parentGrainReconstructor/calcTPVotes">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">calcTPVotes</h1>
+         <div class="subheading"></div>
+         <p>compute votes from triple points</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">job.calcTPVotes</pre><pre class="codeinput"><span class="comment">% only consider triple junctions with the best fit is below 2.5 degree</span>
+<span class="comment">% and the second best fit is worse then 5 degree</span>
+job.calcTPVotes(<span class="string">'minFit'</span>,2.5*degree,<span class="string">'maxFit'</span>,5*degree)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>job</tt>
+            </td>
+            <td>
+            <tt><a href="parentGrainReconstructor.parentGrainReconstructor.html">parentGrainReconstructor</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>job.votes</tt>
+            </td>
+            <td>
+            <tt>table of votes</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>threshold</tt>
+            </td>
+            <td>
+            <tt>threshold fitting angle between job.p2c and the boundary OR</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>tolerance</tt>
+            </td>
+            <td>
+            <tt>range over which the probability increases from 0 to 1 (default 1.5)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>minFit</tt>
+            </td>
+            <td>
+            <tt>minimum required fit for a TP to produce votes</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>maxFit</tt>
+            </td>
+            <td>
+            <tt>maximum second best fit for a TP to produce votes</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>numFit</tt>
+            </td>
+            <td>
+            <tt>number of fits to compute (default 2)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,199 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Taylor Model ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: TaylorModel -->
+      <!-- HEADSTUFF: TaylorModel -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:TaylorModel">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Taylor Model</h1>
+         <div class="subheading"></div>
+         <h2>basic settings<a name="1"> </a></h2>
+         <p>display pole figure plots with RD on top and ND west</p><pre class="codeinput">plotx2north
+
+<span class="comment">% store old annotation style</span>
+storepfA = getMTEXpref(<span class="string">'pfAnnotations'</span>);
+
+<span class="comment">% set new annotation style to display RD and ND</span>
+pfAnnotations = @(varargin) text(-[vector3d.X,vector3d.Y],{<span class="string">'RD'</span>,<span class="string">'ND'</span>},<span class="keyword">...</span>
+  <span class="string">'BackgroundColor'</span>,<span class="string">'w'</span>,<span class="string">'tag'</span>,<span class="string">'axesLabels'</span>,varargin{:});
+
+setMTEXpref(<span class="string">'pfAnnotations'</span>,pfAnnotations);</pre><h2>Set up<a name="2"> </a></h2>
+         <p>consider cubic crystal symmetry</p><pre class="codeinput">cs = crystalSymmetry(<span class="string">'432'</span>);
+
+<span class="comment">% define a family of slip systems</span>
+sS = slipSystem.bcc(cs);
+
+<span class="comment">% some plane strain</span>
+q = 0;
+epsilon = strainTensor(diag([1 -q -(1-q)]))
+
+<span class="comment">% define a crystal orientation</span>
+ori = orientation.byEuler(0,30*degree,15*degree,cs)
+
+<span class="comment">% compute the Taylor factor</span>
+[M,b,W] = calcTaylor(inv(ori)*epsilon,sS.symmetrise);</pre><pre class="codeoutput"> 
+epsilon = strainTensor  
+  type: Lagrange 
+  rank: 2 (3 x 3)
+ 
+  1  0  0
+  0  0  0
+  0  0 -1
+ 
+ori = orientation (432 -&gt; xyz)
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+     0   30   15    0
+ 
+</pre><h2>The orientation dependence of the Taylor factor<a name="3"> </a></h2>
+         <p>The following code reproduces Fig. 5 of the paper of Bunge, H. J. (1970). Some applications of the Taylor theory of polycrystal
+            plasticity. Kristall Und Technik, 5(1), 145-175. <a href="http://doi.org/10.1002/crat.19700050112">http://doi.org/10.1002/crat.19700050112</a></p><pre class="codeinput"><span class="comment">% set up an phi1 section plot</span>
+sP = phi1Sections(cs,specimenSymmetry(<span class="string">'222'</span>));
+sP.phi1 = (0:10:90)*degree;
+
+<span class="comment">% generate an orientations grid</span>
+oriGrid = sP.makeGrid(<span class="string">'resolution'</span>,2.5*degree);
+oriGrid.SS = specimenSymmetry;
+
+<span class="comment">% compute Taylor factor for all orientations</span>
+tic
+[M,~,W] = calcTaylor(inv(oriGrid)*epsilon,sS.symmetrise);
+toc
+
+<span class="comment">% plot the taylor factor</span>
+sP.plot(M,<span class="string">'smooth'</span>)
+
+mtexColorbar</pre><pre class="codeoutput">Elapsed time is 33.583521 seconds.
+</pre><img src="TaylorModel_01.png"> <h2>The orientation dependence of the spin<a name="4"> </a></h2>
+         <p>Compare Fig. 8 of the above paper</p><pre class="codeinput">sP.plot(W.angle./degree,<span class="string">'smooth'</span>)
+mtexColorbar</pre><img src="TaylorModel_02.png"> <p>Display the crystallographic spin in sigma sections</p><pre class="codeinput">sP = sigmaSections(cs,specimenSymmetry);
+oriGrid = sP.makeGrid(<span class="string">'resolution'</span>,2.5*degree);
+[M,~,W] = calcTaylor(inv(oriGrid)*epsilon,sS.symmetrise);
+sP.plot(W.angle./degree,<span class="string">'smooth'</span>)
+mtexColorbar</pre><img src="TaylorModel_03.png"> <h2>Most active slip direction<a name="6"> </a></h2>
+         <p>Next we consider a real world data set.</p><pre class="codeinput">mtexdata <span class="string">csl</span>
+
+<span class="comment">% compute grains</span>
+grains = calcGrains(ebsd(<span class="string">'indexed'</span>));
+grains = smooth(grains,5);
+
+<span class="comment">% remove small grains</span>
+grains(grains.grainSize &lt;= 2) = []</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase   Orientations  Mineral         Color  Symmetry  Crystal reference frame
+    -1  154107 (100%)     iron  LightSkyBlue      m-3m                         
+ 
+ Properties: ci, error, iq, x, y
+ Scan unit : um
+ 
+ 
+grains = grain2d  
+ 
+ Phase  Grains  Pixels  Mineral  Symmetry  Crystal reference frame
+    -1     527  153693     iron      m-3m                         
+ 
+ boundary segments: 21937
+ inner boundary segments: 93
+ triple points: 1451
+ 
+ Properties: GOS, meanRotation
+ 
+</pre><p>Next we apply the Taylor model to each grain of our data set</p><pre class="codeinput"><span class="comment">% some strain</span>
+q = 0;
+epsilon = strainTensor(diag([1 -q -(1-q)]))
+
+<span class="comment">% consider fcc slip systems</span>
+sS = symmetrise(slipSystem.fcc(grains.CS));
+
+<span class="comment">% apply Taylor model</span>
+[M,b,W] = calcTaylor(inv(grains.meanOrientation)*epsilon,sS);</pre><pre class="codeoutput"> 
+epsilon = strainTensor  
+  type: Lagrange 
+  rank: 2 (3 x 3)
+ 
+  1  0  0
+  0  0  0
+  0  0 -1
+</pre><pre class="codeinput"><span class="comment">% colorize grains according to Taylor factor</span>
+plot(grains,M)
+mtexColorMap <span class="string">white2black</span>
+mtexColorbar
+
+<span class="comment">% index of the most active slip system - largest b</span>
+[~,bMaxId] = max(b,[],2);
+
+<span class="comment">% rotate the moste active slip system in specimen coordinates</span>
+sSGrains = grains.meanOrientation .* sS(bMaxId);
+
+<span class="comment">% visualize slip direction and slip plane for each grain</span>
+hold <span class="string">on</span>
+quiver(grains,sSGrains.b,<span class="string">'autoScaleFactor'</span>,0.5,<span class="string">'displayName'</span>,<span class="string">'Burgers vector'</span>)
+hold <span class="string">on</span>
+quiver(grains,sSGrains.trace,<span class="string">'autoScaleFactor'</span>,0.5,<span class="string">'displayName'</span>,<span class="string">'slip plane trace'</span>)
+hold <span class="string">off</span></pre><img src="TaylorModel_04.png"> <p>plot the most active slip directions observe that they point all towards the lower hemisphere - why? they do change if q is
+            changed
+         </p><pre class="codeinput">figure(2)
+plot(sSGrains.b)</pre><img src="TaylorModel_05.png"> <h2>Texture evolution during rolling<a name="10"> </a></h2><pre class="codeinput"><span class="comment">% define some random orientations</span>
+ori = orientation.rand(10000,cs);
+
+<span class="comment">% 30 percent plane strain</span>
+q = 0;
+epsilon = 0.3 * strainTensor(diag([1 -q -(1-q)]));
+
+<span class="comment">%</span>
+numIter = 10;
+progress(0,numIter);
+<span class="keyword">for</span> sas=1:numIter
+
+  <span class="comment">% compute the Taylor factors and the orientation gradients</span>
+  [M,~,W] = calcTaylor(inv(ori) * epsilon ./ numIter, sS.symmetrise,<span class="string">'silent'</span>);
+
+  <span class="comment">% rotate the individual orientations</span>
+  ori = ori .* orientation(-W);
+  progress(sas,numIter);
+<span class="keyword">end</span></pre><pre class="codeinput"><span class="comment">% plot the resulting pole figures</span>
+
+<span class="comment">% set new annotation style to display RD and ND</span>
+pfAnnotations = @(varargin) text([vector3d.X,vector3d.Y,vector3d.Z],{<span class="string">'RD'</span>,<span class="string">'TD'</span>,<span class="string">'ND'</span>},<span class="keyword">...</span>
+  <span class="string">'BackgroundColor'</span>,<span class="string">'w'</span>,<span class="string">'tag'</span>,<span class="string">'axesLabels'</span>,varargin{:});
+setMTEXpref(<span class="string">'pfAnnotations'</span>,pfAnnotations);
+
+plotPDF(ori,Miller({0,0,1},{1,1,1},cs),<span class="string">'contourf'</span>)
+mtexColorbar</pre><img src="TaylorModel_06.png"> <h2>restore MTEX preferences<a name="12"> </a></h2><pre class="codeinput">setMTEXpref(<span class="string">'pfAnnotations'</span>,storepfA);</pre><h2>Inverse Taylor<a name="13"> </a></h2>
+         <p>Use with care!</p><pre class="codeinput">oS = axisAngleSections(cs,cs,<span class="string">'antipodal'</span>);
+oS.angles = 10*degree;
+
+ori = oS.makeGrid;
+
+[M,b,eps] = calcInvTaylor(ori,sS.symmetrise);</pre><pre class="codeinput">plot(oS,M,<span class="string">'contourf'</span>)</pre><img src="TaylorModel_07.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

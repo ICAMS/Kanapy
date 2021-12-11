@@ -1,0 +1,193 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Anisotropic Elasticity ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: AnisotropicTheory -->
+      <!-- HEADSTUFF: AnisotropicTheory -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:AnisotropicTheory">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Anisotropic Elasticity</h1>
+         <div class="subheading"></div>
+         <p>The linear theory of ellasticity in anisotropic materials is essentialy based on the fourth order stiffness tensor <tt>C</tt>. Such a tensor is represented in MTEX by a variable of type <a href="stiffnessTensor.stiffnessTensor.html"><tt>stiffnessTensor</tt></a>. Such a variable can either by set up using a symmetric 6x6 matrix or by importing it from an external file. The following
+            examples does so for the sitiffness tensor for Olivine
+         </p><pre class="codeinput"><span class="comment">% file name</span>
+fname = fullfile(mtexDataPath,<span class="string">'tensor'</span>,<span class="string">'Olivine1997PC.GPa'</span>);
+
+<span class="comment">% crytsal symmetry</span>
+cs = crystalSymmetry(<span class="string">'mmm'</span>,[4.7646 10.2296 5.9942],<span class="string">'mineral'</span>,<span class="string">'Olivin'</span>);
+
+<span class="comment">% define the tensor</span>
+C = stiffnessTensor.load(fname,cs)</pre><pre class="codeoutput"> 
+C = stiffnessTensor  
+  unit   : GPa              
+  rank   : 4 (3 x 3 x 3 x 3)
+  mineral: Olivin (mmm)     
+ 
+  tensor in Voigt matrix representation:
+ 320.5  68.2  71.6     0     0     0
+  68.2 196.5  76.8     0     0     0
+  71.6  76.8 233.5     0     0     0
+     0     0     0    64     0     0
+     0     0     0     0    77     0
+     0     0     0     0     0  78.7
+</pre><h2>Hooks Law<a name="2"> </a></h2>
+         <p>The stiffness tensor tensor of a material is defined as the stress the material expreances for a given strain</p><pre class="codeinput">eps = strainTensor(diag([1,1.1,0.9]),cs)</pre><pre class="codeoutput"> 
+eps = strainTensor  
+  type   : Lagrange    
+  rank   : 2 (3 x 3)   
+  mineral: Olivin (mmm)
+ 
+   1   0   0
+   0 1.1   0
+   0   0 0.9
+</pre><p>Now Hools law states that the resulting stress can be computed by</p><pre class="codeinput">sigma = C : eps</pre><pre class="codeoutput"> 
+sigma = stressTensor  
+  rank   : 2 (3 x 3)   
+  mineral: Olivin (mmm)
+ 
+ 459.9     0     0
+     0 353.4     0
+     0     0 366.2
+</pre><p>The other way the compliance tensor <tt>S = inv(C)</tt> translates stress into strain
+         </p><pre class="codeinput">inv(C) : sigma</pre><pre class="codeoutput"> 
+ans = strainTensor  
+  type   : Lagrange    
+  rank   : 2 (3 x 3)   
+  mineral: Olivin (mmm)
+ 
+   1   0   0
+   0 1.1   0
+   0   0 0.9
+</pre><p>The ellastic energy of the strain <tt>eps</tt> can be computed equivalently by the following equations
+         </p><pre class="codeinput"><span class="comment">% the elastic energy</span>
+U = sigma : eps
+U = EinsteinSum(C,[-1 -2 -3 -4],eps,[-1 -2],eps,[-3 -4]);
+
+U = (C : eps) : eps;</pre><pre class="codeoutput">U =
+   1.1783e+03
+</pre><h2>Young's Modulus<a name="6"> </a></h2>
+         <p>Young's modulus is also known as the tensile modulus and measures the stiffness of elastic materials. It is computed for a
+            specific direction <tt>d</tt> by the command <a href="stiffnessTensor.YoungsModulus.html">YoungsModulus</a>.
+         </p><pre class="codeinput">d = vector3d.X;
+E = C.YoungsModulus(d)</pre><pre class="codeoutput">E =
+  286.9284
+</pre><p>If the direction <tt>d</tt> is ommited Youngs modulus is returned as a <a href="S2FunHarmonic.S2FunHarmonic.html">spherical function</a>.
+         </p><pre class="codeinput"><span class="comment">% compute Young's modulus as a directional dependend function</span>
+E = C.YoungsModulus
+
+<span class="comment">% which can be evaluated at any direction</span>
+E.eval(d)
+
+<span class="comment">% or plot it</span>
+setMTEXpref(<span class="string">'defaultColorMap'</span>,blue2redColorMap);
+plot(C.YoungsModulus,<span class="string">'complete'</span>,<span class="string">'upper'</span>)</pre><pre class="codeoutput"> 
+E = S2FunHarmonicSym  
+ mineral: Olivin (mmm)
+ bandwidth: 8
+ans =
+  286.1748
+</pre><img src="AnisotropicTheory_01.png"> <h2>Linear Compressibility<a name="8"> </a></h2>
+         <p>The linear compressibility is the deformation of an arbitrarily shaped specimen caused by an increase in hydrostatic pressure
+            and can be described by a second rank tensor. Similarly as the Youngs modulus it can be computed by the command <a href="stiffnessTensor.linearCompressibility.html">linearCompressibility</a> for specific directions <tt>d</tt> or as a spherical function
+         </p><pre class="codeinput"><span class="comment">% compute as a spherical function</span>
+beta = linearCompressibility(C)
+
+<span class="comment">% plot it</span>
+plot(beta,<span class="string">'complete'</span>,<span class="string">'upper'</span>)
+
+<span class="comment">% evaluate the function at a specific direction</span>
+beta.eval(d)</pre><pre class="codeoutput"> 
+beta = S2FunHarmonicSym  
+ mineral: Olivin (mmm)
+ bandwidth: 2
+ antipodal: true
+ans =
+    0.0018
+</pre><img src="AnisotropicTheory_02.png"> <h2>Poisson Ratio<a name="9"> </a></h2>
+         <p>The rate of compression / decompression in a direction <tt>n</tt> normal to the pulling direction <tt>p</tt> is called Poisson ration.
+         </p><pre class="codeinput"><span class="comment">% the pulling direction</span>
+p = vector3d.Z;
+
+<span class="comment">% two orthogonal directions</span>
+n = [vector3d.X,vector3d.Y];
+
+<span class="comment">% the Poisson ratio</span>
+nu = C.PoissonRatio(p,n)</pre><pre class="codeoutput">nu =
+    0.1515    0.3383
+</pre><p>If we ommit in the call to <a href="stiffnessTensor.PoissonRatio.html"><tt>PoissonRatio</tt></a> the last argument
+         </p><pre class="codeinput">nu = C.PoissonRatio(p)</pre><pre class="codeoutput"> 
+nu = S2FunHarmonicSym  
+ mineral: Olivin (mmm)
+ bandwidth: 4
+ antipodal: true
+</pre><p>we again obtain a spherical function. However, this time it is only meaningfull to evaluate this function at directions perpendicular
+            to the pulling direction <tt>p</tt>. Hence, a good way to visualize this function is to plot it as a <a href="S2Fun.plotSection.html">section</a> in the x/y plane
+         </p><pre class="codeinput">plotSection(nu,p,<span class="string">'color'</span>,<span class="string">'interp'</span>,<span class="string">'linewidth'</span>,5)
+axis <span class="string">off</span>
+mtexColorbar</pre><img src="AnisotropicTheory_03.png"> <h2>Shear Modulus<a name="12"> </a></h2>
+         <p>The shear modulus is TODO</p><pre class="codeinput"><span class="comment">% shear plane</span>
+n = Miller(0,0,1,cs);
+
+<span class="comment">% shear direction</span>
+d = Miller(1,0,0,cs);
+
+G = C.shearModulus(n,d)</pre><pre class="codeoutput">G =
+   6.2807e+04
+</pre><pre class="codeinput">newMtexFigure(<span class="string">'layout'</span>,[1,3])
+<span class="comment">% shear plane</span>
+n = Miller(1,0,0,cs);
+plotSection(C.shearModulus(n),n,<span class="string">'color'</span>,<span class="string">'interp'</span>,<span class="string">'linewidth'</span>,5)
+mtexTitle(char(n))
+axis <span class="string">off</span>
+
+nextAxis
+n = Miller(1,1,0,cs);
+plotSection(C.shearModulus(n),n,<span class="string">'color'</span>,<span class="string">'interp'</span>,<span class="string">'linewidth'</span>,5)
+mtexTitle(char(n))
+
+nextAxis
+n = Miller(1,1,1,cs)
+plotSection(C.shearModulus(n),n,<span class="string">'color'</span>,<span class="string">'interp'</span>,<span class="string">'linewidth'</span>,5)
+mtexTitle(char(n))
+hold <span class="string">off</span>
+
+setColorRange(<span class="string">'equal'</span>)
+mtexColorbar
+drawNow(gcm,<span class="string">'figSize'</span>,<span class="string">'large'</span>)</pre><pre class="codeoutput"> 
+n = Miller  
+ mineral: Olivin (mmm)
+  h k l
+  1 1 1
+</pre><img src="AnisotropicTheory_04.png"> <h2>Wave Velocities<a name="14"> </a></h2>
+         <p>Since elastic compression and decompression is mechanics of waves traveling through a medium anisotropic compressibility causes
+            also anisotropic waves speeds. The analysis of this anisotropy is explained in the section <a href="WaveVelocities.html">wave velocities</a>.
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,146 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Operations on Spherical Functions ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: S2FunOperations -->
+      <!-- HEADSTUFF: S2FunOperations -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:S2FunOperations">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Operations on Spherical Functions</h1>
+         <div class="subheading"></div>
+         <p>The idea of variables of type <a href="S2Fun.S2Fun.html">S2Fun</a> is to calculate with spherical functions similarly as Matlab does with vectors and matrices. In order to illustrate this
+            we consider the following two spherical functions
+         </p><pre class="codeinput">sF1 = S2Fun.smiley;
+sF2 = S2FunHarmonic.unimodal(<span class="string">'halfwidth'</span>,10*degree)
+
+plot(sF1,<span class="string">'upper'</span>)
+nextAxis
+plot(sF2,<span class="string">'upper'</span>)</pre><pre class="codeoutput"> 
+sF2 = S2FunHarmonic  
+ bandwidth: 50
+</pre><img src="S2FunOperations_01.png"> <h2>Basic arithmetic operations<a name="2"> </a></h2>
+         <p>Now the sum of these two spherical functions is again a spherical function</p><pre class="codeinput">1 + 15 * sF1 + sF2
+
+plot(15 * sF1 + sF2,<span class="string">'upper'</span>)</pre><pre class="codeoutput"> 
+ans = S2FunHarmonic  
+ bandwidth: 128
+</pre><img src="S2FunOperations_02.png"> <p>Accordingly, one can use all basic operations like <tt>-</tt>, <tt>*</tt>, <tt>^</tt>, <tt>/</tt>, <a href="S2Fun.min.html"><tt>min</tt></a>, <a href="S2Fun.max.html"><tt>max</tt></a>, <a href="S2Fun.abs.html"><tt>abs</tt></a>, <a href="S2FunHarmonic.sqrt.html"><tt>sqrt</tt></a> to calculate with variables of type <a href="S2Fun.S2Fun.html">S2Fun</a>.
+         </p><pre class="codeinput"><span class="comment">% the maximum between two functions</span>
+plot(max(15*sF1,sF2),<span class="string">'upper'</span>);
+
+nextAxis
+<span class="comment">% the minimum between two functions</span>
+plot(min(15*sF1,sF2),<span class="string">'upper'</span>);</pre><img src="S2FunOperations_03.png"> <h2>Local Extrema<a name="4"> </a></h2>
+         <p>The obove mentioned functions <a href="S2Fun.min.html"><tt>min</tt></a> and <a href="S2Fun.max.html"><tt>max</tt></a> have very different use cases
+         </p>
+         <div>
+            <ul type="square">
+               <li>if two spherical functions are passed as arguments a spherical functions defined as the pointwise min/max between these two
+                  functions is computed
+               </li>
+               <li>if a spherical function and single number are passed as arguments a spherical functions defined as the pointwise min/max between
+                  these the function and the value is computed
+               </li>
+               <li>if only a single spherical function is provided the global maximum / minimum of the function is returned</li>
+               <li>if additionally the option 'numLocal' is provided the certain number of local minima / maxima is computed</li>
+            </ul>
+         </div><pre class="codeinput">plot(15 * sF1 + sF2,<span class="string">'upper'</span>)
+
+<span class="comment">% compute and mark the global maximum</span>
+[maxvalue, maxnodes] = max(15 * sF1 + sF2);
+annotate(maxnodes)
+
+<span class="comment">% compute and mark the local minimum</span>
+[minvalue, minnodes] = min(15 * sF1 + sF2,<span class="string">'numLocal'</span>,2);
+annotate(minnodes)</pre><img src="S2FunOperations_04.png"> <h2>Integration<a name="5"> </a></h2>
+         <p>The surface integral of a spherical function can be computed by either <a href="S2Fun.mean.html"><tt>mean</tt></a> or <a href="S2Fun.sum.html"><tt>sum</tt></a>. The difference between both commands is that <a href="S2Fun.sum.html"><tt>sum</tt></a> normalizes the integral of the identical function on the sphere to <img src="S2FunOperations_eq12586085190606786913.png">  the command <a href="S2Fun.mean.html"><tt>mean</tt></a> normalizes it to one. Compare
+         </p><pre class="codeinput">mean(sF1)
+
+sum(sF1) / ( 4 * pi )</pre><pre class="codeoutput">ans =
+    0.0329
+ans =
+    0.0329
+</pre><p>A practical application of integration is the computation of the <img src="S2FunOperations_eq11809360406450963432.png"> -norm which is defined for a spherical function <img src="S2FunOperations_eq18096895394918367257.png">  as
+         </p>
+         <p>$$ \lVert f \rVert_2 = \left(\int_{\mathrm{sphere}} f(x)^2 dx\right)^{1/2} $$</p><pre class="error">Error updating Text.
+
+ String scalar or character vector must have valid interpreter syntax: 
+$$ \lVert f \rVert_2 = \left(\int_{\mathrm{sphere}} f(x)^2 dx\right)^{1/2} $$
+</pre><p>accordingly we can compute it by</p><pre class="codeinput">sqrt(sum(sF1.^2))</pre><pre class="codeoutput">ans =
+    0.4138
+</pre><p>or more efficiently by the command <a href="S2FunHarmonic.norm.html"><tt>norm</tt></a></p><pre class="codeinput">norm(sF1)</pre><pre class="codeoutput">ans =
+    0.4138
+</pre><h2>Differentiation<a name="8"> </a></h2>
+         <p>The differential of a spherical function in a specific point is a gradient, i.e., a <a href="vector3d.vector3d.html">three-dimensional vector</a> which can be computed by the command <a href="S2Fun.grad.html"><tt>grad</tt></a></p><pre class="codeinput">grad(sF1,xvector)</pre><pre class="codeoutput"> 
+ans = vector3d  
+  x            y            z
+  0 -0.000291054 -0.000490867
+</pre><p>The gradients of a spherical function in all points form a spherical vector field and are returned by the function <a href="S2Fun.grad.html"><tt>grad</tt></a> as a variable of type <a href="S2VectorFieldHarmonic.S2VectorFieldHarmonic.html">S2VectorFieldHarmonic</a>.
+         </p><pre class="codeinput"><span class="comment">% compute the gradient as a vector field</span>
+G = grad(sF1)
+
+<span class="comment">% plot the gradient on top of the function</span>
+plot(sF1,<span class="string">'upper'</span>)
+hold <span class="string">on</span>
+plot(G)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+G = S2VectorFieldHarmonic  
+ bandwidth: 129
+</pre><img src="S2FunOperations_05.png"> <p>We observe long arrows at the positions of big changes in intensity and almost invisible arrows in regions of constant intensity.</p>
+         <h2>Rotating spherical functions<a name="11"> </a></h2>
+         <p>Rotating a spherical function works with the command <a href="S2Fun.rotate.html"><tt>rotate</tt></a></p><pre class="codeinput"><span class="comment">% define a rotation</span>
+rot = rotation.byAxisAngle(yvector,-30*degree)
+
+<span class="comment">% plot the rotated spherical function</span>
+plot(rotate(15 * sF1 + sF2,rot),<span class="string">'upper'</span>)</pre><pre class="codeoutput"> 
+rot = rotation  
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+   270   30   90    0
+ 
+</pre><img src="S2FunOperations_06.png"> <p>A special case of rotation is symmetrysing it with respect to some symmetry. The following example symmetrises our smiley
+            with respect to a two fold axis in <img src="S2FunOperations_eq17119888974628994297.png"> -direction
+         </p><pre class="codeinput"><span class="comment">% define the symmetry</span>
+cs = crystalSymmetry(<span class="string">'112'</span>);
+
+<span class="comment">% compute the symmetrised function</span>
+sFs = symmetrise(sF1, cs)
+
+<span class="comment">% plot it</span>
+plota2east
+plot(sFs,<span class="string">'upper'</span>,<span class="string">'complete'</span>)</pre><pre class="codeoutput"> 
+sFs = S2FunHarmonicSym  
+ symmetry: 112, X||a*, Y||b*, Z||c*
+ bandwidth: 128
+</pre><img src="S2FunOperations_07.png"> <p>The resulting function is of type <a href="S2FunHarmonicSym.S2FunHarmonicSym.html">S2FunHarmonicSym</a> and knows about its symmetry.
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

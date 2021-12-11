@@ -1,0 +1,184 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>grain2d ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: grain2d.grain2d -->
+      <!-- HEADSTUFF: grain2d.grain2d -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:grain2d.grain2d">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit grain2d/grain2d">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">grain2d</h1>
+         <div class="subheading"></div>
+         <p>class representing two dimensional grains</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">grains = grain2d(ebsd,V,F,I_DG,I_FD,A_Db)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ebsd</tt>
+            </td>
+            <td>
+            <tt>EBSD data set</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>V</tt>
+            </td>
+            <td>
+            <tt>list of vertices</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>F</tt>
+            </td>
+            <td>
+            <tt>list of edges</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>I_DG</tt>
+            </td>
+            <td>
+            <tt>incidence matrix - ebsd cells x grains</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>I_FD</tt>
+            </td>
+            <td>
+            <tt>incidence matrix - edges x ebsd cells</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>A_Db</tt>
+            </td>
+            <td>
+            <tt>adjacense matrix of cells</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Class Properties<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>phaseId</tt>
+            </td>
+            <td>
+            <tt>phase identifier of each grain</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>id</tt>
+            </td>
+            <td>
+            <tt>id of each grain</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>poly</tt>
+            </td>
+            <td>
+            <tt>cell list of the vertex ids of each grain (index to V)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>V</tt>
+            </td>
+            <td>
+            <tt>list of verticies (x,y coordinates)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>boundary</tt>
+            </td>
+            <td>
+            <tt><a href="grainBoundary.grainBoundary.html">grainBoundary</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>innerBoundary</tt>
+            </td>
+            <td>
+            <tt><a href="grainBoundary.grainBoundary.html">grainBoundary</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>triplePoints</tt>
+            </td>
+            <td>
+            <tt>@triplePoints</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>grainSize</tt>
+            </td>
+            <td>
+            <tt>number if pixels belonging to the grain</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>GOS</tt>
+            </td>
+            <td>
+            <tt>grain orientation spread</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>meanOrientation</tt>
+            </td>
+            <td>
+            <tt>average grain orientation (<a href="GrainOrientationParameters.html">only single phase</a>)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="GrainReconstruction.html">GrainReconstruction</a>, <a href="GrainSpatialPlots.html">GrainSpatialPlots</a>, <a href="SelectingGrains.html">SelectingGrains</a>, <a href="ShapeParameter.html">ShapeParameter</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,155 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Twinning Analysis ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: TwinningBoundaries -->
+      <!-- HEADSTUFF: TwinningBoundaries -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:TwinningBoundaries">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Twinning Analysis</h1>
+         <div class="subheading"></div>
+         <p>In this section we consider the analysis of twining. Therefore lets start by importing some Magnesium data and reconstructing
+            the grain structure.
+         </p><pre class="codeinput"><span class="comment">% load some example data</span>
+mtexdata <span class="string">twins</span>
+
+<span class="comment">% segment grains</span>
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,5*degree);
+
+<span class="comment">% remove two pixel grains</span>
+ebsd(grains(grains.grainSize&lt;=2)) = [];
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,5*degree);
+
+<span class="comment">% smooth them</span>
+grains = grains.smooth(5);
+
+<span class="comment">% visualize the grains</span>
+plot(grains,grains.meanOrientation)
+
+<span class="comment">% store crystal symmetry of Magnesium</span>
+CS = grains.CS;</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0     46 (0.2%)  notIndexed                                                 
+     1  22833 (100%)   Magnesium  LightSkyBlue     6/mmm       X||a*, Y||b, Z||c*
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="TwinningBoundaries_01.png"> <p>Next we extract the grainboundaries and save them to a separate variable</p><pre class="codeinput">gB = grains.boundary</pre><pre class="codeoutput"> 
+gB = grainBoundary  
+ 
+ Segments   mineral 1  mineral 2
+      600  notIndexed  Magnesium
+     3164   Magnesium  Magnesium
+</pre><p>The output tells us that we have 3219 Magnesium to Magnesium boundary segments and 606 boundary segements where the grains
+            are cut by the scanning boundary. To restrict the grain boundaries to a specific phase transistion you shall do
+         </p><pre class="codeinput">gB_MgMg = gB(<span class="string">'Magnesium'</span>,<span class="string">'Magnesium'</span>)</pre><pre class="codeoutput"> 
+gB_MgMg = grainBoundary  
+ 
+ Segments  mineral 1  mineral 2
+     3164  Magnesium  Magnesium
+</pre><h2>Properties of grain boundaries<a name="4"> </a></h2>
+         <p>A variable of type grain boundary contains the following properties</p>
+         <div>
+            <ul type="square">
+               <li>misorientation</li>
+               <li>direction</li>
+               <li>segLength</li>
+            </ul>
+         </div>
+         <p>These can be used to colorize the grain boundaries. By the following command, we plot the grain boundaries colorized by the
+            misorientation angle
+         </p><pre class="codeinput">plot(gB_MgMg,gB_MgMg.misorientation.angle./degree,<span class="string">'linewidth'</span>,2)
+mtexColorbar</pre><img src="TwinningBoundaries_02.png"> <p>We observe that we have many grain boundaries with misorientation angle larger than 80 degree. In order to investigate the
+            distribution of misorientation angles further we have the look at a misorientation angle histogramm.
+         </p><pre class="codeinput">close <span class="string">all</span>
+histogram(gB_MgMg.misorientation.angle./degree,40)
+xlabel(<span class="string">'misorientation angle (degree)'</span>)</pre><img src="TwinningBoundaries_03.png"> <p>Lets analyze the misorientations corresponding to the peak around 86 degree in more detail. Therefore, we consider only those
+            misorientations with misorientation angle between 85 and 87 degree
+         </p><pre class="codeinput">ind = gB_MgMg.misorientation.angle&gt;85*degree &amp; gB_MgMg.misorientation.angle&lt;87*degree;
+mori = gB_MgMg.misorientation(ind);</pre><p>and observe that when plotted in axis angle domain they form a strong cluster close to one of the corners of the domain.</p><pre class="codeinput">scatter(mori)</pre><img src="TwinningBoundaries_04.png"> <p>We may determin the center of the cluster and check whether it is close to some special orientation relation ship</p><pre class="codeinput"><span class="comment">% determine the mean of the cluster</span>
+mori_mean = mean(mori,<span class="string">'robust'</span>)
+
+<span class="comment">% determine the closest special orientation relation ship</span>
+round2Miller(mori_mean)</pre><pre class="codeoutput"> 
+mori_mean = misorientation (Magnesium -&gt; Magnesium)
+  antipodal:         true
+ 
+  Bunge Euler angles in degree
+     phi1     Phi    phi2    Inv.
+  90.5949 86.0962 269.995       0
+ 
+ 
+    plane parallel   direction parallel     fit
+(0-111) || (1-101)   [30-33] || [10-1-1]     0.628&deg;
+ 
+</pre><p>Bases on the output above we may now define the special orientation relationship as</p><pre class="codeinput">twinning = orientation.map(Miller(0,1,-1,-2,CS),Miller(0,-1,1,-2,CS),<span class="keyword">...</span>
+  Miller(2,-1,-1,0,CS),Miller(2,-1,-1,0,CS))</pre><pre class="codeoutput"> 
+twinning = misorientation (Magnesium -&gt; Magnesium)
+ 
+  Bunge Euler angles in degree
+  phi1     Phi    phi2    Inv.
+   150 86.2992     210       0
+ 
+</pre><p>and observe that it is actually a rotation about axis (-1210) and angle 86.3 degree</p><pre class="codeinput"><span class="comment">% the rotational axis</span>
+round(twinning.axis)
+
+<span class="comment">% the rotational angle</span>
+twinning.angle / degree</pre><pre class="codeoutput"> 
+ans = Miller  
+ mineral: Magnesium (622, X||a*, Y||b, Z||c*)
+   h  k  i  l
+  -1  2 -1  0
+ans =
+   86.2992
+</pre><p>Next, we check for each boundary segment whether it is a twinning boundary, i.e., whether boundary misorientation is close
+            to the twinning.
+         </p><pre class="codeinput"><span class="comment">% restrict to twinnings with threshold 5 degree</span>
+isTwinning = angle(gB_MgMg.misorientation,twinning) &lt; 5*degree;
+twinBoundary = gB_MgMg(isTwinning)
+
+<span class="comment">% plot the twinning boundaries</span>
+plot(grains,grains.meanOrientation)
+<span class="comment">%plot(ebsd('indexed'),ebsd('indexed').orientations)</span>
+hold <span class="string">on</span>
+<span class="comment">%plot(gB_MgMg,angle(gB_MgMg.misorientation,twinning),'linewidth',4)</span>
+plot(twinBoundary,<span class="string">'linecolor'</span>,<span class="string">'w'</span>,<span class="string">'linewidth'</span>,4,<span class="string">'displayName'</span>,<span class="string">'twin boundary'</span>)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+twinBoundary = grainBoundary  
+ 
+ Segments  mineral 1  mineral 2
+     1649  Magnesium  Magnesium
+</pre><img src="TwinningBoundaries_05.png"> <p>A common next step is to reconstruct the grain structure parent to twinning by merging the twinned grains. This is explained
+            in detail in the section <a href="GrainMerge.html">Merging Grains</a>.
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

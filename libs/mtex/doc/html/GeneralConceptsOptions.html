@@ -1,0 +1,59 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Options ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: GeneralConceptsOptions -->
+      <!-- HEADSTUFF: GeneralConceptsOptions -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:GeneralConceptsOptions">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Options</h1>
+         <div class="subheading"></div>
+         <p>Many functions provided by MTEX can be customized by options. An option is passed to a method as a string parameter followed
+            by a value. For example, almost all plotting methods support the option <b>resolution</b> followed by a double value specifying the resolution in radiant
+         </p><pre class="codeinput">odf = SantaFe
+plotPDF(odf,Miller(1,0,0,odf.CS),<span class="string">'resolution'</span>,10*degree,<span class="string">'contour'</span>,<span class="string">'linewidth'</span>,2);</pre><pre class="codeoutput"> 
+odf = ODF  
+  crystal symmetry : m-3m
+  specimen symmetry: 222
+ 
+  Uniform portion:
+    weight: 0.73
+ 
+  Radially symmetric portion:
+    kernel: van Mises Fisher, halfwidth 10&deg;
+    center: (296.6&deg;,48.2&deg;,26.6&deg;)
+    weight: 0.27
+ 
+</pre><img src="GeneralConceptsOptions_01.png"> <pre class="codeinput">plotPDF(odf,Miller(1,0,0,odf.CS),<span class="string">'resolution'</span>,2.5*degree,<span class="string">'contour'</span>,<span class="string">'linewidth'</span>,2);</pre><img src="GeneralConceptsOptions_02.png"> <p>Options that are not followed by a value are called flags. In the above example, <b>contour</b> is a flag that tells the plotting routine to plot contour lines. Options and flags to a function are always optional and
+            can be passed in any order. If conflicting options or flags are passed, i.e., the resolution is specified twice, the later
+            option in the list is considered to be the right one.
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

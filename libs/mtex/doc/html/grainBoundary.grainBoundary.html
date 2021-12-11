@@ -1,0 +1,203 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>grainBoundary ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: grainBoundary.grainBoundary -->
+      <!-- HEADSTUFF: grainBoundary.grainBoundary -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:grainBoundary.grainBoundary">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit grainBoundary/grainBoundary">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">grainBoundary</h1>
+         <div class="subheading"></div>
+         <p>Variables of type grainBoundary represent lists of grain boundary segments. Those are typically generated during grain reconstruction
+            and are accessible via
+         </p><pre class="codeinput">grains.boundary</pre><p>Each grain boundary segement stores many properties: its position within the map, the ids of the adjacent grains, the ids
+            of the adjacent EBSD measurements, the grain boundary misorientation, etc. These properties are explained in more detail in
+            the section <a href="BoundaryProperties.html">boundary properties</a>.
+         </p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">gB = grainBoundary(V,F,I_FD,ebsd,grainsPhaseId)</pre><h2>Class Properties<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>V</tt>
+            </td>
+            <td>
+            <tt>[x,y] list of vertices</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>scanUnit</tt>
+            </td>
+            <td>
+            <tt>scaning unit (default - um)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>triplePoints</tt>
+            </td>
+            <td>
+            <tt><a href="triplePointList.triplePointList.html">triplePointList</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>F</tt>
+            </td>
+            <td>
+            <tt>list of boundary segments as ids to V</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>grainId</tt>
+            </td>
+            <td>
+            <tt>id's of the neighboring grains to a boundary segment</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>ebsdId</tt>
+            </td>
+            <td>
+            <tt>id's of the neighboring ebsd data to a boundary segment</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>misrotation</tt>
+            </td>
+            <td>
+            <tt>misrotation between neighboring ebsd data to a boundary segment</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Dependent Class Properties<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>misorientation</tt>
+            </td>
+            <td>
+            <tt>disorientation between neighboring ebsd data to a boundary segment</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>direction</tt>
+            </td>
+            <td>
+            <tt>direction of the boundary segment as <a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>midPoint</tt>
+            </td>
+            <td>
+            <tt>x,y coordinates of the midpoint of the segments</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>I_VF</tt>
+            </td>
+            <td>
+            <tt>incidence matrix vertices - edges</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>I_FG</tt>
+            </td>
+            <td>
+            <tt>incidence matrix edges - grains</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>A_F</tt>
+            </td>
+            <td>
+            <tt>adjecency matrix edges - edges</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>A_V</tt>
+            </td>
+            <td>
+            <tt>adjecency matrix vertices - vertices</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>componentId</tt>
+            </td>
+            <td>
+            <tt>connected component id</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>componentSize</tt>
+            </td>
+            <td>
+            <tt>number of segments that belong to the component</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>x</tt>
+            </td>
+            <td>
+            <tt>x coordinates of the vertices of the grains</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>y</tt>
+            </td>
+            <td>
+            <tt>y coordinates of the vertices of the grains</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

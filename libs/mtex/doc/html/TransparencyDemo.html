@@ -1,0 +1,62 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Transparencys ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: TransparencyDemo -->
+      <!-- HEADSTUFF: TransparencyDemo -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:TransparencyDemo">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Transparencys</h1>
+         <div class="subheading"></div><pre class="codeinput">cs = crystalSymmetry(<span class="string">'m-3m'</span>)
+odf = unimodalODF(orientation.id(cs))
+ori = odf.discreteSample(500)
+
+h = Miller({1,0,0},{1,1,0},{1,1,1},cs);
+plotPDF(ori,h,<span class="string">'MarkerFaceAlpha'</span>,0.2,<span class="string">'MarkerEdgeAlpha'</span>,0.5,<span class="string">'MarkerSize'</span>,10,<span class="string">'all'</span>)</pre><pre class="codeoutput"> 
+cs = crystalSymmetry  
+ 
+  symmetry: m-3m   
+  elements: 48     
+  a, b, c : 1, 1, 1
+ 
+ 
+odf = ODF  
+  crystal symmetry : m-3m
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    center: (0&deg;,0&deg;,0&deg;)
+    weight: 1
+ 
+ 
+ori = orientation (m-3m -&gt; xyz)
+  size: 500 x 1
+</pre><img src="TransparencyDemo_01.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

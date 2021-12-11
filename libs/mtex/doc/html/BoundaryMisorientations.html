@@ -1,0 +1,150 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Misorientations at grain boundaries ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: BoundaryMisorientations -->
+      <!-- HEADSTUFF: BoundaryMisorientations -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:BoundaryMisorientations">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Misorientations at grain boundaries</h1>
+         <div class="subheading">
+            <p>Analyse misorientations along grain boundaries</p>
+            <p>This example explains how to analyse boundary misorientation by means of misorientation axes</p>
+         </div>
+         <h2>Import EBSD data and select a subregion<a name="1"> </a></h2>
+         <p>First step is as always to import the data. Here we restrict the big data set to a subregion to make the results easier to
+            visulize
+         </p><pre class="codeinput"><span class="comment">% take some MTEX data set</span>
+mtexdata <span class="string">forsterite</span>
+plotx2east
+
+<span class="comment">% define a sub region</span>
+xmin = 25000;
+xmax = 35000;
+ymin = 4500;
+ymax = 9000;
+
+region = [xmin ymin xmax-xmin ymax-ymin];
+
+<span class="comment">% visualize the whole data set</span>
+plot(ebsd)
+<span class="comment">% and marke the sub region</span>
+rectangle(<span class="string">'position'</span>,region,<span class="string">'edgecolor'</span>,<span class="string">'r'</span>,<span class="string">'linewidth'</span>,2)
+
+<span class="comment">% select EBSD data within region</span>
+condition = inpolygon(ebsd,region); <span class="comment">% select indices by polygon</span>
+ebsd = ebsd(condition);</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0   58485 (24%)  notIndexed                                                 
+     1  152345 (62%)  Forsterite  LightSkyBlue       mmm                         
+     2   26058 (11%)   Enstatite  DarkSeaGreen       mmm                         
+     3   9064 (3.7%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="BoundaryMisorientations_01.png"> <h2>Grain modelling<a name="2"> </a></h2>
+         <p>Second step is the modelling of the grains and grain boundaries</p><pre class="codeinput"><span class="comment">% segmentation angle typically 10 to 15 degrees that seperates to grains</span>
+seg_angle = 10;
+
+<span class="comment">% minimum indexed points per grain between 5 and 10</span>
+min_points = 10;
+
+<span class="comment">% restrict to indexed only points</span>
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,seg_angle*degree);
+
+<span class="comment">% remove small grains with less than min_points indexed points</span>
+grains = grains(grains.grainSize &gt; min_points);
+
+<span class="comment">% re-calculate grain model to cleanup grain boundaries with less than</span>
+<span class="comment">% minimum index points used ebsd points within grains having the minium</span>
+<span class="comment">% indexed number of points (e.g. 10 points)</span>
+ebsd = ebsd(grains);
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,seg_angle*degree);
+
+<span class="comment">% smooth grains</span>
+grains = smooth(grains,4);
+
+<span class="comment">% plot the data</span>
+<span class="comment">% Note, only the forsterite grains are colorred. Grains with different</span>
+<span class="comment">% phase remain white</span>
+plot(grains(<span class="string">'fo'</span>),grains(<span class="string">'fo'</span>).meanOrientation,<span class="string">'micronbar'</span>,<span class="string">'off'</span>,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+hold <span class="string">on</span>
+plot(grains.boundary)
+hold <span class="string">off</span></pre><img src="BoundaryMisorientations_02.png"> <h2>Visualize the misorientation angle at grain boundaries<a name="3"> </a></h2><pre class="codeinput"><span class="comment">% define the linewidth</span>
+lw = 6;
+
+<span class="comment">% consider on Fo-Fo boundaries</span>
+gB = grains.boundary(<span class="string">'Fo'</span>,<span class="string">'Fo'</span>);
+
+<span class="comment">% The following command reorders the boundary segments such that they are</span>
+<span class="comment">% connected. This has two advantages:</span>
+<span class="comment">% 1. the plots become more smooth</span>
+<span class="comment">% 2. you can consider every third line segment as we do in the next paragraph</span>
+gB = gB.reorder;
+
+<span class="comment">% visualize the misorientation angle</span>
+<span class="comment">% draw the boundary in black very thick</span>
+hold <span class="string">on</span>
+plot(gB,<span class="string">'linewidth'</span>,lw+2);
+
+<span class="comment">% and on top of it the boundary colorized according to the misorientation</span>
+<span class="comment">% angle</span>
+hold <span class="string">on</span>
+plot(gB,gB.misorientation.angle./degree,<span class="string">'linewidth'</span>,lw);
+hold <span class="string">off</span>
+mtexColorMap <span class="string">jet</span>
+mtexColorbar(<span class="string">'title'</span>,<span class="string">'misorientation angle in degrees'</span>)</pre><img src="BoundaryMisorientations_03.png"> <h2>Visualize the misorientation axes in specimen coordinates<a name="4"> </a></h2>
+         <p>Computing the misorientation axes in specimen coordinates can not be done using the boundary misorientations only. In fact,
+            we require the orientations on both sides of the grain boundary. Lets extract them first.
+         </p><pre class="codeinput"><span class="comment">% do only consider every third boundary segment</span>
+Sampling_N=3;
+gB = gB(1:Sampling_N:end);
+
+<span class="comment">% the following command gives an Nx2 matrix of orientations which contains</span>
+<span class="comment">% for each boundary segment the orientation on both sides of the boundary.</span>
+ori = ebsd(<span class="string">'id'</span>,gB.ebsdId).orientations;
+
+<span class="comment">% the misorientation axis in specimen coordinates</span>
+gB_axes = axis(ori(:,1),ori(:,2));
+
+<span class="comment">% axes can be plotted using the command quiver</span>
+hold <span class="string">on</span>
+quiver(gB,gB_axes,<span class="string">'linewidth'</span>,1,<span class="string">'color'</span>,<span class="string">'k'</span>,<span class="string">'autoScaleFactor'</span>,0.3)
+hold <span class="string">off</span></pre><img src="BoundaryMisorientations_04.png"> <p>Note, the shorter the axes the more they stick out of the surface. What may be a bit surprising is that the misorientations
+            axes have some abrupt changes at the left hands side grain boundary. The reason for this is that the misorientations angle
+            at this boundary is close to the maximum misorientation angle of 120 degree. As a consequence, slight changes in the misorientation
+            may leed to a completely different disorientation, i.e., a different but symmetrically equivalent misorientation has a smaller
+            misorientation angle.
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

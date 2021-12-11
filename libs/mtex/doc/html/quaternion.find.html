@@ -1,0 +1,106 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>find ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: quaternion.find -->
+      <!-- HEADSTUFF: quaternion.find -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:quaternion.find">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit quaternion/find">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">find</h1>
+         <div class="subheading"></div>
+         <p>return indece and distance of all nodes within a eps neighborhood</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput"><span class="comment">% find for each quaternion in ref the closest quaternion in table</span>
+[ind,d] = find(table, ref)</pre><pre class="codeinput"><span class="comment">% find for each quaternion in ref all quaternion in lookup that have</span>
+<span class="comment">% angle not larger then epsilon</span>
+[ind,d] = find(table, rot_ref, epsilon)</pre><pre class="codeinput"><span class="comment">% find all quaternion which have distant to fibre f less then epsilon</span>
+[ind,d] = find(table, f_ref, epsilon)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>table</tt>
+            </td>
+            <td>
+            <tt><a href="quaternion.quaternion.html">quaternion</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>rot_ref</tt>
+            </td>
+            <td>
+            <tt>reference <a href="quaternion.quaternion.html">quaternion</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>f_ref</tt>
+            </td>
+            <td>
+            <tt>reference <a href="fibre.fibre.html">fibre</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>epsilon</tt>
+            </td>
+            <td>
+            <tt>maximum distance</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ind</tt>
+            </td>
+            <td>
+            <tt>index of the found @quaternions</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>d</tt>
+            </td>
+            <td>
+            <tt>actual distances</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,113 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>fibreODF ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: fibreODF -->
+      <!-- HEADSTUFF: fibreODF -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:fibreODF">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit fibreODF">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">fibreODF</h1>
+         <div class="subheading">
+            <p>defines an fibre symmetric ODF</p>
+         </div>
+         <h2>Description<a name="2"> </a></h2>
+         <p><b>fibreODF</b> defines a fibre symmetric ODF with respect to a crystal direction <tt>h</tt> and a specimen directions <tt>r</tt>. The shape of the ODF is defined by a <a href="kernel.kernel.html">kernel</a> function.
+         </p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">h = Miller(h,k,l,CS)
+r = vector3d(x,y,z);
+odf = fibreODF(h,r) <span class="comment">% default halfwith 10*degree</span>
+odf = fibreODF(h,r,<span class="string">'halfwidth'</span>,15*degree) <span class="comment">% specify halfwidth</span>
+odf = fibreODF(h,r,kernel) <span class="comment">% specify &lt;kernel.kernel.html kernel&gt; shape</span>
+odf = fibreODF(h,r,SS)  <span class="comment">% specify crystal and specimen symmetry</span></pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>h</tt>
+            </td>
+            <td>
+            <tt><a href="Miller.Miller.html">Miller</a> / <a href="vector3d.vector3d.html">vector3d</a> crystal direction</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>r</tt>
+            </td>
+            <td>
+            <tt><a href="vector3d.vector3d.html">vector3d</a> specimen direction</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>CS, SS</tt>
+            </td>
+            <td>
+            <tt>crystal, specimen <a href="symmetry.symmetry.html">symmetry</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>hw</tt>
+            </td>
+            <td>
+            <tt>halfwidth of the kernel (default -- 10°)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>kernel</tt>
+            </td>
+            <td>
+            <tt><a href="kernel.kernel.html">kernel</a> function (default -- de la Vallee Poussin)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>odf</tt>
+            </td>
+            <td>
+            <tt><a href="ODF.ODF.html">ODF</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="ODF.ODF.html">ODF.ODF</a>, <a href="uniformODF.html">uniformODF</a>, <a href="unimodalODF.html">unimodalODF</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

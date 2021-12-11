@@ -1,0 +1,303 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Martensite Parent Grain Reconstruction ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: MaParentGrainReconstructionAdvanced -->
+      <!-- HEADSTUFF: MaParentGrainReconstructionAdvanced -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:MaParentGrainReconstructionAdvanced">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Martensite Parent Grain Reconstruction</h1>
+         <div class="subheading"></div>
+         <p>This script demonstrates the tools MTEX offers to reconstruct a parent austenite phase from a measured martensite phase. Most
+            of the ideas are from <a href="https://www.researchgate.net/deref/http%3A%2F%2Fdx.doi.org%2F10.1007%2Fs11661-018-4904-9?_sg%5B0%5D=gRJGzFvY4PyFk-FFoOIj2jDqqumCsy3e8TU6qDnJoVtZaeUoXjzpsGmpe3TDKsNukQYQX9AtKGniFzbdpymYvzYwhg.5jfOl5Ohgg7pW_6yACRXN3QiR-oTn8UsxZjTbJoS_XqwSaaB7r8NgifJyjSES2iXP6iOVx57sy8HC4q2XyZZaA">Crystallography, Morphology, and Martensite Transformation of Prior Austenite in Intercritically Annealed High-Aluminum Steel</a> by Tuomo Nyyssönen. We shall use the following sample data set.
+         </p><pre class="codeinput"><span class="comment">% load the data</span>
+mtexdata <span class="string">martensite</span>
+plotx2east
+
+<span class="comment">% extract fcc and bcc symmetries</span>
+csBCC = ebsd.CSList{2}; <span class="comment">% austenite bcc:</span>
+csFCC = ebsd.CSList{3}; <span class="comment">% martensite fcc:</span>
+
+<span class="comment">% grain reconstruction</span>
+[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,3*degree);
+
+<span class="comment">% remove small grains</span>
+ebsd(grains(grains.grainSize &lt; 4)) = [];
+
+<span class="comment">% reidentify grains with small grains removed:</span>
+[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,3*degree);
+
+<span class="comment">% plot the data and the grain boundaries</span>
+plot(ebsd(<span class="string">'Iron bcc'</span>),ebsd(<span class="string">'Iron bcc'</span>).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations         Mineral         Color  Symmetry  Crystal reference frame
+     0   92415 (27%)      notIndexed                                                 
+     1  251187 (73%)  Iron bcc (old)  LightSkyBlue       432                         
+ 
+ Properties: bands, bc, bs, error, mad, reliabilityindex, x, y
+ Scan unit : um
+ 
+</pre><img src="MaParentGrainReconstructionAdvanced_01.png"> <h2>Determine the parent child orientation relationship<a name="2"> </a></h2>
+         <p>It is well known that the phase transformation from austenite to martensite is not described by a fixed orientation relationship.
+            In fact, the actual orientation relationship needs to be determined for each sample individualy. Here, we used the iterative
+            method proposed by Tuomo Nyyssönen and implemented in the function <a href="calcParent2Child.html"><tt>calcParent2Child</tt></a> that starts at an initial guess of the orientation relation ship and iterates towards the true orientation relationship.
+         </p>
+         <p>Here we use as the initial guess the Kurdjumov Sachs orientation relationship</p><pre class="codeinput"><span class="comment">% initial gues is Kurdjumov Sachs</span>
+KS = orientation.KurdjumovSachs(csFCC,csBCC);</pre><p>The function <a href="calcParent2Child.html"><tt>calcParent2Child</tt></a> requires as input a list of child to child misorientations or, equivalently, a two column matrix of child orientations. Here
+            we go with the second option and setup this two column orientation matrix from the mean orientations of neighbouring grains
+            which can be found using the command <a href="grain2d.neighbours.html"><tt>neighbours</tt></a></p><pre class="codeinput"><span class="comment">% get neighbouring grain pairs</span>
+grainPairs = grains.neighbors;
+
+<span class="comment">% ignore pairs with misorientation angle smaller then 5 degree</span>
+mori = grains(grainPairs).meanOrientation;
+grainPairs(angle(mori(:,1),mori(:,2)) &lt; 5*degree,:) = [];
+
+<span class="comment">% compute an optimal parent to child orientation relationship</span>
+[fcc2bcc, fit] = calcParent2Child(grains(grainPairs).meanOrientation,KS);</pre><pre class="codeoutput"> 
+ optimizing parent to child orientation relationship
+  (335.8&deg;,10.5&deg;,65.8&deg;)  3.7
+  (345.6&deg;,10.3&deg;,60&deg;)    2.7
+  (351.8&deg;,9.7&deg;,54.4&deg;)   2.6
+  (348.3&deg;,9.4&deg;,57.6&deg;)   2.4
+  (347.8&deg;,9.4&deg;,58&deg;)     2.4
+ 
+</pre><p>Beside the optimized parent to child orientation relationship the command <a href="calcParent2Child.html"><tt>calcParent2Child</tt></a> returns as a second output argument the misfit between all grain to grain misorientations and the theoretical child to child
+            misorientations. In fact, the algorithm assumes that the majority of all boundary misorientations are child to child misorientations
+            and finds the parent to child orientations relationship by minimizing this misfit. The following histogram displays the distribution
+            of the misfit over all grain to grain misorientations.
+         </p><pre class="codeinput">close <span class="string">all</span>
+histogram(fit./degree)
+xlabel(<span class="string">'disorientation angle'</span>)</pre><img src="MaParentGrainReconstructionAdvanced_02.png"> <p>We may also colorize the grain boundaries according to this misfit. To this end we first compute the relationship between
+            pairs of grains <tt>grainPairs</tt> and the boundary segments stored in <tt>grains.boundary</tt> using the command <a href="grainBoundary.selectByGrainId.html"><tt>selectByGrainId</tt></a></p><pre class="codeinput">[gB,pairId] = grains.boundary.selectByGrainId(grainPairs);</pre><p>abd then pass the variable <tt>fit</tt> as second input argument to the <a href="grainBoundary.plot.html"><tt>plot</tt></a> command
+         </p><pre class="codeinput">plot(ebsd(<span class="string">'Iron bcc'</span>),ebsd(<span class="string">'Iron bcc'</span>).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+hold <span class="string">on</span>;
+plot(gB,fit(pairId) ./ degree,<span class="string">'linewidth'</span>,3,<span class="string">'smooth'</span>)
+hold <span class="string">off</span>
+
+mtexColorMap <span class="string">LaboTeX</span>
+mtexColorbar
+
+setColorRange([0,5])</pre><img src="MaParentGrainReconstructionAdvanced_03.png"> <p>We observe that the boundary segments with a large misfit form large grain shapes which we want to identify in the next steps
+            as the parent grains.
+         </p>
+         <h2>Create a similarity matrix<a name="8"> </a></h2>
+         <p>Next we set up a adjacency matrix <tt>A</tt> that describes the probability that two neighbouring grains belong to the same parent grains. This probability is computed
+            from the misfit of the misorientation between two child grains to the theoretical child to child misorientation. More precisely,
+            we model the probability by a cumulative Gaussian distribution with the mean value <tt>threshold</tt> which describes the misfit at which the probability is exactly 50 percent and the standard deviation <tt>tol</tt></p><pre class="codeinput">omega = linspace(0,5)*degree;
+threshold = 2*degree;
+tol = 1.5*degree;
+
+close <span class="string">all</span>
+plot(omega./degree,1 - 0.5 * (1 + erf(2*(omega - threshold)./tol)),<span class="string">'linewidth'</span>,2)
+xlabel(<span class="string">'misfit in degree'</span>)
+ylabel(<span class="string">'probability'</span>)</pre><img src="MaParentGrainReconstructionAdvanced_04.png"> <p>The above diagram describes the probability distribution as a function of the misfit. After filling the matrix <tt>A</tt> with these probabilities
+         </p><pre class="codeinput"><span class="comment">% compute the probabilities</span>
+prob = 1 - 0.5 * (1 + erf(2*(fit - threshold)./tol));
+
+<span class="comment">% the corresponding similarity matrix</span>
+A = sparse(grainPairs(:,1),grainPairs(:,2),prob,length(grains),length(grains));</pre><p>we can split it into clusters using the command <a href="calcCluster.html"><tt>calcCluster</tt></a> which implements the <a href="https://micans.org/mcl">Markovian clustering algorithm</a>. Here an important parameter is the so called inflation power, which controls the size of the clusters.
+         </p><pre class="codeinput">p = 1.6; <span class="comment">% inflation power:</span>
+A = mclComponents(A,p);</pre><p>Each connected component of the resulting adjacency matrix describes one parent grain. Hence, we can use this adjacency matrix
+            to merge child grains into parent grains by the command <a href="graind2d.merge.html"><tt>merge</tt></a>.
+         </p><pre class="codeinput"><span class="comment">% merge grains according to the adjacency matrix A</span>
+[parentGrains, parentId] = merge(grains,A);
+
+<span class="comment">% ensure grainId in parentEBSD is set up correctly with parentGrains</span>
+parentEBSD = ebsd;
+parentEBSD(<span class="string">'indexed'</span>).grainId = parentId(ebsd(<span class="string">'indexed'</span>).grainId);</pre><p>Let's visualize the first result. Note, that at this stage it is not important to have the parent grains already at their
+            optimal size. Similarly orientated grains can be merged later on.
+         </p><pre class="codeinput">plot(ebsd(<span class="string">'Iron bcc'</span>),ebsd(<span class="string">'Iron bcc'</span>).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+hold <span class="string">on</span>;
+plot(parentGrains.boundary,<span class="string">'linewidth'</span>,4)
+hold <span class="string">off</span></pre><img src="MaParentGrainReconstructionAdvanced_05.png"> <h2>Compute parent grain orientations<a name="13"> </a></h2>
+         <p>In the next step we compute for each parent grain its parent austenite orientation. This can be done usig the command <a href="calcParent.html"><tt>calcParent</tt></a>. Note, that we ensure that at least two child grains have been merged and that the misfit is smaller than 5 degree.
+         </p><pre class="codeinput"><span class="comment">% the measured child orientations</span>
+childOri = grains(<span class="string">'Iron bcc'</span>).meanOrientation;
+
+<span class="comment">% the parent orientation we are going to compute</span>
+parentOri = orientation.nan(max(parentId),1,fcc2bcc.CS);
+fit = inf(size(parentOri));
+weights = grains(<span class="string">'Iron bcc'</span>).grainSize;
+
+<span class="comment">% loop through all parent grains</span>
+<span class="keyword">for</span> k = 1:max(parentId)
+  <span class="keyword">if</span> nnz(parentId==k) &gt; 1
+    <span class="comment">% compute the parent orientation from the child orientations</span>
+    [parentOri(k),fit(k)] = calcParent(childOri(parentId==k), fcc2bcc,<span class="string">'weights'</span>,weights((parentId==k)));
+  <span class="keyword">end</span>
+  progress(k,max(parentId));
+<span class="keyword">end</span>
+
+<span class="comment">% update mean orientation of the parent grains</span>
+parentGrains(fit&lt;5*degree).meanOrientation = parentOri(fit&lt;5*degree);
+parentGrains = parentGrains.update;
+
+<span class="comment">% merge grains with similar orientation</span>
+[parentGrains, mergeId] = merge(parentGrains,<span class="string">'threshold'</span>,3*degree);
+parentEBSD(<span class="string">'indexed'</span>).grainId = mergeId(parentEBSD(<span class="string">'indexed'</span>).grainId);</pre><p>Let's plot the resulting parent orientations</p><pre class="codeinput">plot(parentGrains(<span class="string">'Iron fcc'</span>),parentGrains(<span class="string">'Iron fcc'</span>).meanOrientation)</pre><img src="MaParentGrainReconstructionAdvanced_06.png"> <h2>Compute Child Variants<a name="15"> </a></h2>
+         <p>Knowing the parent grain orientations we may compute the <a href="|variantId|">|variantId|</a> of each child grain using the command <a href="calcVariantId.html"><tt>calcVariantId</tt></a>. As a bonus this command returns also the <tt>packetId</tt>, here defined as the closest {111} plane in austenite to the (011) plane in martensite.
+         </p><pre class="codeinput"><span class="comment">% compute variantId and packetId</span>
+[variantId,packetId] = calcVariantId(parentOri(parentId),childOri,fcc2bcc);
+
+<span class="comment">% associate to each packet id a color and plot</span>
+color = ind2color(packetId);
+plot(grains,color)
+
+hold <span class="string">on</span>
+plot(parentGrains.boundary,<span class="string">'linewidth'</span>,3)
+
+<span class="comment">% outline a specific parent grain</span>
+hold <span class="string">on</span>
+id = parentGrains.findByLocation([100,80]);
+plot(parentGrains(id).boundary,<span class="string">'linewidth'</span>,3,<span class="string">'lineColor'</span>,<span class="string">'w'</span>)
+hold <span class="string">off</span></pre><img src="MaParentGrainReconstructionAdvanced_07.png"> <p>In order to check our parent grain reconstruction we chose the single parent grain outlines in the above map and plot all
+            child variants of its reconstructed parent orientation together with the actually measured child orientations inside the parent
+            grain.
+         </p><pre class="codeinput"><span class="comment">% the measured child orientations that belong to parent grain 279</span>
+childOri = ebsd(parentEBSD.grainId==id).orientations;
+plotPDF(childOri,Miller(0,0,1,csBCC),<span class="string">'MarkerSize'</span>,3)
+
+<span class="comment">% the orientation of parent grain 279</span>
+hold <span class="string">on</span>
+parentOri = parentGrains(id).meanOrientation;
+plot(parentOri.symmetrise * Miller(0,0,1,csFCC))
+
+<span class="comment">% the theoretical child variants</span>
+childVariants = variants(fcc2bcc, parentOri);
+plotPDF(childVariants, <span class="string">'markerFaceColor'</span>,<span class="string">'none'</span>,<span class="string">'linewidth'</span>,2,<span class="string">'markerEdgeColor'</span>,<span class="string">'orange'</span>)
+hold <span class="string">off</span></pre><pre class="codeoutput">  I'm plotting 416 random orientations out of 7140 given orientations
+  You can specify the the number points by the option "points".
+  The option "all" ensures that all data are plotted
+</pre><img src="MaParentGrainReconstructionAdvanced_08.png"> <p>So far our analysis was at the grain level. However, once parent grain orientations have been computed we may also use them
+            to compute parent orientations of each pixel in our original EBSD map. To this end we first find pixels that now belong to
+            an austenite grain.
+         </p><pre class="codeinput"><span class="comment">% consider only martensite pixels that now belong to austenite grains</span>
+isNowFCC = parentGrains.phaseId(max(1,parentEBSD.grainId)) == 3 &amp; parentEBSD.phaseId == 2;
+
+<span class="comment">% compute parent orientation</span>
+[parentEBSD(isNowFCC).orientations, fit] = calcParent(ebsd(isNowFCC).orientations,<span class="keyword">...</span>
+  parentGrains(parentEBSD(isNowFCC).grainId).meanOrientation,fcc2bcc);
+
+<span class="comment">% plot the result</span>
+plot(parentEBSD(<span class="string">'Iron fcc'</span>),parentEBSD(<span class="string">'Iron fcc'</span>).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)</pre><img src="MaParentGrainReconstructionAdvanced_09.png"> <p>As a second output argument we obtain the <tt>misfit</tt> between the parent orientation computed for the pixel and the mean orientation of the corresponding parent grain. Let's plot
+            this misfit as a map.
+         </p><pre class="codeinput">plot(parentEBSD(isNowFCC),fit ./ degree,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+mtexColorMap <span class="string">LaboTeX</span>
+mtexColorbar</pre><img src="MaParentGrainReconstructionAdvanced_10.png"> <h2>Denoise the parent map<a name="19"> </a></h2>
+         <p>Finaly we may apply filtering to the parent map to fill non indexed or not reconstructed pixels. To this end we first run
+            grain reconstruction on the parent map
+         </p><pre class="codeinput">[parentGrains, parentEBSD.grainId] = calcGrains(parentEBSD(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,3*degree);
+
+parentEBSD(parentGrains(parentGrains.grainSize&lt;10)) = [];
+
+[parentGrains, parentEBSD.grainId] = calcGrains(parentEBSD(<span class="string">'indexed'</span>),<span class="string">'angle'</span>,3*degree);
+parentGrains = smooth(parentGrains,5);
+
+plot(ebsd(<span class="string">'indexed'</span>),ebsd(<span class="string">'indexed'</span>).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+
+hold <span class="string">on</span>
+plot(parentGrains.boundary,<span class="string">'lineWidth'</span>,4)
+hold <span class="string">off</span></pre><img src="MaParentGrainReconstructionAdvanced_11.png"> <p>and then use the command <a href="EBSD.smooth.html"><tt>smooth</tt></a> to fill the holes in the reconstructed parent map
+         </p><pre class="codeinput"><span class="comment">% fill the holes</span>
+F = halfQuadraticFilter;
+parentEBSD = smooth(parentEBSD(<span class="string">'indexed'</span>),F,<span class="string">'fill'</span>,parentGrains);
+
+<span class="comment">% plot the parent map</span>
+plot(parentEBSD(<span class="string">'Iron fcc'</span>),parentEBSD(<span class="string">'Iron fcc'</span>).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+
+<span class="comment">% with grain boundaries</span>
+hold <span class="string">on</span>
+plot(parentGrains.boundary,<span class="string">'lineWidth'</span>,4)
+hold <span class="string">off</span></pre><img src="MaParentGrainReconstructionAdvanced_12.png"> <h2>Summary of relevant thresholds<a name="21"> </a></h2>
+         <p>In the above script several parameters are decisive for the success of the reconstruction</p>
+         <div>
+            <ul type="square">
+               <li>threshold for initial grain segmentation (3 degree)</li>
+               <li>theshold (2 degree), tolerance (1.5 degree) and inflation power (p = 1.6) of the Markovian clustering algorithm</li>
+               <li>maximum misfit within a parent grain (5 degree)</li>
+               <li>minimum number of merged child grains</li>
+            </ul>
+         </div>
+         <h2>Triple Point Based Analysis<a name="22"> </a></h2>
+         <p>A problem of the boundary based reconstuction algorithm is that often child variants of different grains have a misorientation
+            that is close to the theoretical child to child misorientation. One idea to overcome this problem is to analyze triple junctions.
+            Now all three child orientations must fit to a common parent orientations. This fit is computed by the command <a href="calcParent.html"><tt>calcParent</tt></a>.
+         </p><pre class="codeinput"><span class="comment">% extract child orientations at triple junctions</span>
+tP = grains.triplePoints;
+tPori = grains(tP.grainId).meanOrientation;
+
+<span class="comment">% compute the misfit to a common parent orientation</span>
+[~, fit] = calcParent(tPori,fcc2bcc,<span class="string">'id'</span>,<span class="string">'threshold'</span>,5*degree);</pre><p>Lets visualize this misfit by colorizing all triple junctions accordingly.</p><pre class="codeinput">plot(ebsd(<span class="string">'Iron bcc'</span>),ebsd(<span class="string">'Iron bcc'</span>).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span>
+
+hold <span class="string">on</span>
+plot(tP,fit(:,1) ./ degree,<span class="string">'MarkerEdgecolor'</span>,<span class="string">'k'</span>,<span class="string">'MarkerSize'</span>,8)
+setColorRange([0,5])
+mtexColorMap <span class="string">LaboTeX</span>
+mtexColorbar
+hold <span class="string">off</span></pre><img src="MaParentGrainReconstructionAdvanced_13.png"> <p>Again we observe, that triple junctions with large misfit outline the shape of the parent grains. In order to identify these
+            parent grains we proceed analogously as for the boundary based analysis. We first set up a similarity matrix between grains
+            connected to the same triple points and than use the Markovian clustering algorithm to detect clusters of child grains, which
+            are than merged into parent grains.
+         </p>
+         <h2>Create a similarity matrix and reconstruct parent grains<a name="25"> </a></h2>
+         <p>The setup and the clustering of the similarity matrix is the same as above</p><pre class="codeinput">threshold = 3*degree;
+tol = 2*degree;
+
+<span class="comment">% compute the probabilities</span>
+prob = 1 - 0.5 * (1 + erf(2*(fit(:,1) - threshold)./tol));
+
+<span class="comment">% the corresponding similarity matrix</span>
+A = sparse(tP.grainId(:,1),tP.grainId(:,2),prob,length(grains),length(grains));
+A = max(A, sparse(tP.grainId(:,2),tP.grainId(:,3),prob,length(grains),length(grains)));
+A = max(A, sparse(tP.grainId(:,1),tP.grainId(:,3),prob,length(grains),length(grains)));
+
+p = 1.4; <span class="comment">% inflation power:</span>
+A = mclComponents(A,p);</pre><p>Each connected component of the resulting adjacency matrix describes one parent grain. Hence, we can use this adjacency matrix
+            to merge child grains into parent grains by the command <a href="graind2d.merge.html"><tt>merge</tt></a>.
+         </p><pre class="codeinput"><span class="comment">% merge grains according to the adjacency matrix A</span>
+[parentGrains, parentId] = merge(grains,A);
+
+<span class="comment">% ensure grainId in parentEBSD is set up correctly with parentGrains</span>
+parentEBSD = ebsd;
+parentEBSD(<span class="string">'indexed'</span>).grainId = parentId(ebsd(<span class="string">'indexed'</span>).grainId);</pre><p>Let's visualize the result. Afterwards, we can proceed analogously as for the boundary based parent grain reconstruction described
+            above.
+         </p><pre class="codeinput">plot(ebsd(<span class="string">'Iron bcc'</span>),ebsd(<span class="string">'Iron bcc'</span>).orientations,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+hold <span class="string">on</span>;
+plot(parentGrains.boundary,<span class="string">'linewidth'</span>,4)
+set(gcf,<span class="string">'Renderer'</span>,<span class="string">'painters'</span>)
+hold <span class="string">off</span></pre><img src="MaParentGrainReconstructionAdvanced_14.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

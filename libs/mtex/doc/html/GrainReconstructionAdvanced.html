@@ -1,0 +1,345 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Advanced Grain Reconstruction ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: GrainReconstructionAdvanced -->
+      <!-- HEADSTUFF: GrainReconstructionAdvanced -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:GrainReconstructionAdvanced">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Advanced Grain Reconstruction</h1>
+         <div class="subheading"></div>
+         <h2>1) no fill, no grains, all pixels<a name="1"> </a></h2><pre class="codeinput">mtexdata <span class="string">small</span>
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd);
+ebsd(grains(grains.grainSize&lt;=3)) = [];
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd);
+F = splineFilter;
+ebsd = smooth(ebsd,F);
+[grains,ebsd.grainId,ebsd.mis2mean] = calcGrains(ebsd);
+plot(ebsd)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineColor'</span>,[1 0 0],<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0    1197 (32%)  notIndexed                                                 
+     1    1952 (52%)  Forsterite  LightSkyBlue       mmm                         
+     2    290 (7.8%)   Enstatite  DarkSeaGreen       mmm                         
+     3    282 (7.6%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="GrainReconstructionAdvanced_01.png"> <h2>2) no fill, no grains, indexed pixels<a name="2"> </a></h2><pre class="codeinput">mtexdata <span class="string">small</span>
+[grains,ebsd(<span class="string">'indexed'</span>).grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+ebsd(grains(grains.grainSize&lt;=3)) = [];
+[grains,ebsd(<span class="string">'indexed'</span>).grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+F = splineFilter;
+ebsd = smooth(ebsd(<span class="string">'indexed'</span>),F);
+[grains,ebsd(<span class="string">'indexed'</span>).grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+
+nextAxis
+plot(ebsd)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineColor'</span>,[1 0 0],<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0    1197 (32%)  notIndexed                                                 
+     1    1952 (52%)  Forsterite  LightSkyBlue       mmm                         
+     2    290 (7.8%)   Enstatite  DarkSeaGreen       mmm                         
+     3    282 (7.6%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="GrainReconstructionAdvanced_02.png"> <h2>3) fill, no grains, all pixels<a name="3"> </a></h2><pre class="codeinput">mtexdata <span class="string">small</span>
+[grains,ebsd.grainId] = calcGrains(ebsd);
+ebsd(grains(grains.grainSize&lt;=3)) = [];
+[grains,ebsd.grainId] = calcGrains(ebsd);
+F = splineFilter;
+ebsd = smooth(ebsd,F,<span class="string">'fill'</span>);
+[grains,ebsd.grainId] = calcGrains(ebsd);
+
+nextAxis
+plot(ebsd)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineColor'</span>,[1 0 0],<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0    1197 (32%)  notIndexed                                                 
+     1    1952 (52%)  Forsterite  LightSkyBlue       mmm                         
+     2    290 (7.8%)   Enstatite  DarkSeaGreen       mmm                         
+     3    282 (7.6%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="GrainReconstructionAdvanced_03.png"> <h2>4) fill, no grains, indexed pixels<a name="4"> </a></h2><pre class="codeinput">mtexdata <span class="string">small</span>
+[grains,ebsd(<span class="string">'indexed'</span>).grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+ebsd(grains(grains.grainSize&lt;=3)) = [];
+[grains,ebsd(<span class="string">'indexed'</span>).grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+F = splineFilter;
+ebsd = smooth(ebsd(<span class="string">'indexed'</span>),F,<span class="string">'fill'</span>);
+[grains,ebsd(<span class="string">'indexed'</span>).grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+
+nextAxis
+plot(ebsd)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineColor'</span>,[1 0 0],<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0    1197 (32%)  notIndexed                                                 
+     1    1952 (52%)  Forsterite  LightSkyBlue       mmm                         
+     2    290 (7.8%)   Enstatite  DarkSeaGreen       mmm                         
+     3    282 (7.6%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="GrainReconstructionAdvanced_04.png"> <h2>5) fill, grains, indexed pixels<a name="5"> </a></h2><pre class="codeinput">mtexdata <span class="string">small</span>
+[grains,ebsd(<span class="string">'indexed'</span>).grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+ebsd(grains(grains.grainSize&lt;=3)) = [];
+[grains,ebsd(<span class="string">'indexed'</span>).grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+F = splineFilter;
+ebsd = smooth(ebsd(<span class="string">'indexed'</span>),F,<span class="string">'fill'</span>,grains);
+[grains,ebsd(<span class="string">'indexed'</span>).grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+
+nextAxis
+plot(ebsd)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineColor'</span>,[1 0 0],<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span>
+drawNow(gcm)</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0    1197 (32%)  notIndexed                                                 
+     1    1952 (52%)  Forsterite  LightSkyBlue       mmm                         
+     2    290 (7.8%)   Enstatite  DarkSeaGreen       mmm                         
+     3    282 (7.6%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><img src="GrainReconstructionAdvanced_05.png"> <h2>6) Multiscale clustering method<a name="6"> </a></h2><pre class="codeinput">mtexdata <span class="string">small</span>
+grains = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'FMC'</span>,1)
+nextAxis
+plot(ebsd)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineColor'</span>,[1 0 0],<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span>
+drawNow(gcm)</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0    1197 (32%)  notIndexed                                                 
+     1    1952 (52%)  Forsterite  LightSkyBlue       mmm                         
+     2    290 (7.8%)   Enstatite  DarkSeaGreen       mmm                         
+     3    282 (7.6%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+ 
+grains = grain2d  
+ 
+ Phase  Grains  Pixels     Mineral  Symmetry  Crystal reference frame
+     1      23    1952  Forsterite       mmm                         
+     2       7     290   Enstatite       mmm                         
+     3      38     282    Diopside     12/m1       X||a*, Y||b*, Z||c
+ 
+ boundary segments: 999
+ inner boundary segments: 0
+ triple points: 60
+ 
+ Properties: GOS, meanRotation
+ 
+</pre><img src="GrainReconstructionAdvanced_06.png"> <h2>Multiscale clustering method<a name="7"> </a></h2>
+         <p>When analyzing grains with gradual and subtle boundaries the threshold based method may not lead to the desired result.</p>
+         <p>Let us consider the following example</p><pre class="codeinput">mtexdata <span class="string">single</span>
+
+colorKey = axisAngleColorKey(ebsd);
+colorKey.oriRef = mean(ebsd.orientations);
+
+plot(ebsd,colorKey.orientation2color(ebsd.orientations))</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations  Mineral         Color  Symmetry  Crystal reference frame
+     1  10201 (100%)       Al  LightSkyBlue      m-3m                         
+ 
+ Properties: x, y
+ Scan unit : um
+ 
+</pre><img src="GrainReconstructionAdvanced_07.png"> <p>We obeserve that the are no rapid changes in the orientation which would allow for applying the threshold based algorithm.
+            Setting the threshold angle to a very small value would include many irrelevant or false regions.
+         </p><pre class="codeinput">grains_high = calcGrains(ebsd,<span class="string">'angle'</span>,1*degree);
+grains_low  = calcGrains(ebsd,<span class="string">'angle'</span>,0.5*degree);
+
+figure
+plot(ebsd,colorKey.orientation2color(ebsd.orientations))
+hold <span class="string">on</span>
+plot(grains_high.boundary)
+hold <span class="string">off</span>
+
+figure
+plot(ebsd,colorKey.orientation2color(ebsd.orientations))
+hold <span class="string">on</span>
+plot(grains_low.boundary)
+hold <span class="string">off</span></pre><img src="GrainReconstructionAdvanced_08.png"> <img src="GrainReconstructionAdvanced_09.png"> <p>As an alternative MTEX includes the fast multiscale clustering method (FMC method) which  constructs clusters in a hierarchical
+            manner from single pixels using fuzzy logic to account for local, as well as global information.
+         </p>
+         <p>Analogous with the threshold angle, a  single parameter, C_Maha controls the sensitivity of the segmentation. A C_Maha value
+            of 3.5 properly identifies the  subgrain features. A C_Maha value of 3 captures more general features, while a value of 4
+            identifies finer features but is slightly oversegmented.
+         </p><pre class="codeinput">grains_FMC = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'FMC'</span>,3.8)
+grains = calcGrains(ebsd(<span class="string">'indexed'</span>))
+
+<span class="comment">% smooth grains to remove staircase effect</span>
+grains_FMC = smooth(grains_FMC);</pre><pre class="codeoutput"> 
+grains_FMC = grain2d  
+ 
+ Phase  Grains  Pixels  Mineral  Symmetry  Crystal reference frame
+     1      17   10201       Al      m-3m                         
+ 
+ boundary segments: 1552
+ inner boundary segments: 0
+ triple points: 14
+ 
+ Id   Phase   Pixels          GOS   phi1   Phi   phi2
+  1       1        7    0.0084358    317   128    159
+  2       1     1120     0.025113    239    74    319
+  3       1      517    0.0100241    238    75    320
+  4       1     1783    0.0220667     56   103     40
+  5       1       11   0.00744635     57   104    220
+  6       1        2   0.00276888    237    79    322
+  7       1        7   0.00797851    343    43    249
+  8       1      989    0.0126827    236    79    322
+  9       1     1060    0.0197615    239    75    320
+ 10       1       76   0.00793592    238    75    320
+ 11       1     1556    0.0219543    238    77    320
+ 12       1      349     0.011464    237    77    320
+ 13       1      401    0.0103623    342    41    251
+ 14       1      402    0.0121092    238    77    320
+ 15       1      184    0.0128468    237    77    319
+ 16       1      957    0.0176087    316   129     74
+ 17       1      780    0.0123841    238    78    321
+ 
+ 
+grains = grain2d  
+ 
+ Phase  Grains  Pixels  Mineral  Symmetry  Crystal reference frame
+     1       1   10201       Al      m-3m                         
+ 
+ boundary segments: 404
+ inner boundary segments: 0
+ triple points: 0
+ 
+ Id   Phase   Pixels         GOS   phi1   Phi   phi2
+  1       1    10201   0.0344807    237    77    320
+ 
+</pre><p>We observe how this method nicely splits the measurements into clusters of similar orientation</p><pre class="codeinput"><span class="comment">%plot(ebsd,oM.orientation2color(ebsd.orientations))</span>
+plot(ebsd,colorKey.orientation2color(ebsd.orientations))
+
+<span class="comment">% start overide mode</span>
+hold <span class="string">on</span>
+plot(grains_FMC.boundary,<span class="string">'linewidth'</span>,1.5)
+
+<span class="comment">% stop overide mode</span>
+hold <span class="string">off</span></pre><img src="GrainReconstructionAdvanced_10.png"> <h2>Markovian Clustering Algorithm<a name="11"> </a></h2><pre class="codeinput">F = halfQuadraticFilter
+F.alpha = 0.5
+ebsd = smooth(ebsd,F)</pre><pre class="codeoutput">F = 
+  halfQuadraticFilter with properties:
+
+    l1DataFit: 1
+         l1TV: 1
+        alpha: 1
+      iterMax: 1000
+          tol: 3.4907e-04
+          eps: 1.0000e-03
+    threshold: 0.2618
+        isHex: 0
+F = 
+  halfQuadraticFilter with properties:
+
+    l1DataFit: 1
+         l1TV: 1
+        alpha: 0.5000
+      iterMax: 1000
+          tol: 3.4907e-04
+          eps: 1.0000e-03
+    threshold: 0.2618
+        isHex: 0
+ 
+ebsd = EBSD  
+ 
+ Phase  Orientations  Mineral         Color  Symmetry  Crystal reference frame
+     1  10201 (100%)       Al  LightSkyBlue      m-3m                         
+ 
+ Properties: x, y, oldId, quality
+ Scan unit : um
+ 
+</pre><pre class="codeinput">grains = calcGrains(ebsd,<span class="string">'mcl'</span>,[1.24 50],<span class="string">'soft'</span>,[0.2 0.3]*degree)
+
+grains = smooth(grains,5)
+
+plot(ebsd,colorKey.orientation2color(ebsd.orientations))
+
+hold <span class="string">on</span>;plot(grains.boundary,<span class="string">'linewidth'</span>,2); hold <span class="string">off</span></pre><pre class="codeoutput"> 
+grains = grain2d  
+ 
+ Phase  Grains  Pixels  Mineral  Symmetry  Crystal reference frame
+     1     285   10201       Al      m-3m                         
+ 
+ boundary segments: 3722
+ inner boundary segments: 16502
+ triple points: 423
+ 
+ Properties: GOS, meanRotation
+ 
+ 
+grains = grain2d  
+ 
+ Phase  Grains  Pixels  Mineral  Symmetry  Crystal reference frame
+     1     285   10201       Al      m-3m                         
+ 
+ boundary segments: 3722
+ inner boundary segments: 16502
+ triple points: 423
+ 
+ Properties: GOS, meanRotation
+ 
+</pre><img src="GrainReconstructionAdvanced_11.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,127 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Select EBSD data ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: EBSDSelect -->
+      <!-- HEADSTUFF: EBSDSelect -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:EBSDSelect">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Select EBSD data</h1>
+         <div class="subheading"></div>
+         <p>In this section we discuss how to select specific EBSD data by certain properties. Let us first import some example EBSD data
+            using the command <a href="mtexdata.html"><tt>mtexdata</tt></a>.
+         </p><pre class="codeinput">mtexdata <span class="string">forsterite</span></pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0   58485 (24%)  notIndexed                                                 
+     1  152345 (62%)  Forsterite  LightSkyBlue       mmm                         
+     2   26058 (11%)   Enstatite  DarkSeaGreen       mmm                         
+     3   9064 (3.7%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><p>These data consist of three indexed phases, Forsterite, Enstatite and Diopside. The not indexed phase called <i>not Indexed</i>. The phases can be visualized by
+         </p><pre class="codeinput">close <span class="string">all</span>; plotx2east
+plot(ebsd)</pre><img src="EBSDSelect_01.png"> <h2>Selecting a certain phase<a name="3"> </a></h2>
+         <p>After import the EBSD data are stored in the variable <tt>ebsd</tt> which is essentially a long list of x and y values together with phase information and orientations. In order to restrict
+            this list to a certain phase just use the mineral name as an index, i.e.
+         </p><pre class="codeinput">ebsd(<span class="string">'Forsterite'</span>)</pre><pre class="codeoutput"> 
+ans = EBSD  
+ 
+ Phase   Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     1  152345 (100%)  Forsterite  LightSkyBlue       mmm                         
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><p>contains only the Forsterite measurements. In order to extract a couple of phases, the mineral names have to be grouped in
+            curled parenthesis.
+         </p><pre class="codeinput">ebsd({<span class="string">'Fo'</span>,<span class="string">'En'</span>})</pre><pre class="codeoutput"> 
+ans = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     1  152345 (85%)  Forsterite  LightSkyBlue       mmm                         
+     2   26058 (15%)   Enstatite  DarkSeaGreen       mmm                         
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><p>As an example, let us plot the Forsterite data.</p><pre class="codeinput">close <span class="string">all</span>
+plot(ebsd(<span class="string">'Forsterite'</span>),ebsd(<span class="string">'Forsterite'</span>).orientations)</pre><img src="EBSDSelect_02.png"> <p>The data is colorized according to its orientation. By default color of an orientation is determined by its position in the
+            001 inverse pole figure which itself is colored as
+         </p><pre class="codeinput">ipfKey = ipfColorKey(ebsd(<span class="string">'Forsterite'</span>));
+plot(ipfKey)</pre><img src="EBSDSelect_03.png"> <h2>Restricting to a region of interest<a name="7"> </a></h2>
+         <p>If one is not interested in the whole data set but only in those measurements inside a certain polygon, the restriction can
+            be constructed as follows:
+         </p>
+         <p>First define a region by [xmin ymin xmax-xmin ymax-ymin]</p><pre class="codeinput">region = [5 2 10 5]*10^3;</pre><p>plot the ebsd data together with the region of interest</p><pre class="codeinput">close <span class="string">all</span>
+plot(ebsd)
+rectangle(<span class="string">'position'</span>,region,<span class="string">'edgecolor'</span>,<span class="string">'r'</span>,<span class="string">'linewidth'</span>,2)</pre><img src="EBSDSelect_04.png"> <p>The command <a href="EBSD.inpolygon.html">inpolygon</a> checks for each EBSD data point whether it is inside a polygon or not, i.e.
+         </p><pre class="codeinput">condition = inpolygon(ebsd,region);</pre><p>results in a large vector of <tt>TRUE</tt> and <tt>FALSE</tt> stating which data points are inside the region. Restricting the EBSD data by this condition is done via
+         </p><pre class="codeinput">ebsd = ebsd(condition)</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0    4052 (20%)  notIndexed                                                 
+     1   14093 (69%)  Forsterite  LightSkyBlue       mmm                         
+     2   1397 (6.9%)   Enstatite  DarkSeaGreen       mmm                         
+     3    759 (3.7%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><p>plot</p><pre class="codeinput">close <span class="string">all</span>
+plot(ebsd)</pre><img src="EBSDSelect_05.png"> <p>Note, that you can also select a polygon by mouse using the command</p><pre class="codeinput">poly = selectPolygon</pre><h2>Remove Inaccurate Orientation Measurements<a name="14"> </a></h2>
+         <p><b>By MAD (mean angular deviation)</b> in the case of Oxford Channel programs, or <b>by CI (Confidence Index)</b> in the case of OIM-TSL programs
+         </p>
+         <p>Most EBSD measurements contain quantities indicating inaccurate measurements.</p><pre class="codeinput">close <span class="string">all</span>
+plot(ebsd,ebsd.mad)
+mtexColorbar</pre><img src="EBSDSelect_06.png"> <p>or</p><pre class="codeinput">close <span class="string">all</span>
+plot(ebsd,ebsd.bc)
+mtexColorbar</pre><img src="EBSDSelect_07.png"> <p>Here we will use the MAD to identify and eliminate inaccurate measurements.</p><pre class="codeinput"><span class="comment">% plot a histogram</span>
+close <span class="string">all</span>
+hist(ebsd.mad)</pre><img src="EBSDSelect_08.png"> <pre class="codeinput"><span class="comment">% take only those measurements with MAD smaller then one</span>
+ebsd_corrected = ebsd(ebsd.mad&lt;0.8)</pre><pre class="codeoutput"> 
+ebsd_corrected = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0    4052 (21%)  notIndexed                                                 
+     1   13359 (69%)  Forsterite  LightSkyBlue       mmm                         
+     2   1333 (6.9%)   Enstatite  DarkSeaGreen       mmm                         
+     3    676 (3.5%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><pre class="codeinput">close <span class="string">all</span>
+plot(ebsd_corrected)</pre><img src="EBSDSelect_09.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,137 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Grain Reference Orientation Deviation (GROD) ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: EBSDGROD -->
+      <!-- HEADSTUFF: EBSDGROD -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:EBSDGROD">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Grain Reference Orientation Deviation (GROD)</h1>
+         <div class="subheading"></div>
+         <p>The grain reference orientation deviation is the misorientation <img src="EBSDGROD_eq05163732305140196976.png">  between the orientation <img src="EBSDGROD_eq15351793512778321533.png">  at position <img src="EBSDGROD_eq04298392924420710570.png">  and the reference or mean orientation <img src="EBSDGROD_eq03232368192245196928.png">  of the grain the position <img src="EBSDGROD_eq04298392924420710570.png">  belongs to, i.e.,
+         </p>
+         <p><img src="EBSDGROD_eq10058564321479234126.png"> </p>
+         <p>In the above formula the symmetry elements <img src="EBSDGROD_eq16440373965266724152.png">  are chosen to minimize the misorientation angle of <img src="EBSDGROD_eq05163732305140196976.png"> .
+         </p>
+         <p>Let us demonstrate the computation of the grain reference orientation feviation at the example of a deformed Ferrite specimen.
+            Lets import the data first, reconstruct the grain structure and perform some denoising of the orientation data as the we are
+            going to analyse the misorientation axes which are very noise senitive.
+         </p><pre class="codeinput">mtexdata <span class="string">ferrite</span> <span class="string">silent</span>
+
+[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+<span class="comment">% remove one-three pixel grains</span>
+ebsd(grains(grains.grainSize &lt;= 3)) = [];
+[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'threshold'</span>,[1*degree, 10*degree]);
+
+<span class="comment">% smooth grain boundaries</span>
+grains = smooth(grains,5);
+
+<span class="comment">% denoise the orientations</span>
+F = halfQuadraticFilter;
+ebsd = smooth(ebsd,F,grains,<span class="string">'fill'</span>);
+
+plot(ebsd(<span class="string">'indexed'</span>),ebsd(<span class="string">'indexed'</span>).orientations)
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,2)
+hold <span class="string">off</span></pre><img src="EBSDGROD_01.png"> <p>The grain reference orientation deviation is computed by the command <a href="EBSD.calcGROD.html"><tt>calcGROD</tt></a>. It requires the reconstructed <tt>grains</tt> as second argument and that <tt>ebsd.grainId</tt> has been set as we did in the above code.
+         </p><pre class="codeinput"><span class="comment">% compute the grain reference orientation deviation</span>
+grod = ebsd.calcGROD(grains);</pre><p>As a first application we simply plot the misorientation angle of the grain reference orientation deviation and overlay it
+            with the subgrain boundaries
+         </p><pre class="codeinput"><span class="comment">% plot the misorientation angle of the GROD</span>
+plot(ebsd,grod.angle./degree,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)
+mtexColorbar(<span class="string">'title'</span>,<span class="string">'misorientation angle to meanorientation in degree'</span>)
+mtexColorMap <span class="string">LaboTeX</span>
+
+<span class="comment">% overlay grain and subgrain boundaries</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,1.5)
+plot(grains.innerBoundary,<span class="string">'edgeAlpha'</span>,grains.innerBoundary.misorientation.angle / (5*degree))
+hold <span class="string">off</span></pre><img src="EBSDGROD_02.png"> <h2>Grain Orientation Spread (GOS)<a name="4"> </a></h2>
+         <p>The grain orientation spread (GOS) is the averaged misorientation angle of the grain reference orientation deviations of each
+            grain. We may compute this average by using the command <a href="ebsd.grainMean.html"><tt>grainMean</tt></a>.
+         </p><pre class="codeinput">GOS = grainMean(ebsd, grod.angle);
+
+plot(grains, GOS ./ degree)
+mtexColorbar(<span class="string">'title'</span>,<span class="string">'GOS in degree'</span>)</pre><img src="EBSDGROD_03.png"> <h2>The Misorientation Axis in Crystal Coordinates<a name="5"> </a></h2>
+         <p>When analysing the misorientation axis of the grain reference orientation deviations we have to distinguish whether we look
+            at them in crystal coordinates or in specimen coordinates. Let's start with the crystal coordinates. In this case we use the
+            command <a href="orientation.axis.html"><tt>axis</tt></a> to compute the corresponding <img src="EBSDGROD_eq00592787983515323186.png">  values.
+         </p>
+         <p>Lets first plot the distribution of misorientation axes in the fundamental sector.</p><pre class="codeinput">axCrystal = grod.axis;
+
+plot(axCrystal,<span class="string">'contourf'</span>,<span class="string">'fundamentalRegion'</span>,<span class="string">'antipodal'</span>,<span class="string">'figSize'</span>,<span class="string">'small'</span>)
+mtexColorbar(<span class="string">'title'</span>,<span class="string">'distribution of misorientation axes in mrd'</span>)</pre><img src="EBSDGROD_04.png"> <p>We observe that the distribution is very uniform and there is no prefered misorientation axes. Lets have a look at the spatial
+            distribution of the misorientation axes. To this end we firs have to define a directional color key.
+         </p><pre class="codeinput">colorKey = HSVDirectionKey(ebsd.CS,<span class="string">'antipodal'</span>);
+
+plot(colorKey,<span class="string">'figSize'</span>,<span class="string">'small'</span>)</pre><img src="EBSDGROD_05.png"> <p>When plotting the misorientation axis we use the misorientation angle as transparency value to fade out low angles misorientations
+            to white.
+         </p><pre class="codeinput"><span class="comment">% compute the color from the misorientation axis</span>
+color = colorKey.direction2color(axCrystal);
+
+<span class="comment">% and set the transperency from the misorientation angle</span>
+alpha = min(grod.angle/degree/7.5,1);
+
+<span class="comment">% plot the data</span>
+plot(ebsd,color,<span class="string">'micronbar'</span>,<span class="string">'off'</span>,<span class="string">'faceAlpha'</span>,alpha,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,2)
+plot(grains.innerBoundary,<span class="string">'edgeAlpha'</span>,grains.innerBoundary.misorientation.angle / (5*degree))
+hold <span class="string">off</span></pre><img src="EBSDGROD_06.png"> <p>The misorientation axis in crystal coordinates can be related to active slipsystems. See: V. Tong, E. Wielewski, B. Britton
+            <a href="https://arxiv.org/abs/1803.00236">Characterisation of slip and twinning in high rate deformed zirconium with electron backscatter diffraction</a>, 2018.
+         </p>
+         <p>TODO: explain this at some new documentation page</p>
+         <h2>The Misorientation Axis in Specimen Coordinates<a name="9"> </a></h2>
+         <p>The misorientation axis in specimen coordinates is computed by applying the EBSD orientations to the the misorientation axes
+            in crystal coordinates. It is important to use here the option <tt>'noSymmetry'</tt>.
+         </p><pre class="codeinput">axSpecimen = ebsd.orientations .* grod.axis(<span class="string">'noSymmetry'</span>);
+
+plot(axSpecimen,<span class="string">'contourf'</span>,<span class="string">'fundamentalRegion'</span>,<span class="string">'antipodal'</span>,<span class="string">'halfwidth'</span>,2.5*degree)
+mtexColorbar(<span class="string">'title'</span>,<span class="string">'distribution of misorientation axes in mrd'</span>)</pre><img src="EBSDGROD_07.png"> <p>When looking at the distribution of the misorientation axes in specimen coordinates we observe some strongly prefered directions.</p>
+         <p>As the misorientation axes in specimen coordinates have no symmetry at all (not even antipodal symmetry) we may use a full
+            color key to colorize them
+         </p><pre class="codeinput">colorKey = HSVDirectionKey;
+
+plot(colorKey,<span class="string">'figSize'</span>,<span class="string">'small'</span>)</pre><img src="EBSDGROD_08.png"> <p>The spatial plot of the misorientation axes in crystal coordinates follows the same lines as the plot in specimen coordinates.</p><pre class="codeinput"><span class="comment">% compute color and transperency</span>
+omega = min(grod.angle/degree/7.5,1);
+color = colorKey.direction2color(axSpecimen);
+
+<span class="comment">% plot the data</span>
+plot(ebsd,color,<span class="string">'micronbar'</span>,<span class="string">'off'</span>,<span class="string">'FaceAlpha'</span>,omega,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,2)
+plot(grains.innerBoundary,<span class="string">'edgeAlpha'</span>,grains.innerBoundary.misorientation.angle / (5*degree))
+hold <span class="string">off</span>
+
+<span class="comment">%omega = min(grod.angle/degree/7.5,1);</span>
+<span class="comment">%color = colorKey.direction2color(axSpecimen,'grayValue',omega);</span></pre><img src="EBSDGROD_09.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

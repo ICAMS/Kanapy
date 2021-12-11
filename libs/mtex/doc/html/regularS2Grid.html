@@ -1,0 +1,145 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>regularS2Grid ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: regularS2Grid -->
+      <!-- HEADSTUFF: regularS2Grid -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:regularS2Grid">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit regularS2Grid">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">regularS2Grid</h1>
+         <div class="subheading"></div>
+         <h2>Syntax<a name="2"> </a></h2><pre class="codeinput">regularS2Grid(<span class="string">'points'</span>,[72 19])
+regularS2Grid(<span class="string">'resolution'</span>,[5*degree 2.5*degree])
+regularS2Grid(<span class="string">'theta'</span>,theta,<span class="string">'rho'</span>,rho)</pre><h2>Options<a name="3"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>points</tt>
+            </td>
+            <td>
+            <tt>[nrho,ntheta] number of points to be generated</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>resolution</tt>
+            </td>
+            <td>
+            <tt>resolution in polar and azimthal direction</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>hemisphere</tt>
+            </td>
+            <td>
+            <tt>'lower', 'uper', 'complete', 'sphere', 'identified'</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>theta</tt>
+            </td>
+            <td>
+            <tt>theta angle</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>rho</tt>
+            </td>
+            <td>
+            <tt>rho angle</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>minRho</tt>
+            </td>
+            <td>
+            <tt>starting rho angle (default 0)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>maxRho</tt>
+            </td>
+            <td>
+            <tt>maximum rho angle (default 2*pi)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>minTheta</tt>
+            </td>
+            <td>
+            <tt>starting theta angle (default 0)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>maxTheta</tt>
+            </td>
+            <td>
+            <tt>maximum theta angle (default pi)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Flags<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>antipodal</tt>
+            </td>
+            <td>
+            <tt>include <a href="VectorsAxes.html">antipodal symmetry</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>restrict2MinMax</tt>
+            </td>
+            <td>
+            <tt>restrict margins to min / max</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="equispacedS2Grid.html">equispacedS2Grid</a>, <a href="plotS2Grid.html">plotS2Grid</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

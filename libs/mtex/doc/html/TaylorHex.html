@@ -1,0 +1,141 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Texture evolution in rolled magnesium during uniaxial tension ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: TaylorHex -->
+      <!-- HEADSTUFF: TaylorHex -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:TaylorHex">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Texture evolution in rolled magnesium during uniaxial tension</h1>
+         <div class="subheading">
+            <p>This examples models the texture evolution of rolled magnesium under unixaxial tension using the Taylor model. The undeformed
+               material is assumed to have a basal fibre texture perpendicular to tension direction. Then tension experiment has been performed
+               twice: at room temperature and at 250 degree Celcius. The strain at fracture was approx. 30 percent and 70 percent, respectively.
+            </p>
+         </div>
+         <h2>Setting up hexagonal crystal symmetry<a name="1"> </a></h2>
+         <p>First we need to set up hexagonal crystal symmetry.</p><pre class="codeinput">cs = crystalSymmetry.load(<span class="string">'Mg-Magnesium.cif'</span>)</pre><pre class="codeoutput"> 
+cs = crystalSymmetry  
+ 
+  mineral        : Mg                
+  symmetry       : 6/mmm             
+  elements       : 24                
+  a, b, c        : 3.2, 3.2, 5.2     
+  reference frame: X||a*, Y||b, Z||c*
+ 
+</pre><h2>Setting up the basal fibre texture<a name="2"> </a></h2>
+         <p>Second, we set up the initial fibre texture which has the c-axis perpendicular to the (x,y)-sheet plane and the a-axes are
+            randomized. This is typical for rolled Mg-sheet
+         </p><pre class="codeinput">odf = fibreODF(cs.cAxis, vector3d.Z);</pre><h2>Plot polefigures of generated initial state without strains<a name="3"> </a></h2>
+         <p>define crystal orientations of interest for polefigures and plot figure</p><pre class="codeinput">h = Miller({0,0,0,1},{1,0,-1,0},{1,0,-1,1},cs);
+
+pfAnnotations = @(varargin) text([-vector3d.X,vector3d.Y],{<span class="string">'Tension'</span>,<span class="string">'TD'</span>},<span class="keyword">...</span>
+  <span class="string">'BackgroundColor'</span>,<span class="string">'w'</span>,<span class="string">'tag'</span>,<span class="string">'axesLabels'</span>,varargin{:});
+setMTEXpref(<span class="string">'pfAnnotations'</span>,pfAnnotations);
+plotPDF(odf,h,<span class="string">'antipodal'</span>,<span class="string">'contourf'</span>,<span class="string">'figSize'</span>,<span class="string">'small'</span>)
+mtexColorbar;</pre><img src="TaylorHex_01.png"> <h2>Setting up the slip systems<a name="4"> </a></h2>
+         <p>The critical resolved shear stresses (CRSS) needed to activate certain slip systems is temperature AND material dependant.
+            As it is not trivial to measure/define CRSS, there are many different values in literature.
+         </p>
+         <p>In practise, at room temperature basal slip dominates and commonly simple tension twins are activated as well (they have very
+            low CRSS). During tension stress perpendicular to the c-axis tension twinning cannot occur. Thats why it is sensible to only
+            define compression twins (which in Mg have a very high CRSS)
+         </p><pre class="codeinput"><span class="comment">% second argument is CRSS normalized to basal slip</span>
+sScold = [slipSystem.basal(cs,1),<span class="keyword">...</span>
+  slipSystem.prismatic2A(cs,66),<span class="keyword">...</span>
+  slipSystem.pyramidalCA(cs,80),<span class="keyword">...</span>
+  slipSystem.twinC1(cs,100)];
+
+<span class="comment">% consider all symmetrically equivlent slip systems</span>
+[sScold,slipId] = sScold.symmetrise;</pre><p>At higher temperatures the CRSS of non-basal slip systems decreases.</p><pre class="codeinput"><span class="comment">% second argument is CRSS normalized to basal slip</span>
+sSwarm = [slipSystem.basal(cs,1),<span class="keyword">...</span>
+  slipSystem.prismatic2A(cs,15),<span class="keyword">...</span>
+  slipSystem.pyramidalCA(cs,10),<span class="keyword">...</span>
+  slipSystem.twinC1(cs,100)];
+
+<span class="comment">% consider all symmetrically equivlent slip systems</span>
+sSwarm = sSwarm.symmetrise;</pre><h2>Defining strain tensors<a name="6"> </a></h2>
+         <p>Due to constant volume law, the sum of all strains must equal zero. Here slightly anisotropic strain is assumed at room temperature,
+            with more thinning in y-direction than in z-direction. In practise the anisotropy of Mg at high temperatures becomes negligible.
+         </p><pre class="codeinput">epsCold = 0.3 * strainTensor(diag([1 -0.6 -0.4]))
+epsWarm = 0.7 * strainTensor(diag([1 -0.5 -0.5]))</pre><pre class="codeoutput"> 
+epsCold = strainTensor  
+  type: Lagrange 
+  rank: 2 (3 x 3)
+ 
+ *10^-2
+  30   0   0
+   0 -18   0
+   0   0 -12
+ 
+epsWarm = strainTensor  
+  type: Lagrange 
+  rank: 2 (3 x 3)
+ 
+ *10^-2
+  70   0   0
+   0 -35   0
+   0   0 -35
+</pre><h2>Calculate texture evolution<a name="7"> </a></h2>
+         <p>The Tayor calculation is used to get the resulting spin of each vector as well as the coeffeicients for each slip system for
+            cold and hot state
+         </p><pre class="codeinput"><span class="comment">% simulated an initial orientation distribution of 10000 grains</span>
+ori = odf.discreteSample(10000);
+
+<span class="comment">% apply the Taylor model</span>
+[~,bCold,Wcold] = calcTaylor( inv(ori) .* epsCold, sScold);
+[~,bWarm,Wwarm] = calcTaylor( inv(ori) .* epsWarm, sSwarm);</pre><p>Apply the Taylor spin to the initial orientation distribution</p><pre class="codeinput">oriCold = ori .* orientation(-Wcold);
+oriWarm = ori .* orientation(-Wwarm);</pre><p>Plot pole figures in comparison to inital texture</p><pre class="codeinput">nextAxis <span class="comment">%create a new axis on the existing figure and put along side</span>
+plotPDF(oriCold,h,<span class="string">'antipodal'</span>,<span class="string">'contourf'</span>,<span class="string">'grid'</span>,<span class="string">'grid_res'</span>,30*degree)
+mtexColorbar;
+
+nextAxis <span class="comment">%create a new axis on the existing figure and put along side</span>
+plotPDF(oriWarm,h,<span class="string">'antipodal'</span>,<span class="string">'contourf'</span>,<span class="string">'grid'</span>,<span class="string">'grid_res'</span>,30*degree)
+mtexColorbar;
+
+<span class="comment">% get figure handle and set correct layout</span>
+mtexFig = gcm;
+mtexFig.ncols = 3; mtexFig.nrows = 3; mtexFig.layoutMode = <span class="string">'user'</span>;
+drawNow(gcm)</pre><img src="TaylorHex_02.png"> <h2>Statistics on activated slip systems<a name="10"> </a></h2>
+         <p>By adding up the coefficients of the taylor calculation and grouping them according to their slip system type, a bar chart
+            can be plotted
+         </p><pre class="codeinput"><span class="comment">% ensure slipId has the same size as |bCold|</span>
+slipId = repmat(slipId.',length(ori),1);
+
+<span class="comment">% sum up the sliprates of symmetrically equivalent slip systems, i.e.,</span>
+<span class="comment">% those that have the same |slipId|</span>
+statSsCold = accumarray(slipId(:),bCold(:));
+statSsWarm = accumarray(slipId(:),bWarm(:));</pre><p>The results can be plotted with logarithmic scale for better visualization</p><pre class="codeinput">figure(2)
+bar([statSsCold.';statSsWarm.'])
+set(gca, <span class="string">'YScale'</span>, <span class="string">'log'</span>,<span class="string">'XTickLabel'</span>, {<span class="string">'RT'</span> <span class="string">'250 &deg;C'</span>})
+legend({<span class="string">'Basal slip'</span>,<span class="string">'Prismatic slip'</span>,<span class="string">'Pyramidal slip'</span>,<span class="string">'Comp. Twin'</span>},<span class="keyword">...</span>
+    <span class="string">'Location'</span>,<span class="string">'eastoutside'</span>)
+legend(<span class="string">'boxoff'</span>)</pre><img src="TaylorHex_03.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

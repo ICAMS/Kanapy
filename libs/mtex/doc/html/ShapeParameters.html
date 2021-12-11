@@ -1,0 +1,390 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Shape Parameters - Basic Properties ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: ShapeParameters -->
+      <!-- HEADSTUFF: ShapeParameters -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:ShapeParameters">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Shape Parameters - Basic Properties</h1>
+         <div class="subheading"></div>
+         <p>In this section we discuss basic geometric properties of grains. Due to the huge amount of shape parameters we split them
+            into different categories: basic properties (this page), <a href="EllipseBasedProperties.html">properties based on fitted ellipses</a>, <a href="HullBasedParameters.html">convex hull bases properties</a>, <a href="ProjectionBasesParameters.html">projection bases properties</a>. The table below summarizes the shape parameters discussed on this page.
+         </p>
+         <p>
+            <table class="usertable">
+            <tr>
+            <td>
+            <p>
+            <tt>grainSize</tt>
+            </p>
+            </td>
+            <td>
+            <p>number of pixels per grain</p>
+            </td>
+            <td>
+            <p>
+            <a href="grain2d.area.html">
+            <tt>area</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>grain area in <equation>
+            <img alt="$\mu m^2$" class="equation" height="16px"
+            src="0827847976_tmp_eq12863677189007267369.png"
+            width="27px"/>
+            </equation>
+            </p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="grain2d.boundarySize.html">
+            <tt>boundarySize</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>number of boundary segments</p>
+            </td>
+            <td>
+            <p>
+            <a href="grain2d.perimeter.html">
+            <tt>perimeter</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>perimeter in <equation>
+            <img alt="$\mu m$" class="equation" height="10px"
+            src="0698260448_tmp_eq10042822501118733903.png"
+            width="22px"/>
+            </equation>
+            </p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="grain2d.subBoundarySize.html">
+            <tt>subBoundarySize</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>number of inner boundaries</p>
+            </td>
+            <td>
+            <p>
+            <a href="grain2d.subBoundarySize.html">
+            <tt>subBoundaryLength</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>length of inner boundaries in <equation>
+            <img alt="$\mu m$" class="equation" height="10px"
+            src="0888855859_tmp_eq10042822501118733903.png"
+            width="22px"/>
+            </equation>
+            </p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="grain2d.diameter.html">
+            <tt>diameter</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>diameter in <equation>
+            <img alt="$\mu m$" class="equation" height="10px"
+            src="0931381378_tmp_eq10042822501118733903.png"
+            width="22px"/>
+            </equation>
+            </p>
+            </td>
+            <td>
+            <p>
+            <a href="grain2d.calliper.html">
+            <tt>caliper</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>caliper or Feret diameter</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="grain2d.equivalentPerimeter.html">
+            <tt>equivalentPerimeter</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>perimeter of a circle with the same area</p>
+            </td>
+            <td>
+            <p>
+            <a href="grain2d.equivalentRadius.html">
+            <tt>equivalentRadius</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>radius of a circle with the same area</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="grain2d.shapeFactor.html">
+            <tt>shapeFactor</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>perimeter / equivalent perimeter</p>
+            </td>
+            <td>
+            <p>
+            <a href="grain2d.isBoundary.html">
+            <tt>isBoundary</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>is it a boundary grain</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="grain2d.hasHole.html">
+            <tt>hasHole</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>has inclusions</p>
+            </td>
+            <td>
+            <p>
+            <a href="grain2d.isInclusion.html">
+            <tt>isInclusion</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>is an inclusions</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="grain2d.numNeighbors.html">
+            <tt>numNeighbors</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>number neighboring grains</p>
+            </td>
+            <td>
+            <p>
+            <a href="triplePointList.triplePointList.html">
+            <tt>triplePoints</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>list of  triple points</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <a href="grainBoundary.grainBoundary.html">
+            <tt>boundary</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>list of  boundary segments</p>
+            </td>
+            <td>
+            <p>
+            <a href="grainBoundary.grainBoundary.html">
+            <tt>innerBoundary</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>subgrain boundaries</p>
+            </td>
+            </tr>
+            <tr>
+            <td>
+            <p>
+            <tt>x</tt>, <tt>y</tt>
+            </p>
+            </td>
+            <td>
+            <p>coordinates of the vertices</p>
+            </td>
+            <td>
+            <p>
+            <a href="grain2d.centroid.html">
+            <tt>centroid</tt>
+            </a>
+            </p>
+            </td>
+            <td>
+            <p>x,y coordinates of the barycenter</p>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p>We start our discussion by reconstructing the grain structure from a sample EBSD data set.</p><pre class="codeinput"><span class="comment">% load sample EBSD data set</span>
+mtexdata <span class="string">forsterite</span> <span class="string">silent</span>
+
+<span class="comment">% restrict it to a subregion of interest.</span>
+ebsd = ebsd(inpolygon(ebsd,[5 2 10 5]*10^3));
+
+<span class="comment">% remove all not indexed pixels</span>
+ebsd = ebsd(<span class="string">'indexed'</span>);
+
+<span class="comment">% reconstruct grains</span>
+[grains, ebsd.grainId] = calcGrains(ebsd,<span class="string">'angle'</span>,5*degree);
+
+<span class="comment">% smooth them</span>
+grains = smooth(grains,5);
+
+<span class="comment">% plot the orientation data of the Forsterite phase</span>
+plot(ebsd(<span class="string">'fo'</span>),ebsd(<span class="string">'fo'</span>).orientations)
+
+<span class="comment">% plot the grain boundary on top of it</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,2)
+hold <span class="string">off</span></pre><img src="ShapeParameters_01.png"> <h2>Grain size vs. grain area and boundary size vs. perimeter<a name="3"> </a></h2>
+         <p>The most basic properties are grainSize and grain area. Those can be computed by</p><pre class="codeinput">grains(9).grainSize
+grains(9).area</pre><pre class="codeoutput">ans =
+     1
+ans =
+   1.9540e+03
+</pre><p>Hereby <tt>grainSize</tt> referes to the number of pixels that belong to a certain grain while <tt>area</tt> represents the actual area measured in <tt>(µm)^2</tt>. We may analyze the distribution of grains by grain area using a histogram.
+         </p><pre class="codeinput">close <span class="string">all</span>
+histogram(grains.area)
+xlabel(<span class="string">'grain area'</span>)
+ylabel(<span class="string">'number of grains'</span>)</pre><img src="ShapeParameters_02.png"> <p>Note the large amount of very small grains. A more realistic histogram we obtain if we do not plot the number of grains at
+            the y-axis but its total area. This can be achieved with the command <a href="grain2d.histogram.html"><tt>histogram(grains)</tt></a></p><pre class="codeinput">histogram(grains)
+xlabel(<span class="string">'grain area'</span>)
+
+<span class="comment">%</span>
+<span class="comment">% Simarly as |grainSize| and |area|, the one-dimensional meassures</span>
+<span class="comment">% |boundarySize| and |perimeter| give the length of the grain boundary as</span>
+<span class="comment">% number of segments and in |&micro;m|, respectively.</span>
+
+grains(9).boundarySize
+grains(9).perimeter</pre><pre class="codeoutput">ans =
+     4
+ans =
+  233.1561
+</pre><img src="ShapeParameters_03.png"> <p>We may compute these quantities also explicitely from the grain boundary segents. In the following code the first command
+            returns simply the number of boundary segments while the second one gives the total length of the boundary by summing up the
+            length of each individual boundary segment
+         </p><pre class="codeinput">length(grains(9).boundary)
+sum(grains(9).boundary.segLength)</pre><pre class="codeoutput">ans =
+     4
+ans =
+  233.1561
+</pre><h2>Radius, diameter, equivalent radius, equivalent perimeter and shape factor<a name="7"> </a></h2>
+         <p>Another, one dimensional measure is the <tt>diameter</tt> which refers to the longest distance between any two boundary points and is given im <tt>µm</tt> as well
+         </p><pre class="codeinput">grains(9).diameter</pre><pre class="codeoutput">ans =
+  106.0660
+</pre><p>The diameter is a special case of the caliper or Feret diameter of a grain that is explained in detail in the section <a href="ProjectionBasedParameters.html">Projection based parameters</a>.
+         </p>
+         <p>In contrast the <a href="grain2d.equivalentRadius.html">equivalent radius</a> is the radius of a circle with the same area as the grain. Naturally, the equivalent radius is always smaller than the actual
+            radius of the grains. Similarly, the <a href="grain2d.equivalentPerimeter">equivalent perimeter</a> is defined as the perimeter of the circle the same area and is always smaller then the actual perimeter.
+         </p><pre class="codeinput">2*grains(9).equivalentRadius
+
+grains(9).equivalentPerimeter</pre><pre class="codeoutput">ans =
+   49.8787
+ans =
+  156.6986
+</pre><p>As a consequence, the ratio between between actual grain perimeter and the equivalent perimeter, the so called shape factor,
+            is always larger then 1. The <a href="grain2d.shapeFactor.html"><tt>shapeFactor</tt></a> amd measures how different a certain shape is from a circle.
+         </p><pre class="codeinput">plot(grains,grains.shapeFactor)
+mtexColorbar(<span class="string">'title'</span>,<span class="string">'shape factor'</span>)</pre><img src="ShapeParameters_04.png"> <p>A second measure for the discrepancy between the actual shape and a circle is the relative difference between the <a href="grain2d.perimeter.html"><tt>perimeter</tt></a> and the <a href="grain2d.equivalentPerimeter.html"><tt>equivalentPerimeter</tt></a></p><pre class="codeinput">plot(grains,(grains.perimeter - grains.equivalentPerimeter)./grains.perimeter)
+setColorRange([0,0.5])
+mtexColorbar</pre><img src="ShapeParameters_05.png"> <p>In this plot round shapes will have values close to zero while concave shapes will get values up to <img src="ShapeParameters_eq08832713359046861517.png"> .
+         </p>
+         <p>A third measure is the <a href="grain2d.paris.html"><tt>paris</tt></a> which stands for Percentile Average Relative Indented Surface and gives the relative difference between the actual perimeter
+            and the perimeter of the convex hull. It is explained in more detail in the section <a href="HullBasedParameters.html">convex hull parameters.</a></p><pre class="codeinput">plot(grains,grains.paris)
+mtexColorbar(<span class="string">'title'</span>,<span class="string">'paris'</span>)</pre><img src="ShapeParameters_06.png"> <h2>Fractal Dimension<a name="12"> </a></h2>
+         <p>The fractal dimension of grain boundaries has been used to characterize the conditions of dynamical recrystallization. One
+            way to define the fractal dimension of grain boundaries is to look at the slope of the perimeter as a function of the <a href="grain2d.equivalentRadius.html">equivalent radius</a> of the grains. More precisely, we consider this relationship in a log log plot and fit a linear model.
+         </p><pre class="codeinput"><span class="comment">% consider the entire data set</span>
+mtexdata <span class="string">forsterite</span> <span class="string">silent</span>
+
+<span class="comment">% reconstruct grains</span>
+grains = calcGrains(ebsd(<span class="string">'indexed'</span>));
+
+<span class="comment">% smooth them</span>
+grains = smooth(grains,5);
+
+close <span class="string">all</span>
+scatter(grains.equivalentRadius,grains.perimeter)
+xlabel(<span class="string">'equivalent radius'</span>)
+ylabel(<span class="string">'perimeter'</span>)
+
+<span class="comment">% set axes to logarithmic</span>
+logAxis(gca, [10,10^4],[10^2,10^5])
+
+<span class="comment">% fit a linear function in log space</span>
+ab = polyfit(log(grains.equivalentRadius),log(grains.perimeter),1);
+
+<span class="comment">% plot it</span>
+hold <span class="string">on</span>
+plot([10,10^4],exp(ab(2) + ab(1) * log([10,10^4])),<span class="string">'LineWidth'</span>,3)
+hold <span class="string">off</span></pre><img src="ShapeParameters_07.png"> <p>The slope of the linear function is the fractal dimension.</p><pre class="codeinput">fractalDimension = ab(1)</pre><pre class="codeoutput">fractalDimension =
+    1.0340
+</pre><p>It is important to understand that the fractal dimension computed this way heavily depends on the smoothing applied to the
+            grain boundaries.
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

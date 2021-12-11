@@ -1,0 +1,118 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Subgrain Boundaries ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: SubGrainBoundaries -->
+      <!-- HEADSTUFF: SubGrainBoundaries -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:SubGrainBoundaries">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Subgrain Boundaries</h1>
+         <div class="subheading"></div>
+         <p>Low-angle grain boundaries (LAGB) or subgrain boundaries are those with a misorientation less than about 15 degrees. Generally
+            speaking they are composed of an array of dislocations and their properties and structure are a function of the misorientation.
+            In contrast the properties of high-angle grain boundaries, whose misorientation is greater than about 15 degrees, are normally
+            found to be independent of the misorientation. However, there are special boundaries at particular orientations whose interfacial
+            energies are markedly lower than those of general high-angle grain boundaries.
+         </p>
+         <p>In order to demonstrate the analysis of subgrain boundaries in MTEX we start by importing an sample EBSD data set and preforming
+            some polishing by removing all 5 pixel grains.
+         </p><pre class="codeinput"><span class="comment">% load some test data</span>
+mtexdata <span class="string">ferrite</span> <span class="string">silent</span>
+
+<span class="comment">% remove one pixel grains</span>
+[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+ebsd(grains(grains.grainSize&lt;5)) = [];</pre><p>For the computation of low-angle boundaries we specify two thresholds during grain reconstruction: the first value controls
+            the low-angle grain boundaries whereas the second is used for the high-angle grain boundaries.
+         </p><pre class="codeinput">[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'threshold'</span>,[1*degree, 10*degree]);
+
+<span class="comment">% lets smooth the grain boundaries a bit</span>
+grains = smooth(grains,5)</pre><pre class="codeoutput"> 
+grains = grain2d  
+ 
+ Phase  Grains  Pixels  Mineral  Symmetry  Crystal reference frame
+     0     289   58967  Ferrite       432                         
+ 
+ boundary segments: 12314
+ inner boundary segments: 28501
+ triple points: 473
+ 
+ Properties: GOS, meanRotation
+ 
+</pre><p>We observe that we have 12314 high-angle boundary segments and 28501 low-angle boundary segments. In order to visualize the
+            the subgrain boundaries we first plot the ebsd data colorized by orientation. On top we plot with solid lines the grain boundaries
+            and with thinner lines the subgrain boundaries. We even make the misorientation angle at the subgrain boundaries visible by
+            setting it as the transparency value of the segments.
+         </p><pre class="codeinput"><span class="comment">% plot the ebsd data</span>
+plot(ebsd(<span class="string">'indexed'</span>),ebsd(<span class="string">'indexed'</span>).orientations,<span class="string">'faceAlpha'</span>,0.5,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+
+<span class="comment">% init override mode</span>
+hold <span class="string">on</span>
+
+<span class="comment">% plot grain boundares</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+
+<span class="comment">% compute transparency from misorientation angle</span>
+alpha = grains.innerBoundary.misorientation.angle / (5*degree);
+
+<span class="comment">% plot the subgrain boundaries</span>
+plot(grains.innerBoundary,<span class="string">'linewidth'</span>,1.5,<span class="string">'edgeAlpha'</span>,alpha,<span class="string">'linecolor'</span>,<span class="string">'b'</span>);
+
+<span class="comment">% stop override mode</span>
+hold <span class="string">off</span></pre><img src="SubGrainBoundaries_01.png"> <h2>Subgrain Boundary Density<a name="4"> </a></h2>
+         <p>The number of low-angle  boundary segments inside each grain can be computed by the command <a href="grain2d.subBoundarySize.html"><tt>subBoundarySize</tt></a>. In the following figure we use it to visualize the density of subgrain boundaries per grain pixel.
+         </p><pre class="codeinput">plot(grains, grains.subBoundarySize ./ grains.grainSize)
+mtexColorbar</pre><img src="SubGrainBoundaries_02.png"> <p>We may compute also the density of low-angle boundaries per grain as the length of the subgrain boundaries divided by the
+            grain area. This can be done using the commands <a href="grain2d.subBoundaryLength.html"><tt>subBoundaryLength</tt></a> and <a href="grain2d.area.html"><tt>area</tt></a></p><pre class="codeinput">plot(grains, grains.subBoundaryLength ./ grains.area)
+mtexColorbar</pre><img src="SubGrainBoundaries_03.png"> <h2>Misorientation at Subgrain Boundaries<a name="6"> </a></h2>
+         <p>Appart from the spatial distribution of the subgrain boundaries we may also analyse the distribution of their misorientations.</p><pre class="codeinput"><span class="comment">% extract all subgrain boundary misorientation</span>
+mori = grains.innerBoundary.misorientation;
+
+<span class="comment">% and visualize the distribution of the misorientation axes</span>
+plot(mori.axis,<span class="string">'fundamentalRegion'</span>,<span class="string">'contourf'</span>,<span class="string">'figSize'</span>,<span class="string">'small'</span>)
+
+mtexColorbar</pre><img src="SubGrainBoundaries_04.png"> <p>A more detailed analysis of the misorientation axes at subgrain boundaries can be found in the chapter <a href="TiltAndTwistBoundaries.html">Tild and Twist Boundaries</a>.
+         </p>
+         <h2>Connected Components<a name="8"> </a></h2>
+         <p>Sometimes one would like to distinguish between large connected networks of low-angle boundaries and singular disconected
+            segments. This can be done using the command <a href="grainBoundary.componentSize.html"><tt>componentSize</tt></a>. This command return for each segment the total number of segments it is connected with. In the following figure we use this
+            to plot all low-angle grain boundary networks with more then 50 segments in blue and all remaining segments in red.
+         </p><pre class="codeinput"><span class="comment">% plot the ebsd data</span>
+plot(ebsd(<span class="string">'indexed'</span>),ebsd(<span class="string">'indexed'</span>).orientations,<span class="string">'faceAlpha'</span>,0.5,<span class="string">'figSize'</span>,<span class="string">'large'</span>)
+
+<span class="comment">% distinguish between large connected networks and single segments</span>
+ind = grains.innerBoundary.componentSize &gt; 50;
+
+<span class="comment">% plot the boundaries</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,2)
+plot(grains.innerBoundary(ind),<span class="string">'linewidth'</span>,1.5,<span class="string">'edgeAlpha'</span>,alpha(ind),<span class="string">'edgeColor'</span>,<span class="string">'b'</span>);
+plot(grains.innerBoundary(~ind),<span class="string">'linewidth'</span>,1.5,<span class="string">'edgeAlpha'</span>,alpha(~ind),<span class="string">'edgeColor'</span>,<span class="string">'r'</span>);
+hold <span class="string">off</span></pre><img src="SubGrainBoundaries_05.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

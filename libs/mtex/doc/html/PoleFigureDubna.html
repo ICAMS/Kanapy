@@ -1,0 +1,175 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Orientation Density Functions ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: PoleFigureDubna -->
+      <!-- HEADSTUFF: PoleFigureDubna -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:PoleFigureDubna">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Orientation Density Functions</h1>
+         <div class="subheading"></div>
+         <p>This example demonstrates the most important MTEX tools for analysing Pole Figure Data.</p><pre class="codeinput"><span class="comment">% specify crystal and specimen symmetry</span>
+CS = crystalSymmetry(<span class="string">'-3m'</span>,[4.9 4.9 5.4]);
+SS = specimenSymmetry;
+
+<span class="comment">% specify file names</span>
+fname = {<span class="keyword">...</span>
+  fullfile(mtexDataPath,<span class="string">'PoleFigure'</span>,<span class="string">'dubna'</span>,<span class="string">'Q(10-10)_amp.cnv'</span>),<span class="keyword">...</span>
+  fullfile(mtexDataPath,<span class="string">'PoleFigure'</span>,<span class="string">'dubna'</span>,<span class="string">'Q(10-11)(01-11)_amp.cnv'</span>),<span class="keyword">...</span>
+  fullfile(mtexDataPath,<span class="string">'PoleFigure'</span>,<span class="string">'dubna'</span>,<span class="string">'Q(11-22)_amp.cnv'</span>)};
+
+<span class="comment">% specify crystal directions</span>
+h = {Miller(1,0,-1,0,CS),<span class="keyword">...</span>
+     [Miller(0,1,-1,1,CS),Miller(1,0,-1,1,CS)],<span class="keyword">...</span><span class="comment"> % superposed pole figures</span>
+     Miller(1,1,-2,2,CS)};
+
+<span class="comment">% specify structure coefficients</span>
+c = {1,[0.52 ,1.23],1};
+
+<span class="comment">% import data</span>
+pf = PoleFigure.load(fname,h,CS,SS,<span class="string">'interface'</span>,<span class="string">'dubna'</span>,<span class="string">'superposition'</span>,c);
+
+plot(pf)
+mtexColorbar</pre><img src="PoleFigureDubna_01.png"> <h2>Extract information from imported pole figure data<a name="2"> </a></h2>
+         <p><b>get raw data</b> Data stored in a <a href="PoleFigure.PoleFigure.html">PoleFigure</a> variable can be extracted by
+         </p><pre class="codeinput">I = pf.intensities; <span class="comment">% intensities</span>
+h = pf.h;            <span class="comment">% Miller indice</span>
+r = pf.r;            <span class="comment">% specimen directions</span></pre><p><b>basic statistics</b> There are also some basic statics on pole figure intensities
+         </p><pre class="codeinput">min(pf)
+max(pf)
+isOutlier(pf);</pre><pre class="codeoutput">ans =
+     0     0     0
+ans =
+   1.0e+03 *
+    0.0898    1.3600    0.9620
+</pre><h2>Manipulate pole figure data<a name="4"> </a></h2><pre class="codeinput">pf_modified = pf(pf.r.theta &lt; 70*degree | pf.r.theta &gt; 75*degree)
+
+plot(pf_modified)</pre><pre class="codeoutput"> 
+pf_modified = PoleFigure  
+  crystal symmetry : -3m1, X||a*, Y||b, Z||c*
+  specimen symmetry: 1
+ 
+  h = (10-10), r = 1 x 1224 points
+  h = (01-11)(10-11), r = 1 x 1224 points
+  h = (11-22), r = 1 x 1224 points
+</pre><img src="PoleFigureDubna_02.png"> <pre class="codeinput">rot = rotation.byAxisAngle(xvector-yvector,25*degree);
+pf_modified = rotate(pf,rot)
+
+plot(pf_modified)</pre><pre class="codeoutput"> 
+pf_modified = PoleFigure  
+  crystal symmetry : -3m1, X||a*, Y||b, Z||c*
+  specimen symmetry: 1
+ 
+  h = (10-10), r = 72 x 19 points
+  h = (01-11)(10-11), r = 72 x 19 points
+  h = (11-22), r = 72 x 19 points
+</pre><img src="PoleFigureDubna_03.png"> <h2>PDF - to - ODF Reconstruction<a name="7"> </a></h2><pre class="codeinput">rec = calcODF(pf,<span class="string">'RESOLUTION'</span>,10*degree,<span class="string">'iter_max'</span>,6)
+
+plotPDF(rec,h)
+mtexColorbar</pre><pre class="codeoutput"> 
+rec = ODF  
+  crystal symmetry : -3m1, X||a*, Y||b, Z||c*
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    center: 2430 orientations, resolution: 10&deg;
+    weight: 1
+ 
+</pre><img src="PoleFigureDubna_04.png"> <pre class="codeinput">odf = SantaFe
+
+<span class="comment">% define specimen directions</span>
+r = regularS2Grid(<span class="string">'antipodal'</span>)</pre><pre class="codeoutput"> 
+odf = ODF  
+  crystal symmetry : m-3m
+  specimen symmetry: 222
+ 
+  Uniform portion:
+    weight: 0.73
+ 
+  Radially symmetric portion:
+    kernel: van Mises Fisher, halfwidth 10&deg;
+    center: (296.6&deg;,48.2&deg;,26.6&deg;)
+    weight: 0.27
+ 
+ 
+r = S2Grid  
+ size: 72 x 19
+ antipodal: true
+</pre><p>define crystal directions</p><pre class="codeinput">h = [Miller(1,0,0,odf.CS),Miller(1,1,0,odf.CS),Miller(1,1,1,odf.CS)];</pre><p>simulate pole figure data</p><pre class="codeinput">pf_SantaFe = calcPoleFigure(SantaFe,h,r);</pre><p>estimate an ODF with ghost correction</p><pre class="codeinput">rec = calcODF(pf_SantaFe,<span class="string">'RESOLUTION'</span>,10*degree,<span class="string">'background'</span>,10)
+
+plot(rec,<span class="string">'sections'</span>,6)</pre><pre class="codeoutput"> 
+rec = ODF  
+  crystal symmetry : m-3m
+  specimen symmetry: 222
+ 
+  Uniform portion:
+    weight: 0.73238
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    center: 128 orientations, resolution: 10&deg;
+    weight: 0.26762
+ 
+</pre><img src="PoleFigureDubna_05.png"> <p>without ghost correction</p><pre class="codeinput">rec_ng = calcODF(pf_SantaFe,<span class="string">'RESOLUTION'</span>,10*degree,<span class="string">'background'</span>,10,<span class="string">'NoGhostCorrection'</span>)
+
+plot(rec_ng,<span class="string">'sections'</span>,6)</pre><pre class="codeoutput"> 
+rec_ng = ODF  
+  crystal symmetry : m-3m
+  specimen symmetry: 222
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    center: 150 orientations, resolution: 10&deg;
+    weight: 1
+ 
+</pre><img src="PoleFigureDubna_06.png"> <h2>Error Analysis<a name="13"> </a></h2><pre class="codeinput">calcError(pf_SantaFe,rec)
+calcError(pf_SantaFe,rec_ng)</pre><pre class="codeoutput">ans =
+    0.0202    0.0261    0.0240
+ans =
+    0.0358    0.0283    0.0252
+</pre><p><b>Difference plot</b></p><pre class="codeinput">plotDiff(pf_SantaFe,rec)</pre><img src="PoleFigureDubna_07.png"> <p><b>ODF error</b></p><pre class="codeinput">calcError(SantaFe,rec)
+calcError(SantaFe,rec_ng)</pre><pre class="codeoutput">ans =
+    0.0312
+ans =
+    0.0893
+</pre><h2>Exercises<a name="16"> </a></h2>
+         <p>3)</p>
+         <p>a) Load the pole figure data of a quartz specimen from: data/dubna!</p>
+         <p>b) Inspect the raw data. Are there noticeable problems?</p>
+         <p>c) Compute an ODF from the pole figure data.</p>
+         <p>d) Plot some pole figures of that ODF and compare them to the measured pole figures.</p>
+         <p>e) Compute the RP errors for each pole figure.</p>
+         <p>f) Plot the difference between the raw data and the calculated pole figures. What do you observe?</p>
+         <p>g) Remove the erroneous values from the pole figure data and repeat the ODF calculation. How do the RP error change?</p>
+         <p>h) Vary the number of pole figures used for the ODF calculation. What is the minimum set of pole figures needed to obtain
+            a meaningful ODF?
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

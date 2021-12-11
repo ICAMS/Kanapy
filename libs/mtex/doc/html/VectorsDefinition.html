@@ -1,0 +1,64 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Defining Vectors ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: VectorsDefinition -->
+      <!-- HEADSTUFF: VectorsDefinition -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:VectorsDefinition">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Defining Vectors</h1>
+         <div class="subheading"></div>
+         <p>The standard way to define a three dimensional vector is by its coordinates.</p><pre class="codeinput">v = vector3d(1,1,0);</pre><p>This gives a single vector with coordinates (1,1,0) with respect to the x, y , z coordinate system. A second way to define
+            a specimen directions is by its spherical coordinates, i.e. by its polar angle and its azimuth angle. This is done by the
+            option <b>polar</b>.
+         </p><pre class="codeinput">polar_angle = 60*degree;
+azimuth_angle = 45*degree;
+v = vector3d.byPolar(polar_angle,azimuth_angle);</pre><p>Finally, one can also define a vector as a linear combination of the predefined vectors <a href="xvector.html">xvector</a>, <a href="yvector.html">yvector</a>, and <a href="zvector.html">zvector</a></p><pre class="codeinput">v = xvector + 2*yvector;</pre><h2>Predefined Vectors<a name="4"> </a></h2><pre class="codeinput">[vector3d.X vector3d.Y vector3d.Z]</pre><pre class="codeoutput"> 
+ans = vector3d  
+ size: 1 x 3
+  x y z
+  1 0 0
+  0 1 0
+  0 0 1
+</pre><p>The command <a href="vector3d.rand.html">vector3d.rand</a> allows to define random unit vectors
+         </p><pre class="codeinput">vector3d.rand</pre><pre class="codeoutput"> 
+ans = vector3d  
+         x         y         z
+  0.604927 -0.546877 -0.578782
+</pre><p>Similarly, the commands <a href="vector3d.ones.html">vector3d.ones</a>, <a href="vector3d.zeros.html">vector3d.zeros</a> and <a href="vector3d.nan.html">vector3d.nan</a> allow to define vectors of ones, zeros and nan.
+         </p><pre class="codeinput">[vector3d.ones vector3d.zeros vector3d.nan]</pre><pre class="codeoutput"> 
+ans = vector3d  
+ size: 1 x 3
+    x   y   z
+    1   1   1
+    0   0   0
+  NaN NaN NaN
+</pre><p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

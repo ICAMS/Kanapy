@@ -1,0 +1,92 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Alignment of the Crystal Axes ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: SymmetryAlignment -->
+      <!-- HEADSTUFF: SymmetryAlignment -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:SymmetryAlignment">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Alignment of the Crystal Axes</h1>
+         <div class="subheading">
+            <p>Default is <img src="SymmetryAlignment_eq04815523992820898473.png">  axis of highest symmetry.
+            </p>
+            <p>TODO: Explain the default setting in more detail.</p>
+         </div>
+         <h2>Switching between different Alignment Options<a name="1"> </a></h2>
+         <p>Since, especialy for lower symmetry groups, different conventions for aligning the crystal axes are used it might be necessary
+            to transform data, e.g, orientations or tensors, from one convention into another. This can be done using the command <a href="tensor.transformReferenceFrame.html">transformReferenceFrame</a> as it illustrated below.
+         </p>
+         <p>First we import the stiffness tensor Forsterite with respect to the axes alignment</p><pre class="codeinput">cs = crystalSymmetry(<span class="string">'mmm'</span>,[4.7646 10.2296 5.9942],<span class="string">'mineral'</span>,<span class="string">'Olivin'</span>);
+
+<span class="comment">% import some stiffness tensor</span>
+fname = fullfile(mtexDataPath,<span class="string">'tensor'</span>,<span class="string">'Olivine1997PC.GPa'</span>);
+C = stiffnessTensor.load(fname,cs)
+
+plot(C)</pre><pre class="codeoutput"> 
+C = stiffnessTensor  
+  unit   : GPa              
+  rank   : 4 (3 x 3 x 3 x 3)
+  mineral: Olivin (mmm)     
+ 
+  tensor in Voigt matrix representation:
+ 320.5  68.2  71.6     0     0     0
+  68.2 196.5  76.8     0     0     0
+  71.6  76.8 233.5     0     0     0
+     0     0     0    64     0     0
+     0     0     0     0    77     0
+     0     0     0     0     0  78.7
+</pre><img src="SymmetryAlignment_01.png"> <p>Let us now consider a different setup of the Forsterite symmetry, where the <img src="SymmetryAlignment_eq05953740212242508018.png">  axis is the longest and the <img src="SymmetryAlignment_eq04815523992820898473.png"> -axis is the shortest.
+         </p><pre class="codeinput">cs_new = crystalSymmetry(<span class="string">'mmm'</span>,[10.2296 5.9942 4.7646],<span class="string">'mineral'</span>,<span class="string">'Olivin'</span>)</pre><pre class="codeoutput"> 
+cs_new = crystalSymmetry  
+ 
+  mineral : Olivin    
+  symmetry: mmm       
+  elements: 8         
+  a, b, c : 10, 6, 4.8
+ 
+</pre><p>In order to represent the stiffness tensor <tt>C</tt> with respect to this setupt we use the command <a href="tensor.transformReferenceFrame.html">transformReferenceFrame</a>.
+         </p><pre class="codeinput">C_new = C.transformReferenceFrame(cs_new)
+
+nextAxis
+plot(C_new)</pre><pre class="codeoutput"> 
+C_new = stiffnessTensor  
+  unit   : GPa              
+  rank   : 4 (3 x 3 x 3 x 3)
+  mineral: Olivin (mmm)     
+ 
+  tensor in Voigt matrix representation:
+ 196.5  76.8  68.2     0     0     0
+  76.8 233.5  71.6     0     0     0
+  68.2  71.6 320.5     0     0     0
+     0     0     0    77     0     0
+     0     0     0     0  78.7     0
+     0     0     0     0     0    64
+</pre><img src="SymmetryAlignment_02.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

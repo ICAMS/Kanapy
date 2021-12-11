@@ -1,0 +1,101 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Multivariate S2Fun ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: S2FunMultivariate -->
+      <!-- HEADSTUFF: S2FunMultivariate -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:S2FunMultivariate">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Multivariate S2Fun</h1>
+         <div class="subheading"></div>
+         <h2>Structural conventions of the input and output of multivariate S2FunHarmonic<a name="1"> </a></h2>
+         <p>In this part we deal with multivariate functions of the form</p>
+         <p><img src="S2FunMultivariate_eq02005284333143081024.png"> .
+         </p>
+         <div>
+            <ul type="square">
+               <li>the structure of the nodes is always interpreted as a column vector</li>
+               <li>the node index is the first dimension</li>
+               <li>the dimensions of the <tt>S2FunHarmonic</tt> itself is counted from the second dimension
+               </li>
+            </ul>
+         </div>
+         <p>For example we got four nodes <img src="S2FunMultivariate_eq17926179084054814593.png">  and <img src="S2FunMultivariate_eq15343079787092772057.png">  and six functions <img src="S2FunMultivariate_eq16376045287472918887.png">  and <img src="S2FunMultivariate_eq15320233978921149458.png"> , which we want to store in a 3x2 array, then the following scheme applies to function evaluations:
+         </p>
+         <p><img src="S2FunMultivariate_eq17112665209624934517.png"> </p>
+         <p>For the intern Fourier-coefficient matrix the first dimension is reserved for the Fourier-coefficients of a single function;
+            the dimension of the functions itself begins again with the second dimension.
+         </p>
+         <p>If <img src="S2FunMultivariate_eq10132426415324670699.png">  and <img src="S2FunMultivariate_eq05650264891671257785.png">  would be the column vectors of the Fourier-coefficients of the functions above, internally they would be stored in <img src="S2FunMultivariate_eq14700050704426719036.png">  as follows. <img src="S2FunMultivariate_eq06598518767156971297.png"> </p>
+         <h2>Defining a multivariate S2FunHarmonic<a name="2"> </a></h2>
+         <p><b>Definition via function values</b></p>
+         <p>At first we need some vertices</p><pre class="codeinput">nodes = equispacedS2Grid(<span class="string">'points'</span>, 1e5);
+nodes = nodes(:);</pre><p>Next we define function values for the vertices</p><pre class="codeinput">y = [S2Fun.smiley(nodes), (nodes.x.*nodes.y).^(1/4)];</pre><p>Now the actual command to get a 2x1 <tt>sF1</tt> of type <a href="S2FunHarmonic.S2FunHarmonic"><tt>S2FunHarmonic</tt></a></p><pre class="codeinput">sF1 = S2FunHarmonic.approximation(nodes, y)</pre><pre class="codeoutput"> 
+sF1 = S2FunHarmonic  
+ size: 2 x 1
+ bandwidth: 224
+</pre><p><b>Definition via function handle</b></p>
+         <p>If we have a function handle for the function we could create a <tt>S2FunHarmonic</tt> via quadrature. At first let us define a function handle which takes <a href="vector3d.vector3d.html"><tt>vector3d</tt></a> as an argument and returns double:
+         </p><pre class="codeinput">f = @(v) [exp(v.x+v.y+v.z)+50*(v.y-cos(pi/3)).^3.*(v.y-cos(pi/3) &gt; 0), v.x, v.y, v.z];</pre><p>Now we call the quadrature command to get 4x1 <tt>sF2</tt> of type <a href="S2FunHarmonic.S2FunHarmonic"><tt>S2FunHarmonic</tt></a></p><pre class="codeinput">sF2 = S2FunHarmonic.quadrature(f, <span class="string">'bandwidth'</span>, 50)</pre><pre class="codeoutput"> 
+sF2 = S2FunHarmonic  
+ size: 4 x 1
+ bandwidth: 50
+</pre><p><b>Definition via Fourier-coefficients</b></p>
+         <p>If we already know the Fourier-coefficients, we can simply hand them in the format above to the constructor of <tt>S2FunHarmonic</tt>.
+         </p><pre class="codeinput">sF3 = S2FunHarmonic(eye(9))</pre><pre class="codeoutput"> 
+sF3 = S2FunHarmonic  
+ size: 9 x 1
+ bandwidth: 2
+</pre><div>
+            <ul type="square">
+               <li>This command stores the nine first spherical harmonics in <tt>sF3</tt></li>
+            </ul>
+         </div>
+         <h2>Operations which differ from an univariate S2FunHarmonic<a name="10"> </a></h2>
+         <p><b>Some default matrix and vector operations</b></p>
+         <p>You can concatenate and refer to functions as Matlab does with vectors and matrices</p><pre class="codeinput">sF4 = [sF1; sF2];
+sF4(2:3);</pre><p>You can conjugate the Fourier-coefficients and transpose/ctranspose the multivariate <a href="S2FunHarmonic.S2FunHarmonic"><tt>S2FunHarmonic</tt></a>.
+         </p><pre class="codeinput">conj(sF1);
+sF1.';
+sF1';</pre><p>Some other operations</p><pre class="codeinput">length(sF1);
+size(sF2);
+sF3 = reshape(sF3, 3, []);</pre><p><b><tt>sum</tt> and <tt>mean</tt></b></p>
+         <p>If we do not specify further options to <tt>sum</tt> or <tt>mean</tt> they give we the integral or the mean value back for each function. You could also calculate the conventional sum or the
+            meanvalue over a dimension of a multivariate <tt>S2FunHarmonic</tt>.
+         </p><pre class="codeinput">sum(sF1, 1);
+sum(sF3, 2);</pre><p><b>min/max</b></p>
+         <p>If the <tt>min</tt> or <tt>max</tt> command gets a multivariate <tt>S2FunHarmonic</tt> the pointwise minimum or maximum is calculated along the first non-singelton dimension if not specified otherwise.
+         </p><pre class="codeinput">min(sF3);</pre><p><b>Remark on the matrix product</b></p>
+         <p>At this point the matrix product is implemented per element and not as the usual matrix product.</p>
+         <h2>Visualization of multivariate S2FunHarmonic<a name="17"> </a></h2>
+         <p>The same plot commands as for univariate <tt>S2FunHarmonic</tt> work on multivariate as well. The difference is that, now, each component is plotted next to one another.
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

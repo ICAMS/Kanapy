@@ -1,0 +1,77 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Fibre ODFs ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: FibreODFs -->
+      <!-- HEADSTUFF: FibreODFs -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:FibreODFs">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Fibre ODFs</h1>
+         <div class="subheading">
+            <p>TODO: extend this</p>
+         </div>
+         <p>A fibre is represented in MTEX by a variable of type <a href="fibre.fibre.html">fibre</a>.
+         </p><pre class="codeinput">cs = crystalSymmetry.load(<span class="string">'Ti-Titanium-alpha.cif'</span>)
+
+<span class="comment">% define the fibre to be the beta fibre</span>
+f = fibre.beta(cs)
+
+<span class="comment">% define a fibre ODF</span>
+odf = fibreODF(f,<span class="string">'halfwidth'</span>,10*degree)
+
+<span class="comment">% plot the odf in 3d</span>
+plot3d(odf)</pre><pre class="codeoutput"> 
+cs = crystalSymmetry  
+ 
+  mineral        : Titanium          
+  symmetry       : 6/mmm             
+  elements       : 24                
+  a, b, c        : 3, 3, 4.7         
+  reference frame: X||a*, Y||b, Z||c*
+ 
+Warning: Miller indece are not orthogonal.
+Maximum deviation is 25 degree 
+ 
+f = fibre  
+ size: 1 x 1
+ mineral: Titanium (6/mmm, X||a*, Y||b, Z||c*)
+ h || r: (11 7 -18 12) || (0.16606,0.13548,0.97676)
+ o1 -&gt; o2: (348.4&deg;,57.8&deg;,60&deg;) -&gt; (90&deg;,77.1&deg;,60&deg;)
+ 
+odf = ODF  
+  crystal symmetry : Titanium (6/mmm, X||a*, Y||b, Z||c*)
+ 
+  Fibre symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 10&deg;
+    fibre: (1.7 1 -2.7 1.8) - 0.16606,0.13548,0.97676
+    weight: 1
+ 
+</pre><img src="FibreODFs_01.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,170 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>loadODF_generic ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: loadODF_generic -->
+      <!-- HEADSTUFF: loadODF_generic -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:loadODF_generic">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit loadODF_generic">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">loadODF_generic</h1>
+         <div class="subheading">
+            <p>load pole figure data from (alpha,beta,gamma) files</p>
+         </div>
+         <h2>Description<a name="2"> </a></h2>
+         <p><tt>loadODF_generic</tt> loads an ODF from any txt or exel files are of the following format
+         </p><pre>alpha_1 beta_1 gamma_1 weight_1
+alpha_2 beta_2 gamma_2 weight_2
+alpha_3 beta_3 gamma_3 weight_3
+.      .       .       .
+.      .       .       .
+.      .       .       .
+alpha_M beta_M gamma_M weight_m</pre><p>The assoziation of the columns as Euler angles, phase informationl, etc. is specified by the options <tt>ColumnNames</tt> and <tt>Columns</tt>. The file can contain any number of header lines.
+         </p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">cs = crystalSymmetry(<span class="string">'432'</span>)
+odf   = loadODF_generic(fname,<span class="string">'cs'</span>,cs,<span class="string">'ColumnNames'</span>,{<span class="string">'Euler 1'</span> <span class="string">'Euler 2'</span> <span class="string">'Euler 3'</span> <span class="string">'weight'</span>})</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>fname</tt>
+            </td>
+            <td>
+            <tt>file name (text files only)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ColumnNames</tt>
+            </td>
+            <td>
+            <tt>names of the colums to be imported, mandatory are euler 1, euler 2, euler 3</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>Columns</tt>
+            </td>
+            <td>
+            <tt>postions of the columns to be imported</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>radians</tt>
+            </td>
+            <td>
+            <tt>treat input in radiand</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>delimiter</tt>
+            </td>
+            <td>
+            <tt>delimiter between numbers</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>header</tt>
+            </td>
+            <td>
+            <tt>number of header lines</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>ZXZ, BUNGE</tt>
+            </td>
+            <td>
+            <tt>[phi1 Phi phi2] Euler angle in Bunge convention (default)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>ZYZ, ABG</tt>
+            </td>
+            <td>
+            <tt>[alpha beta gamma] Euler angle in Mathies convention</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Flags<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>interp</tt>
+            </td>
+            <td>
+            <tt>determine the ODF by interpolation the weights</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>density</tt>
+            </td>
+            <td>
+            <tt>determine the ODF as the density of the orientations</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="7"> </a></h2><pre class="codeinput">fname = fullfile(mtexDataPath,<span class="string">'ODF'</span>,<span class="string">'odf.txt'</span>);
+odf = loadODF_generic(fname,<span class="string">'cs'</span>,crystalSymmetry(<span class="string">'cubic'</span>),<span class="string">'header'</span>,5,<span class="keyword">...</span>
+<span class="string">'ColumnNames'</span>,{<span class="string">'Euler 1'</span> <span class="string">'Euler 2'</span> <span class="string">'Euler 3'</span> <span class="string">'weight'</span>},<span class="keyword">...</span>
+<span class="string">'Columns'</span>,[1,2,3,4])</pre><pre class="codeoutput">  Interpolating the ODF. This might take some time...
+ 
+odf = ODF  
+  crystal symmetry : m-3m
+ 
+  Uniform portion:
+    weight: 0.53188
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 5&deg;
+    center: 4906 orientations, resolution: 5&deg;
+    weight: 0.46812
+ 
+</pre><h3 class="seealso">See also</h3>
+         <p><a href="import_wizard.html">import_wizard</a>, <a href="loadODF.html">loadODF</a>, <a href="ODF_demo.html">ODF_demo</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

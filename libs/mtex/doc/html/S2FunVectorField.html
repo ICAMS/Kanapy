@@ -1,0 +1,79 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>S2VectorField ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: S2FunVectorField -->
+      <!-- HEADSTUFF: S2FunVectorField -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:S2FunVectorField">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">S2VectorField</h1>
+         <div class="subheading">
+            <p><a href="S2VectorField.S2VectorField">S2VectorField</a> handles three-dimensional functions on the sphere. For instance the gradient of an univariate <a href="S2FunHarmonic.S2FunHarmonic"><tt>S2FunHarmonic</tt></a> can return a <a href="S2VectorFieldHarmonic.S2VectorFieldHarmonic">S2VectorFieldHarmonic</a>.
+            </p>
+         </div>
+         <h2>Defining a S2VectorFieldHarmonic<a name="1"> </a></h2>
+         <p><b>Definition via function values</b></p>
+         <p>At first we need some example vertices</p><pre class="codeinput">nodes = equispacedS2Grid(<span class="string">'points'</span>, 1e5);
+nodes = nodes(:);</pre><p>Next, we define function values for the vertices</p><pre class="codeinput">y = vector3d.byPolar(sin(3*nodes.theta), nodes.rho+pi/2);</pre><p>Now the actual command to get <tt>sVF1</tt> of type <tt>S2VectorFieldHarmonic</tt></p><pre class="codeinput">sVF1 = S2VectorFieldHarmonic.approximation(nodes, y)</pre><pre class="codeoutput"> 
+sVF1 = S2VectorFieldHarmonic  
+ bandwidth: 128
+</pre><p><b>Definition via function handle</b></p>
+         <p>If we have a function handle for the function we could create a <tt>S2VectorFieldHarmonic</tt> via quadrature. At first lets define a function handle which takes <a href="vector3d.vector3d.html"><tt>vector3d</tt></a> as an argument and returns again <a href="vector3d.vector3d.html"><tt>vector3d</tt></a>:
+         </p><pre class="codeinput">f = @(v) vector3d(v.x, v.y, 0*v.x);</pre><p>Now we can call the quadrature command to get <tt>sVF2</tt> of type <tt>S2VectorFieldHarmonic</tt></p><pre class="codeinput">sVF2 = S2VectorFieldHarmonic.quadrature(@(v) f(v))</pre><pre class="codeoutput"> 
+sVF2 = S2VectorFieldHarmonic  
+ bandwidth: 128
+</pre><p><b>Definition via <a href="S2FunHarmonic.S2FunHarmonic"><tt>S2FunHarmonic</tt></a></b></p>
+         <p>If we directly call the constructor with a multivariate <a href="S2FunHarmonic_multi.S2FunHarmonic_multi"><tt>S2FunHarmonic</tt></a> with two or three entries it will create a <tt>S2VectorFieldHarmonic</tt> with <tt>sF(1)</tt> the polar angle and <tt>sF(2)</tt> the azimuth or <tt>sF(1)</tt>, <tt>sF(2)</tt>, and <tt>sF(3)</tt> the <img src="S2FunVectorField_eq12428413953531653171.png"> , <img src="S2FunVectorField_eq08830444604280721118.png"> , and <img src="S2FunVectorField_eq17119888974628994297.png">  component.
+         </p><pre class="codeinput">sF = S2FunHarmonic(rand(10, 2));
+sVF3 = S2VectorFieldHarmonic(sF)
+
+sF = S2FunHarmonic(rand(10, 3));
+sVF4 = S2VectorFieldHarmonic(sF)</pre><pre class="codeoutput"> 
+sVF3 = S2VectorFieldHarmonic  
+ bandwidth: 3
+ 
+sVF4 = S2VectorFieldHarmonic  
+ bandwidth: 3
+</pre><h2>Operations<a name="8"> </a></h2>
+         <p><b>Basic arithmetic operations</b></p>
+         <p>Again the basic mathematical operations are supported:</p>
+         <p>addition/subtraction of a vector field and a vector or addition/subtraction of two vector fields</p><pre class="codeinput">sVF1+sVF2; sVF1+vector3d(1, 0, 0);
+sVF1-sVF2; sVF2-vector3d(sqrt(2)/2, sqrt(2)/2, 0);</pre><p>multiplication/division by a scalar or a <tt>S2Fun</tt></p><pre class="codeinput">2.*sVF1; sVF1./4;
+S2Fun.smiley*sVF1;</pre><p>dot product with a vector or another vector field</p><pre class="codeinput">dot(sVF1, sVF2); dot(sVF1, vector3d(0, 0, 1));</pre><p>cross product with a vector or another vector field</p><pre class="codeinput">cross(sVF1, sVF2); cross(sVF1, vector3d(0, 0, 1));</pre><p>mean vector of the vector field</p><pre class="codeinput">mean(sVF1);</pre><p>rotation of the vector field</p><pre class="codeinput">r = rotation.byEuler( [pi/4 0 0]);
+rotate(sVF1, r);</pre><p>pointwise norm of the vectors</p><pre class="codeinput">norm(sVF1);</pre><h2>Visualization<a name="17"> </a></h2>
+         <p>One can use the default <tt>plot</tt>-command
+         </p><pre class="codeinput">plot(sVF1);</pre><img src="S2FunVectorField_01.png"> <div>
+            <ul type="square">
+               <li>same as quiver(sVF1)</li>
+            </ul>
+         </div>
+         <p>or the 3D plot of a sphere with the vectors on itself</p><pre class="codeinput">clf;
+quiver3(sVF2);</pre><img src="S2FunVectorField_02.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

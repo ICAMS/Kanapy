@@ -1,0 +1,122 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>smooth ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: EBSD.smooth -->
+      <!-- HEADSTUFF: EBSD.smooth -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:EBSD.smooth">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit EBSD/smooth">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">smooth</h1>
+         <div class="subheading"></div>
+         <p>smooth spatial EBSD</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">ebsd = smooth(ebsd)</pre><pre class="codeinput">F = halfQuadraticFilter
+F.alpha = 2;
+ebsd = smooth(ebsd, F, <span class="string">'fill'</span>, grains)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ebsd</tt>
+            </td>
+            <td>
+            <tt><a href="EBSD.EBSD.html">EBSD</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>F</tt>
+            </td>
+            <td>
+            <tt>@EBSDFilters</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>grains</tt>
+            </td>
+            <td>
+            <tt><a href="grain2d.grain2d.html">grain2d</a> if provided pixels at the boundary between grains are not filled</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>fill</tt>
+            </td>
+            <td>
+            <tt>fill missing values (this is different then not indexed values!)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>extrapolate</tt>
+            </td>
+            <td>
+            <tt>extrapolate up the the outer boundaries</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="6"> </a></h2><pre class="codeinput">mtexdata <span class="string">forsterite</span>;
+ebsd = ebsd(<span class="string">'indexed'</span>);
+<span class="comment">% segment grains</span>
+[grains,ebsd.grainId] = calcGrains(ebsd);</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0   58485 (24%)  notIndexed                                                 
+     1  152345 (62%)  Forsterite  LightSkyBlue       mmm                         
+     2   26058 (11%)   Enstatite  DarkSeaGreen       mmm                         
+     3   9064 (3.7%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><pre class="codeinput"><span class="comment">% find largest grains</span>
+largeGrains = grains(grains.grainSize&gt;800);
+ebsd = ebsd(largeGrains(1));</pre><pre class="codeinput">figure
+plot(largeGrains(1).boundary,<span class="string">'linewidth'</span>,2)
+hold <span class="string">on</span>
+oM = ipfHSVKey(ebsd);
+oM.inversePoleFigureDirection = mean(ebsd.orientations) * oM.whiteCenter;
+oM.colorStretching = 50;
+plot(ebsd,oM.orientation2color(ebsd.orientations))
+hold <span class="string">off</span></pre><pre class="codeoutput">Warning: Possibly applying an orientation to
+an object in specimen coordinates! 
+</pre><img src="EBSD.smooth_01.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

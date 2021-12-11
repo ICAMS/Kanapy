@@ -1,0 +1,83 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>hr2quat ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: hr2quat -->
+      <!-- HEADSTUFF: hr2quat -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:hr2quat">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit hr2quat">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">hr2quat</h1>
+         <div class="subheading">
+            <p>arbitrary quaternion q with q * h = r</p>
+         </div>
+         <h2>Description<a name="2"> </a></h2>
+         <p>The method <tt>hr2quat</tt> defines a <a href="quaternion.quaternion.html">rotation</a> <tt>q</tt> by a crystal direction <tt>h</tt> and a specimen direction <tt>r</tt> such that <tt>q * h = r</tt></p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">q = hr2quat(h,r)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>h</tt>
+            </td>
+            <td>
+            <tt><a href="Miller.Miller.html">Miller</a> or <a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>r</tt>
+            </td>
+            <td>
+            <tt><a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>q</tt>
+            </td>
+            <td>
+            <tt><a href="quaternion.quaternion.html">quaternion</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="quaternion.quaternion.html">quaternion.quaternion</a>, <a href="quaternion.quaternion.html">quaternion.quaternion</a>, <a href="axis2quat.html">axis2quat</a>, <a href="Miller2quat.html">Miller2quat</a>, <a href="vec42quat.html">vec42quat</a>, <a href="euler2quat.html">euler2quat</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

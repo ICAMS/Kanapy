@@ -1,0 +1,95 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>fit ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: BinghamS2.fit -->
+      <!-- HEADSTUFF: BinghamS2.fit -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:BinghamS2.fit">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit BinghamS2/fit">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">fit</h1>
+         <div class="subheading"></div>
+         <p>function to fit Bingham parameters</p>
+         <h2>Description<a name="3"> </a></h2>
+         <p>confidence ellipse for the mean direction based on Tanaka (1999) <a href="https://doi.org/10.1186/BF03351601">https://doi.org/10.1186/BF03351601</a></p>
+         <h2>Syntax<a name="4"> </a></h2><pre class="codeinput">BS2 = BinghamS2.fit(v)</pre><h2>Input<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>v</tt>
+            </td>
+            <td>
+            <tt>vector3d</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>BS2</tt>
+            </td>
+            <td>
+            <tt><a href="BinghamS2.BinghamS2.html">BinghamS2</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="7"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ConfElli</tt>
+            </td>
+            <td>
+            <tt>confidence level p (default at 0.95)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="8"> </a></h2><pre class="codeinput"><span class="comment">% simulate some directions</span>
+odf = unimodalODF(quaternion.id,<span class="string">'halfwidth'</span>,10*degree);
+N = 100;
+v = odf.discreteSample(N) .* <span class="keyword">...</span>
+rotation.byAxisAngle(vector3d.X,rand(N,1)*2*pi) * vector3d.Y;</pre><pre class="codeoutput">Warning: Possibly applying an orientation to
+an object in specimen coordinates! 
+</pre><pre class="codeinput"><span class="comment">% fit a Bingham distribution</span>
+S2F = BinghamS2.fit(v)</pre><pre class="codeoutput"> 
+S2F = BinghamS2  
+</pre><p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

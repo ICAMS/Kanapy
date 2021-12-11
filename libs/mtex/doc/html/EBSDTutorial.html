@@ -1,0 +1,143 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>EBSD Tutorial ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: EBSDTutorial -->
+      <!-- HEADSTUFF: EBSDTutorial -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:EBSDTutorial">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">EBSD Tutorial</h1>
+         <div class="subheading">
+            <p>A quick guide about how to work with EBSD data in MTEX.</p>
+         </div>
+         <h2>Data import<a name="1"> </a></h2>
+         <p>MTEX allows to import EBSD from all big vendors of EBSD systems. Prefered data formats are text based data files like <tt>.ang</tt>, <tt>.ctf</tt> or open binary formats like <tt>.osc</tt> or <tt>.h5</tt>. Most comfortably, EBSD data may be imported using the import wizard, by typing
+         </p><pre class="codeinput">import_wizard</pre><img src="EBSDTutorial_01.png"> <p>or by the command <a href="EBSD.load.html">EBSD.load</a></p><pre class="codeinput">fileName = [mtexDataPath filesep <span class="string">'EBSD'</span> filesep <span class="string">'Forsterite.ctf'</span>];
+ebsd = EBSD.load(fileName)</pre><pre class="codeoutput"> 
+ebsd = EBSD  
+ 
+ Phase  Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     0   58485 (24%)  notIndexed                                                 
+     1  152345 (62%)  Forsterite  LightSkyBlue       mmm                         
+     2   26058 (11%)   Enstatite  DarkSeaGreen       mmm                         
+     3   9064 (3.7%)    Diopside     Goldenrod     12/m1       X||a*, Y||b*, Z||c
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><p>As a result the ebsd data are stored in a single variable, here called <tt>ebsd</tt>. This variable contains all relevant information, i.e., the spatial coordinates, the orientation information, a description
+            of the crystal symmetries and all other parameters contained in the data file.
+         </p>
+         <h2>Phase Plots<a name="4"> </a></h2>
+         <p>In the present case the output shows that the data sets is a composition of three different phases Forsterite, Enstatite,
+            and Diopside. The spatial distribution of the different phases can be visualized by the plotting command
+         </p><pre class="codeinput">plotx2east <span class="comment">% this command tell MTEX to plot the x coordinate pointing towards east</span>
+plot(ebsd,<span class="string">'coordinates'</span>,<span class="string">'on'</span>)</pre><img src="EBSDTutorial_02.png"> <p>When importing EBSD data a central issue is to align them correctly to a fixed reference frame. This issue is exhaustively
+            discussed in the topic <a href="EBSDReferenceFrame.html">Reference Frame Alignment</a>.
+         </p>
+         <h2>Orientation Plots<a name="6"> </a></h2>
+         <p>Analyzing orientations of an EBSD map can be done only for each phase seperately. The key syntax to restrict the data to a
+            single phase is
+         </p><pre class="codeinput">ebsd(<span class="string">'Forsterite'</span>)</pre><pre class="codeoutput"> 
+ans = EBSD  
+ 
+ Phase   Orientations     Mineral         Color  Symmetry  Crystal reference frame
+     1  152345 (100%)  Forsterite  LightSkyBlue       mmm                         
+ 
+ Properties: bands, bc, bs, error, mad, x, y
+ Scan unit : um
+ 
+</pre><p>Now we may extract all Forsterite orientations by</p><pre class="codeinput">ebsd(<span class="string">'Forsterite'</span>).orientations</pre><pre class="codeoutput"> 
+ans = orientation (Forsterite -&gt; xyz)
+  size: 152345 x 1
+</pre><p>and may use them to plot an ipf map of all Forsterite orientations</p><pre class="codeinput">plot(ebsd(<span class="string">'Forsterite'</span>),ebsd(<span class="string">'Forsterite'</span>).orientations,<span class="string">'micronbar'</span>,<span class="string">'off'</span>)</pre><img src="EBSDTutorial_03.png"> <p>In this standard form a default color coding of the orientations is choosen. A more complete discussion about how to colorize
+            orientations can be found in the topic <a href="EBSDIPFMap.html">IPF Maps</a>.
+         </p>
+         <h2>Grain reconstruction<a name="10"> </a></h2>
+         <p>MTEX contains a sophisticates algorithm for reconstructing the grain structure from EBSD data as described in the paper <a href="https://www.researchgate.net/publication/51806709_Grain_detection_from_2d_and_3d_EBSD_data-Specification_of_the_MTEX_algorithm">Grain detection from 2d and 3d EBSD data</a> and the topic <a href="GrainReconstruction.html">Grain Reconstruction</a>. The syntax is
+         </p><pre class="codeinput"><span class="comment">% reconstruct grains with theshold angle 10 degree</span>
+grains = calcGrains(ebsd(<span class="string">'indexed'</span>),<span class="string">'theshold'</span>,10*degree)
+
+<span class="comment">% smooth the grains to avoid the stair casing effect</span>
+grains = smooth(grains,5);</pre><pre class="codeoutput"> 
+grains = grain2d  
+ 
+ Phase  Grains  Pixels     Mineral  Symmetry  Crystal reference frame
+     1    1080  152345  Forsterite       mmm                         
+     2     515   26058   Enstatite       mmm                         
+     3    1496    9064    Diopside     12/m1       X||a*, Y||b*, Z||c
+ 
+ boundary segments: 43912
+ inner boundary segments: 266
+ triple points: 3417
+ 
+ Properties: GOS, meanRotation
+ 
+</pre><p>This creates a variable <tt>grains</tt> of type <a href="grain2d.grain2d.html">grain2d</a> which containes the full <a href="ShapeParameters.html">geometric information</a> about all grains and their <a href="BoundaryProperties.html">boundaries</a>. As the most simplest application we may just plot the grain boundaries
+         </p><pre class="codeinput"><span class="comment">% plot the grain boundaries on top of the ipf map</span>
+hold <span class="string">on</span>
+plot(grains.boundary,<span class="string">'lineWidth'</span>,2)
+hold <span class="string">off</span></pre><img src="EBSDTutorial_04.png"> <h2>Crystal Shapes<a name="12"> </a></h2>
+         <p>In order to make the visualization of crystal orientations more intuitive MTEX supports <a href="CrystalShapes.html">crystal shapes</a>. Those are polyhedrons computed to match the typical shape of ideal crystals. In order to overlay the EBSD map with crystal
+            shapes orienteted accordingly to the orientations of the grains we proceed as follows.
+         </p><pre class="codeinput"><span class="comment">% define the crystal shape of Forsterite and store it in the variable cS</span>
+cS = crystalShape.olivine(ebsd(<span class="string">'Forsterite'</span>).CS)
+
+<span class="comment">% select only grains with more then 100 pixels</span>
+grains = grains(grains.grainSize &gt; 100);
+
+<span class="comment">% plot at the positions of the Forsterite grains the crystal shapes</span>
+hold <span class="string">on</span>
+plot(grains(<span class="string">'Forsterite'</span>),0.7*cS,<span class="string">'FaceColor'</span>,[0.3 0.5 0.3])
+hold <span class="string">off</span></pre><pre class="codeoutput"> 
+cS = crystalShape  
+ mineral: Forsterite (mmm)
+ vertices: 36
+ faces: 20
+</pre><img src="EBSDTutorial_05.png"> <h2>Pole Figures<a name="13"> </a></h2>
+         <p>One of the most important tools for analysing the orientations in an EBSD map are <a href="OrientationPoleFigure.html">pole figure plots</a>. Those answer the question with which specimen directions the a fixes crystal directions, here <tt>h</tt>, is aligned
+         </p><pre class="codeinput"><span class="comment">% the fixed crystal directions</span>
+h = Miller({1,0,0},{0,1,0},{0,0,1},ebsd(<span class="string">'Forsterite'</span>).CS);
+
+<span class="comment">% plot their positions with respect to specimen coordinates</span>
+plotPDF(ebsd(<span class="string">'Forsterite'</span>).orientations,h,<span class="string">'figSize'</span>,<span class="string">'medium'</span>)</pre><pre class="codeoutput">  I'm plotting 1250 random orientations out of 152345 given orientations
+  You can specify the the number points by the option "points".
+  The option "all" ensures that all data are plotted
+</pre><img src="EBSDTutorial_06.png"> <h2>Inverse Pole Figures<a name="14"> </a></h2>
+         <p>Analogously one can ask for the crystal directions pointing into a fixed specimen direction. The resulting plots are called
+            <a href="OrientationInversePoleFigure.html">inverse pole figures</a>.
+         </p><pre class="codeinput"><span class="comment">% the fixed specimen direction</span>
+r = vector3d.Z;
+
+<span class="comment">% plot the position of the z-Axis in crystal coordinates</span>
+plotIPDF(ebsd(<span class="string">'Forsterite'</span>).orientations,r,<span class="string">'MarkerSize'</span>,5,<span class="keyword">...</span>
+  <span class="string">'MarkerFaceAlpha'</span>,0.05,<span class="string">'MarkerEdgeAlpha'</span>,0.05)</pre><pre class="codeoutput">  I'm plotting 12500 random orientations out of 152345 given orientations
+</pre><img src="EBSDTutorial_07.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

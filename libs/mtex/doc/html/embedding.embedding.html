@@ -1,0 +1,104 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>embedding ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: embedding.embedding -->
+      <!-- HEADSTUFF: embedding.embedding -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:embedding.embedding">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit embedding/embedding">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">embedding</h1>
+         <div class="subheading"></div>
+         <p>defines an embedding of the orientation space into an Eucledian space</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">e = embedding(ori)
+e = embedding(u,cs,l)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>ori</tt>
+            </td>
+            <td>
+            <tt><a href="orientation.orientation.html">orientation</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>u</tt>
+            </td>
+            <td>
+            <tt>cell list of tensors describing the embedding</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>cs</tt>
+            </td>
+            <td>
+            <tt><a href="crystalSymmetry.crystalSymmetry.html">crystalSymmetry</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>l</tt>
+            </td>
+            <td>
+            <tt>original vectors, i.e., u = ori * l</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>e</tt>
+            </td>
+            <td>
+            <tt><a href="embedding.embedding.html">embedding</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>References<a name="6"> </a></h2>
+         <div>
+            <ul type="square">
+               <li>R .Hielscher, L. Lippert, Isometric Embeddings of Quotients of the Rotation Group Modulo Finite Symmetries, <a href="https://arxiv.org/abs/2007.09664">arXiv:2007.09664</a>, 2020.
+               </li>
+            </ul>
+         </div>
+         <h3 class="seealso">See also</h3>
+         <p><a href="OrientationEmbeddings.html">OrientationEmbeddings</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,108 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Defining Orientations ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: OrientationDefinition -->
+      <!-- HEADSTUFF: OrientationDefinition -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:OrientationDefinition">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Defining Orientations</h1>
+         <div class="subheading"></div>
+         <p>This sections covers the definition of orientations as MTEX variables. The theoretical definition can be found in the section
+            <a href="DefinitionAsCoordinateTransform.html">Theory</a> and <a href="MTEXvsBungeConvention.html">MTEX vs Bunge Convention</a>.
+         </p>
+         <p>Technically, a variable of type <a href="orientation.orientation.html">orientation</a> is nothing else then a <a href="rotation.rotation.html">rotation</a> that is accompanied by a crystal symmetry. Hence, all methods for defining rotations (<a href="RotationDefinition.html">as explained here</a>) are also applicable for orientations with the only difference that the crystal symmetry has to be specified in form of a
+            variable of type <a href="crystalSymmetry.crystalSymmetry.html">crystalSymmetry</a>.
+         </p><pre class="codeinput"><span class="comment">% load copper cif file</span>
+cs = crystalSymmetry.load(<span class="string">'Cu-Copper.cif'</span>)</pre><pre class="codeoutput"> 
+cs = crystalSymmetry  
+ 
+  mineral : Copper       
+  symmetry: m-3m         
+  elements: 48           
+  a, b, c : 3.6, 3.6, 3.6
+ 
+</pre><p>Most importantly we may use Euler angles to define orientations</p><pre class="codeinput">ori = orientation.byEuler(30*degree,50*degree,10*degree,cs)</pre><pre class="codeoutput"> 
+ori = orientation (Copper -&gt; xyz)
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+    30   50   10    0
+ 
+</pre><p>or a 3x3 rotation matrix</p><pre class="codeinput">M = eye(3)
+
+ori = orientation.byMatrix(M)</pre><pre class="codeoutput">M =
+     1     0     0
+     0     1     0
+     0     0     1
+ 
+ori = orientation (1 -&gt; xyz)
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+     0    0    0    0
+ 
+</pre><h2>Miller indices<a name="4"> </a></h2>
+         <p>Another common way to specify an orientation is by the crystal directions point towards the specimen directions Z and X. This
+            can be done by the command <a href="orientation.byMiller.html">byMiller</a>. E.g. in order to define the GOSS orientation (011)[100] we can write
+         </p><pre class="codeinput">orientation.byMiller([0 1 1],[1 0 0],cs)</pre><pre class="codeoutput"> 
+ans = orientation (Copper -&gt; xyz)
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+     0   45    0    0
+ 
+</pre><p>Note that MTEX comes already with a long list of <a href="OrientationStandard.html">predefined orientations</a>.
+         </p>
+         <h2>Random Orientations<a name="6"> </a></h2>
+         <p>To simulate random orientations we may apply the same syntax as for rotations and write</p><pre class="codeinput">ori = orientation.rand(100,cs)</pre><pre class="codeoutput"> 
+ori = orientation (Copper -&gt; xyz)
+  size: 100 x 1
+</pre><h2>Specimen Symmetry<a name="7"> </a></h2>
+         <p>If one needs to consider also specimen symmetry this can be defined as a variable of type <a href="specimenSymmetry.specimenSymmetry.html">specimenSymmetry</a> and passed as an additional argument to all commands discussed above, e.g.,
+         </p><pre class="codeinput"><span class="comment">% define orthotropic specimen symmetry</span>
+ss = specimenSymmetry(<span class="string">'orthorhombic'</span>)
+
+<span class="comment">% define a corresponding orientation</span>
+ori = orientation.byEuler(30*degree,50*degree,10*degree,cs,ss)</pre><pre class="codeoutput"> 
+ss = orthorhombic specimenSymmetry  
+ 
+ 
+ori = orientation (Copper -&gt; xyz (mmm))
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+    30   50   10    0
+ 
+</pre><p>Symmetrisation will now result in a very long list of symmetrically equivalent orientations</p><pre class="codeinput">ori.symmetrise</pre><pre class="codeoutput"> 
+ans = orientation (Copper -&gt; xyz (mmm))
+  size: 384 x 1
+</pre><p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

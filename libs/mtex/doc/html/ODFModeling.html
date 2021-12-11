@@ -1,0 +1,91 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>ODF Modeling ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: ODFModeling -->
+      <!-- HEADSTUFF: ODFModeling -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:ODFModeling">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">ODF Modeling</h1>
+         <div class="subheading"></div>
+         <p>MTEX provides a very simple way to define model ODFs. Generally, there are five different ODF types in MTEX:</p>
+         <div>
+            <ul type="square">
+               <li><a href="uniformODF.html">uniform ODFs</a></li>
+               <li><a href="UnimodalODFs.html">unimodal ODFs</a></li>
+               <li><a href="FibreODFs.html">fibre ODFs</a></li>
+               <li><a href="BinghamODFs">Bingham ODFs</a></li>
+               <li><a href="HarmonicODFs">ODFs given by harmonic series expansion</a></li>
+            </ul>
+         </div>
+         <p>The central idea is that MTEX allows you to calculate mixture models, by adding and subtracting arbitrary ODFs. Model ODFs
+            may be used as references for ODFs estimated from pole figure data or EBSD data and are instrumental for simulating texture
+            evolutions.
+         </p>
+         <h2>The Uniform ODF<a name="2"> </a></h2>
+         <p>The most simplest case of a model ODF is the uniform ODF</p>
+         <p><img src="ODFModeling_eq15409799391995383922.png"> </p>
+         <p>which is everywhere identical to one. In order to define a uniform ODF one needs only to specify its crystal and specimen
+            symmetry and to use the command <a href="uniformODF.html">uniformODF</a>.
+         </p><pre class="codeinput">cs = crystalSymmetry(<span class="string">'cubic'</span>);
+ss = specimenSymmetry(<span class="string">'orthorhombic'</span>);
+odf = uniformODF(cs,ss)</pre><pre class="codeoutput"> 
+odf = ODF  
+  crystal symmetry : m-3m
+  specimen symmetry: mmm
+ 
+  Uniform portion:
+    weight: 1
+ 
+</pre><h2>Combining model ODFs<a name="3"> </a></h2>
+         <p>All the above can be arbitrarily rotated and combined. For instance, the classical Santafe example can be defined by commands</p><pre class="codeinput">cs = crystalSymmetry(<span class="string">'cubic'</span>);
+ss = specimenSymmetry(<span class="string">'orthorhombic'</span>);
+
+psi = vonMisesFisherKernel(<span class="string">'halfwidth'</span>,10*degree);
+mod1 = orientation.byMiller([1,2,2],[2,2,1],cs,ss);
+
+odf =  0.73 * uniformODF(cs,ss) + 0.27 * unimodalODF(mod1,psi)
+
+close <span class="string">all</span>
+plotPDF(odf,[Miller(1,0,0,cs),Miller(1,1,0,cs)],<span class="string">'antipodal'</span>)</pre><pre class="codeoutput"> 
+odf = ODF  
+  crystal symmetry : m-3m
+  specimen symmetry: mmm
+ 
+  Uniform portion:
+    weight: 0.73
+ 
+  Radially symmetric portion:
+    kernel: van Mises Fisher, halfwidth 10&deg;
+    center: (116.6&deg;,48.2&deg;,26.6&deg;)
+    weight: 0.27
+ 
+</pre><img src="ODFModeling_01.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,130 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>plot ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: grainBoundary.plot -->
+      <!-- HEADSTUFF: grainBoundary.plot -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:grainBoundary.plot">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit grainBoundary/plot">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">plot</h1>
+         <div class="subheading"></div>
+         <p>plot grain boundaries</p>
+         <p>The function plots grain boundaries.</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">plot(grains.boundary)
+plot(grains.innerBoundary,<span class="string">'linecolor'</span>,<span class="string">'r'</span>)
+plot(gB(<span class="string">'Forsterite'</span>,<span class="string">'Forsterite'</span>),gB(<span class="string">'Forsterite'</span>,<span class="string">'Forsterite'</span>).misorientation.angle)</pre><pre class="codeinput"><span class="comment">% colorize segments according to a list of RGB values</span>
+plot(gB(<span class="string">'Forsterite'</span>,<span class="string">'Forsterite'</span>),colorList)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>grains</tt>
+            </td>
+            <td>
+            <tt><a href="grain2d.grain2d.html">grain2d</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>gB</tt>
+            </td>
+            <td>
+            <tt><a href="grainBoundary.grainBoundary.html">grainBoundary</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>colorList</tt>
+            </td>
+            <td>
+            <tt>n x 3 list of RGB values</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>linewidth</tt>
+            </td>
+            <td>
+            <tt>line width</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>linecolor</tt>
+            </td>
+            <td>
+            <tt>line color</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>edgeAlpha</tt>
+            </td>
+            <td>
+            <tt>(list of) transparency values between 0 and 1</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>region</tt>
+            </td>
+            <td>
+            <tt>[xmin xmax ymin ymax] plot only a subregion</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>displayName</tt>
+            </td>
+            <td>
+            <tt>label to appear in the legend</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>smooth</tt>
+            </td>
+            <td>
+            <tt>try to make a smooth connections at the vertices</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

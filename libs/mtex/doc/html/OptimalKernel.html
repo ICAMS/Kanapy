@@ -1,0 +1,114 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Optimal Kernel Selection ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: OptimalKernel -->
+      <!-- HEADSTUFF: OptimalKernel -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:OptimalKernel">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Optimal Kernel Selection</h1>
+         <div class="subheading"></div>
+         <p>In the section <a href="DensityEstimation.html">density estimation</a> we have seen that the correct choice of the kernel halfwidth is essential for good match between the true density function
+            and the reconstructed density function. If the halfwidth is set to small the reconstructed density function is ussualy oszilating
+            and the indiviudual sampling points are visible as sharp peaks. If the halfwidth is to large the resulting density function
+            is usually too smooth and does not reproduce the features of the original density function.
+         </p>
+         <p>Finding an optimal kernel halfwidth is a hard problem as the optimal kernel halfwidth depends not only on the number sampling
+            points but also on the smoothness of the true but unknown density function. A very conserative choice of the kernel halfwidth
+            that takes into account only the number of sampling points is implemented in MTEX as <tt>'magicRule'</tt>. In the <tt>'RuleOfThumb'</tt> considers additionaly to the number of sampling points also the variance of the sampling point as an estimate of the smoothness
+            of the true density function. The most advanced (and default) method for estimating the optimal kernel halfwidth is <a href="orientation.KLCV.html">Kullback Leibler cross validation</a>. The idea of this method is to test different kernel halfwidth on a subset of the random sampling and to select the halfwidth
+            which best reproduces the ommited points of the random sampling.
+         </p>
+         <p>In order to demonstrate this functionality lets start with the following orientation density function</p><pre class="codeinput">cs = crystalSymmetry(<span class="string">'32'</span>);
+
+odf = 0.25*uniformODF(cs) + 0.25*unimodalODF(orientation.brass(cs)) + <span class="keyword">...</span>
+  0.5*fibreODF(fibre.alpha(cs),<span class="string">'halfwidth'</span>,10*degree);
+
+plot(odf,<span class="string">'sections'</span>,6,<span class="string">'silent'</span>,<span class="string">'sigma'</span>)
+mtexColorbar</pre><pre class="codeoutput">Warning: Miller indece are not orthogonal.
+Maximum deviation is 27 degree 
+</pre><img src="OptimalKernel_01.png"> <p>and compute <img src="OptimalKernel_eq04594897795483448826.png">  random orientations using the command <tt><a href="orientation.discreteSample.html">discreteSample</a></tt></p><pre class="codeinput">ori = odf.discreteSample(10000)</pre><pre class="codeoutput"> 
+ori = orientation (321 -&gt; xyz)
+  size: 10000 x 1
+</pre><p>Next we estimate the optimal <a href="ODFShapes.html">kernel function</a> using the command <tt><a href="orientation.calcKernel.html">calcKernel</a></tt>.
+         </p><pre class="codeinput">psi  = calcKernel(ori)</pre><pre class="codeoutput"> 
+psi = deLaValleePoussinKernel  
+  bandwidth: 43
+  halfwidth: 5.7&deg;
+ 
+</pre><p>This kernel can now be used for recovering the original ODF by <a href="DensityEsimation.html">density estimation</a></p><pre class="codeinput">odf_rec = calcDensity(ori,<span class="string">'kernel'</span>,psi)
+
+<span class="comment">% plot the reconstructed ODF</span>
+plot(odf_rec,<span class="string">'sections'</span>,6,<span class="string">'silent'</span>,<span class="string">'sigma'</span>)</pre><pre class="codeoutput"> 
+odf_rec = ODF  
+  crystal symmetry : 321, X||a*, Y||b, Z||c*
+ 
+  Harmonic portion:
+    degree: 43
+    weight: 1
+ 
+</pre><img src="OptimalKernel_02.png"> <h2>Exploration of the relationship between estimation error and number of single orientations<a name="5"> </a></h2>
+         <p>In this section we want to compare the different methods for estimating the optimal kernel halfwidth. To this end we simulate
+            10, 100, ..., 1000000 single orientations of the model ODF <tt>odf</tt>, compute optimal kernels according to the <tt>'magicRule'</tt>, the <tt>'RuleOfThumb'</tt> and <a href="orientation.KLCV.html">Kullback Leibler cross validation</a> and then computed the fit between the reconstructed <tt>odf_rec</tt> to the original <tt>odf</tt>.
+         </p><pre class="codeinput">e = [];
+<span class="keyword">for</span> i = 1:6
+
+  ori = calcOrientations(odf,10^i,<span class="string">'silent'</span>);
+
+  psi1 = calcKernel(ori,<span class="string">'SamplingSize'</span>,10000,<span class="string">'silent'</span>);
+  odf_rec = calcDensity(ori,<span class="string">'kernel'</span>,psi1,<span class="string">'silent'</span>);
+  e(i,1) = calcError(odf_rec,odf,<span class="string">'resolution'</span>,2.5*degree);
+
+  psi2 = calcKernel(ori,<span class="string">'method'</span>,<span class="string">'RuleOfThumb'</span>,<span class="string">'silent'</span>);
+  odf_rec = calcDensity(ori,<span class="string">'kernel'</span>,psi2,<span class="string">'silent'</span>);
+  e(i,2) = calcError(odf_rec,odf,<span class="string">'resolution'</span>,2.5*degree);
+
+  psi3 = calcKernel(ori,<span class="string">'method'</span>,<span class="string">'magicRule'</span>,<span class="string">'silent'</span>);
+  odf_rec = calcDensity(ori,<span class="string">'kernel'</span>,psi3,<span class="string">'silent'</span>);
+  e(i,3) = calcError(odf_rec,odf,<span class="string">'resolution'</span>,2.5*degree);
+
+  disp([<span class="string">'RuleOfThumb: '</span> int2str(psi2.halfwidth/degree) mtexdegchar <span class="keyword">...</span>
+    <span class="string">' KLCV: '</span> int2str(psi1.halfwidth/degree) mtexdegchar <span class="keyword">...</span>
+    <span class="string">' magicRule: '</span> int2str(psi3.halfwidth/degree) mtexdegchar <span class="keyword">...</span>
+    ]);
+
+<span class="keyword">end</span></pre><pre class="codeoutput">RuleOfThumb: 82&deg; KLCV: 24&deg; magicRule: 31&deg;
+RuleOfThumb: 38&deg; KLCV: 15&deg; magicRule: 22&deg;
+RuleOfThumb: 17&deg; KLCV: 8&deg; magicRule: 16&deg;
+RuleOfThumb: 10&deg; KLCV: 6&deg; magicRule: 11&deg;
+RuleOfThumb: 8&deg; KLCV: 5&deg; magicRule: 8&deg;
+RuleOfThumb: 7&deg; KLCV: 4&deg; magicRule: 6&deg;
+</pre><p>Plot the error in dependency of the number of single orientations.</p><pre class="codeinput">close <span class="string">all</span>;
+loglog(10.^(1:length(e)),e,<span class="string">'LineWidth'</span>,2)
+legend(<span class="string">'Default'</span>,<span class="string">'RuleOfThumb'</span>,<span class="string">'magicRule'</span>)
+xlabel(<span class="string">'Number of orientations'</span>)
+ylabel(<span class="string">'Estimation Error'</span>)
+title(<span class="string">'Error between original fibre ODF model and simulated ebsd'</span>,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>)</pre><img src="OptimalKernel_03.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

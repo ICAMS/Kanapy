@@ -1,0 +1,120 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>fundamentalRegion ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: fundamentalRegion -->
+      <!-- HEADSTUFF: fundamentalRegion -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:fundamentalRegion">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit fundamentalRegion">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">fundamentalRegion</h1>
+         <div class="subheading">
+            <p>get the fundamental zone in orientation space for a symmetry</p>
+         </div>
+         <h2>Syntax<a name="2"> </a></h2><pre class="codeinput">oR = fundamentalRegion(cs)
+oR = fundamentalRegion(cs1,cs2)
+[oR,dcs,nSym] = fundamentalRegion(ori)
+[oR,dcs,nSym] = fundamentalRegion(odf)</pre><h2>Input<a name="3"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>cs,cs1,cs2</tt>
+            </td>
+            <td>
+            <tt><a href="symmetry.symmetry.html">symmetry</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>ori</tt>
+            </td>
+            <td>
+            <tt><a href="orientation.orientation.html">orientation</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>odf</tt>
+            </td>
+            <td>
+            <tt><a href="ODF.ODF.html">ODF</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>oR</tt>
+            </td>
+            <td>
+            <tt><a href="orientationRegion.orientationRegion.html">orientationRegion</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>dcs</tt>
+            </td>
+            <td>
+            <tt>common symmetries in cs1 and cs2</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>nSym</tt>
+            </td>
+            <td>
+            <tt>number of zones</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>invSymmetry</tt>
+            </td>
+            <td>
+            <tt>wheter mori == inv(mori)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,50 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>infimalConvolutionFilter ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: infimalConvolutionFilter -->
+      <!-- HEADSTUFF: infimalConvolutionFilter -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:infimalConvolutionFilter">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit infimalConvolutionFilter">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">infimalConvolutionFilter</h1>
+         <div class="subheading">
+            <p>matrix-valued image with the TV-norm. \argmin_u{\|u-u_0\|_2^2 + \lambda \|\nabla u\|_{2,1} + \mu \|H u\|_{2,1}}, \lambda,\mu
+               > 0 Written by Johannes Persch, Ronny Bergmann, 09.06.2015 function ma_val_im_reg_2nd_ord minimzes the second order model
+               of a OUTPUT:  u_hat:       computed minimizer  diff:        differences of u and v between two successive iterations
+            </p>
+            <p>12.05.15 by Markus Loeckel 25.05.15 substituted gauss seidel by mldivide 26.05.15 modified SPD by not deleting half of the
+               entries 30.06.15 projection onto sphere added 01.07.15 mask added 14.07.15 alternative minimzation w.r.t. u via preconditioned
+               cg added 16.07.15 first-and second-order combined 16.07.15 stopping criterion added
+            </p>
+         </div>
+         <h2>Syntax<a name="2"> </a></h2><pre class="codeinput">ma_val_im_reg_2nd_ord <span class="string">minimzes</span> <span class="string">the</span> <span class="string">second</span> <span class="string">order</span> <span class="string">model</span> <span class="string">of</span> <span class="string">a</span></pre><p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

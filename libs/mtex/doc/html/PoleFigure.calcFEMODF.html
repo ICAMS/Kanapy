@@ -1,0 +1,134 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>calcFEMODF ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: PoleFigure.calcFEMODF -->
+      <!-- HEADSTUFF: PoleFigure.calcFEMODF -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:PoleFigure.calcFEMODF">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit PoleFigure/calcFEMODF">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">calcFEMODF</h1>
+         <div class="subheading"></div>
+         <p>PDF to ODF inversion</p>
+         <p><b>calcFEMODF</b> is one of the main function of the MTEX toolbox. It estimates an ODF from given Polefigure intensities by <a href="PoleFigure2ODF.html">fitting an ODF that consists of a large number of unimodal ODFs to the data</a>. It does so by minimizing a least squares functional. The command <b>calcODF</b> supports <a href="PoleFigure2ODFGhostCorrection.html">automatic ghost correction</a> and <a href="PoleFigureDubna.html">the zero range method</a>. The function <b>calcFEMODF</b> has several options to control convergence, resolution, smoothing, etc. See below for a complete description.
+         </p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">[odf,alpha] = calcFEMODF(pf,varargin)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>pf</tt>
+            </td>
+            <td>
+            <tt><a href="PoleFigure.PoleFigure.html">PoleFigure</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>odf</tt>
+            </td>
+            <td>
+            <tt>reconstructed @FEMODF</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>alpha</tt>
+            </td>
+            <td>
+            <tt>scaling factors, calculated during reconstruction</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>resolution</tt>
+            </td>
+            <td>
+            <tt>localization grid for the ansatz fucntions (default = 3/2 resolution(pf))</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>iterMax</tt>
+            </td>
+            <td>
+            <tt>maximum number of iterations (default = 11)</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>regularisation</tt>
+            </td>
+            <td>
+            <tt>weighting coefficient lambda (default = 0)</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Flags<a name="7"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>zeroRange</tt>
+            </td>
+            <td>
+            <tt>apply zero range method (default = )</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>noGhostCorrection</tt>
+            </td>
+            <td>
+            <tt>omit ghost correction</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="PoleFigure2odf.html">PoleFigure2odf</a>, <a href="ODF_demo.html">ODF_demo</a>, <a href="PoleFigureSimulation_demo.html">PoleFigureSimulation_demo</a>, <a href="PoleFigure.load.html">PoleFigure.load</a>, <a href="ImportPoleFigureData.html">ImportPoleFigureData</a>, <a href="examples_index.html">examples_index</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

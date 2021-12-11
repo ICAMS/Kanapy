@@ -1,0 +1,100 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>line ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: rotation.line -->
+      <!-- HEADSTUFF: rotation.line -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:rotation.line">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit rotation/line">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">line</h1>
+         <div class="subheading"></div>
+         <p>draw rotations connected by lines</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">line(rot,<span class="string">'linecolor'</span>,<span class="string">'r'</span>,<span class="string">'linewith'</span>,2)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>rot</tt>
+            </td>
+            <td>
+            <tt>list of <a href="rotation.rotation.html">rotation</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Example<a name="5"> </a></h2><pre class="codeinput">cs1 = crystalSymmetry(<span class="string">'321'</span>)
+cs2 = crystalSymmetry(<span class="string">'432'</span>)
+oR = fundamentalRegion(cs1,cs2)
+plot(oR)</pre><pre class="codeoutput"> 
+cs1 = crystalSymmetry  
+ 
+  symmetry       : 321               
+  elements       : 6                 
+  a, b, c        : 1, 1, 1           
+  reference frame: X||a*, Y||b, Z||c*
+ 
+ 
+cs2 = crystalSymmetry  
+ 
+  symmetry: 432    
+  elements: 24     
+  a, b, c : 1, 1, 1
+ 
+ 
+oR = orientationRegion  
+ 
+ crystal symmetry:  321, X||a*, Y||b, Z||c*
+ crystal symmetry:  432
+ max angle: 56.6003&deg;
+ face normales: 14
+ vertices: 20
+ 
+</pre><img src="rotation.line_01.png"> <pre class="codeinput"><span class="comment">% connect to vertices of the fundamental region</span>
+f = fibre(oR.V(1),oR.V(2))</pre><pre class="codeoutput"> 
+f = fibre  
+ size: 1 x 1
+ crystal symmetry:  321, X||a*, Y||b, Z||c*
+ crystal symmetry:  432
+ h || r: (-3 11 -8 4) || ((0 11 -4))
+ o1 -&gt; o2: (0001)||(-111)  [2-1-10]||[101] -&gt; (-1010)||(-101)  [0003]||[111]
+</pre><pre class="codeinput"><span class="comment">% determine some orientations along the fibre</span>
+o = f.orientation</pre><pre class="codeoutput"> 
+o = misorientation (321 -&gt; 432)
+  size: 1000 x 1
+</pre><pre class="codeinput"><span class="comment">% plot the line</span>
+hold <span class="string">on</span>
+line(o,<span class="string">'color'</span>,<span class="string">'r'</span>,<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="rotation.line_02.png"> <h3 class="seealso">See also</h3>
+         <p><a href=".html"></a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

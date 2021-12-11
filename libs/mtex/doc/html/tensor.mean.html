@@ -1,0 +1,95 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>mean ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: tensor.mean -->
+      <!-- HEADSTUFF: tensor.mean -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:tensor.mean">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit tensor/mean">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">mean</h1>
+         <div class="subheading"></div>
+         <p>mean of a list of tensors</p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">T = mean(T)     <span class="comment">% mean along the first non singleton dimension</span>
+T = mean(T,dim) <span class="comment">% mean along dimension dim</span>
+TReuss = mean(T,<span class="string">'Reuss'</span>) <span class="comment">% Reuss average</span>
+THill = mean(T,<span class="string">'Hill'</span>) <span class="comment">% Hill average</span>
+TGeometric = mean(T,<span class="string">'geometric'</span>) <span class="comment">% geometric mean</span>
+[TVoigt, TReus, THill] = mean(T) <span class="comment">% Voigt, Reuss and Hill averages</span></pre><pre class="codeinput">[TVoigt, TReus, THill] = mean(ori*T,<span class="string">'weights'</span>,weights) <span class="comment">% mean with respect to orientations</span>
+[TVoigt, TReus, THill] = mean(T,odf) <span class="comment">% mean with respect to ODF</span>
+[TVoigt, TReus, THill] = mean(ori,<span class="string">'weights'</span>,weights) <span class="comment">% weighted mean</span></pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>T</tt>
+            </td>
+            <td>
+            <tt><a href="tensor.tensor.html">tensor</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>dim</tt>
+            </td>
+            <td>
+            <tt>dimension with respect to which the mean is taken</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>ori</tt>
+            </td>
+            <td>
+            <tt><a href="orientation.orientation.html">orientation</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>odf</tt>
+            </td>
+            <td>
+            <tt><a href="ODF.ODF.html">ODF</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>weights</tt>
+            </td>
+            <td>
+            <tt>double</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

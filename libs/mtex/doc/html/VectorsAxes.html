@@ -1,0 +1,102 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Axes and Antipodal Symmetry ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: VectorsAxes -->
+      <!-- HEADSTUFF: VectorsAxes -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:VectorsAxes">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Axes and Antipodal Symmetry</h1>
+         <div class="subheading"></div>
+         <h2>Directions vs. Axes<a name="1"> </a></h2>
+         <p>In MTEX it is possible to consider three dimensional vectors either as directions or as axes. The key option to distinguish
+            between both interpretations is <b>antipodal</b>.
+         </p>
+         <p>Consider a pair of vectors</p><pre class="codeinput">v1 = vector3d(1,1,2);
+v2 = vector3d(1,1,-2);</pre><p>and plots them in a spherical projection</p><pre class="codeinput">plot([v1,v2],<span class="string">'label'</span>,{<span class="string">'v_1'</span>,<span class="string">'v_2'</span>})</pre><img src="VectorsAxes_01.png"> <p>These vectors will appear either on the upper or on the lower hemisphere. In order to treat these vectors as axes, i.e. in
+            order to assume antipodal symmetry - one has to use the keyword <b>antipodal</b>.
+         </p><pre class="codeinput">plot([v1,v2],<span class="string">'label'</span>,{<span class="string">'v_1'</span>,<span class="string">'v_2'</span>},<span class="string">'antipodal'</span>)</pre><img src="VectorsAxes_02.png"> <p>Now the direction <b>v_2</b> is identified with the direction <b>-v_2</b> which plots at the upper hemisphere.
+         </p>
+         <h2>The Angle between Directions and Axes<a name="5"> </a></h2>
+         <p>As a consequence the angle between two axes <b>v1</b>, <b>v2</b> will always be the smallest angle between the directions <b>v1</b>, <b>v2</b> and <b>v1</b>, <b>-v2</b>, i.e. it will always be smaller than 90 degree. In the absence of antipodal symmetry we obtain
+         </p><pre class="codeinput">angle(v1,v2) / degree</pre><pre class="codeoutput">ans =
+  109.4712
+</pre><p>whereas, if antipodal symmetry is assumed we obtain</p><pre class="codeinput">angle(v1,v2,<span class="string">'antipodal'</span>) / degree</pre><pre class="codeoutput">ans =
+   70.5288
+</pre><h2>Antipodal Symmetry in Density Estimation<a name="7"> </a></h2>
+         <p>Another example, where antipodal symmetry matters is <a href="VectorsDensityEstimation.html">density estimation</a>. For ordinary directions we obtain an arbitrary spherical function
+         </p><pre class="codeinput">v = vector3d.rand(100)
+density = v.calcDensity;
+plot(density)</pre><pre class="codeoutput"> 
+v = vector3d  
+ size: 100 x 1
+</pre><img src="VectorsAxes_03.png"> <p>Whereas, if antipodal symmetry is present the resulting density function will have antipodal symmetry as well</p><pre class="codeinput">density = v.calcDensity(<span class="string">'antipodal'</span>)
+plot(density,<span class="string">'complete'</span>)</pre><pre class="codeoutput"> 
+density = S2FunHarmonic  
+ bandwidth: 25
+ antipodal: true
+</pre><img src="VectorsAxes_04.png"> <h2>Antipodal Symmetry in Experimental Pole Figures<a name="9"> </a></h2>
+         <p>Due to Friedel's law experimental pole figures always provide antipodal symmetry. One consequence of this fact is that MTEX
+            plots pole figure data always on the upper hemisphere. Moreover if you annotate a certain direction to pole figure data, it
+            is always interpreted as an axis, i.e. projected to the upper hemisphere if necessary
+         </p><pre class="codeinput">mtexdata <span class="string">dubna</span>
+CS = pf.CS;
+
+<span class="comment">% plot the first pole figure</span>
+plot(pf({1}))
+
+<span class="comment">% annotate a axis on the souther hemisphere</span>
+annotate(vector3d(1,0,-1),<span class="string">'labeled'</span>,<span class="string">'backgroundColor'</span>,<span class="string">'w'</span>)</pre><pre class="codeoutput"> 
+pf = PoleFigure  
+  crystal symmetry : Quartz (321, X||a*, Y||b, Z||c*)
+  specimen symmetry: 1
+ 
+  h = (02-21), r = 72 x 19 points
+  h = (10-10), r = 72 x 19 points
+  h = (10-11)(01-11), r = 72 x 19 points
+  h = (10-12), r = 72 x 19 points
+  h = (11-20), r = 72 x 19 points
+  h = (11-21), r = 72 x 19 points
+  h = (11-22), r = 72 x 19 points
+</pre><img src="VectorsAxes_05.png"> <h2>Antipodal Symmetry in Recalculated Pole Figures<a name="10"> </a></h2>
+         <p>However, in the case of pole figures calculated from an ODF antipodal symmetry is in general not present.</p><pre class="codeinput"><span class="comment">% some prefered orientation</span>
+o = orientation.byEuler(20*degree,30*degree,0,<span class="string">'ZYZ'</span>,CS);
+
+<span class="comment">% define an unimodal ODF</span>
+odf = unimodalODF(o);
+
+<span class="comment">% plot pole figures</span>
+plotPDF(odf,[Miller(1,2,2,CS),-Miller(1,2,2,CS)])</pre><img src="VectorsAxes_06.png"> <p>Hence, if one wants to compare calculated pole figures with experimental ones, one has to add antipodal symmetry.</p><pre class="codeinput">plotPDF(odf,Miller(1,2,2,CS),<span class="string">'antipodal'</span>)</pre><img src="VectorsAxes_07.png"> <h2>Antipodal Symmetry in Inverse Pole Figures<a name="12"> </a></h2>
+         <p>The same reasoning as above holds true for inverse pole figures. If we look at complete, inverse pole figures they do not
+            posses antipodal symmetry in general
+         </p><pre class="codeinput">plotIPDF(odf,[yvector,-yvector],<span class="string">'complete'</span>)</pre><img src="VectorsAxes_08.png"> <p>However, if we add the keyword antipodal, antipodal symmetry is enforced.</p><pre class="codeinput">plotIPDF(odf,yvector,<span class="string">'antipodal'</span>,<span class="string">'complete'</span>)</pre><img src="VectorsAxes_09.png"> <p>Notice how MTEX, automatically reduces the fundamental region of inverse pole figures in the case that antipodal symmetry
+            is present.
+         </p><pre class="codeinput">plotIPDF(odf,yvector)</pre><img src="VectorsAxes_10.png"> <pre class="codeinput">plotIPDF(odf,yvector,<span class="string">'antipodal'</span>)</pre><img src="VectorsAxes_11.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

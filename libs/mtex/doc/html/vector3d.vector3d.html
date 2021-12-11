@@ -1,0 +1,180 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>vector3d ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: vector3d.vector3d -->
+      <!-- HEADSTUFF: vector3d.vector3d -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:vector3d.vector3d">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit vector3d/vector3d">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">vector3d</h1>
+         <div class="subheading"></div>
+         <p>The class vector3d describes three dimensional vectors, given by their coordinates x, y, z and allows to calculate with them
+            as comfortable as with real numbers.
+         </p>
+         <h2>Syntax<a name="3"> </a></h2><pre class="codeinput">v = vector3d(x,y,z)
+v = vector3d(x,y,z,<span class="string">'antipodal'</span>)
+v = vector3d.byPolar(theta,rho)</pre><h2>Input<a name="4"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>x,y,z</tt>
+            </td>
+            <td>
+            <tt>cart. coordinates</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>v</tt>
+            </td>
+            <td>
+            <tt><a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Flags<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>antipodal</tt>
+            </td>
+            <td>
+            <tt><a href="VectorsAxes.html">consider vector as an axis</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Class Properties<a name="7"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>x, y, z</tt>
+            </td>
+            <td>
+            <tt>cart. coordinates</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>isNormalized</tt>
+            </td>
+            <td>
+            <tt>whether the vector is a direction</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>antipodal</tt>
+            </td>
+            <td>
+            <tt><a href="VectorsAxes.html">whether the vector is an axis</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Dependent Class Properties<a name="8"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>theta</tt>
+            </td>
+            <td>
+            <tt>polar angle in radiant</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>rho</tt>
+            </td>
+            <td>
+            <tt>azimuthal angle in radiant</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>resolution</tt>
+            </td>
+            <td>
+            <tt>mean distance between the points on the sphere</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>xyz</tt>
+            </td>
+            <td>
+            <tt>cart. coordinates as matrix</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Derived Classes<a name="9"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt><a href="Miller.Miller.html">Miller</a></tt>
+            </td>
+            <td>
+            <tt>crystal directions</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt><a href="S2Grid.S2Grid.html">S2Grid</a></tt>
+            </td>
+            <td>
+            <tt>sphercial grid</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="VectorDefinition.html">VectorDefinition</a>, <a href="VectorsOperations.html">VectorsOperations</a>, <a href="VectorsAxes.html">VectorsAxes</a>, <a href="VectorsImport.html">VectorsImport</a>, <a href="VectorsExport.html">VectorsExport</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

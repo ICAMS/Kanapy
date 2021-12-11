@@ -1,0 +1,218 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Embeddings of Orientations ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: OrientationEmbeddings -->
+      <!-- HEADSTUFF: OrientationEmbeddings -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:OrientationEmbeddings">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Embeddings of Orientations</h1>
+         <div class="subheading"></div>
+         <p>Orientational embeddings are tensorial representations of orientations with the specific property that each class of symmetrically
+            equivalent orientations has a unique tensor representation. The easiest tensorial representation of a rotation is its rotational
+            matrix. However, in the presense of crystal symmetry multiple rotational matrices describe the same orientation. This can
+            be avoided by restricting the space of admissible matrices to the so called fundamental region. However, this creates the
+            problem that two similar orientations may be represented by very different matrices in the fundamental region. This usually
+            happens if the orientations are close to the boundary of the fundamental region.
+         </p>
+         <p>The central problem is that the geometry of the fundamental region is not the geometry of the orientation space. Lets demonstate
+            this by taking pairs <img src="OrientationEmbeddings_eq02071408668218851238.png"> , <img src="OrientationEmbeddings_eq07886512800219817641.png">  of random orientations in the fundamental region
+         </p><pre class="codeinput"><span class="comment">% consider cubic symmetry</span>
+cs = crystalSymmetry(<span class="string">'432'</span>);
+
+<span class="comment">% random pairs of orientations in the fundamental sector</span>
+ori1 = project2FundamentalRegion(orientation.rand(100000,cs));
+ori2 = project2FundamentalRegion(orientation.rand(100000,cs));</pre><p>and compare their misorientation angle <img src="OrientationEmbeddings_eq10242941301667698995.png">  with the Euclidean distance $\lVert \mathtt{tensor(ori_1)} - \mathtt{tensor(ori_2)} \rVert_2$ of the corresponding rotational matrices and the Euclidean distance $ \lVert \mathtt{R(ori_1)} - \mathtt{R(ori_2)} \rVert_2$
+            of the corresponding <a href="rotation.Rodrigues.html">Rodrigues Frank vectors</a>.
+         </p><pre class="error">Error updating Text.
+
+ String scalar or character vector must have valid interpreter syntax: 
+$\lVert \mathtt{tensor(ori_1)} - \mathtt{tensor(ori_2)} \rVert_2$
+</pre><pre class="codeinput"><span class="comment">% compute the misorienation angles in degree</span>
+omega = angle(ori1,ori2)./degree;
+
+<span class="comment">% compute the Euclidean distance between the rotational matrices</span>
+distMat = norm(tensor(ori1) - tensor(ori2));
+
+<span class="comment">% compute the Euclidean distance between the Rodrigues Frank vectors</span>
+distRV = norm(Rodrigues(ori1) - Rodrigues(ori2));
+
+<span class="comment">% plot</span>
+figure(<span class="string">'position'</span>,[200 200 1200 400 ])
+subplot(1,3,1)
+scatter(omega,distMat)
+xlabel(<span class="string">'$\omega(\mathtt{ori}_1,\mathtt{ori}_2)$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)
+ylabel(<span class="string">'$|| \mathtt{tensor(ori_1)} - \mathtt{tensor(ori_2)}||_2$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)
+
+subplot(1,3,2)
+scatter(omega,distRV)
+xlabel(<span class="string">'$\omega(\mathtt{ori}_1,\mathtt{ori}_2)$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)
+ylabel(<span class="string">'$|| \mathtt{R(ori_1)} - \mathtt{R(ori_2)}||_2$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)
+
+subplot(1,3,3)
+scatter(distMat,distRV)
+xlabel(<span class="string">'$|| \mathtt{tensor(ori_1)} - \mathtt{tensor(ori_2)}||_2$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)
+ylabel(<span class="string">'$|| \mathtt{R(ori_1)} - \mathtt{R(ori_2)}||_2$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)</pre><img src="OrientationEmbeddings_01.png"> <p>We observe that orientations with very small misorientation angle <img src="OrientationEmbeddings_eq10242941301667698995.png">  may be very far from each other in Rodrigues Frank space, i.e. <img src="OrientationEmbeddings_eq14607281970273216223.png">  is large. As a consequence, we can not simply compute the average of two orientations by taking the mean of the corresponding
+            Rodrigues vectors.
+         </p>
+         <p>Lets have a look at an extremal case of finding the mean orientations of the orientations <img src="OrientationEmbeddings_eq10839130049515145213.png">  and <img src="OrientationEmbeddings_eq00501762068014944556.png"> </p><pre class="codeinput"><span class="comment">% define two orientations</span>
+ori = project2FundamentalRegion(orientation.byEuler([44 46]*degree,0,0,cs));
+
+<span class="comment">%compute the mean by averaging the Rodrigues vectors</span>
+mori = orientation.byRodrigues(mean(ori.Rodrigues),cs)</pre><pre class="codeoutput"> 
+mori = rotation  
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+     0    0    0    0
+ 
+</pre><p>The  mean orientation <img src="OrientationEmbeddings_eq06304280471703095784.png">  computed from the average of the Rodrigues vectors is far away from the true mean.
+         </p><pre class="codeinput">mean(ori)</pre><pre class="codeoutput"> 
+ans = orientation (432 -&gt; xyz)
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+    45    0    0    0
+ 
+</pre><p>This issue does not only apply to the mean but actually to all statistical methods that work well for vectorial data and that
+            one would like to apply to orientation data.
+         </p>
+         <h2>Defining an Embedding<a name="6"> </a></h2>
+         <p>The crucial idea of an embedding is to replace the vectorial representation by a higher dimensional tensorial representation
+            that preserves the geometry and the distances of the orientation space as good as possible. In MTEX such an embedding <img src="OrientationEmbeddings_eq10803474573487454611.png">  of an orientation <tt>ori</tt> is defined by calling the function <tt><a href="embedding.embedding.html">embedding</a></tt>.
+         </p><pre class="codeinput">e1 = embedding(ori1);
+e2 = embedding(ori2)</pre><pre class="codeoutput"> 
+e2 = embedding  
+ symmetry: 432
+ ranks: 4
+ dim: 9
+ size: 100000 x 1
+</pre><p>This creates variables <tt>e1</tt> and <tt>e2</tt> of type <tt><a href="embedding.embedding.html">embedding</a></tt> that behaves like lists of vectors, i.e., they can be <a href="embedding.sum.html">summed</a>, <a href="embedding.rotate.html">rotated</a>, <a href="embedding.mtimes.html">scaled</a> and one can compute their <a href="embedding.dot.html">inner product</a>. Lets have a look at the Euclidean distances $\lVert\mathcal E(\mathtt{ori_1}) - \mathcal E(\mathtt{ori_2}) \rVert_2$ between the embeddings <tt>e1</tt> and <tt>e2</tt></p><pre class="error">Error updating Text.
+
+ String scalar or character vector must have valid interpreter syntax: 
+$\lVert\mathcal E(\mathtt{ori_1}) - \mathcal E(\mathtt{ori_2}) \rVert_2$
+</pre><pre class="codeinput"><span class="comment">% the Euclidean distance in the embedding</span>
+distE = norm(e1-e2) ./ degree;
+
+close <span class="string">all</span>
+scatter(omega,distE)
+xlabel(<span class="string">'$\omega(\mathtt{ori}_1,\mathtt{ori}_2)$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)
+ylabel(<span class="string">'$||\mathcal E(\mathtt{ori_1}) - \mathcal E(\mathtt{ori_2}) ||_2$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)</pre><img src="OrientationEmbeddings_02.png"> <p>We observe that the distance in the embedding differs slightly from the misorientation angle. However, especially for small
+            misorientation angles the approximation is very good.
+         </p>
+         <p>Lets go back to our second example of averaging the orientations <img src="OrientationEmbeddings_eq10839130049515145213.png">  and <img src="OrientationEmbeddings_eq00501762068014944556.png"> . If we compute the embedding of both orientations, average the resulting tensors and <a href="embedding.orientation.html">project the mean tensor back to an orientation</a> we end up with the correct result <img src="OrientationEmbeddings_eq06304280471703095784.png"> .
+         </p><pre class="codeinput"><span class="comment">% compute the embedding of the two orientations</span>
+e = embedding(ori);
+
+<span class="comment">% take the mean of the embeddings</span>
+me = mean(e);
+
+<span class="comment">% computet an orientation from the mean embedding</span>
+orientation(me)</pre><pre class="codeoutput"> 
+ans = orientation (432 -&gt; xyz)
+ 
+  Bunge Euler angles in degree
+  phi1  Phi phi2 Inv.
+   315    0    0    0
+ 
+</pre><h2>Basic Properties<a name="9"> </a></h2>
+         <p>By construction the embeddings of all orientations have the same norm.</p><pre class="codeinput">norm(embedding(orientation.rand(5,cs))).'</pre><pre class="codeoutput">ans =
+    0.3873    0.3873    0.3873    0.3873    0.3873
+</pre><p>In other words the embeddings are located on the surface of a ball with a radius <img src="OrientationEmbeddings_eq18395870634560867587.png"> . When computing the mean from a list of embeddings the resulting tensor has in general a smaller norm, i.e., is inside this
+            ball. Similarly as in spherical statistics the norm of the mean of the embeddings can be interpreted as a measure of the dispersion
+            of the orientations. If the norm is close to 1 the orientations are tightly concentrated around a prefered orientation, whereas
+            if the norm is close to zero some of the orientations are at maximum distance to each other.
+         </p>
+         <p>Lets compare the norm</p>
+         <p>$$ n=\left\lVert\frac{1}{N} \sum_{i=1}^N \mathcal E(\mathtt{ori}_i) \right\rVert$$</p><pre class="error">Error updating Text.
+
+ String scalar or character vector must have valid interpreter syntax: 
+$$ n=\left\lVert\frac{1}{N} \sum_{i=1}^N \mathcal E(\mathtt{ori}_i) \right\rVert$$
+</pre><p>of the mean embedding with the standard deviation</p>
+         <p><img src="OrientationEmbeddings_eq02645044300496837269.png"> </p>
+         <p>where <img src="OrientationEmbeddings_eq09774774570119076663.png">  denotes the misorientation angle between the orientations <img src="OrientationEmbeddings_eq06973765535077069733.png">  and the mean orientation <img src="OrientationEmbeddings_eq14754995683175270383.png"> .
+         </p><pre class="codeinput"><span class="comment">% genrate samples of orientations of different dispersion</span>
+n = []; sigma = [];
+<span class="keyword">for</span> hw = logspace(-1,1.75,40)*degree
+
+  psi = deLaValleePoussinKernel(<span class="string">'halfwidth'</span>,hw);
+  odf = unimodalODF(orientation.rand(cs),psi);
+  ori = discreteSample(odf,round(1000*(hw*6)^3));
+
+  n(end+1) = norm(mean(embedding(ori)));
+
+  sigma(end+1) = std(ori);
+  progress(length(sigma),40);
+
+<span class="keyword">end</span>
+
+plot(sigma,real(sqrt(1-n)),<span class="string">'linewidth'</span>,2)
+xlabel(<span class="string">'standard deviation $\sigma$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)
+ylabel(<span class="string">'$\sqrt{1-n}$'</span>,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)</pre><img src="OrientationEmbeddings_03.png"> <p>It appears as if the norm of the mean embedding is a function of the standaerd deviation. However, the reason for this false
+            relationship is that we have generated the orientations out of a single family of random variables - <a href="UnimodalODFs.html">unimodal de la Vallee Poussin distributed density functions</a>. A broader family of density function are the <a href="BinghamODFs.html">Bingham distributions</a>. Lets repeat the experiment for this family.
+         </p><pre class="codeinput"><span class="comment">% genrate ODF of different halfwidth</span>
+n = []; sigma = [];
+<span class="keyword">for</span> k = 1:2:600
+
+  kappa = rand(4,1);
+  kappa = k * kappa ./sum(kappa);
+  odf = BinghamODF(kappa,cs);
+  ori = discreteSample(odf,1000);
+
+  n(end+1) = norm(mean(embedding(ori)));
+  sigma(end+1) = std(ori);
+
+<span class="keyword">end</span>
+
+hold <span class="string">on</span>
+scatter(sigma,sqrt(1-n),<span class="string">'linewidth'</span>,2)
+hold <span class="string">off</span></pre><img src="OrientationEmbeddings_04.png"> <p>We observe that there is no one-to-one relatioenship between the discrete standard deviation.</p>
+         <h2>Operations<a name="14"> </a></h2>
+         <p>The following operations are supported for embeddings:</p>
+         <div>
+            <ul type="square">
+               <li><tt><a href="embedding.plus.html">+</a></tt>, <tt><a href="embedding.minus.html">-</a></tt>, <tt><a href="embedding.mtimes.html">*</a></tt>, <tt><a href="embedding.times.html">.*</a></tt>, <tt>./</tt></li>
+               <li><a href="embedding.sum.html"><tt>sum</tt></a>, <a href="embedding.mean.html"><tt>mean</tt></a></li>
+               <li><a href="embedding.norm.html"><tt>norm</tt></a>, <a href="embedding.normalize.html"><tt>normalize</tt></a></li>
+               <li><a href="embedding.dot.html"><tt>dot</tt></a></li>
+               <li><a href="embedding.rotate.html"><tt>rotate</tt></a>, <a href="embedding.rotate_outer.html"><tt>rotate_outer</tt></a></li>
+            </ul>
+         </div>
+         <h2>Rerference<a name="15"> </a></h2>
+         <p>The theory behind these embeddings is explained in the paper</p>
+         <div>
+            <ul type="square">
+               <li>R. Arnold, P. E. Jupp, H. Schaeben, Statistics of ambiguous rotations, Journal of Multivariate Analysis (165), 2018</li>
+               <li>R. Hielscher, L. Lippert, <i>Isometric Embeddings of Quotients of the Rotation Group Modulo Finite Symmetries</i>, <a href="https://arxiv.org/abs/2007.09664">arXiv:2007.09664</a>, 2020.
+               </li>
+            </ul>
+         </div>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

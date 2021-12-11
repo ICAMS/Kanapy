@@ -1,0 +1,110 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>calcGraph ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: parentGrainReconstructor.calcGraph -->
+      <!-- HEADSTUFF: parentGrainReconstructor.calcGraph -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:parentGrainReconstructor.calcGraph">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit parentGrainReconstructor/calcGraph">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">calcGraph</h1>
+         <div class="subheading"></div>
+         <p>set up similarity graph for parent grain reconstruction</p>
+         <h2>Description<a name="3"> </a></h2>
+         <p>The weights of the graph are computed from a cummulative gaussion distribution with mean given by the option <tt>'threshold'</tt> and variance given by the option <tt>'tolerance'</tt></p>
+         <h2>Syntax<a name="4"> </a></h2><pre class="codeinput">job.calcGraph</pre><h2>Input<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>job</tt>
+            </td>
+            <td>
+            <tt><a href="parentGrainReconstructor.parentGrainReconstructor.html">parentGrainReconstructor</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>job.graph</tt>
+            </td>
+            <td>
+            <tt>adjacency matrix of the graph</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Options<a name="7"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>threshold</tt>
+            </td>
+            <td>
+            <tt>misfit at which the probability is set to 0.5, default is 2 degree</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>tolerance</tt>
+            </td>
+            <td>
+            <tt>range around the threshold where the probability increases from 0 to 1</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>noC2C</tt>
+            </td>
+            <td>
+            <tt>ignore child to child grain boundaries</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>noP2C</tt>
+            </td>
+            <td>
+            <tt>ignore parent to child grain boundaries</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

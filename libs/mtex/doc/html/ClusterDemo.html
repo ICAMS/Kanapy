@@ -1,0 +1,110 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Cluster demo ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: ClusterDemo -->
+      <!-- HEADSTUFF: ClusterDemo -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:ClusterDemo">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Cluster demo</h1>
+         <div class="subheading"></div><pre class="codeinput">cs  = crystalSymmetry(<span class="string">'432'</span>);
+odf = unimodalODF(orientation.rand(2,cs),<span class="string">'halfwidth'</span>,5*degree)
+
+
+ori = odf.discreteSample(10000)
+
+r = ori * Miller(1,0,0,odf.CS)
+
+<span class="comment">%scatter(r)</span></pre><pre class="codeoutput"> 
+odf = ODF  
+  crystal symmetry : 432
+ 
+  Radially symmetric portion:
+    kernel: de la Vallee Poussin, halfwidth 5&deg;
+    center: Rotations: 2 x 1
+    weight: 1
+ 
+ 
+ori = orientation (432 -&gt; xyz)
+  size: 10000 x 1
+ 
+r = vector3d  
+ size: 10000 x 1
+</pre><pre class="codeinput">[cId,center] = calcCluster(r,<span class="string">'numCluster'</span>,12);
+
+plotCluster(r,cId)
+
+annotate(center,<span class="string">'add2all'</span>)</pre><img src="ClusterDemo_01.png"> <pre class="codeinput">r.antipodal = true
+
+[cId,center] = calcCluster(r,<span class="string">'numCluster'</span>,6);
+
+plotCluster(r,cId)
+
+annotate(center,<span class="string">'add2all'</span>)</pre><pre class="codeoutput"> 
+r = vector3d  
+ size: 10000 x 1
+ antipodal: true
+</pre><img src="ClusterDemo_02.png"> <pre class="codeinput">h = ori \ vector3d(1,2,0);
+
+[cId,center] = calcCluster(h,<span class="string">'numCluster'</span>,2);
+
+plotCluster(h.project2FundamentalRegion,cId,<span class="string">'fundamentalSector'</span>)
+
+annotate(center,<span class="string">'add2all'</span>)</pre><img src="ClusterDemo_03.png"> <pre class="codeinput">[cId,center] = calcCluster(ori,<span class="string">'numCluster'</span>,2,<span class="string">'method'</span>,<span class="string">'hierarchical'</span>);
+
+plotCluster(r,cId)
+
+annotate(center * Miller(1,0,0,ori.CS),<span class="string">'add2all'</span>)</pre><img src="ClusterDemo_04.png"> <pre class="codeinput">[cId,center] = calcCluster(ori,<span class="string">'numCluster'</span>,2,<span class="string">'method'</span>,<span class="string">'odf'</span>);
+
+plotCluster(r,cId)
+
+annotate(center * Miller(1,0,0,ori.CS),<span class="string">'add2all'</span>)</pre><pre class="codeoutput">...</pre><img src="ClusterDemo_05.png"> <pre class="codeinput"><span class="comment">% compute the full distance matrix</span>
+d = angle_outer(r,r);
+d(d&lt;0.01) = 0;
+<span class="comment">%d = d(triu(true(size(d)),1));</span>
+d = squareform(d);
+
+
+<span class="comment">% use the statistic toolbox</span>
+z = linkage(d,<span class="string">'single'</span>);
+
+<span class="comment">%cId = cluster(z,'cutoff',30*degree);</span>
+cId = cluster(z,<span class="string">'maxclust'</span>,12);
+
+plotCluster(r,cId)</pre><pre class="codeinput"><span class="keyword">function</span> plotCluster(r,cId,varargin)
+
+scatter(r(cId==1),<span class="string">'MarkerFaceColor'</span>,ind2color(1),varargin{:})
+hold <span class="string">on</span>
+<span class="keyword">for</span> i = 2:max(cId)
+  scatter(r(cId==i),<span class="string">'add2all'</span>,<span class="string">'MarkerFaceColor'</span>,ind2color(i),varargin{:})
+<span class="keyword">end</span>
+hold <span class="string">off</span>
+<span class="keyword">end</span></pre><p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

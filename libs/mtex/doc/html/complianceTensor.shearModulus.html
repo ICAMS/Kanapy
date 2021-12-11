@@ -1,0 +1,116 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>shearModulus ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: complianceTensor.shearModulus -->
+      <!-- HEADSTUFF: complianceTensor.shearModulus -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:complianceTensor.shearModulus">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+               <td valign="baseline" align="right"><a href="matlab:edit complianceTensor/shearModulus">
+                     View Code</a></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">shearModulus</h1>
+         <div class="subheading"></div>
+         <p>shear modulus for an compliance tensor</p>
+         <h2>Description<a name="3"> </a></h2>
+         <p><img src="complianceTensor.shearModulus_eq16713770968848485732.png"> </p>
+         <h2>Syntax<a name="4"> </a></h2><pre class="codeinput">[GV,GR,GVRH] = shearModulus(S) <span class="comment">% the isotropic case</span></pre><pre class="codeinput">E = shearModulus(S,h,u) <span class="comment">% the anisotropic case with plane h and shear direction  u</span>
+E = shearModulus(S,[],u)
+E = shearModulus(S,h,[])</pre><h2>Input<a name="5"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>C</tt>
+            </td>
+            <td>
+            <tt>elastic <a href="stiffnessTensor.stiffnessTensor.html">stiffnessTensor</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>h</tt>
+            </td>
+            <td>
+            <tt>shear plane <a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>u</tt>
+            </td>
+            <td>
+            <tt>shear direction <a href="vector3d.vector3d.html">vector3d</a></tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h2>Output<a name="6"> </a></h2>
+         <p>
+            <table cellpadding="4" cellspacing="0" class="funcref" width="100%">
+            <tr>
+            <td width="100px">
+            <tt>E</tt>
+            </td>
+            <td>
+            <tt>shear modulus</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>GVoigt</tt>
+            </td>
+            <td>
+            <tt>Voigt effective shear modulus, upper bound</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>GReuss</tt>
+            </td>
+            <td>
+            <tt>Reuss effective shear modulus, lower bound</tt>
+            </td>
+            </tr>
+            <tr>
+            <td width="100px">
+            <tt>GHill</tt>
+            </td>
+            <td>
+            <tt>Hill effective shear modulus</tt>
+            </td>
+            </tr>
+            </table>
+            
+         </p>
+         <h3 class="seealso">See also</h3>
+         <p><a href="complianceTensor.YoungsModulus.html">complianceTensor.YoungsModulus</a>, <a href="complianceTensor.volumeCompressibility.html">complianceTensor.volumeCompressibility</a>, <a href="complianceTensor.ChristoffelTensor.html">complianceTensor.ChristoffelTensor</a></p>
+         <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>

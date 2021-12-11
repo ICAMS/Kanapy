@@ -1,0 +1,96 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <title>Boundary Curvature ( Toolbox)
+         
+      </title>
+      <!-- DOCNAME:  Toolbox -->
+      <meta name="chunktype" content="refpage">
+      <!-- CHUNKNAME: BoundaryCurvature -->
+      <!-- HEADSTUFF: BoundaryCurvature -->
+      <!-- HEADSTUFF -->
+      <meta name="refentity" content="method:BoundaryCurvature">
+      <meta http-equiv="Content-Script-Type" content="text/javascript">
+      <meta name="toctype" content="fcn">
+      <link rel="stylesheet" href="style.css"><script language="JavaScript" src="docscripts.js"></script></head>
+   <body><a name="top_of_page"></a><div>
+         <table class="nav" summary="Navigation aid" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline"></td>
+            </tr>
+         </table>
+         <p style="font-size:1px;"></p>
+      </div>
+      <div class="content">
+         <h1 class="refname">Boundary Curvature</h1>
+         <div class="subheading"></div>
+         <p>The curvature of a curve is defined by fitting localy a circle and taking one over its radius. Hence, a straight line will
+            have curvature 0 and a circle of radius <img src="BoundaryCurvature_eq17262503285923366262.png">  will have constant curvature <img src="BoundaryCurvature_eq11068084131267532245.png">  everywhere. Hence, the unit of the curvature computed in MTEX is one over the unit of the EBSD coordinates which is usually
+            <img src="BoundaryCurvature_eq10042822501118733903.png"> . Let us demonstrate boundary curvature use some artifical grain shapes
+         </p><pre class="codeinput"><span class="comment">% import the artificial grain shapes</span>
+mtexdata <span class="string">testgrains</span> <span class="string">silent</span>
+
+<span class="comment">% select and smooth a few interesting grains</span>
+grains = smooth(grains(<span class="string">'id'</span>,[2 3 9 11 15 16 18 23 31 33 38 40]),10);
+
+plotx2east</pre><p>Therefore, we first extract all boundary segments and colorize them according to their curvature.</p><pre class="codeinput"><span class="comment">% extract boundary segments</span>
+gB = grains.boundary;
+
+<span class="comment">% plot some dark background</span>
+plot(gB,<span class="string">'linewidth'</span>,10,<span class="string">'micronbar'</span>,<span class="string">'off'</span>);
+
+<span class="comment">% colorize boundaries by curvature</span>
+hold <span class="string">on</span>
+plot(gB,gB.curvature,<span class="string">'linewidth'</span>,6);
+hold <span class="string">off</span>
+
+<span class="comment">% set a specific colormap</span>
+mtexColorMap(<span class="string">'blue2red'</span>)
+setColorRange(0.25*[-1,1])
+mtexColorbar</pre><img src="BoundaryCurvature_01.png"> <p>Note that all the curvature values are positive. This allways happens if the curvature is computed for multiple grains at
+            one. If we consider single grains and compute the curvature of single grain boundaries the sign of the values indicates whether
+            the grain boundary is convex for concav with respect to the specifc grain.
+         </p><pre class="codeinput"><span class="keyword">for</span> k = 1:length(grains)
+
+  gB = grains(k).boundary;
+  plot(gB,<span class="string">'linewidth'</span>,10,<span class="string">'micronbar'</span>,<span class="string">'off'</span>);
+  hold <span class="string">on</span>
+  plot(gB,gB.curvature,<span class="string">'linewidth'</span>,6);
+
+<span class="keyword">end</span>
+hold <span class="string">off</span>
+
+mtexColorMap(<span class="string">'blue2red'</span>)
+setColorRange(0.25*[-1,1])
+drawNow(gcm,<span class="string">'figSize'</span>,getMTEXpref(<span class="string">'figSize'</span>))</pre><img src="BoundaryCurvature_02.png"> <p>Finally we illustrate the ussage of the <a href="grainBoundary.curvature.html">curvature</a> command at a real EBSD map.
+         </p><pre class="codeinput"><span class="comment">% import data and reconstruct grains</span>
+mtexdata <span class="string">titanium</span> <span class="string">silent</span>
+[grains,ebsd.grainId] = calcGrains(ebsd(<span class="string">'indexed'</span>));
+grains = smooth(grains,5);
+
+<span class="comment">% plot an ipf map</span>
+plot(ebsd(<span class="string">'indexed'</span>),ebsd(<span class="string">'indexed'</span>).orientations)
+
+hold <span class="string">on</span>
+
+<span class="comment">% plot grain boundaries</span>
+plot(grains.boundary,<span class="string">'linewidth'</span>,4)
+
+<span class="comment">% colorize the grain boundaries of grain 42 according to curvature</span>
+plot(grains(42).boundary,grains(42).boundary.curvature(5),<span class="string">'linewidth'</span>,6)
+hold <span class="string">off</span>
+mtexColorMap(<span class="string">'blue2red'</span>)
+setColorRange(0.1*[-1,1])
+mtexColorbar</pre><img src="BoundaryCurvature_03.png"> <p style="font-size:1px;"></p>
+         <table class="footer" border="0" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+               <td valign="baseline" align="right"></td>
+            </tr>
+         </table>
+      </div>
+   </body>
+</html>
