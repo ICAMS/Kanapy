@@ -26,8 +26,8 @@ fname = 'ebsd_316L.ang';
 ebsd_r = EBSD.load(fname,CS,'interface','ang',...
   'convertSpatial2EulerReferenceFrame');
 
-
-ebsd = ebsd_filter(ebsd_r,'indexed');
+ebsd = ebsd_r('indexed');
+%ebsd = ebsd_filter(ebsd_r,'indexed');
 
 
 grains_r = calcGrains(ebsd,'boundary','tight','angle',5*degree);
