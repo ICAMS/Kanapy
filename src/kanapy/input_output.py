@@ -14,7 +14,7 @@ from scipy.spatial.distance import euclidean
 from kanapy.entities import Ellipsoid, Cuboid
 
 
-def particleStatGenerator(stats_dict, save_files=False):
+def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=False):
     r"""
     Generates ellipsoid size distribution (Log-normal) based on user-defined statistics
 
@@ -46,6 +46,10 @@ def particleStatGenerator(stats_dict, save_files=False):
     # Extract grain diameter statistics info from input file 
     sd = stats_dict["Equivalent diameter"]["std"]
     mean = stats_dict["Equivalent diameter"]["mean"]
+    if "scale" in stats_dict["Equivalent diameter"]:
+        scale = stats_dict["Equivalent diameter"]["scale"]
+    else:
+        scale = None
     dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
     dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
     
@@ -53,8 +57,13 @@ def particleStatGenerator(stats_dict, save_files=False):
     # NOTE: SCIPY's lognorm takes in sigma & mu of Normal distribution
     # https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335
        
-    # Compute the Log-normal PDF & CDF.              
-    frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
+    # Compute the Log-normal PDF & CDF.
+    if scale is None:
+        scale = np.exp(mean)
+        loc = 0.
+    else:
+        loc = mean
+    frozen_lognorm = lognorm(s=sd, loc=loc, scale=scale)
     xaxis = np.linspace(0.1,200,1000)
     ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
         
@@ -77,14 +86,21 @@ def particleStatGenerator(stats_dict, save_files=False):
         ax.set_ylabel('Density', fontsize=18)
         ax.tick_params(labelsize=14)
         ax.axvline(dia_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(dia_cutoff_min))
-        ax.axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))    
+        ax.axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))
+        if gs_data is not None:
+            ind = np.nonzero(gs_data<x_lim)[0]
+            ax.hist(gs_data[ind], bins=80, density=True, label='experimental data')
         plt.title("Grain equivalent diameter distribution", fontsize=20)     
         plt.legend(fontsize=16)
         plt.show()
     elif stats_dict["Grain type"] == "Elongated":       
         # Extract mean grain aspect ratio value info from input file 
         sd_AR = stats_dict["Aspect ratio"]["std"]
-        mean_AR = stats_dict["Aspect ratio"]["mean"]        
+        mean_AR = stats_dict["Aspect ratio"]["mean"]
+        if "scale" in stats_dict["Aspect ratio"]:
+            scale_AR = stats_dict["Aspect ratio"]["scale"]
+        else:
+            scale_AR = None
         ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]  
     
@@ -100,21 +116,30 @@ def particleStatGenerator(stats_dict, save_files=False):
         ax[0].set_ylabel('Density', fontsize=18)
         ax[0].tick_params(labelsize=14)
         ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(dia_cutoff_min))
-        ax[0].axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))    
+        ax[0].axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))
+        if gs_data is not None:
+            ax[0].hist(gs_data, bins=80, density=True, label='experimental data')
         ax[0].legend(fontsize=14) 
         
         # Plot aspect ratio statistics   
-        # Compute the Log-normal PDF & CDF.              
-        frozen_lognorm = lognorm(s=sd_AR, scale=np.exp(mean_AR))
-        xaxis = np.linspace(0.1,20,1000)
-        ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)                                          
+        # Compute the Log-normal PDF & CDF.  
+        if scale_AR is None:
+            scale_AR = np.exp(mean_AR)
+            loc_AR = 0.
+        else:
+            loc_AR = mean_AR
+        frozen_lognorm = lognorm(s=sd_AR, loc=loc_AR, scale=scale_AR)
+        xaxis = np.linspace(0.5,10,1000)
+        ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
         ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)    
         ax[1].set_xlabel('Aspect ratio', fontsize=18)
         ax[1].set_ylabel('Density', fontsize=18)
         ax[1].tick_params(labelsize=14)            
         ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(ar_cutoff_min))
-        ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(ar_cutoff_max))    
+        ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(ar_cutoff_max))
+        if ar_data is not None:
+            ax[1].hist(ar_data, bins=15, density=True, label='experimental data')
         ax[1].legend(fontsize=14)
         plt.show()
     else:
@@ -162,6 +187,10 @@ def RVEcreator(stats_dict, save_files=False):
     # Extract grain diameter statistics info from input file 
     sd = stats_dict["Equivalent diameter"]["std"]
     mean = stats_dict["Equivalent diameter"]["mean"]
+    if "scale" in stats_dict["Equivalent diameter"]:
+        scale = stats_dict["Equivalent diameter"]["scale"]
+    else:
+        scale = None
     dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
     dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]    
             
@@ -182,8 +211,13 @@ def RVEcreator(stats_dict, save_files=False):
     if output_units != 'mm' and output_units != 'um':
         raise ValueError('Output units can only be "mm" or "um"!')  
                 
-    # Compute the Log-normal PDF & CDF.              
-    frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
+    # Compute the Log-normal PDF & CDF.
+    if scale is None:
+        scale = np.exp(mean)
+        loc = 0.
+    else:
+        loc = mean          
+    frozen_lognorm = lognorm(s=sd, loc=loc, scale=scale)
     xaxis = np.linspace(0.1,200,1000)
     ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
             
@@ -254,7 +288,11 @@ def RVEcreator(stats_dict, save_files=False):
     elif stats_dict["Grain type"] == "Elongated":     
         # Extract mean grain aspect ratio value info from dict
         sd_AR = stats_dict["Aspect ratio"]["std"]
-        mean_AR = stats_dict["Aspect ratio"]["mean"]        
+        mean_AR = stats_dict["Aspect ratio"]["mean"]  
+        if "scale" in stats_dict["Aspect ratio"]:
+            scale_AR = stats_dict["Aspect ratio"]["scale"]
+        else:
+            scale_AR = None
         ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]   
         
@@ -282,7 +320,13 @@ def RVEcreator(stats_dict, save_files=False):
         finalAR = []
         num = int(totalEllipsoids)
         while True:
-            ar = np.random.lognormal(mean_AR, sd_AR, num)  
+            #ar = np.random.lognormal(mean_AR, sd_AR, num)
+            if scale_AR is None:
+                scale_AR = np.exp(mean_AR)
+                loc_AR = 0.
+            else:
+                loc_AR = mean_AR
+            ar = lognorm.rvs(sd_AR, loc=loc_AR, scale=scale_AR, size=num)
             index_array = np.where((ar >= ar_cutoff_min) & (ar <= ar_cutoff_max))
             AR = ar[index_array].tolist()            
             finalAR.extend(AR)                                                

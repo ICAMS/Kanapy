@@ -46,11 +46,11 @@ class Microstructure:
         self.particle_data, self.RVE_data, self.simulation_data = \
             RVEcreator(descriptor, save_files=save_files)
             
-    def create_stats(self, descriptor=None, save_files=False):    
+    def create_stats(self, descriptor=None, gs_data=None, ar_data=None, save_files=False):    
         """ Generates particle statistics based on the data provided in the input file."""
         if descriptor is None:
             descriptor = self.descriptor  
-        particleStatGenerator(descriptor, save_files=save_files)
+        particleStatGenerator(descriptor, gs_data=gs_data, ar_data=ar_data, save_files=save_files)
         
     def pack(self, particle_data=None, RVE_data=None, simulation_data=None, 
              save_files=False):
