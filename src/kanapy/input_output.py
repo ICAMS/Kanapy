@@ -59,13 +59,12 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
        
     # Compute the Log-normal PDF & CDF.
     if scale is None:
-        scale = np.exp(mean)
-        loc = 0.
+        frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
     else:
-        loc = mean
-    frozen_lognorm = lognorm(s=sd, loc=loc, scale=scale)
+        frozen_lognorm = lognorm(s=sd, loc=mean, scale=scale)
+    
     xaxis = np.linspace(0.1,200,1000)
-    ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
+    ypdf = frozen_lognorm.pdf(xaxis)
         
     # Find the location at which CDF > 0.99    
     #cdf_idx = np.where(ycdf > 0.99)[0][0]
@@ -124,13 +123,11 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
         # Plot aspect ratio statistics   
         # Compute the Log-normal PDF & CDF.  
         if scale_AR is None:
-            scale_AR = np.exp(mean_AR)
-            loc_AR = 0.
+            frozen_lognorm = lognorm(s=sd_AR, scale=np.exp(mean_AR))
         else:
-            loc_AR = mean_AR
-        frozen_lognorm = lognorm(s=sd_AR, loc=loc_AR, scale=scale_AR)
+            frozen_lognorm = lognorm(s=sd_AR, loc=mean_AR, scale=scale_AR)
         xaxis = np.linspace(0.5,10,1000)
-        ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
+        ypdf = frozen_lognorm.pdf(xaxis)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
         ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)    
         ax[1].set_xlabel('Aspect ratio', fontsize=18)
@@ -213,13 +210,12 @@ def RVEcreator(stats_dict, save_files=False):
                 
     # Compute the Log-normal PDF & CDF.
     if scale is None:
-        scale = np.exp(mean)
-        loc = 0.
+        frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
     else:
-        loc = mean          
-    frozen_lognorm = lognorm(s=sd, loc=loc, scale=scale)
+        frozen_lognorm = lognorm(s=sd, loc=mean, scale=scale)
+
     xaxis = np.linspace(0.1,200,1000)
-    ypdf, ycdf = frozen_lognorm.pdf(xaxis), frozen_lognorm.cdf(xaxis)
+    ycdf = frozen_lognorm.cdf(xaxis)
             
     # Get the mean value for each pair of neighboring points                
     xaxis = np.vstack([xaxis[1:], xaxis[:-1]]).mean(axis=0)
@@ -322,11 +318,9 @@ def RVEcreator(stats_dict, save_files=False):
         while True:
             #ar = np.random.lognormal(mean_AR, sd_AR, num)
             if scale_AR is None:
-                scale_AR = np.exp(mean_AR)
-                loc_AR = 0.
+                ar = lognorm.rvs(sd_AR, scale=np.exp(mean_AR), size=num)
             else:
-                loc_AR = mean_AR
-            ar = lognorm.rvs(sd_AR, loc=loc_AR, scale=scale_AR, size=num)
+                ar = lognorm.rvs(sd_AR, loc=mean_AR, scale=scale_AR, size=num)
             index_array = np.where((ar >= ar_cutoff_min) & (ar <= ar_cutoff_max))
             AR = ar[index_array].tolist()            
             finalAR.extend(AR)                                                
