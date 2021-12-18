@@ -97,7 +97,7 @@ kwargs = dict(
         'Programming Language :: Python :: 3.8'
     ],     
     description="A python package for generating complex synthetic polycrystalline microstructures.",
-    install_requires=['numpy', 'matplotlib', 'scipy', 'seaborn', 'codecov', 'click', 'tqm',
+    install_requires=['numpy', 'matplotlib', 'scipy', 'seaborn', 'codecov', 'click', 'tqdm',
                       'pytest-cov', 'pytest-mock', 'pytest'],
     #long_description=readme + '\n\n' + history,
     packages=find_packages('src'),
