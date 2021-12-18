@@ -136,11 +136,16 @@ class Microstructure:
         self.gv_sorted_values, self.shared_area = \
             extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=save_files)
         
-    def plot_stats(self, data=None, save_files=False):
+    def plot_stats(self, data=None, gs_data=None, gs_param=None, 
+                          ar_data=None, ar_param=None, save_files=False):
         """ Plots the particle- and grain diameter attributes for statistical comparison."""   
         if data is None:
             data = self.res_data
-        plot_output_stats(data, save_files=save_files)
+        if data is None:
+            raise ValueError('No microstructure data created yet. Run output_stats first.')
+        plot_output_stats(data, gs_data=gs_data, gs_param=gs_param,
+                          ar_data=ar_data, ar_param=ar_param,
+                          save_files=save_files)
 
     def output_abq(self, nodes=None, name=None, simulation_data=None, elmtDict=None, elmtSetDict=None, faces=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""    

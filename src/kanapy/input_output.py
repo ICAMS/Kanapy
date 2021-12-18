@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import defaultdict
-from scipy.stats import lognorm
+from scipy.stats import lognorm, gamma, norm
 from scipy.spatial import ConvexHull 
 from scipy.spatial.distance import euclidean
     
@@ -46,10 +46,10 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
     # Extract grain diameter statistics info from input file 
     sd = stats_dict["Equivalent diameter"]["std"]
     mean = stats_dict["Equivalent diameter"]["mean"]
-    if "scale" in stats_dict["Equivalent diameter"]:
-        scale = stats_dict["Equivalent diameter"]["scale"]
+    if "offs" in stats_dict["Equivalent diameter"]:
+        offs = stats_dict["Equivalent diameter"]["offs"]
     else:
-        scale = None
+        offs = None
     dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
     dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
     
@@ -58,10 +58,10 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
     # https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335
        
     # Compute the Log-normal PDF & CDF.
-    if scale is None:
+    if offs is None:
         frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
     else:
-        frozen_lognorm = lognorm(s=sd, loc=mean, scale=scale)
+        frozen_lognorm = lognorm(s=sd, loc=offs, scale=mean)
     
     xaxis = np.linspace(0.1,200,1000)
     ypdf = frozen_lognorm.pdf(xaxis)
@@ -96,10 +96,10 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
         # Extract mean grain aspect ratio value info from input file 
         sd_AR = stats_dict["Aspect ratio"]["std"]
         mean_AR = stats_dict["Aspect ratio"]["mean"]
-        if "scale" in stats_dict["Aspect ratio"]:
-            scale_AR = stats_dict["Aspect ratio"]["scale"]
+        if "offs" in stats_dict["Aspect ratio"]:
+            offs_AR = stats_dict["Aspect ratio"]["offs"]
         else:
-            scale_AR = None
+            offs_AR = None
         ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]  
     
@@ -122,10 +122,10 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
         
         # Plot aspect ratio statistics   
         # Compute the Log-normal PDF & CDF.  
-        if scale_AR is None:
+        if offs_AR is None:
             frozen_lognorm = lognorm(s=sd_AR, scale=np.exp(mean_AR))
         else:
-            frozen_lognorm = lognorm(s=sd_AR, loc=mean_AR, scale=scale_AR)
+            frozen_lognorm = gamma(sd_AR, loc=offs_AR, scale=mean_AR)
         xaxis = np.linspace(0.5,10,1000)
         ypdf = frozen_lognorm.pdf(xaxis)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
@@ -184,10 +184,10 @@ def RVEcreator(stats_dict, save_files=False):
     # Extract grain diameter statistics info from input file 
     sd = stats_dict["Equivalent diameter"]["std"]
     mean = stats_dict["Equivalent diameter"]["mean"]
-    if "scale" in stats_dict["Equivalent diameter"]:
-        scale = stats_dict["Equivalent diameter"]["scale"]
+    if "offs" in stats_dict["Equivalent diameter"]:
+        offs = stats_dict["Equivalent diameter"]["offs"]
     else:
-        scale = None
+        offs = None
     dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
     dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]    
             
@@ -209,10 +209,10 @@ def RVEcreator(stats_dict, save_files=False):
         raise ValueError('Output units can only be "mm" or "um"!')  
                 
     # Compute the Log-normal PDF & CDF.
-    if scale is None:
+    if offs is None:
         frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
     else:
-        frozen_lognorm = lognorm(s=sd, loc=mean, scale=scale)
+        frozen_lognorm = lognorm(s=sd, loc=offs, scale=mean)
 
     xaxis = np.linspace(0.1,200,1000)
     ycdf = frozen_lognorm.cdf(xaxis)
@@ -238,7 +238,7 @@ def RVEcreator(stats_dict, save_files=False):
     # Total number of ellipsoids
     num = np.divide(K*(RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
     num = np.rint(num).astype(int)                  # Round to the nearest integer    
-    totalEllipsoids = np.sum(num)                   # Total number of ellipsoids
+    totalEllipsoids = int(np.sum(num))              # Total number of ellipsoids
     
     # Duplicate the diameter values
     eq_Dia = np.repeat(eq_Dia, num)        
@@ -270,7 +270,7 @@ def RVEcreator(stats_dict, save_files=False):
         print("    Please increase the voxel numbers (OR) decrease the RVE side lengths\n")
         sys.exit(0)                     
     
-    print('    Total number of grains        = {}'.format(int(totalEllipsoids)))
+    print('    Total number of grains        = {}'.format(totalEllipsoids))
     print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
     print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
     print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
@@ -279,16 +279,16 @@ def RVEcreator(stats_dict, save_files=False):
     if stats_dict["Grain type"] == "Equiaxed":
 
         # Create dictionaries to store the data generated
-        particle_data = {'Type': stats_dict["Grain type"], 'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia)}
+        particle_data = {'Type': stats_dict["Grain type"], 'Number': totalEllipsoids, 'Equivalent_diameter': list(eq_Dia)}
         
     elif stats_dict["Grain type"] == "Elongated":     
         # Extract mean grain aspect ratio value info from dict
         sd_AR = stats_dict["Aspect ratio"]["std"]
         mean_AR = stats_dict["Aspect ratio"]["mean"]  
-        if "scale" in stats_dict["Aspect ratio"]:
-            scale_AR = stats_dict["Aspect ratio"]["scale"]
+        if "offs" in stats_dict["Aspect ratio"]:
+            offs_AR = stats_dict["Aspect ratio"]["offs"]
         else:
-            scale_AR = None
+            offs_AR = None
         ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]   
         
@@ -301,32 +301,30 @@ def RVEcreator(stats_dict, save_files=False):
         # Tilt angle statistics      
         # Sample from Normal distribution: It takes mean and std of normal distribution                                                     
         tilt_angle = []
-        num = int(totalEllipsoids)
-        while True:
-            tilt = np.random.normal(mean_Ori, std_Ori, num)
+        num = totalEllipsoids
+        while num>0:
+            tilt = norm.rvs(scale=std_Ori, loc=mean_Ori, size=num)
             index_array = np.where((tilt >= ori_cutoff_min) & (tilt <= ori_cutoff_max))
             TA = tilt[index_array].tolist()            
             tilt_angle.extend(TA)                                                
-            num = int(totalEllipsoids) - len(tilt_angle)            
-            if len(tilt_angle) >= int(totalEllipsoids):
-                break  
+            num = totalEllipsoids - len(tilt_angle)            
                 
         # Aspect ratio statistics    
-        # Sample from lognormal distribution: It takes mean and std of the underlying normal distribution                                                     
+        # Sample from lognormal or gamma distribution: 
+        # it takes mean, std and scale of the underlying normal distribution                                                     
         finalAR = []
-        num = int(totalEllipsoids)
-        while True:
+        num = totalEllipsoids
+        while num>0:
             #ar = np.random.lognormal(mean_AR, sd_AR, num)
-            if scale_AR is None:
+            if offs_AR is None:
                 ar = lognorm.rvs(sd_AR, scale=np.exp(mean_AR), size=num)
             else:
-                ar = lognorm.rvs(sd_AR, loc=mean_AR, scale=scale_AR, size=num)
+                ar = gamma.rvs(sd_AR, loc=offs_AR, scale=mean_AR, size=num)
             index_array = np.where((ar >= ar_cutoff_min) & (ar <= ar_cutoff_max))
             AR = ar[index_array].tolist()            
             finalAR.extend(AR)                                                
-            num = int(totalEllipsoids) - len(finalAR)            
-            if len(finalAR) >= int(totalEllipsoids):
-                break                
+            num = totalEllipsoids - len(finalAR)            
+               
         finalAR = np.array(finalAR)
 
         # Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b    
@@ -335,7 +333,7 @@ def RVEcreator(stats_dict, save_files=False):
         minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)                                                       
 
         # Create dictionaries to store the data generated
-        particle_data = {'Type': stats_dict["Grain type"], 'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
+        particle_data = {'Type': stats_dict["Grain type"], 'Number': totalEllipsoids, 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
                          'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
     else:
         raise ValueError('The value for "Grain type" must be either "Equiaxed" or "Elongated".')
@@ -637,15 +635,14 @@ def write_position_weights(file_num):
                 values = [values[0]] + int_values
 
                 if '_' in values[0]:
-                    # Duplicates exists (ignore them when writing position and weight files)
+                    # Duplicates exists (ignore them when writing position 
+                    # and weight files)
                     continue
                 else:
                     count += 1
                     iden = count
-                    a, b, c = values[4], values[5], values[6]
-                    x, y, z = values[1], values[2], values[3]
-
-                    par_dict[iden] = [x, y, z, a]
+                    par_dict[iden] = [values[1], values[2], 
+                                      values[3], values[4]]
 
     with open('sphere_positions.txt', 'w') as fd:
         for key, value in par_dict.items():
@@ -768,8 +765,8 @@ def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain
     print('---->DONE!\n')                                                                                    
     return
         
-def write_output_stat(nodes_v, elmtDict, elmtSetDict, particle_data, RVE_data, \
-                  simulation_data, save_files=False):
+def write_output_stat(nodes_v, elmtDict, elmtSetDict, particle_data, RVE_data,\
+                      simulation_data, save_files=False):
     r"""
     Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters for comparison
     and writes them to 'output_statistics.json' file. 
@@ -1070,7 +1067,8 @@ def l1_error_est(**kwargs):
         return l1_value                     
     '''
 
-def plot_output_stats(dataDict, save_files=False):
+def plot_output_stats(dataDict, gs_data=None, gs_param=None, 
+                      ar_data=None, ar_param=None, save_files=False):
     r"""
     Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots the distributions                    
     """ 
@@ -1142,87 +1140,96 @@ def plot_output_stats(dataDict, save_files=False):
                 
         
     elif dataDict['Grain type'] == 'Elongated':
-        par_eqDia = np.sort(np.asarray(dataDict['Particle_Equivalent_diameter']))        
-        grain_eqDia = np.sort(np.asarray(dataDict['Grain_Equivalent_diameter']))
+        par_eqDia = np.sort(dataDict['Particle_Equivalent_diameter'])      
+        grain_eqDia = np.sort(dataDict['Grain_Equivalent_diameter'])
             
-        par_majDia = np.sort(np.asarray(dataDict['Particle_Major_diameter']))
-        par_minDia = np.sort(np.asarray(dataDict['Particle_Minor_diameter']))
+        #par_majDia = np.sort(np.asarray(dataDict['Particle_Major_diameter']))
+        #par_minDia = np.sort(np.asarray(dataDict['Particle_Minor_diameter']))
     
-        grain_majDia = np.sort(np.asarray(dataDict['Grain_Major_diameter']))
-        grain_minDia = np.sort(np.asarray(dataDict['Grain_Minor_diameter']))
+        #grain_majDia = np.sort(np.asarray(dataDict['Grain_Major_diameter']))
+        #grain_minDia = np.sort(np.asarray(dataDict['Grain_Minor_diameter']))
         
         # Convert to micro meter for plotting   
         if dataDict['Unit_scale'] == 'mm':            
-            par_eqDia, grain_eqDia = par_eqDia*1000, grain_eqDia*1000
-            par_majDia, grain_majDia = par_majDia*1000, grain_majDia*1000
-            par_minDia, grain_minDia = par_minDia*1000, grain_minDia*1000        
+            par_eqDia *= 1000
+            grain_eqDia *= 1000
+            #par_majDia, grain_majDia = par_majDia*1000, grain_majDia*1000
+            #par_minDia, grain_minDia = par_minDia*1000, grain_minDia*1000        
                 
         # Concatenate corresponding arrays to compute shared bins
         total_eqDia = np.concatenate([par_eqDia, grain_eqDia])                 
-        total_majDia = np.concatenate([par_majDia, grain_majDia]) 
-        total_minDia = np.concatenate([par_minDia, grain_minDia])
+        #total_majDia = np.concatenate([par_majDia, grain_majDia]) 
+        #total_minDia = np.concatenate([par_minDia, grain_minDia])
                                 
         # Find the corresponding shared bin edges 
         # NOTE: 'doane' produces better estimates for non-normal datasets
         shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
-        shared_majDia = np.histogram_bin_edges(total_majDia, bins='doane')
-        shared_minDia = np.histogram_bin_edges(total_minDia, bins='doane')                                          
+        binNum = len(shared_bins)
+        name = 'Equivalent'
         
-#        loop_list = [(par_eqDia, grain_eqDia, len(shared_bins), 'Equivalent'), 
-#                     (par_majDia, grain_majDia, len(shared_majDia), 'Major'), 
-#                     (par_minDia, grain_minDia, len(shared_minDia), 'Minor')]
-
-        loop_list = [(par_eqDia, grain_eqDia, len(shared_bins), 'Equivalent')]
-                               
-        for (particles, grains, binNum, name) in loop_list:
+        # Get the mean & std of the underlying normal distribution
+        par_data, grain_data = np.log(par_eqDia), np.log(grain_eqDia)
+        mu_par, std_par = np.mean(par_data), np.std(par_data)
+        mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)
         
-            # Get the mean & std of the underlying normal distribution
-            par_data, grain_data = np.log(particles), np.log(grains)
-            mu_par, std_par = np.mean(par_data), np.std(par_data)
-            mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)
-            
-            # Lognormal mean & variance & std  
-            #log_mean = np.exp(mean + (sd**2)/2.0)
-            #log_var = np.exp((sd**2)-1.0)*np.exp(2.0*mean + sd**2)        
-            #print(log_mean, (log_var)**0.5, log_var)
-            
-            # NOTE: lognorm takes mean & std of normal distribution
-            par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
-            grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr))         
+        # Lognormal mean & variance & std  
+        #log_mean = np.exp(mean + (sd**2)/2.0)
+        #log_var = np.exp((sd**2)-1.0)*np.exp(2.0*mean + sd**2)        
+        #print(log_mean, (log_var)**0.5, log_var)
+        
+        # NOTE: lognorm takes mean & std of normal distribution
+        par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
+        grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr))         
 
-            # Plot the histogram & PDF        
-            sns.set(color_codes=True)                                      
-            fig, ax = plt.subplots(1, 2, figsize=(15, 9))
-            
-            # Plot histogram
-            ax[0].hist([particles, grains], density=False, bins=binNum, label=['Input', 'Output'])                 
-            ax[0].legend(loc="upper right", fontsize=16)
-            ax[0].set_xlabel('{0} diameter (μm)'.format(name), fontsize=18)
-            ax[0].set_ylabel('Frequency', fontsize=18)
-            ax[0].tick_params(labelsize=14)
-            
-            # Plot PDF                             
-            ypdf1 = par_lognorm.pdf(particles)
-            ypdf2 = grain_lognorm.pdf(grains)
-            ax[1].plot(particles, ypdf1, linestyle='-', linewidth=3.0, label='Input')              
-            ax[1].fill_between(particles, 0, ypdf1, alpha=0.3)
-            ax[1].plot(grains, ypdf2, linestyle='-', linewidth=3.0, label='Output')              
-            ax[1].fill_between(grains, 0, ypdf2, alpha=0.3) 
-                        
-            #sns.distplot(ypdf1, hist = False, kde = True, 
-            #             kde_kws = {'shade': True, 'linewidth': 3}, 
-            #             label = 'Input', ax=ax[1])
-            #sns.distplot(ypdf2, hist = False, kde = True, 
-            #             kde_kws = {'shade': True, 'linewidth': 3}, 
-            #            label = 'Output', ax=ax[1])        
-            ax[1].legend(loc="upper right", fontsize=16)
-            ax[1].set_xlabel('{0} diameter (μm)'.format(name), fontsize=18)
-            ax[1].set_ylabel('Density', fontsize=18)
-            ax[1].tick_params(labelsize=14)
-            if save_files:
-                plt.savefig(cwd + "/{0}_diameter.png".format(name), bbox_inches="tight") 
-                print("    '{0}_diameter.png' is placed in the current working directory\n".format(name))
-            plt.show()
+        # Plot the histogram & PDF        
+        sns.set(color_codes=True)                                      
+        fig, ax = plt.subplots(1, 2, figsize=(15, 9))
+        data = [par_eqDia, grain_eqDia]
+        label = ['Input', 'Output']
+        if gs_data is not None:
+            data.append(gs_data)
+            label.append('Experiment')
+        # Plot histogram
+        ax[0].hist(data, density=False, bins=binNum, label=label)                 
+        ax[0].legend(loc="upper right", fontsize=16)
+        ax[0].set_xlabel('{} diameter (μm)'.format(name), fontsize=18)
+        ax[0].set_ylabel('Frequency', fontsize=18)
+        ax[0].tick_params(labelsize=14)
+        
+        # Plot PDF                             
+        ypdf1 = par_lognorm.pdf(par_eqDia)
+        area = np.trapz(ypdf1, par_eqDia)
+        ypdf1 /= area
+        ypdf2 = grain_lognorm.pdf(grain_eqDia)
+        area = np.trapz(ypdf2, grain_eqDia)
+        ypdf2 /= area
+        if gs_param is not None:
+            x0 = np.amin(par_eqDia)
+            x1 = np.amax(par_eqDia)
+            x = np.linspace(x0, x1, num=50)
+            y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
+            area = np.trapz(y, x)
+            y /= area
+            ax[1].plot(x, y, '--k', label='Experiment')
+        ax[1].plot(par_eqDia, ypdf1, linestyle='-', linewidth=3.0, label='Input')              
+        ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
+        ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label='Output')              
+        ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3) 
+                    
+        #sns.distplot(ypdf1, hist = False, kde = True, 
+        #             kde_kws = {'shade': True, 'linewidth': 3}, 
+        #             label = 'Input', ax=ax[1])
+        #sns.distplot(ypdf2, hist = False, kde = True, 
+        #             kde_kws = {'shade': True, 'linewidth': 3}, 
+        #            label = 'Output', ax=ax[1])        
+        ax[1].legend(loc="upper right", fontsize=16)
+        ax[1].set_xlabel('{} diameter (μm)'.format(name), fontsize=18)
+        ax[1].set_ylabel('Density', fontsize=18)
+        ax[1].tick_params(labelsize=14)
+        if save_files:
+            plt.savefig(cwd + "/{0}_diameter.png".format(name), bbox_inches="tight") 
+            print("    '{0}_diameter.png' is placed in the current working directory\n".format(name))
+        plt.show()
         
         
         ''' Plot the aspect ratio comparison '''
@@ -1236,19 +1243,28 @@ def plot_output_stats(dataDict, save_files=False):
         shared_AR = np.histogram_bin_edges(total_AR, bins='doane')
         
         # Get the mean & std of the underlying normal distribution
-        par_data, grain_data = np.log(par_AR), np.log(grain_AR)
+        '''par_data, grain_data = np.log(par_AR), np.log(grain_AR)
         mu_par, std_par = np.mean(par_data), np.std(par_data)
-        mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)        
+        mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)'''
+        std_par, offs_par, sc_par = gamma.fit(par_AR)
+        std_gr, offs_gr, sc_gr = gamma.fit(grain_AR)
         
-        par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
-        grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr)) 
-        
+        #par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
+        #grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr))
+        par_lognorm = gamma(std_par, loc=offs_par, scale=sc_par) 
+        grain_lognorm = gamma(std_gr, loc=offs_gr, scale=sc_gr) 
+        data = [par_AR, grain_AR]
+        label = ['Input', 'Output']
+        if ar_data is not None:
+            data.append(ar_data)
+            label.append('Experiment')
+            
         # Plot the histogram & PDF        
         sns.set(color_codes=True)                                      
         fig, ax = plt.subplots(1, 2, figsize=(15, 9))
         
         # Plot histogram
-        ax[0].hist([par_AR, grain_AR], density=False, bins=len(shared_AR), label=['Input', 'Output'])                 
+        ax[0].hist(data, density=False, bins=len(shared_AR), label=label)                 
         ax[0].legend(loc="upper right", fontsize=16)
         ax[0].set_xlabel('Aspect ratio', fontsize=18)
         ax[0].set_ylabel('Frequency', fontsize=18)
@@ -1256,7 +1272,19 @@ def plot_output_stats(dataDict, save_files=False):
         
         # Plot PDF                             
         ypdf1 = par_lognorm.pdf(par_AR)
+        area = np.trapz(ypdf1, par_AR)
+        ypdf1 /= area
         ypdf2 = grain_lognorm.pdf(grain_AR)
+        area = np.trapz(ypdf2, grain_AR)
+        ypdf2 /= area
+        if ar_param is not None:
+            x0 = np.amin(par_AR)
+            x1 = np.amax(par_AR)
+            x = np.linspace(x0, x1, num=100)
+            y = gamma.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
+            area = np.trapz(y, x)
+            y /= area
+            ax[1].plot(x, y, '--k', label='Experiment')
         ax[1].plot(par_AR, ypdf1, linestyle='-', linewidth=3.0, label='Input')              
         ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
         ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label='Output')              
@@ -1310,7 +1338,7 @@ def extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=Fals
     # Sort the grain volumes in ascending order of grain IDs
     gv_sorted_keys = sorted(grain_vol, key=grain_vol.get)
     gv_sorted_values = [[grain_vol[gk]] for gk in gv_sorted_keys]            
-#    gv_sorted_values = [[gk,gv] for gk,gv in grain_vol.items()]
+    # gv_sorted_values = [[gk,gv] for gk,gv in grain_vol.items()]
                     
     # For each grain find its outer face ids
     grain_facesDict = dict()
@@ -1372,3 +1400,21 @@ def extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=Fals
     print('---->DONE!\n')       
     return gv_sorted_values, shared_area
 
+def writeAbaqusMat(ialloy, angles, nsdv=200):
+    '''
+    angles : Euler angles with number of rows= number of grains and 
+            three columns phi1, Phi, phi2
+    ialloy : alloy number in the umat, mod_alloys.f 
+    nsdv : number of state dependant variables default value is 200         
+    '''
+    with open('Material.inp', 'w') as f:
+        f.write('** MATERIALS\n')
+        f.write('**\n')
+        for i in range(len(angles)):
+            f.write('*Material, name=GRAIN{}_mat\n'.format(i+1))
+            f.write('*Depvar\n')
+            f.write('    {}\n'.format(nsdv))
+            f.write('*User Material, constants=4\n')
+            f.write('{}, {}, {}, {}\n'.format(float(ialloy), angles[i,0],
+                                              angles[i,1], angles[i,2])) 
+    return
