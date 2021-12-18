@@ -118,17 +118,17 @@ def readGrains(ctx, f: str, periodic: str, units: str):
     if f == None:
         click.echo('')
         click.echo('Please provide the name of the input file available in the current directory', err=True)
-        click.echo('For more info. run: kanapy readgrains --help\n', err=True)
+        click.echo('For more info. run: kanapy readGrains --help\n', err=True)
         sys.exit(0)    
     elif ((periodic!='True') and (periodic!='False')):
         click.echo('')
-        click.echo('Invalid entry!, Run: kanapy readgrains again', err=True)
-        click.echo('For more info. run: kanapy readgrains --help\n', err=True)
+        click.echo('Invalid entry!, Run: kanapy readGrains again', err=True)
+        click.echo('For more info. run: kanapy readGrains --help\n', err=True)
         sys.exit(0)                
     elif ((units!='mm') and (units!='um')):
         click.echo('')
-        click.echo('Invalid entry!, Run: kanapy readgrains again', err=True)
-        click.echo('For more info. run: kanapy readgrains --help\n', err=True)
+        click.echo('Invalid entry!, Run: kanapy readGrains again', err=True)
+        click.echo('For more info. run: kanapy readGrains --help\n', err=True)
         sys.exit(0)                            
     else:
         cwd = os.getcwd()
