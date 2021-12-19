@@ -1,9 +1,11 @@
 import kanapy as knpy
+import numpy as np
 
 if not knpy.MTEX_AVAIL:
     raise ModuleNotFoundError('Anaysis of EBSD maps is only possible with an existing MTEX installation in Matlab.')
     
-fname = 'ebsd_316L.ang'
+fname = 'ebsd_316L_500x500.ang'
+#fname = 'ebsd_316L_1000x1000.ang'
 matname = 'Iron fcc'
 matnumber = 4  # 'material number of austenite in CP UMAT
 
@@ -14,7 +16,9 @@ ebsd = knpy.EBSDmap(fname, matname)
 # gs_param = [std deviation, mean grain size, offset of lognorm distrib.]
 # ar_param = [std deviation, mean aspect ration, offset of gamma distrib.]
 # om_param = [std deviation, mean tilt angle]
-ms_stats = knpy.set_stats(ebsd.gs_param, ebsd.ar_param, ebsd.om_param)
+ms_stats = knpy.set_stats(ebsd.gs_param, ebsd.ar_param, ebsd.om_param,
+                          deq_min=8., deq_max=30., asp_min=1., asp_max=3.,
+                          omega_min=0., omega_max=2*np.pi)
 
 # create and visualize synthetic RVE
 ms = knpy.Microstructure(descriptor=ms_stats, name=fname+'_RVE')

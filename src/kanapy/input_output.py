@@ -69,7 +69,7 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
     # Find the location at which CDF > 0.99    
     #cdf_idx = np.where(ycdf > 0.99)[0][0]
     #x_lim = xaxis[cdf_idx]
-    x_lim = dia_cutoff_max + 20       
+    x_lim = dia_cutoff_max*1.5     
 
     if stats_dict["Grain type"] == "Equiaxed":         
         sns.set(color_codes=True)                                 
@@ -84,8 +84,10 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
         ax.set_xlabel('Equivalent diameter (μm)', fontsize=18)
         ax.set_ylabel('Density', fontsize=18)
         ax.tick_params(labelsize=14)
-        ax.axvline(dia_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(dia_cutoff_min))
-        ax.axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))
+        ax.axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
+                   label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
+        ax.axvline(dia_cutoff_max, linestyle='-', linewidth=3.0,
+                   label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         if gs_data is not None:
             ind = np.nonzero(gs_data<x_lim)[0]
             ax.hist(gs_data[ind], bins=80, density=True, label='experimental data')
@@ -114,8 +116,10 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
         ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
         ax[0].set_ylabel('Density', fontsize=18)
         ax[0].tick_params(labelsize=14)
-        ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(dia_cutoff_min))
-        ax[0].axvline(dia_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(dia_cutoff_max))
+        ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
+                      label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
+        ax[0].axvline(dia_cutoff_max, linestyle='-', linewidth=3.0,
+                      label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         if gs_data is not None:
             ax[0].hist(gs_data, bins=80, density=True, label='experimental data')
         ax[0].legend(fontsize=14) 
@@ -126,15 +130,17 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
             frozen_lognorm = lognorm(s=sd_AR, scale=np.exp(mean_AR))
         else:
             frozen_lognorm = gamma(sd_AR, loc=offs_AR, scale=mean_AR)
-        xaxis = np.linspace(0.5,10,1000)
+        xaxis = np.linspace(0.5, 2*ar_cutoff_max, 500)
         ypdf = frozen_lognorm.pdf(xaxis)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
         ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)    
         ax[1].set_xlabel('Aspect ratio', fontsize=18)
         ax[1].set_ylabel('Density', fontsize=18)
         ax[1].tick_params(labelsize=14)            
-        ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0, label='Minimum cut-off: {}'.format(ar_cutoff_min))
-        ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0, label='Maximum cut-off: {}'.format(ar_cutoff_max))
+        ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0,
+                      label='Minimum cut-off: {:.2f}'.format(ar_cutoff_min))
+        ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0,
+                      label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
         if ar_data is not None:
             ax[1].hist(ar_data, bins=15, density=True, label='experimental data')
         ax[1].legend(fontsize=14)

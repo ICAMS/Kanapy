@@ -15,7 +15,7 @@ class EBSDmap:
     and filter out their statistical data needed to generate 
     synthetic RVEs
     '''
-    def __init__(self, fname, matname, plot=True):
+    def __init__(self, fname, matname, gs_min=3, plot=True):
         # start MATLAB Engine to use MTEX commands
         eng = matlab.engine.start_matlab()
         eng.addpath(MTEX_DIR, nargout=0)
@@ -38,12 +38,21 @@ class EBSDmap:
                                      5*(np.pi/180.0))
         # filter out small grains
         eng.workspace["grains_w"] = grains_full
-        self.grains = eng.eval("grains_w(grains_w.grainSize > 3)")
+        self.grains = eng.eval("grains_w(grains_w.grainSize > {})".format(gs_min))
         
         # use MTEX function to analye grains and plot ellipses around grain centres
         # calculate orientation, long and short axes of ellipses
         omega_r, ha, hb = eng.principalComponents(self.grains, nargout=3)
         omega = np.array(omega_r)[:, 0]
+        '''hist, bin_edges = np.histogram(omega, bins=30)
+        im = np.argmax(hist)
+        oc = bin_edges[im]
+        if oc < np.pi/3.:
+            ind = np.nonzero(omega>oc+np.pi)[0]
+            omega[ind] -= 2.*np.pi
+        elif oc > 5.*np.pi/3.:
+            ind = np.nonzero(omega>oc-np.pi)[0]
+            omega[ind] -= 2.*np.pi'''
         self.ngrain = len(omega)
         if plot:
             # plot EBSD map
@@ -153,23 +162,32 @@ class EBSDmap:
                     matlab.double(shared_area), nbins, nargout=4)
             return np.array(self.eng.Euler(orilist))
         
-def set_stats(grains, ar, omega, deq_min=None, deq_amx=None,
-              asp_min=None, asp_max=None, omega_min=0., omega_max=np.pi,
+def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
+              asp_min=None, asp_max=None, omega_min=None, omega_max=None,
               size=None, voxels=None, gtype='Elongated', rveunit = 'um',
               periodicity=True, save_file=False):
     '''
-    grains = [std deviation, mean grain size, offset of lognorm distrib.]
-    ar = [std deviation, mean aspect ration, offset of gamma distrib.]
+    grains = [std deviation, offset , mean grain sizeof lognorm distrib.]
+    ar = [std deviation, offset , mean aspect ratio of gamma distrib.]
     omega = [std deviation, mean tilt angle]
     '''
     
     # define cutoff values
     # cutoff deq
-    cut1_deq = 8.0
-    cut2_deq = 30.0
+    if deq_min is None:
+        deq_min = 1.3*grains[1]   # 316L: 8
+    if deq_max is None:
+        deq_max = grains[1] + grains[2] + 6.*grains[0]  # 316L: 30
     # cutoff asp
-    cut1_asp = 1.0
-    cut2_asp = 3.0
+    if asp_min is None:
+        asp_min = np.maximum(1., ar[1])   # 316L: 1
+    if asp_max is None:
+        asp_max = ar[2] + ar[0]  # 316L: 3
+    # cutoff omega
+    if omega_min is None:
+        omega_min = omega[1] - 2*omega[0]
+    if omega_max is None:
+        omega_max = omega[1] + 2*omega[0]
 
     # RVE box size
     if size is None:
@@ -195,10 +213,10 @@ def set_stats(grains, ar, omega, deq_min=None, deq_amx=None,
     ms_stats = {'Grain type': gtype,
                 'Equivalent diameter':
                     {'std': grains[0], 'mean': grains[2], 'offs': grains[1],
-                     'cutoff_min': cut1_deq, 'cutoff_max': cut2_deq},
+                     'cutoff_min': deq_min, 'cutoff_max': deq_max},
                 'Aspect ratio':
                     {'std': ar[0], 'mean': ar[2], 'offs': ar[1],
-                     'cutoff_min': cut1_asp, 'cutoff_max': cut2_asp},
+                     'cutoff_min': asp_min, 'cutoff_max': asp_max},
                 'Tilt angle':
                     {'std': omega[0], 'mean': omega[1],
                      "cutoff_min": omega_min, "cutoff_max": omega_max},
