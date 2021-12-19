@@ -2,8 +2,8 @@
 import os, sys
 import json
 
-from kanapy.util import ROOT_DIR    
-    
+from kanapy import ROOT_DIR
+
 def checkConfiguration():
     r""" 
     Evaluates if Kanapy has been configured for texture analysis by reading the 'PATHS.json'
