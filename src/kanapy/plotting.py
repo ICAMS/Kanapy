@@ -56,9 +56,11 @@ def plot_ellipsoids(particles, cmap='prism', test=False):
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.view_init(30, 30)
     
-    #Npa = len(particles)
+    Npa = len(particles)
+    cm = plt.cm.get_cmap(cmap, Npa)
         
-    for pa in particles:
+    for i, pa in enumerate(particles):
+        col = cm(i)  # set to 'b' for only blue ellipsoids
         qw, qx, qy, qz = pa.quat
         x_c, y_c, z_c, a, b, c = pa.x, pa.y, pa.z, pa.a, pa.b, pa.c
         #Rotation
@@ -75,7 +77,7 @@ def plot_ellipsoids(particles, cmap='prism', test=False):
         x = (points_global[:,0] + np.ones_like(points_global[:,0])*x_c).reshape((100,100))
         y = (points_global[:,1] + np.ones_like(points_global[:,1])*y_c).reshape((100,100))
         z = (points_global[:,2] + np.ones_like(points_global[:,2])*z_c).reshape((100,100))
-        ax.plot_surface(x, y, z,  rstride=4, cstride=4, color='b', linewidth=0)
+        ax.plot_surface(x, y, z,  rstride=4, cstride=4, color=col, linewidth=0)
     plt.show()
 
         
