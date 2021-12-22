@@ -164,7 +164,7 @@ class EBSDmap:
         
 def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
               asp_min=None, asp_max=None, omega_min=None, omega_max=None,
-              size=None, voxels=None, gtype='Elongated', rveunit = 'um',
+              size=100, voxels=60, gtype='Elongated', rveunit = 'um',
               periodicity=True, save_file=False):
     '''
     grains = [std deviation, offset , mean grain sizeof lognorm distrib.]
@@ -190,14 +190,10 @@ def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
         omega_max = omega[1] + 2*omega[0]
 
     # RVE box size
-    if size is None:
-        lx = ly = lz = 100  # size of box in each direction
-    else:
-        lx = ly = lz = size
+    lx = ly = lz = size  # size of box in each direction
 
     # number of voxels
-    if voxels is None:
-        nx = ny = nz = 60  # number of voxels in each direction
+    nx = ny = nz = voxels  # number of voxels in each direction
     # specify RVE info
     # type of grains either 'Elongated' or 'Equiaxed'
     if not (gtype=='Elongated' or gtype=='Equiaxed'):
