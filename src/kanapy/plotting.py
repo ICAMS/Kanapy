@@ -11,8 +11,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 
-def plot_microstructure_3D(voxels, Ngr=1, sliced=True, dual_phase=False, \
-                           cmap='prism', test=False):
+def plot_microstructure_3D(voxels, Ngr=1, sliced=False, dual_phase=False,
+                           mask=None, cmap='prism'):
 
     Nx = voxels.shape[0]
     Ny = voxels.shape[1]
@@ -27,7 +27,10 @@ def plot_microstructure_3D(voxels, Ngr=1, sliced=True, dual_phase=False, \
         colors[phase_0] = 'blue'
         colors[phase_1] = 'red'
     else:
-        vox_b = np.full(voxels.shape, True, dtype=bool)
+        if mask is None:
+            vox_b = np.full(voxels.shape, True, dtype=bool)
+        else:
+            vox_b = mask
         cm = plt.cm.get_cmap(cmap, Ngr)
         colors = cm(voxels.astype(int))
     
@@ -49,7 +52,7 @@ def plot_microstructure_3D(voxels, Ngr=1, sliced=True, dual_phase=False, \
 
     return 
 
-def plot_ellipsoids(particles, cmap='prism', test=False):
+def plot_ellipsoids(particles, cmap='prism'):
               
     fig = plt.figure(figsize=plt.figaspect(1),dpi=1200) 
     ax = fig.add_subplot(111, projection='3d')

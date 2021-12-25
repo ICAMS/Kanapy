@@ -121,7 +121,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
     # Initialize a tqdm progress bar to the Number of voxels in the domain
     pbar = tqdm(total = len(remaining_voxels))
     
-    while True:
+    while len(remaining_voxels) > 0:
         
         # call the growth value for the ellipsoids
         scale = next(growth)
@@ -252,9 +252,6 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
         pbar.reset()
         pbar.update(len(assigned_voxels)) 
         pbar.refresh()
-
-        if len(remaining_voxels) == 0:            
-            break
             
     pbar.close()    # Close the progress bar
     return
@@ -281,9 +278,8 @@ def reassign_shared_voxels(cooDict, Ellipsoids):
             for vox in shared_voxels:
                 vox_ellDict[vox].update(cb)
 
+    assigned_voxel = []
     if len(list(vox_ellDict.keys())) != 0:       
-
-        assigned_voxel = []
         for vox, ells in vox_ellDict.items():
             # Remove the shared voxel for all the ellipsoids containing it
             for el in ells:
@@ -364,8 +360,8 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
         else:
             continue
             # If ellipsoid does'nt contain any voxel inside
-            print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissable'.format(
-                int(ellipsoid.id)))
+            print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissable'
+                  .format(int(ellipsoid.id)))
             sys.exit(0)
     
     # generate array of voxelized structure

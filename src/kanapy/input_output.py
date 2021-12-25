@@ -1015,7 +1015,6 @@ def l1_error_est(**kwargs):
         
         # Compute the L1-error between particles and grains    
         l1_value = np.sum(np.abs(hist_par - hist_gr))        
-        return l1_value
 
     elif 'Ellipsoids' in kwargs.keys():
         # Extract the values
@@ -1037,41 +1036,7 @@ def l1_error_est(**kwargs):
         
         # Compute the L1-error between particles and grains    
         l1_value = np.sum(np.abs(hist_par - hist_gr))        
-        return l1_value
-    '''
-    elif 'Ellipsoids' in kwargs.keys():
-        # Extract the values       
-        par_majDia = np.asarray(kwargs['Ellipsoids']['Major diameter']['Particles'])
-        grain_majDia = np.asarray(kwargs['Ellipsoids']['Major diameter']['Grains'])
-        
-        par_minDia = np.asarray(kwargs['Ellipsoids']['Minor diameter']['Particles'])
-        grain_minDia = np.asarray(kwargs['Ellipsoids']['Minor diameter']['Grains'])
-        
-        # Concatenate corresponding arrays to compute shared bins
-        total_majDia = np.concatenate([par_majDia, grain_majDia]) 
-        total_minDia = np.concatenate([par_minDia, grain_minDia])
-                                
-        # Find the corresponding shared bin edges 
-        # NOTE: 'doane' produces better estimates for non-normal datasets
-        shared_majDia = np.histogram_bin_edges(total_majDia, bins='doane')
-        shared_minDia = np.histogram_bin_edges(total_minDia, bins='doane') 
-        
-        # Concatenate arrays along columns for creating multidimensional histogram
-        par_dd = np.c_[par_majDia, par_minDia]
-        grain_dd = np.c_[grain_majDia, grain_minDia]
-        
-        # Compute the multidimensional histogram for both: particles and grains
-        hist_par, _ = np.histogramdd(par_dd, bins=(shared_majDia, shared_minDia))
-        hist_gr, _ = np.histogramdd(grain_dd, bins=(shared_majDia, shared_minDia))        
-    
-        # Normalize the values
-        hist_par = hist_par/np.sum(hist_par)
-        hist_gr = hist_gr/np.sum(hist_gr)
-        
-        # Compute the L1-error between particles and grains    
-        l1_value = np.sum(np.abs(hist_par - hist_gr))                
-        return l1_value                     
-    '''
+    return l1_value
 
 def plot_output_stats(dataDict, gs_data=None, gs_param=None, 
                       ar_data=None, ar_param=None, save_files=False):
@@ -1351,7 +1316,6 @@ def extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=Fals
     for gid, elset in elmtSetDict.items():               
         outer_faces = set()    
         nodeConn = [elmtDict[el] for el in elset]        # For each voxel/element get node connectivity
-        
         # create the 6 faces of the voxel
         for nc in nodeConn:
             faces = [[nc[0], nc[1], nc[2], nc[3]], [nc[4], nc[5], nc[6], nc[7]],
@@ -1369,8 +1333,7 @@ def extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=Fals
                 if fid not in outer_faces:
                     outer_faces.add(fid)
                 else:
-                    outer_faces.remove(fid)
-        
+                    outer_faces.remove(fid)        
         grain_facesDict[gid] = outer_faces
     
     # Find all combination of grains to check for common area
@@ -1404,7 +1367,7 @@ def extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=Fals
             writer.writerows(shared_area)
     
     print('---->DONE!\n')       
-    return gv_sorted_values, shared_area
+    return gv_sorted_values, shared_area, grain_facesDict
 
 def writeAbaqusMat(ialloy, angles, nsdv=200):
     '''

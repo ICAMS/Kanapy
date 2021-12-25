@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
+#import sys
 import json
+import itertools
 from collections import defaultdict
 from tqdm import tqdm
+from scipy.spatial import ConvexHull
 
 import numpy as np
 
@@ -60,8 +62,9 @@ class Node(object):
         
         
         
-def readGrainFaces(nodes_v,elmtDict,elmtSetDict,RVE_xmin,RVE_xmax, RVE_ymin,RVE_ymax,RVE_zmin, RVE_zmax):
-
+def calcGrainFaces(nodes_v,elmtDict,elmtSetDict):
+    RVE_min = np.amin(nodes_v, axis=0)
+    RVE_max = np.amax(nodes_v, axis=0)
     grain_facesDict = dict()      # {Grain: faces} 
     for gid, elset in elmtSetDict.items():               
 
@@ -105,24 +108,47 @@ def readGrainFaces(nodes_v,elmtDict,elmtSetDict,RVE_xmin,RVE_xmax, RVE_ymin,RVE_
             n3 = nodes_v[conn[2]-1,:]
             n4 = nodes_v[conn[3]-1,:]
             
-            if (n1[0] == n2[0] == n3[0] == n4[0] == RVE_xmin):
+            if (n1[0] == n2[0] == n3[0] == n4[0] == RVE_min[0]):
                 continue
-            if (n1[0] == n2[0] == n3[0] == n4[0] == RVE_xmax):
+            if (n1[0] == n2[0] == n3[0] == n4[0] == RVE_max[0]):
                 continue
             
-            if (n1[1] == n2[1] == n3[1] == n4[1] == RVE_ymin):
+            if (n1[1] == n2[1] == n3[1] == n4[1] == RVE_min[1]):
                 continue
-            if (n1[1] == n2[1] == n3[1] == n4[1] == RVE_ymax):
-                continue
-                
-            if (n1[2] == n2[2] == n3[2] == n4[2] == RVE_zmin):
-                continue
-            if (n1[2] == n2[2] == n3[2] == n4[2] == RVE_zmax):
+            if (n1[1] == n2[1] == n3[1] == n4[1] == RVE_max[1]):
                 continue
                 
-            grain_facesDict[gid][of] = face_nodes[of]    
+            if (n1[2] == n2[2] == n3[2] == n4[2] == RVE_min[2]):
+                continue
+            if (n1[2] == n2[2] == n3[2] == n4[2] == RVE_max[2]):
+                continue
+                
+            grain_facesDict[gid][of] = face_nodes[of]  
+            
+    # Find all combination of grains to check for common area
+    gbDict = dict()
+    for i in grain_facesDict.keys():
+        gbDict[i+1] = dict()
+    combis = list(itertools.combinations(sorted(grain_facesDict.keys()), 2))
+
+    # Find the shared area
+    shared_area = []
+    for cb in combis:
+        finter = set(grain_facesDict[cb[0]]).intersection(set(grain_facesDict[cb[1]]))    
+        if finter:
+            sh_area = len(finter) #* (voxel_size**2)
+            shared_area.append([cb[0], cb[1], sh_area])
+            ind = []
+            for key in finter:
+                for i in grain_facesDict[cb[0]][key]:
+                    ind.append(i)
+            ind = np.array(ind)
+            hull = ConvexHull(nodes_v[ind,:])
+            gbDict[cb[0]][cb[1]] = ind[hull.vertices]
+        else:
+            continue
         
-    return grain_facesDict      
+    return grain_facesDict, gbDict    
         
 
 
@@ -213,9 +239,7 @@ def smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=False):
     RVE_zmin, RVE_zmax = min(zvals), max(zvals)
     
     # Find each grain's outer face ids and its nodal connectivities
-    grain_facesDict = readGrainFaces(nodes_v,elmtDict,elmtSetDict,
-                        RVE_xmin, RVE_xmax, RVE_ymin, RVE_ymax,
-                        RVE_zmin, RVE_zmax)
+    grain_facesDict, gbDict = calcGrainFaces(nodes_v,elmtDict,elmtSetDict)
     
     # Initialize the spring-mass-anchor system
     allNodes,anchDict = initalizeSystem(nodes_v,grain_facesDict)

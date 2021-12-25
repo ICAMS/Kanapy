@@ -45,6 +45,7 @@ class Microstructure:
             descriptor = self.descriptor  
         self.particle_data, self.RVE_data, self.simulation_data = \
             RVEcreator(descriptor, save_files=save_files)
+        self.Ngr = self.particle_data['Number']
             
     def create_stats(self, descriptor=None, gs_data=None, ar_data=None, save_files=False):    
         """ Generates particle statistics based on the data provided in the input file."""
@@ -66,11 +67,11 @@ class Microstructure:
         self.particles, self.simbox = \
             packingRoutine(particle_data, RVE_data, simulation_data, save_files=save_files)
     
-    def plot_ellipsoids(self, cmap='prism', test=False):
+    def plot_ellipsoids(self, cmap='prism'):
         """ Generates plot of particles"""
         if self.particles is None:
             raise ValueError('No particle to plot. Run pack first.')
-        plot_ellipsoids(self.particles, cmap=cmap, test=test)
+        plot_ellipsoids(self.particles, cmap=cmap)
         
     def voxelize(self, particle_data=None, RVE_data=None, particles=None, 
                  simbox=None, save_files=False):
@@ -102,12 +103,12 @@ class Microstructure:
             smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=save_files)
         
             
-    def plot_3D(self, sliced=True, dual_phase=False, cmap='prism', test=False):
+    def plot_3D(self, sliced=True, dual_phase=False, cmap='prism'):
         """ Generate 3D plot of grains in voxelized microstructure. """
         if self.voxels is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
-        plot_microstructure_3D(self.voxels, Ngr=self.particle_data['Number'], sliced=sliced, dual_phase=dual_phase, \
-                               cmap=cmap, test=test)
+        plot_microstructure_3D(self.voxels, Ngr=self.particle_data['Number'], sliced=sliced,
+                               dual_phase=dual_phase, cmap=cmap)
 
     def output_stats(self, nodes_v=None, elmtDict=None, elmtSetDict=None, \
                      particle_data=None, RVE_data=None, simulation_data=None, save_files=False):
@@ -133,7 +134,7 @@ class Microstructure:
             
         self.res_data = write_output_stat(nodes_v, elmtDict, elmtSetDict, particle_data, RVE_data, \
                           simulation_data, save_files=save_files)
-        self.gv_sorted_values, self.shared_area = \
+        self.gv_sorted_values, self.shared_area, self.grain_facesDict = \
             extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=save_files)
         
     def plot_stats(self, data=None, gs_data=None, gs_param=None, 
