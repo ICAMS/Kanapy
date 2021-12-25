@@ -128,7 +128,7 @@ def calcGrainFaces(nodes_v,elmtDict,elmtSetDict):
     # Find all combination of grains to check for common area
     gbDict = dict()
     for i in grain_facesDict.keys():
-        gbDict[i+1] = dict()
+        gbDict[i] = dict()
     combis = list(itertools.combinations(sorted(grain_facesDict.keys()), 2))
 
     # Find the shared area
