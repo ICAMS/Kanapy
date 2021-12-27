@@ -127,8 +127,6 @@ def calcGrainFaces(nodes_v,elmtDict,elmtSetDict):
             
     # Find all combination of grains to check for common area
     gbDict = dict()
-    for i in grain_facesDict.keys():
-        gbDict[i] = dict()
     combis = list(itertools.combinations(sorted(grain_facesDict.keys()), 2))
 
     # Find the shared area
@@ -136,19 +134,23 @@ def calcGrainFaces(nodes_v,elmtDict,elmtSetDict):
     for cb in combis:
         finter = set(grain_facesDict[cb[0]]).intersection(set(grain_facesDict[cb[1]]))    
         if finter:
-            sh_area = len(finter) #* (voxel_size**2)
-            shared_area.append([cb[0], cb[1], sh_area])
             ind = []
             for key in finter:
                 for i in grain_facesDict[cb[0]][key]:
                     ind.append(i)
             ind = np.array(ind)
-            hull = ConvexHull(nodes_v[ind,:])
-            gbDict[cb[0]][cb[1]] = ind[hull.vertices]
+            try:
+                hull = ConvexHull(nodes_v[ind,:])
+                key = 'f{}{}'.format(cb[0], cb[1])
+                gbDict[key] = ind#[hull.vertices]
+                #gbDict[cb[0]][key] = ind[hull.simplices]
+                shared_area.append([cb[0], cb[1], hull.area])
+            except:
+                pass
         else:
             continue
         
-    return grain_facesDict, gbDict    
+    return grain_facesDict, gbDict, shared_area 
         
 
 
@@ -239,7 +241,8 @@ def smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=False):
     RVE_zmin, RVE_zmax = min(zvals), max(zvals)
     
     # Find each grain's outer face ids and its nodal connectivities
-    grain_facesDict, gbDict = calcGrainFaces(nodes_v,elmtDict,elmtSetDict)
+    grain_facesDict, gbDict, shared_area = \
+        calcGrainFaces(nodes_v,elmtDict,elmtSetDict)
     
     # Initialize the spring-mass-anchor system
     allNodes,anchDict = initalizeSystem(nodes_v,grain_facesDict)
