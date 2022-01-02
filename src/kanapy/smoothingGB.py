@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
-#import sys
 import json
-import itertools
 from collections import defaultdict
 from tqdm import tqdm
-from scipy.spatial import ConvexHull
 
 import numpy as np
 
@@ -61,8 +58,12 @@ class Node(object):
         self.az = fz/mass       
         
         
-        
-def calcGrainFaces(nodes_v,elmtDict,elmtSetDict):
+""" The function readGrainFaces has some redundancies with
+kanapy/input_output/extract_volume_sharedGBarea which is only used in 
+kanapy CLI and 
+kanapy/api/calcPolygons which offers more functionality, e.g. polygonization
+"""
+def readGrainFaces(nodes_v,elmtDict,elmtSetDict):
     RVE_min = np.amin(nodes_v, axis=0)
     RVE_max = np.amax(nodes_v, axis=0)
     grain_facesDict = dict()      # {Grain: faces} 
@@ -124,33 +125,8 @@ def calcGrainFaces(nodes_v,elmtDict,elmtSetDict):
                 continue
                 
             grain_facesDict[gid][of] = face_nodes[of]  
-            
-    # Find all combination of grains to check for common area
-    gbDict = dict()
-    combis = list(itertools.combinations(sorted(grain_facesDict.keys()), 2))
-
-    # Find the shared area
-    shared_area = []
-    for cb in combis:
-        finter = set(grain_facesDict[cb[0]]).intersection(set(grain_facesDict[cb[1]]))    
-        if finter:
-            ind = []
-            for key in finter:
-                for i in grain_facesDict[cb[0]][key]:
-                    ind.append(i)
-            ind = np.array(ind)
-            try:
-                hull = ConvexHull(nodes_v[ind,:])
-                key = 'f{}{}'.format(cb[0], cb[1])
-                gbDict[key] = ind#[hull.vertices]
-                #gbDict[cb[0]][key] = ind[hull.simplices]
-                shared_area.append([cb[0], cb[1], hull.area])
-            except:
-                pass
-        else:
-            continue
         
-    return grain_facesDict, gbDict, shared_area 
+    return grain_facesDict
         
 
 
@@ -171,7 +147,7 @@ def initalizeSystem(nodes_v,grain_facesDict):
             if fc not in fcList:
                 fcList.append(fc)
                 n1 = nodes_v[conn[0]-1,:]      # A corner node
-                n2 = nodes_v[conn[2]-1,:]      # it's opposite corner
+                n2 = nodes_v[conn[2]-1,:]      # its opposite corner
                 ancrpos = ((n1[0]+n2[0])/2, (n1[1]+n2[1])/2, (n1[2]+n2[2])/2)
                 anchDict[fc] = ancrpos
                 
@@ -241,8 +217,7 @@ def smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=False):
     RVE_zmin, RVE_zmax = min(zvals), max(zvals)
     
     # Find each grain's outer face ids and its nodal connectivities
-    grain_facesDict, gbDict, shared_area = \
-        calcGrainFaces(nodes_v,elmtDict,elmtSetDict)
+    grain_facesDict = readGrainFaces(nodes_v,elmtDict,elmtSetDict)
     
     # Initialize the spring-mass-anchor system
     allNodes,anchDict = initalizeSystem(nodes_v,grain_facesDict)

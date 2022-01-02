@@ -53,16 +53,18 @@ def test_particleStatGenerator():
         sd = json.load(json_file)
 
     # Dictionaries to verify against
-    compare_rd = {'RVE_sizeX': 6, 'RVE_sizeY': 6, 'RVE_sizeZ': 6, 'Voxel_numberX': 15, 'Voxel_numberY': 15, 
-                  'Voxel_numberZ': 15, 'Voxel_resolutionX': 0.4, 'Voxel_resolutionY': 0.4, 'Voxel_resolutionZ': 0.4}
+    compare_rd = {'RVE_sizeX': 6, 'RVE_sizeY': 6, 'RVE_sizeZ': 6,
+                  'Voxel_numberX': 15, 'Voxel_numberY': 15, 'Voxel_numberZ': 15,
+                  'Voxel_resolutionX': 0.4, 'Voxel_resolutionY': 0.4, 'Voxel_resolutionZ': 0.4,
+                  'Periodic': True, 'Units': 'mm'}
     compare_sd = {'Time steps': 1000, 'Periodicity': 'True', 'Output units': 'mm'}
     
     # Verify
     assert rd == compare_rd
     assert sd == compare_sd
 
-    os.remove(stat_inp)
-    shutil.rmtree(json_dir)
+    #os.remove(stat_inp)
+    #shutil.rmtree(json_dir)
     
 
 @pytest.fixture

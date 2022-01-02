@@ -199,10 +199,7 @@ def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
     if not (gtype=='Elongated' or gtype=='Equiaxed'):
         raise ValueError('Wrong grain type given in set_stats: {}'
                          .format(gtype))
-    if periodicity:
-        pbc = 'True'
-    else:
-        pbc = 'False'
+    pbc = 'True' if periodicity else 'False'
 
     # check grain type
     # create the corresponding dict with statistical grain geometry information

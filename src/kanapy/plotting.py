@@ -11,9 +11,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 
-def plot_microstructure_3D(voxels, Ngr=1, sliced=False, dual_phase=False,
-                           mask=None, cmap='prism'):
+def plot_voxels_3D(voxels, Ngr=1, sliced=False, dual_phase=False,
+                   mask=None, cmap='prism', alpha=1.0):
+    '''
+    Plot voxeles in microstructure, each grain with a different color. Sliced 
+    indicates whether one eights of the box should be removed to see internal 
+    structure. With alpha, the transparency of the voxels can be adjusted.
 
+    Parameters
+    ----------
+    voxels : int array
+        Grain number associated to each voxel
+    Ngr : int, optional
+        Number of grains. The default is 1.
+    sliced : Boolean, optional
+        Indicate if one eighth of box is invisible. The default is False.
+    dual_phase : Boolean, optional
+        Indicate if microstructure is dual phase. The default is False.
+    mask : bool array, optional
+        Mask for voxels to be displayed. The default is None, in which case
+        all voxels will be plotted (except sliced).
+    cmap : color map, optional
+        Color map for voxels. The default is 'prism'.
+    alpha : float, optional
+        Adjust transparaency of voxels in alpha channel of color map. 
+        The default is 1.0.
+
+    Returns
+    -------
+    ax : matplotlib.axes
+        Axes handle for 3D subplot
+
+    '''
     Nx = voxels.shape[0]
     Ny = voxels.shape[1]
     Nz = voxels.shape[2]
@@ -41,19 +70,74 @@ def plot_microstructure_3D(voxels, Ngr=1, sliced=False, dual_phase=False,
         vox_b[ix:Nx,iy:Ny,iz:Nz] = False
 
     ax = plt.figure().add_subplot(projection='3d')
+    colors[:,:,:,-1] = alpha   # add semitransparency
     ax.voxels(vox_b, facecolors=colors, edgecolors=colors, shade = True)
     ax.set(xlabel='x', ylabel='y', zlabel='z')
-    
+    ax.set_title('Voxelated microstructure')
     ax.view_init(30, 30)
     ax.set_xlim(right=Nx)
     ax.set_ylim(top=Ny)
     ax.set_zlim(top=Nz)
+    # plt.show()
+
+    return ax
+
+def plot_polygons_3D(grains, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1]):
+    '''
+    Plot triangularized convex hulls of grains, based on vertices, i.e. 
+    connection points of 4 up to 8 grains or the end pointss of triple or quadriiple 
+    lines between grains.
+
+    Parameters
+    ----------
+    grains : dict
+        Dictonary with 'vertices' (node numbers) and 'simplices' (triangles)
+    nodes : (N,nx,ny,nz)-array
+        Nodal positions
+    cmap : color map, optional
+        Color map for triangles. The default is 'prism'.
+    alpha : float, optional
+        Transparency of plotted objects. The default is 0.4.
+    ec : color, optional
+        Color of edges. The default is [0.5,0.5,0.5,0.1].
+
+    Returns
+    -------
+    None.
+
+    '''
+    cm = plt.cm.get_cmap(cmap, len(grains.keys()))
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    for igr in grains.keys():
+        pts = grains[igr]['Points']
+        if len(pts) > 6:
+            col = list(cm(igr))
+            col[-1] = alpha   # change alpha channel to create semi-transparency
+            ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
+                            triangles=grains[igr]['Simplices'], color=col, 
+                            edgecolor=ec, linewidth=1)
+    ax.set(xlabel='x', ylabel='y', zlabel='z')
+    ax.set_title('Polygonized microstructure')
+    ax.view_init(30, 30)
     plt.show()
+    
+def plot_ellipsoids_3D(particles, cmap='prism'):
+    '''
+    Display ellipsoids during or after packing procedure
 
-    return 
+    Parameters
+    ----------
+    particles : Class particles
+        Ellipsoids in microstructure before voxelization.
+    cmap : color map, optional
+        Color map for ellipsoids. The default is 'prism'.
 
-def plot_ellipsoids(particles, cmap='prism'):
-              
+    Returns
+    -------
+    None.
+
+    '''
     fig = plt.figure(figsize=plt.figaspect(1),dpi=1200) 
     ax = fig.add_subplot(111, projection='3d')
     ax.set(xlabel='x', ylabel='y', zlabel='z')

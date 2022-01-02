@@ -223,6 +223,7 @@ def smoothen(ctx):
         except FileNotFoundError:
             print('Json files not found, make sure "nodes_v.json", "elmtDict.json" and "elmtSetDict.json" files exist!')
             raise FileNotFoundError
+
         smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=True)    
     except KeyboardInterrupt:
         sys.exit(0)

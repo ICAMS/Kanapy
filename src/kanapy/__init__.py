@@ -4,9 +4,8 @@
 
 from pkg_resources import get_distribution
 from kanapy.api import Microstructure
-from kanapy.plotting import plot_microstructure_3D
+from kanapy.plotting import plot_voxels_3D, plot_polygons_3D
 from kanapy.input_output import writeAbaqusMat
-from kanapy.smoothingGB import calcGrainFaces
 from kanapy.util import ROOT_DIR, MAIN_DIR, MTEX_DIR
 try:
     from kanapy.analyse_micrograph import EBSDmap, set_stats
