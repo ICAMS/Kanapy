@@ -7,7 +7,7 @@ descriptors.
 The methods of the class Microstructure for an API that can be used to generate
 Python workflows.
 
-Authors: Alexander Hartmaier, Golsa Tolooei Eshlghi
+Authors: Alexander Hartmaier, Golsa Tolooei Eshlghi, Abhishek Biswas
 Institution: ICAMS, Ruhr University Bochum
 
 """
@@ -15,7 +15,8 @@ import os
 import json
 import itertools
 import numpy as np
-from scipy.spatial import ConvexHull
+import matplotlib.pyplot as plt
+from scipy.spatial import ConvexHull, Delaunay
 from kanapy.input_output import particleStatGenerator, RVEcreator,\
     write_output_stat, plot_output_stats, export2abaqus
 from kanapy.packing import packingRoutine
@@ -173,7 +174,7 @@ class Microstructure:
             if 'Grains' in self.RVE_data.keys():
                 grains = self.RVE_data['Grains']
             else:
-                raise ValueError('No polygons for grains defined. Run analyse first')
+                raise ValueError('No polygons for grains defined. Run analyse_RVE first')
         plot_polygons_3D(grains, cmap=cmap, alpha=alpha, ec=ec)
 
         
@@ -184,7 +185,7 @@ class Microstructure:
         if data is None:
             data = self.res_data
         if data is None:
-            raise ValueError('No microstructure data created yet. Run output_stats first.')
+            raise ValueError('No microstructure data created yet. Run analyse_RVE first.')
         plot_output_stats(data, gs_data=gs_data, gs_param=gs_param,
                           ar_data=ar_data, ar_param=ar_param,
                           save_files=save_files)
@@ -263,6 +264,199 @@ class Microstructure:
             for key, value in par_dict.items():
                 fd.write('{0}\n'.format(value[3]))
         print('---->DONE!\n')
+        
+    def output_ang(self, ori=None, cut='xy', data=None, plot=True,
+                   pos=None, matname='XXXX'):
+        """
+        Convert orientation information of microstructure into a .ang file,
+        mimicking an EBSD map.
+        If polygonalized microstructure is avaible, it will be used as data 
+        basis, otherwise or if data='voxels' the voxelized microstructure 
+        will be exported.
+        If no orientation are provided, each grain will get a random 
+        Euler angle
+        Values in ANG file:
+        phi1 Phi phi2 X Y imageQuality confidenseIndex phase semSignal Fit(/mad)
+
+
+        Parameters
+        ----------
+        ori : (self.Ngr,)-array, optional
+            Euler angles of grains. The default is None.
+        cut : str, optional
+            Define cutting plane of slice as 'xy', 'xz' or 'yz'. The default is 'xy'.
+        data : str, optional
+            Define data basis for plotting as 'voxels' or 'poly'. The default is None.
+        pos : str or float
+            Position in which slice is taken, either as absolute value, or as 
+            one of 'top', 'bottom', 'left', 'right'. The default is None.
+        plot : anolena, optional
+            Indicate if slice is plotted. The default is True.
+
+        Returns
+        -------
+        fanem : str
+            Name of ang file.
+
+        """
+        cut = cut.lower()
+        if cut=='xy':
+            sizeX = self.RVE_data['RVE_sizeX']
+            sizeY = self.RVE_data['RVE_sizeY']
+            sx = self.RVE_data['Voxel_resolutionX']
+            sy = self.RVE_data['Voxel_resolutionY']
+            sz = self.RVE_data['Voxel_resolutionZ']
+            ix = np.arange(self.RVE_data['Voxel_numberX'])
+            iy = np.arange(self.RVE_data['Voxel_numberY'])
+            if pos is None or pos=='top' or pos=='right':
+                iz = self.RVE_data['Voxel_numberZ'] - 1
+            elif pos=='bottom' or pos=='left':
+                iz = 0
+            elif type(pos)==float or type(pos)==int:
+                iz = int(pos/sz)
+            else:
+                raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
+            xl = r'x ($\mu$m)'
+            yl = r'y ($\mu$m)'
+            title = r'XY slice at z={} $\mu$m'.format(round(iz*sz, 1))
+        elif cut=='xz':
+            sizeX = self.RVE_data['RVE_sizeX']
+            sizeY = self.RVE_data['RVE_sizeZ']
+            sx = self.RVE_data['Voxel_resolutionX']
+            sy = self.RVE_data['Voxel_resolutionZ']
+            sz = self.RVE_data['Voxel_resolutionY']
+            ix = np.arange(self.RVE_data['Voxel_numberX'])
+            iy = np.arange(self.RVE_data['Voxel_numberZ'])
+            if pos is None or pos=='top' or pos=='right':
+                iz = self.RVE_data['Voxel_numberY'] - 1
+            elif pos=='bottom' or pos=='left':
+                iz = 0
+            elif type(pos)==float or type(pos)==int:
+                iz = int(pos/sy)
+            else:
+                raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
+            xl = r'x ($\mu$m)'
+            yl = r'z ($\mu$m)'
+            title = r'XZ slice at y={} $\mu$m'.format(round(iz*sz, 1))
+        elif cut=='yz':
+            sizeX = self.RVE_data['RVE_sizeY']
+            sizeY = self.RVE_data['RVE_sizeZ']
+            sx = self.RVE_data['Voxel_resolutionY']
+            sy = self.RVE_data['Voxel_resolutionZ']
+            sz = self.RVE_data['Voxel_resolutionX']
+            ix = np.arange(self.RVE_data['Voxel_numberY'])
+            iy = np.arange(self.RVE_data['Voxel_numberZ'])
+            if pos is None or pos=='top' or pos=='right':
+                iz = self.RVE_data['Voxel_numberX'] - 1
+            elif pos=='bottom' or pos=='left':
+                iz = 0
+            elif type(pos)==float or type(pos)==int:
+                iz = int(pos/sx)
+            else:
+                raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
+            if pos is None:
+                pos = int(iz*sz)
+            xl = r'y ($\mu$m)'
+            yl = r'z ($\mu$m)'
+            title = r'YZ slice at x={} $\mu$m'.format(round(iz*sz, 1))
+        else:
+            raise ValueError('"cut" must bei either "xy", "xz" or "yz".')
+        # ANG file header
+        head = ['# TEM_PIXperUM          1.000000\n',
+                '# x-star                0.000000\n',
+                '# y-star                0.000000\n',
+                '# z-star                0.000000\n',
+                '# WorkingDistance       0.000000\n',
+                '#\n',
+                '# Phase 0\n',
+                '# MaterialName  	{}\n'.format(matname),
+                '# Formula\n',
+                '# Info\n',
+                '# Symmetry              m-3m\n',
+                '# LatticeConstants       4.050 4.050 4.050  90.000  90.000  90.000\n',
+                '# NumberFamilies        0\n',
+                '# ElasticConstants 	0.000000 0.000000 0.000000 0.000000 0.000000 0.000000\n',
+                '# ElasticConstants 	0.000000 0.000000 0.000000 0.000000 0.000000 0.000000\n',
+                '# ElasticConstants 	0.000000 0.000000 0.000000 0.000000 0.000000 0.000000\n',
+                '# ElasticConstants 	0.000000 0.000000 0.000000 0.000000 0.000000 0.000000\n',
+                '# ElasticConstants 	0.000000 0.000000 0.000000 0.000000 0.000000 0.000000\n',
+                '# ElasticConstants 	0.000000 0.000000 0.000000 0.000000 0.000000 0.000000\n',
+                '# Categories0 0 0 0 0\n',     
+                '# \n',
+                '# GRID: SqrGrid\n',
+                '# XSTEP: {}\n'.format(round(sx, 6)),
+                '# YSTEP: {}\n'.format(round(sy, 6)),
+                '# NCOLS_ODD: {}\n'.format(ix),
+                '# NCOLS_EVEN: {}\n'.format(ix),
+                '# NROWS: {}\n'.format(iy),
+                '#\n',
+                '# OPERATOR: 	Administrator\n',
+                '#\n',
+                '# SAMPLEID:\n',
+                '#\n',
+                '# SCANID:\n', 	
+                '#\n'       
+                ]
+        
+        # determine whether polygons or voxels shall be exported
+        if data is None:
+            if 'Grains' in self.RVE_data.keys():
+                data = 'poly'
+            elif self.voxels is None:
+                raise ValueError('Neither polygons nor voxels for grains are present.\
+                                 \nRun voxelize and analyze_RVE first')
+            else:
+                data = 'voxels'
+        elif data!='voxels' and data!='poly':
+            raise ValueError('"data" must be either "voxels" or "poly".')
+                
+        if data=='voxels':
+            if cut=='xy':
+                g_slice = np.array(self.voxels[:,:,iz], dtype=int)
+            elif cut=='xz':
+                g_slice = np.array(self.voxels[:,iz,:], dtype=int)
+            else:
+                g_slice = np.array(self.voxels[iz,:,:], dtype=int)
+        else:
+            xv, yv = np.meshgrid(ix*sx, iy*sy, indexing='ij')
+            grain_slice = np.ones(len(ix)*len(iy), dtype=int)
+            if cut=='xy':
+                mesh_slice = np.array([xv.flatten(), yv.flatten(), grain_slice*iz*sz]).T
+            elif cut=='xz':
+                mesh_slice = np.array([xv.flatten(), grain_slice*iz*sz, yv.flatten()]).T
+            else:
+                mesh_slice = np.array([grain_slice*iz*sz, xv.flatten(), yv.flatten()]).T
+            for igr in self.RVE_data['Grains'].keys():
+                pts = self.RVE_data['Grains'][igr]['Points']
+                tri = Delaunay(pts)
+                i = tri.find_simplex(mesh_slice)
+                ind = np.nonzero(i >= 0)[0]
+                grain_slice[ind] = igr
+            g_slice = grain_slice.reshape(xv.shape)
+        
+        # write data to ang file
+        fname = '{0}_slice_{1}_{2}.ang'.format(cut.upper(), pos, data)
+        with open (fname,'w') as f:
+            f.writelines(head)
+            for j in iy:
+                for i in ix:
+                    p1 = ori[g_slice[j,i], 0]
+                    P  = ori[g_slice[j,i], 1]
+                    p2 = ori[g_slice[j,i], 2]
+                    f.write('  {0}  {1}  {2}  {3}  {4}   0.0  0.000  0   1  0.000\n'\
+                            .format(round(p1,5), round(P,5), round(p2,5),
+                                    round(sizeX-i*sx, 5), round(sizeY-j*sy, 5)))
+        if plot:
+            # plot grains on slice
+            cmap = plt.cm.get_cmap('gist_rainbow')
+            fig, ax = plt.subplots(1)
+            ax.grid(False)
+            ax.imshow(g_slice, cmap=cmap, interpolation='none', 
+                      extent=[0, sizeX, 0, sizeY])
+            ax.set(xlabel=xl, ylabel=yl)
+            ax.set_title(title)
+            plt.show()
+        return fname
 
     """
     --------        Supporting Routines         -------
@@ -288,7 +482,6 @@ class Microstructure:
 
         """
         periodic = self.RVE_data['Periodic']
-        print(periodic, type(periodic))
         RVE_min = np.amin(self.nodes_v, axis=0)
         RVE_max = np.amax(self.nodes_v, axis=0)
         voxel_size = self.RVE_data['Voxel_resolutionX']
@@ -459,7 +652,7 @@ class Microstructure:
         for igr in self.elmtSetDict.keys():
             vertices.update(vert[igr])
             grains[igr] = dict()
-            grains[igr]['Nodes'] = np.array(list(vert[igr]), dtype=int)-1
+            grains[igr]['Nodes'] = np.array(list(vert[igr]), dtype=int) - 1
             points = self.nodes_v[grains[igr]['Nodes']]
             try:
                 hull = ConvexHull(points, qhull_options='QJ Pp')
@@ -476,7 +669,7 @@ class Microstructure:
                 grains[igr]['Area'] = 0.
             grains[igr]['Center'] = np.mean(points, axis=0)
         self.RVE_data['Grains'] = grains
-        self.RVE_data['Vertices'] = list(vertices)
+        self.RVE_data['Vertices'] = np.array(list(vertices), dtype=int) - 1
         self.RVE_data['GBnodes'] = gbDict
         self.RVE_data['GBarea'] = shared_area
         

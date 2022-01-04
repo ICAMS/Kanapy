@@ -33,7 +33,7 @@ ms.plot_voxels(sliced=False)
 ms.plot_stats(gs_param=ebsd.gs_param, ar_param=ebsd.ar_param)
 
 # get list of orientations for grains in RVE matching the ODF of the EBSD map
-ori_rve = ebsd.calcORI(ms.particle_data['Number'], ms.shared_area)
+ori_rve = ebsd.calcORI(ms.Ngr, ms.shared_area)
 knpy.writeAbaqusMat(matnumber, ori_rve)
 
 #write Abaqus input file for voxelated structure
