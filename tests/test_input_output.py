@@ -63,8 +63,8 @@ def test_particleStatGenerator():
     assert rd == compare_rd
     assert sd == compare_sd
 
-    #os.remove(stat_inp)
-    #shutil.rmtree(json_dir)
+    os.remove(stat_inp)
+    shutil.rmtree(json_dir)
     
 
 @pytest.fixture
