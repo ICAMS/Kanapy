@@ -21,6 +21,7 @@ import kanapy as knpy
 
 Nv = 50
 periodic = False
+matname='simulanium'
 #cutoff_min 15: 11 grains
 ms_elong = {'Grain type': 'Elongated', 
           'Equivalent diameter': {'std': 1.0, 'mean': 15.0, 'offs': 6.0, 'cutoff_min': 12.0, 'cutoff_max': 28.0},
@@ -38,7 +39,25 @@ ms.plot_ellipsoids()
 ms.voxelize()
 ms.plot_voxels()
 ms.analyze_RVE()
-ms.plot_polygons()  
+ms.plot_polygons()
+
+# compare microstructure on three surfaces 
+# for voxelated and polygonalized grains
+ms.plot_slice(cut='xy', pos='top', data='voxels')
+ms.plot_slice(cut='xy', pos='top', data='poly')
+ms.plot_slice(cut='xz', pos='top', data='voxels')
+ms.plot_slice(cut='xz', pos='top', data='poly')
+ms.plot_slice(cut='yz', pos='top', data='voxels')
+ms.plot_slice(cut='yz', pos='top', data='poly')
+
+# generate grain orientations and write ang file
+ang = [0, 45, 0]    # Euler angles for Goss texture
+omega = 7.5         # kernel half-width
+ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
+fname = ms.output_ang(ori=ori_rve, matname=matname)
+
+# analyze result
+ebsd = knpy.EBSDmap(fname, matname)
 
 for igr in range(1,6):
     # plot voxels of grain

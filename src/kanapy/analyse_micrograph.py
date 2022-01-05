@@ -3,12 +3,14 @@ Tools for analysis of EBSD maps in form of .ang files
 
 @author: Alexander Hartmaier, Abhishek Biswas, ICAMS, Ruhr-Universität Bochum
 """
-import os, json
+import os
+import json
+import warnings
 import matlab.engine
 import numpy as np
 import matplotlib.pyplot as plt
 from kanapy.util import MTEX_DIR, ROOT_DIR
-from scipy.stats import lognorm, norm, gamma
+from scipy.stats import lognorm, norm
 
 class EBSDmap:
     '''Class to store attributes and methods to import EBSD maps
@@ -32,7 +34,7 @@ class EBSDmap:
         # Texture analysis: if multiple phases exist, select one single phase
 
         self.ori = eng.getfield(ebsd, 'orientations')  # orientation set from the EBSD
-        
+        self.cs = eng.getfield(ebsd, 'CS')
         # analyze grain boundaries with MTEX function
         grains_full = eng.calcGrains(ebsd, 'boundary', 'tight', 'angle',
                                      5*(np.pi/180.0))
@@ -44,15 +46,20 @@ class EBSDmap:
         # calculate orientation, long and short axes of ellipses
         omega_r, ha, hb = eng.principalComponents(self.grains, nargout=3)
         omega = np.array(omega_r)[:, 0]
-        '''hist, bin_edges = np.histogram(omega, bins=30)
+        hist, bin_edges = np.histogram(omega, bins=30)
         im = np.argmax(hist)
-        oc = bin_edges[im]
-        if oc < np.pi/3.:
-            ind = np.nonzero(omega>oc+np.pi)[0]
-            omega[ind] -= 2.*np.pi
-        elif oc > 5.*np.pi/3.:
-            ind = np.nonzero(omega>oc-np.pi)[0]
-            omega[ind] -= 2.*np.pi'''
+        hw = bin_edges[-1] - bin_edges[0]
+        hc = bin_edges[im]
+        hh = (hc-bin_edges[0])/hw
+        if hh < 0.35:
+            # maximum of distribution in lower quartile
+            # shift large omegas to negative values
+            ind = np.nonzero(omega > hc+0.35*hw)[0]
+            omega[ind] -= np.pi
+        elif hh > 0.65:
+            ind = np.nonzero(omega < hc-0.35*hw)[0]
+            omega[ind] += np.pi
+        self.omega=omega
         self.ngrain = len(omega)
         if plot:
             # plot EBSD map
@@ -66,19 +73,26 @@ class EBSDmap:
             eng.plotEllipse(centres, ha, hb, omega_r, 'lineColor', 'r',
                             'linewidth', 2.0, nargout=0)
             eng.hold('off', nargout=0)
-        
-            '''ODF too large for plotting
-            # estimate the ODF using KDE
-            odf = eng.calcKernelODF(ori,'kernel',psi)
+            ipfKey = eng.ipfColorKey(self.ori, nargout=1)
+            eng.plot(ipfKey, nargout=0)
             
-            # describe poles for the polefigure plot ()
-            cs = eng.getfield(odf,'CS')
-            h = [eng.Miller(1,0,0,cs),eng.Miller(1,1,0,cs),eng.Miller(1,1,1,cs)]
+            ''' ODF plotting produces system failure
+            # plot ODF 
+            # estimate the ODF using KDE
+            psi = eng.deLaValleePoussinKernel('halfwidth', 5*np.pi/180.)
+            odf = eng.calcKernelODF(self.ori, 'kernel', psi)
+            
+            h = [eng.Miller(1, 0, 0, self.cs),
+                 eng.Miller(1, 1, 0, self.cs),
+                 eng.Miller(1, 1, 1, self.cs)]
             
             # plot pole figure
-            eng.plotPDF(odf,h,'contourf', nargout=0)
-            eng.hold('on', nargout=0)
-            eng.mtexColorbar'''
+            try:
+                eng.plotPDF(odf,h,'contourf', nargout=0)
+                eng.hold('on', nargout=0)
+                eng.mtexColorbar
+            except:
+                warnings.warn('ODF too large for plotting')    '''
         
         # Evaluate grain shape statistics
         # generate dict for statistical input for geometry module
@@ -104,17 +118,14 @@ class EBSDmap:
         # grain aspect ratio
         asp = np.array(eng.aspectRatio(self.grains))[:,0]
         asig, aoffs, ascale = lognorm.fit(asp)  # fit log normal distribution
-        gsig, goffs, gscale = gamma.fit(asp)
-        self.ar_param = [gsig, goffs, gscale]
+        self.ar_param = [asig, aoffs, ascale]
         self.ar_data = asp
         if plot:
             # plot distribution of aspect ratios
             fig, ax = plt.subplots()
             x = np.linspace(np.amin(asp), np.amax(asp), 150)
             y = lognorm.pdf(x, asig, loc=aoffs, scale=ascale)
-            yg = gamma.pdf(x, gsig, loc=1., scale=gscale)
             ax.plot(x, y, '-r', label='fit lognorm')
-            ax.plot(x, yg, '.g', label='fit gamma')
             afreq, abins, art = ax.hist(asp, bins=20, density=True, label='density')
             plt.legend()
             plt.title('Histogram of grain aspect ratio')
@@ -227,8 +238,63 @@ def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
             json.dump(ms_stats, outfile, indent=2)
     
     return ms_stats
-       
-            
-       
 
+def createOriset(num, ang, omega, cs='m-3m', Nbase=50000):
+    """
+    Create a set on num Euler angles according to the ODF defined by the 
+    set of Euler angles ang and the kernel half-width omega.
+    Example: Goss texture: ang = [0, 45, 0], omega = 5
+
+    Parameters
+    ----------
+    num : int
+        Numberof Euler angles in set to be created.
+    ang : (3,) or (M, 3) array
+        Set of Euler angles (in degrees) defining the ODF.
+    omega : float
+        Half-wodth of kernel in degrees.
+    cs : str, optional
+        Crystal symmetry group. The default is 'm3m'.
+
+    Returns
+    -------
+    ori : (num, 3) array
+        Set of Euler angles
+
+    """
+    # start Matlab engine
+    eng = matlab.engine.start_matlab()
+    eng.addpath(MTEX_DIR, nargout=0)
+    eng.addpath(ROOT_DIR, nargout=0)
+    eng.startup(nargout=0)
+    
+    # prepare parameters
+    deg = np.pi/180.
+    omega *= deg
+    ang = np.array(ang)*deg
+    
+    '''
+    # support for higher dim arrays for orientation angles
+    N = len(ang)
+    sh = ang.shape
+    if N==3 and sh==(3,):
+        ang=np.array([ang])
+    elif sh==(N,3):
+        raise ValueError('"ang" must be a single Euler angle, i.e. (3,) array,'+\
+                         'or an (N,3) array of Euler angles')'''
         
+    cs_ = eng.crystalSymmetry(cs)
+    
+    ori = eng.orientation('Euler', float(ang[0]), float(ang[1]),
+                          float(ang[2]), cs_)
+    psi = eng.deLaValleePoussinKernel('halfwidth', omega)
+    odf = eng.calcKernelODF(ori, 'kernel', psi)
+
+    # create artificial EBSD
+    o = eng.calcOrientations(odf, Nbase);
+
+    ori, odfred, ero = \
+        eng.textureReconstruction(num, 'orientation', o, 'kernel', psi,
+                                  nargout=3)
+        
+    return np.array(eng.Euler(ori))

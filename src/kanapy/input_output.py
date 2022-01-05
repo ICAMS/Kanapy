@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import defaultdict
-from scipy.stats import lognorm, gamma, norm
+from scipy.stats import lognorm, norm
 from scipy.spatial import ConvexHull 
 from scipy.spatial.distance import euclidean
     
@@ -128,7 +128,7 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
         if offs_AR is None:
             frozen_lognorm = lognorm(s=sd_AR, scale=np.exp(mean_AR))
         else:
-            frozen_lognorm = gamma(sd_AR, loc=offs_AR, scale=mean_AR)
+            frozen_lognorm = lognorm(sd_AR, loc=offs_AR, scale=mean_AR)
         xaxis = np.linspace(0.5, 2*ar_cutoff_max, 500)
         ypdf = frozen_lognorm.pdf(xaxis)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)              
@@ -324,7 +324,7 @@ def RVEcreator(stats_dict, save_files=False):
             if offs_AR is None:
                 ar = lognorm.rvs(sd_AR, scale=np.exp(mean_AR), size=num)
             else:
-                ar = gamma.rvs(sd_AR, loc=offs_AR, scale=mean_AR, size=num)
+                ar = lognorm.rvs(sd_AR, loc=offs_AR, scale=mean_AR, size=num)
             index_array = np.where((ar >= ar_cutoff_min) & (ar <= ar_cutoff_max))
             AR = ar[index_array].tolist()            
             finalAR.extend(AR)                                                
@@ -1219,13 +1219,13 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         '''par_data, grain_data = np.log(par_AR), np.log(grain_AR)
         mu_par, std_par = np.mean(par_data), np.std(par_data)
         mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)'''
-        std_par, offs_par, sc_par = gamma.fit(par_AR)
-        std_gr, offs_gr, sc_gr = gamma.fit(grain_AR)
+        std_par, offs_par, sc_par = lognorm.fit(par_AR)
+        std_gr, offs_gr, sc_gr = lognorm.fit(grain_AR)
         
         #par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
         #grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr))
-        par_lognorm = gamma(std_par, loc=offs_par, scale=sc_par) 
-        grain_lognorm = gamma(std_gr, loc=offs_gr, scale=sc_gr) 
+        par_lognorm = lognorm(std_par, loc=offs_par, scale=sc_par) 
+        grain_lognorm = lognorm(std_gr, loc=offs_gr, scale=sc_gr) 
         data = [par_AR, grain_AR]
         label = ['Input', 'Output']
         if ar_data is not None:
@@ -1254,7 +1254,7 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
             x0 = np.amin(par_AR)
             x1 = np.amax(par_AR)
             x = np.linspace(x0, x1, num=100)
-            y = gamma.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
+            y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
             area = np.trapz(y, x)
             y /= area
             ax[1].plot(x, y, '--k', label='Experiment')

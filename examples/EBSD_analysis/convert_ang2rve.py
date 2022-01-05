@@ -2,12 +2,13 @@ import kanapy as knpy
 from math import pi
 
 if not knpy.MTEX_AVAIL:
-    raise ModuleNotFoundError('Anaysis of EBSD maps is only possible with an existing MTEX installation in Matlab.')
+    raise ModuleNotFoundError('Anaysis of EBSD maps is only possible with an'+\
+                              ' existing MTEX installation in Matlab.')
     
-fname = 'ebsd_316L_500x500.ang'
+fname = 'ebsd_316L_500x500.ang'  # name of ang file to be imported
 #fname = 'ebsd_316L_1000x1000.ang'
-matname = 'Iron fcc'
-matnumber = 4  # 'material number of austenite in CP UMAT
+matname = 'Iron fcc'  # material name for MTEX
+matnumber = 4         # material number of austenite in CP UMAT
 
 # read EBSD map and evaluate statistics of microstructural features
 ebsd = knpy.EBSDmap(fname, matname)
@@ -19,7 +20,7 @@ ebsd = knpy.EBSDmap(fname, matname)
 ms_stats = knpy.set_stats(ebsd.gs_param, ebsd.ar_param, ebsd.om_param,
                           deq_min=8., deq_max=30., asp_min=1., asp_max=3.,
                           omega_min=0., omega_max=2*pi, voxels=60, size=100,
-                          periodicity=True)
+                          periodicity=False)
 
 # create and visualize synthetic RVE
 ms = knpy.Microstructure(descriptor=ms_stats, name=fname+'_RVE')
@@ -30,16 +31,29 @@ ms.plot_ellipsoids()
 ms.voxelize()
 ms.analyze_RVE()
 ms.plot_voxels(sliced=False)
+ms.plot_polygons()
 ms.plot_stats(gs_param=ebsd.gs_param, ar_param=ebsd.ar_param)
+
+# compare microstructure on three surfaces 
+# for voxelated and polygonalized grains
+ms.plot_slice(cut='xy', pos='top', data='voxels')
+ms.plot_slice(cut='xy', pos='top', data='poly')
+ms.plot_slice(cut='xz', pos='top', data='voxels')
+ms.plot_slice(cut='xz', pos='top', data='poly')
+ms.plot_slice(cut='yz', pos='top', data='voxels')
+ms.plot_slice(cut='yz', pos='top', data='poly')
 
 # get list of orientations for grains in RVE matching the ODF of the EBSD map
 ori_rve = ebsd.calcORI(ms.Ngr, ms.shared_area)
+
+# export virtual EBSD map as ang file and analyse with MTEX
+ang_rve = ms.output_ang(ori=ori_rve, cut='xy', pos='top', cs=ebsd.cs,
+                        matname=matname)
+ebsd_rve = knpy.EBSDmap(ang_rve, matname)
+
+# write Abaqus input file for voxelated structure
+ms.output_abq('v')
+# write Euler angles of grains into Abaqus input file
 knpy.writeAbaqusMat(matnumber, ori_rve)
 
-#write Abaqus input file for voxelated structure
-ms.output_abq('v')
-
-#smoothen grain boundaries and write Abaqus input file for smoothened structure
-ms.smoothen()
-ms.output_abq('s')
 

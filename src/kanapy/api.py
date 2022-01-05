@@ -14,6 +14,7 @@ Institution: ICAMS, Ruhr University Bochum
 import os
 import json
 import itertools
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull, Delaunay
@@ -189,7 +190,41 @@ class Microstructure:
         plot_output_stats(data, gs_data=gs_data, gs_param=gs_param,
                           ar_data=ar_data, ar_param=ar_param,
                           save_files=save_files)
+        
+    def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
+                   save_files=False):
+        """
+        Plot a slice through the microstructure.
+        
+        If polygonalized microstructure is available, it will be used as data 
+        basis, otherwise or if data='voxels' the voxelized microstructure 
+        will be plotted.
+        
+        This subroutine calls the output_ang function with plotting active 
+        and writing of ang file deactivated.
 
+        Parameters
+        ----------
+        cut : str, optional
+            Define cutting plane of slice as 'xy', 'xz' or 'yz'. The default is 'xy'.
+        data : str, optional
+            Define data basis for plotting as 'voxels' or 'poly'. The default is None.
+        pos : str or float
+            Position in which slice is taken, either as absolute value, or as 
+            one of 'top', 'bottom', 'left', 'right'. The default is None.
+        fname : str, optional
+            Filename of PDF file. The default is None.
+        save_files : bool, optional
+            Indicate if figure file is saved and PDF. The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.output_ang(cut=cut, data=data, plot=True, save_files=False,
+                       pos=pos, fname=fname, save_plot=save_files)
+            
     """
     --------        Output/Export routines        --------
     """
@@ -239,6 +274,7 @@ class Microstructure:
             if os.path.exists(name):
                 os.remove(name)                  # remove old file if it exists
         export2abaqus(nodes, name, simulation_data, elmtSetDict, elmtDict, grain_facesDict=faces)
+        return name
 
     #def output_neper(self, timestep=None):
     def output_neper(self):
@@ -265,18 +301,20 @@ class Microstructure:
                 fd.write('{0}\n'.format(value[3]))
         print('---->DONE!\n')
         
-    def output_ang(self, ori=None, cut='xy', data=None, plot=True,
-                   pos=None, matname='XXXX'):
+    def output_ang(self, ori=None, cut='xy', data=None, plot=True, cs=None,
+                   pos=None, fname=None, matname='XXXX', save_files=True,
+                   save_plot=False):
         """
         Convert orientation information of microstructure into a .ang file,
         mimicking an EBSD map.
-        If polygonalized microstructure is avaible, it will be used as data 
+        If polygonalized microstructure is available, it will be used as data 
         basis, otherwise or if data='voxels' the voxelized microstructure 
         will be exported.
-        If no orientation are provided, each grain will get a random 
-        Euler angle
+        If no orientations are provided, each grain will get a random 
+        Euler angle.
         Values in ANG file:
         phi1 Phi phi2 X Y imageQuality confidenseIndex phase semSignal Fit(/mad)
+        Output of ang file can be deactivated if called for plotting of slice.
 
 
         Parameters
@@ -287,15 +325,23 @@ class Microstructure:
             Define cutting plane of slice as 'xy', 'xz' or 'yz'. The default is 'xy'.
         data : str, optional
             Define data basis for plotting as 'voxels' or 'poly'. The default is None.
+        plot : bool, optional
+            Indicate if slice is plotted. The default is True.
         pos : str or float
             Position in which slice is taken, either as absolute value, or as 
             one of 'top', 'bottom', 'left', 'right'. The default is None.
-        plot : anolena, optional
-            Indicate if slice is plotted. The default is True.
+        cs : str, Optional
+            Crystal symmetry. Default is None
+        fname : str, optional
+            Filename of ang file. The default is None.
+        matname : str, optional
+            Name of the material to be written in ang file. The default is 'XXXX'
+        save_files : bool, optional
+            Indicate if ang file is saved, The default is True.
 
         Returns
         -------
-        fanem : str
+        fname : str
             Name of ang file.
 
         """
@@ -316,6 +362,8 @@ class Microstructure:
                 iz = int(pos/sz)
             else:
                 raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
+            if pos is None:
+                pos = int(iz*sz)
             xl = r'x ($\mu$m)'
             yl = r'y ($\mu$m)'
             title = r'XY slice at z={} $\mu$m'.format(round(iz*sz, 1))
@@ -335,6 +383,8 @@ class Microstructure:
                 iz = int(pos/sy)
             else:
                 raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
+            if pos is None:
+                pos = int(iz*sz)
             xl = r'x ($\mu$m)'
             yl = r'z ($\mu$m)'
             title = r'XZ slice at y={} $\mu$m'.format(round(iz*sz, 1))
@@ -411,6 +461,7 @@ class Microstructure:
             raise ValueError('"data" must be either "voxels" or "poly".')
                 
         if data=='voxels':
+            title += ' (Voxels)'
             if cut=='xy':
                 g_slice = np.array(self.voxels[:,:,iz], dtype=int)
             elif cut=='xz':
@@ -418,6 +469,7 @@ class Microstructure:
             else:
                 g_slice = np.array(self.voxels[iz,:,:], dtype=int)
         else:
+            title += ' (Polygons)'
             xv, yv = np.meshgrid(ix*sx, iy*sy, indexing='ij')
             grain_slice = np.ones(len(ix)*len(iy), dtype=int)
             if cut=='xy':
@@ -428,24 +480,35 @@ class Microstructure:
                 mesh_slice = np.array([grain_slice*iz*sz, xv.flatten(), yv.flatten()]).T
             for igr in self.RVE_data['Grains'].keys():
                 pts = self.RVE_data['Grains'][igr]['Points']
-                tri = Delaunay(pts)
-                i = tri.find_simplex(mesh_slice)
-                ind = np.nonzero(i >= 0)[0]
-                grain_slice[ind] = igr
+                try:
+                    tri = Delaunay(pts)
+                    i = tri.find_simplex(mesh_slice)
+                    ind = np.nonzero(i >= 0)[0]
+                    grain_slice[ind] = igr
+                except:
+                    warnings.warn('Grain #{} has not convex hull (Nvertices: {})'\
+                                  .format(igr, len(pts)))
+                    
             g_slice = grain_slice.reshape(xv.shape)
         
-        # write data to ang file
-        fname = '{0}_slice_{1}_{2}.ang'.format(cut.upper(), pos, data)
-        with open (fname,'w') as f:
-            f.writelines(head)
-            for j in iy:
-                for i in ix:
-                    p1 = ori[g_slice[j,i], 0]
-                    P  = ori[g_slice[j,i], 1]
-                    p2 = ori[g_slice[j,i], 2]
-                    f.write('  {0}  {1}  {2}  {3}  {4}   0.0  0.000  0   1  0.000\n'\
-                            .format(round(p1,5), round(P,5), round(p2,5),
-                                    round(sizeX-i*sx, 5), round(sizeY-j*sy, 5)))
+        if save_files:
+            if ori is None:
+                ori = np.zeros((self.Ngr, 3))
+                ori[:,0] = np.random.rand(self.Ngr)*2*np.pi
+                ori[:,1] = np.random.rand(self.Ngr)*0.5*np.pi
+                ori[:,2] = np.random.rand(self.Ngr)*0.5*np.pi
+            # write data to ang file
+            fname = '{0}_slice_{1}_{2}.ang'.format(cut.upper(), pos, data)
+            with open (fname,'w') as f:
+                f.writelines(head)
+                for j in iy:
+                    for i in ix:
+                        p1 = ori[g_slice[j,i]-1, 0]
+                        P  = ori[g_slice[j,i]-1, 1]
+                        p2 = ori[g_slice[j,i]-1, 2]
+                        f.write('  {0}  {1}  {2}  {3}  {4}   0.0  0.000  0   1  0.000\n'\
+                                .format(round(p1,5), round(P,5), round(p2,5),
+                                        round(sizeX-i*sx, 5), round(sizeY-j*sy, 5)))
         if plot:
             # plot grains on slice
             cmap = plt.cm.get_cmap('gist_rainbow')
@@ -455,6 +518,8 @@ class Microstructure:
                       extent=[0, sizeX, 0, sizeY])
             ax.set(xlabel=xl, ylabel=yl)
             ax.set_title(title)
+            if save_plot:
+                plt.savefig(fname[:-4]+'.pdf', format='pdf', dpi=300)
             plt.show()
         return fname
 
@@ -596,12 +661,13 @@ class Microstructure:
                 [ind.update(grain_facesDict[cb[0]][key]) for key in finter]
                 key = 'f{}_{}'.format(cb[0], cb[1])
                 gbDict[key] = ind
-                try:
-                    hull = ConvexHull(self.nodes_v[list(ind),:])
-                    shared_area.append([cb[0], cb[1], hull.area])
-                except:
-                    sh_area = len(finter) * (voxel_size**2)
-                    shared_area.append([cb[0], cb[1], sh_area])
+                if not(cb[0]>Ng or cb[1]>Ng):
+                    try:
+                        hull = ConvexHull(self.nodes_v[list(ind),:])
+                        shared_area.append([cb[0], cb[1], hull.area])
+                    except:
+                        sh_area = len(finter) * (voxel_size**2)
+                        shared_area.append([cb[0], cb[1], sh_area])
             else:
                 continue
         vert = dict()
