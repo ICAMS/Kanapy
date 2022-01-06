@@ -73,8 +73,6 @@ class EBSDmap:
             eng.plotEllipse(centres, ha, hb, omega_r, 'lineColor', 'r',
                             'linewidth', 2.0, nargout=0)
             eng.hold('off', nargout=0)
-            ipfKey = eng.ipfColorKey(self.ori, nargout=1)
-            eng.plot(ipfKey, nargout=0)
             
             ''' ODF plotting produces system failure
             # plot ODF 
@@ -173,6 +171,10 @@ class EBSDmap:
                     matlab.double(shared_area), nbins, nargout=4)
             return np.array(self.eng.Euler(orilist))
         
+    def showIPF(self):
+        ipfKey = self.eng.ipfColorKey(self.ori, nargout=1)
+        self.eng.plot(ipfKey, nargout=0)
+        
 def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
               asp_min=None, asp_max=None, omega_min=None, omega_max=None,
               size=100, voxels=60, gtype='Elongated', rveunit = 'um',
@@ -239,7 +241,8 @@ def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
     
     return ms_stats
 
-def createOriset(num, ang, omega, cs='m-3m', Nbase=50000):
+def createOriset(num, ang, omega, hist=None, shared_area=None,
+                 cs='m-3m', Nbase=50000):
     """
     Create a set on num Euler angles according to the ODF defined by the 
     set of Euler angles ang and the kernel half-width omega.
@@ -253,6 +256,10 @@ def createOriset(num, ang, omega, cs='m-3m', Nbase=50000):
         Set of Euler angles (in degrees) defining the ODF.
     omega : float
         Half-wodth of kernel in degrees.
+    hist : array, optional
+        Histogram of MDF. The default is None.
+    shared_area: array, optional
+        The shared area between pairs of grains. The default in None.
     cs : str, optional
         Crystal symmetry group. The default is 'm3m'.
 
@@ -296,5 +303,11 @@ def createOriset(num, ang, omega, cs='m-3m', Nbase=50000):
     ori, odfred, ero = \
         eng.textureReconstruction(num, 'orientation', o, 'kernel', psi,
                                   nargout=3)
-        
-    return np.array(eng.Euler(ori))
+    if hist is None:
+        return np.array(eng.Euler(ori))
+    else:
+        if shared_area is None:
+            raise ValueError('Microstructure.shared_area must be provided if hist is given.')
+        orilist, ein, eout, mbin = \
+            eng.gb_textureReconstruction(hist, ori, 
+                matlab.double(shared_area), len(hist), nargout=4)

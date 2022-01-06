@@ -1,7 +1,11 @@
 function [orilist,ein,eout,mbin] = ...
-    gb_textureReconstruction(inp,orilist,fl,nbin)
+    gb_textureReconstruction(grains,orilist,fl,nbin)
 
 tic
+
+gb = grains.boundary('indexed');
+seglen = gb.segLength;
+misori = gb.misorientation;
 
 RVEgrains = length(unique([fl(:,1); fl(:,2)])); 
 bin_score_area = sparse(fl(:,1),fl(:,2),fl(:,3),RVEgrains,RVEgrains);
@@ -9,33 +13,22 @@ area = bin_score_area(bin_score_area>0);
 
 index = 1:RVEgrains;
 
-oR = fundamentalRegion(orilist.CS,orilist.CS);
+%% first create bins of disorientation angle and apply weights to bins
+
+oR = fundamentalRegion(misori.CS,misori.SS);
 maxAng = oR.maxAngle;
 bins = linspace(0,maxAng,nbin+1);
 mbin = 0.5.*(bins(1:end-1)+bins(2:end)).*180/pi;
 
-if strcmp(class(inp),'grain2d')
-grains = inp;
-gb = grains.boundary('indexed');
-seglen = gb.segLength;
-misori = gb.misorientation;
 a_in = angle(misori);
 [~,loc] = histc(a_in,bins);
 et = sparse(loc,1:length(loc),seglen,nbin,length(loc));
 ein=sum(et,2);
 ein = full(ein);
 ein = ein./sum(ein); %weights of each bin based on segment length
-else
-ein = inp(:);
-if nbin~=length(ein)
-nbin=length(ein);
-end
-end
-
-%% first create bins of disorientation angle and apply weights to bins
 
 e_old = 100;
-flag=1; 
+flag=1;
 tol=0.05;
 rep_count_lim = 200;
 

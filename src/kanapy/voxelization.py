@@ -370,6 +370,7 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
         il = np.array(il) - 1
         hh[il] = ih
     voxels = np.reshape(hh, (voxX,voxY,voxZ), order='F')
+    voxels = np.array(voxels, dtype=int)
     
     # test consistency of voxel array with element dict
     '''for igr, iel in elmtSetDict.items():

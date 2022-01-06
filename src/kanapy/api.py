@@ -18,8 +18,9 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull, Delaunay
+from scipy.spatial.distance import euclidean
 from kanapy.input_output import particleStatGenerator, RVEcreator,\
-    write_output_stat, plot_output_stats, export2abaqus
+    write_output_stat, plot_output_stats, export2abaqus, l1_error_est
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
@@ -124,34 +125,18 @@ class Microstructure:
             smoothingRoutine(nodes_v, elmtDict, elmtSetDict,
                              save_files=save_files)
 
-    def analyze_RVE(self, nodes_v=None, elmtDict=None, elmtSetDict=None,
-                     particle_data=None, RVE_data=None, simulation_data=None,
-                     save_files=False):
+    def analyze_RVE(self, save_files=False):
         """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
         grain volumes and shared grain boundary surface areas info are written out as well."""
-        if nodes_v is None:
-            nodes_v = self.nodes_v
-        if elmtDict is None:
-            elmtDict = self.elmtDict
-        if elmtSetDict is None:
-            elmtSetDict = self.elmtSetDict
-        if particle_data is None:
-            particle_data = self.particle_data
-        if RVE_data is None:
-            RVE_data = self.RVE_data
-        if simulation_data is None:
-            simulation_data = self.simulation_data
             
-        if nodes_v is None:
+        if self.nodes_v is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-        if particle_data is None:
-            raise ValueError('No particles created yet. Run create_RVE, pack and voxelize first.')
+        if self.particle_data is None:
+            raise ValueError('No particles created yet. Run init_RVE, pack and voxelize first.')
             
-        self.res_data = \
-            write_output_stat(nodes_v, elmtDict, elmtSetDict,particle_data,
-                              RVE_data, simulation_data, save_files=save_files)
         self.grain_facesDict, self.shared_area = self.calcPolygons()  # updates RVE_data 
-        
+        self.res_data = self.get_stats()
+
     """
     --------     Plotting routines          --------
     """
@@ -478,6 +463,7 @@ class Microstructure:
                 mesh_slice = np.array([xv.flatten(), grain_slice*iz*sz, yv.flatten()]).T
             else:
                 mesh_slice = np.array([grain_slice*iz*sz, xv.flatten(), yv.flatten()]).T
+            grain_slice = np.zeros(len(ix)*len(iy), dtype=int)
             for igr in self.RVE_data['Grains'].keys():
                 pts = self.RVE_data['Grains'][igr]['Points']
                 try:
@@ -485,10 +471,29 @@ class Microstructure:
                     i = tri.find_simplex(mesh_slice)
                     ind = np.nonzero(i >= 0)[0]
                     grain_slice[ind] = igr
+                    if self.RVE_data['Periodic']:
+                        # add periodic images of grain to slice
+                        cb = np.array([self.RVE_data['RVE_sizeX'], self.RVE_data['RVE_sizeY'],
+                                       self.RVE_data['RVE_sizeZ']])*0.5
+                        sp = self.RVE_data['Grains'][igr]['Center'] - cb
+                        for i, split in enumerate(self.RVE_data['Grains'][igr]['Split']):
+                            if split:
+                                ppbc = np.array(pts)
+                                if sp[i] > 0.:
+                                    ppbc[:,i] -= 2*cb[i]
+                                else:
+                                    ppbc[:,i] += 2*cb[i]
+                                tri = Delaunay(ppbc)
+                                i = tri.find_simplex(mesh_slice)
+                                ind = np.nonzero(i >= 0)[0]
+                                grain_slice[ind] = igr
+                            '''Account for grains with multiple splits'''
                 except:
-                    warnings.warn('Grain #{} has not convex hull (Nvertices: {})'\
+                    warnings.warn('Grain #{} has no convex hull (Nvertices: {})'\
                                   .format(igr, len(pts)))
-                    
+            if np.any(grain_slice==0):
+                ind = np.nonzero(grain_slice==0)[0]
+                warnings.warn('Incomplete slicing for {} pixels.'.format(len(ind)))
             g_slice = grain_slice.reshape(xv.shape)
         
         if save_files:
@@ -548,11 +553,18 @@ class Microstructure:
         """
         periodic = self.RVE_data['Periodic']
         RVE_min = np.amin(self.nodes_v, axis=0)
+        if np.any(RVE_min > 1.e-3) or np.any(RVE_min < -1.e-3):
+            raise ValueError('Irregular RVE geometry: RVE_min = {}'.format(RVE_min))
         RVE_max = np.amax(self.nodes_v, axis=0)
         voxel_size = self.RVE_data['Voxel_resolutionX']
         grain_facesDict = dict()      # {Grain: faces}
         Ng = len(self.elmtSetDict.keys())
-        if not periodic:
+        if periodic:
+            #store grains that are split across boundaries
+            gsplit = dict()
+            for igr in self.elmtSetDict.keys():
+                gsplit[igr] = dict({'lr': False, 'bt': False, 'fb': False})
+        else:
             # create dicts for fake facets at surfaces
             for i in range(Ng+1,Ng+7):
                 grain_facesDict[i]=dict()
@@ -599,6 +611,7 @@ class Microstructure:
                 h4 = np.abs(n4[0] - RVE_min[0]) < tol
                 if (h1 and h2 and h3 and h4):
                     if periodic:
+                        gsplit[gid]['lr'] = True
                         continue
                     else:
                         grain_facesDict[Ng+1][of] = face_nodes[of]
@@ -608,6 +621,7 @@ class Microstructure:
                 h4 = np.abs(n4[0] - RVE_max[0]) < tol
                 if (h1 and h2 and h3 and h4):
                     if periodic:
+                        gsplit[gid]['lr'] = True
                         continue
                     else:
                         grain_facesDict[Ng+2][of] = face_nodes[of]
@@ -617,6 +631,7 @@ class Microstructure:
                 h4 = np.abs(n4[1] - RVE_min[1]) < tol
                 if (h1 and h2 and h3 and h4):
                     if periodic:
+                        gsplit[gid]['bt'] = True
                         continue
                     else:
                         grain_facesDict[Ng+3][of] = face_nodes[of]
@@ -626,6 +641,7 @@ class Microstructure:
                 h4 = np.abs(n4[1] - RVE_max[1]) < tol
                 if (h1 and h2 and h3 and h4):
                     if periodic:
+                        gsplit[gid]['bt'] = True
                         continue
                     else:
                         grain_facesDict[Ng+4][of] = face_nodes[of]
@@ -635,6 +651,7 @@ class Microstructure:
                 h4 = np.abs(n4[2] - RVE_min[2]) < tol
                 if (h1 and h2 and h3 and h4):
                     if periodic:
+                        gsplit[gid]['fb'] = True
                         continue
                     else:
                         grain_facesDict[Ng+5][of] = face_nodes[of]
@@ -644,12 +661,13 @@ class Microstructure:
                 h4 = np.abs(n4[2] - RVE_max[2]) < tol
                 if (h1 and h2 and h3 and h4):
                     if periodic:
+                        gsplit[gid]['fb'] = True
                         continue
                     else:
                         grain_facesDict[Ng+6][of] = face_nodes[of]
                 grain_facesDict[gid][of] = face_nodes[of]  
                 
-        # Find all combination of grains to check for common area
+        # Find all combinations of grains to check for common area
         gbDict = dict()
         combis = list(itertools.combinations(sorted(grain_facesDict.keys()), 2))
         # Find the shared area
@@ -670,6 +688,8 @@ class Microstructure:
                         shared_area.append([cb[0], cb[1], sh_area])
             else:
                 continue
+        
+        # find intersection lines of GB's (triple or quadruple lines) -> edges
         vert = dict()
         gbVert = dict()
         for i in grain_facesDict.keys():
@@ -712,7 +732,7 @@ class Microstructure:
                     grains.add(int(key1[j+1:]))
                     for j in grains:
                         vert[j].update(elist)
-                        
+        # construct convex hull for each grain from its vertices 
         grains = dict()
         vertices = set()
         for igr in self.elmtSetDict.keys():
@@ -720,6 +740,21 @@ class Microstructure:
             grains[igr] = dict()
             grains[igr]['Nodes'] = np.array(list(vert[igr]), dtype=int) - 1
             points = self.nodes_v[grains[igr]['Nodes']]
+            if periodic:
+                dc = points - 0.5*(RVE_max - RVE_min)
+                '''Check if grains extends through entire RVE'''
+                # move points of periodic images to one side of RVE
+                for i, val in enumerate(gsplit[igr].values()):
+                    if val:
+                        sd = np.sign(dc[:, i])
+                        i1 = np.nonzero(sd < 0.)[0]
+                        i2 = np.nonzero(sd >= 0.)[0]
+                        if len(i1) > len(i2):
+                            # move points to the left
+                            points[i2, i] -= RVE_max[i]
+                        else:
+                            # move points to the right
+                            points[i1, i] += RVE_max[i]
             try:
                 hull = ConvexHull(points, qhull_options='QJ Pp')
                 grains[igr]['Points'] = hull.points
@@ -733,10 +768,71 @@ class Microstructure:
                 grains[igr]['Simplices'] = []
                 grains[igr]['Volume'] = 0.
                 grains[igr]['Area'] = 0.
-            grains[igr]['Center'] = np.mean(points, axis=0)
+            # Find the euclidean distance to all surface points from the center
+            center = np.mean(points, axis=0)
+            dists = [euclidean(center, pt) for pt in grains[igr]['Points']]
+            grains[igr]['Center'] = center
+            grains[igr]['eqDia']  = 2.0 * (3*grains[igr]['Volume'] / (4*np.pi))**(1/3)
+            grains[igr]['majDia'] = 2.0 * np.amax(dists)
+            grains[igr]['minDia'] = 2.0 * np.amin(dists)
+            if periodic:
+                grains[igr]['Split'] = list(gsplit[igr].values())
         self.RVE_data['Grains'] = grains
         self.RVE_data['Vertices'] = np.array(list(vertices), dtype=int) - 1
         self.RVE_data['GBnodes'] = gbDict
         self.RVE_data['GBarea'] = shared_area
         
         return grain_facesDict, shared_area
+    
+    def get_stats(self):
+        """
+        Comape the geometries of particles used for packing and the resulting 
+        grains.
+
+        Parameters
+        ----------
+        save_files : bool, optional
+            Indicate if output is written to file. The default is False.
+
+        Returns
+        -------
+        output_data : dict
+            Statistical information about particle and grain geometries.
+
+        """
+        # Analyse geometry of particles used for packing algorithm
+        par_eqDia = np.array(self.particle_data['Equivalent_diameter'])
+        if self.particle_data['Type'] == 'Elongated':
+            par_majDia = np.array(self.particle_data['Major_diameter'])
+            par_minDia = np.array(self.particle_data['Minor_diameter1'])
+
+        # Analyse grain geometries        
+        grain_eqDia = np.zeros(self.Ngr)
+        grain_majDia = np.zeros(self.Ngr)
+        grain_minDia = np.zeros(self.Ngr)
+        for igr in self.RVE_data['Grains'].keys():
+            grain_eqDia[igr-1] = self.RVE_data['Grains'][igr]['eqDia']
+            if self.particle_data['Type'] == 'Elongated':
+                grain_minDia[igr-1] = self.RVE_data['Grains'][igr]['minDia']
+                grain_majDia[igr-1] = self.RVE_data['Grains'][igr]['majDia']
+                
+        # Compute the L1-error between particle and grain geometries
+        kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
+                                'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
+                                'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}  
+        error = l1_error_est(**kwargs)
+        
+        # Create dictionaries to store the data generated
+        output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
+                       'Grain type': self.particle_data['Type'],
+                       'Unit_scale': self.RVE_data['Units'],
+                       'L1-error': error,
+                       'Particle_Equivalent_diameter': par_eqDia, 
+                       'Particle_Major_diameter': par_majDia,
+                       'Particle_Minor_diameter': par_minDia,
+                       'Grain_Equivalent_diameter': grain_eqDia,
+                       'Grain_Major_diameter': grain_majDia,
+                       'Grain_Minor_diameter': grain_minDia}
+
+        return output_data                                                                                   
+    

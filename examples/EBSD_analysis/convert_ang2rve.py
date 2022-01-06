@@ -20,7 +20,7 @@ ebsd = knpy.EBSDmap(fname, matname)
 ms_stats = knpy.set_stats(ebsd.gs_param, ebsd.ar_param, ebsd.om_param,
                           deq_min=8., deq_max=30., asp_min=1., asp_max=3.,
                           omega_min=0., omega_max=2*pi, voxels=60, size=100,
-                          periodicity=False)
+                          periodicity=True)
 
 # create and visualize synthetic RVE
 ms = knpy.Microstructure(descriptor=ms_stats, name=fname+'_RVE')
@@ -29,8 +29,8 @@ ms.init_RVE()
 ms.pack()
 ms.plot_ellipsoids()
 ms.voxelize()
-ms.analyze_RVE()
 ms.plot_voxels(sliced=False)
+ms.analyze_RVE()
 ms.plot_polygons()
 ms.plot_stats(gs_param=ebsd.gs_param, ar_param=ebsd.ar_param)
 
@@ -55,5 +55,3 @@ ebsd_rve = knpy.EBSDmap(ang_rve, matname)
 ms.output_abq('v')
 # write Euler angles of grains into Abaqus input file
 knpy.writeAbaqusMat(matnumber, ori_rve)
-
-

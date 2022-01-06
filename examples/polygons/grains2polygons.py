@@ -20,16 +20,16 @@ import matplotlib.pyplot as plt
 import kanapy as knpy
 
 Nv = 50
-periodic = False
-matname='simulanium'
+size = 70
+periodic = True
+matname='Simulanium fcc'
 #cutoff_min 15: 11 grains
 ms_elong = {'Grain type': 'Elongated', 
-          'Equivalent diameter': {'std': 1.0, 'mean': 15.0, 'offs': 6.0, 'cutoff_min': 12.0, 'cutoff_max': 28.0},
+          'Equivalent diameter': {'std': 1.0, 'mean': 15.0, 'offs': 6.0, 'cutoff_min': 12.0, 'cutoff_max': 27.0},
           'Aspect ratio': {'std':1.5, 'mean': 1.5, 'offs': 1.0, 'cutoff_min': 1.0, 'cutoff_max': 3.0}, 
           'Tilt angle': {'std': 15., 'mean': 60., "cutoff_min": 0.0, "cutoff_max": 180.0}, 
-          'RVE': {'sideX': 50, 'sideY': 50, 'sideZ': 50, 'Nx': Nv, 'Ny': Nv, 'Nz': Nv}, 
+          'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': Nv, 'Ny': Nv, 'Nz': Nv}, 
           'Simulation': {'periodicity': str(periodic), 'output_units': 'um'}}
-
 
 ms = knpy.Microstructure(ms_elong)
 ms.init_stats()
@@ -40,6 +40,7 @@ ms.voxelize()
 ms.plot_voxels()
 ms.analyze_RVE()
 ms.plot_polygons()
+ms.plot_stats()
 
 # compare microstructure on three surfaces 
 # for voxelated and polygonalized grains
@@ -50,15 +51,7 @@ ms.plot_slice(cut='xz', pos='top', data='poly')
 ms.plot_slice(cut='yz', pos='top', data='voxels')
 ms.plot_slice(cut='yz', pos='top', data='poly')
 
-# generate grain orientations and write ang file
-ang = [0, 45, 0]    # Euler angles for Goss texture
-omega = 7.5         # kernel half-width
-ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
-fname = ms.output_ang(ori=ori_rve, matname=matname)
-
-# analyze result
-ebsd = knpy.EBSDmap(fname, matname)
-
+# plot selected grains as voxels and polygons
 for igr in range(1,6):
     # plot voxels of grain
     ind = np.array(ms.elmtSetDict[igr]) - 1
@@ -81,3 +74,13 @@ for igr in range(1,6):
     ax.set_title('Grain #{}'.format(igr))
     ax.view_init(30, 60)
     plt.show()
+
+# generate grain orientations and write ang file
+ang = [0, 45, 0]    # Euler angles for Goss texture
+omega = 7.5         # kernel half-width
+ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
+fname = ms.output_ang(ori=ori_rve, matname=matname)
+
+# analyze result
+ebsd = knpy.EBSDmap(fname, matname)
+#ebsd.showIPF()

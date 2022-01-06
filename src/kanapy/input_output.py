@@ -776,11 +776,18 @@ def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain
 def write_output_stat(nodes_v, elmtDict, elmtSetDict, particle_data, RVE_data,\
                       simulation_data, save_files=False):
     r"""
-    Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters for comparison
-    and writes them to 'output_statistics.json' file. 
+    Evaluates particle- and output RVE grain statistics with respect to Major, 
+    Minor & Equivalent diameters for comparison
+    and writes them to 'output_statistics.json' file.
+    
+    WARNING: This subroutine is only used by kanapy CLI and will no longer be
+             maintained.
+             Kanapy API uses api.calcPolygens and api.get_stats, which offer 
+             more functionality.
 
-    .. note:: The particle and grain diameter values are written in either :math:`mm` or :math:`\mu m` scale, 
-              as requested by the user in the input file.                       
+    .. note:: The particle and grain diameter values are written in either 
+              :math:`mm` or :math:`\mu m` scale, 
+              as requested by the user in the input file.
     """ 
     print('') 
     print('Comparing input & output statistics')
@@ -795,9 +802,9 @@ def write_output_stat(nodes_v, elmtDict, elmtSetDict, particle_data, RVE_data,\
         par_minDia = particle_data['Minor_diameter1']   
     
     if simulation_data['Periodicity'] == 'True':
-        periodic_status = True
+        periodic = True
     elif simulation_data['Periodicity'] == 'False':
-        periodic_status = False
+        periodic = False
 
     # Factor used to generate particle and grains diameters in 'mm' or 'um' scale
     if simulation_data['Output units'] == 'mm':
@@ -864,7 +871,7 @@ def write_output_stat(nodes_v, elmtDict, elmtSetDict, particle_data, RVE_data,\
             points = np.asarray(points)                  
             grain_node[k] = points
         
-        if periodic_status:                       
+        if periodic:                       
             # If periodic, find the grains whose perodic halves have to be shifted
             shiftRight, shiftTop, shiftBack = [], [], [] 
             for key, value in grain_node.items():                             
