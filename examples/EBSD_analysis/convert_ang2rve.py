@@ -37,11 +37,8 @@ ms.plot_stats(gs_param=ebsd.gs_param, ar_param=ebsd.ar_param)
 
 # compare microstructure on three surfaces 
 # for voxelated and polygonalized grains
-ms.plot_slice(cut='xz', pos='top', data='voxels')
 ms.plot_slice(cut='xz', pos='top', data='poly')
-ms.plot_slice(cut='yz', pos='top', data='voxels')
 ms.plot_slice(cut='yz', pos='top', data='poly')
-ms.plot_slice(cut='xy', pos='top', data='voxels')
 ms.plot_slice(cut='xy', pos='top', data='poly')
 
 # get list of orientations for grains in RVE matching the ODF of the EBSD map
