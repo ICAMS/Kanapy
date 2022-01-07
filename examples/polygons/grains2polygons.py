@@ -19,11 +19,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import kanapy as knpy
 
-Nv = 50
+Nv = 60
 size = 70
-periodic = True
+periodic = False
 matname='Simulanium fcc'
-#cutoff_min 15: 11 grains
+matnumber = 4  # UMAT number for fcc Iron
 ms_elong = {'Grain type': 'Elongated', 
           'Equivalent diameter': {'std': 1.0, 'mean': 15.0, 'offs': 6.0, 'cutoff_min': 12.0, 'cutoff_max': 27.0},
           'Aspect ratio': {'std':1.5, 'mean': 1.5, 'offs': 1.0, 'cutoff_min': 1.0, 'cutoff_max': 3.0}, 
@@ -41,15 +41,6 @@ ms.plot_voxels()
 ms.analyze_RVE()
 ms.plot_polygons()
 ms.plot_stats()
-
-# compare microstructure on three surfaces 
-# for voxelated and polygonalized grains
-ms.plot_slice(cut='xy', pos='top', data='voxels')
-ms.plot_slice(cut='xy', pos='top', data='poly')
-ms.plot_slice(cut='xz', pos='top', data='voxels')
-ms.plot_slice(cut='xz', pos='top', data='poly')
-ms.plot_slice(cut='yz', pos='top', data='voxels')
-ms.plot_slice(cut='yz', pos='top', data='poly')
 
 # plot selected grains as voxels and polygons
 for igr in range(1,6):
@@ -75,12 +66,27 @@ for igr in range(1,6):
     ax.view_init(30, 60)
     plt.show()
 
+# compare microstructure on three surfaces 
+# for voxelated and polygonalized grains
+ms.plot_slice(cut='xz', pos='top', data='voxels')
+ms.plot_slice(cut='xz', pos='top', data='poly')
+ms.plot_slice(cut='yz', pos='top', data='voxels')
+ms.plot_slice(cut='yz', pos='top', data='poly')
+ms.plot_slice(cut='xy', pos='top', data='voxels')
+ms.plot_slice(cut='xy', pos='top', data='poly')
+
 # generate grain orientations and write ang file
 ang = [0, 45, 0]    # Euler angles for Goss texture
 omega = 7.5         # kernel half-width
 ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
-fname = ms.output_ang(ori=ori_rve, matname=matname)
+fname = ms.output_ang(ori=ori_rve, cut='xy', pos='top', data='voxels',
+                      matname=matname, plot=False)
 
 # analyze result
 ebsd = knpy.EBSDmap(fname, matname)
 #ebsd.showIPF()
+
+# write Abaqus input file for voxelated structure
+ms.output_abq('v')
+# write Euler angles of grains into Abaqus input file
+knpy.writeAbaqusMat(matnumber, ori_rve)

@@ -264,7 +264,8 @@ def RVEcreator(stats_dict, save_files=False):
 
     if (dif1 > 1e-5) or (dif2 > 1e-5) or (dif3 > 1e-5):
         print(" ")
-        print("    The voxel resolution along (X,Y,Z): ({0:.4f},{1:.4f},{2:.4f}) are not equal!".format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
+        print("    The voxel resolutions along (X,Y,Z): ({0:.4f},{1:.4f},{2:.4f}) are not equal!"\
+              .format(voxel_sizeX,voxel_sizeY, voxel_sizeZ))
         print("    Change the RVE side lengths (OR) the voxel numbers\n")
         sys.exit(0) 
         
@@ -273,7 +274,12 @@ def RVEcreator(stats_dict, save_files=False):
         print(" ")
         print("    Grains will not be voxelated well!")
         print("    Please increase the voxel numbers (OR) decrease the RVE side lengths\n")
-        sys.exit(0)                     
+        sys.exit(0)
+    # raise warning if large grain occur in periodic box
+    if np.amax(eq_Dia) >= RVEsizeX*0.5 and periodicity:
+        print("\n")
+        print("    Periodic box with grains larger the half of box width.")
+        print("    Check grain polygons carefully.")
     
     print('    Total number of grains        = {}'.format(totalEllipsoids))
     print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))

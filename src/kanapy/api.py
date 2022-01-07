@@ -15,12 +15,13 @@ import os
 import json
 import itertools
 import warnings
+from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.spatial.distance import euclidean
 from kanapy.input_output import particleStatGenerator, RVEcreator,\
-    write_output_stat, plot_output_stats, export2abaqus, l1_error_est
+    plot_output_stats, export2abaqus, l1_error_est
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
@@ -476,24 +477,40 @@ class Microstructure:
                         cb = np.array([self.RVE_data['RVE_sizeX'], self.RVE_data['RVE_sizeY'],
                                        self.RVE_data['RVE_sizeZ']])*0.5
                         sp = self.RVE_data['Grains'][igr]['Center'] - cb
-                        for i, split in enumerate(self.RVE_data['Grains'][igr]['Split']):
+                        plist = []
+                        for j, split in enumerate(self.RVE_data['Grains'][igr]['Split']):
                             if split:
-                                ppbc = np.array(pts)
-                                if sp[i] > 0.:
-                                    ppbc[:,i] -= 2*cb[i]
-                                else:
-                                    ppbc[:,i] += 2*cb[i]
-                                tri = Delaunay(ppbc)
-                                i = tri.find_simplex(mesh_slice)
-                                ind = np.nonzero(i >= 0)[0]
-                                grain_slice[ind] = igr
-                            '''Account for grains with multiple splits'''
+                                # store copy of points for each direction in 
+                                # which grain is split
+                                plist.append(deepcopy(pts))
+                                for ppbc in plist:
+                                    # shift grains to all image positions
+                                    if sp[j] > 0.:
+                                        ppbc[:,j] -= 2*cb[j]
+                                    else:
+                                        ppbc[:,j] += 2*cb[j]
+                                    tri = Delaunay(ppbc)
+                                    i = tri.find_simplex(mesh_slice)
+                                    ind = np.nonzero(i >= 0)[0]
+                                    grain_slice[ind] = igr
+                                    if j==2 and len(plist)==3:
+                                        # if split grain is in corner, 
+                                        # cover last image position
+                                        if sp[0] > 0.:
+                                            ppbc[:,0] -= 2*cb[0]
+                                        else:
+                                            ppbc[:,0] += 2*cb[0]
+                                        tri = Delaunay(ppbc)
+                                        i = tri.find_simplex(mesh_slice)
+                                        ind = np.nonzero(i >= 0)[0]
+                                        grain_slice[ind] = igr
                 except:
                     warnings.warn('Grain #{} has no convex hull (Nvertices: {})'\
                                   .format(igr, len(pts)))
             if np.any(grain_slice==0):
                 ind = np.nonzero(grain_slice==0)[0]
-                warnings.warn('Incomplete slicing for {} pixels.'.format(len(ind)))
+                warnings.warn('Incomplete slicing for {} pixels in {} slice at {}.'\
+                              .format(len(ind), cut, pos))
             g_slice = grain_slice.reshape(xv.shape)
         
         if save_files:
@@ -742,10 +759,10 @@ class Microstructure:
             points = self.nodes_v[grains[igr]['Nodes']]
             if periodic:
                 dc = points - 0.5*(RVE_max - RVE_min)
-                '''Check if grains extends through entire RVE'''
+                '''Check if grain extends through entire RVE'''
                 # move points of periodic images to one side of RVE
-                for i, val in enumerate(gsplit[igr].values()):
-                    if val:
+                for i, split in enumerate(gsplit[igr].values()):
+                    if split:
                         sd = np.sign(dc[:, i])
                         i1 = np.nonzero(sd < 0.)[0]
                         i2 = np.nonzero(sd >= 0.)[0]
@@ -821,6 +838,8 @@ class Microstructure:
                                 'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
                                 'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}  
         error = l1_error_est(**kwargs)
+        print('\n    L1 error between particle and grain geometries: {}'\
+              .format(round(error, 5)))
         
         # Create dictionaries to store the data generated
         output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 

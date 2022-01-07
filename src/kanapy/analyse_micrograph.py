@@ -309,5 +309,5 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         if shared_area is None:
             raise ValueError('Microstructure.shared_area must be provided if hist is given.')
         orilist, ein, eout, mbin = \
-            eng.gb_textureReconstruction(hist, ori, 
+            eng.gb_textureReconstruction(matlab.double(hist), ori, 
                 matlab.double(shared_area), len(hist), nargout=4)
