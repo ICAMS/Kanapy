@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import kanapy as knpy
 
 matname = 'Simulanium fcc'
+matnumber = 4  # UMAT number for fcc Iron
 Nv = 60
 size = 70
 periodic = True
@@ -78,23 +79,30 @@ and how to incorporate them into three-dimensional models of microstructural
 evolution." Acta materialia 47.9 (1999): 2661-2668.
 https://doi.org/10.1016/S1359-6454(99)00137-8
 '''
-mdf_freq = {
-  "High": [0.0013303016, 0.208758929, 0.3783092708, 0.7575794912, 1.6903069613,
-           2.5798481069, 5.0380640643, 10.4289690569, 21.892113657, 21.0,
-           22.1246762077, 13.9000439533],
-  "Low":  [4.5317, 18.6383, 25, 20.755, 12.5984, 7.2646, 4.2648, 3.0372, 2.5,
-           1, 0.31, 0.1],
-  "Random": [0.1, 0.67, 1.9, 3.65, 5.8, 8.8, 11.5, 15.5, 20, 16.7, 11.18, 4.2] 
-}
-mdf_bins = np.linspace(62.8/12,62.8,12)
-
-# generate grain orientations and write ang file
-ang = [0, 45, 0]    # Euler angle for Goss texture
-omega = 7.5         # kernel half-width
-ori_rve = knpy.createOriset(ms.Ngr, ang, omega, hist=mdf_freq['Low'],
-                            shared_area=ms.shared_area)
-fname = ms.output_ang(ori=ori_rve, matname=matname, cut='xy', data='poly',
-                      plot=False)
-# analyze result
-ebsd = knpy.EBSDmap(fname, matname)
-#ebsd.showIPF()
+if knpy.MTEX_AVAIL:
+    mdf_freq = {
+      "High": [0.0013303016, 0.208758929, 0.3783092708, 0.7575794912, 1.6903069613,
+               2.5798481069, 5.0380640643, 10.4289690569, 21.892113657, 21.0,
+               22.1246762077, 13.9000439533],
+      "Low":  [4.5317, 18.6383, 25, 20.755, 12.5984, 7.2646, 4.2648, 3.0372, 2.5,
+               1, 0.31, 0.1],
+      "Random": [0.1, 0.67, 1.9, 3.65, 5.8, 8.8, 11.5, 15.5, 20, 16.7, 11.18, 4.2] 
+    }
+    mdf_bins = np.linspace(62.8/12,62.8,12)
+    
+    # generate grain orientations and write ang file
+    ang = [0, 45, 0]    # Euler angle for Goss texture
+    omega = 7.5         # kernel half-width
+    ori_rve = knpy.createOriset(ms.Ngr, ang, omega, hist=mdf_freq['Low'],
+                                shared_area=ms.shared_area)
+    fname = ms.output_ang(ori=ori_rve, matname=matname, cut='xy', data='poly',
+                          plot=False)
+    # analyze result
+    ebsd = knpy.EBSDmap(fname, matname)
+    #ebsd.showIPF()
+    
+    # write Euler angles of grains into Abaqus input file
+    knpy.writeAbaqusMat(matnumber, ori_rve)
+    
+    # write Abaqus input file for voxelated structure
+    ms.output_abq('v')

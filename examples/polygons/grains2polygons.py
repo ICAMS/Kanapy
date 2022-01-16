@@ -76,17 +76,20 @@ ms.plot_slice(cut='xy', pos='top', data='voxels')
 ms.plot_slice(cut='xy', pos='top', data='poly')
 
 # generate grain orientations and write ang file
-ang = [0, 45, 0]    # Euler angles for Goss texture
-omega = 7.5         # kernel half-width
-ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
-fname = ms.output_ang(ori=ori_rve, cut='xy', pos='top', data='voxels',
-                      matname=matname, plot=False)
-
-# analyze result
-ebsd = knpy.EBSDmap(fname, matname)
-#ebsd.showIPF()
-
-# write Abaqus input file for voxelated structure
-ms.output_abq('v')
-# write Euler angles of grains into Abaqus input file
-knpy.writeAbaqusMat(matnumber, ori_rve)
+# requires Kanapy's texture module
+if knpy.MTEX_AVAIL:
+    ang = [0, 45, 0]    # Euler angles for Goss texture
+    omega = 7.5         # kernel half-width
+    ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
+    fname = ms.output_ang(ori=ori_rve, cut='xy', pos='top', data='voxels',
+                          matname=matname, plot=False)
+    
+    # analyze result
+    ebsd = knpy.EBSDmap(fname, matname)
+    #ebsd.showIPF()
+    
+    # write Euler angles of grains into Abaqus input file
+    knpy.writeAbaqusMat(matnumber, ori_rve)
+    
+    # write Abaqus input file for voxelated structure
+    ms.output_abq('v')
