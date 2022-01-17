@@ -25,7 +25,6 @@ jobs:
       run: |
         conda --version
         which python
-        $CONDA/bin/conda env update --file environment.yml --name base
         pip install -e .
         
     - name: run tests
