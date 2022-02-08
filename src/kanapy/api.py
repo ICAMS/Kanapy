@@ -275,7 +275,7 @@ class Microstructure:
         
         for pa in self.particles:
             x, y, z = pa.x, pa.y, pa.z
-            a, b, c = pa.a, pa.b, pa.c
+            a = pa.a
             par_dict[pa] = [x, y, z, a]
             
         with open('sphere_positions.txt', 'w') as fd:
@@ -544,14 +544,82 @@ class Microstructure:
                 plt.savefig(fname[:-4]+'.pdf', format='pdf', dpi=300)
             plt.show()
         return fname
+    
+    def write_stl(self, file=None, grains=None, centers=True):
+        """ Write triangles of convex polyhedra forming grains in form of STL
+        files in the format:
+        solid name
+          facet normal n1 n2 n3
+            outer loop
+              vertex p1x p1y p1z
+              vertex p2x p2y p2z
+              vertex p3x p3y p3z
+            endloop
+          endfacet
+        endsolid name
 
+        Returns
+        -------
+        None.
+        
+        ISSUES: facets are duplicated (two grains have the same facet,
+                                       bookkeeping is necessary)
+
+        """
+        if file is None:
+            file = self.name + '.stl'
+        if grains is None:
+            grains = self.RVE_data['Grains']
+        facets = set()
+        with open(file, 'w') as f:
+            f.write("solid {}\n".format(self.name));
+            for igr in grains.keys():
+                for vert in grains[igr]['Simplices']:
+                    nodes = grains[igr]['Nodes'][vert]
+                    facet = str(sorted(nodes))
+                    if facet in facets:
+                        continue
+                    else:
+                        facets.add(facet)
+                    pts = grains[igr]['Points'][vert]
+                    nv = np.cross(pts[1]-pts[0], pts[2]-pts[0])  # facet normal
+                    nv /= np.sqrt(np.dot(nv, nv))
+                    f.write(" facet normal {} {} {}\n"\
+                            .format(nv[0], nv[1], nv[2]))
+                    f.write(" outer loop\n")
+                    f.write("   vertex {} {} {}\n"\
+                            .format(pts[0,0], pts[0,1], pts[0,2]))
+                    f.write("   vertex {} {} {}\n"\
+                            .format(pts[1,0], pts[1,1], pts[1,2]))
+                    f.write("   vertex {} {} {}\n"\
+                            .format(pts[2,0], pts[2,1], pts[2,2]))
+                    f.write("  endloop\n")
+                    f.write(" endfacet\n")
+            f.write("endsolid\n")
+        if centers:
+            with open(file[:-4]+'_centroid.csv', 'w') as f:
+                for gr in grains.values():
+                    ctr = gr['Center']
+                    f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2])) 
+        return
+    
+    def write_ori(self, angles, file=None):
+        if file is None:
+            file = self.name + '_ori.csv'
+        with open(file, 'w') as f:
+            for ori in angles:
+                f.write('{}, {}, {}\n'.format(ori[0], ori[1], ori[2]))
+        return
+    
     """
     --------        Supporting Routines         -------
     """
     def calcPolygons(self, tol=1.e-3):
         """
         Evaluates the grain volume and the grain boundary shared surface area 
-        between neighbouring grains.
+        between neighbouring grains in voxelized microstrcuture. Generate 
+        vertices as contact points between 3 or more grains. Generate 
+        polyhedral convex hull for vertices.
 
         Parameters
         ----------
@@ -566,8 +634,45 @@ class Microstructure:
             DESCRIPTION.
         shared_area : TYPE
             DESCRIPTION.
+            
+        ISSUES: for periodic structures, large grains with segments in both 
+        halves of the box and touching one boundary are split wrongly
 
         """
+        def check_neigh(nodes, grains, margin):
+            ''' Check if close neighbors of new vertices are already in list
+            # nodes: list of nodes identified as new vertices
+            # grains: set of grains containing the nodes in elist
+            # margin: radius in which vertices will be united'''
+            
+            # create set of all vertices of all involved grains
+            vset = set()
+            for gid in grains:
+                vset.update(vert[gid])
+            # loop over all combinations
+            for i, nid1 in enumerate(nodes):
+                npos1 = self.nodes_v[nid1-1]
+                sur1 = [np.abs(npos1[0] - RVE_min[0]) < tol, 
+                        np.abs(npos1[1] - RVE_min[1]) < tol,
+                        np.abs(npos1[2] - RVE_min[2]) < tol,
+                        np.abs(npos1[0] - RVE_max[0]) < tol,
+                        np.abs(npos1[1] - RVE_max[1]) < tol,
+                        np.abs(npos1[2] - RVE_max[2]) < tol]
+                for nid2 in vset:
+                    npos2 = self.nodes_v[nid2-1]
+                    sur2 = [np.abs(npos2[0] - RVE_min[0]) < tol, 
+                            np.abs(npos2[1] - RVE_min[1]) < tol,
+                            np.abs(npos2[2] - RVE_min[2]) < tol,
+                            np.abs(npos2[0] - RVE_max[0]) < tol,
+                            np.abs(npos2[1] - RVE_max[1]) < tol,
+                            np.abs(npos2[2] - RVE_max[2]) < tol]
+                    d = np.linalg.norm(npos1 - npos2)
+                    if d < margin:
+                        if (not np.any(sur1)) or (sur1 == sur2):
+                            nodes[i] = nid2
+                        break
+            return nodes
+        
         periodic = self.RVE_data['Periodic']
         RVE_min = np.amin(self.nodes_v, axis=0)
         if np.any(RVE_min > 1.e-3) or np.any(RVE_min < -1.e-3):
@@ -707,14 +812,13 @@ class Microstructure:
                 continue
         
         # find intersection lines of GB's (triple or quadruple lines) -> edges
+        # vertices are nodes in voxelized microstructure
         vert = dict()
-        gbVert = dict()
         for i in grain_facesDict.keys():
             vert[i] = set()
         for key0 in gbDict.keys():
-            gbVert[key0] = set()
-        for key0 in gbDict.keys():
             klist = list(gbDict.keys())
+            # select grains with list positions before the current one
             while key0 != klist.pop(0):
                 pass
             for key1 in klist:
@@ -722,11 +826,10 @@ class Microstructure:
                 if finter:
                     if len(finter) == 1:
                         # only one node in intersection of GBs
-                        elist = finter
+                        elist = list(finter)
                     else:
                         # mulitple nodes in intersection 
                         # identify end points of triple or quadruple line 
-                        # = nodes in edge with largest mutual distance
                         edge = np.array(list(finter), dtype=int)
                         rn = self.nodes_v[edge-1]
                         dmax = 0.
@@ -736,10 +839,7 @@ class Microstructure:
                                 if d > dmax:
                                     elist = [edge[j], edge[k+j+1]]
                                     dmax = d
-                    # add vertices to gbVert
-                    gbVert[key0].update(elist)
-                    gbVert[key1].update(elist)
-                    # update all involved grains
+                    # select all involved grains
                     grains = set()
                     j = key0.index('_')
                     grains.add(int(key0[1:j]))
@@ -747,8 +847,12 @@ class Microstructure:
                     j = key1.index('_')
                     grains.add(int(key1[1:j]))
                     grains.add(int(key1[j+1:]))
+                    # check if any neighboring nodes are already in list of
+                    # vertices. If yes, replace new vertex with existing one
+                    newlist = check_neigh(elist, grains, margin=5*voxel_size)
+                    # update grains with new vertex
                     for j in grains:
-                        vert[j].update(elist)
+                        vert[j].update(newlist)
         # construct convex hull for each grain from its vertices 
         grains = dict()
         vertices = set()
