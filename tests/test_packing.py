@@ -17,7 +17,7 @@ from kanapy.entities import Ellipsoid, Simulation_Box
 @pytest.fixture
 def par_sim(mocker):
     parDict = {'Type': 'Elongated', 'Number': 3, 'Major_diameter': np.array([5.2, 3.6, 2.4]), 'Minor_diameter1': np.array([2.15, 3.6, 1.15]),
-               'Minor_diameter2': np.array([2.15, 3.6, 1.15]), 'Tilt angle': np.array([92, 89.3, 85])}
+               'Minor_diameter2': np.array([2.15, 3.6, 1.15]), 'Tilt angle': np.array([92, 89.3, 85]),'Phase name':['XXXX', 'XXXX', 'XXXX'], 'Phase number': [0, 0, 0]}
 
     sb = mocker.MagicMock()
 
@@ -89,8 +89,9 @@ def rot_surf():
 
 
 def test_particle_generator(par_sim):
-
+    
     ell_list = particle_generator(par_sim[0], par_sim[1])
+
     for ell in ell_list:
         assert isinstance(ell, Ellipsoid)
 
@@ -119,7 +120,7 @@ def test_packingRoutine():
 
     # Prepare the dictionaries to be dumped as json files
     pd = {'Type': 'Equiaxed', 'Number': 2, 'Equivalent_diameter': [1.651, 1.651], 'Major_diameter': [2.0, 2.0],
-          'Minor_diameter1': [1.5, 1.5], 'Minor_diameter2': [1.5, 1.5], 'Tilt angle': [86, 92]}
+          'Minor_diameter1': [1.5, 1.5], 'Minor_diameter2': [1.5, 1.5], 'Tilt angle': [86, 92], 'Phase name':['XXXX', 'XXXX'], 'Phase number': [0, 0]}
 
     rd = {'RVE_sizeX': 10, 'RVE_sizeY': 10, 'RVE_sizeZ': 10, 
           'Voxel_numberX': 3, 'Voxel_numberY': 3, 'Voxel_numberZ': 3, 
