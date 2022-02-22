@@ -1,0 +1,40 @@
+{
+    "Grain type": "Elongated",
+    "Equivalent diameter": {
+        "std": 1.1387378475264764,
+        "mean": 12.752215286185043,
+        "offs": 7.982101272673502,
+        "cutoff_min": 8.0,
+        "cutoff_max": 30.0
+    },
+    "Aspect ratio": {
+        "std": 0.7164240109557845,
+        "mean": 1.6290155563469921,
+        "offs": 0.867478044910382,
+        "cutoff_min": 1.0,
+        "cutoff_max": 3.0
+    },
+    "Tilt angle": {
+        "std": 0.5415466024956505,
+        "mean": 1.4447866980864903,
+        "cutoff_min": 0.0,
+        "cutoff_max": 6.283185307179586
+    },
+    "RVE": {
+        "sideX": 100,
+        "sideY": 100,
+        "sideZ": 100,
+        "Nx": 60,
+        "Ny": 60,
+        "Nz": 60
+    },
+    "Simulation": {
+        "periodicity": "True",
+        "output_units": "um"
+    },
+    "Phase": {
+        "Name": "austenite",
+        "Number": 0,
+        "Volume fraction": 0.7
+    }
+}

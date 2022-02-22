@@ -204,6 +204,10 @@ def RVEcreator(stats_dict, save_files=False):
     Ny = int(stats_dict["RVE"]["Ny"]) 
     Nz = int(stats_dict["RVE"]["Nz"]) 
     
+    phase_name = stats_dict["Phase"]["Name"]
+    phase_number = stats_dict["Phase"]["Number"]
+    VF = stats_dict["Phase"]["Volume fraction"]
+    
     # Extract other simulation attrributes from input file 
     nsteps = 1000
     periodicity = str(stats_dict["Simulation"]["periodicity"])       
@@ -241,9 +245,14 @@ def RVEcreator(stats_dict, save_files=False):
     K = individualK/np.sum(individualK)                
     
     # Total number of ellipsoids
-    num = np.divide(K*(RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
+    # num = np.divide(K*(RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
+    # num = np.rint(num).astype(int)                  # Round to the nearest integer    
+    # totalEllipsoids = int(np.sum(num))              # Total number of ellipsoids
+ 
+
+    num = np.divide(K*(VF*RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
     num = np.rint(num).astype(int)                  # Round to the nearest integer    
-    totalEllipsoids = int(np.sum(num))              # Total number of ellipsoids
+    totalEllipsoids = int(np.sum(num))  
     
     # Duplicate the diameter values
     eq_Dia = np.repeat(eq_Dia, num)        
@@ -287,10 +296,13 @@ def RVEcreator(stats_dict, save_files=False):
     print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
     print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))                
 
+    phname = [phase_name]*totalEllipsoids
+    phnum = [phase_number]*totalEllipsoids
+    
     if stats_dict["Grain type"] == "Equiaxed":
 
         # Create dictionaries to store the data generated
-        particle_data = {'Type': stats_dict["Grain type"], 'Number': totalEllipsoids, 'Equivalent_diameter': list(eq_Dia)}
+        particle_data = {'Type': stats_dict["Grain type"], 'Number': totalEllipsoids, 'Equivalent_diameter': list(eq_Dia), 'Phase name':phname, 'Phase number':phnum}
         
     elif stats_dict["Grain type"] == "Elongated":     
         # Extract mean grain aspect ratio value info from dict
@@ -345,7 +357,7 @@ def RVEcreator(stats_dict, save_files=False):
 
         # Create dictionaries to store the data generated
         particle_data = {'Type': stats_dict["Grain type"], 'Number': totalEllipsoids, 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
-                         'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
+                         'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle), 'Phase name':phname, 'Phase number':phnum}
     else:
         raise ValueError('The value for "Grain type" must be either "Equiaxed" or "Elongated".')
     

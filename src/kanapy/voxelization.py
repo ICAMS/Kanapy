@@ -316,7 +316,7 @@ def reassign_shared_voxels(cooDict, Ellipsoids):
     return
     
 
-def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files=False):
+def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files=False, dual_phase=False):
     """
     The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`, :meth:`create_voxels`
     , :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`
@@ -372,6 +372,15 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
     voxels = np.reshape(hh, (voxX,voxY,voxZ), order='F')
     voxels = np.array(voxels, dtype=int)
     
+    hh = np.zeros(voxX*voxY*voxZ)
+    voxels_phase = np.reshape(hh, (voxX,voxY,voxZ), order='F')
+   
+    if dual_phase == True:
+        for ih, il in elmtSetDict.items():
+            il = np.array(il) - 1
+            hh[il] = Ellipsoids[ih-1].phasenum
+        voxels_phase = np.reshape(hh, (voxX,voxY,voxZ), order='F')
+    
     # test consistency of voxel array with element dict
     '''for igr, iel in elmtSetDict.items():
         ic = 0
@@ -405,5 +414,5 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
         with open(json_dir + '/elmtSetDict.json', 'w') as outfile:
             json.dump(elmtSetDict, outfile, indent=2)  
                                                                                    
-    return nodes_v, elmtDict, elmtSetDict, vox_centerDict, voxels
+    return nodes_v, elmtDict, elmtSetDict, vox_centerDict, voxels, voxels_phase
         

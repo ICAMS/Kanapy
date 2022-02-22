@@ -58,8 +58,11 @@ def particle_generator(particle_data, sim_box):
         qw = np.cos(angle/2)
         quat = np.array([qw, qx, qy, qz])
 
+        #Find the phase number
+        phasenum = particle_data['Phase number'][n]
+        
         # instance of Ellipsoid class
-        ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat)
+        ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat, phasenum=phasenum)
         ellipsoid.color = (random.randint(0, 255), random.randint(
             0, 255), random.randint(0, 255))
 
@@ -73,7 +76,7 @@ def particle_generator(particle_data, sim_box):
     return Ellipsoids
 
 
-def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, dump=False):
+def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0, dump=False):
     """
     Initializes the :class:`entities.Octree` class and performs recursive subdivision with 
     collision checks and response for the ellipsoids. At each time step of the simulation it 
@@ -112,6 +115,9 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, dump=False):
         # find all the items which are not duplicates
         inter_ell = [ell for ell in Ellipsoids if not isinstance(ell.id, str)]
         Ellipsoids = inter_ell
+        
+        if k_att!= 0.0 or k_rep!=0.0:
+            calculateForce(Ellipsoids, sim_box, periodicity, k_rep=k_rep, k_att=k_att)
 
         dups = []
         # Loop over the ellipsoids: move, set Bbox, & check for wall collision / PBC
@@ -134,8 +140,64 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, dump=False):
         
     return Ellipsoids, sim_box
 
+def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
+    
+    rSq = 0
+    r2inv = 0
+    Force = 0
+    dx = dy = dz = 0
+      
+    w = sim_box.w          
+    h = sim_box.h
+    d = sim_box.d 
+    
+    w_half = sim_box.w/2           
+    h_half = sim_box.h/2
+    d_half = sim_box.d/2 
+    
+    
+    for ell in Ellipsoids:       
+        ell.force_x = 0
+        ell.force_y = 0
+        ell.force_z = 0          
+        for ell_n in Ellipsoids:
+            if ell.id != ell_n.id:                
+                dx = ell.x - ell_n.x
+                dy = ell.y - ell_n.y
+                dz = ell.z - ell_n.z  
+                
+                if periodicity == True:
+                    if dx > w_half:
+                        dx -= w
+                    if dx <= -w_half:
+                        dx += w
+                    if dy > h_half:
+                        dy -= h
+                    if dy <= -h_half:
+                        dy += h
+                    if dz > d_half:
+                        dz -= d
+                    if dz <= -d_half:
+                        dz += d
+                        
+                rSq = dx*dx + dy*dy + dz*dz
+                r = np.sqrt(rSq)
+                r2inv = 1 / (rSq)
+                if ell.q * ell_n.q == 1:
+                    Force = k_rep * ell.q * ell_n.q * r2inv
+                else:
+                    Force = k_att * ell.q * ell_n.q * r2inv
+                
+                ell.force_x += Force * dx / r 
+                ell.force_y += Force * dy / r
+                ell.force_z += Force * dz / r
+                
+                # ell.force_x += Force * dx 
+                # ell.force_y += Force * dy 
+                # ell.force_z += Force * dz 
+    return
 
-def packingRoutine(particle_data, RVE_data, simulation_data, save_files=False):
+def packingRoutine(particle_data, RVE_data, simulation_data, k_rep=0.0, k_att=0.0, save_files=False):
     """
     The main function that controls the particle packing routine using: :meth:`particle_grow` & :meth:`particle_generator`
     
@@ -167,7 +229,7 @@ def packingRoutine(particle_data, RVE_data, simulation_data, save_files=False):
         raise ValueError('packingRoutine: Wrong value for periodicity in simulation_data')   
         
     particles, simbox = particle_grow(sim_box, Particles, periodic_status, \
-                                      simulation_data['Time steps'], dump=save_files)
+                                      simulation_data['Time steps'], k_rep=k_rep, k_att=k_att, dump=save_files)
     
     print('Completed particle packing')
     print('')

@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 
-def plot_voxels_3D(voxels, Ngr=1, sliced=False, dual_phase=False,
+def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=False,
                    mask=None, cmap='prism', alpha=1.0):
     '''
     Plot voxeles in microstructure, each grain with a different color. Sliced 
@@ -46,22 +46,37 @@ def plot_voxels_3D(voxels, Ngr=1, sliced=False, dual_phase=False,
     Nx = voxels.shape[0]
     Ny = voxels.shape[1]
     Nz = voxels.shape[2]
-    
+
     if dual_phase:
         # phase assignment should be stored in elmtSetDict
-        phase_0 = voxels%2==0
-        phase_1 = voxels%2==1
+        phase_0 = voxels_phase%2==0
+        phase_1 = voxels_phase%2==1
         vox_b = phase_0 | phase_1
-        colors = np.empty(voxels.shape, dtype=object)
-        colors[phase_0] = 'blue'
-        colors[phase_1] = 'red'
+        colors = np.empty(voxels_phase.shape, dtype=object)
+        colors[phase_0] = 'red'
+        colors[phase_1] = 'green'
+        #cm = plt.cm.get_cmap(cmap, Ngr)
+        #colors = cm(voxels_phase.astype(int))
+        if sliced:
+            ix = int(Nx/2)
+            iy = int(Ny/2)
+            iz = int(Nz/2)
+            vox_b[ix:Nx,iy:Ny,iz:Nz] = False            
+        ax = plt.figure().add_subplot(projection='3d')
+        ax.voxels(vox_b, facecolors=colors, edgecolors=colors, shade = True)
+        ax.set(xlabel='x', ylabel='y', zlabel='z')
+        ax.set_title('Dual-phase microstructure')
+        ax.view_init(30, 30)
+        ax.set_xlim(right=Nx)
+        ax.set_ylim(top=Ny)
+        ax.set_zlim(top=Nz)
+
+    if mask is None:
+        vox_b = np.full(voxels.shape, True, dtype=bool)
     else:
-        if mask is None:
-            vox_b = np.full(voxels.shape, True, dtype=bool)
-        else:
-            vox_b = mask
-        cm = plt.cm.get_cmap(cmap, Ngr)
-        colors = cm(voxels.astype(int))
+        vox_b = mask
+    cm = plt.cm.get_cmap(cmap, Ngr)
+    colors = cm(voxels.astype(int))
     
     if sliced:
         ix = int(Nx/2)
@@ -122,7 +137,7 @@ def plot_polygons_3D(grains, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1]):
     ax.view_init(30, 30)
     plt.show()
     
-def plot_ellipsoids_3D(particles, cmap='prism'):
+def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
     '''
     Display ellipsoids during or after packing procedure
 
@@ -147,7 +162,14 @@ def plot_ellipsoids_3D(particles, cmap='prism'):
     cm = plt.cm.get_cmap(cmap, Npa)
         
     for i, pa in enumerate(particles):
-        col = cm(i)  # set to 'b' for only blue ellipsoids
+        if dual_phase==True:
+            if pa.phasenum == 0:
+                col = 'red'
+            else: 
+                col = 'green'
+            #col = cm(pa.phasenum)
+        else:
+            col = cm(i)  # set to 'b' for only blue ellipsoids
         qw, qx, qy, qz = pa.quat
         x_c, y_c, z_c, a, b, c = pa.x, pa.y, pa.z, pa.a, pa.b, pa.c
         #Rotation

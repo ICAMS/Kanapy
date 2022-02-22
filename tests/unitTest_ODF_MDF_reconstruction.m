@@ -1,7 +1,7 @@
 classdef unitTest_ODF_MDF_reconstruction < matlab.unittest.TestCase
     
     properties ( TestParameter )
-        r = {'/Users/alexander/Codes/kanapy/libs/mtex/'};
+        r = {'/Users/golsatolooeieshlaghi/kanapy//libs/mtex/'};
     end
   
     

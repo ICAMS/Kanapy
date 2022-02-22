@@ -65,21 +65,53 @@ class Microstructure:
         """ Creates RVE based on the data provided in the input file."""
         if descriptor is None:
             descriptor = self.descriptor  
-        self.particle_data, self.RVE_data, self.simulation_data = \
-            RVEcreator(descriptor, save_files=save_files)
-        self.Ngr = self.particle_data['Number']
-            
+        #self.particle_data, self.RVE_data, self.simulation_data = \
+        #    RVEcreator(descriptor, save_files=save_files)
+        #self.Ngr = self.particle_data['Number']
+        
+        for des in descriptor:
+            particle_data, RVE_data, simulation_data = \
+                RVEcreator(des, save_files=save_files)
+            Ngr = particle_data['Number']            
+            if des == descriptor[0]:
+                self.Ngr = Ngr
+                self.particle_data = particle_data
+                self.RVE_data = RVE_data
+                self.simulation_data = simulation_data             
+            else:
+                if des['Grain type'] == 'Elongated':
+                    self.Ngr = self.Ngr + Ngr
+                    self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + particle_data['Equivalent_diameter']
+                    self.particle_data['Major_diameter'] = self.particle_data['Major_diameter'] + particle_data['Major_diameter']
+                    self.particle_data['Minor_diameter1'] = self.particle_data['Minor_diameter1'] + particle_data['Minor_diameter1']       
+                    self.particle_data['Minor_diameter2'] = self.particle_data['Minor_diameter2'] + particle_data['Minor_diameter2']
+                    self.particle_data['Number'] = self.particle_data['Number'] + particle_data['Number']
+                    self.particle_data['Phase name'] = self.particle_data['Phase name'] + particle_data['Phase name']
+                    self.particle_data['Phase number'] = self.particle_data['Phase number'] + particle_data['Phase number']
+                    self.particle_data['Tilt angle'] = self.particle_data['Tilt angle'] + particle_data['Tilt angle']                
+                elif des['Grain type'] == 'Equiaxed':
+                    self.Ngr = self.Ngr + Ngr
+                    self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + particle_data['Equivalent_diameter']
+                    self.particle_data['Number'] = self.particle_data['Number'] + particle_data['Number']
+                    self.particle_data['Phase name'] = self.particle_data['Phase name'] + particle_data['Phase name']
+                    self.particle_data['Phase number'] = self.particle_data['Phase number'] + particle_data['Phase number']
+            #if both Equiaxed and Elongated grains are present at the same time, it should be adjusted.
     def init_stats(self, descriptor=None, gs_data=None, ar_data=None,
                    save_files=False):    
         """ Generates particle statistics based on the data provided in the 
         input file."""
         if descriptor is None:
             descriptor = self.descriptor  
-        particleStatGenerator(descriptor, gs_data=gs_data, ar_data=ar_data,
-                              save_files=save_files)
+        # particleStatGenerator(descriptor, gs_data=gs_data, ar_data=ar_data,
+        #                       save_files=save_files)
+        for des in descriptor:
+            particleStatGenerator(des, gs_data=gs_data, ar_data=ar_data,
+                                  save_files=save_files)
         
-    def pack(self, particle_data=None, RVE_data=None, simulation_data=None, 
-             save_files=False):
+
+    def pack(self, particle_data=None, RVE_data=None, simulation_data=None,
+             k_rep=0.0, k_att=0.0, save_files=False):
+
         """ Packs the particles into a simulation box."""
         if particle_data is None:
             particle_data = self.particle_data
@@ -90,11 +122,11 @@ class Microstructure:
         if simulation_data is None:
             simulation_data = self.simulation_data
         self.particles, self.simbox = \
-            packingRoutine(particle_data, RVE_data, simulation_data,
+            packingRoutine(particle_data, RVE_data, simulation_data, k_rep=k_rep, k_att=k_att,
                            save_files=save_files)
 
     def voxelize(self, particle_data=None, RVE_data=None, particles=None, 
-                 simbox=None, save_files=False):
+                 simbox=None, dual_phase=False, save_files=False):
         """ Generates the RVE by assigning voxels to grains."""   
         if particle_data is None:
             particle_data = self.particle_data
@@ -107,9 +139,9 @@ class Microstructure:
         if simbox is None:
             simbox = self.simbox
         self.nodes_v, self.elmtDict, self.elmtSetDict,\
-            self.vox_centerDict, self.voxels = \
+            self.vox_centerDict, self.voxels, self.voxels_phase = \
             voxelizationRoutine(particle_data, RVE_data, particles, simbox,
-                                save_files=save_files)
+                                save_files=save_files, dual_phase=dual_phase)
 
     def smoothen(self, nodes_v=None, elmtDict=None, elmtSetDict=None,
                  save_files=False):
@@ -141,22 +173,22 @@ class Microstructure:
     """
     --------     Plotting routines          --------
     """
-    def plot_ellipsoids(self, cmap='prism'):
+    def plot_ellipsoids(self, cmap='prism', dual_phase=False):
         """ Generates plot of particles"""
         if self.particles is None:
             raise ValueError('No particle to plot. Run pack first.')
-        plot_ellipsoids_3D(self.particles, cmap=cmap)
+        plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase)
         
     def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism'):
         """ Generate 3D plot of grains in voxelized microstructure. """
         if self.voxels is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
-        plot_voxels_3D(self.voxels, Ngr=self.particle_data['Number'],
+        plot_voxels_3D(self.voxels, self.voxels_phase, Ngr=self.particle_data['Number'],
                        sliced=sliced, dual_phase=dual_phase, cmap=cmap)
 
     def plot_polygons(self, grains=None, cmap='prism', alpha=0.4, 
                          ec=[0.5,0.5,0.5,0.1]):
-        """ Plot polygonalized icrostructure"""
+        """ Plot polygonalized microstructure"""
         if grains is None:
             if 'Grains' in self.RVE_data.keys():
                 grains = self.RVE_data['Grains']
@@ -178,7 +210,7 @@ class Microstructure:
                           save_files=save_files)
         
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
-                   save_files=False):
+                   dual_phase=False, save_files=False):
         """
         Plot a slice through the microstructure.
         
@@ -209,7 +241,7 @@ class Microstructure:
 
         """
         self.output_ang(cut=cut, data=data, plot=True, save_files=False,
-                       pos=pos, fname=fname, save_plot=save_files)
+                       pos=pos, fname=fname, dual_phase=dual_phase, save_plot=save_files)
             
     """
     --------        Output/Export routines        --------
@@ -289,7 +321,7 @@ class Microstructure:
         
     def output_ang(self, ori=None, cut='xy', data=None, plot=True, cs=None,
                    pos=None, fname=None, matname='XXXX', save_files=True,
-                   save_plot=False):
+                   dual_phase=False, save_plot=False):
         """
         Convert orientation information of microstructure into a .ang file,
         mimicking an EBSD map.
@@ -454,6 +486,13 @@ class Microstructure:
                 g_slice = np.array(self.voxels[:,iz,:], dtype=int)
             else:
                 g_slice = np.array(self.voxels[iz,:,:], dtype=int)
+            if dual_phase == True:
+                if cut=='xy':
+                    g_slice_phase = np.array(self.voxels_phase[:,:,iz], dtype=int)
+                elif cut=='xz':
+                    g_slice_phase = np.array(self.voxels_phase[:,iz,:], dtype=int)
+                else:
+                    g_slice_phase = np.array(self.voxels_phase[iz,:,:], dtype=int)
         else:
             title += ' (Polygons)'
             xv, yv = np.meshgrid(ix*sx, iy*sy, indexing='ij')
@@ -533,7 +572,8 @@ class Microstructure:
                                         round(sizeX-i*sx, 5), round(sizeY-j*sy, 5)))
         if plot:
             # plot grains on slice
-            cmap = plt.cm.get_cmap('gist_rainbow')
+            #cmap = plt.cm.get_cmap('gist_rainbow')
+            cmap = plt.cm.get_cmap('prism')
             fig, ax = plt.subplots(1)
             ax.grid(False)
             ax.imshow(g_slice, cmap=cmap, interpolation='none', 
@@ -543,6 +583,17 @@ class Microstructure:
             if save_plot:
                 plt.savefig(fname[:-4]+'.pdf', format='pdf', dpi=300)
             plt.show()
+            
+            if dual_phase == True:
+                fig, ax = plt.subplots(1)
+                ax.grid(False)
+                ax.imshow(g_slice_phase, cmap=cmap, interpolation='none', 
+                          extent=[0, sizeX, 0, sizeY])
+                ax.set(xlabel=xl, ylabel=yl)
+                ax.set_title(title)
+                if save_plot:
+                    plt.savefig(fname[:-4]+'.pdf', format='pdf', dpi=300)
+                plt.show()
         return fname
     
     def write_stl(self, file=None, grains=None, centers=True):

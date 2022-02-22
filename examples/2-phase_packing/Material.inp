@@ -1,0 +1,477 @@
+** MATERIALS
+**
+*Material, name=GRAIN1_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 2.9171931783333793, 0.6159985595274104, 3.184746398831411
+*Material, name=GRAIN2_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 2.9171931783333793, 0.6159985595274103, 3.3055768855079415
+*Material, name=GRAIN3_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 2.9171931783333793, 0.6159985595274104, 3.426407372184472
+*Material, name=GRAIN4_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.141592653589793, 0.6159985595274103, 2.9603469235749973
+*Material, name=GRAIN5_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.141592653589793, 0.6159985595274103, 3.322838383604589
+*Material, name=GRAIN6_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.365992128846207, 0.6159985595274103, 2.856777934995114
+*Material, name=GRAIN7_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.365992128846207, 0.6159985595274104, 2.9776084216716443
+*Material, name=GRAIN8_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.365992128846207, 0.6159985595274104, 3.098438908348175
+*Material, name=GRAIN9_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.058785831923172, 0.6159985595274104, 0.04315374524161797
+*Material, name=GRAIN10_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.058785831923172, 0.6159985595274104, 0.16398423191814882
+*Material, name=GRAIN11_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.058785831923172, 0.6159985595274104, 0.28481471859467966
+*Material, name=GRAIN12_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.0, 0.6159985595274103, 6.101939577164791
+*Material, name=GRAIN13_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.283185307179586, 0.6159985595274104, 0.18124573001479583
+*Material, name=GRAIN14_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.2243994752564129, 0.6159985595274102, 5.998370588584908
+*Material, name=GRAIN15_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.22439947525641268, 0.6159985595274103, 6.119201075261438
+*Material, name=GRAIN16_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.22439947525641246, 0.6159985595274104, 6.240031561937968
+*Material, name=GRAIN17_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 2.84706834231575, 0.7391982714328924, 3.2548712348490403
+*Material, name=GRAIN18_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 2.84706834231575, 0.7391982714328924, 3.496532208202101
+*Material, name=GRAIN19_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.043417883165112, 0.7391982714328924, 3.42101315402927
+*Material, name=GRAIN20_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.2397674240144743, 0.7391982714328922, 2.862172153150316
+*Material, name=GRAIN21_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.436116964863836, 0.7391982714328924, 2.7866530989774843
+*Material, name=GRAIN22_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.436116964863836, 0.7391982714328924, 3.0283140723305455
+*Material, name=GRAIN23_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 5.988660995905542, 0.7391982714328924, 0.11327858125924806
+*Material, name=GRAIN24_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 5.988660995905542, 0.7391982714328924, 0.35493955461230975
+*Material, name=GRAIN25_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.185010536754905, 0.7391982714328924, 0.2794205004394774
+*Material, name=GRAIN26_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.0981747704246807, 0.7391982714328924, 6.00376480674011
+*Material, name=GRAIN27_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.294524311274043, 0.7391982714328924, 5.928245752567278
+*Material, name=GRAIN28_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.29452431127404255, 0.7391982714328924, 6.169906725920338
+*Material, name=GRAIN29_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.0702592755151343, 2.2054471223313143, 6.242075682813164
+*Material, name=GRAIN30_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.281414770471449, 2.5106788348489095, 3.195883501645852
+*Material, name=GRAIN31_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.217251489315496, 0.9389134713514301, 4.747596546873686
+*Material, name=GRAIN32_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 4.758038396490004, 1.53927584420876, 0.6311746749891176
+*Material, name=GRAIN33_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.2094380689512367, 2.2028958425434846, 0.04075301830080846
+*Material, name=GRAIN34_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.2124179010659124, 2.2028868930614647, 0.036741883609453296
+*Material, name=GRAIN35_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.214268935460468, 2.202458849307241, 4.671766832731371
+*Material, name=GRAIN36_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.278286381996898, 0.6343579046782217, 1.518233144507934
+*Material, name=GRAIN37_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.6148466082563158, 1.5363063747636327, 2.204767021297112
+*Material, name=GRAIN38_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.6167503274138018, 1.5357418232717435, 2.204240847352329
+*Material, name=GRAIN39_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.2100093421064373, 0.93986213939801, 1.5295989362791769
+*Material, name=GRAIN40_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.013407603657349, 2.399668288821168, 2.928775039918281
+*Material, name=GRAIN41_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.020191306553435, 2.4048554982846615, 4.501768798962887
+*Material, name=GRAIN42_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.053737843834595, 0.7385712465000721, 1.4949966099485135
+*Material, name=GRAIN43_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 4.568602049451997, 1.624953573674746, 0.7387547004471466
+*Material, name=GRAIN44_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 4.647523523826066, 1.5470512854038003, 0.737744606697877
+*Material, name=GRAIN45_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.102422773562128, 2.307992334521753, 0.0328652042020785
+*Material, name=GRAIN46_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 4.650883939737968, 1.5478281493047463, 0.7389646004920118
+*Material, name=GRAIN47_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.241215058214085, 0.8297062346057578, 3.1129369252736203
+*Material, name=GRAIN48_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.5066537965542264, 1.5985129196499672, 2.404515485794132
+*Material, name=GRAIN49_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.1939514180404, 2.4031508027845114, 4.565642967051119
+*Material, name=GRAIN50_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.195833949199255, 2.4027968383999836, 2.9979178505997996
+*Material, name=GRAIN51_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.052810302262931, 0.7358272149408439, 0.14454052849095778
+*Material, name=GRAIN52_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.2524349234395817, 2.3010531249280097, 3.273658029084709
+*Material, name=GRAIN53_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.5882337815509664, 1.6690151081601883, 5.550690918630284
+*Material, name=GRAIN54_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.033240739475188, 2.2992400500408814, 3.0089613217003297
+*Material, name=GRAIN55_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.08701479291622949, 2.402462240533236, 3.2867947504398867
+*Material, name=GRAIN56_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.2273927398755546, 0.7404672277512542, 6.138724827804711
+*Material, name=GRAIN57_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.2321669070315666, 0.7358416102348068, 6.136289901533914
+*Material, name=GRAIN58_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.227827825679663, 0.7358909201011304, 3.1082916170087933
+*Material, name=GRAIN59_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.1789275392713217, 2.3051275327700917, 3.1067319752030897
+*Material, name=GRAIN60_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.09217872703463703, 2.402357196644615, 0.03959396708352969
+*Material, name=GRAIN61_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.6335227765332228, 1.5461501934261186, 3.9753156297829584
+*Material, name=GRAIN62_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 4.774334686083814, 1.5944661301603174, 5.451191476878031
+*Material, name=GRAIN63_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.6311745462029381, 1.5444310926945841, 5.545446712759784
+*Material, name=GRAIN64_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.230759094121044, 0.7400679838844184, 1.649747977428456
+*Material, name=GRAIN65_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.08694678978018189, 2.4015086351873522, 4.634859984057298
+*Material, name=GRAIN66_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.2664524690475809, 2.4020501235079235, 1.781217683268233
+*Material, name=GRAIN67_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.266084388693848, 2.4021808841027923, 0.20969432810849398
+*Material, name=GRAIN68_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.018760679510769762, 2.29273099939023, 3.333287353294833
+*Material, name=GRAIN69_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 4.606775410867807, 1.7132373039345092, 3.983913683631198
+*Material, name=GRAIN70_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.197456560115863, 0.7409703779567386, 6.202969654335187
+*Material, name=GRAIN71_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.0555709827953876, 2.401693196788789, 4.792343241074011
+*Material, name=GRAIN72_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.057329874639317, 2.401340921582014, 6.252317155250237
+*Material, name=GRAIN73_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.055584056207767, 2.4051432563209354, 3.1063516359962975
+*Material, name=GRAIN74_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 4.647150803774431, 1.5955188644843923, 3.975351348307547
+*Material, name=GRAIN75_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.0488706677688775, 2.404010525442612, 6.2409780622537845
+*Material, name=GRAIN76_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.243212906288709, 2.304621255714632, 3.172532644661766
+*Material, name=GRAIN77_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.2427558754269, 2.3058256571613747, 1.6034682251590535
+*Material, name=GRAIN78_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.195155777208094, 0.7367070632433794, 4.858123262257318
+*Material, name=GRAIN79_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.590245826632847, 1.4735527683933105, 0.732124099276743
+*Material, name=GRAIN80_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.10480826283425149, 2.3002709422749685, 4.844216807994605
+*Material, name=GRAIN81_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.5878388143914244, 1.472044672723717, 5.447851714747215
+*Material, name=GRAIN82_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.5507087040341285, 1.6680471920671542, 3.8751335410867735
+*Material, name=GRAIN83_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.08688076559392321, 0.7391349249912402, 4.568247916913968
+*Material, name=GRAIN84_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 6.177402329873501, 2.2983775015038943, 6.153066197802319
+*Material, name=GRAIN85_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.227188130643755, 2.4046174737804966, 4.856084494995591
+*Material, name=GRAIN86_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 1.5504503162106649, 1.6673430565702663, 3.8763315998118717
+*Material, name=GRAIN87_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.04000451366803226, 2.3079651739353135, 4.679845048775624
+*Material, name=GRAIN88_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 4.775417591447399, 1.5461058519081097, 3.9763679477726015
+*Material, name=GRAIN89_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.08937564972115863, 0.73727175544375, 3.105408401555163
+*Material, name=GRAIN90_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.1806060004751653, 0.83400907096216, 1.6031330291200199
+*Material, name=GRAIN91_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.09365581612592089, 0.7360271893288416, 6.2461883094199075
+*Material, name=GRAIN92_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 4.8554626568860995, 1.6232590462312904, 2.4057585345080588
+*Material, name=GRAIN93_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 3.3333452916283663, 0.8337781808158944, 4.644072962502714
+*Material, name=GRAIN94_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.2623504770343841, 0.7404606161403229, 4.501040352064481
+*Material, name=GRAIN95_mat
+*Depvar
+    200
+*User Material, constants=4
+4.0, 0.2696841896384896, 0.7391667523765058, 1.354461388762929

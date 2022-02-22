@@ -178,7 +178,7 @@ class EBSDmap:
 def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
               asp_min=None, asp_max=None, omega_min=None, omega_max=None,
               size=100, voxels=60, gtype='Elongated', rveunit = 'um',
-              periodicity=True, save_file=False):
+              periodicity=True, VF = None, phasename = None, phasenum = None, save_file=False):
     '''
     grains = [std deviation, offset , mean grain sizeof lognorm distrib.]
     ar = [std deviation, offset , mean aspect ratio of gamma distrib.]
@@ -230,7 +230,10 @@ def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
                     {'sideX': lx, 'sideY': ly, 'sideZ': lz,
                      'Nx': nx, 'Ny': ny, 'Nz': nz},
                 'Simulation': {'periodicity': pbc,
-                               'output_units': rveunit}}
+                               'output_units': rveunit},
+                'Phase':{'Name':phasename,
+                         'Number':phasenum,
+                         'Volume fraction':VF}}
     if save_file:
         cwd = os.getcwd()     
         json_dir = cwd + '/json_files'   # Folder to store the json files

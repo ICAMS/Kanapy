@@ -10,7 +10,7 @@ eng = matlab.engine.start_matlab()
 eng.addpath(MTEX_DIR,nargout=0)
 eng.startup(nargout=0)
 
-fname = 'ebsd_316L.ang'
+fname = 'ebsd_316L_500x500.ang'
 matname = 'Iron fcc'
 
 # read EBSD map and return the matlab.object of MTEX class EBSD
