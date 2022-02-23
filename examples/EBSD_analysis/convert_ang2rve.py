@@ -21,7 +21,9 @@ ebsd = knpy.EBSDmap(fname, matname)
 ms_stats = knpy.set_stats(ebsd.gs_param, ebsd.ar_param, ebsd.om_param,
                           deq_min=8., deq_max=30., asp_min=1., asp_max=3.,
                           omega_min=0., omega_max=2*pi, voxels=60, size=100,
-                          periodicity=True)
+                          periodicity=True, VF = 1.0, phasename = "XXXX", phasenum = 0)
+
+ms_stats = [ms_stats]
 
 # create and visualize synthetic RVE
 ms = knpy.Microstructure(descriptor=ms_stats, name=fname+'_RVE')
