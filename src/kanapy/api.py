@@ -989,9 +989,13 @@ class Microstructure:
                 grain_majDia[igr-1] = self.RVE_data['Grains'][igr]['majDia']
                 
         # Compute the L1-error between particle and grain geometries
-        kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
+        if self.particle_data['Type'] == 'Elongated':
+            kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
                                 'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
-                                'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}  
+                                'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}
+        else:
+            kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia}}}
+
         error = l1_error_est(**kwargs)
         print('\n    L1 error between particle and grain geometries: {}'\
               .format(round(error, 5)))
@@ -1002,11 +1006,12 @@ class Microstructure:
                        'Unit_scale': self.RVE_data['Units'],
                        'L1-error': error,
                        'Particle_Equivalent_diameter': par_eqDia, 
-                       'Particle_Major_diameter': par_majDia,
-                       'Particle_Minor_diameter': par_minDia,
-                       'Grain_Equivalent_diameter': grain_eqDia,
-                       'Grain_Major_diameter': grain_majDia,
-                       'Grain_Minor_diameter': grain_minDia}
+                       'Grain_Equivalent_diameter': grain_eqDia}
+        if self.particle_data['Type'] == 'Elongated':
+            output_data['Particle_Major_diameter'] = par_majDia
+            output_data['Particle_Minor_diameter'] = par_minDia
+            output_data['Grain_Major_diameter'] = grain_majDia
+            output_data['Grain_Minor_diameter'] = grain_minDia
 
         return output_data                                                                                   
     

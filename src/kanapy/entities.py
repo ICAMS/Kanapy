@@ -343,6 +343,7 @@ class Ellipsoid(object):
             
             # If it collides with any three faces: Create 7 duplicates
             if sum([left, top, right, bottom, front, back]) == 3:
+                p1 = None
                 if left and top and front:
                     p1 = Ellipsoid(str(self.id)+'_RTF', self.x+sim_width, self.y,
                                    self.z, self.a, self.b, self.c, self.quat, dup=self.id, phasenum=self.phasenum)
@@ -463,10 +464,12 @@ class Ellipsoid(object):
                                    sim_height, self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id, phasenum=self.phasenum)
                     p7 = Ellipsoid(str(self.id)+'_RBF', self.x+sim_width, self.y,
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id, phasenum=self.phasenum)
-                duplicates.extend([p1, p2, p3, p4, p5, p6, p7])
+                if p1 is not None:
+                    duplicates.extend([p1, p2, p3, p4, p5, p6, p7])
 
             # If it collides with any two faces: Create 3 duplicates
             elif sum([left, top, right, bottom, front, back]) == 2:
+                p1 = None
                 if left and top:
                     p1 = Ellipsoid(str(self.id)+'_RT', self.x+sim_width, self.y,
                                    self.z,           self.a, self.b, self.c, self.quat, dup=self.id, phasenum=self.phasenum)
@@ -551,10 +554,12 @@ class Ellipsoid(object):
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id, phasenum=self.phasenum)
                     p3 = Ellipsoid(str(self.id)+'_FR', self.x+sim_width, self.y,
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id, phasenum=self.phasenum)
-                duplicates.extend([p1, p2, p3])
+                if p1 is not None:
+                    duplicates.extend([p1, p2, p3])
 
             # If it collides with any single face: Create 1 duplicate
             elif sum([left, top, right, bottom, front, back]) == 1:
+                p1 = None
                 if left:
                     p1 = Ellipsoid(str(self.id)+'_R', self.x+sim_width, self.y,
                                    self.z,           self.a, self.b, self.c, self.quat, dup=self.id, phasenum=self.phasenum)
@@ -573,7 +578,8 @@ class Ellipsoid(object):
                 elif back:
                     p1 = Ellipsoid(str(self.id)+'_F', self.x,           self.y,
                                    self.z-sim_depth, self.a, self.b, self.c, self.quat, dup=self.id, phasenum=self.phasenum)
-                duplicates.append(p1)
+                if p1 is not None:
+                    duplicates.append(p1)
         else:
             # no periodicity
             if self.bbox_xmin < sim_box.left:
