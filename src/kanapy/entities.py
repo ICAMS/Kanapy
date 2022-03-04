@@ -2,6 +2,7 @@
 import os
 import itertools
 import numpy as np
+import random
 
 from kanapy.collision_detect_react import collision_routine
 
@@ -748,6 +749,7 @@ class Octree(object):
         if len(self.particles) > self.maxparticles and self.level <= self.maxlevel:
             self.subdivide()
             self.subdivide_particles()
+            random.shuffle(self.branches)
             for branch in self.branches:
                 branch.update()
         else:
