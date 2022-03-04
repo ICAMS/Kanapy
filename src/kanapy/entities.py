@@ -686,7 +686,7 @@ class Octree(object):
 
     def __init__(self, level, cub, particles=[]):
 
-        self.maxlevel = 3           # max number of subdivisions
+        self.maxlevel = -1           # max number of subdivisions
         self.level = level          # current level of subdivision
         self.maxparticles = 10      # max number of particles without subdivision
         self.cub = cub              # cuboid object
