@@ -618,7 +618,10 @@ class Microstructure:
 
         """
         if file is None:
-            file = self.name + '.stl'
+            if self.name == 'Microstructure':
+                file = 'px_{}grains.stl'.format(self.Ngr)
+            else:
+                file = self.name + '.stl'
         if grains is None:
             grains = self.RVE_data['Grains']
         facets = set()
@@ -634,7 +637,9 @@ class Microstructure:
                         facets.add(facet)
                     pts = grains[igr]['Points'][vert]
                     nv = np.cross(pts[1]-pts[0], pts[2]-pts[0])  # facet normal
-                    nv /= np.sqrt(np.dot(nv, nv))
+                    if np.linalg.norm(nv) < 1.e-3:
+                        nv = np.cross(pts[1]-pts[0], pts[2]-pts[1])
+                    nv /= np.linalg.norm(nv)
                     f.write(" facet normal {} {} {}\n"\
                             .format(nv[0], nv[1], nv[2]))
                     f.write(" outer loop\n")
@@ -656,7 +661,10 @@ class Microstructure:
     
     def write_ori(self, angles, file=None):
         if file is None:
-            file = self.name + '_ori.csv'
+            if self.name == 'Microstructure':
+                file = 'px_{}grains_ori.csv'.format(self.Ngr)
+            else:
+                file = self.name + '_ori.csv'
         with open(file, 'w') as f:
             for ori in angles:
                 f.write('{}, {}, {}\n'.format(ori[0], ori[1], ori[2]))
