@@ -637,8 +637,11 @@ class Microstructure:
                         facets.add(facet)
                     pts = grains[igr]['Points'][vert]
                     nv = np.cross(pts[1]-pts[0], pts[2]-pts[0])  # facet normal
-                    if np.linalg.norm(nv) < 1.e-3:
+                    if np.linalg.norm(nv) < 1.e-5:
+                        warnings.warning(f'Acute facet detected. Grain: {igr}; Facet: {facet}')
                         nv = np.cross(pts[1]-pts[0], pts[2]-pts[1])
+                        if np.linalg.norm(nv) < 1.e-5:
+                            warnings.warning(f'Irregular facet detected. Grain: {igr}; Facet: {facet}')
                     nv /= np.linalg.norm(nv)
                     f.write(" facet normal {} {} {}\n"\
                             .format(nv[0], nv[1], nv[2]))
@@ -908,7 +911,7 @@ class Microstructure:
                     grains.add(int(key1[j+1:]))
                     # check if any neighboring nodes are already in list of
                     # vertices. If yes, replace new vertex with existing one
-                    newlist = check_neigh(elist, grains, margin=5*voxel_size)
+                    newlist = check_neigh(elist, grains, margin=3*voxel_size)
                     # update grains with new vertex
                     for j in grains:
                         vert[j].update(newlist)
@@ -936,7 +939,7 @@ class Microstructure:
                             # move points to the right
                             points[i1, i] += RVE_max[i]
             try:
-                hull = ConvexHull(points, qhull_options='QJ Pp')
+                hull = ConvexHull(points, qhull_options='Qt')
                 grains[igr]['Points'] = hull.points
                 grains[igr]['Vertices'] = hull.vertices
                 grains[igr]['Simplices'] = hull.simplices
