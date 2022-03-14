@@ -314,3 +314,50 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         orilist, ein, eout, mbin = \
             eng.gb_textureReconstruction(matlab.double(hist), ori, 
                 matlab.double(shared_area), len(hist), nargout=4)
+        return np.array(eng.Euler(orilist))
+
+def createOrisetRandom(num, hist=None, shared_area=None,
+                 cs='m-3m'):
+    
+    """
+    Create a set of num Euler angles for Random texture. 
+    Other than knpy.createOriset() this method does not create an artificial
+    EBSD which is reduced in a second step to num discrete orientations but 
+    directly samples num randomly distributed orientations.s
+
+    Parameters
+    ----------
+    num : int
+        Number of Euler angles in set to be created.
+    
+    hist : array, optional
+        Histogram of MDF. The default is None.
+    shared_area: array, optional
+        The shared area between pairs of grains. The default in None.
+    cs : str, optional
+        Crystal symmetry group. The default is 'm3m'.
+
+    Returns
+    -------
+    ori : (num, 3) array
+        Set of Euler angles
+
+    """
+    # start Matlab engine
+    eng = matlab.engine.start_matlab()
+    eng.addpath(MTEX_DIR, nargout=0)
+    eng.addpath(ROOT_DIR, nargout=0)
+    eng.startup(nargout=0)
+    
+    cs_ = eng.crystalSymmetry(cs)
+    ori = eng.orientation.rand(num, cs_)
+    if hist is None:
+        return np.array(eng.Euler(ori))
+    else:
+        if shared_area is None:
+            raise ValueError('Microstructure.shared_area must be provided if hist is given.')
+        orilist, ein, eout, mbin = \
+            eng.gb_textureReconstruction(matlab.double(hist), ori, 
+                matlab.double(shared_area), len(hist), nargout=4)
+        return np.array(eng.Euler(orilist))
+    
