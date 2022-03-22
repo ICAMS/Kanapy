@@ -29,7 +29,7 @@
         "Nz": 60
     },
     "Simulation": {
-        "periodicity": "True",
+        "periodicity": "False",
         "output_units": "um"
     },
     "Phase": {

@@ -329,8 +329,8 @@ class TestOctree():
         # Initialize the Ellipsoids
         ell1 = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5, rot_surf[0])
         ell2 = Ellipsoid(2, 1.9, 1.68, 2.6, 2.0, 1.5, 1.5, rot_surf[0])
-        ell1.speedx, ell1.speedy, ell1.speedz = -0.02, 0.075, -0.05
-        ell2.speedx, ell2.speedy, ell2.speedz = 0.5, -0.025, -0.36
+        ell1.speedx0, ell1.speedy0, ell1.speedz0 = -0.02, 0.075, -0.05
+        ell2.speedx0, ell2.speedy0, ell2.speedz0 = 0.5, -0.025, -0.36
 
         # Initialize the Octree
         self.tree = Octree(0, cbox, particles=[ell1, ell2])
@@ -371,8 +371,8 @@ class TestOctree():
         mocker.spy(self.tree, 'subdivide_particles')
 
         self.tree.update()
-        assert self.tree.subdivide.call_count == 1
-        assert self.tree.subdivide_particles.call_count == 1
+        assert self.tree.subdivide.call_count == 0
+        assert self.tree.subdivide_particles.call_count == 0
 
     def test_update2(self, mocker, rot_surf):
 

@@ -100,14 +100,14 @@ def test_particle_grow(rot_surf):
 
     ell1 = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5, rot_surf[0])
     ell2 = Ellipsoid(2, 1.9, 1.68, 2.6, 2.0, 1.5, 1.5, rot_surf[0])
-    ell1.speedx, ell1.speedy, ell1.speedz = -0.02, 0.075, -0.05
-    ell2.speedx, ell2.speedy, ell2.speedz = 0.5, -0.025, -0.36
+    ell1.speedx0, ell1.speedy0, ell1.speedz0 = -0.02, 0.075, -0.05
+    ell2.speedx0, ell2.speedy0, ell2.speedz0 = 0.5, -0.025, -0.36
 
     ells = [ell1, ell2]
     sb = Simulation_Box(10, 10, 10)
 
     particle_grow(sb, ells, True, 10, dump=True)
-
+    
     assert round(ell1.x, 6) == 0.78
     assert round(ell1.y, 6) == 1.325
     assert round(ell1.z, 6) == 0.2

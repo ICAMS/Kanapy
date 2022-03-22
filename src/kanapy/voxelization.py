@@ -119,7 +119,8 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
     
     # Initialize a tqdm progress bar to the Number of voxels in the domain
     pbar = tqdm(total = len(remaining_voxels))
-    
+    for ellipsoid in Ellipsoids:
+        ellipsoid.inside_voxels = []
     while len(remaining_voxels) > 0:
         
         # call the growth value for the ellipsoids

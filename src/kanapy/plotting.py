@@ -97,7 +97,7 @@ def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=
 
     return ax
 
-def plot_polygons_3D(grains, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1]):
+def plot_polygons_3D(grains, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1], dual_phase=False):
     '''
     Plot triangularized convex hulls of grains, based on vertices, i.e. 
     connection points of 4 up to 8 grains or the end pointss of triple or quadriiple 
@@ -127,8 +127,14 @@ def plot_polygons_3D(grains, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1]):
     for igr in grains.keys():
         pts = grains[igr]['Points']
         if len(pts) > 6:
-            col = list(cm(igr))
-            col[-1] = alpha   # change alpha channel to create semi-transparency
+            if dual_phase==True:
+                if grains[igr]['PhaseID'] == 0:
+                    col = 'red'
+                else: 
+                    col = 'green'
+            else:
+                col = list(cm(igr))
+                col[-1] = alpha   # change alpha channel to create semi-transparency
             ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
                             triangles=grains[igr]['Simplices'], color=col, 
                             edgecolor=ec, linewidth=1)
@@ -169,7 +175,7 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
                 col = 'green'
             #col = cm(pa.phasenum)
         else:
-            col = cm(i)  # set to 'b' for only blue ellipsoids
+            col = cm(i+1)  # set to 'b' for only blue ellipsoids
         qw, qx, qy, qz = pa.quat
         x_c, y_c, z_c, a, b, c = pa.x, pa.y, pa.z, pa.a, pa.b, pa.c
         #Rotation

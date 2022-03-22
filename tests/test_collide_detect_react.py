@@ -111,8 +111,11 @@ def test_collision_react():
     el2 = Ellipsoid(2, 5.5, 5.5, 5.5, 2.0, 2.0, 2.0,
                     np.array([0.52532199, 0., -0., 0.85090352]))
 
-    el1.speedx, el1.speedy, el1.speedz = 0.1, 0.075, -0.05
-    el2.speedx, el2.speedy, el2.speedz = -0.1, -0.025, -0.36
+    # el1.speedx, el1.speedy, el1.speedz = 0.1, 0.075, -0.05
+    # el2.speedx, el2.speedy, el2.speedz = -0.1, -0.025, -0.36
+    
+    el1.speedx0, el1.speedy0, el1.speedz0 = 0.1, 0.075, -0.05
+    el2.speedx0, el2.speedy0, el2.speedz0 = -0.1, -0.025, -0.36
         
     # Test different conditions
     # Condition: xdiff > 0 && zdiff > 0          
@@ -128,7 +131,10 @@ def test_collision_react():
     assert round(el2.speedz, 6) == 0.216198    
 
     # Condition: xdiff > 0 && zdiff < 0
-    el2.z = 4.5   
+    el2.z = 4.5 
+    el1.speedx, el1.speedy, el1.speedz = 0.0, 0.0, 0.0
+    el2.speedx, el2.speedy, el2.speedz = 0.0, 0.0, 0.0
+    
     collision_react(el1, el2)
     collision_react(el2, el1)   
 
@@ -143,6 +149,8 @@ def test_collision_react():
     # Condition: xdiff < 0 && zdiff > 0
     el2.x = 4.5
     el2.z  = 5.5  
+    el1.speedx, el1.speedy, el1.speedz = 0.0, 0.0, 0.0
+    el2.speedx, el2.speedy, el2.speedz = 0.0, 0.0, 0.0
 
     collision_react(el1, el2)
     collision_react(el2, el1)   
@@ -158,6 +166,8 @@ def test_collision_react():
     # Condition: xdiff < 0 && zdiff < 0
     el2.x = 4.5
     el2.z  = 4.5  
+    el1.speedx, el1.speedy, el1.speedz = 0.0, 0.0, 0.0
+    el2.speedx, el2.speedy, el2.speedz = 0.0, 0.0, 0.0
 
     collision_react(el1, el2)
     collision_react(el2, el1)   
@@ -173,6 +183,8 @@ def test_collision_react():
     # Condition: xdiff = 0 && zdiff = 0
     el2.x = 5.0
     el2.z  = 5.0  
+    el1.speedx, el1.speedy, el1.speedz = 0.0, 0.0, 0.0
+    el2.speedx, el2.speedy, el2.speedz = 0.0, 0.0, 0.0
 
     collision_react(el1, el2)
     collision_react(el2, el1)   
@@ -188,6 +200,8 @@ def test_collision_react():
     # Condition: xdiff = 0 && zdiff > 0
     el2.x = 5.0
     el2.z  = 5.5  
+    el1.speedx, el1.speedy, el1.speedz = 0.0, 0.0, 0.0
+    el2.speedx, el2.speedy, el2.speedz = 0.0, 0.0, 0.0
 
     collision_react(el1, el2)
     collision_react(el2, el1)   
@@ -203,6 +217,8 @@ def test_collision_react():
     # Condition: xdiff = 0 && zdiff < 0    
     el2.x = 5.0
     el2.z  = 4.5  
+    el1.speedx, el1.speedy, el1.speedz = 0.0, 0.0, 0.0
+    el2.speedx, el2.speedy, el2.speedz = 0.0, 0.0, 0.0
 
     collision_react(el1, el2)
     collision_react(el2, el1)   
@@ -218,6 +234,8 @@ def test_collision_react():
     # Condition: xdiff < 0 && zdiff = 0    
     el2.x = 4.5
     el2.z  = 5.0  
+    el1.speedx, el1.speedy, el1.speedz = 0.0, 0.0, 0.0
+    el2.speedx, el2.speedy, el2.speedz = 0.0, 0.0, 0.0
 
     collision_react(el1, el2)
     collision_react(el2, el1)   
@@ -234,6 +252,8 @@ def test_collision_react():
     # Condition: xdiff > 0 && zdiff = 0    
     el2.x = 5.5
     el2.z  = 5.0  
+    el1.speedx, el1.speedy, el1.speedz = 0.0, 0.0, 0.0
+    el2.speedx, el2.speedy, el2.speedz = 0.0, 0.0, 0.0
 
     collision_react(el1, el2)
     collision_react(el2, el1)   

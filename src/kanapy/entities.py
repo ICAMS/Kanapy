@@ -104,6 +104,9 @@ class Ellipsoid(object):
         self.c = c
         self.quat = quat        
         self.oria, self.orib, self.oric = a, b, c   # Store the original size of the particle 
+        self.speedx0 = 0.
+        self.speedy0 = 0.
+        self.speedz0 = 0.
         self.speedx = 0.
         self.speedy = 0.
         self.speedz = 0.
@@ -735,10 +738,9 @@ class Octree(object):
 
                 # Distance between the centers of ellipsoids
                 dist = np.sqrt(np.sum(np.square(np.subtract(E1.get_pos(), E2.get_pos()))))
-
+                
                 # If the bounding spheres collide then check for collision
                 if dist <= E1.a + E2.a:
-
                     # Check if ellipsoids overlap and update their speeds accordingly
                     collision_routine(E1, E2)
 

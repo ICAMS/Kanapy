@@ -78,7 +78,7 @@ def collision_react(E1, E2):
                   :height: 80px
                   :align: center                        
     """
-    E1Speed = np.sqrt((E1.speedx**2)+(E1.speedy**2)+(E1.speedz**2))
+    E1Speed = np.sqrt((E1.speedx0**2)+(E1.speedy0**2)+(E1.speedz0**2))
     XDiff = -(E1.x - E2.x)
     YDiff = -(E1.y - E2.y)
     ZDiff = -(E1.z - E2.z)
@@ -122,8 +122,9 @@ def collision_react(E1, E2):
         ZSpeed = E1Speed * math.sin(Angle)*math.cos(ElevationAngle)
 
     # Assign new speeds
-    E1.speedx = XSpeed
-    E1.speedy = YSpeed
-    E1.speedz = ZSpeed
+    
+    E1.speedx += XSpeed
+    E1.speedy += YSpeed
+    E1.speedz += ZSpeed
 
     return

@@ -158,7 +158,7 @@ class Microstructure:
             smoothingRoutine(nodes_v, elmtDict, elmtSetDict,
                              save_files=save_files)
 
-    def analyze_RVE(self, save_files=False):
+    def analyze_RVE(self, save_files=False, dual_phase=False):
         """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
         grain volumes and shared grain boundary surface areas info are written out as well."""
             
@@ -167,8 +167,8 @@ class Microstructure:
         if self.particle_data is None:
             raise ValueError('No particles created yet. Run init_RVE, pack and voxelize first.')
             
-        self.grain_facesDict, self.shared_area = self.calcPolygons()  # updates RVE_data 
-        self.res_data = self.get_stats()
+        self.grain_facesDict, self.shared_area = self.calcPolygons(dual_phase=dual_phase)  # updates RVE_data 
+        self.res_data = self.get_stats(dual_phase=dual_phase)
 
     """
     --------     Plotting routines          --------
@@ -187,27 +187,30 @@ class Microstructure:
                        sliced=sliced, dual_phase=dual_phase, cmap=cmap)
 
     def plot_polygons(self, grains=None, cmap='prism', alpha=0.4, 
-                         ec=[0.5,0.5,0.5,0.1]):
+                         ec=[0.5,0.5,0.5,0.1], dual_phase=False):
         """ Plot polygonalized microstructure"""
         if grains is None:
             if 'Grains' in self.RVE_data.keys():
                 grains = self.RVE_data['Grains']
             else:
                 raise ValueError('No polygons for grains defined. Run analyse_RVE first')
-        plot_polygons_3D(grains, cmap=cmap, alpha=alpha, ec=ec)
+        plot_polygons_3D(grains, cmap=cmap, alpha=alpha, ec=ec, dual_phase=dual_phase)
 
         
     def plot_stats(self, data=None, gs_data=None, gs_param=None, 
-                          ar_data=None, ar_param=None, save_files=False):
+                          ar_data=None, ar_param=None, dual_phase=False, save_files=False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""   
         if data is None:
             data = self.res_data
+        else:
+            data = [data]
         if data is None:
             raise ValueError('No microstructure data created yet. Run analyse_RVE first.')
-        plot_output_stats(data, gs_data=gs_data, gs_param=gs_param,
-                          ar_data=ar_data, ar_param=ar_param,
-                          save_files=save_files)
+        for dat in data:
+            plot_output_stats(dat, gs_data=gs_data, gs_param=gs_param,
+                              ar_data=ar_data, ar_param=ar_param,
+                              save_files=save_files)
         
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):
@@ -676,7 +679,7 @@ class Microstructure:
     """
     --------        Supporting Routines         -------
     """
-    def calcPolygons(self, tol=1.e-3):
+    def calcPolygons(self, tol=1.e-3, dual_phase=False):
         """
         Evaluates the grain volume and the grain boundary shared surface area 
         between neighbouring grains in voxelized microstrcuture. Generate 
@@ -956,10 +959,14 @@ class Microstructure:
             dists = [euclidean(center, pt) for pt in grains[igr]['Points']]
             grains[igr]['Center'] = center
             grains[igr]['eqDia']  = 2.0 * (3*grains[igr]['Volume'] / (4*np.pi))**(1/3)
+            #if the Volume is zero, the eqDia is zero, the ouput plot for eqDia in plot_stats() won't work.
             grains[igr]['majDia'] = 2.0 * np.amax(dists)
             grains[igr]['minDia'] = 2.0 * np.amin(dists)
             if periodic:
                 grains[igr]['Split'] = list(gsplit[igr].values())
+            if dual_phase == True:
+                grains[igr]['PhaseID'] = self.particle_data['Phase number'][igr-1]
+                grains[igr]['PhaseName'] = self.particle_data['Phase name'][igr-1]
         self.RVE_data['Grains'] = grains
         self.RVE_data['Vertices'] = np.array(list(vertices), dtype=int) - 1
         self.RVE_data['GBnodes'] = gbDict
@@ -967,7 +974,7 @@ class Microstructure:
         
         return grain_facesDict, shared_area
     
-    def get_stats(self):
+    def get_stats(self, dual_phase=False):
         """
         Comape the geometries of particles used for packing and the resulting 
         grains.
@@ -993,36 +1000,77 @@ class Microstructure:
         grain_eqDia = np.zeros(self.Ngr)
         grain_majDia = np.zeros(self.Ngr)
         grain_minDia = np.zeros(self.Ngr)
+        grain_PhaseID = np.zeros(self.Ngr)
+        grain_PhaseName = np.chararray(self.Ngr)
         for igr in self.RVE_data['Grains'].keys():
             grain_eqDia[igr-1] = self.RVE_data['Grains'][igr]['eqDia']
             if self.particle_data['Type'] == 'Elongated':
                 grain_minDia[igr-1] = self.RVE_data['Grains'][igr]['minDia']
                 grain_majDia[igr-1] = self.RVE_data['Grains'][igr]['majDia']
+            if dual_phase == True:
+                grain_PhaseID[igr-1] = self.RVE_data['Grains'][igr]['PhaseID']
+                grain_PhaseName[igr-1] = self.RVE_data['Grains'][igr]['PhaseName']
                 
-        # Compute the L1-error between particle and grain geometries
-        if self.particle_data['Type'] == 'Elongated':
-            kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
-                                'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
-                                'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}
-        else:
-            kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia}}}
-
-        error = l1_error_est(**kwargs)
-        print('\n    L1 error between particle and grain geometries: {}'\
-              .format(round(error, 5)))
+        output_data_list = []
+        if dual_phase == True:
+            indexPhase = [grain_PhaseID == 0, grain_PhaseID == 1]
+            # Compute the L1-error between particle and grain geometries for phase 0
+            for index in indexPhase:
+                if self.particle_data['Type'] == 'Elongated':
+                    kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia[index], 'Grains': grain_eqDia[index]},
+                                        'Major diameter': {'Particles': par_majDia[index], 'Grains': grain_majDia[index]},
+                                        'Minor diameter': {'Particles': par_minDia[index], 'Grains': grain_minDia[index]}}}
+                else:
+                    kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia[index], 'Grains': grain_eqDia[index]}}}
         
-        # Create dictionaries to store the data generated
-        output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
-                       'Grain type': self.particle_data['Type'],
-                       'Unit_scale': self.RVE_data['Units'],
-                       'L1-error': error,
-                       'Particle_Equivalent_diameter': par_eqDia, 
-                       'Grain_Equivalent_diameter': grain_eqDia}
-        if self.particle_data['Type'] == 'Elongated':
-            output_data['Particle_Major_diameter'] = par_majDia
-            output_data['Particle_Minor_diameter'] = par_minDia
-            output_data['Grain_Major_diameter'] = grain_majDia
-            output_data['Grain_Minor_diameter'] = grain_minDia
+                error = l1_error_est(**kwargs)
+                print('\n    L1 error between particle and grain geometries: {}'\
+                      .format(round(error, 5)))
 
-        return output_data                                                                                   
+            
+                # Create dictionaries to store the data generated
+                output_data = {'Number_of_particles/grains': int(len(par_eqDia[index])), 
+                               'Grain type': self.particle_data['Type'],
+                               'Unit_scale': self.RVE_data['Units'],
+                               'L1-error': error,
+                               'Particle_Equivalent_diameter': par_eqDia[index], 
+                               'Grain_Equivalent_diameter': grain_eqDia[index]}
+                if self.particle_data['Type'] == 'Elongated':
+                    output_data['Particle_Major_diameter'] = par_majDia[index]
+                    output_data['Particle_Minor_diameter'] = par_minDia[index]
+                    output_data['Grain_Major_diameter'] = grain_majDia[index]
+                    output_data['Grain_Minor_diameter'] = grain_minDia[index]
+                    output_data['PhaseID'] = grain_PhaseID[index]
+                    output_data['PhaseName'] = grain_PhaseName[index]
+                output_data_list.append(output_data)
+                       
+        else:
+            # Compute the L1-error between particle and grain geometries
+            if self.particle_data['Type'] == 'Elongated':
+                kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
+                                    'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
+                                    'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}
+            else:
+                kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia}}}
+    
+            error = l1_error_est(**kwargs)
+            print('\n    L1 error between particle and grain geometries: {}'\
+                  .format(round(error, 5)))
+            
+        
+            # Create dictionaries to store the data generated
+            output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
+                           'Grain type': self.particle_data['Type'],
+                           'Unit_scale': self.RVE_data['Units'],
+                           'L1-error': error,
+                           'Particle_Equivalent_diameter': par_eqDia, 
+                           'Grain_Equivalent_diameter': grain_eqDia}
+            if self.particle_data['Type'] == 'Elongated':
+                output_data['Particle_Major_diameter'] = par_majDia
+                output_data['Particle_Minor_diameter'] = par_minDia
+                output_data['Grain_Major_diameter'] = grain_majDia
+                output_data['Grain_Minor_diameter'] = grain_minDia
+            output_data_list.append(output_data)
+
+        return output_data_list                                                                                   
     

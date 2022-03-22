@@ -11,7 +11,7 @@ from kanapy.input_output import write_dump
 from kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
 
 
-def particle_generator(particle_data, sim_box):
+def particle_generator(particle_data, sim_box, RVE_data=None,):
     """
     Initializes ellipsoids by assigning them random positions and speeds within the simulation box.
 
@@ -67,9 +67,14 @@ def particle_generator(particle_data, sim_box):
             0, 255), random.randint(0, 255))
 
         # Define random speed values along the 3 axes x, y & z
-        ellipsoid.speedx = np.random.uniform(low=-c/20., high=c/20.)
-        ellipsoid.speedy = np.random.uniform(low=-c/20., high=c/20.)
-        ellipsoid.speedz = np.random.uniform(low=-c/20., high=c/20.)
+        
+        ellipsoid.speedx0 = np.random.uniform(low=-c/20., high=c/20.)
+        ellipsoid.speedy0 = np.random.uniform(low=-c/20., high=c/20.)
+        ellipsoid.speedz0 = np.random.uniform(low=-c/20., high=c/20.)
+        
+        # ellipsoid.speedx0 = np.random.uniform(low=-(RVE_data['Voxel_resolutionX'])/20., high=(RVE_data['Voxel_resolutionX'])/20.)
+        # ellipsoid.speedy0 = np.random.uniform(low=-(RVE_data['Voxel_resolutionY'])/20., high=(RVE_data['Voxel_resolutionY'])/20.)
+        # ellipsoid.speedz0 = np.random.uniform(low=-(RVE_data['Voxel_resolutionZ'])/20., high=(RVE_data['Voxel_resolutionZ'])/20.)
         
         Ellipsoids.append(ellipsoid)                               # adds ellipsoid to list
 
@@ -103,9 +108,17 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
     for i in tqdm(range(nsteps+1)):
     
         # Initialize Octree and test for collision between ellipsoids
+        for ellipsoid in Ellipsoids:
+            ellipsoid.speedx = 0.
+            ellipsoid.speedy = 0.
+            ellipsoid.speedz = 0.
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
                                 sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
         tree.update()
+        # for ellipsoid in Ellipsoids:
+        #     ellipsoid.speedx0 = ellipsoid.speedx
+        #     ellipsoid.speedy0 = ellipsoid.speedy
+        #     ellipsoid.speedz0 = ellipsoid.speedz
         
         if dump:
             # Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)
@@ -215,7 +228,7 @@ def packingRoutine(particle_data, RVE_data, simulation_data, k_rep=0.0, k_att=0.
     
     print('    Creating particles from distribution statistics')
     # Create instances for particles
-    Particles = particle_generator(particle_data, sim_box)
+    Particles = particle_generator(particle_data, sim_box, RVE_data)
     
     # Growth of particle at each time step
     print('    Particle packing by growth simulation')
