@@ -44,6 +44,11 @@ ms.plot_stats(dual_phase=True)
 # ms.plot_slice(cut='yz', pos='top', data='poly', dual_phase=False)
 # ms.plot_slice(cut='xy', pos='top', data='poly', dual_phase=False)
 
+# write Abaqus input file for voxelated structure
+ms.output_abq('v')
+# write phaseID of grains into Abaqus input file
+knpy.writeAbaqusPhase(ms.RVE_data['Grains'])
+
 # smoothen voxelated structure and write Abaqus .inp file
 ms.smoothen()
 ms.output_abq('s')

@@ -126,7 +126,8 @@ def plot_polygons_3D(grains, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1], dual
     ax = fig.add_subplot(projection='3d')
     for igr in grains.keys():
         pts = grains[igr]['Points']
-        if len(pts) > 6:
+        #if len(pts) > 6:
+        if len(pts) > 3:
             if dual_phase==True:
                 if grains[igr]['PhaseID'] == 0:
                     col = 'red'

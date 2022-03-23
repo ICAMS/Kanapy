@@ -1418,4 +1418,16 @@ def writeAbaqusMat(ialloy, angles, nsdv=200):
             f.write('*User Material, constants=4\n')
             f.write('{}, {}, {}, {}\n'.format(float(ialloy), angles[i,0],
                                               angles[i,1], angles[i,2])) 
-    return
+    return 
+
+def writeAbaqusPhase(grains, nsdv=200):
+    with open('Material.inp', 'w') as f:
+        f.write('** MATERIALS\n')
+        f.write('**\n')
+        for i in range(len(grains)):
+            f.write('*Material, name=GRAIN{}_mat\n'.format(i+1))
+            f.write('*Depvar\n')
+            f.write('    {}\n'.format(nsdv))
+            f.write('*User Material, constants=1\n')
+            f.write('{}\n'.format(float(grains[i+1]['PhaseID'])))
+    return 

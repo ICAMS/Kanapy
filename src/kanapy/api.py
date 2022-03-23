@@ -69,6 +69,7 @@ class Microstructure:
         #    RVEcreator(descriptor, save_files=save_files)
         #self.Ngr = self.particle_data['Number']
         
+        self.nphase = len(descriptor)
         for des in descriptor:
             particle_data, RVE_data, simulation_data = \
                 RVEcreator(des, save_files=save_files)
@@ -1001,7 +1002,7 @@ class Microstructure:
         grain_majDia = np.zeros(self.Ngr)
         grain_minDia = np.zeros(self.Ngr)
         grain_PhaseID = np.zeros(self.Ngr)
-        grain_PhaseName = np.chararray(self.Ngr)
+        grain_PhaseName = np.zeros(self.Ngr).astype(str)
         for igr in self.RVE_data['Grains'].keys():
             grain_eqDia[igr-1] = self.RVE_data['Grains'][igr]['eqDia']
             if self.particle_data['Type'] == 'Elongated':
@@ -1012,8 +1013,11 @@ class Microstructure:
                 grain_PhaseName[igr-1] = self.RVE_data['Grains'][igr]['PhaseName']
                 
         output_data_list = []
-        if dual_phase == True:
-            indexPhase = [grain_PhaseID == 0, grain_PhaseID == 1]
+        indexPhase = []
+        if dual_phase == True:            
+            for iph in range(self.nphase):
+                indexPhase.append(grain_PhaseID == iph)
+            #indexPhase = [grain_PhaseID == 0, grain_PhaseID == 1]
             # Compute the L1-error between particle and grain geometries for phase 0
             for index in indexPhase:
                 if self.particle_data['Type'] == 'Elongated':
