@@ -11,7 +11,7 @@ from kanapy.input_output import write_dump
 from kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
 
 
-def particle_generator(particle_data, sim_box, RVE_data=None,):
+def particle_generator(particle_data, sim_box, RVE_data=None):
     """
     Initializes ellipsoids by assigning them random positions and speeds within the simulation box.
 
