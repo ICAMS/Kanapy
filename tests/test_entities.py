@@ -371,8 +371,8 @@ class TestOctree():
         mocker.spy(self.tree, 'subdivide_particles')
 
         self.tree.update()
-        assert self.tree.subdivide.call_count == 0
-        assert self.tree.subdivide_particles.call_count == 0
+        assert self.tree.subdivide.call_count == 1
+        assert self.tree.subdivide_particles.call_count == 1
 
     def test_update2(self, mocker, rot_surf):
 
@@ -392,6 +392,7 @@ class TestOctree():
         mocker.spy(self.tree, 'collisionsTest')
 
         self.tree.update()
+        self.tree.collisionsTest()
         assert self.tree.collisionsTest.call_count == 1
 
 

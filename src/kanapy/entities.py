@@ -761,7 +761,9 @@ class Octree(object):
         self.neighborlistMake()
         for i, E1 in enumerate(self.particles):
             for E2 in E1.neighborlist:
-                if E2.id > E1.id:
+                id1 = E1.id if E1.duplicate == None else (E1.duplicate + len(self.particles))
+                id2 = E2.id if E2.duplicate == None else (E2.duplicate + len(self.particles))
+                if id2 > id1:
                     # Distance between the centers of ellipsoids
                     dist = np.sqrt(np.sum(np.square(np.subtract(E1.get_pos(), E2.get_pos()))))
     
