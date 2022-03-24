@@ -68,7 +68,9 @@ class Microstructure:
         #self.particle_data, self.RVE_data, self.simulation_data = \
         #    RVEcreator(descriptor, save_files=save_files)
         #self.Ngr = self.particle_data['Number']
-        
+        if type(descriptor) is not list:
+            descriptor = [descriptor]
+            
         self.nphase = len(descriptor)
         for des in descriptor:
             particle_data, RVE_data, simulation_data = \
