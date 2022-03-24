@@ -120,6 +120,8 @@ class Ellipsoid(object):
         self.force_y = 0.
         self.force_z = 0.
         self.q = 2*(self.phasenum)-1
+        self.branches = []
+        self.neighborlist = set()
         
     def get_pos(self):
         """
@@ -689,7 +691,7 @@ class Octree(object):
 
     def __init__(self, level, cub, particles=[]):
 
-        self.maxlevel = -1           # max number of subdivisions
+        self.maxlevel = 3           # max number of subdivisions
         self.level = level          # current level of subdivision
         self.maxparticles = 10      # max number of particles without subdivision
         self.cub = cub              # cuboid object
@@ -728,21 +730,46 @@ class Octree(object):
             if branch.get_cub().intersect(particle.get_cub()):
                 branch.add_particle(particle)
 
+    # def collisionsTest(self):
+    #     """
+    #     Tests for collision between all ellipsoids in the particle list of a particular Octree
+    #     sub-branch           
+    #     """
+    #     for i, E1 in enumerate(self.particles):
+    #         for E2 in self.particles[i+1:]:
+
+    #             # Distance between the centers of ellipsoids
+    #             dist = np.sqrt(np.sum(np.square(np.subtract(E1.get_pos(), E2.get_pos()))))
+                
+    #             # If the bounding spheres collide then check for collision
+    #             if dist <= E1.a + E2.a:
+    #                 # Check if ellipsoids overlap and update their speeds accordingly
+    #                 collision_routine(E1, E2)
+    
+    def neighborlistMake(self):
+        """
+        Finds the neighborlist for each particle
+        """
+        for particle in self.particles:
+            for branch in particle.branches:
+                        particle.neighborlist.update(branch.particles)
+                        
     def collisionsTest(self):
         """
-        Tests for collision between all ellipsoids in the particle list of a particular Octree
-        sub-branch           
+        Tests for collision between all ellipsoids in the particle list of octree         
         """
+        self.neighborlistMake()
         for i, E1 in enumerate(self.particles):
-            for E2 in self.particles[i+1:]:
-
-                # Distance between the centers of ellipsoids
-                dist = np.sqrt(np.sum(np.square(np.subtract(E1.get_pos(), E2.get_pos()))))
-                
-                # If the bounding spheres collide then check for collision
-                if dist <= E1.a + E2.a:
-                    # Check if ellipsoids overlap and update their speeds accordingly
-                    collision_routine(E1, E2)
+            for E2 in E1.neighborlist:
+                if E2.id > E1.id:
+                    # Distance between the centers of ellipsoids
+                    dist = np.sqrt(np.sum(np.square(np.subtract(E1.get_pos(), E2.get_pos()))))
+    
+                    # If the bounding spheres collide then check for collision
+                    if dist <= (E1.a + E2.a):
+    
+                        # Check if ellipsoids overlap and update their speeds accordingly
+                        collision_routine(E1, E2)
 
     def update(self):
         """
@@ -755,5 +782,10 @@ class Octree(object):
             for branch in self.branches:
                 branch.update()
         else:
-            if len(self.particles) > 1:
-                self.collisionsTest()
+            # if len(self.particles) > 1:
+            #     self.collisionsTest()
+            for particle in self.particles:
+                particle.branches.append(self)
+
+                
+

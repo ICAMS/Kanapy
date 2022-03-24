@@ -112,9 +112,12 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
             ellipsoid.speedx = 0.
             ellipsoid.speedy = 0.
             ellipsoid.speedz = 0.
+            ellipsoid.branches = []
+            
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
-                                sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
+                                 sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
         tree.update()
+        tree.collisionsTest()
         # for ellipsoid in Ellipsoids:
         #     ellipsoid.speedx0 = ellipsoid.speedx
         #     ellipsoid.speedy0 = ellipsoid.speedy
