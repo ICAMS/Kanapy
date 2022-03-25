@@ -121,9 +121,20 @@ def collision_react(E1, E2):
         YSpeed = E1Speed * math.sin(ElevationAngle)
         ZSpeed = E1Speed * math.sin(Angle)*math.cos(ElevationAngle)
 
-    # Assign new speeds   
+    # Assign new speeds 
+    
     E1.speedx += XSpeed
     E1.speedy += YSpeed
     E1.speedz += ZSpeed
+
+    
+    # if E1.q * E2.q == 1:
+    #     E1.speedx += 2*XSpeed
+    #     E1.speedy += 2*YSpeed
+    #     E1.speedz += 2*ZSpeed
+    # else:
+    #     E1.speedx += XSpeed
+    #     E1.speedy += YSpeed
+    #     E1.speedz += ZSpeed
 
     return

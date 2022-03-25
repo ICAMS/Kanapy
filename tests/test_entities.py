@@ -334,7 +334,8 @@ class TestOctree():
 
         # Initialize the Octree
         self.tree = Octree(0, cbox, particles=[ell1, ell2])
-        self.tree.subdivide_particles()
+        self.tree.update()
+        #self.tree.subdivide_particles()
         self.tree.collisionsTest()
 
         assert round(ell1.speedx, 6) == -0.035037
