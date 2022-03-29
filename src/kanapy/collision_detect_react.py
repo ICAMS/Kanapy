@@ -128,7 +128,7 @@ def collision_react(E1, E2):
     E1.speedz += ZSpeed
 
     
-    # if E1.q * E2.q == 1:
+    # if E1.phasenum == E2.phasenum:
     #     E1.speedx += 2*XSpeed
     #     E1.speedy += 2*YSpeed
     #     E1.speedz += 2*ZSpeed

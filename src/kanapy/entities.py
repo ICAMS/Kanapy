@@ -119,7 +119,6 @@ class Ellipsoid(object):
         self.force_x = 0.
         self.force_y = 0.
         self.force_z = 0.
-        self.q = 2*(self.phasenum)-1
         self.branches = []
         self.neighborlist = set()
         

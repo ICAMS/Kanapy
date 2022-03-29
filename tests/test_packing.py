@@ -108,12 +108,12 @@ def test_particle_grow(rot_surf):
 
     particle_grow(sb, ells, True, 10, dump=True)
     
-    assert round(ell1.x, 6) == 0.78
-    assert round(ell1.y, 6) == 1.325
-    assert round(ell1.z, 6) == 0.2
-    assert round(ell2.x, 6) == 7.4
-    assert round(ell2.y, 6) == 1.405
-    assert round(ell2.z, 6) == 8.64
+    assert round(ell1.x, 6) == 0.929925
+    assert round(ell1.y, 6) == 0.408124
+    assert round(ell1.z, 6) == 0.605957
+    assert round(ell2.x, 6) == 2.367989
+    assert round(ell2.y, 6) == 2.293585
+    assert round(ell2.z, 6) == 3.561977
 
 
 def test_packingRoutine():

@@ -199,7 +199,12 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
                 rSq = dx*dx + dy*dy + dz*dz
                 r = np.sqrt(rSq)
                 r2inv = 1 / (rSq)
-                if ell.q * ell_n.q == 1:
+                # if ell.q * ell_n.q == 1:
+                #     Force = k_rep * ell.q * ell_n.q * r2inv
+                # else:
+                #     Force = k_att * ell.q * ell_n.q * r2inv
+                
+                if ell.phasenum == ell_n.phasenum:
                     Force = k_rep * ell.q * ell_n.q * r2inv
                 else:
                     Force = k_att * ell.q * ell_n.q * r2inv
