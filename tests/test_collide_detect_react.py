@@ -189,12 +189,12 @@ def test_collision_react():
     collision_react(el1, el2)
     collision_react(el2, el1)   
 
-    assert round(el1.speedx, 6) == 0.000038
-    assert round(el1.speedy, 6) == 0.134629
+    assert round(el1.speedx, 6) == -0.000038
+    assert round(el1.speedy, 6) == -0.134629
     assert round(el1.speedz, 6) == 0.0
     
-    assert round(el2.speedx, 6) == 0.000106
-    assert round(el2.speedy, 6) == -0.374466
+    assert round(el2.speedx, 6) == -0.000106
+    assert round(el2.speedy, 6) == 0.374466
     assert round(el2.speedz, 6) == 0.0          
 
     # Condition: xdiff = 0 && zdiff > 0
@@ -206,12 +206,12 @@ def test_collision_react():
     collision_react(el1, el2)
     collision_react(el2, el1)   
 
-    assert round(el1.speedx, 6) == 0.0
-    assert round(el1.speedy, 6) == 0.095197
+    assert round(el1.speedx, 6) == -0.0
+    assert round(el1.speedy, 6) == -0.095197
     assert round(el1.speedz, 6) == -0.095197
     
     assert round(el2.speedx, 6) == 0.0
-    assert round(el2.speedy, 6) == -0.264788
+    assert round(el2.speedy, 6) == 0.264788
     assert round(el2.speedz, 6) == 0.264788          
 
     # Condition: xdiff = 0 && zdiff < 0    
@@ -223,12 +223,12 @@ def test_collision_react():
     collision_react(el1, el2)
     collision_react(el2, el1)   
 
-    assert round(el1.speedx, 6) == 0.0
-    assert round(el1.speedy, 6) == 0.095197
+    assert round(el1.speedx, 6) == -0.0
+    assert round(el1.speedy, 6) == -0.095197
     assert round(el1.speedz, 6) == 0.095197
     
     assert round(el2.speedx, 6) == 0.0
-    assert round(el2.speedy, 6) == -0.264788
+    assert round(el2.speedy, 6) == 0.264788
     assert round(el2.speedz, 6) == -0.264788          
 
     # Condition: xdiff < 0 && zdiff = 0    
@@ -241,11 +241,11 @@ def test_collision_react():
     collision_react(el2, el1)   
     
     assert round(el1.speedx, 6) == 0.095197
-    assert round(el1.speedy, 6) == 0.095197
+    assert round(el1.speedy, 6) == -0.095197
     assert round(el1.speedz, 6) == 0.0
     
     assert round(el2.speedx, 6) == -0.264788
-    assert round(el2.speedy, 6) == -0.264788
+    assert round(el2.speedy, 6) == 0.264788
     assert round(el2.speedz, 6) == 0.0          
 
 
@@ -259,11 +259,11 @@ def test_collision_react():
     collision_react(el2, el1)   
 
     assert round(el1.speedx, 6) == -0.095197
-    assert round(el1.speedy, 6) == 0.095197
+    assert round(el1.speedy, 6) == -0.095197
     assert round(el1.speedz, 6) == 0.0
     
     assert round(el2.speedx, 6) == 0.264788
-    assert round(el2.speedy, 6) == -0.264788
+    assert round(el2.speedy, 6) == 0.264788
     assert round(el2.speedz, 6) == 0.0          
                             
 

@@ -91,26 +91,24 @@ def collision_react(E1, E2):
 
     if XDiff != 0 and ZDiff != 0:
         Angle = np.arctan2(ZDiff, XDiff)        
-        XSpeed = -E1Speed * np.cos(Angle)*np.cos(ElevationAngle)
-        YSpeed = -E1Speed * np.sin(ElevationAngle)
-        ZSpeed = -E1Speed * np.sin(Angle)*np.cos(ElevationAngle)
 
     else:
         if XDiff == 0 and ZDiff == 0:
             Angle = 0
         if XDiff == 0 and ZDiff != 0:
             if ZDiff > 0:
-                Angle = -np.pi/2.0
-            else:
                 Angle = np.pi/2.0
+            else:
+                Angle = -np.pi/2.0
         if XDiff != 0 and ZDiff == 0:
             if XDiff < 0:
-                Angle = 0.0
-            else:
                 Angle = np.pi
-        XSpeed = E1Speed * np.cos(Angle)*np.cos(ElevationAngle)
-        YSpeed = E1Speed * np.sin(ElevationAngle)
-        ZSpeed = E1Speed * np.sin(Angle)*np.cos(ElevationAngle)
+            else:
+                Angle = 0.0  
+                
+    XSpeed = -E1Speed * np.cos(Angle)*np.cos(ElevationAngle)
+    YSpeed = -E1Speed * np.sin(ElevationAngle)
+    ZSpeed = -E1Speed * np.sin(Angle)*np.cos(ElevationAngle)
 
     # Assign new speeds 
     
