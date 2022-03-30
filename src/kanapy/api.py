@@ -618,10 +618,6 @@ class Microstructure:
         Returns
         -------
         None.
-        
-        ISSUES: facets are duplicated (two grains have the same facet,
-                                       bookkeeping is necessary)
-
         """
         if file is None:
             if self.name == 'Microstructure':

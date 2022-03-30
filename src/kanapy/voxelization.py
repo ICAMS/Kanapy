@@ -9,9 +9,6 @@ from collections import defaultdict
 import numpy as np
 from scipy.spatial import ConvexHull
 
-#from kanapy.input_output import read_dump, write_output_stat
-
-
 def points_in_convexHull(Points, hull):
     """
     Determines whether the given array of points lie inside the convex hull or outside.        
@@ -71,7 +68,7 @@ def create_voxels(sim_box, voxNums):
 
         # Find the center of each voxel and update the center dictionary
         elmt_count += 1
-        vox_centerDict[elmt_count] = ((mi + ni) / 2., (mj + nj) / 2., (mk + nk) / 2.)
+        vox_centerDict[elmt_count] = (0.5*(mi + ni), 0.5*(mj + nj), 0.5*(mk + nk))
 
         # group the 8 nodes of an element and update node & element dictonary accordingly
         # C3D8 element connectivity is maintained by this list (DON'T change this order)
@@ -380,20 +377,7 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
             il = np.array(il) - 1
             hh[il] = Ellipsoids[ih-1].phasenum
         voxels_phase = np.reshape(hh, (voxX,voxY,voxZ), order='F')
-    
-    # test consistency of voxel array with element dict
-    '''for igr, iel in elmtSetDict.items():
-        ic = 0
-        for i in iel:
-            iv = vox_centerDict[i]
-            ih = voxels[int(voxX*iv[0]/lx), int(voxY*iv[1]/ly), int(voxZ*iv[2]/lz)]
-            if ih != igr:
-                print('Wrong voxel number',igr, ih, i, iv)
-            else:
-                ic += 1
-        if ic==len(iel):
-            print('Correct voxel assignment to grain:',igr)'''
-            
+
     print('Completed RVE voxelization')
     print('')
     

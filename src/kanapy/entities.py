@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import itertools
 import numpy as np
 import random
@@ -302,12 +301,12 @@ class Ellipsoid(object):
             # Check if particle's center is inside or outside the box
             if sim_box.right > self.x > sim_box.left and sim_box.bottom > self.y > sim_box.top and sim_box.back > self.z > sim_box.front:
                 # If inside: Check which face the particle collides with
-                left = True if self.bbox_xmin < sim_box.left else False
-                top = True if self.bbox_ymin < sim_box.top else False
-                front = True if self.bbox_zmin < sim_box.front else False
-                right = True if self.bbox_xmax > sim_box.right else False
-                bottom = True if self.bbox_ymax > sim_box.bottom else False
-                back = True if self.bbox_zmax > sim_box.back else False
+                left = self.bbox_xmin < sim_box.left
+                top = self.bbox_ymin < sim_box.top
+                front = self.bbox_zmin < sim_box.front
+                right = self.bbox_xmax > sim_box.right
+                bottom = self.bbox_ymax > sim_box.bottom
+                back = self.bbox_zmax > sim_box.back
                 
             else:
                 # Its outside: Move the particle to the opposite side
@@ -335,12 +334,12 @@ class Ellipsoid(object):
                 self.set_cub()             # update the bounding box due to its movement
 
                 # Now its inside: Check which face the particle collides with
-                left = True if self.bbox_xmin < sim_box.left else False
-                top = True if self.bbox_ymin < sim_box.top else False
-                front = True if self.bbox_zmin < sim_box.front else False
-                right = True if self.bbox_xmax > sim_box.right else False
-                bottom = True if self.bbox_ymax > sim_box.bottom else False
-                back = True if self.bbox_zmax > sim_box.back else False
+                left = self.bbox_xmin < sim_box.left
+                top = self.bbox_ymin < sim_box.top
+                front = self.bbox_zmin < sim_box.front
+                right = self.bbox_xmax > sim_box.right
+                bottom = self.bbox_ymax > sim_box.bottom
+                back = self.bbox_zmax > sim_box.back
 
             sim_width = abs(sim_box.right - sim_box.left)
             sim_height = abs(sim_box.bottom - sim_box.top)
@@ -728,22 +727,6 @@ class Octree(object):
         for particle, branch in itertools.product(self.particles, self.branches):
             if branch.get_cub().intersect(particle.get_cub()):
                 branch.add_particle(particle)
-
-    # def collisionsTest(self):
-    #     """
-    #     Tests for collision between all ellipsoids in the particle list of a particular Octree
-    #     sub-branch           
-    #     """
-    #     for i, E1 in enumerate(self.particles):
-    #         for E2 in self.particles[i+1:]:
-
-    #             # Distance between the centers of ellipsoids
-    #             dist = np.sqrt(np.sum(np.square(np.subtract(E1.get_pos(), E2.get_pos()))))
-                
-    #             # If the bounding spheres collide then check for collision
-    #             if dist <= E1.a + E2.a:
-    #                 # Check if ellipsoids overlap and update their speeds accordingly
-    #                 collision_routine(E1, E2)
     
     def neighborlistMake(self):
         """
@@ -764,7 +747,7 @@ class Octree(object):
                 id2 = E2.id if E2.duplicate == None else (E2.duplicate + len(self.particles))
                 if id2 > id1:
                     # Distance between the centers of ellipsoids
-                    dist = np.sqrt(np.sum(np.square(np.subtract(E1.get_pos(), E2.get_pos()))))
+                    dist = np.linalg.norm(np.subtract(E1.get_pos(), E2.get_pos()))
     
                     # If the bounding spheres collide then check for collision
                     if dist <= (E1.a + E2.a):

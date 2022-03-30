@@ -97,8 +97,6 @@ bool collideDetect (Vector3f coef_i, Vector3f coef_j, Vector3f r_i, Vector3f r_j
         if (mycomplex.imag() == 0.0)
             realRoots[i] = mycomplex.real();
     }
-    //cout << "Roots: " << realRoots[0] << ", " << realRoots[1] << ", ";
-    //cout << realRoots[2] << ", " << realRoots[3] << endl;
 
     // Count number of real negative roots
     int count_neg = 0;
@@ -106,28 +104,20 @@ bool collideDetect (Vector3f coef_i, Vector3f coef_j, Vector3f r_i, Vector3f r_j
         if (realRoots[i] < -1.e-12)
             count_neg += 1;
     }
-    //cout << "count_neg: " << count_neg << endl;
     
     // Sort the real roots in ascending order
     int n = sizeof(realRoots)/sizeof(realRoots[0]);   
     sort(realRoots, realRoots+n);                       // sorts in ascending order
-    //sort(realRoots, realRoots+n, greater<int>());       // sorts in descending order    
-   
+    
     // Algebraic separation conditions to determine overlapping
     if (count_neg == 2){
         if (realRoots[0] != realRoots[1]){
             //status = 'separated'
             return false;
         }
-        // this seems to be redundant as true is returned in each case
-        else if (abs(realRoots[0] - realRoots[1]) <= 0.01){
-            //status = 'touching'
-            return true;
-        }
-        else{
+        else {
             return true;        
         }
-
     }
     else{
         //status = 'overlapping'

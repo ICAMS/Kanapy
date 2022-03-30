@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import math
 import numpy as np
 import kanapy.base as kbase
 
@@ -78,31 +77,23 @@ def collision_react(E1, E2):
                   :height: 80px
                   :align: center                        
     """
-    E1Speed = np.sqrt((E1.speedx0**2)+(E1.speedy0**2)+(E1.speedz0**2))
+    E1Speed = np.linalg.norm([E1.speedx0, E1.speedy0, E1.speedz0])
     XDiff = -(E1.x - E2.x)
     YDiff = -(E1.y - E2.y)
     ZDiff = -(E1.z - E2.z)
 
     # To avoid zero-Division error
+    #ElevationAngle = np.arctan2(YDiff, np.linalg.norm([XDiff, ZDiff]))
     if XDiff == 0 and ZDiff == 0:
-        ElevationAngle = np.arctan(YDiff/(math.sqrt((0.0001**2)+(0.0001**2))))
+        ElevationAngle = np.arctan(YDiff/(np.sqrt((0.0001**2)+(0.0001**2))))
     else:
-        ElevationAngle = np.arctan(YDiff/(math.sqrt((XDiff**2)+(ZDiff**2))))
+        ElevationAngle = np.arctan(YDiff/(np.sqrt((XDiff**2)+(ZDiff**2))))
 
     if XDiff != 0 and ZDiff != 0:
-        if XDiff > 0:
-            if ZDiff > 0:
-                Angle = np.arctan(ZDiff/XDiff)
-            elif ZDiff < 0:
-                Angle = np.arctan(ZDiff/XDiff)
-        elif XDiff < 0:
-            if ZDiff > 0:
-                Angle = np.pi + np.arctan(ZDiff/XDiff)
-            elif ZDiff < 0:
-                Angle = -np.pi + np.arctan(ZDiff/XDiff)
-        XSpeed = -E1Speed * math.cos(Angle)*math.cos(ElevationAngle)
-        YSpeed = -E1Speed * math.sin(ElevationAngle)
-        ZSpeed = -E1Speed * math.sin(Angle)*math.cos(ElevationAngle)
+        Angle = np.arctan2(ZDiff, XDiff)        
+        XSpeed = -E1Speed * np.cos(Angle)*np.cos(ElevationAngle)
+        YSpeed = -E1Speed * np.sin(ElevationAngle)
+        ZSpeed = -E1Speed * np.sin(Angle)*np.cos(ElevationAngle)
 
     else:
         if XDiff == 0 and ZDiff == 0:
@@ -117,24 +108,14 @@ def collision_react(E1, E2):
                 Angle = 0.0
             else:
                 Angle = np.pi
-        XSpeed = E1Speed * math.cos(Angle)*math.cos(ElevationAngle)
-        YSpeed = E1Speed * math.sin(ElevationAngle)
-        ZSpeed = E1Speed * math.sin(Angle)*math.cos(ElevationAngle)
+        XSpeed = E1Speed * np.cos(Angle)*np.cos(ElevationAngle)
+        YSpeed = E1Speed * np.sin(ElevationAngle)
+        ZSpeed = E1Speed * np.sin(Angle)*np.cos(ElevationAngle)
 
     # Assign new speeds 
     
     E1.speedx += XSpeed
     E1.speedy += YSpeed
     E1.speedz += ZSpeed
-
-    
-    # if E1.phasenum == E2.phasenum:
-    #     E1.speedx += 2*XSpeed
-    #     E1.speedy += 2*YSpeed
-    #     E1.speedz += 2*ZSpeed
-    # else:
-    #     E1.speedx += XSpeed
-    #     E1.speedy += YSpeed
-    #     E1.speedz += ZSpeed
 
     return

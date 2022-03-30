@@ -245,11 +245,6 @@ def RVEcreator(stats_dict, save_files=False):
     K = individualK/np.sum(individualK)                
     
     # Total number of ellipsoids
-    # num = np.divide(K*(RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
-    # num = np.rint(num).astype(int)                  # Round to the nearest integer    
-    # totalEllipsoids = int(np.sum(num))              # Total number of ellipsoids
- 
-
     num = np.divide(K*(VF*RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
     num = np.rint(num).astype(int)                  # Round to the nearest integer    
     totalEllipsoids = int(np.sum(num))  
@@ -1213,13 +1208,7 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
         ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label='Output')              
         ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3) 
-                    
-        #sns.distplot(ypdf1, hist = False, kde = True, 
-        #             kde_kws = {'shade': True, 'linewidth': 3}, 
-        #             label = 'Input', ax=ax[1])
-        #sns.distplot(ypdf2, hist = False, kde = True, 
-        #             kde_kws = {'shade': True, 'linewidth': 3}, 
-        #            label = 'Output', ax=ax[1])        
+                          
         ax[1].legend(loc="upper right", fontsize=16)
         ax[1].set_xlabel('{} diameter (μm)'.format(name), fontsize=18)
         ax[1].set_ylabel('Density', fontsize=18)
@@ -1287,13 +1276,7 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
         ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label='Output')              
         ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3) 
-                    
-        #sns.distplot(ypdf1, hist = False, kde = True, 
-        #             kde_kws = {'shade': True, 'linewidth': 3}, 
-        #             label = 'Input', ax=ax[1])
-        #sns.distplot(ypdf2, hist = False, kde = True, 
-        #             kde_kws = {'shade': True, 'linewidth': 3}, 
-        #            label = 'Output', ax=ax[1])        
+
         ax[1].legend(loc="upper right", fontsize=16)
         ax[1].set_xlabel('Aspect ratio', fontsize=18)
         ax[1].set_ylabel('Density', fontsize=18)

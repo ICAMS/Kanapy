@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-#import os
-#import sys
-#import json
 import random
 from tqdm import tqdm
-
 import numpy as np
 
 from kanapy.input_output import write_dump
@@ -29,13 +25,11 @@ def particle_generator(particle_data, sim_box, RVE_data=None):
 
         iden = n+1                                                # ellipsoid 'id'
         if particle_data['Type'] == 'Equiaxed':
-            a = particle_data['Equivalent_diameter'][n] / 2.
-            b = particle_data['Equivalent_diameter'][n] / 2.
-            c = particle_data['Equivalent_diameter'][n] / 2.
+            a = b = c = 0.5 * particle_data['Equivalent_diameter'][n]
         else:    
-            a = particle_data['Major_diameter'][n] / 2.               # Semi-major length
-            b = particle_data['Minor_diameter1'][n] / 2.              # Semi-minor length 1
-            c = particle_data['Minor_diameter2'][n] / 2.              # Semi-minor length 2
+            a = 0.5 * particle_data['Major_diameter'][n]              # Semi-major length
+            b = 0.5 * particle_data['Minor_diameter1'][n]             # Semi-minor length 1
+            c = 0.5 * particle_data['Minor_diameter2'][n]             # Semi-minor length 2
 
         # Random placement for ellipsoids
         x = random.uniform(c, sim_box.w - c)
@@ -67,15 +61,10 @@ def particle_generator(particle_data, sim_box, RVE_data=None):
             0, 255), random.randint(0, 255))
 
         # Define random speed values along the 3 axes x, y & z
-        
         ellipsoid.speedx0 = np.random.uniform(low=-c/20., high=c/20.)
         ellipsoid.speedy0 = np.random.uniform(low=-c/20., high=c/20.)
         ellipsoid.speedz0 = np.random.uniform(low=-c/20., high=c/20.)
-        
-        # ellipsoid.speedx0 = np.random.uniform(low=-(RVE_data['Voxel_resolutionX'])/20., high=(RVE_data['Voxel_resolutionX'])/20.)
-        # ellipsoid.speedy0 = np.random.uniform(low=-(RVE_data['Voxel_resolutionY'])/20., high=(RVE_data['Voxel_resolutionY'])/20.)
-        # ellipsoid.speedz0 = np.random.uniform(low=-(RVE_data['Voxel_resolutionZ'])/20., high=(RVE_data['Voxel_resolutionZ'])/20.)
-        
+
         Ellipsoids.append(ellipsoid)                               # adds ellipsoid to list
 
     return Ellipsoids
@@ -118,10 +107,6 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
                                 sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
         tree.update()
         tree.collisionsTest()
-        # for ellipsoid in Ellipsoids:
-        #     ellipsoid.speedx0 = ellipsoid.speedx
-        #     ellipsoid.speedy0 = ellipsoid.speedy
-        #     ellipsoid.speedz0 = ellipsoid.speedz
         
         if dump:
             # Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)
@@ -157,25 +142,30 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
     return Ellipsoids, sim_box
 
 def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
-    
-    rSq = 0
-    r2inv = 0
-    Force = 0
-    dx = dy = dz = 0
-      
-    w = sim_box.w          
-    h = sim_box.h
-    d = sim_box.d 
-    
+    """
+    Calculate interaction force between eööipsoids
+
+    :param Ellipsoids: 
+    :type Ellipsoids: 
+    :param sim_box :
+    :type sim_box:
+    :param periodicity:
+    :type periodicity:
+    :param k_rep: optional, default is 0.0
+    :type k_rep: float
+    :param k_att: optional, default is 0.0
+    :type k_att: float
+    """
+
     w_half = sim_box.w/2           
     h_half = sim_box.h/2
     d_half = sim_box.d/2 
     
     
     for ell in Ellipsoids:       
-        ell.force_x = 0
-        ell.force_y = 0
-        ell.force_z = 0          
+        ell.force_x = 0.
+        ell.force_y = 0.
+        ell.force_z = 0.          
         for ell_n in Ellipsoids:
             if ell.id != ell_n.id:                
                 dx = ell.x - ell_n.x
@@ -184,25 +174,21 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
                 
                 if periodicity == True:
                     if dx > w_half:
-                        dx -= w
+                        dx -= sim_box.w
                     if dx <= -w_half:
-                        dx += w
+                        dx += sim_box.w
                     if dy > h_half:
-                        dy -= h
+                        dy -= sim_box.h
                     if dy <= -h_half:
-                        dy += h
+                        dy += sim_box.h
                     if dz > d_half:
-                        dz -= d
+                        dz -= sim_box.d 
                     if dz <= -d_half:
-                        dz += d
+                        dz += sim_box.d 
                         
                 rSq = dx*dx + dy*dy + dz*dz
                 r = np.sqrt(rSq)
-                r2inv = 1 / (rSq)
-                # if ell.q * ell_n.q == 1:
-                #     Force = k_rep * ell.q * ell_n.q * r2inv
-                # else:
-                #     Force = k_att * ell.q * ell_n.q * r2inv
+                r2inv = 1. / rSq
                 
                 if ell.phasenum == ell_n.phasenum:
                     Force = k_rep * ell.q * ell_n.q * r2inv
@@ -212,10 +198,6 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
                 ell.force_x += Force * dx / r 
                 ell.force_y += Force * dy / r
                 ell.force_z += Force * dz / r
-                
-                # ell.force_x += Force * dx 
-                # ell.force_y += Force * dy 
-                # ell.force_z += Force * dz 
     return
 
 def packingRoutine(particle_data, RVE_data, simulation_data, k_rep=0.0, k_att=0.0, save_files=False):
