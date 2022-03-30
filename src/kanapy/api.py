@@ -54,7 +54,10 @@ class Microstructure:
             except:
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
         else:
-            self.descriptor = descriptor
+            if type(descriptor) is not list:
+                self.descriptor = [descriptor]
+            else:
+                self.descriptor = descriptor
             if file is not None:
                 print('WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
     
@@ -65,12 +68,8 @@ class Microstructure:
         """ Creates RVE based on the data provided in the input file."""
         if descriptor is None:
             descriptor = self.descriptor  
-        #self.particle_data, self.RVE_data, self.simulation_data = \
-        #    RVEcreator(descriptor, save_files=save_files)
-        #self.Ngr = self.particle_data['Number']
         if type(descriptor) is not list:
             descriptor = [descriptor]
-            
         self.nphase = len(descriptor)
         for des in descriptor:
             particle_data, RVE_data, simulation_data = \
@@ -99,14 +98,16 @@ class Microstructure:
                     self.particle_data['Phase name'] = self.particle_data['Phase name'] + particle_data['Phase name']
                     self.particle_data['Phase number'] = self.particle_data['Phase number'] + particle_data['Phase number']
             #if both Equiaxed and Elongated grains are present at the same time, it should be adjusted.
+
     def init_stats(self, descriptor=None, gs_data=None, ar_data=None,
                    save_files=False):    
         """ Generates particle statistics based on the data provided in the 
         input file."""
         if descriptor is None:
-            descriptor = self.descriptor  
-        # particleStatGenerator(descriptor, gs_data=gs_data, ar_data=ar_data,
-        #                       save_files=save_files)
+            descriptor = self.descriptor
+        if type(descriptor) is not list:
+            descriptor = [descriptor]
+
         for des in descriptor:
             particleStatGenerator(des, gs_data=gs_data, ar_data=ar_data,
                                   save_files=save_files)

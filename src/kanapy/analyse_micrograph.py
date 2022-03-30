@@ -317,7 +317,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         return np.array(eng.Euler(orilist))
 
 def createOrisetRandom(num, hist=None, shared_area=None,
-                 cs='m-3m'):
+                 cs='m-3m', file=None):
     
     """
     Create a set of num Euler angles for Random texture. 

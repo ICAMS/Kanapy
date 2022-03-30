@@ -1400,7 +1400,7 @@ def writeAbaqusMat(ialloy, angles, nsdv=200):
             f.write('    {}\n'.format(nsdv))
             f.write('*User Material, constants=4\n')
             f.write('{}, {}, {}, {}\n'.format(float(ialloy), angles[i,0],
-                                              angles[i,1], angles[i,2])) 
+                                              angles[i,1], angles[i,2]))
     return 
 
 def writeAbaqusPhase(grains, nsdv=200):
