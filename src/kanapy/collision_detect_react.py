@@ -83,35 +83,34 @@ def collision_react(E1, E2):
     ZDiff = -(E1.z - E2.z)
 
     # To avoid zero-Division error
-    #ElevationAngle = np.arctan2(YDiff, np.linalg.norm([XDiff, ZDiff]))
-    if XDiff == 0 and ZDiff == 0:
+    xis0 = np.isclose(XDiff, 0.)
+    zis0 = np.isclose(ZDiff, 0.)
+    if xis0 and zis0:
         ElevationAngle = np.arctan(YDiff/(np.sqrt((0.0001**2)+(0.0001**2))))
     else:
-        ElevationAngle = np.arctan(YDiff/(np.sqrt((XDiff**2)+(ZDiff**2))))
+        ElevationAngle = np.arctan2(YDiff, np.linalg.norm([XDiff, ZDiff]))
 
-    if XDiff != 0 and ZDiff != 0:
-        Angle = np.arctan2(ZDiff, XDiff)        
-
+    if (not xis0) and (not zis0):
+        Angle = np.arctan2(ZDiff, XDiff)
     else:
-        if XDiff == 0 and ZDiff == 0:
+        if xis0 and zis0:
             Angle = 0
-        if XDiff == 0 and ZDiff != 0:
+        elif xis0 and (not zis0):
             if ZDiff > 0:
                 Angle = np.pi/2.0
             else:
                 Angle = -np.pi/2.0
-        if XDiff != 0 and ZDiff == 0:
+        elif (not xis0) and zis0:
             if XDiff < 0:
                 Angle = np.pi
             else:
-                Angle = 0.0  
+                Angle = 0.0
                 
     XSpeed = -E1Speed * np.cos(Angle)*np.cos(ElevationAngle)
     YSpeed = -E1Speed * np.sin(ElevationAngle)
     ZSpeed = -E1Speed * np.sin(Angle)*np.cos(ElevationAngle)
 
     # Assign new speeds 
-    
     E1.speedx += XSpeed
     E1.speedy += YSpeed
     E1.speedz += ZSpeed

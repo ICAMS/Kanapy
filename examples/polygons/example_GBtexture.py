@@ -13,7 +13,7 @@ January 2022
 import numpy as np
 import matplotlib.pyplot as plt
 import kanapy as knpy
-import matlab.engine
+#import matlab.engine
 
 texture = 'random' # Implemented textures are goss, copper, random
 matname = 'Simulanium fcc'
