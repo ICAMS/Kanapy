@@ -82,17 +82,17 @@ def collision_react(E1, E2):
     YDiff = -(E1.y - E2.y)
     ZDiff = -(E1.z - E2.z)
 
-    # To avoid zero-Division error
+    """# To avoid zero-Division error
     xis0 = np.isclose(XDiff, 0.)
     zis0 = np.isclose(ZDiff, 0.)
     if xis0 and zis0:
         ElevationAngle = np.arctan(YDiff/(np.sqrt((0.0001**2)+(0.0001**2))))
-    else:
-        ElevationAngle = np.arctan2(YDiff, np.linalg.norm([XDiff, ZDiff]))
+    else:"""
+    ElevationAngle = np.arctan2(YDiff, np.linalg.norm([XDiff, ZDiff]))
 
-    if (not xis0) and (not zis0):
-        Angle = np.arctan2(ZDiff, XDiff)
-    else:
+    #if (not xis0) and (not zis0):
+    Angle = np.arctan2(ZDiff, XDiff)
+    """else:
         if xis0 and zis0:
             Angle = 0
         elif xis0 and (not zis0):
@@ -104,7 +104,7 @@ def collision_react(E1, E2):
             if XDiff < 0:
                 Angle = np.pi
             else:
-                Angle = 0.0
+                Angle = 0.0"""
                 
     XSpeed = -E1Speed * np.cos(Angle)*np.cos(ElevationAngle)
     YSpeed = -E1Speed * np.sin(ElevationAngle)

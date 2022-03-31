@@ -182,18 +182,18 @@ def test_collision_react():
 
     # Condition: xdiff = 0 && zdiff = 0
     el2.x = 5.0
-    el2.z  = 5.0  
+    el2.z = 5.0  
     el1.speedx, el1.speedy, el1.speedz = 0.0, 0.0, 0.0
     el2.speedx, el2.speedy, el2.speedz = 0.0, 0.0, 0.0
 
     collision_react(el1, el2)
     collision_react(el2, el1)   
 
-    assert round(el1.speedx, 6) == -0.000038
+    assert round(el1.speedx, 6) == 0.0
     assert round(el1.speedy, 6) == -0.134629
     assert round(el1.speedz, 6) == 0.0
     
-    assert round(el2.speedx, 6) == -0.000106
+    assert round(el2.speedx, 6) == 0.0
     assert round(el2.speedy, 6) == 0.374466
     assert round(el2.speedz, 6) == 0.0          
 
