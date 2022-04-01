@@ -25,6 +25,7 @@ jobs:
       run: |
         conda --version
         which python
+	conda install packaging
         pip install -e .
         
     - name: run tests
