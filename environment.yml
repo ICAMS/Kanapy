@@ -10,6 +10,7 @@ dependencies:
   - pytest-mock
   - pytest-cov
   - codecov
+  - packaging
   - sphinx
   - sphinx_rtd_theme
   - tqdm
