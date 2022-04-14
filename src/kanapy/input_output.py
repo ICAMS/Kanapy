@@ -158,7 +158,7 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
     return
 
 
-def RVEcreator(stats_dict, save_files=False):    
+def RVEcreator(stats_dict, nsteps = 1000, save_files=False):    
     r"""
     Creates an RVE based on user-defined statistics
 
@@ -209,7 +209,6 @@ def RVEcreator(stats_dict, save_files=False):
     VF = stats_dict["Phase"]["Volume fraction"]
     
     # Extract other simulation attrributes from input file 
-    nsteps = 1000
     periodicity = str(stats_dict["Simulation"]["periodicity"])       
     output_units = str(stats_dict["Simulation"]["output_units"])                                                                                     
     

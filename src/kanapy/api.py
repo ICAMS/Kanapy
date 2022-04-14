@@ -64,7 +64,7 @@ class Microstructure:
     """
     --------        Routines for user interface        --------
     """
-    def init_RVE(self, descriptor=None, save_files=False):    
+    def init_RVE(self, descriptor=None, nsteps = 1000, save_files=False):    
         """ Creates RVE based on the data provided in the input file."""
         if descriptor is None:
             descriptor = self.descriptor  
@@ -73,7 +73,7 @@ class Microstructure:
         self.nphase = len(descriptor)
         for des in descriptor:
             particle_data, RVE_data, simulation_data = \
-                RVEcreator(des, save_files=save_files)
+                RVEcreator(des, nsteps=nsteps, save_files=save_files)
             Ngr = particle_data['Number']            
             if des == descriptor[0]:
                 self.Ngr = Ngr
