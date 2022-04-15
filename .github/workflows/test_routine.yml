@@ -21,11 +21,10 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependecies
+    - name: Install dependencies
       run: |
         conda --version
         which python
-        conda install packaging
         pip install -e .
         
     - name: run tests
