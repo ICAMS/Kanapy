@@ -178,7 +178,8 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
         else:
             col = cm(i+1)  # set to 'b' for only blue ellipsoids
         qw, qx, qy, qz = pa.quat
-        x_c, y_c, z_c, a, b, c = pa.x, pa.y, pa.z, pa.a, pa.b, pa.c
+        x_c, y_c, z_c = pa.x, pa.y, pa.z
+        a, b, c = pa.a, pa.b, pa.c
         #Rotation
         r = R.from_quat([qx, qy, qz, qw])
         #Local coordinates

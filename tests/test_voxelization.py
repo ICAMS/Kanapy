@@ -213,7 +213,7 @@ def test_voxelizationRoutine():
                 'Simulation': {'periodicity': 'True', 'output_units': 'mm'},
                 'Phase': {'Name': 'XXXX', 'Number': 0, 'Volume fraction': 1.0}}
 
-                
+    rve_data = {'Periodic' : False}
     #with open(stat_inp, 'w') as outfile:
     #    json.dump(to_write, outfile, indent=2) 
 
@@ -228,7 +228,7 @@ def test_voxelizationRoutine():
                                     
     sim_box = Simulation_Box(RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ'])
     sim_box.sim_ts = 500
-    Particles = particle_generator(particle_data, sim_box)
+    Particles = particle_generator(particle_data, sim_box, rve_data)
     
     #write_dump(Particles, sim_box)
     

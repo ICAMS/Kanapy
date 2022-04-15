@@ -2,7 +2,7 @@
 import numpy as np
 import kanapy.base as kbase
 
-def collision_routine(E1, E2):
+def collision_routine(E1, E2, damp=0):
     """
     Calls the c++ method :meth:`kanapy.base.collideDetect` to determine whether the given two ellipsoid objects overlap using 
     the Algebraic separation condition developed by W. Wang et al. A detailed description is provided
@@ -22,10 +22,10 @@ def collision_routine(E1, E2):
     """
 
     # If spheres:
-    if E1.a == E1.b == E1.c and E2.a == E2.b == E2.c:        
+    if False and E1.a == E1.b == E1.c and E2.a == E2.b == E2.c:        
         collision_react(E1, E2)                       # calculates resultant speed for E1        
         collision_react(E2, E1)                       # calculates resultant speed for E2
-        return
+        overlap_status = None
 
     # Elif ellipsoids
     else:
@@ -35,13 +35,13 @@ def collision_routine(E1, E2):
                                        E1.rotation_matrix, E2.rotation_matrix)
 
         if overlap_status:            
-            collision_react(E1, E2)                  # calculates resultant speed for E1            
-            collision_react(E2, E1)                  # calculates resultant speed for E2
+            collision_react(E1, E2, damp=damp)                  # calculates resultant speed for E1            
+            collision_react(E2, E1, damp=damp)                  # calculates resultant speed for E2
 
-        return
+    return overlap_status
 
 
-def collision_react(E1, E2):
+def collision_react(E1, E2, damp=0.):
     r"""
     Evaluates and modifies the magnitude and direction of the ellipsoid's velocity after collision.    
 
@@ -77,42 +77,20 @@ def collision_react(E1, E2):
                   :height: 80px
                   :align: center                        
     """
-    E1Speed = np.linalg.norm([E1.speedx0, E1.speedy0, E1.speedz0])
-    XDiff = -(E1.x - E2.x)
-    YDiff = -(E1.y - E2.y)
-    ZDiff = -(E1.z - E2.z)
-
-    """# To avoid zero-Division error
-    xis0 = np.isclose(XDiff, 0.)
-    zis0 = np.isclose(ZDiff, 0.)
-    if xis0 and zis0:
-        ElevationAngle = np.arctan(YDiff/(np.sqrt((0.0001**2)+(0.0001**2))))
-    else:"""
+    E1Speed = np.linalg.norm([E1.speedx0, E1.speedy0, E1.speedz0])*(1. - damp)
+    XDiff = E2.x - E1.x
+    YDiff = E2.y - E1.y
+    ZDiff = E2.z - E1.z
     ElevationAngle = np.arctan2(YDiff, np.linalg.norm([XDiff, ZDiff]))
-
-    #if (not xis0) and (not zis0):
     Angle = np.arctan2(ZDiff, XDiff)
-    """else:
-        if xis0 and zis0:
-            Angle = 0
-        elif xis0 and (not zis0):
-            if ZDiff > 0:
-                Angle = np.pi/2.0
-            else:
-                Angle = -np.pi/2.0
-        elif (not xis0) and zis0:
-            if XDiff < 0:
-                Angle = np.pi
-            else:
-                Angle = 0.0"""
                 
     XSpeed = -E1Speed * np.cos(Angle)*np.cos(ElevationAngle)
     YSpeed = -E1Speed * np.sin(ElevationAngle)
     ZSpeed = -E1Speed * np.sin(Angle)*np.cos(ElevationAngle)
 
     # Assign new speeds 
-    E1.speedx += XSpeed
-    E1.speedy += YSpeed
-    E1.speedz += ZSpeed
+    E1.speedx = XSpeed
+    E1.speedy = YSpeed
+    E1.speedz = ZSpeed
 
     return

@@ -5,9 +5,10 @@ import numpy as np
 
 from kanapy.input_output import write_dump
 from kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
+from kanapy.collision_detect_react import collision_routine
 
 
-def particle_generator(particle_data, sim_box, RVE_data=None):
+def particle_generator(particle_data, sim_box, RVE_data):
     """
     Initializes ellipsoids by assigning them random positions and speeds within the simulation box.
 
@@ -21,15 +22,17 @@ def particle_generator(particle_data, sim_box, RVE_data=None):
     """
     num_particles = particle_data['Number']                      # Total number of ellipsoids
     Ellipsoids = []
+    # introduce scaling factor to reduce particle overlap for non-peridoc box
+    sf = 0.5 if RVE_data['Periodic'] else 0.45
     for n in range(num_particles):
 
         iden = n+1                                                # ellipsoid 'id'
         if particle_data['Type'] == 'Equiaxed':
-            a = b = c = 0.5 * particle_data['Equivalent_diameter'][n]
+            a = b = c = sf * particle_data['Equivalent_diameter'][n]
         else:    
-            a = 0.5 * particle_data['Major_diameter'][n]              # Semi-major length
-            b = 0.5 * particle_data['Minor_diameter1'][n]             # Semi-minor length 1
-            c = 0.5 * particle_data['Minor_diameter2'][n]             # Semi-minor length 2
+            a = sf * particle_data['Major_diameter'][n]              # Semi-major length
+            b = sf * particle_data['Minor_diameter1'][n]             # Semi-minor length 1
+            c = sf * particle_data['Minor_diameter2'][n]             # Semi-minor length 2
 
         # Random placement for ellipsoids
         x = random.uniform(c, sim_box.w - c)
@@ -64,6 +67,9 @@ def particle_generator(particle_data, sim_box, RVE_data=None):
         ellipsoid.speedx0 = np.random.uniform(low=-c/20., high=c/20.)
         ellipsoid.speedy0 = np.random.uniform(low=-c/20., high=c/20.)
         ellipsoid.speedz0 = np.random.uniform(low=-c/20., high=c/20.)
+        ellipsoid.speedx = ellipsoid.speedx0
+        ellipsoid.speedy = ellipsoid.speedy0
+        ellipsoid.speedz = ellipsoid.speedz0
 
         Ellipsoids.append(ellipsoid)                               # adds ellipsoid to list
 
@@ -98,15 +104,12 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
     
         # Initialize Octree and test for collision between ellipsoids
         for ellipsoid in Ellipsoids:
-            ellipsoid.speedx = 0.
-            ellipsoid.speedy = 0.
-            ellipsoid.speedz = 0.
             ellipsoid.branches = []
             
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
                                 sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
         tree.update()
-        tree.collisionsTest()
+        ncoll = tree.collisionsTest(damp=0.) #i/nsteps)
         
         if dump:
             # Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)
@@ -117,12 +120,15 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         inter_ell = [ell for ell in Ellipsoids if not isinstance(ell.id, str)]
         Ellipsoids = inter_ell
         
-        if k_att!= 0.0 or k_rep!=0.0:
+        if (not np.isclose(k_att, 0.0)) or (not np.isclose(k_rep, 0.0)):
             calculateForce(Ellipsoids, sim_box, periodicity, k_rep=k_rep, k_att=k_att)
 
         dups = []
+        ekin = 0.
         # Loop over the ellipsoids: move, set Bbox, & check for wall collision / PBC
         for ellipsoid in Ellipsoids:
+            ekin += np.linalg.norm([ellipsoid.speedx, ellipsoid.speedy,
+                                    ellipsoid.speedz])
             # Move the ellipsoid according to collision status
             ellipsoid.move()
             # grow the ellipsoid
@@ -234,7 +240,26 @@ def packingRoutine(particle_data, RVE_data, simulation_data, k_rep=0.0, k_att=0.
     particles, simbox = particle_grow(sim_box, Particles, periodic_status, \
                                       simulation_data['Time steps'], k_rep=k_rep, k_att=k_att, dump=save_files)
     
-    print('Completed particle packing')
-    print('')
+    if particles is not None:
+        # check is particles are overlapping after growth
+        ncoll = 0
+        ekin0 = 0.
+        ekin = 0.
+        for E1 in particles:
+            ekin0 += np.linalg.norm([E1.speedx0, E1.speedy0, E1.speedz0])
+            ekin += np.linalg.norm([E1.speedx, E1.speedy, E1.speedz])
+            for E2 in particles:
+                # Distance between the centers of ellipsoids
+                dist = np.linalg.norm(np.subtract(E1.get_pos(), E2.get_pos()))
+                # If the bounding spheres collide then check for collision
+                if dist <= (E1.a + E2.a):
+                    # Check if ellipsoids overlap and update their speeds accordingly
+                    if collision_routine(E1, E2):
+                        ncoll += 1
+        print('Completed particle packing')
+        print(f'{ncoll} overlapping particles detected after packing')
+        print(f'Kinetic energy of particles after packing: {ekin}')
+        print(f'Initial kinetic energy: {ekin0}')
+        print('')
     
     return particles, simbox

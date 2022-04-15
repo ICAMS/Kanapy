@@ -1,0 +1,11 @@
+ITEM: TIMESTEP
+0
+ITEM: NUMBER OF ATOMS
+2
+ITEM: BOX BOUNDS ff ff ff
+0 10
+10 0
+10 0
+ITEM: ATOMS id x y z AsphericalShapeX AsphericalShapeY AsphericalShapeZ OrientationX OrientationY OrientationZ OrientationW
+1 1 0.5 0.75 0.2 0.15 0.15 0.0 -0.0 0.8509035245341184 0.5253219888177297
+2 1.9 1.68 2.6 0.2 0.15 0.15 0.0 -0.0 0.8509035245341184 0.5253219888177297

@@ -82,7 +82,8 @@ class Microstructure:
                 self.simulation_data = simulation_data             
             else:
                 if des['Grain type'] == 'Elongated':
-                    self.Ngr = self.Ngr + Ngr
+                    self.Ngr += Ngr
+                    """This needs to be stored in a phase-specific way"""
                     self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + particle_data['Equivalent_diameter']
                     self.particle_data['Major_diameter'] = self.particle_data['Major_diameter'] + particle_data['Major_diameter']
                     self.particle_data['Minor_diameter1'] = self.particle_data['Minor_diameter1'] + particle_data['Minor_diameter1']       

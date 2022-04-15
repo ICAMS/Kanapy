@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import itertools
 import numpy as np
 import random
@@ -736,24 +735,25 @@ class Octree(object):
             for branch in particle.branches:
                         particle.neighborlist.update(branch.particles)
                         
-    def collisionsTest(self):
+    def collisionsTest(self, damp=0.):
         """
         Tests for collision between all ellipsoids in the particle list of octree         
         """
         self.neighborlistMake()
-        for i, E1 in enumerate(self.particles):
+        ncoll = 0
+        for E1 in self.particles:
             for E2 in E1.neighborlist:
                 id1 = E1.id if E1.duplicate == None else (E1.duplicate + len(self.particles))
                 id2 = E2.id if E2.duplicate == None else (E2.duplicate + len(self.particles))
                 if id2 > id1:
                     # Distance between the centers of ellipsoids
                     dist = np.linalg.norm(np.subtract(E1.get_pos(), E2.get_pos()))
-    
                     # If the bounding spheres collide then check for collision
                     if dist <= (E1.a + E2.a):
-    
                         # Check if ellipsoids overlap and update their speeds accordingly
-                        collision_routine(E1, E2)
+                        if collision_routine(E1, E2, damp=damp):
+                            ncoll += 1
+        return ncoll
 
     def update(self):
         """

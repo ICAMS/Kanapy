@@ -89,17 +89,17 @@ def rot_surf():
 
 
 def test_particle_generator(par_sim):
-    
-    ell_list = particle_generator(par_sim[0], par_sim[1])
+    rve_data = {'Periodic' : False}
+    ell_list = particle_generator(par_sim[0], par_sim[1], rve_data)
 
     for ell in ell_list:
         assert isinstance(ell, Ellipsoid)
 
 
 def test_particle_grow(rot_surf):
-
-    ell1 = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5, rot_surf[0])
-    ell2 = Ellipsoid(2, 1.9, 1.68, 2.6, 2.0, 1.5, 1.5, rot_surf[0])
+    rs = rot_surf[0]
+    ell1 = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5, rs)
+    ell2 = Ellipsoid(2, 1.9, 1.68, 2.6, 2.0, 1.5, 1.5, rs)
     ell1.speedx0, ell1.speedy0, ell1.speedz0 = -0.02, 0.075, -0.05
     ell2.speedx0, ell2.speedy0, ell2.speedz0 = 0.5, -0.025, -0.36
 
@@ -108,23 +108,25 @@ def test_particle_grow(rot_surf):
 
     particle_grow(sb, ells, True, 10, dump=True)
     
-    assert round(ell1.x, 6) == 0.929925
-    assert round(ell1.y, 6) == 0.408124
-    assert round(ell1.z, 6) == 0.605957
-    assert round(ell2.x, 6) == 2.367989
-    assert round(ell2.y, 6) == 2.293585
-    assert round(ell2.z, 6) == 3.561977
+    assert np.isclose(ell1.x, 0.8248128269258855)
+    assert np.isclose(ell1.y, 0.2703101508583834)
+    assert np.isclose(ell1.z, 0.3898930331254312)
+    assert np.isclose(ell2.x, 3.069971937626122)
+    assert np.isclose(ell2.y, 3.2139632071098028)
+    assert np.isclose(ell2.z, 5.00494231623147)
 
 
 def test_packingRoutine():
 
     # Prepare the dictionaries to be dumped as json files
     pd = {'Type': 'Equiaxed', 'Number': 2, 'Equivalent_diameter': [1.651, 1.651], 'Major_diameter': [2.0, 2.0],
-          'Minor_diameter1': [1.5, 1.5], 'Minor_diameter2': [1.5, 1.5], 'Tilt angle': [86, 92], 'Phase name':['XXXX', 'XXXX'], 'Phase number': [0, 0]}
+          'Minor_diameter1': [1.5, 1.5], 'Minor_diameter2': [1.5, 1.5], 'Tilt angle': [86, 92],
+          'Phase name':['XXXX', 'XXXX'], 'Phase number': [0, 0]}
 
     rd = {'RVE_sizeX': 10, 'RVE_sizeY': 10, 'RVE_sizeZ': 10, 
           'Voxel_numberX': 3, 'Voxel_numberY': 3, 'Voxel_numberZ': 3, 
-          'Voxel_resolutionX': round(10/3,4), 'Voxel_resolutionY': round(10/3,4), 'Voxel_resolutionZ': round(10/3,4)}
+          'Voxel_resolutionX': round(10/3,4), 'Voxel_resolutionY': round(10/3,4),
+          'Voxel_resolutionZ': round(10/3,4), 'Periodic': True}
 
     sd = {'Time steps': 2, 'Periodicity': 'True'}
 

@@ -158,7 +158,7 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
     return
 
 
-def RVEcreator(stats_dict, nsteps = 1000, save_files=False):    
+def RVEcreator(stats_dict, nsteps=1000, save_files=False):    
     r"""
     Creates an RVE based on user-defined statistics
 
@@ -225,7 +225,7 @@ def RVEcreator(stats_dict, nsteps = 1000, save_files=False):
     xaxis = np.linspace(0.1,200,1000)
     ycdf = frozen_lognorm.cdf(xaxis)
             
-    # Get the mean value for each pair of neighboring points                
+    # Get the mean value for each pair of neighboring points as centers of bins          
     xaxis = np.vstack([xaxis[1:], xaxis[:-1]]).mean(axis=0)
     
     # Based on the cutoff specified, get the restricted distribution
@@ -233,23 +233,23 @@ def RVEcreator(stats_dict, nsteps = 1000, save_files=False):
     eq_Dia = xaxis[index_array]          # Selected diameters within the cutoff            
     
     # Compute the number fractions and extract them based on the cut-off
-    number_fraction = np.ediff1d(ycdf)
+    number_fraction = np.ediff1d(ycdf)  # better use lognorm.pdf
     numFra_Dia = number_fraction[index_array]      
     
     # Volume of each ellipsoid
-    volume_array = (4/3)*np.pi*(eq_Dia**3)*(1/8)        
+    volume_array = (4/3)*np.pi*(0.5*eq_Dia)**3        
     
     # Volume fraction for each ellipsoid
     individualK = np.multiply(numFra_Dia, volume_array)
     K = individualK/np.sum(individualK)                
     
-    # Total number of ellipsoids
-    num = np.divide(K*(VF*RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)    
-    num = np.rint(num).astype(int)                  # Round to the nearest integer    
+    # Total number of ellipsoids for packing density 0.74
+    num = np.divide(K*(VF*RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)*0.74
+    num = np.rint(num).astype(int)       # Round to the nearest integer    
     totalEllipsoids = int(np.sum(num))  
     
     # Duplicate the diameter values
-    eq_Dia = np.repeat(eq_Dia, num)        
+    eq_Dia = np.repeat(eq_Dia, num)  # better calculate num first 
     
     # Raise value error in case the RVE side length is too small to fit grains inside.
     if len(eq_Dia) == 0:
@@ -345,7 +345,7 @@ def RVEcreator(stats_dict, nsteps = 1000, save_files=False):
         finalAR = np.array(finalAR)
 
         # Calculate the major, minor axes lengths for pores using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b    
-        minDia = eq_Dia / (finalAR)**(1/3)                          # Minor axis length
+        minDia = eq_Dia / finalAR**(1/3)                            # Minor axis length
         majDia = minDia * finalAR                                   # Major axis length    
         minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)                                                       
 
