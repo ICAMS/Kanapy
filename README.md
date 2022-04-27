@@ -52,6 +52,8 @@ The preferred method to install kanapy is through Anaconda or Miniconda
 Python distributions. If you do not have any, we suggest installing
 [miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
+Note, that you also need "cmake" and a C++ compiler, as g++, installed on your system, and the system paths set properly.
+
 Once done, clone the repository to a desired location, create a conda
 environment for the Kanapy installation and install.
 
