@@ -2,7 +2,7 @@
 import os, sys
 import json
 
-from kanapy import ROOT_DIR
+from kanapy import KNPY_DIR, ROOT_DIR
 
 def checkConfiguration():
     r""" 
@@ -10,7 +10,7 @@ def checkConfiguration():
     file if it exists.
     """
     
-    path_file = ROOT_DIR + '/PATHS.json'
+    path_file = KNPY_DIR + '/PATHS.json'
     print('')
     
     if not os.path.exists(path_file):        

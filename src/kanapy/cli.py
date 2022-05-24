@@ -3,7 +3,7 @@ import os, sys
 import shutil, json
 import click
 
-from kanapy.util import ROOT_DIR, MAIN_DIR 
+from kanapy.util import ROOT_DIR, MAIN_DIR, KNPY_DIR
 from kanapy.input_output import particleStatGenerator, particleCreator, RVEcreator, \
     write_position_weights, write_output_stat, plot_output_stats, \
     extract_volume_sharedGBarea, read_dump, export2abaqus
@@ -486,7 +486,7 @@ def setPaths():
     if userpath1 and userpath2:        
         
         pathDict = {'MATLABpath': '{}'.format(userpath1), 'MTEXpath': '{}'.format(userpath2)}                
-        path_path = ROOT_DIR+'/PATHS.json'
+        path_path = KNPY_DIR+'/PATHS.json'
         
         if os.path.exists(path_path):
             os.remove(path_path)

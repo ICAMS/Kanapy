@@ -10,10 +10,10 @@ import numpy as np
 import pytest
 
 import kanapy
-from kanapy.util import ROOT_DIR, MAIN_DIR
+from kanapy.util import KNPY_DIR, ROOT_DIR
 
 # Check if kanapy has been configured with MATLAB & MTEX
-pathFile = ROOT_DIR + '/PATHS.json'
+pathFile = KNPY_DIR + '/PATHS.json'
 if not os.path.exists(pathFile):
     skipVal = True
 else:
@@ -22,8 +22,8 @@ else:
 @pytest.mark.skipif(skipVal == True, reason="Your Kanapy is not configured for texture analysis yet! Run: kanapy setuptexture to set it up.")
 def test_analyzeTexture():
            
-    pathFile = ROOT_DIR + '/PATHS.json'
-    testDir = MAIN_DIR + '/tests'
+    pathFile = KNPY_DIR + '/PATHS.json'
+    testDir = KNPY_DIR + '/tests'
     utFile = testDir + '/unitTest_ODF_MDF_reconstruction.m'
     logFile = testDir + '/matlabUnitTest.log'
     resultFile = 'matlabResults.txt'

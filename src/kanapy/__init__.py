@@ -6,7 +6,7 @@ from pkg_resources import get_distribution
 from kanapy.api import Microstructure
 from kanapy.plotting import plot_voxels_3D, plot_polygons_3D
 from kanapy.input_output import writeAbaqusMat, writeAbaqusPhase
-from kanapy.util import ROOT_DIR, MAIN_DIR, MTEX_DIR
+from kanapy.util import ROOT_DIR, MAIN_DIR, MTEX_DIR, KNPY_DIR
 try:
     from kanapy.analyse_micrograph import EBSDmap, set_stats, createOriset, createOrisetRandom
     MTEX_AVAIL = True
