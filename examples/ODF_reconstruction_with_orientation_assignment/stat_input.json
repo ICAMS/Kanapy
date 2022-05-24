@@ -34,5 +34,10 @@
     {
       "periodicity": "True",                                         
       "output_units": "mm"         
+    },
+  "Phase": {
+        "Name": "austenite",
+        "Number": 
+        "Volume fraction": 1
     }
 }
