@@ -23,8 +23,7 @@ import setuptools
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
-#from distutils.version import LooseVersion
-from packaging.version import Version, parse
+from distutils.version import LooseVersion
 
 """The setup script."""
 
@@ -43,7 +42,7 @@ class CMakeBuild(build_ext):
                                ", ".join(e.name for e in self.extensions))
 
         if platform.system() == "Windows":
-            cmake_version = Version(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
+            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
             if cmake_version < '3.1.0':
                 raise RuntimeError("CMake >= 3.1.0 is required on Windows")
 
@@ -99,7 +98,7 @@ kwargs = dict(
     ],     
     description="A python package for generating complex synthetic polycrystalline microstructures.",
     install_requires=['numpy', 'matplotlib', 'scipy', 'seaborn', 'codecov', 'click', 'tqdm',
-                      'pytest-cov', 'pytest-mock', 'pytest', 'packaging'],
+                      'pytest-cov', 'pytest-mock', 'pytest'],
     #long_description=readme + '\n\n' + history,
     packages=find_packages('src'),
     package_dir={'':'src'},
