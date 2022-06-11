@@ -13,7 +13,8 @@ using Eigen::MatrixXf;
 using Eigen::ArrayXXf;
 
 bool collideDetect (Vector3f coef_i, Vector3f coef_j, Vector3f r_i, Vector3f r_j,
-    Matrix3f A_i, Matrix3f A_j) {          
+    Matrix3f A_i, Matrix3f A_j) {
+    double SMALL = 1.e-12;       
     
     // Initialize Matrices A & B with zeros
     MatrixXf A = MatrixXf::Zero(4, 4);   
@@ -52,36 +53,36 @@ bool collideDetect (Vector3f coef_i, Vector3f coef_j, Vector3f r_i, Vector3f r_j
     // aij of matrix A in det(lambda*A - Ma'*(Mb^-1)'*B*(Mb^-1)*Ma).        
     // bij of matrix b = Ma'*(Mb^-1)'*B*(Mb^-1)*Ma
     MatrixXf aux = MatrixXf::Zero(4, 4); 
-    MatrixXf b = MatrixXf::Zero(4, 4); 
+    MatrixXf bm = MatrixXf::Zero(4, 4); 
 
     aux = Mb.inverse() * Ma;   
-    b = aux.transpose() * B * aux;
+    bm = aux.transpose() * B * aux;
 
     
     // Coefficients of the Characteristic Polynomial.
     double T0, T1, T2, T3, T4;
     T4 = (-A(0,0)*A(1,1)*A(2,2));
-    T3 = (A(0,0)*A(1,1)*b(2,2) + A(0,0)*A(2,2)*b(1,1) + A(1,1)*A(2,2)*b(0,0) - A(0,0)*A(1,1)*A(2,2)*b(3,3));
-    T2 = (A(0,0)*b(1,2)*b(2,1) - A(0,0)*b(1,1)*b(2,2) - A(1,1)*b(0,0)*b(2,2) + A(1,1)*b(0,2)*b(2,0) - 
-          A(2,2)*b(0,0)*b(1,1) + A(2,2)*b(0,1)*b(1,0) + A(0,0)*A(1,1)*b(2,2)*b(3,3) - A(0,0)*A(1,1)*b(2,3)*b(3,2) + 
-          A(0,0)*A(2,2)*b(1,1)*b(3,3) - A(0,0)*A(2,2)*b(1,3)*b(3,1) + A(1,1)*A(2,2)*b(0,0)*b(3,3) - 
-          A(1,1)*A(2,2)*b(0,3)*b(3,0));
-    T1 = (b(0,0)*b(1,1)*b(2,2) - b(0,0)*b(1,2)*b(2,1) - b(0,1)*b(1,0)*b(2,2) + b(0,1)*b(1,2)*b(2,0) + 
-          b(0,2)*b(1,0)*b(2,1) - b(0,2)*b(1,1)*b(2,0) - A(0,0)*b(1,1)*b(2,2)*b(3,3) + A(0,0)*b(1,1)*b(2,3)*b(3,2) + 
-          A(0,0)*b(1,2)*b(2,1)*b(3,3) - A(0,0)*b(1,2)*b(2,3)*b(3,1) - A(0,0)*b(1,3)*b(2,1)*b(3,2) + 
-          A(0,0)*b(1,3)*b(2,2)*b(3,1) - A(1,1)*b(0,0)*b(2,2)*b(3,3) + A(1,1)*b(0,0)*b(2,3)*b(3,2) + 
-          A(1,1)*b(0,2)*b(2,0)*b(3,3) - A(1,1)*b(0,2)*b(2,3)*b(3,0) - A(1,1)*b(0,3)*b(2,0)*b(3,2) + 
-          A(1,1)*b(0,3)*b(2,2)*b(3,0) - A(2,2)*b(0,0)*b(1,1)*b(3,3) + A(2,2)*b(0,0)*b(1,3)*b(3,1) + 
-          A(2,2)*b(0,1)*b(1,0)*b(3,3) - A(2,2)*b(0,1)*b(1,3)*b(3,0) - A(2,2)*b(0,3)*b(1,0)*b(3,1) + 
-          A(2,2)*b(0,3)*b(1,1)*b(3,0));
-    T0 = (b(0,0)*b(1,1)*b(2,2)*b(3,3) - b(0,0)*b(1,1)*b(2,3)*b(3,2) - b(0,0)*b(1,2)*b(2,1)*b(3,3) + 
-          b(0,0)*b(1,2)*b(2,3)*b(3,1) + b(0,0)*b(1,3)*b(2,1)*b(3,2) - b(0,0)*b(1,3)*b(2,2)*b(3,1) - 
-          b(0,1)*b(1,0)*b(2,2)*b(3,3) + b(0,1)*b(1,0)*b(2,3)*b(3,2) + b(0,1)*b(1,2)*b(2,0)*b(3,3) - 
-          b(0,1)*b(1,2)*b(2,3)*b(3,0) - b(0,1)*b(1,3)*b(2,0)*b(3,2) + b(0,1)*b(1,3)*b(2,2)*b(3,0) + 
-          b(0,2)*b(1,0)*b(2,1)*b(3,3) - b(0,2)*b(1,0)*b(2,3)*b(3,1) - b(0,2)*b(1,1)*b(2,0)*b(3,3) + 
-          b(0,2)*b(1,1)*b(2,3)*b(3,0) + b(0,2)*b(1,3)*b(2,0)*b(3,1) - b(0,2)*b(1,3)*b(2,1)*b(3,0) - 
-          b(0,3)*b(1,0)*b(2,1)*b(3,2) + b(0,3)*b(1,0)*b(2,2)*b(3,1) + b(0,3)*b(1,1)*b(2,0)*b(3,2) - 
-          b(0,3)*b(1,1)*b(2,2)*b(3,0) - b(0,3)*b(1,2)*b(2,0)*b(3,1) + b(0,3)*b(1,2)*b(2,1)*b(3,0));
+    T3 = (A(0,0)*A(1,1)*bm(2,2)  + A(0,0)*A(2,2)*bm(1,1)  + A(1,1)*A(2,2)*bm(0,0)  - A(0,0)*A(1,1)*A(2,2)*bm(3,3));
+    T2 = (A(0,0)*bm(1,2)*bm(2,1) - A(0,0)*bm(1,1)*bm(2,2) - A(1,1)*bm(0,0)*bm(2,2) + A(1,1)*bm(0,2)*bm(2,0) - 
+          A(2,2)*bm(0,0)*bm(1,1) + A(2,2)*bm(0,1)*bm(1,0) + A(0,0)*A(1,1)*bm(2,2)*bm(3,3) - A(0,0)*A(1,1)*bm(2,3)*bm(3,2) + 
+          A(0,0)*A(2,2)*bm(1,1)*bm(3,3) - A(0,0)*A(2,2)*bm(1,3)*bm(3,1) + A(1,1)*A(2,2)*bm(0,0)*bm(3,3) - 
+          A(1,1)*A(2,2)*bm(0,3)*bm(3,0));
+    T1 = (bm(0,0)*bm(1,1)*bm(2,2) - bm(0,0)*bm(1,2)*bm(2,1) - bm(0,1)*bm(1,0)*bm(2,2) + bm(0,1)*bm(1,2)*bm(2,0) + 
+          bm(0,2)*bm(1,0)*bm(2,1) - bm(0,2)*bm(1,1)*bm(2,0) - A(0,0)*bm(1,1)*bm(2,2)*bm(3,3) + A(0,0)*bm(1,1)*bm(2,3)*bm(3,2) + 
+          A(0,0)*bm(1,2)*bm(2,1)*bm(3,3) - A(0,0)*bm(1,2)*bm(2,3)*bm(3,1) - A(0,0)*bm(1,3)*bm(2,1)*bm(3,2) + 
+          A(0,0)*bm(1,3)*bm(2,2)*bm(3,1) - A(1,1)*bm(0,0)*bm(2,2)*bm(3,3) + A(1,1)*bm(0,0)*bm(2,3)*bm(3,2) + 
+          A(1,1)*bm(0,2)*bm(2,0)*bm(3,3) - A(1,1)*bm(0,2)*bm(2,3)*bm(3,0) - A(1,1)*bm(0,3)*bm(2,0)*bm(3,2) + 
+          A(1,1)*bm(0,3)*bm(2,2)*bm(3,0) - A(2,2)*bm(0,0)*bm(1,1)*bm(3,3) + A(2,2)*bm(0,0)*bm(1,3)*bm(3,1) + 
+          A(2,2)*bm(0,1)*bm(1,0)*bm(3,3) - A(2,2)*bm(0,1)*bm(1,3)*bm(3,0) - A(2,2)*bm(0,3)*bm(1,0)*bm(3,1) + 
+          A(2,2)*bm(0,3)*bm(1,1)*bm(3,0));
+    T0 = (bm(0,0)*bm(1,1)*bm(2,2)*bm(3,3) - bm(0,0)*bm(1,1)*bm(2,3)*bm(3,2) - bm(0,0)*bm(1,2)*bm(2,1)*bm(3,3) + 
+          bm(0,0)*bm(1,2)*bm(2,3)*bm(3,1) + bm(0,0)*bm(1,3)*bm(2,1)*bm(3,2) - bm(0,0)*bm(1,3)*bm(2,2)*bm(3,1) - 
+          bm(0,1)*bm(1,0)*bm(2,2)*bm(3,3) + bm(0,1)*bm(1,0)*bm(2,3)*bm(3,2) + bm(0,1)*bm(1,2)*bm(2,0)*bm(3,3) - 
+          bm(0,1)*bm(1,2)*bm(2,3)*bm(3,0) - bm(0,1)*bm(1,3)*bm(2,0)*bm(3,2) + bm(0,1)*bm(1,3)*bm(2,2)*bm(3,0) + 
+          bm(0,2)*bm(1,0)*bm(2,1)*bm(3,3) - bm(0,2)*bm(1,0)*bm(2,3)*bm(3,1) - bm(0,2)*bm(1,1)*bm(2,0)*bm(3,3) + 
+          bm(0,2)*bm(1,1)*bm(2,3)*bm(3,0) + bm(0,2)*bm(1,3)*bm(2,0)*bm(3,1) - bm(0,2)*bm(1,3)*bm(2,1)*bm(3,0) - 
+          bm(0,3)*bm(1,0)*bm(2,1)*bm(3,2) + bm(0,3)*bm(1,0)*bm(2,2)*bm(3,1) + bm(0,3)*bm(1,1)*bm(2,0)*bm(3,2) - 
+          bm(0,3)*bm(1,1)*bm(2,2)*bm(3,0) - bm(0,3)*bm(1,2)*bm(2,0)*bm(3,1) + bm(0,3)*bm(1,2)*bm(2,1)*bm(3,0));
     
     //  Roots of the characteristic_polynomial (lambda0, ... , lambda4).
     Eigen::Matrix<double,5,1> cp;
@@ -91,17 +92,17 @@ bool collideDetect (Vector3f coef_i, Vector3f coef_j, Vector3f r_i, Vector3f r_j
     PolynomialSolver<double,4> psolve( cp );
     
     // Find the real roots where imaginary part does'nt exist
-    double realRoots[4];
+    double realRoots[4] = { 0.0, 0.0, 0.0, 0.0 };
     for (int i = 0; i < 4; i++) {         
         std::complex<double> mycomplex = psolve.roots()[i];
-        if (mycomplex.imag() == 0.0)
+        if (abs(mycomplex.imag()) < SMALL)
             realRoots[i] = mycomplex.real();
     }
 
     // Count number of real negative roots
     int count_neg = 0;
     for (int i = 0; i < 4; i++) {         
-        if (realRoots[i] < -1.e-12)
+        if (realRoots[i] < -SMALL)
             count_neg += 1;
     }
     
@@ -111,7 +112,7 @@ bool collideDetect (Vector3f coef_i, Vector3f coef_j, Vector3f r_i, Vector3f r_j
     
     // Algebraic separation conditions to determine overlapping
     if (count_neg == 2){
-        if (realRoots[0] != realRoots[1]){
+        if (abs(realRoots[0] - realRoots[1]) > SMALL){
             //status = 'separated'
             return false;
         }
