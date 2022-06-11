@@ -42,7 +42,7 @@ def particleStatGenerator(stats_dict, gs_data=None, ar_data=None, save_files=Fal
     """    
     print('Generating particle distribution based on user defined statistics')   
 
-    # Extract grain diameter statistics info from input file 
+    # Extract grain diameter statistics info from input file
     sd = stats_dict["Equivalent diameter"]["std"]
     mean = stats_dict["Equivalent diameter"]["mean"]
     if "offs" in stats_dict["Equivalent diameter"]:
@@ -738,7 +738,7 @@ def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain
             # Create sections
             for k, v in elmtSetDict.items():
                 f.write(
-                    '*Solid Section, elset=Grain{0}_set, material=Grain{1}_mat\n'.format(k, k))
+                    '*Solid Section, elset=Grain{0}_set, material=GRAIN{1}_mat\n'.format(k, k))
         else:
             # write smoothened structure with tetrahedral mesh
             f.write('*ELEMENT, TYPE=SFM3D4\n')
