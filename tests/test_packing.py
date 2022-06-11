@@ -117,9 +117,16 @@ def test_particle_grow(rot_surf):
     assert np.isclose(ell2.y, 3.2139632071098028)
     assert np.isclose(ell2.z, 5.00494231623147)
     '''
+    
+    assert np.isclose(ell1.x, 0.7799999999999998)
+    assert np.isclose(ell1.y, 1.3249999999999995)
+    assert np.isclose(ell2.z, 8.280000000000001)
+                      
+    '''
     assert ell1.x > 0.8 and ell1.x < 0.9
     assert ell1.y > 0.2 and ell1.y < 0.35
     assert ell2.z > 4.5 and ell2.z < 5.5
+    '''
     
 def test_packingRoutine():
 

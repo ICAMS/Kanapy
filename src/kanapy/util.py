@@ -7,7 +7,7 @@ pel = ROOT_DIR.split('/')
 for hs in pel[0:pel.index('kanapy')+1]:
     path += hs+'/'
 MAIN_DIR = path[0:-1]
-MTEX_DIR = path + '/libs/mtex'
+MTEX_DIR = path + 'libs/mtex'
 
 HOME_DIR = os.path.expanduser('~')  # User home directory
 KNPY_DIR = HOME_DIR + '/.kanapy'
