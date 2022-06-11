@@ -6,6 +6,7 @@ import numpy as np
 from kanapy.input_output import write_dump
 from kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
 from kanapy.collision_detect_react import collision_routine
+import kanapy.base as kbase
 
 
 def particle_generator(particle_data, sim_box, RVE_data):
@@ -105,12 +106,22 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         # Initialize Octree and test for collision between ellipsoids
         for ellipsoid in Ellipsoids:
             ellipsoid.branches = []
+            ellipsoid.speedx = 0.
+            ellipsoid.speedy = 0.
+            ellipsoid.speedz = 0.
+            ellipsoid.ncollision = 0
             
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
                                 sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
         tree.update()
         ncoll = tree.collisionsTest(damp=0.) #i/nsteps)
         
+        for ellipsoid in Ellipsoids:
+            if ellipsoid.ncollision == 0:
+                ellipsoid.speedx = ellipsoid.speedx0
+                ellipsoid.speedy = ellipsoid.speedy0
+                ellipsoid.speedz = ellipsoid.speedz0
+            
         if dump:
             # Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)
             write_dump(Ellipsoids, sim_box)
@@ -246,16 +257,22 @@ def packingRoutine(particle_data, RVE_data, simulation_data, k_rep=0.0, k_att=0.
         ekin0 = 0.
         ekin = 0.
         for E1 in particles:
+            E1.ncollision = 0
             ekin0 += np.linalg.norm([E1.speedx0, E1.speedy0, E1.speedz0])
             ekin += np.linalg.norm([E1.speedx, E1.speedy, E1.speedz])
             for E2 in particles:
-                # Distance between the centers of ellipsoids
-                dist = np.linalg.norm(np.subtract(E1.get_pos(), E2.get_pos()))
-                # If the bounding spheres collide then check for collision
-                if dist <= (E1.a + E2.a):
-                    # Check if ellipsoids overlap and update their speeds accordingly
-                    if collision_routine(E1, E2):
-                        ncoll += 1
+                if E1.id != E2.id:
+                    # Distance between the centers of ellipsoids
+                    dist = np.linalg.norm(np.subtract(E1.get_pos(), E2.get_pos()))
+                    # If the bounding spheres collide then check for collision
+                    if dist <= (E1.a + E2.a):
+                        # Check if ellipsoids overlap and update their speeds accordingly
+                        if kbase.collideDetect(E1.get_coeffs(), E2.get_coeffs(), 
+                                    E1.get_pos(), E2.get_pos(), 
+                                    E1.rotation_matrix, E2.rotation_matrix):
+                        #if collision_routine(E1, E2):
+                            E1.ncollision += 1
+                            ncoll += 1
         print('Completed particle packing')
         print(f'{ncoll} overlapping particles detected after packing')
         print(f'Kinetic energy of particles after packing: {ekin}')

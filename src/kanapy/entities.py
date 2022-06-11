@@ -119,6 +119,7 @@ class Ellipsoid(object):
         self.force_z = 0.
         self.branches = []
         self.neighborlist = set()
+        self.ncollision = 0
         
     def get_pos(self):
         """
@@ -727,7 +728,7 @@ class Octree(object):
             if branch.get_cub().intersect(particle.get_cub()):
                 branch.add_particle(particle)
     
-    def neighborlistMake(self):
+    def make_neighborlist(self):
         """
         Finds the neighborlist for each particle
         """
@@ -739,7 +740,7 @@ class Octree(object):
         """
         Tests for collision between all ellipsoids in the particle list of octree         
         """
-        self.neighborlistMake()
+        self.make_neighborlist()
         ncoll = 0
         for E1 in self.particles:
             for E2 in E1.neighborlist:
@@ -753,6 +754,8 @@ class Octree(object):
                         # Check if ellipsoids overlap and update their speeds accordingly
                         if collision_routine(E1, E2, damp=damp):
                             ncoll += 1
+                            E1.ncollision += 1
+                            E2.ncollision += 1
         return ncoll
 
     def update(self):

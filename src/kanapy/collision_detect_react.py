@@ -34,7 +34,7 @@ def collision_routine(E1, E2, damp=0):
                                        E1.get_pos(), E2.get_pos(), 
                                        E1.rotation_matrix, E2.rotation_matrix)
 
-        if overlap_status:            
+        if overlap_status:
             collision_react(E1, E2, damp=damp)                  # calculates resultant speed for E1            
             collision_react(E2, E1, damp=damp)                  # calculates resultant speed for E2
 
@@ -89,8 +89,8 @@ def collision_react(E1, E2, damp=0.):
     ZSpeed = -E1Speed * np.sin(Angle)*np.cos(ElevationAngle)
 
     # Assign new speeds 
-    E1.speedx = XSpeed
-    E1.speedy = YSpeed
-    E1.speedz = ZSpeed
+    E1.speedx += XSpeed
+    E1.speedy += YSpeed
+    E1.speedz += ZSpeed
 
     return
