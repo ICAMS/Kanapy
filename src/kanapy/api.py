@@ -1015,7 +1015,7 @@ class Microstructure:
             n_received = len(new_facets)
             if n_received == 0 or n_replaced==0:
                 print(f'Too little intersection between grains #{gr_list[0]} and #{gr_list[1]}.')
-            if n_replaced > n_received:
+            elif n_replaced > n_received:
                 print(f'Less facets received than deleted, flip order between grains #{gr_list[0]} and #{gr_list[1]}.')
                 combis.append(tuple(reversed(cb)))
             else:
@@ -1032,7 +1032,7 @@ class Microstructure:
         self.RVE_data['Vertices'] = np.array(list(vertices), dtype=int) - 1
         self.RVE_data['GBnodes'] = gbDict
         self.RVE_data['GBarea'] = shared_area
-        
+
         return grain_facesDict, shared_area
     
     def get_stats(self, dual_phase=False):
