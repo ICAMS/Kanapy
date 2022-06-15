@@ -968,6 +968,66 @@ class Microstructure:
             if dual_phase == True:
                 grains[igr]['PhaseID'] = self.particle_data['Phase number'][igr-1]
                 grains[igr]['PhaseName'] = self.particle_data['Phase name'][igr-1]
+                
+        combis = list(itertools.combinations(self.elmtSetDict.keys(), 2))
+        for cb in combis:
+            gr_list = list(cb)
+            grain_a = grains[gr_list[0]]
+            grain_b = grains[gr_list[1]]
+            nodes_a = grain_a['Nodes']
+            nodes_b = grain_b['Nodes']
+            simp_a  = grain_a['Simplices']
+            simp_b  = grain_b['Simplices']
+            intersect_ab = np.intersect1d(nodes_a, nodes_b)
+            ninter = len(intersect_ab)
+            if ninter == 0:
+                print(f'Grains #{gr_list[0]} and #{gr_list[1]} have no vertices in common.')
+            # generate matrix to map indices of intersect nodes from grain_a to grain_b
+            map_ind_ab = np.zeros((2, ninter), dtype=int)
+            for i, na in enumerate(intersect_ab):
+                map_ind_ab[0, i] = np.where(nodes_a==na)[0][0]
+                map_ind_ab[1, i] = np.where(nodes_b==na)[0][0]
+
+            # find facets that contain only nodes of intersection with grain_b
+            facet_replace_a = []
+            for i, facet in enumerate(simp_a):
+                if nodes_a[facet[0]] in intersect_ab and\
+                   nodes_a[facet[1]] in intersect_ab and\
+                   nodes_a[facet[2]] in intersect_ab:
+                       facet_replace_a.append(i)
+                       
+            # map the intersection simplices of grain_a to indices of grain_b
+            new_facets = simp_a[facet_replace_a, :]
+            for i in range(len(new_facets)):
+                for j in range(3):
+                    ib = np.where(map_ind_ab[0, :]==new_facets[i, j])[0][0]
+                    new_facets[i, j] = map_ind_ab[1, ib]
+
+            # find facets that contain only nodes of intersection with grain_a
+            facet_replace_b = []
+            for i, facet in enumerate(simp_b):
+                if nodes_b[facet[0]] in intersect_ab and\
+                   nodes_b[facet[1]] in intersect_ab and\
+                   nodes_b[facet[2]] in intersect_ab:
+                       facet_replace_b.append(i)
+                       
+            n_replaced = len(facet_replace_b)
+            n_received = len(new_facets)
+            if n_received == 0 or n_replaced==0:
+                print(f'Too little intersection between grains #{gr_list[0]} and #{gr_list[1]}.')
+            if n_replaced > n_received:
+                print(f'Less facets received than deleted, flip order between grains #{gr_list[0]} and #{gr_list[1]}.')
+                combis.append(tuple(reversed(cb)))
+            else:
+                # replace intersection facets of grain_b with those of grains_a
+                print(f'Grain #{gr_list[1]}: {n_replaced} facets replaced by')
+                print(f'{n_received} facets inherited from grain #{gr_list[0]}.')
+                
+                # replace intersection facets of grain_b with those of grains_a
+                simp_b_red = np.delete(simp_b, facet_replace_b, axis=0)
+                simp_b_new = np.append(simp_b_red, new_facets, axis=0)
+                grains[gr_list[1]]['Simplices'] = simp_b_new
+
         self.RVE_data['Grains'] = grains
         self.RVE_data['Vertices'] = np.array(list(vertices), dtype=int) - 1
         self.RVE_data['GBnodes'] = gbDict
