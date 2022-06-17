@@ -19,13 +19,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import kanapy as knpy
 
-Nv = 60
-size = 70
+Nv = 40
+size = 60
 periodic = False
 matname='Simulanium fcc'
 matnumber = 4  # UMAT number for fcc Iron
 ms_elong = {'Grain type': 'Elongated', 
-          'Equivalent diameter': {'std': 1.0, 'mean': 15.0, 'offs': 6.0, 'cutoff_min': 12.0, 'cutoff_max': 27.0},
+          'Equivalent diameter': {'std': 1.0, 'mean': 18.0, 'offs': 10.0, 'cutoff_min': 15.0, 'cutoff_max': 24.0},
           'Aspect ratio': {'std':1.5, 'mean': 1.5, 'offs': 1.0, 'cutoff_min': 1.0, 'cutoff_max': 3.0}, 
           'Tilt angle': {'std': 15., 'mean': 60., "cutoff_min": 0.0, "cutoff_max": 180.0}, 
           'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': Nv, 'Ny': Nv, 'Nz': Nv}, 
