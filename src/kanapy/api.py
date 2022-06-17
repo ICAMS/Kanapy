@@ -981,7 +981,7 @@ class Microstructure:
             intersect_ab = np.intersect1d(nodes_a, nodes_b)
             ninter = len(intersect_ab)
             if ninter == 0:
-                print(f'Grains #{gr_list[0]} and #{gr_list[1]} have no vertices in common.')
+                continue
             # generate matrix to map indices of intersect nodes from grain_a to grain_b
             map_ind_ab = np.zeros((2, ninter), dtype=int)
             for i, na in enumerate(intersect_ab):
@@ -1013,20 +1013,19 @@ class Microstructure:
                        
             n_replaced = len(facet_replace_b)
             n_received = len(new_facets)
-            if n_received == 0 or n_replaced==0:
-                print(f'Too little intersection between grains #{gr_list[0]} and #{gr_list[1]}.')
-            elif n_replaced > n_received:
-                print(f'Less facets received than deleted, flip order between grains #{gr_list[0]} and #{gr_list[1]}.')
-                combis.append(tuple(reversed(cb)))
-            else:
-                # replace intersection facets of grain_b with those of grains_a
-                print(f'Grain #{gr_list[1]}: {n_replaced} facets replaced by')
-                print(f'{n_received} facets inherited from grain #{gr_list[0]}.')
-                
-                # replace intersection facets of grain_b with those of grains_a
-                simp_b_red = np.delete(simp_b, facet_replace_b, axis=0)
-                simp_b_new = np.append(simp_b_red, new_facets, axis=0)
-                grains[gr_list[1]]['Simplices'] = simp_b_new
+            if n_received > 0 or n_replaced > 0:
+                if n_replaced > n_received:
+                    # Less facets received than deleted, flip order between grains
+                    combis.append(tuple(reversed(cb)))
+                else:
+                    # replace intersection facets of grain_b with those of grains_a
+                    print(f'Grain #{gr_list[1]}: {n_replaced} facets replaced by')
+                    print(f'{n_received} facets inherited from grain #{gr_list[0]}.')
+                    
+                    # replace intersection facets of grain_b with those of grains_a
+                    simp_b_red = np.delete(simp_b, facet_replace_b, axis=0)
+                    simp_b_new = np.append(simp_b_red, new_facets, axis=0)
+                    grains[gr_list[1]]['Simplices'] = simp_b_new
 
         self.RVE_data['Grains'] = grains
         self.RVE_data['Vertices'] = np.array(list(vertices), dtype=int) - 1
