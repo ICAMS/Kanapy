@@ -152,7 +152,7 @@ class Ellipsoid(object):
         :rtype: numpy array
         """
 
-        FLOAT_EPS = np.finfo(float).eps
+        FLOAT_EPS = np.finfo(float).resolution
 
         w, x, y, z = self.quat
         Nq = w*w + x*x + y*y + z*z
@@ -177,9 +177,6 @@ class Ellipsoid(object):
             self.rotation_matrix = np.array([[1.0-(yY+zZ), xY-wZ, xZ+wY],
                                              [xY+wZ, 1.0-(xX+zZ), yZ-wX],
                                              [xZ-wY, yZ+wX, 1.0-(xX+yY)]])
-
-        # Rotation matrix has to be transposed as OVITO uses the transposed matrix for visualization.
-        #self.rotation_matrix = self.rotation_matrix.T          # Not required, it's consistent!!!
 
     def surfacePointsGen(self):
         """

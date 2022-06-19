@@ -251,8 +251,9 @@ def packingRoutine(particle_data, RVE_data, simulation_data, k_rep=0.0, k_att=0.
     particles, simbox = particle_grow(sim_box, Particles, periodic_status, \
                                       simulation_data['Time steps'], k_rep=k_rep, k_att=k_att, dump=save_files)
     
+    # statistical evaluation of collisions
     if particles is not None:
-        # check is particles are overlapping after growth
+        # check if particles are overlapping after growth
         ncoll = 0
         ekin0 = 0.
         ekin = 0.
@@ -270,7 +271,6 @@ def packingRoutine(particle_data, RVE_data, simulation_data, k_rep=0.0, k_att=0.
                         if kbase.collideDetect(E1.get_coeffs(), E2.get_coeffs(), 
                                     E1.get_pos(), E2.get_pos(), 
                                     E1.rotation_matrix, E2.rotation_matrix):
-                        #if collision_routine(E1, E2):
                             E1.ncollision += 1
                             ncoll += 1
         print('Completed particle packing')

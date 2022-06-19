@@ -21,34 +21,26 @@ def collision_routine(E1, E2, damp=0):
                  to determine whether they overlap.                             
     """
 
-    # If spheres:
-    if False and E1.a == E1.b == E1.c and E2.a == E2.b == E2.c:        
-        collision_react(E1, E2)                       # calculates resultant speed for E1        
-        collision_react(E2, E1)                       # calculates resultant speed for E2
-        overlap_status = None
+    # call the c++ method
+    overlap_status = kbase.collideDetect(E1.get_coeffs(), E2.get_coeffs(), 
+                                   E1.get_pos(), E2.get_pos(), 
+                                   E1.rotation_matrix, E2.rotation_matrix)
 
-    # Elif ellipsoids
-    else:
-        # call the c++ method
-        overlap_status = kbase.collideDetect(E1.get_coeffs(), E2.get_coeffs(), 
-                                       E1.get_pos(), E2.get_pos(), 
-                                       E1.rotation_matrix, E2.rotation_matrix)
-
-        if overlap_status:
-            collision_react(E1, E2, damp=damp)                  # calculates resultant speed for E1            
-            collision_react(E2, E1, damp=damp)                  # calculates resultant speed for E2
+    if overlap_status:
+        collision_react(E1, E2, damp=damp)                  # calculates resultant speed for E1            
+        collision_react(E2, E1, damp=damp)                  # calculates resultant speed for E2
 
     return overlap_status
 
 
-def collision_react(E1, E2, damp=0.):
+def collision_react(ell1, ell2, damp=0.):
     r"""
     Evaluates and modifies the magnitude and direction of the ellipsoid's velocity after collision.    
 
-    :param E1: Ellipsoid :math:`i`
-    :type E1: object :obj:`Ellipsoid`
-    :param E2: Ellipsoid :math:`j`
-    :type E2: object :obj:`Ellipsoid`
+    :param ell1: Ellipsoid :math:`i`
+    :type ell1: object :obj:`Ellipsoid`
+    :param ell2: Ellipsoid :math:`j`
+    :type ell2: object :obj:`Ellipsoid`
 
     .. note:: Consider two ellipsoids :math:`i, j` at collision. Let them occupy certain positions in space
               defined by the position vectors :math:`\mathbf{r}^{i}, \mathbf{r}^{j}` and have certain 
@@ -77,20 +69,20 @@ def collision_react(E1, E2, damp=0.):
                   :height: 80px
                   :align: center                        
     """
-    E1Speed = np.linalg.norm([E1.speedx0, E1.speedy0, E1.speedz0])*(1. - damp)
-    XDiff = E2.x - E1.x
-    YDiff = E2.y - E1.y
-    ZDiff = E2.z - E1.z
-    ElevationAngle = np.arctan2(YDiff, np.linalg.norm([XDiff, ZDiff]))
-    Angle = np.arctan2(ZDiff, XDiff)
+    ell1_speed = np.linalg.norm([ell1.speedx0, ell1.speedy0, ell1.speedz0])*(1. - damp)
+    x_diff = ell2.x - ell1.x
+    y_diff = ell2.y - ell1.y
+    z_diff = ell2.z - ell1.z
+    elevation_angle = np.arctan2(y_diff, np.linalg.norm([x_diff, z_diff]))
+    angle = np.arctan2(z_diff, x_diff)
                 
-    XSpeed = -E1Speed * np.cos(Angle)*np.cos(ElevationAngle)
-    YSpeed = -E1Speed * np.sin(ElevationAngle)
-    ZSpeed = -E1Speed * np.sin(Angle)*np.cos(ElevationAngle)
+    x_speed = -ell1_speed * np.cos(angle)*np.cos(elevation_angle)
+    y_speed = -ell1_speed * np.sin(elevation_angle)
+    z_speed = -ell1_speed * np.sin(angle)*np.cos(elevation_angle)
 
     # Assign new speeds 
-    E1.speedx += XSpeed
-    E1.speedy += YSpeed
-    E1.speedz += ZSpeed
+    ell1.speedx += x_speed
+    ell1.speedy += y_speed
+    ell1.speedz += z_speed
 
     return

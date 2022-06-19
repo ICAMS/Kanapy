@@ -30,12 +30,21 @@ def autocomplete(ctx):
 
 
 @main.command(name='runTests')
+@click.option('-no_texture', default=False)
 @click.pass_context
-def tests(ctx):    
+def tests(ctx, no_texture: bool):    
     """ Runs unittests built within kanapy."""    
     
     click.echo('')
-    os.system("pytest {0}/tests/ -v".format(MAIN_DIR))      
+    if no_texture:
+        t1 = "{0}/tests/test_collide_detect_react.py".format(MAIN_DIR)
+        t2 = "{0}/tests/test_entities.py".format(MAIN_DIR)
+        t3 = "{0}/tests/test_entities.py".format(MAIN_DIR)
+        t4 = "{0}/tests/test_entities.py".format(MAIN_DIR)
+        t5 = "{0}/tests/test_entities.py".format(MAIN_DIR)
+        os.system(f"pytest {t1} {t2} {t3} {t4} {t5} -v")
+    else:
+        os.system("pytest {0}/tests/ -v".format(MAIN_DIR))
     click.echo('')    
         
     

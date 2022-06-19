@@ -998,7 +998,10 @@ class Microstructure:
                        
             # map the intersection simplices of grain_a to indices of grain_b
             new_facets = simp_a[facet_replace_a, :]
-            for i in range(len(new_facets)):
+            n_received = len(new_facets)
+            if n_received == 0:
+                continue
+            for i in range(n_received):
                 for j in range(3):
                     ib = np.where(map_ind_ab[0, :]==new_facets[i, j])[0][0]
                     new_facets[i, j] = map_ind_ab[1, ib]
@@ -1009,11 +1012,9 @@ class Microstructure:
                 if nodes_b[facet[0]] in intersect_ab and\
                    nodes_b[facet[1]] in intersect_ab and\
                    nodes_b[facet[2]] in intersect_ab:
-                       facet_replace_b.append(i)
-                       
+                       facet_replace_b.append(i)         
             n_replaced = len(facet_replace_b)
-            n_received = len(new_facets)
-            if n_received > 0 or n_replaced > 0:
+            if n_replaced > 0:
                 if n_replaced > n_received:
                     # Less facets received than deleted, flip order between grains
                     combis.append(tuple(reversed(cb)))
