@@ -97,7 +97,7 @@ def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=
 
     return ax
 
-def plot_polygons_3D(grains, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1], dual_phase=False):
+def plot_polygons_3D(rve, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1], dual_phase=False):
     '''
     Plot triangularized convex hulls of grains, based on vertices, i.e. 
     connection points of 4 up to 8 grains or the end pointss of triple or quadriiple 
@@ -121,24 +121,23 @@ def plot_polygons_3D(grains, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1], dual
     None.
 
     '''
+    grains = rve['Grains']
+    pts = rve['Points']
     cm = plt.cm.get_cmap(cmap, len(grains.keys()))
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     for igr in grains.keys():
-        pts = grains[igr]['Points']
-        #if len(pts) > 6:
-        if len(pts) > 3:
-            if dual_phase==True:
-                if grains[igr]['PhaseID'] == 0:
-                    col = 'red'
-                else: 
-                    col = 'green'
-            else:
-                col = list(cm(igr))
-                col[-1] = alpha   # change alpha channel to create semi-transparency
-            ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
-                            triangles=grains[igr]['Simplices'], color=col, 
-                            edgecolor=ec, linewidth=1)
+        if dual_phase==True:
+            if grains[igr]['PhaseID'] == 0:
+                col = 'red'
+            else: 
+                col = 'green'
+        else:
+            col = list(cm(igr))
+            col[-1] = alpha   # change alpha channel to create semi-transparency
+        ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
+                        triangles=grains[igr]['Simplices'], color=col, 
+                        edgecolor=ec, linewidth=1)
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.set_title('Polygonized microstructure')
     ax.view_init(30, 30)

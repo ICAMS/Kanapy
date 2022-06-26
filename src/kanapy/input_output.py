@@ -243,8 +243,8 @@ def RVEcreator(stats_dict, nsteps=1000, save_files=False):
     individualK = np.multiply(numFra_Dia, volume_array)
     K = individualK/np.sum(individualK)                
     
-    # Total number of ellipsoids for packing density 0.68 (74)
-    num = np.divide(K*(VF*RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)*0.68
+    # Total number of ellipsoids for packing density 65%
+    num = np.divide(K*(VF*RVEsizeX*RVEsizeY*RVEsizeZ), volume_array)*0.65
     num = np.rint(num).astype(int)       # Round to the nearest integer    
     totalEllipsoids = int(np.sum(num))  
     

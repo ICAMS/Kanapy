@@ -191,15 +191,15 @@ class Microstructure:
         plot_voxels_3D(self.voxels, self.voxels_phase, Ngr=self.particle_data['Number'],
                        sliced=sliced, dual_phase=dual_phase, cmap=cmap)
 
-    def plot_polygons(self, grains=None, cmap='prism', alpha=0.4, 
+    def plot_polygons(self, rve=None, cmap='prism', alpha=0.4, 
                          ec=[0.5,0.5,0.5,0.1], dual_phase=False):
         """ Plot polygonalized microstructure"""
-        if grains is None:
+        if rve is None:
             if 'Grains' in self.RVE_data.keys():
-                grains = self.RVE_data['Grains']
+                rve = self.RVE_data
             else:
                 raise ValueError('No polygons for grains defined. Run analyse_RVE first')
-        plot_polygons_3D(grains, cmap=cmap, alpha=alpha, ec=ec, dual_phase=dual_phase)
+        plot_polygons_3D(rve, cmap=cmap, alpha=alpha, ec=ec, dual_phase=dual_phase)
 
         
     def plot_stats(self, data=None, gs_data=None, gs_param=None, 
@@ -604,7 +604,7 @@ class Microstructure:
                 plt.show()
         return fname
     
-    def write_stl(self, file=None, grains=None, centers=True):
+    def write_stl(self, file=None):
         """ Write triangles of convex polyhedra forming grains in form of STL
         files in the format:
         solid name
@@ -626,44 +626,43 @@ class Microstructure:
                 file = 'px_{}grains.stl'.format(self.Ngr)
             else:
                 file = self.name + '.stl'
-        if grains is None:
-            grains = self.RVE_data['Grains']
-        facets = set()
         with open(file, 'w') as f:
             f.write("solid {}\n".format(self.name));
-            for igr in grains.keys():
-                for vert in grains[igr]['Simplices']:
-                    nodes = grains[igr]['Nodes'][vert]
-                    facet = str(sorted(nodes))
-                    if facet in facets:
-                        continue
-                    else:
-                        facets.add(facet)
-                    pts = grains[igr]['Points'][vert]
-                    nv = np.cross(pts[1]-pts[0], pts[2]-pts[0])  # facet normal
+            for ft in self.RVE_data['Facets']:
+                pts = self.RVE_data['Points'][ft]
+                nv = np.cross(pts[1]-pts[0], pts[2]-pts[0])  # facet normal
+                if np.linalg.norm(nv) < 1.e-5:
+                    warnings.warning(f'Acute facet detected. Facet: {ft}')
+                    nv = np.cross(pts[1]-pts[0], pts[2]-pts[1])
                     if np.linalg.norm(nv) < 1.e-5:
-                        warnings.warning(f'Acute facet detected. Grain: {igr}; Facet: {facet}')
-                        nv = np.cross(pts[1]-pts[0], pts[2]-pts[1])
-                        if np.linalg.norm(nv) < 1.e-5:
-                            warnings.warning(f'Irregular facet detected. Grain: {igr}; Facet: {facet}')
-                    nv /= np.linalg.norm(nv)
-                    f.write(" facet normal {} {} {}\n"\
-                            .format(nv[0], nv[1], nv[2]))
-                    f.write(" outer loop\n")
-                    f.write("   vertex {} {} {}\n"\
-                            .format(pts[0,0], pts[0,1], pts[0,2]))
-                    f.write("   vertex {} {} {}\n"\
-                            .format(pts[1,0], pts[1,1], pts[1,2]))
-                    f.write("   vertex {} {} {}\n"\
-                            .format(pts[2,0], pts[2,1], pts[2,2]))
-                    f.write("  endloop\n")
-                    f.write(" endfacet\n")
+                        warnings.warning(f'Irregular facet detected. Facet: {ft}')
+                nv /= np.linalg.norm(nv)
+                f.write(" facet normal {} {} {}\n"
+                        .format(nv[0], nv[1], nv[2]))
+                f.write(" outer loop\n")
+                f.write("   vertex {} {} {}\n"
+                        .format(pts[0,0], pts[0,1], pts[0,2]))
+                f.write("   vertex {} {} {}\n"
+                        .format(pts[1,0], pts[1,1], pts[1,2]))
+                f.write("   vertex {} {} {}\n"
+                        .format(pts[2,0], pts[2,1], pts[2,2]))
+                f.write("  endloop\n")
+                f.write(" endfacet\n")
             f.write("endsolid\n")
-        if centers:
-            with open(file[:-4]+'_centroid.csv', 'w') as f:
-                for gr in grains.values():
-                    ctr = gr['Center']
-                    f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2])) 
+            return
+        
+    def write_centers(self, file=None, grains=None):
+        if file is None:
+            if self.name == 'Microstructure':
+                file = 'px_{}grains_centroid.csv'.format(self.Ngr)
+            else:
+                file = self.name + '_centroid.csv'
+        if grains is None:
+            grains = self.RVE_data['Grains']
+        with open(file, 'w') as f:
+            for gr in grains.values():
+                ctr = gr['Center']
+                f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2])) 
         return
     
     def write_ori(self, angles, file=None):
@@ -919,47 +918,78 @@ class Microstructure:
                     # update grains with new vertex
                     for j in grains:
                         vert[j].update(newlist)
-        # construct convex hull for each grain from its vertices 
+                        
+        # Store grain-based information and collect vertices
         grains = dict()
         vertices = set()
         for igr in self.elmtSetDict.keys():
             vertices.update(vert[igr])
             grains[igr] = dict()
-            grains[igr]['Nodes'] = np.array(list(vert[igr]), dtype=int) - 1
-            points = self.nodes_v[grains[igr]['Nodes']]
-            if periodic:
-                dc = points - 0.5*(RVE_max - RVE_min)
-                '''Check if grain extends through entire RVE'''
-                # move points of periodic images to one side of RVE
-                for i, split in enumerate(gsplit[igr].values()):
-                    if split:
-                        sd = np.sign(dc[:, i])
-                        i1 = np.nonzero(sd < 0.)[0]
-                        i2 = np.nonzero(sd >= 0.)[0]
-                        if len(i1) > len(i2):
-                            # move points to the left
-                            points[i2, i] -= RVE_max[i]
-                        else:
-                            # move points to the right
-                            points[i1, i] += RVE_max[i]
-            try:
-                hull = ConvexHull(points, qhull_options='Qt')
-                grains[igr]['Points'] = hull.points
-                grains[igr]['Vertices'] = hull.vertices
-                grains[igr]['Simplices'] = hull.simplices
-                grains[igr]['Volume'] = hull.volume
-                grains[igr]['Area'] = hull.area
-            except:
-                grains[igr]['Points'] = points
-                grains[igr]['Vertices'] = np.arange(len(points))
-                grains[igr]['Simplices'] = []
-                grains[igr]['Volume'] = 0.
-                grains[igr]['Area'] = 0.
+            grains[igr]['Vertices'] = np.array(list(vert[igr]), dtype=int) - 1
+            grains[igr]['Points'] = self.nodes_v[grains[igr]['Vertices']]
+            grains[igr]['Simplices'] = []
+            grains[igr]['Volume'] = 0.
+            grains[igr]['Area'] = 0.
+            
+        # Constructuct Delaunay tesselation of structure given by vertices
+        vlist = np.array(list(vertices), dtype=int) - 1
+        tetra = Delaunay(self.nodes_v[vlist])
+        if len(tetra.coplanar) != 0:
+            warnings.warn('Coplanar points in list of vertices!')
+        self.RVE_data['Vertices'] = vlist
+        self.RVE_data['Points'] = tetra.points
+
+        # Assign simplices (tetrahedra) to grains, by voxel of their center
+        Ntet = len(tetra.simplices)
+        tet_to_grain = np.zeros(Ntet, dtype=int)
+        for i, tet in enumerate(tetra.simplices):
+            ctr = np.mean(tetra.points[tet], axis=0)
+            v0 = np.minimum(int(ctr[0]/self.RVE_data['Voxel_resolutionX']),
+                            self.RVE_data['Voxel_numberX']-1)
+            v1 = np.minimum(int(ctr[1]/self.RVE_data['Voxel_resolutionY']),
+                            self.RVE_data['Voxel_numberY']-1)
+            v2 = np.minimum(int(ctr[2]/self.RVE_data['Voxel_resolutionZ']),
+                            self.RVE_data['Voxel_numberZ']-1)
+            igr = self.voxels[v0, v1, v2]
+            tet_to_grain[i] = igr
+            # Update grain volume with tet volume
+            dv = self.nodes_v[tet[3]]
+            vmat = [tet[0]-dv, tet[1]-dv, tet[2]-dv]
+            grains[igr]['Volume'] += np.abs(np.linalg.det(vmat))
+            
+        # Keep only facets at boundary or between different grains
+        facet_keys = set()
+        for i, tet in enumerate(tetra.simplices):
+            igr = tet_to_grain[i]
+            for j, neigh in enumerate(tetra.neighbors[i,:]):
+                if neigh == -1 or tet_to_grain[neigh] != igr:
+                    ft = []
+                    for k in range(4):
+                        if k != j:
+                            ft.append(tet[k])
+                    ft = sorted(ft)
+                    facet_keys.add(f'{ft[0]}_{ft[1]}_{ft[2]}')
+                    grains[igr]['Simplices'].append(ft)
+                    # Update grain surface area
+                    cv = self.nodes_v[ft[2]]
+                    avec = np.cross(self.nodes_v[ft[0]] - cv,
+                                    self.nodes_v[ft[1]] - cv)
+                    grains[igr]['Area'] += np.linalg.norm(avec)
+                    
+        facets = []
+        for key in facet_keys:
+            hh = key.split('_')
+            facets.append([int(hh[0]), int(hh[1]), int(hh[2])])
+        self.RVE_data['Facets'] = np.array(facets)
+        
+        for igr in self.elmtSetDict.keys():
             # Find the euclidean distance to all surface points from the center
-            center = np.mean(points, axis=0)
-            dists = [euclidean(center, pt) for pt in grains[igr]['Points']]
+            center = np.mean(grains[igr]['Points'], axis=0)
+            dists = [euclidean(center, pt) for pt in 
+                     self.nodes_v[grains[igr]['Vertices']]]
             grains[igr]['Center'] = center
-            grains[igr]['eqDia']  = 2.0 * (3*grains[igr]['Volume'] / (4*np.pi))**(1/3)
+            grains[igr]['eqDia']  = 2.0 * (3*grains[igr]['Volume'] /\
+                                   (4*np.pi))**(1/3)
             #if the Volume is zero, the eqDia is zero, the ouput plot for eqDia in plot_stats() won't work.
             grains[igr]['majDia'] = 2.0 * np.amax(dists)
             grains[igr]['minDia'] = 2.0 * np.amin(dists)
@@ -969,67 +999,8 @@ class Microstructure:
                 grains[igr]['PhaseID'] = self.particle_data['Phase number'][igr-1]
                 grains[igr]['PhaseName'] = self.particle_data['Phase name'][igr-1]
                 
-        combis = list(itertools.combinations(self.elmtSetDict.keys(), 2))
-        for cb in combis:
-            gr_list = list(cb)
-            grain_a = grains[gr_list[0]]
-            grain_b = grains[gr_list[1]]
-            nodes_a = grain_a['Nodes']
-            nodes_b = grain_b['Nodes']
-            simp_a  = grain_a['Simplices']
-            simp_b  = grain_b['Simplices']
-            intersect_ab = np.intersect1d(nodes_a, nodes_b)
-            ninter = len(intersect_ab)
-            if ninter == 0:
-                continue
-            # generate matrix to map indices of intersect nodes from grain_a to grain_b
-            map_ind_ab = np.zeros((2, ninter), dtype=int)
-            for i, na in enumerate(intersect_ab):
-                map_ind_ab[0, i] = np.where(nodes_a==na)[0][0]
-                map_ind_ab[1, i] = np.where(nodes_b==na)[0][0]
-
-            # find facets that contain only nodes of intersection with grain_b
-            facet_replace_a = []
-            for i, facet in enumerate(simp_a):
-                if nodes_a[facet[0]] in intersect_ab and\
-                   nodes_a[facet[1]] in intersect_ab and\
-                   nodes_a[facet[2]] in intersect_ab:
-                       facet_replace_a.append(i)
-                       
-            # map the intersection simplices of grain_a to indices of grain_b
-            new_facets = simp_a[facet_replace_a, :]
-            n_received = len(new_facets)
-            if n_received == 0:
-                continue
-            for i in range(n_received):
-                for j in range(3):
-                    ib = np.where(map_ind_ab[0, :]==new_facets[i, j])[0][0]
-                    new_facets[i, j] = map_ind_ab[1, ib]
-
-            # find facets that contain only nodes of intersection with grain_a
-            facet_replace_b = []
-            for i, facet in enumerate(simp_b):
-                if nodes_b[facet[0]] in intersect_ab and\
-                   nodes_b[facet[1]] in intersect_ab and\
-                   nodes_b[facet[2]] in intersect_ab:
-                       facet_replace_b.append(i)         
-            n_replaced = len(facet_replace_b)
-            if n_replaced > 0:
-                if n_replaced > n_received:
-                    # Less facets received than deleted, flip order between grains
-                    combis.append(tuple(reversed(cb)))
-                else:
-                    # replace intersection facets of grain_b with those of grains_a
-                    print(f'Grain #{gr_list[1]}: {n_replaced} facets replaced by')
-                    print(f'{n_received} facets inherited from grain #{gr_list[0]}.')
-                    
-                    # replace intersection facets of grain_b with those of grains_a
-                    simp_b_red = np.delete(simp_b, facet_replace_b, axis=0)
-                    simp_b_new = np.append(simp_b_red, new_facets, axis=0)
-                    grains[gr_list[1]]['Simplices'] = simp_b_new
 
         self.RVE_data['Grains'] = grains
-        self.RVE_data['Vertices'] = np.array(list(vertices), dtype=int) - 1
         self.RVE_data['GBnodes'] = gbDict
         self.RVE_data['GBarea'] = shared_area
 
