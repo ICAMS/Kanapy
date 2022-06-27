@@ -189,10 +189,12 @@ def test_reassign_shared_voxels(dec_info):
 
     ells = [ell1, ell2]
 
-    reassign_shared_voxels(dec_info[2], ells)
+    reassign_shared_voxels(dec_info[2], ells, dec_info[1])
 
-    ref1 = [1, 2, 3, 4, 5, 10, 11, 13, 7, 8, 6, 19]
-    ref2 = [12, 15, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 9, 16, 14]
+    #ref1 = [1, 2, 3, 4, 5, 10, 11, 13, 7, 8, 6, 19]
+    #ref2 = [12, 15, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 9, 16, 14]
+    ref1 = [1, 2, 3, 4, 5, 10, 11, 13, 7, 8, 6]
+    ref2 = [12, 15, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 9, 16, 14, 19]
 
     assert set(ref1) == set(ell1.inside_voxels)
     assert set(ref2) == set(ell2.inside_voxels)
