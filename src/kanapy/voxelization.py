@@ -239,7 +239,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
         remaining_voxels = set(list(cooDict.keys())) - assigned_voxels
         
         # Reassign at the end of each growth cycle
-        reassign_shared_voxels(cooDict, Ellipsoids)
+        reassign_shared_voxels(cooDict, Ellipsoids, elmtDict)
 
         # Update the test_points and ids to remaining voxels
         test_ids = np.array(list(remaining_voxels))        
@@ -254,7 +254,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
     return
 
 
-def reassign_shared_voxels(cooDict, Ellipsoids):
+def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
     """
     Assigns shared voxels between ellipsoids to the ellispoid with the closest center.
 
@@ -282,34 +282,88 @@ def reassign_shared_voxels(cooDict, Ellipsoids):
             for el in ells:
                 el.inside_voxels.remove(vox)                    
                 
-            ells = list(ells)                                     # convert to list
-            vox_coord = cooDict[vox]                              # Get the voxel position        
-            ells_pos = np.array([el.get_pos() for el in ells])    # Get the ellipsoids positions
+    shared_voxels = set(vox_ellDict.keys())
+    while len(shared_voxels) > 0:  
+        for vox, ells in vox_ellDict.items():  
+            if vox in shared_voxels:
+                ells = list(ells) 
+                nids = set(elmtDict[vox])                                                
+                common_nodes = dict()
+                len_common_nodes = list()
+                
+                for ellipsoid in ells:
+                    all_nodes = [elmtDict[i] for i in ellipsoid.inside_voxels]
+                    merged_nodes = list(itertools.chain(*all_nodes))
+                    ell_nodes = set(merged_nodes)
+                    common_nodes[ellipsoid.id] = ell_nodes.intersection(nids)
+                    len_common_nodes.append(len(common_nodes[ellipsoid.id])) 
+                
+                loc_common_nodes_max = [i for i, x in enumerate(len_common_nodes) if x == max(len_common_nodes)]
+                
+                if np.any(len_common_nodes):
+                    if len(loc_common_nodes_max) == 1:
+                        assigned_voxel.append(vox) 
+                        shared_voxels.remove(vox)
+                        ells[loc_common_nodes_max[0]].inside_voxels.append(vox)
+                    else:
+                        ells = [ells[i] for i in loc_common_nodes_max]
+                        vox_coord = cooDict[vox]                              # Get the voxel position        
+                        ells_pos = np.array([el.get_pos() for el in ells])    # Get the ellipsoids positions
+                                
+                        # Distance b/w points along three axes
+                        XDiff = vox_coord[0] - ells_pos[:, 0]  # 'x'-axis
+                        YDiff = vox_coord[1] - ells_pos[:, 1]  # 'y'-axis
+                        ZDiff = vox_coord[2] - ells_pos[:, 2]  # 'z'-axis
+                
+                        # Find the distance from the 1st ellipsoid
+                        dist = np.sqrt((XDiff**2)+(YDiff**2)+(ZDiff**2))
+                        
+                        clo_loc = np.where(dist == dist.min())[0]             # closest ellipsoid index        
+                        clo_ells = [ells[loc] for loc in clo_loc]             # closest ellipsoids
+                        
+                        # If '1' closest ellipsoid: assign voxel to it        
+                        if len(clo_ells) == 1:
+                            clo_ells[0].inside_voxels.append(vox)
+                        # Else: Determine the smallest and assign to it
+                        else:
+                            clo_vol = np.array([ce.get_volume() for ce in clo_ells])    # Determine the volumes
+                            small_loc = np.where(clo_vol == clo_vol.min())[0]     # Smallest ellipsoid index
+                            #small_ells = [ells[loc] for loc in clo_loc]           # Smallest ellipsoids
+                            
+                            # assign to the smallest one regardless how many are of the same volume
+                            #small_ells[0].inside_voxels.append(vox)
+                            clo_ells[small_loc].inside_voxels.append(vox)
+                        assigned_voxel.append(vox) 
+                        shared_voxels.remove(vox)     
+                                       
+            # ells = list(ells)                                     # convert to list
+            # vox_coord = cooDict[vox]                              # Get the voxel position        
+            # ells_pos = np.array([el.get_pos() for el in ells])    # Get the ellipsoids positions
                     
-            # Distance b/w points along three axes
-            XDiff = vox_coord[0] - ells_pos[:, 0]  # 'x'-axis
-            YDiff = vox_coord[1] - ells_pos[:, 1]  # 'y'-axis
-            ZDiff = vox_coord[2] - ells_pos[:, 2]  # 'z'-axis
+            # # Distance b/w points along three axes
+            # XDiff = vox_coord[0] - ells_pos[:, 0]  # 'x'-axis
+            # YDiff = vox_coord[1] - ells_pos[:, 1]  # 'y'-axis
+            # ZDiff = vox_coord[2] - ells_pos[:, 2]  # 'z'-axis
     
-            # Find the distance from the 1st ellipsoid
-            dist = np.sqrt((XDiff**2)+(YDiff**2)+(ZDiff**2))
+            # # Find the distance from the 1st ellipsoid
+            # dist = np.sqrt((XDiff**2)+(YDiff**2)+(ZDiff**2))
        
-            clo_loc = np.where(dist == dist.min())[0]             # closest ellipsoid index        
-            clo_ells = [ells[loc] for loc in clo_loc]             # closest ellipsoids
+            # clo_loc = np.where(dist == dist.min())[0]             # closest ellipsoid index        
+            # clo_ells = [ells[loc] for loc in clo_loc]             # closest ellipsoids
         
-            # If '1' closest ellipsoid: assign voxel to it        
-            if len(clo_ells) == 1:
-                clo_ells[0].inside_voxels.append(vox)
-            # Else: Determine the smallest and assign to it
-            else:
-                #clo_vol = np.array([ce.get_volume() for ce in clo_ells])    # Determine the volumes
-                #small_loc = np.where(clo_vol == clo_vol.min())[0]     # Smallest ellipsoid index
-                small_ells = [ells[loc] for loc in clo_loc]           # Smallest ellipsoids
+            # # If '1' closest ellipsoid: assign voxel to it        
+            # if len(clo_ells) == 1:
+            #     clo_ells[0].inside_voxels.append(vox)
+            # # Else: Determine the smallest and assign to it
+            # else:
+            #     #clo_vol = np.array([ce.get_volume() for ce in clo_ells])    # Determine the volumes
+            #     #small_loc = np.where(clo_vol == clo_vol.min())[0]     # Smallest ellipsoid index
+            #     small_ells = [ells[loc] for loc in clo_loc]           # Smallest ellipsoids
             
-                # assign to the smallest one regardless how many are of the same volume
-                small_ells[0].inside_voxels.append(vox)
+            #     # assign to the smallest one regardless how many are of the same volume
+            #     small_ells[0].inside_voxels.append(vox)
         
-            assigned_voxel.append(vox)                                                          
+            # assigned_voxel.append(vox)                                                          
     return
     
 
