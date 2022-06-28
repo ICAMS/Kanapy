@@ -283,7 +283,7 @@ def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
                 el.inside_voxels.remove(vox)                    
                 
     shared_voxels = set(vox_ellDict.keys())
-    while len(shared_voxels) > 0:  
+    while len(shared_voxels) > 0: 
         for vox, ells in vox_ellDict.items():  
             if vox in shared_voxels:
                 ells = list(ells) 
@@ -300,7 +300,7 @@ def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
                 
                 loc_common_nodes_max = [i for i, x in enumerate(len_common_nodes) if x == max(len_common_nodes)]
                 
-                if np.any(len_common_nodes):
+                if np.any(len_common_nodes) and max(len_common_nodes) >= 4:
                     if len(loc_common_nodes_max) == 1:
                         assigned_voxel.append(vox) 
                         shared_voxels.remove(vox)
