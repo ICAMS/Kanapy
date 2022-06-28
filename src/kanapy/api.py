@@ -953,12 +953,29 @@ class Microstructure:
                         vert[j].update(newlist)
                         
         # Store grain-based information and do Delaunay tesselation
-        # Sort grains in descending order w.r.t number of vertices
+        # Sort grains w.r.t number of vertices
         num_vert = [len(vert[igr]) for igr in self.elmtSetDict.keys()]
-        glist = np.argsort(num_vert) + 1
+        glist = list(np.argsort(num_vert) + 1)
+        grain_seq = [glist.pop()]
+        while len(grain_seq) < self.Ngr:
+            igr = grain_seq[-1]
+            neigh = set()
+            for gb in shared_area:
+                if igr == gb[0]:
+                    neigh.add(gb[1])
+                elif igr == gb[1]:
+                    neigh.add(gb[0])
+            neigh.difference_update(set(grain_seq))
+            if len(neigh) == 0:
+                grain_seq.append(glist.pop())
+            else:
+                ind = [glist.index(i) for i in neigh]
+                grain_seq.append(glist.pop(np.amax(ind)))
+        if len(glist) != 0:
+            raise ValueError(f'glist not empty, {glist}')
         grains = dict()
         vertices = np.array([], dtype=int)
-        for igr in reversed(glist):
+        for step, igr in enumerate(grain_seq):
             add_vert = vert[igr].difference(set(vertices))
             grains[igr] = dict()
             grains[igr]['Vertices'] = np.array(list(vert[igr]), dtype=int) - 1
@@ -973,15 +990,19 @@ class Microstructure:
             # Constructuct incremental Delaunay tesselation of
             # structure given by vertices
             vlist = np.array(list(add_vert), dtype=int) - 1
-            if len(vertices) == 0:
+            vertices = np.append(vertices, list(add_vert))
+            if step == 0:
                 tetra = Delaunay(self.nodes_v[vlist], incremental=True)
             else:
-                tetra.add_points(self.nodes_v[vlist])
-            vertices = np.append(vertices, list(add_vert))
-            if len(tetra.coplanar) != 0:
-                warnings.warn('Coplanar points in list of vertices!')
+                try:
+                    tetra.add_points(self.nodes_v[vlist])
+                except:
+                    warnings.warn(f'Incremental Delaunay tesselation failed for grain {step+1}. Restarting Delaunay process from there')
+                    vlist = np.array(vertices, dtype=int) - 1
+                    tetra = Delaunay(self.nodes_v[vlist], incremental=True)
+
         tetra.close()
-        self.RVE_data['Vertices'] = vertices - 1
+        self.RVE_data['Vertices'] = np.array(vertices, dtype=int) - 1
         self.RVE_data['Points'] = tetra.points
         self.RVE_data['Simplices'] = tetra.simplices
 
@@ -992,7 +1013,7 @@ class Microstructure:
             ctr = np.mean(tetra.points[tet], axis=0)
             igr = self.voxels[get_voxel(ctr)]
             # test if all vertices of tet belong to that grain
-            grain_vertices = self.RVE_data['Grains'][igr]['Vertices']
+            grain_vertices = grains[igr]['Vertices']
             if not is_contained(tet, grain_vertices):
                 #print(f'Grain {igr}: Tetra = {tet}, missing vertices')
                 # try to find a neighboring grain with all vertices of tet
@@ -1003,7 +1024,7 @@ class Microstructure:
                 #print(f'### Neighboring grains: {neigh_list}')
                 match_found = False
                 for jgr in set(neigh_list):
-                    grain_vertices = self.RVE_data['Grains'][jgr]['Vertices']
+                    grain_vertices = grains[jgr]['Vertices']
                     if is_contained(tet, grain_vertices):
                         #print(f'*** Grain {jgr} contains all vertices')
                         igr = jgr
