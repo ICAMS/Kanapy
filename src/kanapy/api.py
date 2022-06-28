@@ -738,6 +738,39 @@ class Microstructure:
                         break
             return nodes
         
+        def get_voxel(pos):
+            """
+            Get voxel associated with position vector pos.
+
+            Parameters
+            ----------
+            pos : TYPE
+                DESCRIPTION.
+
+            Returns
+            -------
+            v0 : TYPE
+                DESCRIPTION.
+            v1 : TYPE
+                DESCRIPTION.
+            v2 : TYPE
+                DESCRIPTION.
+
+            """
+            v0 = np.minimum(int(pos[0]/self.RVE_data['Voxel_resolutionX']),
+                            self.RVE_data['Voxel_numberX']-1)
+            v1 = np.minimum(int(pos[1]/self.RVE_data['Voxel_resolutionY']),
+                            self.RVE_data['Voxel_numberY']-1)
+            v2 = np.minimum(int(pos[2]/self.RVE_data['Voxel_resolutionZ']),
+                            self.RVE_data['Voxel_numberZ']-1)
+            return (v0, v1, v2)
+        
+        def is_contained(tet, vertices):
+            return self.RVE_data['Vertices'][tet[0]] in vertices and\
+                self.RVE_data['Vertices'][tet[1]] in vertices and\
+                self.RVE_data['Vertices'][tet[2]] in vertices and\
+                self.RVE_data['Vertices'][tet[3]] in vertices
+        
         periodic = self.RVE_data['Periodic']
         RVE_min = np.amin(self.nodes_v, axis=0)
         if np.any(RVE_min > 1.e-3) or np.any(RVE_min < -1.e-3):
@@ -914,47 +947,85 @@ class Microstructure:
                     grains.add(int(key1[j+1:]))
                     # check if any neighboring nodes are already in list of
                     # vertices. If yes, replace new vertex with existing one
-                    newlist = check_neigh(elist, grains, margin=3*voxel_size)
+                    newlist = check_neigh(elist, grains, margin=2*voxel_size)
                     # update grains with new vertex
                     for j in grains:
                         vert[j].update(newlist)
                         
-        # Store grain-based information and collect vertices
+        # Store grain-based information and do Delaunay tesselation
+        # Sort grains in descending order w.r.t number of vertices
+        num_vert = [len(vert[igr]) for igr in self.elmtSetDict.keys()]
+        glist = np.argsort(num_vert) + 1
         grains = dict()
-        vertices = set()
-        for igr in self.elmtSetDict.keys():
-            vertices.update(vert[igr])
+        vertices = np.array([], dtype=int)
+        for igr in reversed(glist):
+            add_vert = vert[igr].difference(set(vertices))
             grains[igr] = dict()
             grains[igr]['Vertices'] = np.array(list(vert[igr]), dtype=int) - 1
             grains[igr]['Points'] = self.nodes_v[grains[igr]['Vertices']]
+            center = np.mean(grains[igr]['Points'], axis=0)
+            grains[igr]['Center'] = center
+            # initialize values to be incrementally updated later
             grains[igr]['Simplices'] = []
             grains[igr]['Volume'] = 0.
             grains[igr]['Area'] = 0.
-            
-        # Constructuct Delaunay tesselation of structure given by vertices
-        vlist = np.array(list(vertices), dtype=int) - 1
-        tetra = Delaunay(self.nodes_v[vlist])
-        if len(tetra.coplanar) != 0:
-            warnings.warn('Coplanar points in list of vertices!')
-        self.RVE_data['Vertices'] = vlist
+
+            # Constructuct incremental Delaunay tesselation of
+            # structure given by vertices
+            vlist = np.array(list(add_vert), dtype=int) - 1
+            if len(vertices) == 0:
+                tetra = Delaunay(self.nodes_v[vlist], incremental=True)
+            else:
+                tetra.add_points(self.nodes_v[vlist])
+            vertices = np.append(vertices, list(add_vert))
+            if len(tetra.coplanar) != 0:
+                warnings.warn('Coplanar points in list of vertices!')
+        tetra.close()
+        self.RVE_data['Vertices'] = vertices - 1
         self.RVE_data['Points'] = tetra.points
+        self.RVE_data['Simplices'] = tetra.simplices
 
         # Assign simplices (tetrahedra) to grains, by voxel of their center
         Ntet = len(tetra.simplices)
         tet_to_grain = np.zeros(Ntet, dtype=int)
         for i, tet in enumerate(tetra.simplices):
             ctr = np.mean(tetra.points[tet], axis=0)
-            v0 = np.minimum(int(ctr[0]/self.RVE_data['Voxel_resolutionX']),
-                            self.RVE_data['Voxel_numberX']-1)
-            v1 = np.minimum(int(ctr[1]/self.RVE_data['Voxel_resolutionY']),
-                            self.RVE_data['Voxel_numberY']-1)
-            v2 = np.minimum(int(ctr[2]/self.RVE_data['Voxel_resolutionZ']),
-                            self.RVE_data['Voxel_numberZ']-1)
-            igr = self.voxels[v0, v1, v2]
+            igr = self.voxels[get_voxel(ctr)]
+            # test if all vertices of tet belong to that grain
+            grain_vertices = self.RVE_data['Grains'][igr]['Vertices']
+            if not is_contained(tet, grain_vertices):
+                #print(f'Grain {igr}: Tetra = {tet}, missing vertices')
+                # try to find a neighboring grain with all vertices of tet
+                neigh_list = []
+                for hv in tet:
+                    neigh_list.append(
+                        self.voxels[get_voxel(self.RVE_data['Points'][hv])])
+                #print(f'### Neighboring grains: {neigh_list}')
+                match_found = False
+                for jgr in set(neigh_list):
+                    grain_vertices = self.RVE_data['Grains'][jgr]['Vertices']
+                    if is_contained(tet, grain_vertices):
+                        #print(f'*** Grain {jgr} contains all vertices')
+                        igr = jgr
+                        match_found = True
+                        continue
+                if not match_found:
+                    # get a majority vote. BETTER: split up tet
+                    # count all voxels in tet
+                    unique_list, counts =\
+                        np.unique(neigh_list, return_counts=True)
+                    if np.amax(counts) > 1:
+                        igr = unique_list[np.argmax(counts)]
+                    #    print(f'+++ Majority vote grain {igr}')
+                    #else:
+                    #    print('??? No resolution found')
+                    
             tet_to_grain[i] = igr
             # Update grain volume with tet volume
             dv = self.nodes_v[tet[3]]
-            vmat = [tet[0]-dv, tet[1]-dv, tet[2]-dv]
+            vmat = [self.nodes_v[tet[0]] - dv,
+                    self.nodes_v[tet[1]] - dv,
+                    self.nodes_v[tet[2]] - dv]
             grains[igr]['Volume'] += np.abs(np.linalg.det(vmat))
             
         # Keep only facets at boundary or between different grains
@@ -984,10 +1055,8 @@ class Microstructure:
         
         for igr in self.elmtSetDict.keys():
             # Find the euclidean distance to all surface points from the center
-            center = np.mean(grains[igr]['Points'], axis=0)
-            dists = [euclidean(center, pt) for pt in 
+            dists = [euclidean(grains[igr]['Center'], pt) for pt in 
                      self.nodes_v[grains[igr]['Vertices']]]
-            grains[igr]['Center'] = center
             grains[igr]['eqDia']  = 2.0 * (3*grains[igr]['Volume'] /\
                                    (4*np.pi))**(1/3)
             #if the Volume is zero, the eqDia is zero, the ouput plot for eqDia in plot_stats() won't work.
