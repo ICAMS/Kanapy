@@ -216,7 +216,7 @@ def smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=False):
     RVE_ymin, RVE_ymax = min(yvals), max(yvals)
     RVE_zmin, RVE_zmax = min(zvals), max(zvals)
     
-    # Find each grain's outer face ids and its nodal connectivities
+    # Find each grain's outer face ids and it's nodal connectivities
     grain_facesDict = readGrainFaces(nodes_v,elmtDict,elmtSetDict)
     
     # Initialize the spring-mass-anchor system
@@ -230,7 +230,7 @@ def smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=False):
     allNodes = relaxSystem(allNodes,anchDict,dt,N,k,c,RVE_xmin,
                            RVE_xmax,RVE_ymin, RVE_ymax,RVE_zmin,RVE_zmax)
             
-    nodes_s = np.array([(n.px, n.py, n.pz) for n in allNodes])
+    nodes_s = np.array([[n.px, n.py, n.pz] for n in allNodes])
     
     if save_files:
         cwd = os.getcwd()

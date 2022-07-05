@@ -507,7 +507,7 @@ def setPaths():
         os.system('python setup.py install')
         path = os.path.abspath(__file__)[0:-7] # remove /cli.py from kanapy path
         os.chdir(path)
-        os.system('python setup_mtex.py')
+        os.system('python init_engine.py')
         click.echo('')
         click.echo('Kanapy is now configured for texture analysis!\n')
         # store paths in Python API?
