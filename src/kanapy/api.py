@@ -20,16 +20,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.spatial.distance import euclidean
-from kanapy.input_output import particleStatGenerator, RVEcreator,\
+from kanapy.input_output import particleStatGenerator, RVEcreator, \
     plot_output_stats, export2abaqus, l1_error_est
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
-from kanapy.plotting import plot_voxels_3D, plot_ellipsoids_3D,\
+from kanapy.plotting import plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D
+
 
 class Microstructure:
     '''Define class for synthetic microstructures'''
+
     def __init__(self, descriptor=None, file=None, name='Microstructure'):
         self.name = name
         self.particle_data = None
@@ -46,11 +48,11 @@ class Microstructure:
         if descriptor is None:
             if file is None:
                 raise ValueError('Please provide either a dictionary with statistics or an input file name')
-                 
+
             # Open the user input statistics file and read the data
             try:
-                with open(file) as json_file:  
-                     self.descriptor = json.load(json_file)
+                with open(file) as json_file:
+                    self.descriptor = json.load(json_file)
             except:
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
         else:
@@ -60,48 +62,56 @@ class Microstructure:
                 self.descriptor = descriptor
             if file is not None:
                 print('WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
-    
+
     """
     --------        Routines for user interface        --------
     """
-    def init_RVE(self, descriptor=None, nsteps = 1000, save_files=False):    
+
+    def init_RVE(self, descriptor=None, nsteps=1000, save_files=False):
         """ Creates RVE based on the data provided in the input file."""
         if descriptor is None:
-            descriptor = self.descriptor  
+            descriptor = self.descriptor
         if type(descriptor) is not list:
             descriptor = [descriptor]
         self.nphase = len(descriptor)
         for des in descriptor:
             particle_data, RVE_data, simulation_data = \
                 RVEcreator(des, nsteps=nsteps, save_files=save_files)
-            Ngr = particle_data['Number']            
+            Ngr = particle_data['Number']
             if des == descriptor[0]:
                 self.Ngr = Ngr
                 self.particle_data = particle_data
                 self.RVE_data = RVE_data
-                self.simulation_data = simulation_data             
+                self.simulation_data = simulation_data
             else:
                 if des['Grain type'] == 'Elongated':
                     self.Ngr += Ngr
                     """This needs to be stored in a phase-specific way"""
-                    self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + particle_data['Equivalent_diameter']
-                    self.particle_data['Major_diameter'] = self.particle_data['Major_diameter'] + particle_data['Major_diameter']
-                    self.particle_data['Minor_diameter1'] = self.particle_data['Minor_diameter1'] + particle_data['Minor_diameter1']       
-                    self.particle_data['Minor_diameter2'] = self.particle_data['Minor_diameter2'] + particle_data['Minor_diameter2']
+                    self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + \
+                                                                particle_data['Equivalent_diameter']
+                    self.particle_data['Major_diameter'] = self.particle_data['Major_diameter'] + particle_data[
+                        'Major_diameter']
+                    self.particle_data['Minor_diameter1'] = self.particle_data['Minor_diameter1'] + particle_data[
+                        'Minor_diameter1']
+                    self.particle_data['Minor_diameter2'] = self.particle_data['Minor_diameter2'] + particle_data[
+                        'Minor_diameter2']
                     self.particle_data['Number'] = self.particle_data['Number'] + particle_data['Number']
                     self.particle_data['Phase name'] = self.particle_data['Phase name'] + particle_data['Phase name']
-                    self.particle_data['Phase number'] = self.particle_data['Phase number'] + particle_data['Phase number']
-                    self.particle_data['Tilt angle'] = self.particle_data['Tilt angle'] + particle_data['Tilt angle']                
+                    self.particle_data['Phase number'] = self.particle_data['Phase number'] + particle_data[
+                        'Phase number']
+                    self.particle_data['Tilt angle'] = self.particle_data['Tilt angle'] + particle_data['Tilt angle']
                 elif des['Grain type'] == 'Equiaxed':
                     self.Ngr = self.Ngr + Ngr
-                    self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + particle_data['Equivalent_diameter']
+                    self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + \
+                                                                particle_data['Equivalent_diameter']
                     self.particle_data['Number'] = self.particle_data['Number'] + particle_data['Number']
                     self.particle_data['Phase name'] = self.particle_data['Phase name'] + particle_data['Phase name']
-                    self.particle_data['Phase number'] = self.particle_data['Phase number'] + particle_data['Phase number']
-            #if both Equiaxed and Elongated grains are present at the same time, it should be adjusted.
+                    self.particle_data['Phase number'] = self.particle_data['Phase number'] + particle_data[
+                        'Phase number']
+            # if both Equiaxed and Elongated grains are present at the same time, it should be adjusted.
 
     def init_stats(self, descriptor=None, gs_data=None, ar_data=None,
-                   save_files=False):    
+                   save_files=False):
         """ Generates particle statistics based on the data provided in the 
         input file."""
         if descriptor is None:
@@ -112,7 +122,6 @@ class Microstructure:
         for des in descriptor:
             particleStatGenerator(des, gs_data=gs_data, ar_data=ar_data,
                                   save_files=save_files)
-        
 
     def pack(self, particle_data=None, RVE_data=None, simulation_data=None,
              k_rep=0.0, k_att=0.0, save_files=False):
@@ -127,12 +136,12 @@ class Microstructure:
         if simulation_data is None:
             simulation_data = self.simulation_data
         self.particles, self.simbox = \
-            packingRoutine(particle_data, RVE_data, simulation_data, k_rep=k_rep, k_att=k_att,
-                           save_files=save_files)
+            packingRoutine(particle_data, RVE_data, simulation_data,
+                           k_rep=k_rep, k_att=k_att, save_files=save_files)
 
-    def voxelize(self, particle_data=None, RVE_data=None, particles=None, 
+    def voxelize(self, particle_data=None, RVE_data=None, particles=None,
                  simbox=None, dual_phase=False, save_files=False):
-        """ Generates the RVE by assigning voxels to grains."""   
+        """ Generates the RVE by assigning voxels to grains."""
         if particle_data is None:
             particle_data = self.particle_data
         if RVE_data is None:
@@ -143,8 +152,8 @@ class Microstructure:
                 raise ValueError('No particles in voxelize. Run pack first.')
         if simbox is None:
             simbox = self.simbox
-        self.nodes_v, self.elmtDict, self.elmtSetDict,\
-            self.vox_centerDict, self.voxels, self.voxels_phase = \
+        self.nodes_v, self.elmtDict, self.elmtSetDict, \
+        self.vox_centerDict, self.voxels, self.voxels_phase = \
             voxelizationRoutine(particle_data, RVE_data, particles, simbox,
                                 save_files=save_files, dual_phase=dual_phase)
 
@@ -166,24 +175,25 @@ class Microstructure:
     def analyze_RVE(self, save_files=False, dual_phase=False):
         """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
         grain volumes and shared grain boundary surface areas info are written out as well."""
-            
+
         if self.nodes_v is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
         if self.particle_data is None:
             raise ValueError('No particles created yet. Run init_RVE, pack and voxelize first.')
-            
+
         self.grain_facesDict, self.shared_area = self.calcPolygons(dual_phase=dual_phase)  # updates RVE_data 
         self.res_data = self.get_stats(dual_phase=dual_phase)
 
     """
     --------     Plotting routines          --------
     """
+
     def plot_ellipsoids(self, cmap='prism', dual_phase=False):
         """ Generates plot of particles"""
         if self.particles is None:
             raise ValueError('No particle to plot. Run pack first.')
         plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase)
-        
+
     def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism'):
         """ Generate 3D plot of grains in voxelized microstructure. """
         if self.voxels is None:
@@ -191,8 +201,8 @@ class Microstructure:
         plot_voxels_3D(self.voxels, self.voxels_phase, Ngr=self.particle_data['Number'],
                        sliced=sliced, dual_phase=dual_phase, cmap=cmap)
 
-    def plot_polygons(self, rve=None, cmap='prism', alpha=0.4, 
-                         ec=[0.5,0.5,0.5,0.1], dual_phase=False):
+    def plot_polygons(self, rve=None, cmap='prism', alpha=0.4,
+                      ec=[0.5, 0.5, 0.5, 0.1], dual_phase=False):
         """ Plot polygonalized microstructure"""
         if rve is None:
             if 'Grains' in self.RVE_data.keys():
@@ -201,11 +211,10 @@ class Microstructure:
                 raise ValueError('No polygons for grains defined. Run analyse_RVE first')
         plot_polygons_3D(rve, cmap=cmap, alpha=alpha, ec=ec, dual_phase=dual_phase)
 
-        
-    def plot_stats(self, data=None, gs_data=None, gs_param=None, 
-                          ar_data=None, ar_param=None, dual_phase=False, save_files=False):
+    def plot_stats(self, data=None, gs_data=None, gs_param=None,
+                   ar_data=None, ar_param=None, dual_phase=False, save_files=False):
         """ Plots the particle- and grain diameter attributes for statistical 
-        comparison."""   
+        comparison."""
         if data is None:
             data = self.res_data
         else:
@@ -216,7 +225,7 @@ class Microstructure:
             plot_output_stats(dat, gs_data=gs_data, gs_param=gs_param,
                               ar_data=ar_data, ar_param=ar_param,
                               save_files=save_files)
-        
+
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):
         """
@@ -249,15 +258,16 @@ class Microstructure:
 
         """
         self.output_ang(cut=cut, data=data, plot=True, save_files=False,
-                       pos=pos, fname=fname, dual_phase=dual_phase, save_plot=save_files)
-            
+                        pos=pos, fname=fname, dual_phase=dual_phase, save_plot=save_files)
+
     """
     --------        Output/Export routines        --------
     """
+
     def output_abq(self, nodes=None, name=None, simulation_data=None,
                    elmtDict=None, elmtSetDict=None, faces=None):
-        """ Writes out the Abaqus (.inp) file for the generated RVE."""    
-        #write_abaqus_inp()
+        """ Writes out the Abaqus (.inp) file for the generated RVE."""
+        # write_abaqus_inp()
         if simulation_data is None:
             simulation_data = self.simulation_data
         if nodes is None:
@@ -273,21 +283,21 @@ class Microstructure:
                 ntag = 'voxels'
             else:
                 raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-        elif nodes=='smooth' or nodes=='s':
+        elif nodes == 'smooth' or nodes == 's':
             if self.nodes_s is not None and self.grain_facesDict is not None:
                 nodes = self.nodes_s
                 faces = self.grain_facesDict
                 ntag = 'smooth'
             else:
                 raise ValueError('No information about smoothed microstructure. Run smoothen first.')
-        elif nodes=='voxels' or nodes=='v':
+        elif nodes == 'voxels' or nodes == 'v':
             if self.nodes_v is not None:
                 nodes = self.nodes_v
                 faces = None
                 ntag = 'voxels'
             else:
                 raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-            
+
         if elmtDict is None:
             elmtDict = self.elmtDict
         if elmtSetDict is None:
@@ -296,37 +306,37 @@ class Microstructure:
             raise ValueError('No simulation data exists. Run create_RVE, pack and voxelize first.')
         if name is None:
             cwd = os.getcwd()
-            name = cwd + '/kanapy_{0}grains_{1}.inp'.format(len(elmtSetDict),ntag)
+            name = cwd + '/kanapy_{0}grains_{1}.inp'.format(len(elmtSetDict), ntag)
             if os.path.exists(name):
-                os.remove(name)                  # remove old file if it exists
+                os.remove(name)  # remove old file if it exists
         export2abaqus(nodes, name, simulation_data, elmtSetDict, elmtDict, grain_facesDict=faces)
         return name
 
-    #def output_neper(self, timestep=None):
+    # def output_neper(self, timestep=None):
     def output_neper(self):
         """ Writes out particle position and weights files required for
         tessellation in Neper."""
-        #write_position_weights(timestep)
+        # write_position_weights(timestep)
         if self.particles is None:
             raise ValueError('No particle to plot. Run pack first.')
         print('')
         print('Writing position and weights files for NEPER', end="")
         par_dict = dict()
-        
+
         for pa in self.particles:
             x, y, z = pa.x, pa.y, pa.z
             a = pa.a
             par_dict[pa] = [x, y, z, a]
-            
+
         with open('sphere_positions.txt', 'w') as fd:
             for key, value in par_dict.items():
                 fd.write('{0} {1} {2}\n'.format(value[0], value[1], value[2]))
-    
+
         with open('sphere_weights.txt', 'w') as fd:
             for key, value in par_dict.items():
                 fd.write('{0}\n'.format(value[3]))
         print('---->DONE!\n')
-        
+
     def output_ang(self, ori=None, cut='xy', data=None, plot=True, cs=None,
                    pos=None, fname=None, matname='XXXX', save_files=True,
                    dual_phase=False, save_plot=False):
@@ -372,7 +382,7 @@ class Microstructure:
 
         """
         cut = cut.lower()
-        if cut=='xy':
+        if cut == 'xy':
             sizeX = self.RVE_data['RVE_sizeX']
             sizeY = self.RVE_data['RVE_sizeY']
             sx = self.RVE_data['Voxel_resolutionX']
@@ -380,20 +390,20 @@ class Microstructure:
             sz = self.RVE_data['Voxel_resolutionZ']
             ix = np.arange(self.RVE_data['Voxel_numberX'])
             iy = np.arange(self.RVE_data['Voxel_numberY'])
-            if pos is None or pos=='top' or pos=='right':
+            if pos is None or pos == 'top' or pos == 'right':
                 iz = self.RVE_data['Voxel_numberZ'] - 1
-            elif pos=='bottom' or pos=='left':
+            elif pos == 'bottom' or pos == 'left':
                 iz = 0
-            elif type(pos)==float or type(pos)==int:
-                iz = int(pos/sz)
+            elif type(pos) == float or type(pos) == int:
+                iz = int(pos / sz)
             else:
                 raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
             if pos is None:
-                pos = int(iz*sz)
+                pos = int(iz * sz)
             xl = r'x ($\mu$m)'
             yl = r'y ($\mu$m)'
-            title = r'XY slice at z={} $\mu$m'.format(round(iz*sz, 1))
-        elif cut=='xz':
+            title = r'XY slice at z={} $\mu$m'.format(round(iz * sz, 1))
+        elif cut == 'xz':
             sizeX = self.RVE_data['RVE_sizeX']
             sizeY = self.RVE_data['RVE_sizeZ']
             sx = self.RVE_data['Voxel_resolutionX']
@@ -401,20 +411,20 @@ class Microstructure:
             sz = self.RVE_data['Voxel_resolutionY']
             ix = np.arange(self.RVE_data['Voxel_numberX'])
             iy = np.arange(self.RVE_data['Voxel_numberZ'])
-            if pos is None or pos=='top' or pos=='right':
+            if pos is None or pos == 'top' or pos == 'right':
                 iz = self.RVE_data['Voxel_numberY'] - 1
-            elif pos=='bottom' or pos=='left':
+            elif pos == 'bottom' or pos == 'left':
                 iz = 0
-            elif type(pos)==float or type(pos)==int:
-                iz = int(pos/sy)
+            elif type(pos) == float or type(pos) == int:
+                iz = int(pos / sy)
             else:
                 raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
             if pos is None:
-                pos = int(iz*sz)
+                pos = int(iz * sz)
             xl = r'x ($\mu$m)'
             yl = r'z ($\mu$m)'
-            title = r'XZ slice at y={} $\mu$m'.format(round(iz*sz, 1))
-        elif cut=='yz':
+            title = r'XZ slice at y={} $\mu$m'.format(round(iz * sz, 1))
+        elif cut == 'yz':
             sizeX = self.RVE_data['RVE_sizeY']
             sizeY = self.RVE_data['RVE_sizeZ']
             sx = self.RVE_data['Voxel_resolutionY']
@@ -422,19 +432,19 @@ class Microstructure:
             sz = self.RVE_data['Voxel_resolutionX']
             ix = np.arange(self.RVE_data['Voxel_numberY'])
             iy = np.arange(self.RVE_data['Voxel_numberZ'])
-            if pos is None or pos=='top' or pos=='right':
+            if pos is None or pos == 'top' or pos == 'right':
                 iz = self.RVE_data['Voxel_numberX'] - 1
-            elif pos=='bottom' or pos=='left':
+            elif pos == 'bottom' or pos == 'left':
                 iz = 0
-            elif type(pos)==float or type(pos)==int:
-                iz = int(pos/sx)
+            elif type(pos) == float or type(pos) == int:
+                iz = int(pos / sx)
             else:
                 raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
             if pos is None:
-                pos = int(iz*sz)
+                pos = int(iz * sz)
             xl = r'y ($\mu$m)'
             yl = r'z ($\mu$m)'
-            title = r'YZ slice at x={} $\mu$m'.format(round(iz*sz, 1))
+            title = r'YZ slice at x={} $\mu$m'.format(round(iz * sz, 1))
         else:
             raise ValueError('"cut" must bei either "xy", "xz" or "yz".')
         # ANG file header
@@ -457,7 +467,7 @@ class Microstructure:
                 '# ElasticConstants 	0.000000 0.000000 0.000000 0.000000 0.000000 0.000000\n',
                 '# ElasticConstants 	0.000000 0.000000 0.000000 0.000000 0.000000 0.000000\n',
                 '# ElasticConstants 	0.000000 0.000000 0.000000 0.000000 0.000000 0.000000\n',
-                '# Categories0 0 0 0 0\n',     
+                '# Categories0 0 0 0 0\n',
                 '# \n',
                 '# GRID: SqrGrid\n',
                 '# XSTEP: {}\n'.format(round(sx, 6)),
@@ -470,10 +480,10 @@ class Microstructure:
                 '#\n',
                 '# SAMPLEID:\n',
                 '#\n',
-                '# SCANID:\n', 	
-                '#\n'       
+                '# SCANID:\n',
+                '#\n'
                 ]
-        
+
         # determine whether polygons or voxels shall be exported
         if data is None:
             if 'Grains' in self.RVE_data.keys():
@@ -483,35 +493,35 @@ class Microstructure:
                                  \nRun voxelize and analyze_RVE first')
             else:
                 data = 'voxels'
-        elif data!='voxels' and data!='poly':
+        elif data != 'voxels' and data != 'poly':
             raise ValueError('"data" must be either "voxels" or "poly".')
-                
-        if data=='voxels':
+
+        if data == 'voxels':
             title += ' (Voxels)'
-            if cut=='xy':
-                g_slice = np.array(self.voxels[:,:,iz], dtype=int)
-            elif cut=='xz':
-                g_slice = np.array(self.voxels[:,iz,:], dtype=int)
+            if cut == 'xy':
+                g_slice = np.array(self.voxels[:, :, iz], dtype=int)
+            elif cut == 'xz':
+                g_slice = np.array(self.voxels[:, iz, :], dtype=int)
             else:
-                g_slice = np.array(self.voxels[iz,:,:], dtype=int)
+                g_slice = np.array(self.voxels[iz, :, :], dtype=int)
             if dual_phase == True:
-                if cut=='xy':
-                    g_slice_phase = np.array(self.voxels_phase[:,:,iz], dtype=int)
-                elif cut=='xz':
-                    g_slice_phase = np.array(self.voxels_phase[:,iz,:], dtype=int)
+                if cut == 'xy':
+                    g_slice_phase = np.array(self.voxels_phase[:, :, iz], dtype=int)
+                elif cut == 'xz':
+                    g_slice_phase = np.array(self.voxels_phase[:, iz, :], dtype=int)
                 else:
-                    g_slice_phase = np.array(self.voxels_phase[iz,:,:], dtype=int)
+                    g_slice_phase = np.array(self.voxels_phase[iz, :, :], dtype=int)
         else:
             title += ' (Polygons)'
-            xv, yv = np.meshgrid(ix*sx, iy*sy, indexing='ij')
-            grain_slice = np.ones(len(ix)*len(iy), dtype=int)
-            if cut=='xy':
-                mesh_slice = np.array([xv.flatten(), yv.flatten(), grain_slice*iz*sz]).T
-            elif cut=='xz':
-                mesh_slice = np.array([xv.flatten(), grain_slice*iz*sz, yv.flatten()]).T
+            xv, yv = np.meshgrid(ix * sx, iy * sy, indexing='ij')
+            grain_slice = np.ones(len(ix) * len(iy), dtype=int)
+            if cut == 'xy':
+                mesh_slice = np.array([xv.flatten(), yv.flatten(), grain_slice * iz * sz]).T
+            elif cut == 'xz':
+                mesh_slice = np.array([xv.flatten(), grain_slice * iz * sz, yv.flatten()]).T
             else:
-                mesh_slice = np.array([grain_slice*iz*sz, xv.flatten(), yv.flatten()]).T
-            grain_slice = np.zeros(len(ix)*len(iy), dtype=int)
+                mesh_slice = np.array([grain_slice * iz * sz, xv.flatten(), yv.flatten()]).T
+            grain_slice = np.zeros(len(ix) * len(iy), dtype=int)
             for igr in self.RVE_data['Grains'].keys():
                 pts = self.RVE_data['Grains'][igr]['Points']
                 try:
@@ -522,7 +532,7 @@ class Microstructure:
                     if self.RVE_data['Periodic']:
                         # add periodic images of grain to slice
                         cb = np.array([self.RVE_data['RVE_sizeX'], self.RVE_data['RVE_sizeY'],
-                                       self.RVE_data['RVE_sizeZ']])*0.5
+                                       self.RVE_data['RVE_sizeZ']]) * 0.5
                         sp = self.RVE_data['Grains'][igr]['Center'] - cb
                         plist = []
                         for j, split in enumerate(self.RVE_data['Grains'][igr]['Split']):
@@ -533,77 +543,77 @@ class Microstructure:
                                 for ppbc in plist:
                                     # shift grains to all image positions
                                     if sp[j] > 0.:
-                                        ppbc[:,j] -= 2*cb[j]
+                                        ppbc[:, j] -= 2 * cb[j]
                                     else:
-                                        ppbc[:,j] += 2*cb[j]
+                                        ppbc[:, j] += 2 * cb[j]
                                     tri = Delaunay(ppbc)
                                     i = tri.find_simplex(mesh_slice)
                                     ind = np.nonzero(i >= 0)[0]
                                     grain_slice[ind] = igr
-                                    if j==2 and len(plist)==3:
+                                    if j == 2 and len(plist) == 3:
                                         # if split grain is in corner, 
                                         # cover last image position
                                         if sp[0] > 0.:
-                                            ppbc[:,0] -= 2*cb[0]
+                                            ppbc[:, 0] -= 2 * cb[0]
                                         else:
-                                            ppbc[:,0] += 2*cb[0]
+                                            ppbc[:, 0] += 2 * cb[0]
                                         tri = Delaunay(ppbc)
                                         i = tri.find_simplex(mesh_slice)
                                         ind = np.nonzero(i >= 0)[0]
                                         grain_slice[ind] = igr
                 except:
-                    warnings.warn('Grain #{} has no convex hull (Nvertices: {})'\
+                    warnings.warn('Grain #{} has no convex hull (Nvertices: {})' \
                                   .format(igr, len(pts)))
-            if np.any(grain_slice==0):
-                ind = np.nonzero(grain_slice==0)[0]
-                warnings.warn('Incomplete slicing for {} pixels in {} slice at {}.'\
+            if np.any(grain_slice == 0):
+                ind = np.nonzero(grain_slice == 0)[0]
+                warnings.warn('Incomplete slicing for {} pixels in {} slice at {}.' \
                               .format(len(ind), cut, pos))
             g_slice = grain_slice.reshape(xv.shape)
-        
+
         if save_files:
             if ori is None:
                 ori = np.zeros((self.Ngr, 3))
-                ori[:,0] = np.random.rand(self.Ngr)*2*np.pi
-                ori[:,1] = np.random.rand(self.Ngr)*0.5*np.pi
-                ori[:,2] = np.random.rand(self.Ngr)*0.5*np.pi
+                ori[:, 0] = np.random.rand(self.Ngr) * 2 * np.pi
+                ori[:, 1] = np.random.rand(self.Ngr) * 0.5 * np.pi
+                ori[:, 2] = np.random.rand(self.Ngr) * 0.5 * np.pi
             # write data to ang file
             fname = '{0}_slice_{1}_{2}.ang'.format(cut.upper(), pos, data)
-            with open (fname,'w') as f:
+            with open(fname, 'w') as f:
                 f.writelines(head)
                 for j in iy:
                     for i in ix:
-                        p1 = ori[g_slice[j,i]-1, 0]
-                        P  = ori[g_slice[j,i]-1, 1]
-                        p2 = ori[g_slice[j,i]-1, 2]
-                        f.write('  {0}  {1}  {2}  {3}  {4}   0.0  0.000  0   1  0.000\n'\
-                                .format(round(p1,5), round(P,5), round(p2,5),
-                                        round(sizeX-i*sx, 5), round(sizeY-j*sy, 5)))
+                        p1 = ori[g_slice[j, i] - 1, 0]
+                        P = ori[g_slice[j, i] - 1, 1]
+                        p2 = ori[g_slice[j, i] - 1, 2]
+                        f.write('  {0}  {1}  {2}  {3}  {4}   0.0  0.000  0   1  0.000\n' \
+                                .format(round(p1, 5), round(P, 5), round(p2, 5),
+                                        round(sizeX - i * sx, 5), round(sizeY - j * sy, 5)))
         if plot:
             # plot grains on slice
-            #cmap = plt.cm.get_cmap('gist_rainbow')
+            # cmap = plt.cm.get_cmap('gist_rainbow')
             cmap = plt.cm.get_cmap('prism')
             fig, ax = plt.subplots(1)
             ax.grid(False)
-            ax.imshow(g_slice, cmap=cmap, interpolation='none', 
+            ax.imshow(g_slice, cmap=cmap, interpolation='none',
                       extent=[0, sizeX, 0, sizeY])
             ax.set(xlabel=xl, ylabel=yl)
             ax.set_title(title)
             if save_plot:
-                plt.savefig(fname[:-4]+'.pdf', format='pdf', dpi=300)
+                plt.savefig(fname[:-4] + '.pdf', format='pdf', dpi=300)
             plt.show()
-            
+
             if dual_phase == True:
                 fig, ax = plt.subplots(1)
                 ax.grid(False)
-                ax.imshow(g_slice_phase, cmap=cmap, interpolation='none', 
+                ax.imshow(g_slice_phase, cmap=cmap, interpolation='none',
                           extent=[0, sizeX, 0, sizeY])
                 ax.set(xlabel=xl, ylabel=yl)
                 ax.set_title(title)
                 if save_plot:
-                    plt.savefig(fname[:-4]+'.pdf', format='pdf', dpi=300)
+                    plt.savefig(fname[:-4] + '.pdf', format='pdf', dpi=300)
                 plt.show()
         return fname
-    
+
     def write_stl(self, file=None):
         """ Write triangles of convex polyhedra forming grains in form of STL
         files in the format:
@@ -630,10 +640,10 @@ class Microstructure:
             f.write("solid {}\n".format(self.name));
             for ft in self.RVE_data['Facets']:
                 pts = self.RVE_data['Points'][ft]
-                nv = np.cross(pts[1]-pts[0], pts[2]-pts[0])  # facet normal
+                nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
                 if np.linalg.norm(nv) < 1.e-5:
                     warnings.warning(f'Acute facet detected. Facet: {ft}')
-                    nv = np.cross(pts[1]-pts[0], pts[2]-pts[1])
+                    nv = np.cross(pts[1] - pts[0], pts[2] - pts[1])
                     if np.linalg.norm(nv) < 1.e-5:
                         warnings.warning(f'Irregular facet detected. Facet: {ft}')
                 nv /= np.linalg.norm(nv)
@@ -641,16 +651,16 @@ class Microstructure:
                         .format(nv[0], nv[1], nv[2]))
                 f.write(" outer loop\n")
                 f.write("   vertex {} {} {}\n"
-                        .format(pts[0,0], pts[0,1], pts[0,2]))
+                        .format(pts[0, 0], pts[0, 1], pts[0, 2]))
                 f.write("   vertex {} {} {}\n"
-                        .format(pts[1,0], pts[1,1], pts[1,2]))
+                        .format(pts[1, 0], pts[1, 1], pts[1, 2]))
                 f.write("   vertex {} {} {}\n"
-                        .format(pts[2,0], pts[2,1], pts[2,2]))
+                        .format(pts[2, 0], pts[2, 1], pts[2, 2]))
                 f.write("  endloop\n")
                 f.write(" endfacet\n")
             f.write("endsolid\n")
             return
-        
+
     def write_centers(self, file=None, grains=None):
         if file is None:
             if self.name == 'Microstructure':
@@ -662,9 +672,9 @@ class Microstructure:
         with open(file, 'w') as f:
             for gr in grains.values():
                 ctr = gr['Center']
-                f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2])) 
+                f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2]))
         return
-    
+
     def write_ori(self, angles, file=None):
         if file is None:
             if self.name == 'Microstructure':
@@ -675,10 +685,11 @@ class Microstructure:
             for ori in angles:
                 f.write('{}, {}, {}\n'.format(ori[0], ori[1], ori[2]))
         return
-    
+
     """
     --------        Supporting Routines         -------
     """
+
     def calcPolygons(self, tol=1.e-3, dual_phase=False):
         """
         Evaluates the grain volume and the grain boundary shared surface area 
@@ -704,28 +715,29 @@ class Microstructure:
         halves of the box and touching one boundary are split wrongly
 
         """
+
         def check_neigh(nodes, grains, margin):
             ''' Check if close neighbors of new vertices are already in list
             # nodes: list of nodes identified as new vertices
             # grains: set of grains containing the nodes in elist
             # margin: radius in which vertices will be united'''
-            
+
             # create set of all vertices of all involved grains
             vset = set()
             for gid in grains:
                 vset.update(vert[gid])
             # loop over all combinations
             for i, nid1 in enumerate(nodes):
-                npos1 = self.nodes_v[nid1-1]
-                sur1 = [np.abs(npos1[0] - RVE_min[0]) < tol, 
+                npos1 = self.nodes_v[nid1 - 1]
+                sur1 = [np.abs(npos1[0] - RVE_min[0]) < tol,
                         np.abs(npos1[1] - RVE_min[1]) < tol,
                         np.abs(npos1[2] - RVE_min[2]) < tol,
                         np.abs(npos1[0] - RVE_max[0]) < tol,
                         np.abs(npos1[1] - RVE_max[1]) < tol,
                         np.abs(npos1[2] - RVE_max[2]) < tol]
                 for nid2 in vset:
-                    npos2 = self.nodes_v[nid2-1]
-                    sur2 = [np.abs(npos2[0] - RVE_min[0]) < tol, 
+                    npos2 = self.nodes_v[nid2 - 1]
+                    sur2 = [np.abs(npos2[0] - RVE_min[0]) < tol,
                             np.abs(npos2[1] - RVE_min[1]) < tol,
                             np.abs(npos2[2] - RVE_min[2]) < tol,
                             np.abs(npos2[0] - RVE_max[0]) < tol,
@@ -737,7 +749,7 @@ class Microstructure:
                             nodes[i] = nid2
                         break
             return nodes
-        
+
         def get_voxel(pos):
             """
             Get voxel associated with position vector pos.
@@ -757,41 +769,88 @@ class Microstructure:
                 DESCRIPTION.
 
             """
-            v0 = np.minimum(int(pos[0]/self.RVE_data['Voxel_resolutionX']),
-                            self.RVE_data['Voxel_numberX']-1)
-            v1 = np.minimum(int(pos[1]/self.RVE_data['Voxel_resolutionY']),
-                            self.RVE_data['Voxel_numberY']-1)
-            v2 = np.minimum(int(pos[2]/self.RVE_data['Voxel_resolutionZ']),
-                            self.RVE_data['Voxel_numberZ']-1)
+            v0 = np.minimum(int(pos[0] / self.RVE_data['Voxel_resolutionX']),
+                            self.RVE_data['Voxel_numberX'] - 1)
+            v1 = np.minimum(int(pos[1] / self.RVE_data['Voxel_resolutionY']),
+                            self.RVE_data['Voxel_numberY'] - 1)
+            v2 = np.minimum(int(pos[2] / self.RVE_data['Voxel_resolutionZ']),
+                            self.RVE_data['Voxel_numberZ'] - 1)
             return (v0, v1, v2)
-        
-        def is_contained(tet, vertices):
-            return self.RVE_data['Vertices'][tet[0]] in vertices and\
-                self.RVE_data['Vertices'][tet[1]] in vertices and\
-                self.RVE_data['Vertices'][tet[2]] in vertices and\
-                self.RVE_data['Vertices'][tet[3]] in vertices
-        
+
+        def tet_in_grain(tet, vertices):
+            """
+
+            Parameters
+            ----------
+            tet
+            vertices
+
+            Returns
+            -------
+
+            """
+            return self.RVE_data['Vertices'][tet[0]] in vertices and \
+                   self.RVE_data['Vertices'][tet[1]] in vertices and \
+                   self.RVE_data['Vertices'][tet[2]] in vertices and \
+                   self.RVE_data['Vertices'][tet[3]] in vertices
+
+        def vox_in_tet(vox_, tet_):
+            """
+            Determine whether centre of voxel lies within tetrahedron
+
+            Parameters
+            ----------
+            vox_
+            tet_
+
+            Returns
+            -------
+            contained : bool
+                Voxel lies in tetrahedron
+            """
+
+            v_pos = self.vox_centerDict[vox_]
+            contained = True
+            for node in tet_:
+                n_pos = self.RVE_data['Points'][node]
+                hh = set(tet_)
+                hh.remove(node)
+                ind_ = list(hh)
+                f_pos = self.RVE_data['Points'][ind_]
+                ctr_ = np.mean(f_pos, axis=0)
+                normal = np.cross(f_pos[1, :] - f_pos[0, :], f_pos[2, :] - f_pos[0, :])
+                hn = np.linalg.norm(normal)
+                if hn > 1.e-5:
+                    normal /= hn
+                dist_to_vox = np.dot(v_pos - ctr_, normal)
+                dist_to_node = np.dot(n_pos - ctr_, normal)
+                if np.sign(dist_to_vox*dist_to_node) < 0. or\
+                    np.abs(dist_to_vox) > np.abs(dist_to_node):
+                    contained = False
+                    break
+            return contained
+
         periodic = self.RVE_data['Periodic']
         RVE_min = np.amin(self.nodes_v, axis=0)
         if np.any(RVE_min > 1.e-3) or np.any(RVE_min < -1.e-3):
             raise ValueError('Irregular RVE geometry: RVE_min = {}'.format(RVE_min))
         RVE_max = np.amax(self.nodes_v, axis=0)
         voxel_size = self.RVE_data['Voxel_resolutionX']
-        grain_facesDict = dict()      # {Grain: faces}
+        grain_facesDict = dict()  # {Grain: faces}
         Ng = len(self.elmtSetDict.keys())
         if periodic:
-            #store grains that are split across boundaries
+            # store grains that are split across boundaries
             gsplit = dict()
             for igr in self.elmtSetDict.keys():
                 gsplit[igr] = dict({'lr': False, 'bt': False, 'fb': False})
         else:
             # create dicts for fake facets at surfaces
-            for i in range(Ng+1,Ng+7):
-                grain_facesDict[i]=dict()
+            for i in range(Ng + 1, Ng + 7):
+                grain_facesDict[i] = dict()
 
-        for gid, elset in self.elmtSetDict.items():               
-            outer_faces = set()       # Stores only outer face IDs
-            face_nodes = dict()       # {Faces: nodal connectivity} 
+        for gid, elset in self.elmtSetDict.items():
+            outer_faces = set()  # Stores only outer face IDs
+            face_nodes = dict()  # {Faces: nodal connectivity}
             nodeConn = [self.elmtDict[el] for el in elset]  # Nodal connectivity of a voxel
 
             # For each voxel, re-create its 6 faces
@@ -800,31 +859,31 @@ class Microstructure:
                          [nc[0], nc[1], nc[5], nc[4]], [nc[3], nc[2], nc[6], nc[7]],
                          [nc[0], nc[4], nc[7], nc[3]], [nc[1], nc[5], nc[6], nc[2]]]
                 # Sort in ascending order
-                sorted_faces = [sorted(fc) for fc in faces]  
+                sorted_faces = [sorted(fc) for fc in faces]
                 # create face ids by joining node id's                        
-                face_ids = [int(''.join(str(c) for c in fc)) for fc in sorted_faces]        
+                face_ids = [int(''.join(str(c) for c in fc)) for fc in sorted_faces]
                 # Update {Faces: nodal connectivity} dictionary
                 for enum, fid in enumerate(face_ids):
-                    if fid not in face_nodes.keys():       
-                        face_nodes[fid] = faces[enum]                
-                # Identify outer faces that occur only once
-                for fid in face_ids:        
+                    if fid not in face_nodes.keys():
+                        face_nodes[fid] = faces[enum]
+                        # Identify outer faces that occur only once
+                for fid in face_ids:
                     if fid not in outer_faces:
                         outer_faces.add(fid)
                     else:
-                        outer_faces.remove(fid)        
-            
-            # Update {Grain: faces} dictionary
-            grain_facesDict[gid] = dict() 
+                        outer_faces.remove(fid)
+
+                        # Update {Grain: faces} dictionary
+            grain_facesDict[gid] = dict()
             for of in outer_faces:
                 # Treat faces belonging to RVE surface:
                 # Create facets if not peridoic
                 # Discard if periodic
                 conn = face_nodes[of]
-                n1 = self.nodes_v[conn[0]-1,:]
-                n2 = self.nodes_v[conn[1]-1,:]
-                n3 = self.nodes_v[conn[2]-1,:]
-                n4 = self.nodes_v[conn[3]-1,:]
+                n1 = self.nodes_v[conn[0] - 1, :]
+                n2 = self.nodes_v[conn[1] - 1, :]
+                n3 = self.nodes_v[conn[2] - 1, :]
+                n4 = self.nodes_v[conn[3] - 1, :]
                 h1 = np.abs(n1[0] - RVE_min[0]) < tol
                 h2 = np.abs(n2[0] - RVE_min[0]) < tol
                 h3 = np.abs(n3[0] - RVE_min[0]) < tol
@@ -834,7 +893,7 @@ class Microstructure:
                         gsplit[gid]['lr'] = True
                         continue
                     else:
-                        grain_facesDict[Ng+1][of] = face_nodes[of]
+                        grain_facesDict[Ng + 1][of] = face_nodes[of]
                 h1 = np.abs(n1[0] - RVE_max[0]) < tol
                 h2 = np.abs(n2[0] - RVE_max[0]) < tol
                 h3 = np.abs(n3[0] - RVE_max[0]) < tol
@@ -844,7 +903,7 @@ class Microstructure:
                         gsplit[gid]['lr'] = True
                         continue
                     else:
-                        grain_facesDict[Ng+2][of] = face_nodes[of]
+                        grain_facesDict[Ng + 2][of] = face_nodes[of]
                 h1 = np.abs(n1[1] - RVE_min[1]) < tol
                 h2 = np.abs(n2[1] - RVE_min[1]) < tol
                 h3 = np.abs(n3[1] - RVE_min[1]) < tol
@@ -854,7 +913,7 @@ class Microstructure:
                         gsplit[gid]['bt'] = True
                         continue
                     else:
-                        grain_facesDict[Ng+3][of] = face_nodes[of]
+                        grain_facesDict[Ng + 3][of] = face_nodes[of]
                 h1 = np.abs(n1[1] - RVE_max[1]) < tol
                 h2 = np.abs(n2[1] - RVE_max[1]) < tol
                 h3 = np.abs(n3[1] - RVE_max[1]) < tol
@@ -864,7 +923,7 @@ class Microstructure:
                         gsplit[gid]['bt'] = True
                         continue
                     else:
-                        grain_facesDict[Ng+4][of] = face_nodes[of]
+                        grain_facesDict[Ng + 4][of] = face_nodes[of]
                 h1 = np.abs(n1[2] - RVE_min[2]) < tol
                 h2 = np.abs(n2[2] - RVE_min[2]) < tol
                 h3 = np.abs(n3[2] - RVE_min[2]) < tol
@@ -874,7 +933,7 @@ class Microstructure:
                         gsplit[gid]['fb'] = True
                         continue
                     else:
-                        grain_facesDict[Ng+5][of] = face_nodes[of]
+                        grain_facesDict[Ng + 5][of] = face_nodes[of]
                 h1 = np.abs(n1[2] - RVE_max[2]) < tol
                 h2 = np.abs(n2[2] - RVE_max[2]) < tol
                 h3 = np.abs(n3[2] - RVE_max[2]) < tol
@@ -884,10 +943,10 @@ class Microstructure:
                         gsplit[gid]['fb'] = True
                         continue
                     else:
-                        grain_facesDict[Ng+6][of] = face_nodes[of]
-                grain_facesDict[gid][of] = face_nodes[of]  
-                
-        # Find all combinations of grains to check for common area
+                        grain_facesDict[Ng + 6][of] = face_nodes[of]
+                grain_facesDict[gid][of] = face_nodes[of]
+
+                # Find all combinations of grains to check for common area
         gbDict = dict()
         combis = list(itertools.combinations(sorted(grain_facesDict.keys()), 2))
         # Find the shared area
@@ -899,19 +958,20 @@ class Microstructure:
                 [ind.update(grain_facesDict[cb[0]][key]) for key in finter]
                 key = 'f{}_{}'.format(cb[0], cb[1])
                 gbDict[key] = ind
-                if not(cb[0]>Ng or cb[1]>Ng):
+                if not (cb[0] > Ng or cb[1] > Ng):
                     try:
-                        hull = ConvexHull(self.nodes_v[list(ind),:])
+                        hull = ConvexHull(self.nodes_v[list(ind), :])
                         shared_area.append([cb[0], cb[1], hull.area])
                     except:
-                        sh_area = len(finter) * (voxel_size**2)
+                        sh_area = len(finter) * (voxel_size ** 2)
                         shared_area.append([cb[0], cb[1], sh_area])
             else:
                 continue
-        
+
         # find intersection lines of GB's (triple or quadruple lines) -> edges
         # vertices are nodes in voxelized microstructure
         vert = dict()
+        grains_of_vert = dict()
         for i in grain_facesDict.keys():
             vert[i] = set()
         for key0 in gbDict.keys():
@@ -929,29 +989,36 @@ class Microstructure:
                         # mulitple nodes in intersection 
                         # identify end points of triple or quadruple line 
                         edge = np.array(list(finter), dtype=int)
-                        rn = self.nodes_v[edge-1]
+                        rn = self.nodes_v[edge - 1]
                         dmax = 0.
                         for j, rp0 in enumerate(rn):
-                            for k, rp1 in enumerate(rn[j+1:,:]):
-                                d = np.sqrt(np.dot(rp0-rp1, rp0-rp1))
+                            for k, rp1 in enumerate(rn[j + 1:, :]):
+                                d = np.sqrt(np.dot(rp0 - rp1, rp0 - rp1))
                                 if d > dmax:
-                                    elist = [edge[j], edge[k+j+1]]
+                                    elist = [edge[j], edge[k + j + 1]]
                                     dmax = d
                     # select all involved grains
                     grains = set()
                     j = key0.index('_')
                     grains.add(int(key0[1:j]))
-                    grains.add(int(key0[j+1:]))
+                    grains.add(int(key0[j + 1:]))
                     j = key1.index('_')
                     grains.add(int(key1[1:j]))
-                    grains.add(int(key1[j+1:]))
+                    grains.add(int(key1[j + 1:]))
                     # check if any neighboring nodes are already in list of
                     # vertices. If yes, replace new vertex with existing one
-                    newlist = check_neigh(elist, grains, margin=2*voxel_size)
+                    newlist = check_neigh(elist, grains, margin=2 * voxel_size)
                     # update grains with new vertex
                     for j in grains:
                         vert[j].update(newlist)
-                        
+                    for nv in newlist:
+                        for j in range(1,7):
+                            grains.discard(self.Ngr+j)
+                        if nv in grains_of_vert.keys():
+                            grains_of_vert[nv].update(grains)
+                        else:
+                            grains_of_vert[nv] = grains
+
         # Store grain-based information and do Delaunay tesselation
         # Sort grains w.r.t number of vertices
         num_vert = [len(vert[igr]) for igr in self.elmtSetDict.keys()]
@@ -997,7 +1064,8 @@ class Microstructure:
                 try:
                     tetra.add_points(self.nodes_v[vlist])
                 except:
-                    warnings.warn(f'Incremental Delaunay tesselation failed for grain {step+1}. Restarting Delaunay process from there')
+                    warnings.warn(
+                        f'Incremental Delaunay tesselation failed for grain {step + 1}. Restarting Delaunay process from there')
                     vlist = np.array(vertices, dtype=int) - 1
                     tetra = Delaunay(self.nodes_v[vlist], incremental=True)
 
@@ -1013,34 +1081,46 @@ class Microstructure:
             ctr = np.mean(tetra.points[tet], axis=0)
             igr = self.voxels[get_voxel(ctr)]
             # test if all vertices of tet belong to that grain
-            grain_vertices = grains[igr]['Vertices']
-            if not is_contained(tet, grain_vertices):
-                #print(f'Grain {igr}: Tetra = {tet}, missing vertices')
+            if not tet_in_grain(tet, grains[igr]['Vertices']):
+                # print(f'Grain {igr}: Tetra = {tet}, missing vertices')
                 # try to find a neighboring grain with all vertices of tet
-                neigh_list = []
+                neigh_list = set()
                 for hv in tet:
-                    neigh_list.append(
-                        self.voxels[get_voxel(self.RVE_data['Points'][hv])])
-                #print(f'### Neighboring grains: {neigh_list}')
+                    neigh_list.update(grains_of_vert[vertices[hv]])
+                    #    self.voxels[get_voxel(tetra.points[hv])])
+                # print(f'### Neighboring grains: {neigh_list}')
                 match_found = False
-                for jgr in set(neigh_list):
-                    grain_vertices = grains[jgr]['Vertices']
-                    if is_contained(tet, grain_vertices):
-                        #print(f'*** Grain {jgr} contains all vertices')
+                for jgr in neigh_list:
+                    if tet_in_grain(tet, grains[jgr]['Vertices']):
+                        # print(f'*** Grain {jgr} contains all vertices')
                         igr = jgr
                         match_found = True
-                        continue
+                        break
                 if not match_found:
                     # get a majority vote. BETTER: split up tet
                     # count all voxels in tet
-                    unique_list, counts =\
+                    neigh_list.add(igr)
+                    neigh_list = list(neigh_list)
+                    num_vox = []
+                    # print(f'nodes in tet: {tet}')
+                    for ngr in neigh_list:
+                        nv = 0
+                        for vox in self.elmtSetDict[ngr]:
+                            if vox_in_tet(vox, tet):
+                                nv += 1
+                        num_vox.append(nv)
+                    igr = neigh_list[np.argmax(num_vox)]
+                    # print(f'+++ Majority vote grain {igr}')
+                    # print(f'Neighbors: {neigh_list}')
+                    # print(f'Counts: {num_vox}')
+                    """unique_list, counts = \
                         np.unique(neigh_list, return_counts=True)
                     if np.amax(counts) > 1:
                         igr = unique_list[np.argmax(counts)]
-                    #    print(f'+++ Majority vote grain {igr}')
-                    #else:
-                    #    print('??? No resolution found')
-                    
+                        print(f'+++ Majority vote grain {igr}')
+                    else:
+                        print('??? No resolution found')"""
+
             tet_to_grain[i] = igr
             # Update grain volume with tet volume
             dv = self.nodes_v[tet[3]]
@@ -1048,12 +1128,12 @@ class Microstructure:
                     self.nodes_v[tet[1]] - dv,
                     self.nodes_v[tet[2]] - dv]
             grains[igr]['Volume'] += np.abs(np.linalg.det(vmat))
-            
+
         # Keep only facets at boundary or between different grains
         facet_keys = set()
         for i, tet in enumerate(tetra.simplices):
             igr = tet_to_grain[i]
-            for j, neigh in enumerate(tetra.neighbors[i,:]):
+            for j, neigh in enumerate(tetra.neighbors[i, :]):
                 if neigh == -1 or tet_to_grain[neigh] != igr:
                     ft = []
                     for k in range(4):
@@ -1067,35 +1147,34 @@ class Microstructure:
                     avec = np.cross(self.nodes_v[ft[0]] - cv,
                                     self.nodes_v[ft[1]] - cv)
                     grains[igr]['Area'] += np.linalg.norm(avec)
-                    
+
         facets = []
         for key in facet_keys:
             hh = key.split('_')
             facets.append([int(hh[0]), int(hh[1]), int(hh[2])])
         self.RVE_data['Facets'] = np.array(facets)
-        
+
         for igr in self.elmtSetDict.keys():
             # Find the euclidean distance to all surface points from the center
-            dists = [euclidean(grains[igr]['Center'], pt) for pt in 
+            dists = [euclidean(grains[igr]['Center'], pt) for pt in
                      self.nodes_v[grains[igr]['Vertices']]]
-            grains[igr]['eqDia']  = 2.0 * (3*grains[igr]['Volume'] /\
-                                   (4*np.pi))**(1/3)
-            #if the Volume is zero, the eqDia is zero, the ouput plot for eqDia in plot_stats() won't work.
+            grains[igr]['eqDia'] = 2.0 * (3 * grains[igr]['Volume'] / \
+                                          (4 * np.pi)) ** (1 / 3)
+            # if the Volume is zero, the eqDia is zero, the ouput plot for eqDia in plot_stats() won't work.
             grains[igr]['majDia'] = 2.0 * np.amax(dists)
             grains[igr]['minDia'] = 2.0 * np.amin(dists)
             if periodic:
                 grains[igr]['Split'] = list(gsplit[igr].values())
             if dual_phase == True:
-                grains[igr]['PhaseID'] = self.particle_data['Phase number'][igr-1]
-                grains[igr]['PhaseName'] = self.particle_data['Phase name'][igr-1]
-                
+                grains[igr]['PhaseID'] = self.particle_data['Phase number'][igr - 1]
+                grains[igr]['PhaseName'] = self.particle_data['Phase name'][igr - 1]
 
         self.RVE_data['Grains'] = grains
         self.RVE_data['GBnodes'] = gbDict
         self.RVE_data['GBarea'] = shared_area
 
         return grain_facesDict, shared_area
-    
+
     def get_stats(self, dual_phase=False):
         """
         Comape the geometries of particles used for packing and the resulting 
@@ -1125,40 +1204,42 @@ class Microstructure:
         grain_PhaseID = np.zeros(self.Ngr)
         grain_PhaseName = np.zeros(self.Ngr).astype(str)
         for igr in self.RVE_data['Grains'].keys():
-            grain_eqDia[igr-1] = self.RVE_data['Grains'][igr]['eqDia']
+            grain_eqDia[igr - 1] = self.RVE_data['Grains'][igr]['eqDia']
             if self.particle_data['Type'] == 'Elongated':
-                grain_minDia[igr-1] = self.RVE_data['Grains'][igr]['minDia']
-                grain_majDia[igr-1] = self.RVE_data['Grains'][igr]['majDia']
+                grain_minDia[igr - 1] = self.RVE_data['Grains'][igr]['minDia']
+                grain_majDia[igr - 1] = self.RVE_data['Grains'][igr]['majDia']
             if dual_phase == True:
-                grain_PhaseID[igr-1] = self.RVE_data['Grains'][igr]['PhaseID']
-                grain_PhaseName[igr-1] = self.RVE_data['Grains'][igr]['PhaseName']
-                
+                grain_PhaseID[igr - 1] = self.RVE_data['Grains'][igr]['PhaseID']
+                grain_PhaseName[igr - 1] = self.RVE_data['Grains'][igr]['PhaseName']
+
         output_data_list = []
         indexPhase = []
-        if dual_phase == True:            
+        if dual_phase == True:
             for iph in range(self.nphase):
                 indexPhase.append(grain_PhaseID == iph)
-            #indexPhase = [grain_PhaseID == 0, grain_PhaseID == 1]
+            # indexPhase = [grain_PhaseID == 0, grain_PhaseID == 1]
             # Compute the L1-error between particle and grain geometries for phase 0
             for index in indexPhase:
                 if self.particle_data['Type'] == 'Elongated':
-                    kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia[index], 'Grains': grain_eqDia[index]},
-                                        'Major diameter': {'Particles': par_majDia[index], 'Grains': grain_majDia[index]},
-                                        'Minor diameter': {'Particles': par_minDia[index], 'Grains': grain_minDia[index]}}}
+                    kwargs = {
+                        'Ellipsoids': {'Equivalent': {'Particles': par_eqDia[index], 'Grains': grain_eqDia[index]},
+                                       'Major diameter': {'Particles': par_majDia[index],
+                                                          'Grains': grain_majDia[index]},
+                                       'Minor diameter': {'Particles': par_minDia[index],
+                                                          'Grains': grain_minDia[index]}}}
                 else:
                     kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia[index], 'Grains': grain_eqDia[index]}}}
-        
+
                 error = l1_error_est(**kwargs)
-                print('\n    L1 error between particle and grain geometries: {}'\
+                print('\n    L1 error between particle and grain geometries: {}' \
                       .format(round(error, 5)))
 
-            
                 # Create dictionaries to store the data generated
-                output_data = {'Number_of_particles/grains': int(len(par_eqDia[index])), 
+                output_data = {'Number_of_particles/grains': int(len(par_eqDia[index])),
                                'Grain type': self.particle_data['Type'],
                                'Unit_scale': self.RVE_data['Units'],
                                'L1-error': error,
-                               'Particle_Equivalent_diameter': par_eqDia[index], 
+                               'Particle_Equivalent_diameter': par_eqDia[index],
                                'Grain_Equivalent_diameter': grain_eqDia[index]}
                 if self.particle_data['Type'] == 'Elongated':
                     output_data['Particle_Major_diameter'] = par_majDia[index]
@@ -1168,27 +1249,26 @@ class Microstructure:
                     output_data['PhaseID'] = grain_PhaseID[index]
                     output_data['PhaseName'] = grain_PhaseName[index]
                 output_data_list.append(output_data)
-                       
+
         else:
             # Compute the L1-error between particle and grain geometries
             if self.particle_data['Type'] == 'Elongated':
                 kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
-                                    'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
-                                    'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}
+                                         'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
+                                         'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}
             else:
                 kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia}}}
-    
+
             error = l1_error_est(**kwargs)
-            print('\n    L1 error between particle and grain geometries: {}'\
+            print('\n    L1 error between particle and grain geometries: {}' \
                   .format(round(error, 5)))
-            
-        
+
             # Create dictionaries to store the data generated
-            output_data = {'Number_of_particles/grains': int(len(par_eqDia)), 
+            output_data = {'Number_of_particles/grains': int(len(par_eqDia)),
                            'Grain type': self.particle_data['Type'],
                            'Unit_scale': self.RVE_data['Units'],
                            'L1-error': error,
-                           'Particle_Equivalent_diameter': par_eqDia, 
+                           'Particle_Equivalent_diameter': par_eqDia,
                            'Grain_Equivalent_diameter': grain_eqDia}
             if self.particle_data['Type'] == 'Elongated':
                 output_data['Particle_Major_diameter'] = par_majDia
@@ -1197,5 +1277,4 @@ class Microstructure:
                 output_data['Grain_Minor_diameter'] = grain_minDia
             output_data_list.append(output_data)
 
-        return output_data_list                                                                                   
-    
+        return output_data_list

@@ -155,6 +155,8 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         
         # Update the simulation time
         sim_box.sim_ts += 1
+        if i > 700:
+            break
         
     return Ellipsoids, sim_box
 

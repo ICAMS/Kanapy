@@ -416,14 +416,14 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
             sys.exit(0)
     
     # generate array of voxelized structure
-    hh = np.zeros(voxX*voxY*voxZ)
+    hh = np.zeros(voxX*voxY*voxZ, dtype=int)
     for ih, il in elmtSetDict.items():
         il = np.array(il) - 1
         hh[il] = ih
     voxels = np.reshape(hh, (voxX,voxY,voxZ), order='F')
-    voxels = np.array(voxels, dtype=int)
+    #voxels = np.array(voxels, dtype=int)
     
-    hh = np.zeros(voxX*voxY*voxZ)
+    hh = np.zeros(voxX*voxY*voxZ, dtype=int)
     voxels_phase = np.reshape(hh, (voxX,voxY,voxZ), order='F')
    
     if dual_phase == True:
