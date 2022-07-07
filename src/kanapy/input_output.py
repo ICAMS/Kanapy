@@ -1383,24 +1383,30 @@ def extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=Fals
     print('---->DONE!\n')       
     return gv_sorted_values, shared_area, grain_facesDict
 
-def writeAbaqusMat(ialloy, angles, nsdv=200):
+def writeAbaqusMat(ialloy, angles, filename=None, nsdv=200):
     '''
-    angles : Euler angles with number of rows= number of grains and 
+    angles : Euler angles with number of rows= number of grains and
             three columns phi1, Phi, phi2
-    ialloy : alloy number in the umat, mod_alloys.f 
-    nsdv : number of state dependant variables default value is 200         
+    ialloy : alloy number in the umat, mod_alloys.f
+    nsdv : number of state dependant variables default value is 200
     '''
-    with open('Material.inp', 'w') as f:
+    Ngr = len(angles)
+    if filename is None:
+        cwd = os.getcwd()
+        filename = cwd + '/abq_px_{0}grains_materials.inp'.format(Ngr)
+        if os.path.exists(filename):
+            os.remove(filename)  # remove old file if it exists
+    with open(filename, 'w') as f:
         f.write('** MATERIALS\n')
         f.write('**\n')
-        for i in range(len(angles)):
+        for i in range(Ngr):
             f.write('*Material, name=GRAIN{}_mat\n'.format(i+1))
             f.write('*Depvar\n')
             f.write('    {}\n'.format(nsdv))
             f.write('*User Material, constants=4\n')
             f.write('{}, {}, {}, {}\n'.format(float(ialloy), angles[i,0],
                                               angles[i,1], angles[i,2]))
-    return 
+    return
 
 def writeAbaqusPhase(grains, nsdv=200):
     with open('Material.inp', 'w') as f:

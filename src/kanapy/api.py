@@ -217,10 +217,10 @@ class Microstructure:
         comparison."""
         if data is None:
             data = self.res_data
+            if data is None:
+                raise ValueError('No microstructure data created yet. Run analyse_RVE first.')
         else:
             data = [data]
-        if data is None:
-            raise ValueError('No microstructure data created yet. Run analyse_RVE first.')
         for dat in data:
             plot_output_stats(dat, gs_data=gs_data, gs_param=gs_param,
                               ar_data=ar_data, ar_param=ar_param,
@@ -267,7 +267,6 @@ class Microstructure:
     def output_abq(self, nodes=None, name=None, simulation_data=None,
                    elmtDict=None, elmtSetDict=None, faces=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""
-        # write_abaqus_inp()
         if simulation_data is None:
             simulation_data = self.simulation_data
         if nodes is None:
@@ -824,8 +823,8 @@ class Microstructure:
                     normal /= hn
                 dist_to_vox = np.dot(v_pos - ctr_, normal)
                 dist_to_node = np.dot(n_pos - ctr_, normal)
-                if np.sign(dist_to_vox*dist_to_node) < 0. or\
-                    np.abs(dist_to_vox) > np.abs(dist_to_node):
+                if np.sign(dist_to_vox * dist_to_node) < 0. or \
+                        np.abs(dist_to_vox) > np.abs(dist_to_node):
                     contained = False
                     break
             return contained
@@ -1012,8 +1011,8 @@ class Microstructure:
                     for j in grains:
                         vert[j].update(newlist)
                     for nv in newlist:
-                        for j in range(1,7):
-                            grains.discard(self.Ngr+j)
+                        for j in range(1, 7):
+                            grains.discard(self.Ngr + j)
                         if nv in grains_of_vert.keys():
                             grains_of_vert[nv].update(grains)
                         else:
@@ -1054,7 +1053,7 @@ class Microstructure:
             grains[igr]['Volume'] = 0.
             grains[igr]['Area'] = 0.
 
-            # Constructuct incremental Delaunay tesselation of
+            # Construct incremental Delaunay tesselation of
             # structure given by vertices
             vlist = np.array(list(add_vert), dtype=int) - 1
             vertices = np.append(vertices, list(add_vert))
@@ -1075,9 +1074,11 @@ class Microstructure:
         self.RVE_data['Simplices'] = tetra.simplices
 
         # Assign simplices (tetrahedra) to grains, by voxel of their center
+        print('\nGenerated Delaunay tesselation of grain vertices.')
+        print('Assigning tetrahedra to grains ...')
         Ntet = len(tetra.simplices)
         tet_to_grain = np.zeros(Ntet, dtype=int)
-        for i, tet in enumerate(tetra.simplices):
+        for i, tet in tqdm(enumerate(tetra.simplices)):
             ctr = np.mean(tetra.points[tet], axis=0)
             igr = self.voxels[get_voxel(ctr)]
             # test if all vertices of tet belong to that grain
@@ -1113,21 +1114,14 @@ class Microstructure:
                     # print(f'+++ Majority vote grain {igr}')
                     # print(f'Neighbors: {neigh_list}')
                     # print(f'Counts: {num_vox}')
-                    """unique_list, counts = \
-                        np.unique(neigh_list, return_counts=True)
-                    if np.amax(counts) > 1:
-                        igr = unique_list[np.argmax(counts)]
-                        print(f'+++ Majority vote grain {igr}')
-                    else:
-                        print('??? No resolution found')"""
 
             tet_to_grain[i] = igr
             # Update grain volume with tet volume
-            dv = self.nodes_v[tet[3]]
-            vmat = [self.nodes_v[tet[0]] - dv,
-                    self.nodes_v[tet[1]] - dv,
-                    self.nodes_v[tet[2]] - dv]
-            grains[igr]['Volume'] += np.abs(np.linalg.det(vmat))
+            dv = tetra.points[tet[3]]
+            vmat = [tetra.points[tet[0]] - dv,
+                    tetra.points[tet[1]] - dv,
+                    tetra.points[tet[2]] - dv]
+            grains[igr]['Volume'] += np.abs(np.linalg.det(vmat))/6.
 
         # Keep only facets at boundary or between different grains
         facet_keys = set()
@@ -1143,9 +1137,9 @@ class Microstructure:
                     facet_keys.add(f'{ft[0]}_{ft[1]}_{ft[2]}')
                     grains[igr]['Simplices'].append(ft)
                     # Update grain surface area
-                    cv = self.nodes_v[ft[2]]
-                    avec = np.cross(self.nodes_v[ft[0]] - cv,
-                                    self.nodes_v[ft[1]] - cv)
+                    cv = tetra.points[ft[2]]
+                    avec = np.cross(tetra.points[ft[0]] - cv,
+                                    tetra.points[ft[1]] - cv)
                     grains[igr]['Area'] += np.linalg.norm(avec)
 
         facets = []
@@ -1158,26 +1152,46 @@ class Microstructure:
             # Find the euclidean distance to all surface points from the center
             dists = [euclidean(grains[igr]['Center'], pt) for pt in
                      self.nodes_v[grains[igr]['Vertices']]]
-            grains[igr]['eqDia'] = 2.0 * (3 * grains[igr]['Volume'] / \
-                                          (4 * np.pi)) ** (1 / 3)
-            # if the Volume is zero, the eqDia is zero, the ouput plot for eqDia in plot_stats() won't work.
+            grains[igr]['eqDia'] = 2.0 * (3 * grains[igr]['Volume']
+                                          / (4 * np.pi)) ** (1 / 3)
             grains[igr]['majDia'] = 2.0 * np.amax(dists)
             grains[igr]['minDia'] = 2.0 * np.amin(dists)
             if periodic:
                 grains[igr]['Split'] = list(gsplit[igr].values())
-            if dual_phase == True:
+            if dual_phase:
                 grains[igr]['PhaseID'] = self.particle_data['Phase number'][igr - 1]
                 grains[igr]['PhaseName'] = self.particle_data['Phase name'][igr - 1]
 
         self.RVE_data['Grains'] = grains
         self.RVE_data['GBnodes'] = gbDict
         self.RVE_data['GBarea'] = shared_area
+        print('Finished generating polyhedral hulls for grains.')
+        vref = self.RVE_data['RVE_sizeX'] * \
+               self.RVE_data['RVE_sizeY'] * \
+               self.RVE_data['RVE_sizeZ']
+        vtot = 0.
+        vtot_vox = 0.
+        vunit = self.RVE_data['Voxel_resolutionX'] * \
+                self.RVE_data['Voxel_resolutionY'] * \
+                self.RVE_data['Voxel_resolutionZ']
+        vol_mae = 0.
+        for igr, grain in self.RVE_data['Grains'].items():
+            vg = grain['Volume']
+            vtot += vg
+            vvox = np.count_nonzero(self.voxels == igr)*vunit
+            vtot_vox += vvox
+            vol_mae += np.abs(1. - vg / vvox)
+            #print(f'igr: {igr}, vol={vg}, vox={vvox}')
+        vol_mae /= self.Ngr
+        if np.abs(vtot - vref) > 1.e-5:
+            warnings.warn(f'Inconsistent volume of polyhedral grains: {vtot}, Reference volume: {vref}')
+        print(f'Mean absolute error of polyhedral vs. voxel volume of grains: {vol_mae}')
 
         return grain_facesDict, shared_area
 
     def get_stats(self, dual_phase=False):
         """
-        Comape the geometries of particles used for packing and the resulting 
+        Compare the geometries of particles used for packing and the resulting 
         grains.
 
         Parameters
@@ -1208,13 +1222,13 @@ class Microstructure:
             if self.particle_data['Type'] == 'Elongated':
                 grain_minDia[igr - 1] = self.RVE_data['Grains'][igr]['minDia']
                 grain_majDia[igr - 1] = self.RVE_data['Grains'][igr]['majDia']
-            if dual_phase == True:
+            if dual_phase:
                 grain_PhaseID[igr - 1] = self.RVE_data['Grains'][igr]['PhaseID']
                 grain_PhaseName[igr - 1] = self.RVE_data['Grains'][igr]['PhaseName']
 
         output_data_list = []
         indexPhase = []
-        if dual_phase == True:
+        if dual_phase:
             for iph in range(self.nphase):
                 indexPhase.append(grain_PhaseID == iph)
             # indexPhase = [grain_PhaseID == 0, grain_PhaseID == 1]
