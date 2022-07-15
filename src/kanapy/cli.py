@@ -193,7 +193,8 @@ def voxelize(ctx):
         
         # Read the required dump file
         if particle_data['Type'] == 'Equiaxed':
-            filename = cwd + '/dump_files/particle.{0}.dump'.format(800)            
+            #filename = cwd + '/dump_files/particle.{0}.dump'.format(800)    
+            filename = cwd + '/dump_files/particle.{0}.dump'.format(700)        
         else:
             filename = cwd + '/dump_files/particle.{0}.dump'.format(500) 
     
