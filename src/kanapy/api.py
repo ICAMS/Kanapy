@@ -16,6 +16,7 @@ import json
 import itertools
 import warnings
 from copy import deepcopy
+from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull, Delaunay
