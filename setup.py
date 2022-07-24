@@ -17,6 +17,7 @@
 import os
 import re
 import sys
+import json
 import platform
 import subprocess
 import setuptools
@@ -24,7 +25,26 @@ import setuptools
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
+from shutil import rmtree
 
+# create file structure for testing and MTEX support
+# not required otherwise
+MAIN_DIR = os.getcwd()  # directory in which repository is cloned
+WORK_DIR = os.path.expanduser('~') + '/.kanapy'  # working directory for temporary files
+if os.path.exists(WORK_DIR):
+    print(f'Removing existing working directory {WORK_DIR}')
+    rmtree(WORK_DIR)
+
+os.makedirs(WORK_DIR)
+os.makedirs(WORK_DIR + '/tests')
+os.system(f'cp {MAIN_DIR}/tests/unitTest_ODF_MDF_reconstruction.m {WORK_DIR}/tests')
+pathDict = {'MAIN_DIR': MAIN_DIR, 'MTEXpath': MAIN_DIR+'/libs/mtex', 'MATLABpath': None}
+path_path = WORK_DIR + '/PATHS.json'
+
+
+with open(path_path, 'w') as outfile:
+    json.dump(pathDict, outfile, indent=2)
+    
 """The setup script."""
 
 class CMakeExtension(Extension):

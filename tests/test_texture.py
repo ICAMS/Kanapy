@@ -1,36 +1,34 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Created on Tue Jul 12 23:26:59 2022
+
+"""
 
 import os
-import shutil, json
-from pathlib import Path
-from subprocess import PIPE, run 
-
+import shutil
+import json
 import numpy as np
 import pytest
-
-import kanapy
-from kanapy.util import KNPY_DIR, ROOT_DIR
-
-# Check if kanapy has been configured with MATLAB & MTEX
-pathFile = KNPY_DIR + '/PATHS.json'
-if not os.path.exists(pathFile):
-    skipVal = True
-else:
-    skipVal = False
+from kanapy import WORK_DIR, MAIN_DIR, MTEX_AVAIL
             
-@pytest.mark.skipif(skipVal == True, reason="Your Kanapy is not configured for texture analysis yet! Run: kanapy setuptexture to set it up.")
+@pytest.mark.skipif(MTEX_AVAIL == False, reason="Kanapy is not configured for texture analysis yet!")
 def test_analyzeTexture():
            
-    pathFile = KNPY_DIR + '/PATHS.json'
-    testDir = KNPY_DIR + '/tests'
+    pathFile = WORK_DIR + '/PATHS.json'
+    testDir = WORK_DIR + '/tests'
     utFile = testDir + '/unitTest_ODF_MDF_reconstruction.m'
     logFile = testDir + '/matlabUnitTest.log'
-    resultFile = 'matlabResults.txt'
+    resultFile = testDir + '/matlabResults.txt'
     
     # Read the MATLAB & MTEX paths                 
     with open(pathFile) as json_file:  
-        path_dict = json.load(json_file) 
+        path_dict = json.load(json_file)
+        
+    if type(path_dict['MATLABpath']) != str:
+        raise ModuleNotFoundError('Matlab not installed properly.')
+    if not MTEX_AVAIL:
+        raise ModuleNotFoundError('MTEX not installed properly.')
 
     # Read the MATLAB unittest file and replace the MTEX path in it
     with open (utFile,'r') as f:
@@ -40,26 +38,19 @@ def test_analyzeTexture():
         data = f.writelines(data)
                  
     # Copy file temporarily into the 'tests/' folder
-    filelist = ['ODF_reduction_algo.m','splitMean.m','odfEst.m','mdf_Anglefitting_algo_MC.m']
+    filelist = ['ODF_reduction_algo.m', 'splitMean.m', 'odfEst.m',
+                'mdf_Anglefitting_algo_MC.m']
     for i in filelist:
-        shutil.copy2(ROOT_DIR+'/'+i, testDir)
+        shutil.copy2(MAIN_DIR+'/src/kanapy/'+i, testDir)
 
     # Create a temporary matlab script file that runs Texture reduction algorithm      
-    TRfile = testDir+'/runUnitTest.m'           # Temporary '.m' file
+    TRfile = testDir + '/runUnitTest.m'  # Temporary '.m' file
 
     with open (TRfile,'w') as f:
-        f.write("MTEXpath='{}';\n".format(path_dict['MTEXpath']))
-        f.write("run([MTEXpath 'install_mtex.m'])\n")
-        f.write('\n')
         f.write("result = runtests('{0}');\n".format(utFile))
         f.write("T=table(result)\n")  
         f.write("writetable(T,'{}','Delimiter',' ');\n".format(resultFile))    
         f.write("exit;")
-
-    # Run from the terminal                                    
-    #command = ["{}".format(path_dict['MATLABpath']), " -nosplash -nodesktop -nodisplay -r ", '"run(', "'{}')".format(TRfile), '; exit;"']
-    #with open(logFile, "w") as outfile:
-    #    result = run(command, stdout=outfile, stderr=PIPE, universal_newlines=True)             
 
     cmd1 = "{0} -nosplash -nodesktop -nodisplay -r ".format(path_dict['MATLABpath']) 
     cmd2 = '"run(' + "'{}')".format(TRfile) + '; exit;"'
@@ -67,19 +58,19 @@ def test_analyzeTexture():
     os.system(cmd + '> {}'.format(logFile))               
         
     # Remove the files once done! 
-    os.remove(TRfile)        
+    os.remove(TRfile)
     for i in filelist:
         os.remove(testDir+'/'+i)
     
     # Read the tabulated result written by MATLAB
-    tabRes = np.loadtxt(testDir + '/' + resultFile, delimiter=' ', skiprows=1, usecols = (1,2,3))
+    tabRes = np.loadtxt(resultFile, delimiter=' ', skiprows=1, usecols=(1, 2, 3))
     
     # Remove the MATLAB tabulated results file
-    os.remove(testDir + '/' + resultFile)
+    os.remove(resultFile)
     
     # Report back to pytest 
     passed, failed, incomplete = int(sum(tabRes[:,0])), int(sum(tabRes[:,1])), int(sum(tabRes[:,2]))        
-    assert passed==np.shape(tabRes)[0]    
+    assert passed == np.shape(tabRes)[0]
                
 
 if __name__ == "__main__":   

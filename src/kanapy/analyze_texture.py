@@ -1,28 +1,25 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os
 import json
+from kanapy import MTEX_AVAIL, WORK_DIR
 
-from kanapy import KNPY_DIR, ROOT_DIR
 
 def checkConfiguration():
     r""" 
-    Evaluates if Kanapy has been configured for texture analysis by reading the 'PATHS.json'
+    Evaluates if kanapy has been configured for texture analysis by reading the 'PATHS.json'
     file if it exists.
     """
-    
-    path_file = KNPY_DIR + '/PATHS.json'
-    print('')
-    
-    if not os.path.exists(path_file):        
-        print("    Your Kanapy is not configured for texture analysis yet! Please run 'kanapy setuptexture' to do so.\n")
-        sys.exit(0)
-    else:            
-        with open(path_file) as json_file:  
-            paths = json.load(json_file)   
-        print("    Your Kanapy has been configured for texture analysis!")
-        print("        MATLAB executable: {}".format(paths['MATLABpath']))
-        print("        MTEX path:         {}".format(paths['MTEXpath']))
-        print("        (To update these paths, run: kanapy setuptexture)")
+    if not os.path.exists(WORK_DIR):
+        raise FileNotFoundError('Package not properly installed, working directory is missing.')
+    if not MTEX_AVAIL:
+        raise ModuleNotFoundError("Kanapy is not configured for texture analysis yet! Please run 'python setup_mtex.py' to do so.")
+
+    with open(WORK_DIR + '/PATHS.json') as json_file:
+        paths = json.load(json_file)
+    print("    Kanapy has been configured for texture analysis!")
+    print("        MATLAB executable: {}".format(paths['MATLABpath']))
+    print("        MTEX path:         {}".format(paths['MTEXpath']))
+    print("        (To update these paths, run: python setup_mtex)")
     return paths
 
 
@@ -35,7 +32,7 @@ def getGrainNumber(wd):
     :type wd: String                          
     """
 
-    grain_info = wd + '/particle_data.json'         # Kanapy generated particle file
+    grain_info = wd + '/particle_data.json'         # kanapy generated particle file
     print('')
     
     # If kanapy's geometry module is executed before: Use it to get the grain number!
@@ -50,14 +47,12 @@ def getGrainNumber(wd):
         elif decision == 'no' or decision == 'n' or decision == 'N' or decision == 'NO':
             oriNum = input('    Please provide the number of reduced orientations required (integer): ')
         else:
-            print('    Invalid entry!, run: kanapy reducetexture again\n')
-            sys.exit(0)                
+            raise ValueError('Invalid entry!, run: kanapy reducetexture again')
     # Else ask the user for input.
     elif not os.path.exists(grain_info):        
         oriNum = input('    Please provide the number of reduced orientations required (integer): ')  
         if oriNum=='':
-            print('    Invalid entry!, run: kanapy reducetexture again\n')
-            sys.exit(0) 
+            raise ValueError('Invalid entry!, run: kanapy reducetexture again')
     return oriNum
 
 
@@ -70,7 +65,7 @@ def getSharedSurfaceArea(wd):
     :type wd: String                          
     """
 
-    ssa_info = wd + '/shared_surfaceArea.csv'       # Kanapy generated file
+    ssa_info = wd + '/shared_surfaceArea.csv'       # kanapy generated file
 
     # If kanapy's geometry module is executed before: Use it to get the shared area info!
     if os.path.exists(ssa_info):                   
@@ -82,22 +77,16 @@ def getSharedSurfaceArea(wd):
             ssafile = wd + '/json_files/' + ssafileName
 
             if not os.path.exists(ssafile):
-                print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(ssafileName))
-                sys.exit(0)
-            
+                raise FileNotFoundError(f"File: '{ssafileName}' does not exist in the current working directory!")
         else:
-            print('    Invalid entry!, run: kanapy reducetexture again\n')
-            sys.exit(0)              
+            raise ValueError('Invalid entry!, run: kanapy reducetexture again\n')
               
     # Else ask the user for input.
     elif not os.path.exists(ssa_info):        
         ssafileName = input("    Please provide the shared surface area file name located in the 'current/working/directory/json_files' directory! (.csv format): ")       
         ssafile = wd + '/json_files/' + ssafileName
-        
         if not os.path.exists(ssafile):
-            print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(ssafileName))
-            sys.exit(0)
-
+            raise FileNotFoundError(f"File: '{ssafileName}' does not exist in the current working directory!")
     return ssafile
                        
 
@@ -116,12 +105,11 @@ def getGrainVolume(wd):
     elif status == 'no' or status == 'n' or status == 'N' or status == 'NO':
         volfile = False            
     else:
-        print('    Invalid entry!, run: kanapy reducetexture again\n')
-        sys.exit(0) 
+        raise ValueError('Invalid entry!, run: kanapy reducetexture again\n')
             
     # If the user requests the grain volumes to be used
     if volfile == True:
-        vol_info = wd + '/grainVolumes.csv'       # Kanapy generated file
+        vol_info = wd + '/grainVolumes.csv'       # kanapy generated file
         
         # If kanapy's geometry module is executed before: Use it to get the grain volume info!
         if os.path.exists(vol_info):                   
@@ -133,12 +121,10 @@ def getGrainVolume(wd):
                 volfile = wd + '/json_files/' + volfileName 
 
                 if not os.path.exists(volfile):
-                    print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(volfileName))
-                    sys.exit(0)
+                    raise FileNotFoundError(f"File: '{volfile}' does not exist in the current working directory!")
                                        
             else:
-                print('    Invalid entry!, run: kanapy reducetexture again\n')
-                sys.exit(0)              
+                raise ValueError('Invalid entry!, run: kanapy reducetexture again\n')
               
         # Else ask the user for input.
         elif not os.path.exists(vol_info):        
@@ -146,8 +132,7 @@ def getGrainVolume(wd):
             volfile = wd + '/json_files/' + volfileName
 
         if not os.path.exists(volfile):
-            print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(volfileName))
-            sys.exit(0)
+            raise FileNotFoundError(f"File: '{volfile}' does not exist in the current working directory!")
                 
         return volfile
     
@@ -198,11 +183,10 @@ def textureReduction(kdict):
             user_grainsFile = cwd + '/' + user_grainsFileName
             
             if not os.path.exists(user_grainsFile):
-                print("    Mentioned file: '{}' does not exist in the current working directory!\n".format(user_grainsFileName))
-                sys.exit(0)
+                raise FileNotFoundError(f"File: '{user_grainsFile}' does not exist in the current working directory!")
             
     # Create a temporary matlab script file that runs Texture reduction algorithm    
-    TRfile = cwd+'/textureReduction.m'      # Temporary '.m' file witten in cwd
+    TRfile = WORK_DIR+'/textureReduction.m'      # Temporary '.m' file
     logFile = cwd + '/kanapyTexture.log'        # Log file.
     
     with open (TRfile,'w') as f:
@@ -229,8 +213,7 @@ def textureReduction(kdict):
         f.write("outputPath='{}';\n".format(cwd))
         
         f.write("\n")
-        f.write('addpath {0}\n'.format(cwd))
-        f.write('addpath {0}\n'.format(ROOT_DIR)) # add also this dir for the ODF_red.. function                       
+        f.write('addpath {0}\n'.format(WORK_DIR))
         
         command = "ODF_reduction_algo(MTEXpath,ori_num,"
         if "ebsdMatFile" in kdict.keys():
@@ -253,9 +236,8 @@ def textureReduction(kdict):
         f.write('exit;\n')
 
     # Run from the terminal 
-    #os.system('cat {0} | {1} -nosplash -nodesktop -nodisplay -nojvm;'.format(TRfile, path_dict['MATLABpath']))         
     print('')
-    print('    Calling Kanapy-MATLAB scripts ...')
+    print('    Calling kanapy-MATLAB scripts ...')
     
     cmd1 = "{0} -nosplash -nodesktop -nodisplay -r ".format(path_dict['MATLABpath']) 
     cmd2 = '"run(' + "'{}')".format(TRfile) + '; exit;"'

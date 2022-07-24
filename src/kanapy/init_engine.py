@@ -10,6 +10,3 @@ import matlab.engine
 eng = matlab.engine.start_matlab()
 eng.startup(nargout=0)
 
-#path = 'src/kanapy/'
-#eng.addpath(path,nargout=0)
-#eng.install_mtex.m

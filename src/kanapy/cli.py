@@ -3,7 +3,7 @@ import os, sys
 import shutil, json
 import click
 
-from kanapy.util import ROOT_DIR, MAIN_DIR, KNPY_DIR
+from kanapy.util import MAIN_DIR, WORK_DIR
 from kanapy.input_output import particleStatGenerator, particleCreator, RVEcreator, \
     write_position_weights, write_output_stat, plot_output_stats, \
     extract_volume_sharedGBarea, read_dump, export2abaqus
@@ -26,7 +26,7 @@ def autocomplete(ctx):
        
     click.echo('')  
     os.system("echo '# For KANAPY bash autocompletion' >> ~/.bashrc")
-    os.system("echo '. {}' >> ~/.bashrc".format(ROOT_DIR+'/kanapy-complete.sh'))  
+    os.system("echo '. {}' >> ~/.bashrc".format(MAIN_DIR+'/src/kanapy/kanapy-complete.sh'))  
 
 
 @main.command(name='runTests')
@@ -419,7 +419,11 @@ def chkVersion(matlab):
         
 def setPaths():
     ''' Requests user input for MATLAB & MTEX installation paths'''
-    
+    if not os.path.exists(WORK_DIR):
+        raise FileNotFoundError('Package not properly installed, working directory is missing.')
+    with open(WORK_DIR + '/PATHS.json') as json_file:
+        path_dict = json.load(json_file)
+        
     # For MATLAB executable
     click.echo('')
     status1 = input('Is MATLAB installed in this system (yes/no): ')
@@ -479,10 +483,6 @@ def setPaths():
                 sys.exit(0)
             else:
                 userpath1 = userinput
-                    
-        
-        # For MTEX installation path
-        userpath2 = MAIN_DIR+'/libs/mtex/'
                      
     elif status1 == 'no' or status1 == 'n' or status1 == 'N' or status1 == 'NO':
         click.echo("Kanapy's texture analysis code requires MATLAB. Please install it.")
@@ -493,16 +493,16 @@ def setPaths():
         sys.exit(0)        
         
     # Create a file in the 'src/kanapy' folder that stores the paths
-    if userpath1 and userpath2:        
+    if userpath1:        
         
-        pathDict = {'MATLABpath': '{}'.format(userpath1), 'MTEXpath': '{}'.format(userpath2)}                
-        path_path = KNPY_DIR+'/PATHS.json'
+        path_dict['MATLABpath'] = userpath1
+        path_path = WORK_DIR + '/PATHS.json'
         
         if os.path.exists(path_path):
             os.remove(path_path)
 
         with open(path_path,'w') as outfile:
-            json.dump(pathDict, outfile, indent=2)                
+            json.dump(path_dict, outfile, indent=2)                
         
         os.chdir('{}extern/engines/python'.format(userpath1[0:-10])) # remove bin/matlab from matlab path
         os.system('python setup.py install')
