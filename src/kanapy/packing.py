@@ -106,9 +106,9 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         # Initialize Octree and test for collision between ellipsoids
         for ellipsoid in Ellipsoids:
             ellipsoid.branches = []
-            ellipsoid.speedx = 0.
-            ellipsoid.speedy = 0.
-            ellipsoid.speedz = 0.
+            # ellipsoid.speedx = 0.
+            # ellipsoid.speedy = 0.
+            # ellipsoid.speedz = 0.
             ellipsoid.ncollision = 0
             
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
@@ -116,12 +116,12 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         tree.update()
         ncoll = tree.collisionsTest(damp=0.) #i/nsteps)
         
-        for ellipsoid in Ellipsoids:
-            if ellipsoid.ncollision == 0:
-                ellipsoid.speedx = ellipsoid.speedx0
-                ellipsoid.speedy = ellipsoid.speedy0
-                ellipsoid.speedz = ellipsoid.speedz0
-            
+        # for ellipsoid in Ellipsoids:
+        #     if ellipsoid.ncollision == 0:
+        #         ellipsoid.speedx = ellipsoid.speedx0
+        #         ellipsoid.speedy = ellipsoid.speedy0
+        #         ellipsoid.speedz = ellipsoid.speedz0
+        
         if dump:
             # Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)
             write_dump(Ellipsoids, sim_box)
@@ -149,6 +149,7 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
             dups.extend(ell_dups)
             # Update the BBox of the ellipsoid
             ellipsoid.set_cub()
+            
 
         # Update the actual list with duplicates
         Ellipsoids.extend(dups)
