@@ -118,9 +118,9 @@ def test_particle_grow(rot_surf):
     assert np.isclose(ell2.z, 5.00494231623147)
     '''
     
-    assert np.isclose(ell1.x, 0.7799999999999998)
-    assert np.isclose(ell1.y, 1.3249999999999995)
-    assert np.isclose(ell2.z, 8.280000000000001)
+    assert np.isclose(ell1.x, 0.8598502615407084)
+    assert np.isclose(ell1.y, 0.3162481206867067)
+    assert np.isclose(ell2.z, 4.523953852985176)
                       
     '''
     assert ell1.x > 0.8 and ell1.x < 0.9
