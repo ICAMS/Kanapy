@@ -7,16 +7,16 @@ function [orired_f,odfred_f,ero,varargout]=...
 %
 %
 % Syntax:
-% [ori,odf,e]=ODF_reduction_algo(n,'ebsdMatfile',ebsdfile)
-% [ori,odf,e]=ODF_reduction_algo(n,'ebsd',ebsd) 
-% [ori,odf,e]=ODF_reduction_algo(n,'ebsdMatfile',ebsdfile,  
+% [ori,odf,e]=texture_reconstruction_algo(n,'ebsdMatfile',ebsdfile)
+% [ori,odf,e]=texture_reconstruction_algo(n,'ebsd',ebsd) 
+% [ori,odf,e]=texture_reconstruction_algo(n,'ebsdMatfile',ebsdfile,  
 %           'grainsMatfile',grainsfile)
-% [ori,odf,e]=ODF_reduction_algo(n,'ebsd',ebsd,'grains',...
+% [ori,odf,e]=texture_reconstruction_algo(n,'ebsd',ebsd,'grains',...
 %           'grains')
-% [ori,odf,e]=ODF_reduction_algo(n,'orientations',ori)  
-% [ori,odf,e]=ODF_reduction_algo(n,'orientations',ori,...  
+% [ori,odf,e]=texture_reconstruction_algo(n,'orientations',ori)  
+% [ori,odf,e]=texture_reconstruction_algo(n,'orientations',ori,...  
 %           'kernel',psi)
-% [ori,odf,e]=ODF_reduction_algo(n,'orientations',ori,...  
+% [ori,odf,e]=texture_reconstruction_algo(n,'orientations',ori,...  
 %           'kernelShape','kappa') 
 %
 % Inputs:
@@ -32,9 +32,7 @@ function [orired_f,odfred_f,ero,varargout]=...
 % Output: reduced orientation set, ODF and L1 error 
 % 
 %% input fields and checks
-    
-%run('../../libs/mtex/install_mtex.m')
- 
+
 options = {'ebsdMatFile','ebsd','orientation'};
 flag = 1; 
 grains = [];
@@ -51,14 +49,14 @@ for i = 1:length(options)
                     ebsd_var = who(matfile(varargin{loc+1}));
                     ebsd = ebsd.(ebsd_var{1});
                     assert(length(unique(ebsd.phaseId))==1,...
-                    'ODF_reduction_algo:e3', 'EBSD has multiple phases')
+                    'texture_reconstruction_algo:e3', 'EBSD has multiple phases')
                     ori = ebsd.orientations;
                     flag = flag-1;
 
                 case 'ebsd'
                     ebsd = varargin{loc+1};
                     assert(length(unique(ebsd.phaseId))==1,...
-                        'ODF_reduction_algo:e3','EBSD has multiple phases')
+                        'texture_reconstruction_algo:e3','EBSD has multiple phases')
                     ori = ebsd.orientations;
                     flag = flag-1;
 
@@ -90,7 +88,7 @@ if length(varargin)>2
                         grains_var = who(matfile(varargin{loc+1}));
                         grains = grains.(grains_var{1});
                         assert(length(unique(grains.phaseId))==1,...
-                     'ODF_reduction_algo:e6','Grains has multiple phases')
+                     'texture_reconstruction_algo:e6','Grains has multiple phases')
                         disp(...
               'Optimum kernel estimated from mean orientations of grains')
                         psi = calcKernel(grains.meanOrientation);
@@ -99,7 +97,7 @@ if length(varargin)>2
                     case 'grains'
                         grains = varargin{loc+1};
                         assert(length(unique(grains.phaseId))==1,...
-                      'ODF_reduction_algo:e6','Grains has multiple phases')
+                      'texture_reconstruction_algo:e6','Grains has multiple phases')
                         disp(...
                'Optimum kernel estimated from mean orientations of grains')
                         psi = calcKernel(grains.meanOrientation);
@@ -107,7 +105,7 @@ if length(varargin)>2
                     case 'kernel'
                         assert(isa(varargin{loc+1},...
                             'deLaValleePoussinKernel'),...
-                            'ODF_reduction_algo:e7',...
+                            'texture_reconstruction_algo:e7',...
                             'Invalid kernel use deLaValeePoussinKernel')
                         psi = varargin{loc+1};
                         
@@ -122,7 +120,7 @@ if length(varargin)>2
     end  
 end
 
-assert(flag>=0,'ODF_reduction_algo:e4','Multiple options for same input')
+assert(flag>=0,'texture_reconstruction_algo:e4','Multiple options for same input')
 if flag==1 
     psi = deLaValleePoussinKernel('halfwidth',0.08726646259971647);
     disp(['Default initial kernel shape factor: ',num2str(5),' degree'])
@@ -246,15 +244,3 @@ end
 end
 
 time = toc
-
-
-
-
-
-
-
-
-
-
-
-

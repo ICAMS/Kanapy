@@ -33,21 +33,21 @@ function [orired_f,odfred_f,ero,varargout]=...
 % Output: reduced orientation set, ODF and L1 error 
 % 
 %% input fields and checks
-if p_mtex(end)=='/'
-    try
-        run([p_mtex 'install_mtex.m'])
-    catch 
-        error('ODF_reduction_algo:e1',...
-            'Could not find MTEX installation file')
-    end    
-else
-    try
-        run([p_mtex '/install_mtex.m'])
-    catch
-        error('ODF_reduction_algo:e1',...
-            'Could not find MTEX installation file')
-    end    
-end     
+%if p_mtex(end)=='/'
+%    try
+%        run([p_mtex 'install_mtex.m'])
+%    catch 
+%        error('ODF_reduction_algo:e1',...
+%            'Could not find MTEX installation file')
+%    end    
+%else
+%    try
+%        run([p_mtex '/install_mtex.m'])
+%    catch
+%        error('ODF_reduction_algo:e1',...
+%            'Could not find MTEX installation file')
+%    end    
+%end     
 
 assert(length(varargin)>=2,'ODF_reduction_algo:e2','Insufficient options')
  

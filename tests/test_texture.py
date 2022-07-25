@@ -55,25 +55,23 @@ def test_analyzeTexture():
     cmd1 = "{0} -nosplash -nodesktop -nodisplay -r ".format(path_dict['MATLABpath']) 
     cmd2 = '"run(' + "'{}')".format(TRfile) + '; exit;"'
     cmd = cmd1+cmd2
-    os.system(cmd + '> {}'.format(logFile))               
-        
-    # Remove the files once done! 
-    os.remove(TRfile)
-    for i in filelist:
-        os.remove(testDir+'/'+i)
+    os.system(cmd + '> {}'.format(logFile))                   
     
     # Read the tabulated result written by MATLAB
     tabRes = np.loadtxt(resultFile, delimiter=' ', skiprows=1, usecols=(1, 2, 3))
-    
-    # Remove the MATLAB tabulated results file
-    os.remove(resultFile)
     
     # Report back to pytest 
     passed = int(sum(tabRes[:, 0]))
     # failed = int(sum(tabRes[:, 1]))
     # incomplete = int(sum(tabRes[:, 2])
     assert passed == np.shape(tabRes)[0]
-               
-
+    
+    # Remove the files once done! 
+    os.remove(TRfile)
+    for i in filelist:
+        os.remove(testDir+'/'+i)
+    # Remove the MATLAB tabulated results file
+    os.remove(resultFile)
+  
 if __name__ == "__main__":   
     pytest.main([__file__])
