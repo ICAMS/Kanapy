@@ -38,7 +38,14 @@ path_dict = {'MAIN_DIR': MAIN_DIR,
 if os.path.exists(WORK_DIR):
     if not os.path.exists(WORK_DIR + '/tests'):
         os.makedirs(WORK_DIR + '/tests')
-    if not os.path.exists(path_path):
+    if os.path.exists(path_path):
+        with open(path_path, 'r') as json_file:
+            paths = json.load(json_file)
+        if not 'MAIN_DIR' in paths.keys():
+            paths['MAIN_DIR'] = MAIN_DIR
+            with open(path_path, 'w') as outfile:
+                json.dump(paths, outfile, indent=2)
+    else:
         with open(path_path, 'w') as outfile:
             json.dump(path_dict, outfile, indent=2)
 else:

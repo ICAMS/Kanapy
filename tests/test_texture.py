@@ -46,7 +46,7 @@ def test_analyzeTexture():
     # Create a temporary matlab script file that runs Texture reduction algorithm      
     TRfile = testDir + '/runUnitTest.m'  # Temporary '.m' file
 
-    with open (TRfile,'w') as f:
+    with open (TRfile, 'w') as f:
         f.write("result = runtests('{0}');\n".format(utFile))
         f.write("T=table(result)\n")  
         f.write("writetable(T,'{}','Delimiter',' ');\n".format(resultFile))    
@@ -69,7 +69,9 @@ def test_analyzeTexture():
     os.remove(resultFile)
     
     # Report back to pytest 
-    passed, failed, incomplete = int(sum(tabRes[:,0])), int(sum(tabRes[:,1])), int(sum(tabRes[:,2]))        
+    passed = int(sum(tabRes[:, 0]))
+    # failed = int(sum(tabRes[:, 1]))
+    # incomplete = int(sum(tabRes[:, 2])
     assert passed == np.shape(tabRes)[0]
                
 
