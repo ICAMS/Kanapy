@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-import os, sys
-import shutil, json
+import os
+import sys
+import shutil
+import json
 import click
 
 from kanapy.util import MAIN_DIR, WORK_DIR
@@ -33,8 +35,11 @@ def autocomplete(ctx):
 @click.option('-no_texture', default=False)
 @click.pass_context
 def tests(ctx, no_texture: bool):    
-    """ Runs unittests built within kanapy."""    
-    
+    """ Runs unittests built within kanapy."""  
+    shutil.rmtree(WORK_DIR + '/tests', ignore_errors=True)
+    os.makedirs(WORK_DIR + '/tests')
+    os.system(f'cp {MAIN_DIR}/tests/unitTest_ODF_MDF_reconstruction.m {WORK_DIR}/tests')
+    os.system(f'cp {MAIN_DIR}/tests/shared_surfaceArea.csv {WORK_DIR}/tests')
     click.echo('')
     if no_texture:
         t1 = "{0}/tests/test_collide_detect_react.py".format(MAIN_DIR)

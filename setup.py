@@ -33,30 +33,19 @@ MAIN_DIR = os.getcwd()  # directory in which repository is cloned
 WORK_DIR = os.path.expanduser('~') + '/.kanapy'  # working directory for temporary files
 path_path = WORK_DIR + '/PATHS.json'
 path_dict = {'MAIN_DIR': MAIN_DIR,
-             'MTEXpath': MAIN_DIR+'/libs/mtex',
+             'MTEXpath': MAIN_DIR + '/libs/mtex',
              'MATLABpath': None}
 if os.path.exists(WORK_DIR):
-    if not os.path.exists(WORK_DIR + '/tests'):
-        os.makedirs(WORK_DIR + '/tests')
-        os.system(f'cp {MAIN_DIR}/tests/unitTest_ODF_MDF_reconstruction.m {WORK_DIR}/tests')
-        os.system(f'cp {MAIN_DIR}/tests/shared_surfaceArea.csv {WORK_DIR}/tests')
     if os.path.exists(path_path):
         with open(path_path, 'r') as json_file:
             paths = json.load(json_file)
-        if not 'MAIN_DIR' in paths.keys():
-            paths['MAIN_DIR'] = MAIN_DIR
-            with open(path_path, 'w') as outfile:
-                json.dump(paths, outfile, indent=2)
-    else:
-        with open(path_path, 'w') as outfile:
-            json.dump(path_dict, outfile, indent=2)
+        if 'MATLABpath' in paths.keys():
+            path_dict['MATLABpath'] = paths['MATLABpath']
 else:
     os.makedirs(WORK_DIR)
-    os.makedirs(WORK_DIR + '/tests')
-    os.system(f'cp {MAIN_DIR}/tests/unitTest_ODF_MDF_reconstruction.m {WORK_DIR}/tests')
-    os.system(f'cp {MAIN_DIR}/tests/shared_surfaceArea.csv {WORK_DIR}/tests')
-    with open(path_path, 'w') as outfile:
-        json.dump(path_dict, outfile, indent=2)
+    
+with open(path_path, 'w') as outfile:
+    json.dump(path_dict, outfile, indent=2)
     
 """The setup script."""
 
