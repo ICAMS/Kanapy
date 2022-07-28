@@ -1023,8 +1023,9 @@ class Microstructure:
         # Sort grains w.r.t number of vertices
         num_vert = [len(vert[igr]) for igr in self.elmtSetDict.keys()]
         glist = list(np.argsort(num_vert) + 1)
-        grain_seq = [glist.pop()]
-        while len(grain_seq) < self.Ngr:
+        # resort by keeping neighborhood relations
+        grain_seq = [glist.pop()]  # start list with grain with most vertices
+        while len(glist) > 0:
             igr = grain_seq[-1]
             neigh = set()
             for gb in shared_area:
@@ -1032,14 +1033,17 @@ class Microstructure:
                     neigh.add(gb[1])
                 elif igr == gb[1]:
                     neigh.add(gb[0])
+            # remove grains already in list from neighbor set
             neigh.difference_update(set(grain_seq))
             if len(neigh) == 0:
+                # continue with next grain in list
                 grain_seq.append(glist.pop())
             else:
+                # continue with neighboring grain that has most vertices
                 ind = [glist.index(i) for i in neigh]
                 grain_seq.append(glist.pop(np.amax(ind)))
-        if len(glist) != 0:
-            raise ValueError(f'glist not empty, {glist}')
+        if len(grain_seq) != self.Ngr:
+            raise ValueError(f'Grain list incomplete: {grain_seq}')
         grains = dict()
         vertices = np.array([], dtype=int)
         for step, igr in enumerate(grain_seq):
@@ -1075,9 +1079,9 @@ class Microstructure:
         self.RVE_data['Simplices'] = tetra.simplices
 
         # Assign simplices (tetrahedra) to grains, by voxel of their center
-        print('\nGenerated Delaunay tesselation of grain vertices.')
-        print('Assigning tetrahedra to grains ...')
         Ntet = len(tetra.simplices)
+        print('\nGenerated Delaunay tesselation of grain vertices.')
+        print(f'Assigning {Ntet} tetrahedra to grains ...')
         tet_to_grain = np.zeros(Ntet, dtype=int)
         for i, tet in tqdm(enumerate(tetra.simplices)):
             ctr = np.mean(tetra.points[tet], axis=0)
