@@ -97,7 +97,8 @@ def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=
 
     return ax
 
-def plot_polygons_3D(rve, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1], dual_phase=False):
+def plot_polygons_3D(rve, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1],
+                     dual_phase=False):
     '''
     Plot triangularized convex hulls of grains, based on vertices, i.e. 
     connection points of 4 up to 8 grains or the end pointss of triple or quadriiple 
@@ -123,10 +124,13 @@ def plot_polygons_3D(rve, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1], dual_ph
     '''
     grains = rve['Grains']
     pts = rve['Points']
-    cm = plt.cm.get_cmap(cmap, len(grains.keys()))
+    Ng = np.amax(list(grains.keys()))
+    cm = plt.cm.get_cmap(cmap, Ng)
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     for igr in grains.keys():
+        if grains[igr]['Simplices'] == []:
+            continue
         if dual_phase==True:
             if grains[igr]['PhaseID'] == 0:
                 col = 'red'
@@ -168,6 +172,8 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
     cm = plt.cm.get_cmap(cmap, Npa)
         
     for i, pa in enumerate(particles):
+        if pa.duplicate is not None:
+            continue
         if dual_phase==True:
             if pa.phasenum == 0:
                 col = 'red'

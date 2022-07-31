@@ -841,7 +841,7 @@ class Microstructure:
         RVE_max = np.amax(self.nodes_v, axis=0)
         voxel_size = self.RVE_data['Voxel_resolutionX']
         grain_facesDict = dict()  # {Grain: faces}
-        Ng = len(self.elmtSetDict.keys())
+        Ng = np.amax(list(self.elmtSetDict.keys()))  # highest grain number
         if periodic:
             # store grains that are split across boundaries
             gsplit = dict()
@@ -962,15 +962,14 @@ class Microstructure:
                 [ind.update(grain_facesDict[cb[0]][key]) for key in finter]
                 key = 'f{}_{}'.format(cb[0], cb[1])
                 gbDict[key] = ind
-                if not (cb[0] > Ng or cb[1] > Ng):
+                if cb[0] <= Ng and cb[1] <= Ng:
+                    # grain faces are not on boundary
                     try:
                         hull = ConvexHull(self.nodes_v[list(ind), :])
                         shared_area.append([cb[0], cb[1], hull.area])
                     except:
                         sh_area = len(finter) * (voxel_size ** 2)
                         shared_area.append([cb[0], cb[1], sh_area])
-            else:
-                continue
 
         # find intersection lines of GB's (triple or quadruple lines) -> edges
         # vertices are nodes in voxelized microstructure
@@ -1031,9 +1030,9 @@ class Microstructure:
         if len(glist) != self.Ngr:
             raise ValueError(f'Wrong number of grains in list: {glist}')
         # re-sort by keeping neighborhood relations
-        grain_seq = [glist.pop()]  # start list with grain with most vertices
+        grain_sequence = [glist.pop()]  # start sequence with grain with most vertices
         while len(glist) > 0:
-            igr = grain_seq[-1]
+            igr = grain_sequence[-1]
             neigh = set()
             for gb in shared_area:
                 if igr == gb[0]:
@@ -1041,22 +1040,23 @@ class Microstructure:
                 elif igr == gb[1]:
                     neigh.add(gb[0])
             # remove grains already in list from neighbor set
-            neigh.difference_update(set(grain_seq))
+            neigh.difference_update(set(grain_sequence))
             if len(neigh) == 0:
                 # continue with next grain in list
-                grain_seq.append(glist.pop())
+                grain_sequence.append(glist.pop())
             else:
                 # continue with neighboring grain that has most vertices
                 ind = [glist.index(i) for i in neigh]
                 if len(ind) == 0:
-                    grain_seq.append(glist.pop())
+                    grain_sequence.append(glist.pop())
                 else:
-                    grain_seq.append(glist.pop(np.amax(ind)))
-        if len(grain_seq) != self.Ngr or len(glist) > 0:
-            raise ValueError(f'Grain list incomplete: {grain_seq}, remaining elements: {glist}')
+                    grain_sequence.append(glist.pop(np.amax(ind)))
+        if len(grain_sequence) != self.Ngr or len(glist) > 0:
+            raise ValueError(f'Grain list incomplete: {grain_sequence}, remaining elements: {glist}')
+        # grains changes its meaning!!!
         grains = dict()
         vertices = np.array([], dtype=int)
-        for step, igr in enumerate(grain_seq):
+        for step, igr in enumerate(grain_sequence):
             add_vert = vert[igr].difference(set(vertices))
             grains[igr] = dict()
             grains[igr]['Vertices'] = np.array(list(vert[igr]), dtype=int) - 1
@@ -1088,7 +1088,7 @@ class Microstructure:
         self.RVE_data['Points'] = tetra.points
         self.RVE_data['Simplices'] = tetra.simplices
 
-        # Assign simplices (tetrahedra) to grains, by voxel of their center
+        # Assign simplices (tetrahedra) to grains
         Ntet = len(tetra.simplices)
         print('\nGenerated Delaunay tesselation of grain vertices.')
         print(f'Assigning {Ntet} tetrahedra to grains ...')

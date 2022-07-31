@@ -123,7 +123,8 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         #         ellipsoid.speedz = ellipsoid.speedz0
         
         if dump:
-            # Dump the ellipsoid information to be read by OVITO (Includes duplicates at periodic boundaries)
+            # Dump the ellipsoid information to be read by OVITO 
+            # (Includes duplicates at periodic boundaries)
             write_dump(Ellipsoids, sim_box)
 
         # Delete duplicates if existing (Active only if periodicity is True)

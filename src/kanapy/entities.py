@@ -296,7 +296,9 @@ class Ellipsoid(object):
         # for periodic boundaries
         if periodicity:
             # Check if particle's center is inside or outside the box
-            if sim_box.right > self.x > sim_box.left and sim_box.bottom > self.y > sim_box.top and sim_box.back > self.z > sim_box.front:
+            if sim_box.right > self.x > sim_box.left and\
+               sim_box.bottom > self.y > sim_box.top and\
+               sim_box.back > self.z > sim_box.front:
                 # If inside: Check which face the particle collides with
                 left = self.bbox_xmin < sim_box.left
                 top = self.bbox_ymin < sim_box.top
@@ -328,7 +330,7 @@ class Ellipsoid(object):
                     diff = abs(sim_box.front - self.z)
                     self.z = sim_box.back - diff
 
-                self.set_cub()             # update the bounding box due to its movement
+                self.set_cub()  # update the bounding box due to its movement
 
                 # Now its inside: Check which face the particle collides with
                 left = self.bbox_xmin < sim_box.left
@@ -741,8 +743,8 @@ class Octree(object):
         ncoll = 0
         for E1 in self.particles:
             for E2 in E1.neighborlist:
-                id1 = E1.id if E1.duplicate == None else (E1.duplicate + len(self.particles))
-                id2 = E2.id if E2.duplicate == None else (E2.duplicate + len(self.particles))
+                id1 = E1.id if E1.duplicate is None else (E1.duplicate + len(self.particles))
+                id2 = E2.id if E2.duplicate is None else (E2.duplicate + len(self.particles))
                 if id2 > id1:
                     # Distance between the centers of ellipsoids
                     dist = np.linalg.norm(np.subtract(E1.get_pos(), E2.get_pos()))
