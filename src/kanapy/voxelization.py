@@ -399,15 +399,18 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
     for ellipsoid in Ellipsoids:
         if ellipsoid.inside_voxels:
             # If the ellipsoid is a duplicate add the voxels to the original ellipsoid
-            if ellipsoid.duplicate:
-                if int(ellipsoid.duplicate) not in elmtSetDict:
-                    elmtSetDict[int(ellipsoid.duplicate)] = [int(iv) for iv in ellipsoid.inside_voxels]
+            if ellipsoid.duplicate is not None:
+                iel = int(ellipsoid.duplicate)
+                if iel not in elmtSetDict:
+                    elmtSetDict[iel] =\
+                        [int(iv) for iv in ellipsoid.inside_voxels]
                 else:
-                    elmtSetDict[int(ellipsoid.duplicate)].extend(
+                    elmtSetDict[iel].extend(
                         [int(iv) for iv in ellipsoid.inside_voxels])
             # Else it is the original ellipsoid
             else:
-                elmtSetDict[int(ellipsoid.id)] = [int(iv) for iv in ellipsoid.inside_voxels]
+                elmtSetDict[int(ellipsoid.id)] =\
+                    [int(iv) for iv in ellipsoid.inside_voxels]
         else:
             continue
             # If ellipsoid does'nt contain any voxel inside

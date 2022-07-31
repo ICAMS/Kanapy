@@ -157,6 +157,10 @@ class Microstructure:
         self.vox_centerDict, self.voxels, self.voxels_phase = \
             voxelizationRoutine(particle_data, RVE_data, particles, simbox,
                                 save_files=save_files, dual_phase=dual_phase)
+        Ngr = len(self.elmtSetDict.keys())
+        if self.Ngr != Ngr:
+            warnings.warn(f'Number of grains has changed from {self.Ngr} to {Ngr} during voxelization.')
+            self.Ngr = Ngr
 
     def smoothen(self, nodes_v=None, elmtDict=None, elmtSetDict=None,
                  save_files=False):
@@ -837,7 +841,7 @@ class Microstructure:
         RVE_max = np.amax(self.nodes_v, axis=0)
         voxel_size = self.RVE_data['Voxel_resolutionX']
         grain_facesDict = dict()  # {Grain: faces}
-        Ng = len(self.elmtSetDict.keys())
+        Ng = np.amax(list(self.elmtSetDict.keys()))  # highest grain number
         if periodic:
             # store grains that are split across boundaries
             gsplit = dict()
@@ -958,15 +962,14 @@ class Microstructure:
                 [ind.update(grain_facesDict[cb[0]][key]) for key in finter]
                 key = 'f{}_{}'.format(cb[0], cb[1])
                 gbDict[key] = ind
-                if not (cb[0] > Ng or cb[1] > Ng):
+                if cb[0] <= Ng and cb[1] <= Ng:
+                    # grain faces are not on boundary
                     try:
                         hull = ConvexHull(self.nodes_v[list(ind), :])
                         shared_area.append([cb[0], cb[1], hull.area])
                     except:
                         sh_area = len(finter) * (voxel_size ** 2)
                         shared_area.append([cb[0], cb[1], sh_area])
-            else:
-                continue
 
         # find intersection lines of GB's (triple or quadruple lines) -> edges
         # vertices are nodes in voxelized microstructure
@@ -1022,27 +1025,38 @@ class Microstructure:
         # Store grain-based information and do Delaunay tesselation
         # Sort grains w.r.t number of vertices
         num_vert = [len(vert[igr]) for igr in self.elmtSetDict.keys()]
-        glist = list(np.argsort(num_vert) + 1)
-        grain_seq = [glist.pop()]
-        while len(grain_seq) < self.Ngr:
-            igr = grain_seq[-1]
+        glist = np.array(list(self.elmtSetDict.keys()), dtype=int)
+        glist = list(glist[np.argsort(num_vert)])
+        if len(glist) != self.Ngr:
+            raise ValueError(f'Wrong number of grains in list: {glist}')
+        # re-sort by keeping neighborhood relations
+        grain_sequence = [glist.pop()]  # start sequence with grain with most vertices
+        while len(glist) > 0:
+            igr = grain_sequence[-1]
             neigh = set()
             for gb in shared_area:
                 if igr == gb[0]:
                     neigh.add(gb[1])
                 elif igr == gb[1]:
                     neigh.add(gb[0])
-            neigh.difference_update(set(grain_seq))
+            # remove grains already in list from neighbor set
+            neigh.difference_update(set(grain_sequence))
             if len(neigh) == 0:
-                grain_seq.append(glist.pop())
+                # continue with next grain in list
+                grain_sequence.append(glist.pop())
             else:
+                # continue with neighboring grain that has most vertices
                 ind = [glist.index(i) for i in neigh]
-                grain_seq.append(glist.pop(np.amax(ind)))
-        if len(glist) != 0:
-            raise ValueError(f'glist not empty, {glist}')
+                if len(ind) == 0:
+                    grain_sequence.append(glist.pop())
+                else:
+                    grain_sequence.append(glist.pop(np.amax(ind)))
+        if len(grain_sequence) != self.Ngr or len(glist) > 0:
+            raise ValueError(f'Grain list incomplete: {grain_sequence}, remaining elements: {glist}')
+        # grains changes its meaning!!!
         grains = dict()
         vertices = np.array([], dtype=int)
-        for step, igr in enumerate(grain_seq):
+        for step, igr in enumerate(grain_sequence):
             add_vert = vert[igr].difference(set(vertices))
             grains[igr] = dict()
             grains[igr]['Vertices'] = np.array(list(vert[igr]), dtype=int) - 1
@@ -1074,10 +1088,10 @@ class Microstructure:
         self.RVE_data['Points'] = tetra.points
         self.RVE_data['Simplices'] = tetra.simplices
 
-        # Assign simplices (tetrahedra) to grains, by voxel of their center
-        print('\nGenerated Delaunay tesselation of grain vertices.')
-        print('Assigning tetrahedra to grains ...')
+        # Assign simplices (tetrahedra) to grains
         Ntet = len(tetra.simplices)
+        print('\nGenerated Delaunay tesselation of grain vertices.')
+        print(f'Assigning {Ntet} tetrahedra to grains ...')
         tet_to_grain = np.zeros(Ntet, dtype=int)
         for i, tet in tqdm(enumerate(tetra.simplices)):
             ctr = np.mean(tetra.points[tet], axis=0)
@@ -1153,6 +1167,9 @@ class Microstructure:
             # Find the euclidean distance to all surface points from the center
             dists = [euclidean(grains[igr]['Center'], pt) for pt in
                      self.nodes_v[grains[igr]['Vertices']]]
+            if len(dists) == 0:
+                warnings.warn(f'Grain {igr} with few vertices: {grains[igr]["Vertices"]}')
+                dists = [0.]
             grains[igr]['eqDia'] = 2.0 * (3 * grains[igr]['Volume']
                                           / (4 * np.pi)) ** (1 / 3)
             grains[igr]['majDia'] = 2.0 * np.amax(dists)
@@ -1218,14 +1235,14 @@ class Microstructure:
         grain_minDia = np.zeros(self.Ngr)
         grain_PhaseID = np.zeros(self.Ngr)
         grain_PhaseName = np.zeros(self.Ngr).astype(str)
-        for igr in self.RVE_data['Grains'].keys():
-            grain_eqDia[igr - 1] = self.RVE_data['Grains'][igr]['eqDia']
+        for i, igr in enumerate(self.RVE_data['Grains'].keys()):
+            grain_eqDia[i] = self.RVE_data['Grains'][igr]['eqDia']
             if self.particle_data['Type'] == 'Elongated':
-                grain_minDia[igr - 1] = self.RVE_data['Grains'][igr]['minDia']
-                grain_majDia[igr - 1] = self.RVE_data['Grains'][igr]['majDia']
+                grain_minDia[i] = self.RVE_data['Grains'][igr]['minDia']
+                grain_majDia[i] = self.RVE_data['Grains'][igr]['majDia']
             if dual_phase:
-                grain_PhaseID[igr - 1] = self.RVE_data['Grains'][igr]['PhaseID']
-                grain_PhaseName[igr - 1] = self.RVE_data['Grains'][igr]['PhaseName']
+                grain_PhaseID[i] = self.RVE_data['Grains'][igr]['PhaseID']
+                grain_PhaseName[i] = self.RVE_data['Grains'][igr]['PhaseName']
 
         output_data_list = []
         indexPhase = []

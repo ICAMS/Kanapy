@@ -17,6 +17,7 @@
 import os
 import re
 import sys
+import json
 import platform
 import subprocess
 import setuptools
@@ -25,6 +26,27 @@ from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
+
+# create file structure for testing and MTEX support
+# not required otherwise
+MAIN_DIR = os.getcwd()  # directory in which repository is cloned
+WORK_DIR = os.path.expanduser('~') + '/.kanapy'  # working directory for temporary files
+path_path = WORK_DIR + '/PATHS.json'
+path_dict = {'MAIN_DIR': MAIN_DIR,
+             'MTEXpath': MAIN_DIR + '/libs/mtex',
+             'MATLABpath': None}
+if os.path.exists(WORK_DIR):
+    if os.path.exists(path_path):
+        with open(path_path, 'r') as json_file:
+            paths = json.load(json_file)
+        if 'MATLABpath' in paths.keys():
+            path_dict['MATLABpath'] = paths['MATLABpath']
+else:
+    os.makedirs(WORK_DIR)
+    
+with open(path_path, 'w') as outfile:
+    json.dump(path_dict, outfile, indent=2)
+    
 """The setup script."""
 
 class CMakeExtension(Extension):

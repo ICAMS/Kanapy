@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
+import json
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))  # Kanapy's root
-path = ''
-pel = ROOT_DIR.split('/')
-for hs in pel[0:pel.index('kanapy')+1]:
-    path += hs+'/'
-MAIN_DIR = path[0:-1]
-MTEX_DIR = path + 'libs/mtex'
-
-HOME_DIR = os.path.expanduser('~')  # User home directory
-KNPY_DIR = HOME_DIR + '/.kanapy'
-if not os.path.exists(KNPY_DIR):
-    os.makedirs(KNPY_DIR)
-    os.makedirs(KNPY_DIR + '/tests')
-    os.system(f'cp {MAIN_DIR}/tests/unitTest_ODF_MDF_reconstruction.m {KNPY_DIR}/tests')
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))  # root directory of package
+WORK_DIR = os.path.expanduser('~') + '/.kanapy'  # working directory for temporary files
+if not os.path.exists(WORK_DIR):
+    raise FileNotFoundError('Package not properly installed, working directory is missing.')
+with open(WORK_DIR + '/PATHS.json') as json_file:
+    paths = json.load(json_file)
+MAIN_DIR = paths['MAIN_DIR']  # directory in which repository is cloned
+MTEX_DIR = paths['MTEXpath']  # path to MTEX

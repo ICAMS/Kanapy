@@ -73,6 +73,7 @@ class EBSDmap:
             eng.plotEllipse(centres, ha, hb, omega_r, 'lineColor', 'r',
                             'linewidth', 2.0, nargout=0)
             eng.hold('off', nargout=0)
+            #eng.exportgraphics(gcf,'ebsd_map.png','Resolution',300)
             
             ''' ODF plotting produces system failure
             # plot ODF 
