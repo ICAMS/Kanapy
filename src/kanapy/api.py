@@ -533,38 +533,6 @@ class Microstructure:
                     i = tri.find_simplex(mesh_slice)
                     ind = np.nonzero(i >= 0)[0]
                     grain_slice[ind] = igr
-                    if self.RVE_data['Periodic']:
-                        # add periodic images of grain to slice
-                        cb = np.array([self.RVE_data['RVE_sizeX'], self.RVE_data['RVE_sizeY'],
-                                       self.RVE_data['RVE_sizeZ']]) * 0.5
-                        sp = self.RVE_data['Grains'][igr]['Center'] - cb
-                        plist = []
-                        for j, split in enumerate(self.RVE_data['Grains'][igr]['Split']):
-                            if split:
-                                # store copy of points for each direction in 
-                                # which grain is split
-                                plist.append(deepcopy(pts))
-                                for ppbc in plist:
-                                    # shift grains to all image positions
-                                    if sp[j] > 0.:
-                                        ppbc[:, j] -= 2 * cb[j]
-                                    else:
-                                        ppbc[:, j] += 2 * cb[j]
-                                    tri = Delaunay(ppbc)
-                                    i = tri.find_simplex(mesh_slice)
-                                    ind = np.nonzero(i >= 0)[0]
-                                    grain_slice[ind] = igr
-                                    if j == 2 and len(plist) == 3:
-                                        # if split grain is in corner, 
-                                        # cover last image position
-                                        if sp[0] > 0.:
-                                            ppbc[:, 0] -= 2 * cb[0]
-                                        else:
-                                            ppbc[:, 0] += 2 * cb[0]
-                                        tri = Delaunay(ppbc)
-                                        i = tri.find_simplex(mesh_slice)
-                                        ind = np.nonzero(i >= 0)[0]
-                                        grain_slice[ind] = igr
                 except:
                     warnings.warn('Grain #{} has no convex hull (Nvertices: {})' \
                                   .format(igr, len(pts)))
@@ -675,7 +643,7 @@ class Microstructure:
             grains = self.RVE_data['Grains']
         with open(file, 'w') as f:
             for gr in grains.values():
-                # if polyhedral grains has no simplices, center should not be written!!!
+                # if polyhedral grain has no simplices, center should not be written!!!
                 ctr = gr['Center']
                 f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2]))
         return
@@ -1061,8 +1029,7 @@ class Microstructure:
                 try:
                     tetra.add_points(self.nodes_v[vlist])
                 except:
-                    warnings.warn(
-                        f'Incremental Delaunay tesselation failed for grain {step + 1}. Restarting Delaunay process from there')
+                    #print(f'Incremental Delaunay tesselation failed for grain {step + 1}. Restarting Delaunay process from there')
                     vlist = np.array(vertices, dtype=int) - 1
                     tetra = Delaunay(self.nodes_v[vlist], incremental=True)
 
@@ -1082,17 +1049,13 @@ class Microstructure:
             igr = self.voxels[get_voxel(ctr)]
             # test if all vertices of tet belong to that grain
             if not tet_in_grain(tet, grains[igr]['Vertices']):
-                # print(f'Grain {igr}: Tetra = {tet}, missing vertices')
                 # try to find a neighboring grain with all vertices of tet
                 neigh_list = set()
                 for hv in tet:
                     neigh_list.update(grains_of_vert[vertices[hv]])
-                    #    self.voxels[get_voxel(tetra.points[hv])])
-                # print(f'### Neighboring grains: {neigh_list}')
                 match_found = False
                 for jgr in neigh_list:
                     if tet_in_grain(tet, grains[jgr]['Vertices']):
-                        # print(f'*** Grain {jgr} contains all vertices')
                         igr = jgr
                         match_found = True
                         break
@@ -1102,7 +1065,6 @@ class Microstructure:
                     neigh_list.add(igr)
                     neigh_list = list(neigh_list)
                     num_vox = []
-                    # print(f'nodes in tet: {tet}')
                     for ngr in neigh_list:
                         nv = 0
                         for vox in self.elmtSetDict[ngr]:
@@ -1110,9 +1072,6 @@ class Microstructure:
                                 nv += 1
                         num_vox.append(nv)
                     igr = neigh_list[np.argmax(num_vox)]
-                    # print(f'+++ Majority vote grain {igr}')
-                    # print(f'Neighbors: {neigh_list}')
-                    # print(f'Counts: {num_vox}')
 
             tet_to_grain[i] = igr
             # Update grain volume with tet volume
@@ -1141,6 +1100,7 @@ class Microstructure:
                                     tetra.points[ft[1]] - cv)
                     grains[igr]['Area'] += np.linalg.norm(avec)
 
+        # perform geometrical analysis of grain structure
         facets = []
         for key in facet_keys:
             hh = key.split('_')
