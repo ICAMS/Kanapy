@@ -721,6 +721,36 @@ class Microstructure:
 
         """
 
+        def facet_on_boundary(conn):
+            """
+            Check if given voxel facet lies on any RVE boundary
+
+            Parameters
+            ----------
+            conn
+
+            Returns
+            -------
+            face : (3,2)-array of bool
+            """
+            n1 = self.nodes_v[conn[0] - 1, :]
+            n2 = self.nodes_v[conn[1] - 1, :]
+            n3 = self.nodes_v[conn[2] - 1, :]
+            n4 = self.nodes_v[conn[3] - 1, :]
+            face = np.zeros((3,2), dtype=bool)
+            for i in range(3):
+                h1 = np.abs(n1[i] - RVE_min[i]) < tol
+                h2 = np.abs(n2[i] - RVE_min[i]) < tol
+                h3 = np.abs(n3[i] - RVE_min[i]) < tol
+                h4 = np.abs(n4[i] - RVE_min[i]) < tol
+                face[i, 0] = h1 and h2 and h3 and h4
+                h1 = np.abs(n1[i] - RVE_max[i]) < tol
+                h2 = np.abs(n2[i] - RVE_max[i]) < tol
+                h3 = np.abs(n3[i] - RVE_max[i]) < tol
+                h4 = np.abs(n4[i] - RVE_max[i]) < tol
+                face[i, 1] = h1 and h2 and h3 and h4
+            return face
+
         def check_neigh(nodes, grains, margin):
             ''' Check if close neighbors of new vertices are already in list
             # nodes: list of nodes identified as new vertices
@@ -835,27 +865,27 @@ class Microstructure:
                     break
             return contained
 
+        # define constants
         periodic = self.RVE_data['Periodic']
+        voxel_size = self.RVE_data['Voxel_resolutionX']
         RVE_min = np.amin(self.nodes_v, axis=0)
         if np.any(RVE_min > 1.e-3) or np.any(RVE_min < -1.e-3):
             raise ValueError('Irregular RVE geometry: RVE_min = {}'.format(RVE_min))
         RVE_max = np.amax(self.nodes_v, axis=0)
-        voxel_size = self.RVE_data['Voxel_resolutionX']
-        grain_facesDict = dict()  # {Grain: faces}
         Ng = np.amax(list(self.elmtSetDict.keys()))  # highest grain number
-        if periodic:
-            # store grains that are split across boundaries
-            gsplit = dict()
-            for igr in self.elmtSetDict.keys():
-                gsplit[igr] = dict({'lr': False, 'bt': False, 'fb': False})
 
-        # create dicts for fake facets at surfaces
-        for i in range(Ng + 1, Ng + 7):
+        # create dicts for GB facets, including fake facets at surfaces
+        grain_facesDict = dict()  # {Grain: faces}
+        for i in range(1, Ng + 7):
             grain_facesDict[i] = dict()
 
+        # genrate following objects:
+        # outer_faces: {face_id's of outer voxel faces}  (potential GB facets)
+        # face_nodes: {face_id: list with 4 nodes}
+        # grain_facesDict: {grain_id: {face_id: list with 4 nodes}}
         for gid, elset in self.elmtSetDict.items():
-            outer_faces = set()  # Stores only outer face IDs
-            face_nodes = dict()  # {Faces: nodal connectivity}
+            outer_faces = set()
+            face_nodes = dict()
             nodeConn = [self.elmtDict[el] for el in elset]  # Nodal connectivity of a voxel
 
             # For each voxel, re-create its 6 faces
@@ -865,85 +895,39 @@ class Microstructure:
                          [nc[0], nc[4], nc[7], nc[3]], [nc[1], nc[5], nc[6], nc[2]]]
                 # Sort in ascending order
                 sorted_faces = [sorted(fc) for fc in faces]
-                # create face ids by joining node id's                        
+                # create unique face ids by joining node id's
                 face_ids = [int(''.join(str(c) for c in fc)) for fc in sorted_faces]
-                # Update {Faces: nodal connectivity} dictionary
+                # Create face_nodes = {face_id: nodal connectivity} dictionary
                 for enum, fid in enumerate(face_ids):
                     if fid not in face_nodes.keys():
                         face_nodes[fid] = faces[enum]
-                        # Identify outer faces that occur only once
+                # Identify outer faces that occur only once and store in outer_faces
                 for fid in face_ids:
                     if fid not in outer_faces:
                         outer_faces.add(fid)
                     else:
                         outer_faces.remove(fid)
 
-                        # Update {Grain: faces} dictionary
-            grain_facesDict[gid] = dict()
+            # Update grain_faces_dict= {grain_id: {face_id: facet nodes}
             for of in outer_faces:
-                # Treat faces belonging to RVE surface:
-                # Create facets if not peridoic
-                # Discard if periodic
+                # add face nodes to grain faces dictionary
                 conn = face_nodes[of]
-                n1 = self.nodes_v[conn[0] - 1, :]
-                n2 = self.nodes_v[conn[1] - 1, :]
-                n3 = self.nodes_v[conn[2] - 1, :]
-                n4 = self.nodes_v[conn[3] - 1, :]
-                h1 = np.abs(n1[0] - RVE_min[0]) < tol
-                h2 = np.abs(n2[0] - RVE_min[0]) < tol
-                h3 = np.abs(n3[0] - RVE_min[0]) < tol
-                h4 = np.abs(n4[0] - RVE_min[0]) < tol
-                if (h1 and h2 and h3 and h4):
-                    if periodic:
-                        gsplit[gid]['lr'] = True
-                    grain_facesDict[Ng + 1][of] = face_nodes[of]
-                h1 = np.abs(n1[0] - RVE_max[0]) < tol
-                h2 = np.abs(n2[0] - RVE_max[0]) < tol
-                h3 = np.abs(n3[0] - RVE_max[0]) < tol
-                h4 = np.abs(n4[0] - RVE_max[0]) < tol
-                if (h1 and h2 and h3 and h4):
-                    if periodic:
-                        gsplit[gid]['lr'] = True
-                    grain_facesDict[Ng + 2][of] = face_nodes[of]
-                h1 = np.abs(n1[1] - RVE_min[1]) < tol
-                h2 = np.abs(n2[1] - RVE_min[1]) < tol
-                h3 = np.abs(n3[1] - RVE_min[1]) < tol
-                h4 = np.abs(n4[1] - RVE_min[1]) < tol
-                if (h1 and h2 and h3 and h4):
-                    if periodic:
-                        gsplit[gid]['bt'] = True
-                    grain_facesDict[Ng + 3][of] = face_nodes[of]
-                h1 = np.abs(n1[1] - RVE_max[1]) < tol
-                h2 = np.abs(n2[1] - RVE_max[1]) < tol
-                h3 = np.abs(n3[1] - RVE_max[1]) < tol
-                h4 = np.abs(n4[1] - RVE_max[1]) < tol
-                if (h1 and h2 and h3 and h4):
-                    if periodic:
-                        gsplit[gid]['bt'] = True
-                    grain_facesDict[Ng + 4][of] = face_nodes[of]
-                h1 = np.abs(n1[2] - RVE_min[2]) < tol
-                h2 = np.abs(n2[2] - RVE_min[2]) < tol
-                h3 = np.abs(n3[2] - RVE_min[2]) < tol
-                h4 = np.abs(n4[2] - RVE_min[2]) < tol
-                if (h1 and h2 and h3 and h4):
-                    if periodic:
-                        gsplit[gid]['fb'] = True
-                    grain_facesDict[Ng + 5][of] = face_nodes[of]
-                h1 = np.abs(n1[2] - RVE_max[2]) < tol
-                h2 = np.abs(n2[2] - RVE_max[2]) < tol
-                h3 = np.abs(n3[2] - RVE_max[2]) < tol
-                h4 = np.abs(n4[2] - RVE_max[2]) < tol
-                if (h1 and h2 and h3 and h4):
-                    if periodic:
-                        gsplit[gid]['fb'] = True
-                    grain_facesDict[Ng + 6][of] = face_nodes[of]
-                grain_facesDict[gid][of] = face_nodes[of]
+                grain_facesDict[gid][of] = conn  # list of four nodes
+                # if voxel faces lies on RVE boundary add also to fake grains
+                fob = facet_on_boundary(conn)
+                for i in range(3):
+                    for j in range(2):
+                        if fob[i, j]:
+                            grain_facesDict[Ng + 1 + 2*i + j][of] = conn
 
-                # Find all combinations of grains to check for common area
-        gbDict = dict()
+        # Find all combinations of grains to check for common area
+        # analyse grain_facesDict and create object:
+        # gbDict: {f{gid1}_{gid2}: list with 4 nodes shared by grains #gid1 and #gid2}
+        # shared_area: [[gid1, gid2, GB area]]
+        shared_area = []  # GB area
+        gbDict = dict()  # voxel factes on GB
+        # Find the shared area and generate gbDict for all pairs of neighboring grains
         combis = list(itertools.combinations(sorted(grain_facesDict.keys()), 2))
-        # Find the shared area
-        shared_area = []
         for cb in combis:
             finter = set(grain_facesDict[cb[0]]).intersection(set(grain_facesDict[cb[1]]))
             if finter:
@@ -952,7 +936,7 @@ class Microstructure:
                 key = 'f{}_{}'.format(cb[0], cb[1])
                 gbDict[key] = ind
                 if cb[0] <= Ng and cb[1] <= Ng:
-                    # grain faces are not on boundary
+                    # grain facet is not on boundary
                     try:
                         hull = ConvexHull(self.nodes_v[list(ind), :])
                         shared_area.append([cb[0], cb[1], hull.area])
@@ -960,8 +944,16 @@ class Microstructure:
                         sh_area = len(finter) * (voxel_size ** 2)
                         shared_area.append([cb[0], cb[1], sh_area])
 
-        # find intersection lines of GB's (triple or quadruple lines) -> edges
-        # vertices are nodes in voxelized microstructure
+        # analyse gbDict to find intersection lines of GB's
+        # (triple or quadruple lines) -> edges
+        # vertices are end points of edges, represented by
+        # nodes in voxelized microstructure
+        # created objects:
+        # vert: {grain_id: [node_numbers of vertices]}
+        # grains_of_vert: {node_number: [grain_id's connected to vertex]}
+
+        # for periodic structures vertices at surfaces should be mirrored!!!
+
         vert = dict()
         grains_of_vert = dict()
         for i in grain_facesDict.keys():
@@ -990,34 +982,35 @@ class Microstructure:
                                     elist = [edge[j], edge[k + j + 1]]
                                     dmax = d
                     # select all involved grains
-                    grains = set()
+                    gr_set = set()
                     j = key0.index('_')
-                    grains.add(int(key0[1:j]))
-                    grains.add(int(key0[j + 1:]))
+                    gr_set.add(int(key0[1:j]))
+                    gr_set.add(int(key0[j + 1:]))
                     j = key1.index('_')
-                    grains.add(int(key1[1:j]))
-                    grains.add(int(key1[j + 1:]))
+                    gr_set.add(int(key1[1:j]))
+                    gr_set.add(int(key1[j + 1:]))
                     # check if any neighboring nodes are already in list of
                     # vertices. If yes, replace new vertex with existing one
-                    newlist = check_neigh(elist, grains, margin=2 * voxel_size)
+                    newlist = check_neigh(elist, gr_set, margin=2 * voxel_size)
                     # update grains with new vertex
-                    for j in grains:
+                    for j in gr_set:
                         vert[j].update(newlist)
                     for nv in newlist:
                         for j in range(1, 7):
-                            grains.discard(self.Ngr + j)
+                            # discard fake grains at RVE boundary in grain list
+                            gr_set.discard(self.Ngr + j)
                         if nv in grains_of_vert.keys():
-                            grains_of_vert[nv].update(grains)
+                            grains_of_vert[nv].update(gr_set)
                         else:
-                            grains_of_vert[nv] = grains
+                            grains_of_vert[nv] = gr_set
 
         # Store grain-based information and do Delaunay tesselation
         # Sort grains w.r.t number of vertices
         num_vert = [len(vert[igr]) for igr in self.elmtSetDict.keys()]
         glist = np.array(list(self.elmtSetDict.keys()), dtype=int)
         glist = list(glist[np.argsort(num_vert)])
-        if len(glist) != self.Ngr:
-            raise ValueError(f'Wrong number of grains in list: {glist}')
+        assert len(glist) == self.Ngr
+
         # re-sort by keeping neighborhood relations
         grain_sequence = [glist.pop()]  # start sequence with grain with most vertices
         while len(glist) > 0:
@@ -1042,7 +1035,8 @@ class Microstructure:
                     grain_sequence.append(glist.pop(np.amax(ind)))
         if len(grain_sequence) != self.Ngr or len(glist) > 0:
             raise ValueError(f'Grain list incomplete: {grain_sequence}, remaining elements: {glist}')
-        # grains changes its meaning!!!
+
+        # initialize dictionary for grain information
         grains = dict()
         vertices = np.array([], dtype=int)
         for step, igr in enumerate(grain_sequence):
@@ -1073,11 +1067,12 @@ class Microstructure:
                     tetra = Delaunay(self.nodes_v[vlist], incremental=True)
 
         tetra.close()
+        # store global result of tesselation
         self.RVE_data['Vertices'] = np.array(vertices, dtype=int) - 1
         self.RVE_data['Points'] = tetra.points
         self.RVE_data['Simplices'] = tetra.simplices
 
-        # Assign simplices (tetrahedra) to grains
+        # assign simplices (tetrahedra) to grains
         Ntet = len(tetra.simplices)
         print('\nGenerated Delaunay tesselation of grain vertices.')
         print(f'Assigning {Ntet} tetrahedra to grains ...')
@@ -1163,8 +1158,6 @@ class Microstructure:
                                           / (4 * np.pi)) ** (1 / 3)
             grains[igr]['majDia'] = 2.0 * np.amax(dists)
             grains[igr]['minDia'] = 2.0 * np.amin(dists)
-            if periodic:
-                grains[igr]['Split'] = list(gsplit[igr].values())
             if dual_phase:
                 grains[igr]['PhaseID'] = self.particle_data['Phase number'][igr - 1]
                 grains[igr]['PhaseName'] = self.particle_data['Phase name'][igr - 1]
