@@ -675,6 +675,7 @@ class Microstructure:
             grains = self.RVE_data['Grains']
         with open(file, 'w') as f:
             for gr in grains.values():
+                # if polyhedral grains has no simplices, center should not be written!!!
                 ctr = gr['Center']
                 f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2]))
         return
@@ -847,10 +848,10 @@ class Microstructure:
             gsplit = dict()
             for igr in self.elmtSetDict.keys():
                 gsplit[igr] = dict({'lr': False, 'bt': False, 'fb': False})
-        else:
-            # create dicts for fake facets at surfaces
-            for i in range(Ng + 1, Ng + 7):
-                grain_facesDict[i] = dict()
+
+        # create dicts for fake facets at surfaces
+        for i in range(Ng + 1, Ng + 7):
+            grain_facesDict[i] = dict()
 
         for gid, elset in self.elmtSetDict.items():
             outer_faces = set()  # Stores only outer face IDs
@@ -895,9 +896,7 @@ class Microstructure:
                 if (h1 and h2 and h3 and h4):
                     if periodic:
                         gsplit[gid]['lr'] = True
-                        continue
-                    else:
-                        grain_facesDict[Ng + 1][of] = face_nodes[of]
+                    grain_facesDict[Ng + 1][of] = face_nodes[of]
                 h1 = np.abs(n1[0] - RVE_max[0]) < tol
                 h2 = np.abs(n2[0] - RVE_max[0]) < tol
                 h3 = np.abs(n3[0] - RVE_max[0]) < tol
@@ -905,9 +904,7 @@ class Microstructure:
                 if (h1 and h2 and h3 and h4):
                     if periodic:
                         gsplit[gid]['lr'] = True
-                        continue
-                    else:
-                        grain_facesDict[Ng + 2][of] = face_nodes[of]
+                    grain_facesDict[Ng + 2][of] = face_nodes[of]
                 h1 = np.abs(n1[1] - RVE_min[1]) < tol
                 h2 = np.abs(n2[1] - RVE_min[1]) < tol
                 h3 = np.abs(n3[1] - RVE_min[1]) < tol
@@ -915,9 +912,7 @@ class Microstructure:
                 if (h1 and h2 and h3 and h4):
                     if periodic:
                         gsplit[gid]['bt'] = True
-                        continue
-                    else:
-                        grain_facesDict[Ng + 3][of] = face_nodes[of]
+                    grain_facesDict[Ng + 3][of] = face_nodes[of]
                 h1 = np.abs(n1[1] - RVE_max[1]) < tol
                 h2 = np.abs(n2[1] - RVE_max[1]) < tol
                 h3 = np.abs(n3[1] - RVE_max[1]) < tol
@@ -925,9 +920,7 @@ class Microstructure:
                 if (h1 and h2 and h3 and h4):
                     if periodic:
                         gsplit[gid]['bt'] = True
-                        continue
-                    else:
-                        grain_facesDict[Ng + 4][of] = face_nodes[of]
+                    grain_facesDict[Ng + 4][of] = face_nodes[of]
                 h1 = np.abs(n1[2] - RVE_min[2]) < tol
                 h2 = np.abs(n2[2] - RVE_min[2]) < tol
                 h3 = np.abs(n3[2] - RVE_min[2]) < tol
@@ -935,9 +928,7 @@ class Microstructure:
                 if (h1 and h2 and h3 and h4):
                     if periodic:
                         gsplit[gid]['fb'] = True
-                        continue
-                    else:
-                        grain_facesDict[Ng + 5][of] = face_nodes[of]
+                    grain_facesDict[Ng + 5][of] = face_nodes[of]
                 h1 = np.abs(n1[2] - RVE_max[2]) < tol
                 h2 = np.abs(n2[2] - RVE_max[2]) < tol
                 h3 = np.abs(n3[2] - RVE_max[2]) < tol
@@ -945,9 +936,7 @@ class Microstructure:
                 if (h1 and h2 and h3 and h4):
                     if periodic:
                         gsplit[gid]['fb'] = True
-                        continue
-                    else:
-                        grain_facesDict[Ng + 6][of] = face_nodes[of]
+                    grain_facesDict[Ng + 6][of] = face_nodes[of]
                 grain_facesDict[gid][of] = face_nodes[of]
 
                 # Find all combinations of grains to check for common area
