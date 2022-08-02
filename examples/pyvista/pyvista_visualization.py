@@ -37,6 +37,7 @@ ms.analyze_RVE()
 ms.plot_polygons()
 ms.write_stl(file='{}_{}grains.stl'.format(name, ms.Ngr))
 
+
 # generate pyvista grid of polyhedral grains
 facets = set()
 ptlbl = []
@@ -46,13 +47,13 @@ f2gr = []
 grains = ms.RVE_data['Grains']
 for igr in grains.keys():
     for fc in grains[igr]['Simplices']:
-        nds = grains[igr]['Nodes'][fc]
+        nds = ms.RVE_data['Vertices'][fc]
         facet = str(sorted(nds))
         if facet in facets:
             continue
         else:
             facets.add(facet)
-        pts = grains[igr]['Points'][fc]
+        pts = ms.RVE_data['Points'][fc]
         faces.append(3)
         f2gr.append(igr)
         for pt in pts:
@@ -66,8 +67,10 @@ for igr in grains.keys():
 
 poly_grid = pv.PolyData(points, faces)
 poly_grid.cell_data['Grain'] = f2gr
-poly_grid.plot(show_edges=True)
-poly_grid.plot(style='wireframe')
+pl = pv.Plotter()
+pl.add_mesh(poly_grid, show_edges=True)
+pl.add_point_labels(poly_grid.cell_centers(), 'Grain', font_size=24)
+pl.show()
 
 # generate pyvista grid for voxelated structure
 nvox = len(ms.voxels.ravel())
