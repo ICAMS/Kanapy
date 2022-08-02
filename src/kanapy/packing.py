@@ -115,7 +115,12 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
                                 sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
         tree.update()
-        ncoll = tree.collisionsTest(damp=0.) #i/nsteps)
+        if periodicity:
+            damp = 0.
+        else:
+            damp = i/(nsteps)
+        ncoll = tree.collisionsTest(damp)
+        #ncoll = tree.collisionsTest(damp = 0.) #i/nsteps)
         
         if periodicity:
             for ellipsoid in Ellipsoids:
