@@ -10,33 +10,21 @@ import kanapy as knpy
 import pyvista as pv
 from vtk import VTK_HEXAHEDRON
 
-Nv = 60
-size = 70
+Nv = 40
+size = 50
 periodic = False
 if periodic:
     name = 'pbc_px'
 else:
     name = 'px'
-matname='Simulanium fcc'
-if periodic:
-    # for periodic structures we need to chose smaller and rather equiaxed grains
-    ms_elong = {'Grain type': 'Elongated', 
-          'Equivalent diameter': {'std': 1.0, 'mean': 15.0, 'offs': 6.0, 'cutoff_min': 12.0, 'cutoff_max': 20.0},
-          'Aspect ratio': {'std':1.5, 'mean': 1.0, 'offs': 1.0, 'cutoff_min': 1.0, 'cutoff_max': 3.0}, 
-          'Tilt angle': {'std': 15., 'mean': 60., "cutoff_min": 0.0, "cutoff_max": 180.0}, 
+matname = 'Simulanium fcc'
+ms_elong = {'Grain type': 'Elongated', 
+          'Equivalent diameter': {'std': 1.0, 'mean': 12.0, 'offs': 6.0, 'cutoff_min': 10.0, 'cutoff_max': 20.0},
+          'Aspect ratio': {'std':1.5, 'mean': 1.7, 'offs': 0.8, 'cutoff_min': 1.0, 'cutoff_max': 3.0}, 
+          'Tilt angle': {'std': 15., 'mean': 90., "cutoff_min": 0.0, "cutoff_max": 180.0}, 
           'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': Nv, 'Ny': Nv, 'Nz': Nv}, 
           'Simulation': {'periodicity': str(periodic), 'output_units': 'um'},
           'Phase': {'Name': 'Simulanium fcc', 'Number': 0, 'Volume fraction': 1.0}}
-else:
-    ms_elong = {'Grain type': 'Elongated', 
-          'Equivalent diameter': {'std': 1.0, 'mean': 15.0, 'offs': 6.0, 'cutoff_min': 20.0, 'cutoff_max': 25.0},
-          'Aspect ratio': {'std':1.5, 'mean': 1.7, 'offs': 1.0, 'cutoff_min': 1.0, 'cutoff_max': 3.0}, 
-          'Tilt angle': {'std': 15., 'mean': 60., "cutoff_min": 0.0, "cutoff_max": 180.0}, 
-          'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': Nv, 'Ny': Nv, 'Nz': Nv}, 
-          'Simulation': {'periodicity': str(periodic), 'output_units': 'um'},
-          'Phase': {'Name': 'Simulanium fcc', 'Number': 0, 'Volume fraction': 1.0}}
-
-ms_elong = [ms_elong]
 
 ms = knpy.Microstructure(ms_elong)
 ms.init_stats()
@@ -49,6 +37,7 @@ ms.analyze_RVE()
 ms.plot_polygons()
 ms.write_stl(file='{}_{}grains.stl'.format(name, ms.Ngr))
 
+
 # generate pyvista grid of polyhedral grains
 facets = set()
 ptlbl = []
@@ -58,13 +47,13 @@ f2gr = []
 grains = ms.RVE_data['Grains']
 for igr in grains.keys():
     for fc in grains[igr]['Simplices']:
-        nds = grains[igr]['Nodes'][fc]
+        nds = ms.RVE_data['Vertices'][fc]
         facet = str(sorted(nds))
         if facet in facets:
             continue
         else:
             facets.add(facet)
-        pts = grains[igr]['Points'][fc]
+        pts = ms.RVE_data['Points'][fc]
         faces.append(3)
         f2gr.append(igr)
         for pt in pts:
@@ -78,8 +67,10 @@ for igr in grains.keys():
 
 poly_grid = pv.PolyData(points, faces)
 poly_grid.cell_data['Grain'] = f2gr
-poly_grid.plot(show_edges=True)
-poly_grid.plot(style='wireframe')
+pl = pv.Plotter()
+pl.add_mesh(poly_grid, show_edges=True)
+pl.add_point_labels(poly_grid.cell_centers(), 'Grain', font_size=24)
+pl.show()
 
 # generate pyvista grid for voxelated structure
 nvox = len(ms.voxels.ravel())
@@ -97,12 +88,3 @@ ms.smoothen()
 smooth_grid = pv.UnstructuredGrid(cells.ravel(), celltypes, ms.nodes_s)
 smooth_grid['Grains'] = ms.voxels.ravel(order='F')
 smooth_grid.plot(show_edges=True)
-
-# generate grain orientations
-# requires Kanapy's texture module
-if knpy.MTEX_AVAIL:
-    ang = [0, 45, 0]    # Euler angles for Goss texture
-    omega = 7.5         # kernel half-width
-    ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
-    # write Euler angles of grains into csv file
-    ms.write_ori(ori_rve, file='{}_{}grains_ori.csv'.format(name, ms.Ngr))
