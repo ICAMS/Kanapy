@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 
 def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=False,
-                   mask=None, cmap='prism', alpha=1.0):
+                   mask=None, cmap='prism', alpha=1.0, show=True):
     '''
     Plot voxeles in microstructure, each grain with a different color. Sliced 
     indicates whether one eights of the box should be removed to see internal 
@@ -36,6 +36,8 @@ def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=
     alpha : float, optional
         Adjust transparaency of voxels in alpha channel of color map. 
         The default is 1.0.
+    show : bool
+        Indicate whether to show the plot or to return the axis for further use
 
     Returns
     -------
@@ -93,9 +95,11 @@ def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=
     ax.set_xlim(right=Nx)
     ax.set_ylim(top=Ny)
     ax.set_zlim(top=Nz)
-    # plt.show()
-
-    return ax
+    if show:
+        plt.show()
+        return
+    else:
+        return ax
 
 def plot_polygons_3D(rve, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1],
                      dual_phase=False):
@@ -129,9 +133,9 @@ def plot_polygons_3D(rve, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1],
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     for igr in grains.keys():
-        if grains[igr]['Simplices'] == []:
+        if not grains[igr]['Simplices']:
             continue
-        if dual_phase==True:
+        if dual_phase:
             if grains[igr]['PhaseID'] == 0:
                 col = 'red'
             else: 
@@ -174,7 +178,7 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
     for i, pa in enumerate(particles):
         if pa.duplicate is not None:
             continue
-        if dual_phase==True:
+        if dual_phase:
             if pa.phasenum == 0:
                 col = 'red'
             else: 

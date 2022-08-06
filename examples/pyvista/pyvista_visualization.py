@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Sep 22 09:56:39 2021
+Example for visualization of microstructures with pyvista
+Requires a pyvista installation in the knpy envirnment, e.g. with
+(knpy) $ conda install -c conda-forge pyvista
 
-@author: alexander
+
+
+@author: Alexander Hartmaier, ICAMS/Ruhr University Germany
+August 2022
 """
 import numpy as np
 import kanapy as knpy
@@ -12,7 +17,7 @@ from vtk import VTK_HEXAHEDRON
 
 Nv = 40
 size = 50
-periodic = False
+periodic = True
 if periodic:
     name = 'pbc_px'
 else:
