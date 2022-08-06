@@ -224,7 +224,7 @@ class Microstructure:
             data = self.res_data
             if data is None:
                 raise ValueError('No microstructure data created yet. Run analyse_RVE first.')
-        else:
+        elif type(data) != list:
             data = [data]
         for dat in data:
             plot_output_stats(dat, gs_data=gs_data, gs_param=gs_param,
@@ -834,7 +834,6 @@ class Microstructure:
             return contained
 
         # define constants
-        periodic = self.RVE_data['Periodic']
         voxel_size = self.RVE_data['Voxel_resolutionX']
         RVE_min = np.amin(self.nodes_v, axis=0)
         if np.any(RVE_min > 1.e-3) or np.any(RVE_min < -1.e-3):
@@ -1108,6 +1107,11 @@ class Microstructure:
         self.RVE_data['Facets'] = np.array(facets)
 
         for igr in self.elmtSetDict.keys():
+            if grains[igr]['Volume'] < 1.e-5:
+                warnings.warn(f'No tet assigned to grain {igr}.')
+                if grains[igr]['Simplices']:
+                    nf = len(grains[igr]['Simplices'])
+                    warnings.warn(f'Grain {igr} contains {nf} tets, but no volume')
             # Find the euclidean distance to all surface points from the center
             dists = [euclidean(grains[igr]['Center'], pt) for pt in
                      self.nodes_v[grains[igr]['Vertices']]]

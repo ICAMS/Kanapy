@@ -1068,35 +1068,34 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
     print('Plotting input & output statistics')
     cwd = os.getcwd()
     
+    par_eqDia = np.sort(np.asarray(dataDict['Particle_Equivalent_diameter']))
+    grain_eqDia = np.sort(np.asarray(dataDict['Grain_Equivalent_diameter']))
+    
+    # Convert to micro meter for plotting   
+    if dataDict['Unit_scale'] == 'mm':            
+        par_eqDia *= 1000
+        grain_eqDia *= 1000
+    
+    # Concatenate both arrays to compute shared bins
+    # NOTE: 'doane' produces better estimates for non-normal datasets
+    total_eqDia = np.concatenate([par_eqDia, grain_eqDia]) 
+    shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
+    
+    # Get the mean & std of the underlying normal distribution
+    par_data = np.log(par_eqDia)
+    mu_par = np.mean(par_data)
+    std_par = np.std(par_data)
+    ind = np.nonzero(grain_eqDia > 1.e-5)[0]
+    grain_data = np.log(grain_eqDia[ind])
+    mu_gr = np.mean(grain_data)
+    std_gr = np.std(grain_data)
+    
+    # NOTE: lognorm takes mean & std of normal distribution
+    par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
+    grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr)) 
+    
     # read the data from the file
     if dataDict['Grain type'] == 'Equiaxed':
-        
-        par_eqDia = np.sort(np.asarray(dataDict['Particle_Equivalent_diameter']))
-        grain_eqDia = np.sort(np.asarray(dataDict['Grain_Equivalent_diameter']))
-
-        # Convert to micro meter for plotting   
-        if dataDict['Unit_scale'] == 'mm':            
-            par_eqDia, grain_eqDia = par_eqDia*1000, grain_eqDia*1000
-        
-        # Concatenate both arrays to compute shared bins
-        # NOTE: 'doane' produces better estimates for non-normal datasets
-        total_eqDia = np.concatenate([par_eqDia, grain_eqDia]) 
-        shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
-
-        # Get the mean & std of the underlying normal distribution
-        par_data, grain_data = np.log(par_eqDia), np.log(grain_eqDia)
-        mu_par, std_par = np.mean(par_data), np.std(par_data)
-        mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)
-
-        # Lognormal mean & variance & std  
-        #log_mean = np.exp(mean + (sd**2)/2.0)
-        #log_var = np.exp((sd**2)-1.0)*np.exp(2.0*mean + sd**2)        
-        #print(log_mean, (log_var)**0.5, log_var)
-        
-        # NOTE: lognorm takes mean & std of normal distribution
-        par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
-        grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr)) 
-                        
         # Plot the histogram & PDF
         sns.set(color_codes=True)        
         fig, ax = plt.subplots(1, 2, figsize=(15, 9))
@@ -1115,13 +1114,7 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
         ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label='Output')              
         ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3) 
-                    
-        #sns.distplot(ypdf1, hist = False, kde = True, 
-        #             kde_kws = {'shade': True, 'linewidth': 3}, 
-        #             label = 'Input', ax=ax[1])
-        #sns.distplot(ypdf2, hist = False, kde = True, 
-        #             kde_kws = {'shade': True, 'linewidth': 3}, 
-        #            label = 'Output', ax=ax[1])        
+                        
         ax[1].legend(loc="upper right", fontsize=16)
         ax[1].set_xlabel('Equivalent diameter (μm)', fontsize=18)
         ax[1].set_ylabel('Density', fontsize=18)
@@ -1132,46 +1125,12 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
                 
         
     elif dataDict['Grain type'] == 'Elongated':
-        par_eqDia = np.sort(dataDict['Particle_Equivalent_diameter'])      
-        grain_eqDia = np.sort(dataDict['Grain_Equivalent_diameter'])
-            
-        #par_majDia = np.sort(np.asarray(dataDict['Particle_Major_diameter']))
-        #par_minDia = np.sort(np.asarray(dataDict['Particle_Minor_diameter']))
-    
-        #grain_majDia = np.sort(np.asarray(dataDict['Grain_Major_diameter']))
-        #grain_minDia = np.sort(np.asarray(dataDict['Grain_Minor_diameter']))
-        
-        # Convert to micro meter for plotting   
-        if dataDict['Unit_scale'] == 'mm':            
-            par_eqDia *= 1000
-            grain_eqDia *= 1000
-            #par_majDia, grain_majDia = par_majDia*1000, grain_majDia*1000
-            #par_minDia, grain_minDia = par_minDia*1000, grain_minDia*1000        
-                
-        # Concatenate corresponding arrays to compute shared bins
-        total_eqDia = np.concatenate([par_eqDia, grain_eqDia])                 
-        #total_majDia = np.concatenate([par_majDia, grain_majDia]) 
-        #total_minDia = np.concatenate([par_minDia, grain_minDia])
-                                
+        total_eqDia = np.concatenate([par_eqDia, grain_eqDia]) 
         # Find the corresponding shared bin edges 
         # NOTE: 'doane' produces better estimates for non-normal datasets
         shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
         binNum = len(shared_bins)
-        name = 'Equivalent'
-        
-        # Get the mean & std of the underlying normal distribution
-        par_data, grain_data = np.log(par_eqDia), np.log(grain_eqDia)
-        mu_par, std_par = np.mean(par_data), np.std(par_data)
-        mu_gr, std_gr = np.mean(grain_data), np.std(grain_data)
-        
-        # Lognormal mean & variance & std  
-        #log_mean = np.exp(mean + (sd**2)/2.0)
-        #log_var = np.exp((sd**2)-1.0)*np.exp(2.0*mean + sd**2)        
-        #print(log_mean, (log_var)**0.5, log_var)
-        
-        # NOTE: lognorm takes mean & std of normal distribution
-        par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par)) 
-        grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr))         
+        name = 'Equivalent'        
 
         # Plot the histogram & PDF        
         sns.set(color_codes=True)                                      
