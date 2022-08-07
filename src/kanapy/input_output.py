@@ -1155,8 +1155,8 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         area = np.trapz(ypdf2, grain_eqDia)
         ypdf2 /= area
         if gs_param is not None:
-            x0 = np.amin(par_eqDia)
-            x1 = np.amax(par_eqDia)
+            x0 = np.minimum(np.amin(grain_eqDia), np.amin(par_eqDia))
+            x1 = np.maximum(np.amax(grain_eqDia), np.amax(par_eqDia))
             x = np.linspace(x0, x1, num=50)
             y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
             area = np.trapz(y, x)
@@ -1177,9 +1177,12 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         plt.show()
         
         
-        ''' Plot the aspect ratio comparison '''
-        par_AR = np.sort(np.asarray(dataDict['Particle_Major_diameter']) / np.asarray(dataDict['Particle_Minor_diameter']))
-        grain_AR = np.sort(np.asarray(dataDict['Grain_Major_diameter']) / np.asarray(dataDict['Grain_Minor_diameter']))
+        # Plot the aspect ratio comparison
+        par_AR = np.sort(np.asarray(dataDict['Particle_Major_diameter']) /
+                         np.asarray(dataDict['Particle_Minor_diameter']))
+        ind = np.nonzero(dataDict['Grain_Minor_diameter'] > 1.e-5)[0]
+        grain_AR = np.sort(np.asarray(dataDict['Grain_Major_diameter'][ind]) /
+                           np.asarray(dataDict['Grain_Minor_diameter'][ind]))
 
         # Concatenate corresponding arrays to compute shared bins
         total_AR = np.concatenate([par_AR, grain_AR])                         
@@ -1223,8 +1226,8 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         area = np.trapz(ypdf2, grain_AR)
         ypdf2 /= area
         if ar_param is not None:
-            x0 = np.amin(par_AR)
-            x1 = np.amax(par_AR)
+            x0 = np.minimum(np.amin(grain_AR), np.amin(par_AR))
+            x1 = np.maximum(np.amax(grain_AR), np.amax(par_AR))
             x = np.linspace(x0, x1, num=100)
             y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
             area = np.trapz(y, x)

@@ -951,21 +951,26 @@ class Microstructure:
                     # select all involved grains
                     gr_set = set()
                     j = key0.index('_')
-                    gr_set.add(int(key0[1:j]))
-                    gr_set.add(int(key0[j + 1:]))
+                    igr = int(key0[1:j])
+                    if igr <= Ng:
+                        gr_set.add(igr)
+                    igr = int(key0[j + 1:])
+                    if igr <= Ng:
+                        gr_set.add(igr)
                     j = key1.index('_')
-                    gr_set.add(int(key1[1:j]))
-                    gr_set.add(int(key1[j + 1:]))
+                    igr = int(key1[1:j])
+                    if igr <= Ng:
+                        gr_set.add(igr)
+                    igr = int(key1[j + 1:])
+                    if igr <= Ng:
+                        gr_set.add(igr)
                     # check if any neighboring nodes are already in list of
                     # vertices. If yes, replace new vertex with existing one
                     newlist = check_neigh(elist, gr_set, margin=2 * voxel_size)
                     # update grains with new vertex
-                    for j in gr_set:
-                        vert[j].update(newlist)
+                    for igr in gr_set:
+                        vert[igr].update(newlist)
                     for nv in newlist:
-                        for j in range(1, 7):
-                            # discard fake grains at RVE boundary in grain list
-                            gr_set.discard(self.Ngr + j)
                         if nv in grains_of_vert.keys():
                             grains_of_vert[nv].update(gr_set)
                         else:

@@ -27,7 +27,7 @@ class EBSDmap:
         
         # read EBSD map and return the matlab.object of MTEX class EBSD
         ebsd_full = eng.EBSD.load(fname, matname, 'interface', 'ang',
-                                  'convertSpatial2EulerReferenceFrame', 'silent')
+                                  'convertSpatial2EulerReferenceFrame', 'setting 2')  # 'silent')
         # remove not indexed pixels
         eng.workspace["ebsd_w"] = ebsd_full
         ebsd = eng.eval("ebsd_w('indexed')")  # select only indexed pixels in EBSD
@@ -67,7 +67,7 @@ class EBSDmap:
             eng.hold('on', nargout=0)
             # plot grain boundaries into EBSD map
             eng.plot(eng.getfield(self.grains, 'boundary'), 'linewidth', 2.0, 
-                     'micronbar', 'off')
+                     'micronbar', 'on')
             # evalute centres of grains
             centres = eng.getfield(self.grains, 'centroid')
             eng.plotEllipse(centres, ha, hb, omega_r, 'lineColor', 'r',
@@ -91,7 +91,7 @@ class EBSDmap:
                 eng.hold('on', nargout=0)
                 eng.mtexColorbar
             except:
-                warnings.warn('ODF too large for plotting')    '''
+                warnings.warn('ODF too large for plotting')'''
         
         # Evaluate grain shape statistics
         # generate dict for statistical input for geometry module
