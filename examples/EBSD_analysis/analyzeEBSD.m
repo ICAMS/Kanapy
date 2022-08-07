@@ -1,7 +1,7 @@
 %% Import Script for EBSD Data
 %
 % This script was automatically created by the import wizard. You should
-% run the whoole script or parts of it in order to import your data. There
+% run the entire script or parts of it in order to import your data. There
 % is no problem in making any changes to this script.
 
 %% Specify Crystal and Specimen Symmetries
@@ -18,26 +18,36 @@ setMTEXpref('zAxisDirection','outOfPlane');
 %% Specify File Names
 
 % which files to be imported
-fname = 'ebsd_316L.ang';
+fname = '/Users/alexander/Codes/kanapy/examples/EBSD_analysis/ebsd_316L_500x500.ang';
 
 %% Import the Data
 
 % create an EBSD variable containing the data
-ebsd_r = EBSD.load(fname,CS,'interface','ang',...
-  'convertSpatial2EulerReferenceFrame');
+ebsd_full = EBSD.load(fname,CS,'interface','ang',...
+  'convertSpatial2EulerReferenceFrame', 'setting 2');
 
-ebsd = ebsd_r('indexed');
+ebsd = ebsd_full('indexed');
 %ebsd = ebsd_filter(ebsd_r,'indexed');
 
 
-grains_r = calcGrains(ebsd,'boundary','tight','angle',5*degree);
-grains = grains_r(grains_r.grainSize > 5);
+grains_full = calcGrains(ebsd,'boundary','tight','angle',5*degree);
+grains = grains_full(grains_full.grainSize > 5);
 
-plot(ebsd,ebsd.orientations,'micronbar','off')
+plot(ebsd,ebsd.orientations,'micronbar','on')
 hold on
 
 plot(grains.boundary,'linewidth',2.0,'micronbar','off')
 
 
 [omega,a,b] = principalComponents(grains);
-plotEllipse(grains.centroid,a,b,omega,'lineColor','r','linewidth',2.0)
+plotEllipse(grains.centroid,a,b,omega,'lineColor','r','linewidth',2.0);
+
+%% Plot ODF map
+psi = deLaValleePoussinKernel('halfwidth', 5*pi/180.);
+ori = getfield(ebsd, 'orientations');
+cs = getfield(ebsd, 'CS');
+h = [Miller(1, 0, 0, cs), Miller(1, 1, 0, cs), Miller(1, 1, 1, cs)];
+odf = calcKernelODF(ori, 'kernel', psi);
+plotPDF(odf,h,'contourf');
+hold('on');
+mtexColorbar;
