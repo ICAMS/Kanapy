@@ -13,17 +13,26 @@ matnumber = 4         # material number of austenite in CP UMAT
 # read EBSD map and evaluate statistics of microstructural features
 ebsd = knpy.EBSDmap(fname, matname)
 #ebsd.showIPF()
+print('==== Grain size ====')
+print(f'mean equivalent diameter: {ebsd.gs_param[2].round(3)}, ' +
+      f'std. deviation: {ebsd.gs_param[0].round(3)}, ' +
+      f'offset: {ebsd.gs_param[1].round(3)}')
+print('==== Aspect ratio ====')
+print(f'mean value: {ebsd.ar_param[2].round(3)}, ' +
+      f'std. deviation: {ebsd.ar_param[0].round(3)}, ' +
+      f'offset: {ebsd.ar_param[1].round(3)}')
+print('==== Tilt angle ====')
+print(f'mean value: {(ebsd.om_param[1]*180/pi).round(3)}, ' +
+      f'std. deviation: {(ebsd.om_param[0]*180/pi).round(3)}')
 
 # create dictionary with statistical information obtained from EBSD map
-# gs_param : [std deviation, mean grain size, offset of lognorm distrib.]
-# ar_param : [std deviation, mean aspect ration, offset of gamma distrib.]
+# gs_param : [std deviation, offset of lognorm distrib., mean grain size]
+# ar_param : [std deviation, offset of gamma distrib., mean aspect ration]
 # om_param : [std deviation, mean tilt angle]
 ms_stats = knpy.set_stats(ebsd.gs_param, ebsd.ar_param, ebsd.om_param,
-                          deq_min=8., deq_max=30., asp_min=1., asp_max=3.,
-                          omega_min=0., omega_max=2*pi, voxels=60, size=100,
+                          deq_min=8., deq_max=16., asp_min=0.95, asp_max=3.5,
+                          omega_min=0., omega_max=2*pi, voxels=30, size=50,
                           periodicity=True, VF = 1.0, phasename = "XXXX", phasenum = 0)
-
-ms_stats = [ms_stats]
 
 # create and visualize synthetic RVE
 ms = knpy.Microstructure(descriptor=ms_stats, name=fname+'_RVE')
