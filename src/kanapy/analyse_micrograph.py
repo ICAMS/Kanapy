@@ -75,7 +75,8 @@ class EBSDmap:
             eng.hold('off', nargout=0)
             #eng.exportgraphics(gcf,'ebsd_map.png','Resolution',300)
             
-            ''' ODF plotting produces system failure
+            ''' ODF plotting produces system failure, use Matlab functions
+            
             # plot ODF 
             # estimate the ODF using KDE
             psi = eng.deLaValleePoussinKernel('halfwidth', 5*np.pi/180.)

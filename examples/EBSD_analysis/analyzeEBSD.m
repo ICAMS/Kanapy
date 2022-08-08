@@ -18,7 +18,7 @@ setMTEXpref('zAxisDirection','outOfPlane');
 %% Specify File Names
 
 % which files to be imported
-fname = '/Users/alexander/Codes/kanapy/examples/EBSD_analysis/ebsd_316L_500x500.ang';
+fname = '/Users/alexander/Documents/Projekte/SFB-TR-103/EBSD-Data-AM_316L/ebsd_316L_500x500.ang';
 
 %% Import the Data
 
@@ -27,20 +27,17 @@ ebsd_full = EBSD.load(fname,CS,'interface','ang',...
   'convertSpatial2EulerReferenceFrame', 'setting 2');
 
 ebsd = ebsd_full('indexed');
-%ebsd = ebsd_filter(ebsd_r,'indexed');
-
 
 grains_full = calcGrains(ebsd,'boundary','tight','angle',5*degree);
 grains = grains_full(grains_full.grainSize > 5);
 
-plot(ebsd,ebsd.orientations,'micronbar','on')
-hold on
-
-plot(grains.boundary,'linewidth',2.0,'micronbar','off')
-
+plot(ebsd,ebsd.orientations,'micronbar','on');
+hold on;
+plot(grains.boundary,'linewidth',2.0,'micronbar','off');
 
 [omega,a,b] = principalComponents(grains);
 plotEllipse(grains.centroid,a,b,omega,'lineColor','r','linewidth',2.0);
+hold off;
 
 %% Plot ODF map
 psi = deLaValleePoussinKernel('halfwidth', 5*pi/180.);
@@ -48,6 +45,7 @@ ori = getfield(ebsd, 'orientations');
 cs = getfield(ebsd, 'CS');
 h = [Miller(1, 0, 0, cs), Miller(1, 1, 0, cs), Miller(1, 1, 1, cs)];
 odf = calcKernelODF(ori, 'kernel', psi);
+figure;
+hold on;
 plotPDF(odf,h,'contourf');
-hold('on');
 mtexColorbar;
