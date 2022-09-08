@@ -2,7 +2,7 @@ import itertools
 import numpy as np
 import random
 
-from kanapy.collision_detect_react import collision_routine
+from kanapy.collisions import collision_routine
 
 
 def cub_oct_split(cub):

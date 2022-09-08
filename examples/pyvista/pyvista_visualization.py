@@ -38,8 +38,8 @@ ms.pack()
 ms.plot_ellipsoids()
 ms.voxelize()
 ms.plot_voxels()
-ms.analyze_RVE()
-ms.plot_polygons()
+ms.generate_grains()
+ms.plot_grains()
 ms.write_stl(file='{}_{}grains.stl'.format(name, ms.Ngr))
 
 

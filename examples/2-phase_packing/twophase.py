@@ -34,8 +34,8 @@ ms.plot_voxels(sliced=True,dual_phase=True)
 ms.plot_slice(cut='xz', pos='top', data='voxels', dual_phase=True)
 ms.plot_slice(cut='yz', pos='top', data='voxels', dual_phase=True)
 ms.plot_slice(cut='xy', pos='top', data='voxels', dual_phase=True)
-ms.analyze_RVE(dual_phase=True)
-ms.plot_polygons(dual_phase=True)
+ms.generate_grains(dual_phase=True)
+ms.plot_grains(dual_phase=True)
 ms.plot_stats(dual_phase=True)
 
 # # compare microstructure on three surfaces 

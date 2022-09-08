@@ -5,7 +5,7 @@ import numpy as np
 
 from kanapy.input_output import write_dump
 from kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
-from kanapy.collision_detect_react import collision_routine
+from kanapy.collisions import collision_routine
 import kanapy.base as kbase
 
 
@@ -81,7 +81,8 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
     """
     Initializes the :class:`entities.Octree` class and performs recursive subdivision with 
     collision checks and response for the ellipsoids. At each time step of the simulation it 
-    increases the size of the ellipsoid by a factor, which depends on the user-defined value for total number of time steps. 
+    increases the size of the ellipsoid by a factor, which depends on the user-defined value for
+    total number of time steps.
 
     :param sim_box: Simulation box representing RVE.
     :type sim_box: :obj:`entities.Simulation_Box`  
@@ -89,8 +90,11 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
     :type Ellipsoids: list    
     :param periodicity: Status of periodicity.
     :type periodicity: boolean 
-    :param nsteps:  Total simulation steps.
-    :type nsteps: int       
+    :param nsteps:  Total simulation steps to fill box volume with particle volume.
+    :type nsteps: int
+    :param dump: Indicate if dump files for particles are written.
+    :type dump: boolean
+
 
     .. note:: :meth:`kanapy.input_output.write_dump` function is called at each time step of the simulation to
               write output (.dump) files. By default, periodic images are written to the output file, 
@@ -101,7 +105,8 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         ell.a, ell.b, ell.c = ell.oria/nsteps, ell.orib/nsteps, ell.oric/nsteps
 
     # Simulation loop for particle growth and interaction steps
-    for i in tqdm(range(nsteps+1)):
+    end_step = int(0.7*nsteps)  # grow particles only to 70% of box volume
+    for i in tqdm(range(end_step)):
     
         # Initialize Octree and test for collision between ellipsoids
         for ellipsoid in Ellipsoids:
@@ -115,12 +120,11 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
                                 sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
         tree.update()
-        if periodicity:
+        '''if periodicity:
             damp = 0.
         else:
             damp = i/(nsteps)
-        ncoll = tree.collisionsTest(damp)
-        #ncoll = tree.collisionsTest(damp = 0.) #i/nsteps)
+        ncoll = tree.collisionsTest(damp)'''
         
         if periodicity:
             for ellipsoid in Ellipsoids:
@@ -156,15 +160,12 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
             dups.extend(ell_dups)
             # Update the BBox of the ellipsoid
             ellipsoid.set_cub()
-            
 
         # Update the actual list with duplicates
         Ellipsoids.extend(dups)
         
         # Update the simulation time
         sim_box.sim_ts += 1
-        if i > 700:
-            break
         
     return Ellipsoids, sim_box
 

@@ -6,7 +6,7 @@ import numpy as np
 from unittest import mock
 
 import kanapy
-from kanapy.collision_detect_react import *
+from kanapy.collisions import *
 from kanapy.base import collideDetect
 from kanapy.entities import Ellipsoid
 
@@ -279,7 +279,7 @@ def test_collision_routine_sphere():
     el2.speedx, el2.speedy, el2.speedz = -0.1, -0.025, -0.36
 
     # Test if the 'collision_react' function is called twice
-    with mock.patch('kanapy.collision_detect_react.collision_react') as mocked_method:
+    with mock.patch('kanapy.collisions.collision_react') as mocked_method:
         collision_routine(el1, el2)
         assert mocked_method.call_count == 2
 
@@ -287,7 +287,7 @@ def test_collision_routine_sphere():
 def test_collision_routine_ellipsoid(ellip):
 
     # Test if the 'collision_react' function is called twice
-    with mock.patch('kanapy.collision_detect_react.collision_react') as mocked_method:
+    with mock.patch('kanapy.collisions.collision_react') as mocked_method:
         collision_routine(ellip[0], ellip[1])
         assert mocked_method.call_count == 2
         

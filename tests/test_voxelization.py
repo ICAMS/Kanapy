@@ -12,7 +12,7 @@ from scipy.spatial import ConvexHull
 import kanapy
 from kanapy.voxelization import *
 from kanapy.entities import Ellipsoid, Simulation_Box
-from kanapy.input_output import RVEcreator
+from kanapy.initializations import RVEcreator
 from kanapy.input_output import write_dump
 from kanapy.packing import particle_generator
 

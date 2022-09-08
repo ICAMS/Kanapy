@@ -179,7 +179,7 @@ class EBSDmap:
         
 def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
               asp_min=None, asp_max=None, omega_min=None, omega_max=None,
-              size=100, voxels=60, gtype='Elongated', rveunit = 'um',
+              size=100, voxels=60, gtype='Elongated', rveunit = 'mm',
               periodicity=True, VF = None, phasename = None, phasenum = None, save_file=False):
     '''
     grains = [std deviation, offset , mean grain sizeof lognorm distrib.]
@@ -249,7 +249,7 @@ def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
 def createOriset(num, ang, omega, hist=None, shared_area=None,
                  cs='m-3m', Nbase=50000):
     """
-    Create a set on num Euler angles according to the ODF defined by the 
+    Create a set of num Euler angles according to the ODF defined by the 
     set of Euler angles ang and the kernel half-width omega.
     Example: Goss texture: ang = [0, 45, 0], omega = 5
 

@@ -42,8 +42,8 @@ ms.pack()
 ms.plot_ellipsoids()
 ms.voxelize()
 ms.plot_voxels(sliced=False)
-ms.analyze_RVE()
-ms.plot_polygons()
+ms.generate_grains()
+ms.plot_grains()
 ms.plot_stats(gs_param=ebsd.gs_param, ar_param=ebsd.ar_param)
 
 # compare microstructure on three surfaces 

@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
+import csv
+import itertools
 import os
+import re
 import sys
 import shutil
 import json
 import click
+import numpy as np
+from scipy.spatial import ConvexHull
+from scipy.spatial.distance import euclidean
 
+from kanapy.grains import l1_error_est
 from kanapy.util import MAIN_DIR, WORK_DIR
-from kanapy.input_output import particleStatGenerator, particleCreator, RVEcreator, \
-    write_position_weights, write_output_stat, plot_output_stats, \
-    extract_volume_sharedGBarea, read_dump, export2abaqus
+from kanapy.input_output import read_dump, export2abaqus
+from kanapy.initializations import particleStatGenerator, RVEcreator
+from kanapy.plotting import plot_output_stats
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
-from kanapy.analyze_texture import textureReduction
+from kanapy.textures import textureReduction
 from kanapy.smoothingGB import smoothingRoutine
 from numpy import asarray
 
@@ -573,3 +580,497 @@ def start():
     
 if __name__ == '__main__':
     start()
+
+# ************************************************************
+# Functions for RVE handling that are only used in CLI version
+# ************************************************************
+
+def particleCreator(inputFile, periodic='True', units="mm", output=False):
+    r"""
+    Generates ellipsoid particles based on user-defined inputs.
+
+    :param inputFile: User-defined grain informationfile for ellipsoid generation.
+    :type inputFile: document
+
+    .. note:: 1. Input parameters provided by the user in the input file are:
+
+                * Grain major diameter (:math:`\mu m`)
+                * Grain minor diameter (:math:`\mu m`)
+                * Grain's major axis tilt angle (degrees) with respect to the +ve X-axis (horizontal axis)
+
+              2. Other user defined inputs: Periodicity & output units format (:math:`mm` or :math:`\mu m`).
+                 Default values: periodicity=True & units= :math:`\mu m`.
+
+              3. Particle, RVE and simulation data are written as JSON files in a folder in the current
+                 working directory for later access.
+
+                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.
+                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.
+                * Simulation attributes such as total number of timesteps, periodicity and Output unit scale (:math:`mm`
+                  or :math:`\mu m`) for ABAQUS .inp file.
+
+    """
+    print('')
+    print('------------------------------------------------------------------------')
+    print('Welcome to KANAPY - A synthetic polycrystalline microstructure generator')
+    print('------------------------------------------------------------------------')
+
+    print('Generating particles based on user defined grains')
+
+    # Open the user input grain file and read the data
+    try:
+        input_data = np.loadtxt(inputFile, delimiter=',')
+    except FileNotFoundError:
+        print('Input file not found, make sure {0} file is present in the working directory!'.format(inputFile))
+        raise FileNotFoundError
+
+    # User defined major, minor axes lengths using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b
+    majDia = input_data[:,0]                          # Major axis length
+    minDia = input_data[:,1]                          # Minor axis length
+    minDia2 = minDia.copy()                           # Minor2 axis length (assuming spheroid)
+    tilt_angle = input_data[:,2]                      # Tilt angle
+
+    # Volume of each ellipsoid
+    volume_array = (4/3)*np.pi*(majDia*minDia*minDia2)*(1/8)
+
+    # Equivalent diameter of each ellipsoid
+    eq_Dia = (majDia*minDia*minDia2)**(1/3)
+
+    # RVE size: RVE volume = sum(ellipsoidal volume)
+    RVEvol = (np.sum(volume_array))
+
+    # Determine the RVE side lengths
+    dia_max = np.amax(majDia)
+    RVEsizeY = 1.1*dia_max                 # The Y-side length should accomodate the Biggest dimension of the biggest ellipsoid
+    RVEsizeX = round((RVEvol/ RVEsizeY)**0.5, 4)
+    RVEsizeZ = RVEsizeX
+
+    # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels
+    voxel_size = 1.1*(np.amin(minDia) / 3.)
+    Nx = int(round(RVEsizeX / voxel_size))         # Number of voxel/RVE side
+    Ny = int(round(RVEsizeY / voxel_size))
+    Nz = int(round(RVEsizeZ / voxel_size))
+
+    # Re-calculate the voxel resolution
+    voxel_sizeX = RVEsizeX / Nx
+    voxel_sizeY = RVEsizeY / Ny
+    voxel_sizeZ = RVEsizeZ / Nz
+
+    totalEllipsoids = len(majDia)
+    print('    Total number of grains        = {}'.format(totalEllipsoids))
+    print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
+    print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
+    print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))
+    print('    Total number of voxels (C3D8) = {}\n'.format(Nx*Ny*Nz))
+
+    # Create dictionaries to store the data generated
+    particle_data = {'Type': 'Elongated', 'Number': int(totalEllipsoids), 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
+                     'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle)}
+
+    RVE_data = {'RVE_sizeX': RVEsizeX, 'RVE_sizeY': RVEsizeY, 'RVE_sizeZ': RVEsizeZ,
+                'Voxel_numberX': Nx, 'Voxel_numberY': Ny, 'Voxel_numberZ': Nz,
+                'Voxel_resolutionX': voxel_sizeX,'Voxel_resolutionY': voxel_sizeY, 'Voxel_resolutionZ': voxel_sizeZ}
+
+    simulation_data = {'Time steps': 1000, 'Periodicity': "{}".format(periodic), 'Output units': units}
+
+    # Dump the Dictionaries as json files
+    cwd = os.getcwd()
+    json_dir = cwd + '/json_files'          # Folder to store the json files
+
+    if not os.path.exists(json_dir):
+        os.makedirs(json_dir)
+
+    with open(json_dir + '/particle_data.json', 'w') as outfile:
+        json.dump(particle_data, outfile, indent=2)
+
+    with open(json_dir + '/RVE_data.json', 'w') as outfile:
+        json.dump(RVE_data, outfile, indent=2)
+
+    with open(json_dir + '/simulation_data.json', 'w') as outfile:
+        json.dump(simulation_data, outfile, indent=2)
+
+    return
+
+
+def extract_volume_sharedGBarea(elmtDict, elmtSetDict, RVE_data, save_files=False):
+    r"""
+    Evaluates the grain volume and the grain boundary shared surface area between neighbouring grains
+    and writes them to 'grainVolumes.csv' & 'shared_surfaceArea.csv' files.
+
+    --- WARNING --- This function is only used in CLI version of kanapy and
+                    will no longer be updated.
+                    The API version uses kanapy/api/calcPolygons which
+                    offers more functionality.
+
+    .. note:: 1. RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.
+
+              2. The grain volumes written to the 'grainVolumes.csv' file are sorted in ascending order of grain IDs. And the values are written
+                 in either :math:`mm` or :math:`\mu m` scale, as requested by the user in the input file.
+
+              3. The shared surface area written to the 'shared_surfaceArea.csv' file are in either :math:`mm` or :math:`\mu m` scale,
+                 as requested by the user in the input file.
+    """
+    print('')
+    print('Evaluating grain volumes.')
+    print('Evaluating shared Grain Boundary surface area between grains.')
+
+    voxel_size = RVE_data['Voxel_resolutionX']
+
+    grain_vol = {}
+    # For each grain find its volume and output it
+    for gid, elset in elmtSetDict.items():
+        # Convert to
+        gvol = len(elset) * (voxel_size**3)
+        grain_vol[gid] = gvol
+
+    # Sort the grain volumes in ascending order of grain IDs
+    gv_sorted_keys = sorted(grain_vol, key=grain_vol.get)
+    gv_sorted_values = [[grain_vol[gk]] for gk in gv_sorted_keys]
+    # gv_sorted_values = [[gk,gv] for gk,gv in grain_vol.items()]
+
+    # For each grain find its outer face ids
+    grain_facesDict = dict()
+    for gid, elset in elmtSetDict.items():
+        outer_faces = set()
+        nodeConn = [elmtDict[el] for el in elset]        # For each voxel/element get node connectivity
+        # create the 6 faces of the voxel
+        for nc in nodeConn:
+            faces = [[nc[0], nc[1], nc[2], nc[3]], [nc[4], nc[5], nc[6], nc[7]],
+                     [nc[0], nc[1], nc[5], nc[4]], [nc[3], nc[2], nc[6], nc[7]],
+                     [nc[0], nc[4], nc[7], nc[3]], [nc[1], nc[5], nc[6], nc[2]]]
+
+            # Sort each list in ascending order
+            sorted_faces = [sorted(fc) for fc in faces]
+
+            # create face ids by joining node id's
+            face_ids = [int(''.join(str(c) for c in fc)) for fc in sorted_faces]
+
+            # Update the set to include only the outer face id's
+            for fid in face_ids:
+                if fid not in outer_faces:
+                    outer_faces.add(fid)
+                else:
+                    outer_faces.remove(fid)
+        grain_facesDict[gid] = outer_faces
+
+    # Find all combination of grains to check for common area
+    combis = list(itertools.combinations(sorted(grain_facesDict.keys()), 2))
+
+    # Find the shared area
+    shared_area = []
+    for cb in combis:
+        finter = grain_facesDict[cb[0]].intersection(grain_facesDict[cb[1]])
+        if finter:
+            sh_area = len(finter) * (voxel_size**2)
+            shared_area.append([cb[0], cb[1], sh_area])
+        else:
+            continue
+
+    if save_files:
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'          # Folder to store the json files
+        print("Writing grain volumes info. to file ('grainVolumes.csv')\n", end="")
+
+        # Write out grain volumes to a file
+        with open(json_dir + '/grainVolumes.csv', "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerows(gv_sorted_values)
+        print("Writing shared GB surface area info. to file ('shared_surfaceArea.csv')", end="")
+
+        # Write out shared grain boundary area to a file
+        with open(json_dir + '/shared_surfaceArea.csv', "w", newline="") as f:
+            f.write('GrainA, GrainB, SharedArea\n')
+            writer = csv.writer(f)
+            writer.writerows(shared_area)
+
+    print('---->DONE!\n')
+    return gv_sorted_values, shared_area, grain_facesDict
+
+
+def write_output_stat(nodes_v, elmtDict, elmtSetDict, particle_data, RVE_data,\
+                      simulation_data, save_files=False):
+    r"""
+    Evaluates particle- and output RVE grain statistics with respect to Major,
+    Minor & Equivalent diameters for comparison
+    and writes them to 'output_statistics.json' file.
+
+    WARNING: This subroutine is only used by kanapy CLI and will no longer be
+             maintained.
+             Kanapy API uses api.calcPolygens and api.get_stats, which offer
+             more functionality.
+
+    .. note:: The particle and grain diameter values are written in either
+              :math:`mm` or :math:`\mu m` scale,
+              as requested by the user in the input file.
+    """
+    print('')
+    print('Comparing input & output statistics')
+
+    # Extract from dictionaries
+    par_eqDia = particle_data['Equivalent_diameter']
+    voxel_size = RVE_data['Voxel_resolutionX']
+    RVE_sizeX, RVE_sizeY, RVE_sizeZ = RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ']
+
+    if particle_data['Type'] == 'Elongated':
+        par_majDia = particle_data['Major_diameter']
+        par_minDia = particle_data['Minor_diameter1']
+
+    if simulation_data['Periodicity'] == 'True':
+        periodic = True
+    elif simulation_data['Periodicity'] == 'False':
+        periodic = False
+
+    # Factor used to generate particle and grains diameters in 'mm' or 'um' scale
+    if simulation_data['Output units'] == 'mm':
+        scale = 'mm'
+        divideBy = 1000
+    elif simulation_data['Output units'] == 'um':
+        scale = 'um'
+        divideBy = 1
+
+    # Check if Equiaxed or elongated particles
+    if particle_data['Type'] == 'Equiaxed':          # Equiaxed grains (spherical particles)
+
+        # Find each grain's equivalent diameter
+        grain_eqDia = []
+        for k, v in elmtSetDict.items():
+            num_voxels = len(v)
+            grain_vol = num_voxels * (voxel_size)**3
+            grain_dia = 2 * (grain_vol * (3/(4*np.pi)))**(1/3)
+            grain_eqDia.append(grain_dia)
+
+        # write out the particle and grain equivalent diameters to files
+        par_eqDia = list(np.array(par_eqDia)/divideBy)
+        grain_eqDia = list(np.array(grain_eqDia)/divideBy)
+
+        # Compute the L1-error
+        kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia}}}
+        error = l1_error_est(**kwargs)
+
+        # Create dictionaries to store the data generated
+        output_data = {'Number_of_particles/grains': int(len(par_eqDia)),
+                       'Grain type': particle_data['Type'],
+                       'Unit_scale': scale,
+                       'L1-error':error,
+                       'Particle_Equivalent_diameter': par_eqDia,
+                       'Grain_Equivalent_diameter': grain_eqDia}
+
+        if save_files:
+            print("Writing particle & grain equivalent, major & minor diameter to file ('output_statistics.json')")
+            cwd = os.getcwd()
+            json_dir = cwd + '/json_files'          # Folder to store the json files
+            with open(json_dir + '/output_statistics.json', 'w') as outfile:
+                json.dump(output_data, outfile, indent=2)
+
+    else:                                               # Elongated grains (ellipsoidal particles)
+
+        grain_eqDia, grain_majDia, grain_minDia = [], [], []
+        # Find all the nodal coordinates belonging to the grain
+        grain_node = {}
+        for k, v in elmtSetDict.items():
+            num_voxels = len(v)
+            grain_vol = num_voxels * (voxel_size)**3
+            grain_dia = 2 * (grain_vol * (3/(4*np.pi)))**(1/3)
+            grain_eqDia.append(grain_dia)
+
+            # All nodes belonging to grain
+            nodeset = set()
+            for el in v:
+                nodes = elmtDict[el]
+                for n in nodes:
+                    if n not in nodeset:
+                        nodeset.add(n)
+            # Get the coordinates as an array
+            points = [nodes_v[n-1] for n in nodeset]
+            points = np.asarray(points)
+            grain_node[k] = points
+
+        if periodic:
+            # If periodic, find the grains whose perodic halves have to be shifted
+            shiftRight, shiftTop, shiftBack = [], [], []
+            for key, value in grain_node.items():
+
+                # Find all nodes on left, Right, Top, Bottom, Front & Back faces
+                nodeLS, nodeRS = set(), set()
+                nodeTS, nodeBS = set(), set()
+                nodeFS, nodeBaS = set(), set()
+                for enum, coord in enumerate(value):
+
+                    if abs(0.0000 - coord[0]) <= 0.00000001:       # nodes on Left face
+                        nodeLS.add(enum)
+                    elif abs(RVE_sizeX - coord[0]) <= 0.00000001:    # nodes on Right face
+                        nodeRS.add(enum)
+
+                    if abs(0.0000 - coord[1]) <= 0.00000001:       # nodes on Bottom face
+                        nodeBS.add(enum)
+                    elif abs(RVE_sizeY - coord[1]) <= 0.00000001:    # nodes on Top face
+                        nodeTS.add(enum)
+
+                    if abs(0.0000 - coord[2]) <= 0.00000001:       # nodes on Front face
+                        nodeFS.add(enum)
+                    elif abs(RVE_sizeZ - coord[2]) <= 0.00000001:    # nodes on Back face
+                        nodeBaS.add(enum)
+
+                if len(nodeLS) != 0 and len(nodeRS) != 0:   # grain is periodic, has faces on both Left & Right sides
+                    shiftRight.append(key)                  # left set has to be moved to right side
+                if len(nodeBS) != 0 and len(nodeTS) != 0:   # grain is periodic, has faces on both Top & Bottom sides
+                    shiftTop.append(key)                    # bottom set has to be moved to Top side
+                if len(nodeFS) != 0 and len(nodeBaS) != 0:  # grain is periodic, has faces on both Front & Back sides
+                    shiftBack.append(key)                   # front set has to be moved to Back side
+
+            # For each grain that has to be shifted, pad along x, y, z respectively
+            for grain in shiftRight:
+                pts = grain_node[grain]
+                # Pad the nodes on the left side by RVE x-dimension
+                for enum, val in enumerate(pts[:, 0]):
+                    if val>=0.0 and val<=RVE_sizeX/2.:
+                        pts[enum, 0] += RVE_sizeX
+
+            for grain in shiftBack:
+                pts = grain_node[grain]
+                # Pad the nodes on the front side by RVE z-dimension
+                for enum, val in enumerate(pts[:, 2]):
+                    if val>=0.0 and val<=RVE_sizeZ/2.:
+                        pts[enum, 2] += RVE_sizeZ
+
+            for grain in shiftTop:
+                pts = grain_node[grain]
+                # Pad the nodes on the bottom side by RVE y-dimension
+                for enum, val in enumerate(pts[:, 1]):
+                    if val>=0.0 and val<=RVE_sizeY/2.:
+                        pts[enum, 1] += RVE_sizeY
+
+        # For periodic & Non-periodic: create the convex hull and find the major & minor diameters
+        for grain, points in grain_node.items():
+            hull = ConvexHull(points)
+            hull_pts = points[hull.vertices]
+
+            # Find the approximate center of the grain using extreme surface points
+            xmin, xmax = np.amin(points[:, 0]), np.amax(points[:, 0])
+            ymin, ymax = np.amin(points[:, 1]), np.amax(points[:, 1])
+            zmin, zmax = np.amin(points[:, 2]), np.amax(points[:, 2])
+            center = np.array([xmin + (xmax-xmin)/2.0, ymin + (ymax-ymin)/2.0, zmin + (zmax-zmin)/2.0])
+
+            # Find the euclidean distance to all surface points from the center
+            dists = [euclidean(center, pt) for pt in hull_pts]
+            a2 = 2.0*np.amax(dists)
+            b2 = 2.0*np.amin(dists)
+
+            # Calculate ellipsoid dimensions using eigen values
+            #ellPoints = points.T
+            #eigvals, eigvecs = np.linalg.eig(np.cov(ellPoints))
+            #eigvals = np.sort(eigvals)
+            #a2, b2 = eigvals[-1], eigvals[-2]
+
+            grain_majDia.append(a2)                 # update the major diameter list
+            grain_minDia.append(b2)                 # update the minor diameter list
+
+        # write out the particle and grain equivalent, major, minor diameters to file
+        par_eqDia = list(np.array(par_eqDia)/divideBy)
+        grain_eqDia = list(np.array(grain_eqDia)/divideBy)
+
+        par_majDia = list(np.array(par_majDia)/divideBy)
+        grain_majDia = list(np.array(grain_majDia)/divideBy)
+
+        par_minDia = list(np.array(par_minDia)/divideBy)
+        grain_minDia = list(np.array(grain_minDia)/divideBy)
+
+        # Compute the L1-error
+        kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
+                                'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
+                                'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}
+        error = l1_error_est(**kwargs)
+
+        # Create dictionaries to store the data generated
+        output_data = {'Number_of_particles/grains': int(len(par_eqDia)),
+                       'Grain type': particle_data['Type'],
+                       'Unit_scale': scale,
+                       'L1-error': error,
+                       'Particle_Equivalent_diameter': par_eqDia,
+                       'Particle_Major_diameter': par_majDia,
+                       'Particle_Minor_diameter': par_minDia,
+                       'Grain_Equivalent_diameter': grain_eqDia,
+                       'Grain_Major_diameter': grain_majDia,
+                       'Grain_Minor_diameter': grain_minDia}
+
+        if save_files:
+            print("Writing particle & grain equivalent, major & minor diameter to file ('output_statistics.json')")
+            cwd = os.getcwd()
+            json_dir = cwd + '/json_files'          # Folder to store the json files
+            with open(json_dir + '/output_statistics.json', 'w') as outfile:
+                json.dump(output_data, outfile, indent=2)
+
+    print('---->DONE!')
+    return output_data
+
+
+def write_position_weights(file_num):
+    r"""
+    Reads the (.dump) file to extract information and ouputs the position and weight files for tessellation.
+
+    :param file_num: Simulation time step for which position and weights output.
+    :type file_num: int
+
+    .. note:: 1. Applicable only to spherical particles.
+              2. The generated 'sphere_positions.txt' and 'sphere_weights.txt' files can be inputted
+                 into NEPER for tessellation and meshing.
+              3. The values of positions and weights are written in :math:`\mu m` scale only.
+    """
+    print('')
+    print('Writing position and weights files for NEPER', end="")
+    cwd = os.getcwd()
+    dump_file = cwd + '/dump_files/particle.{0}.dump'.format(file_num)
+
+    try:
+        with open(dump_file, 'r+') as fd:
+            lookup = "ITEM: NUMBER OF ATOMS"
+            lookup2 = "ITEM: BOX BOUNDS ff ff ff"
+            for num, lines in enumerate(fd, 1):
+                if lookup in lines:
+                    number_particles = int(next(fd))
+                    par_line_num = num + 7
+
+                if lookup2 in lines:
+                    valuesX = re.findall(r'\S+', next(fd))
+                    RVE_minX, RVE_maxX = list(map(float, valuesX))
+
+                    valuesY = re.findall(r'\S+', next(fd))
+                    RVE_minY, RVE_maxY = list(map(float, valuesY))
+
+                    valuesZ = re.findall(r'\S+', next(fd))
+                    RVE_minZ, RVE_maxZ = list(map(float, valuesZ))
+
+
+    except FileNotFoundError:
+        print('    .dump file not found, make sure "Packing" command is executed first!')
+        raise FileNotFoundError
+
+    par_dict = dict()
+    with open(dump_file, "r") as f:
+        count = 0
+        for num, lines in enumerate(f, 1):
+            if num >= par_line_num:
+
+                values = re.findall(r'\S+', lines)
+                int_values = list(map(float, values[1:]))
+                values = [values[0]] + int_values
+
+                if '_' in values[0]:
+                    # Duplicates exists (ignore them when writing position
+                    # and weight files)
+                    continue
+                else:
+                    count += 1
+                    iden = count
+                    par_dict[iden] = [values[1], values[2],
+                                      values[3], values[4]]
+
+    with open('sphere_positions.txt', 'w') as fd:
+        for key, value in par_dict.items():
+            fd.write('{0} {1} {2}\n'.format(value[0], value[1], value[2]))
+
+    with open('sphere_weights.txt', 'w') as fd:
+        for key, value in par_dict.items():
+            fd.write('{0}\n'.format(value[3]))
+    print('---->DONE!\n')
+    return

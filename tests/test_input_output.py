@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
 import shutil
 import pytest
-import numpy as np
-import kanapy
+import json
+
+from kanapy.cli import write_position_weights
+from kanapy.initializations import RVEcreator
 from kanapy.input_output import *
 from kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
 
