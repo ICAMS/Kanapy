@@ -54,6 +54,8 @@ class Microstructure:
                     self.descriptor = json.load(json_file)
             except:
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
+        elif descriptor == 'from_voxels':
+            pass
         else:
             if type(descriptor) is not list:
                 self.descriptor = [descriptor]
@@ -74,12 +76,13 @@ class Microstructure:
             descriptor = [descriptor]
         self.nphase = len(descriptor)
         for des in descriptor:
-            particle_data, RVE_data, simulation_data = \
+            particle_data, phases, RVE_data, simulation_data = \
                 RVEcreator(des, nsteps=nsteps, save_files=save_files)
             Ngr = particle_data['Number']
             if des == descriptor[0]:
                 self.Ngr = Ngr
                 self.particle_data = particle_data
+                self.phases = phases
                 self.RVE_data = RVE_data
                 self.simulation_data = simulation_data
             else:
@@ -95,18 +98,16 @@ class Microstructure:
                     self.particle_data['Minor_diameter2'] = self.particle_data['Minor_diameter2'] + particle_data[
                         'Minor_diameter2']
                     self.particle_data['Number'] = self.particle_data['Number'] + particle_data['Number']
-                    self.particle_data['Phase name'] = self.particle_data['Phase name'] + particle_data['Phase name']
-                    self.particle_data['Phase number'] = self.particle_data['Phase number'] + particle_data[
-                        'Phase number']
+                    self.phases['Phase name'] = self.phases['Phase name'] + phases['Phase name']
+                    self.phases['Phase number'] = self.phases['Phase number'] + phases['Phase number']
                     self.particle_data['Tilt angle'] = self.particle_data['Tilt angle'] + particle_data['Tilt angle']
                 elif des['Grain type'] == 'Equiaxed':
                     self.Ngr = self.Ngr + Ngr
                     self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + \
                                                                 particle_data['Equivalent_diameter']
                     self.particle_data['Number'] = self.particle_data['Number'] + particle_data['Number']
-                    self.particle_data['Phase name'] = self.particle_data['Phase name'] + particle_data['Phase name']
-                    self.particle_data['Phase number'] = self.particle_data['Phase number'] + particle_data[
-                        'Phase number']
+                    self.phases['Phase name'] = self.phases['Phase name'] + phases['Phase name']
+                    self.phases['Phase number'] = self.phases['Phase number'] + phases['Phase number']
             # if both Equiaxed and Elongated grains are present at the same time, it should be adjusted.
 
     def init_stats(self, descriptor=None, gs_data=None, ar_data=None,
@@ -135,7 +136,7 @@ class Microstructure:
         if simulation_data is None:
             simulation_data = self.simulation_data
         self.particles, self.simbox = \
-            packingRoutine(particle_data, RVE_data, simulation_data,
+            packingRoutine(particle_data, self.phases, RVE_data, simulation_data,
                            k_rep=k_rep, k_att=k_att, save_files=save_files)
 
     def voxelize(self, particle_data=None, RVE_data=None, particles=None,
@@ -181,14 +182,16 @@ class Microstructure:
 
         if self.nodes_v is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-        if self.particle_data is None:
-            raise ValueError('No particles created yet. Run init_RVE, pack and voxelize first.')
+        if self.phases is None:
+            raise ValueError('No phases defined.')
 
         self.grain_facesDict, self.shared_area = calcPolygons(self.RVE_data, self.nodes_v, self.elmtSetDict,
-                                                              self.elmtDict, self.Ngr, self.voxels, self.particle_data,
+                                                              self.elmtDict, self.Ngr, self.voxels, self.phases,
                                                               self.vox_centerDict,
                                                               dual_phase=dual_phase)  # updates RVE_data
-        self.res_data = get_stats(self.particle_data, self.Ngr, self.RVE_data, self.nphase, dual_phase=dual_phase)
+        if self.particle_data is not None:
+            self.res_data = \
+                get_stats(self.particle_data, self.Ngr, self.RVE_data, self.nphase, dual_phase=dual_phase)
 
     """
     --------     Plotting methods          --------
@@ -204,7 +207,7 @@ class Microstructure:
         """ Generate 3D plot of grains in voxelized microstructure. """
         if self.voxels is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
-        plot_voxels_3D(self.voxels, self.voxels_phase, Ngr=self.particle_data['Number'],
+        plot_voxels_3D(self.voxels, self.voxels_phase, Ngr=self.Ngr,
                        sliced=sliced, dual_phase=dual_phase, cmap=cmap)
 
     def plot_grains(self, rve=None, cmap='prism', alpha=0.4,
@@ -270,11 +273,9 @@ class Microstructure:
     --------        Output/Export methods        --------
     """
 
-    def output_abq(self, nodes=None, name=None, simulation_data=None,
+    def output_abq(self, nodes=None, name=None, RVE_data=None,
                    elmtDict=None, elmtSetDict=None, faces=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""
-        if simulation_data is None:
-            simulation_data = self.simulation_data
         if nodes is None:
             if self.nodes_s is not None and self.grain_facesDict is not None:
                 print('\nWarning: No information about nodes is given, will write smoothened structure')
@@ -307,14 +308,14 @@ class Microstructure:
             elmtDict = self.elmtDict
         if elmtSetDict is None:
             elmtSetDict = self.elmtSetDict
-        if simulation_data is None:
-            raise ValueError('No simulation data exists. Run create_RVE, pack and voxelize first.')
+        if RVE_data is None:
+            RVE_data = self.RVE_data
         if name is None:
             cwd = os.getcwd()
             name = cwd + '/kanapy_{0}grains_{1}.inp'.format(len(elmtSetDict), ntag)
             if os.path.exists(name):
                 os.remove(name)  # remove old file if it exists
-        export2abaqus(nodes, name, simulation_data, elmtSetDict, elmtDict, grain_facesDict=faces)
+        export2abaqus(nodes, name, RVE_data, elmtSetDict, elmtDict, grain_facesDict=faces)
         return name
 
     # def output_neper(self, timestep=None):
@@ -658,4 +659,126 @@ class Microstructure:
         with open(file, 'w') as f:
             for ori in angles:
                 f.write('{}, {}, {}\n'.format(ori[0], ori[1], ori[2]))
+        return
+
+    def write_voxels(self, sname, file=None, path='./', mesh=True, source=None):
+        """
+        Write voxel structure into JSON file.
+
+        Parameters
+        ----------
+        sname
+        file
+        path
+        mesh
+        source
+
+        Returns
+        -------
+
+        """
+
+        import platform
+        import getpass
+        from datetime import date
+        from pkg_resources import get_distribution
+        from json import dump
+
+        if path[-1] != '/':
+            path += '/'
+        if file is None:
+            if self.name == 'Microstructure':
+                file = path + 'px_{}grains_voxels.json'.format(self.Ngr)
+            else:
+                file = path + self.name + '_voxels.json'
+        # metadata
+        today = str(date.today())  # date
+        owner = getpass.getuser()  # username
+        sys_info = platform.uname()  # system information
+        structure = {
+            "Info": {
+                "Owner": owner,
+                "Institution": "ICAMS, Ruhr University Bochum, Germany",
+                "Date": today,
+                "Description": "Voxels of microstructure",
+                "Method": "Synthetic microstructure generator Kanapy",
+                "System": {
+                    "sysname": sys_info[0],
+                    "nodename": sys_info[1],
+                    "release": sys_info[2],
+                    "version": sys_info[3],
+                    "machine": sys_info[4]},
+            },
+            "Model": {
+                "Creator": "kanapy",
+                "Version": get_distribution('kanapy').version,
+                "Repository": "https://github.com/ICAMS/Kanapy.git",
+                "Input": source,
+                "Script": sname,
+            },
+            "Data": {
+                "Class" : 'phase_numbers',
+                "Type"  : 'int',
+                "Shape" : self.voxels.shape,
+                "Order" : 'C',
+                "Values": [val.item() for val in self.voxels.flatten()],  # item() converts numpy-int64 to python int
+                "Geometry" : (self.RVE_data['RVE_sizeX'],
+                              self.RVE_data['RVE_sizeY'],
+                              self.RVE_data['RVE_sizeZ']),
+                "Units": {
+                    'Length': self.RVE_data['Units'],
+                    },
+                "Periodicity": self.RVE_data['Periodic'],
+            }
+        }
+        if mesh:
+            nout = []
+            for pos in self.nodes_v:
+                nout.append([val.item() for val in pos])
+            structure['Mesh'] = {
+                "Nodes" : {
+                    "Class" : 'coordinates',
+                    "Type"  : 'float',
+                    "Shape" : self.nodes_v.shape,
+                    "Values"  : nout,
+                },
+                "Voxels" : {
+                    "Class" : 'node_list',
+                    "Type"  : 'int',
+                    "Shape" : (len(self.elmtDict.keys()), 8),
+                    "Values"  : [val for val in self.elmtDict.values()],
+                }
+            }
+        with open(file, 'w') as fp:
+            dump(structure, fp, indent=2)
+        return
+
+    def pckl(self, file=None, path='./'):
+        """Write microstructure into pickle file. Usefull for to store complex structures.
+
+
+        Parameters
+        ----------
+        file : string (optional, default: None)
+            File name for pickled microstructure. The default is None, in which case
+            the filename will be the microstructure name + '.pckl'.
+        path : string
+            Path to location for pickles
+
+        Returns
+        -------
+        None.
+
+        """
+        import pickle
+
+        if path[-1] != '/':
+            path += '/'
+        if file is None:
+            if self.name == 'Microstructure':
+                file = path + 'px_{}grains_microstructure.pckl'.format(self.Ngr)
+            else:
+                file = path + self.name + '_microstructure.pckl'
+        with open(path + file, 'wb') as output:
+            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
         return

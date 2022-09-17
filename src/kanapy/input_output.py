@@ -22,8 +22,8 @@ def write_dump(Ellipsoids, sim_box):
     """
     num_particles = len(Ellipsoids)
     cwd = os.getcwd()
-    output_dir = cwd + '/dump_files'    # output directory
-    dump_outfile = output_dir + '/particle'	    # output dump file
+    output_dir = cwd + '/dump_files'  # output directory
+    dump_outfile = output_dir + '/particle'  # output dump file
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -36,7 +36,8 @@ def write_dump(Ellipsoids, sim_box):
         f.write('{0} {1}\n'.format(sim_box.left, sim_box.right))
         f.write('{0} {1}\n'.format(sim_box.bottom, sim_box.top))
         f.write('{0} {1}\n'.format(sim_box.back, sim_box.front))
-        f.write('ITEM: ATOMS id x y z AsphericalShapeX AsphericalShapeY AsphericalShapeZ OrientationX OrientationY OrientationZ OrientationW\n')
+        f.write(
+            'ITEM: ATOMS id x y z AsphericalShapeX AsphericalShapeY AsphericalShapeZ OrientationX OrientationY OrientationZ OrientationW\n')
         for ell in Ellipsoids:
             qw, qx, qy, qz = ell.quat
             f.write('{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n'.format(
@@ -69,17 +70,17 @@ def read_dump(dump_file):
                 if lookup2 in lines:
                     valuesX = re.findall(r'\S+', next(fd))
                     RVE_minX, RVE_maxX = list(map(float, valuesX))
-                    
+
                     valuesY = re.findall(r'\S+', next(fd))
                     RVE_minY, RVE_maxY = list(map(float, valuesY))
-                    
+
                     valuesZ = re.findall(r'\S+', next(fd))
                     RVE_minZ, RVE_maxZ = list(map(float, valuesZ))
 
     except FileNotFoundError:
         print('    .dump file not found, make sure "Packing" command is executed first!')
         raise FileNotFoundError
-        
+
     # Create an instance of simulation box
     sim_box = Cuboid(RVE_minX, RVE_maxY, RVE_maxX, RVE_minY, RVE_maxZ, RVE_minZ)
 
@@ -96,12 +97,12 @@ def read_dump(dump_file):
                 int_values = list(map(float, values[1:]))
                 values = [values[0]] + int_values
 
-                iden = count                                        # ellipsoid 'id'                
-                a, b, c = values[4], values[5], values[6]           # Semi-major length, Semi-minor length 1 & 2
+                iden = count  # ellipsoid 'id'
+                a, b, c = values[4], values[5], values[6]  # Semi-major length, Semi-minor length 1 & 2
                 x, y, z = values[1], values[2], values[3]
                 qx, qy, qz, qw = values[7], values[8], values[9], values[10]
-                quat = np.array([qw, qx, qy, qz])                
-                ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat) # instance of Ellipsoid class
+                quat = np.array([qw, qx, qy, qz])
+                ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat)  # instance of Ellipsoid class
 
                 # Find the original particle if the current is duplicate
                 for c in values[0]:
@@ -113,12 +114,12 @@ def read_dump(dump_file):
                     else:
                         continue
 
-                Ellipsoids.append(ellipsoid)                
+                Ellipsoids.append(ellipsoid)
 
     return sim_box, Ellipsoids
 
 
-def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain_facesDict=None):
+def export2abaqus(nodes, fileName, RVE_data, elmtSetDict, elmtDict, grain_facesDict=None):
     r"""
     Creates an ABAQUS input file with microstructure morphology information
     in the form of nodes, elements and element sets.
@@ -136,10 +137,10 @@ def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain
     print('Writing ABAQUS (.inp) file', end="")
 
     # Factor used to generate nodal cordinates in 'mm' or 'um' scale
-    if simulation_data['Output units'] == 'mm':
+    if RVE_data['Units'] == 'mm':
         scale = 'mm'
         divideBy = 1000
-    elif simulation_data['Output units'] == 'um':
+    elif RVE_data['Units'] == 'um':
         scale = 'um'
         divideBy = 1
 
@@ -156,7 +157,7 @@ def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain
         # Create nodes
         for k, v in enumerate(nodes):
             # Write out coordinates in 'mm' or 'um'
-            f.write('{0}, {1}, {2}, {3}\n'.format(k+1, v[0]/divideBy, v[1]/divideBy, v[2]/divideBy))
+            f.write('{0}, {1}, {2}, {3}\n'.format(k + 1, v[0] / divideBy, v[1] / divideBy, v[2] / divideBy))
 
         if grain_facesDict is None:
             # write voxelized structure with regular hex mesh
@@ -189,19 +190,19 @@ def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain
             fcList = {}
             fcNum = 0
             gr_fcs = defaultdict(list)
-            for gid,ginfo in grain_facesDict.items():                
-                for fc,conn in ginfo.items():
+            for gid, ginfo in grain_facesDict.items():
+                for fc, conn in ginfo.items():
                     if fc not in fcList.keys():
                         fcNum += 1
                         fcList[fc] = fcNum
-                        f.write('%d,%d,%d,%d,%d\n'%(fcNum,conn[0],conn[1],conn[2], conn[3]))            
-                        gr_fcs[gid].append(fcNum)  
+                        f.write('%d,%d,%d,%d,%d\n' % (fcNum, conn[0], conn[1], conn[2], conn[3]))
+                        gr_fcs[gid].append(fcNum)
                     elif fc in fcList.keys():
-                        f.write('%d,%d,%d,%d,%d\n'%(fcList[fc],conn[0],conn[1],conn[2], conn[3]))       
+                        f.write('%d,%d,%d,%d,%d\n' % (fcList[fc], conn[0], conn[1], conn[2], conn[3]))
                         gr_fcs[gid].append(fcList[fc])
 
-            for gid,fcs in gr_fcs.items():             
-                f.write('*ELSET, ELSET=GRAIN{}_SET\n'.format(gid))    
+            for gid, fcs in gr_fcs.items():
+                f.write('*ELSET, ELSET=GRAIN{}_SET\n'.format(gid))
                 for enum, el in enumerate(fcs, 1):
                     if enum % 16 != 0:
                         if enum == len(fcs):
@@ -212,9 +213,9 @@ def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain
                         if enum == len(fcs):
                             f.write('%d\n' % el)
                         else:
-                            f.write('%d\n' % el)    
+                            f.write('%d\n' % el)
 
-            for gid,fcs in gr_fcs.items():    
+            for gid, fcs in gr_fcs.items():
                 f.write('*SURFACE SECTION, ELSET=GRAIN{}_SET\n'.format(gid))
         f.write('*End Part\n')
         f.write('**\n')
@@ -226,7 +227,7 @@ def export2abaqus(nodes, fileName, simulation_data, elmtSetDict, elmtDict, grain
         f.write('*Instance, name=PART-1-1, part=PART-1\n')
         f.write('*End Instance\n')
         f.write('*End Assembly\n')
-    print('---->DONE!\n')                                                                                    
+    print('---->DONE!\n')
     return
 
 
@@ -247,22 +248,113 @@ def writeAbaqusMat(ialloy, angles, filename=None, nsdv=200):
         f.write('** MATERIALS\n')
         f.write('**\n')
         for i in range(Ngr):
-            f.write('*Material, name=GRAIN{}_mat\n'.format(i+1))
+            f.write('*Material, name=GRAIN{}_mat\n'.format(i + 1))
             f.write('*Depvar\n')
             f.write('    {}\n'.format(nsdv))
             f.write('*User Material, constants=4\n')
-            f.write('{}, {}, {}, {}\n'.format(float(ialloy), angles[i,0],
-                                              angles[i,1], angles[i,2]))
+            f.write('{}, {}, {}, {}\n'.format(float(ialloy), angles[i, 0],
+                                              angles[i, 1], angles[i, 2]))
     return
+
 
 def writeAbaqusPhase(grains, nsdv=200):
     with open('Material.inp', 'w') as f:
         f.write('** MATERIALS\n')
         f.write('**\n')
         for i in range(len(grains)):
-            f.write('*Material, name=GRAIN{}_mat\n'.format(i+1))
+            f.write('*Material, name=GRAIN{}_mat\n'.format(i + 1))
             f.write('*Depvar\n')
             f.write('    {}\n'.format(nsdv))
             f.write('*User Material, constants=1\n')
-            f.write('{}\n'.format(float(grains[i+1]['PhaseID'])))
+            f.write('{}\n'.format(float(grains[i + 1]['PhaseID'])))
     return
+
+
+def pickle2microstructure(file, path='./'):
+    """Read pickled microstructure file.
+
+
+    Parameters
+    ----------
+    file : string
+        File name of pickled microstructure to be read.
+    path : string
+        Path under which pickle-files are stored (optional, default: './')
+
+    Returns
+    -------
+    pcl : Material object
+        unpickled microstructure
+
+    """
+    import pickle
+
+    if path[-1] != '/':
+        path += '/'
+    if file is None:
+        raise ValueError('Name for pickled microstructure must be given.')
+    with open(path + file, 'rb') as inp:
+        pcl = pickle.load(inp)
+    return pcl
+
+
+def import_voxels(file, path='./'):
+    import json
+    from kanapy.api import Microstructure
+
+    if path[-1] != '/':
+        path += '/'
+    if file is None:
+        raise ValueError('Name for pickled microstructure must be given.')
+    data = json.load(open(path + file))
+    sh = data['Data']['Shape']
+    gr_numbers = np.unique(data['Data']['Values'])
+    Ngr = len(gr_numbers)
+    voxels = np.reshape(data['Data']['Values'], sh, order=data['Data']['Order'])
+    delta = np.divide(data['Data']['Geometry'][0], sh)
+    RVE_data = {
+        "RVE_sizeX": data['Data']['Geometry'][0],
+        "RVE_sizeY": data['Data']['Geometry'][1],
+        "RVE_sizeZ": data['Data']['Geometry'][2],
+        "Voxel_numberX": sh[0],
+        "Voxel_numberY": sh[1],
+        "Voxel_numberZ": sh[2],
+        "Voxel_resolutionX": delta[0],
+        "Voxel_resolutionY": delta[1],
+        "Voxel_resolutionZ": delta[2],
+        "Periodic": data['Data']['Periodicity'],
+        "Units": data['Data']['Units']['Length'],
+    }
+    elmtDict = dict()
+    elmtSetDict = dict()
+    vox_centerDict = dict()
+    for ngr in gr_numbers:
+        elmtSetDict[ngr] = []
+    if 'Mesh' in data.keys():
+        nodes_v = np.array(data['Mesh']['Nodes']['Values'])
+        for i, el in enumerate(data['Mesh']['Voxels']['Values']):
+            elmtDict[i+1] = el
+            ind = np.array(el, dtype=int) - 1
+            vox_centerDict[i+1] = np.mean(nodes_v[ind], axis=0)
+            ind = np.divide(vox_centerDict[i+1], delta).astype(int)
+            igr = voxels[ind[0], ind[1], ind[2]]
+            elmtSetDict[igr].append(i+1)
+    else:
+        raise ValueError('Construction of mesh from voxel data not yet implemented.')
+
+    ms = Microstructure('from_voxels')
+    ms.Ngr = Ngr
+    ms.RVE_data = RVE_data
+    ms.elmtDict = elmtDict
+    ms.elmtSetDict = elmtSetDict
+    ms.name = 'Microstructure'
+    ms.nodes_v = nodes_v
+    ms.nphase = 1
+    ms.vox_centerDict = vox_centerDict
+    ms.voxels = voxels
+    ms.voxels_phase = np.zeros(sh, dtype=int)
+    ms.phases = {
+        'Phase name': ['Simulanium']*Ngr,
+        'Phase number': [0]*Ngr,
+    }
+    return ms

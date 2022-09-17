@@ -291,7 +291,15 @@ def RVEcreator(stats_dict, nsteps=1000, save_files=False):
     if stats_dict["Grain type"] == "Equiaxed":
 
         # Create dictionaries to store the data generated
-        particle_data = {'Type': stats_dict["Grain type"], 'Number': totalEllipsoids, 'Equivalent_diameter': list(eq_Dia), 'Phase name':phname, 'Phase number':phnum}
+        particle_data = {
+            'Type': stats_dict["Grain type"],
+            'Number': totalEllipsoids,
+            'Equivalent_diameter': list(eq_Dia),
+        }
+        phases = {
+            'Phase name':phname,
+            'Phase number':phnum
+        }
 
     elif stats_dict["Grain type"] == "Elongated":
         # Extract mean grain aspect ratio value info from dict
@@ -345,8 +353,19 @@ def RVEcreator(stats_dict, nsteps=1000, save_files=False):
         minDia2 = minDia.copy()                                     # Minor2 axis length (assuming spheroid)
 
         # Create dictionaries to store the data generated
-        particle_data = {'Type': stats_dict["Grain type"], 'Number': totalEllipsoids, 'Equivalent_diameter': list(eq_Dia), 'Major_diameter': list(majDia),
-                         'Minor_diameter1': list(minDia), 'Minor_diameter2': list(minDia2), 'Tilt angle': list(tilt_angle), 'Phase name':phname, 'Phase number':phnum}
+        particle_data = {
+            'Type': stats_dict["Grain type"],
+            'Number': totalEllipsoids,
+            'Equivalent_diameter': list(eq_Dia),
+            'Major_diameter': list(majDia),
+            'Minor_diameter1': list(minDia),
+            'Minor_diameter2': list(minDia2),
+            'Tilt angle': list(tilt_angle),
+        }
+        phases = {
+            'Phase name': phname,
+            'Phase number': phnum
+        }
     else:
         raise ValueError('The value for "Grain type" must be either "Equiaxed" or "Elongated".')
 
@@ -377,4 +396,4 @@ def RVEcreator(stats_dict, nsteps=1000, save_files=False):
             json.dump(simulation_data, outfile, indent=2)
 
 
-    return particle_data, RVE_data, simulation_data
+    return particle_data, phases, RVE_data, simulation_data

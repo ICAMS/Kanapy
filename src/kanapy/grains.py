@@ -8,7 +8,7 @@ from scipy.spatial.distance import euclidean
 from tqdm import tqdm
 
 
-def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr, voxels, particle_data, vox_centerDict, tol=1.e-3,
+def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr, voxels, phases, vox_centerDict, tol=1.e-3,
                  dual_phase=False):
     """
     Evaluates the grain volume and the grain boundary shared surface area
@@ -474,8 +474,8 @@ def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr, voxels, particle
         grains[igr]['majDia'] = 2.0 * np.amax(dists)
         grains[igr]['minDia'] = 2.0 * np.amin(dists)
         if dual_phase:
-            grains[igr]['PhaseID'] = particle_data['Phase number'][igr - 1]
-            grains[igr]['PhaseName'] = particle_data['Phase name'][igr - 1]
+            grains[igr]['PhaseID'] = phases['Phase number'][igr - 1]
+            grains[igr]['PhaseName'] = phases['Phase name'][igr - 1]
 
     RVE_data['Grains'] = grains
     RVE_data['GBnodes'] = gbDict

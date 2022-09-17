@@ -90,7 +90,11 @@ def rot_surf():
 
 def test_particle_generator(par_sim):
     rve_data = {'Periodic' : False}
-    ell_list = particle_generator(par_sim[0], par_sim[1], rve_data)
+    ph = {
+        'Phase name': ['Simulanium'] * par_sim[0]['Number'],
+        'Phase number': [0] * par_sim[0]['Number'],
+    }
+    ell_list = particle_generator(par_sim[0], ph, par_sim[1], rve_data)
 
     for ell in ell_list:
         assert isinstance(ell, Ellipsoid)
@@ -135,6 +139,11 @@ def test_packingRoutine():
           'Minor_diameter1': [1.5, 1.5], 'Minor_diameter2': [1.5, 1.5], 'Tilt angle': [86, 92],
           'Phase name':['XXXX', 'XXXX'], 'Phase number': [0, 0]}
 
+    ph = {
+        'Phase name': ['Simulanium']*pd['Number'],
+        'Phase number': [0]*pd['Number'],
+    }
+
     rd = {'RVE_sizeX': 10, 'RVE_sizeY': 10, 'RVE_sizeZ': 10, 
           'Voxel_numberX': 3, 'Voxel_numberY': 3, 'Voxel_numberZ': 3, 
           'Voxel_resolutionX': round(10/3,4), 'Voxel_resolutionY': round(10/3,4),
@@ -144,10 +153,10 @@ def test_packingRoutine():
 
     # Test if the 'particle_generator' function is called once
     with mock.patch('kanapy.packing.particle_generator') as mocked_method:
-        packingRoutine(pd, rd, sd, save_files=False)
+        packingRoutine(pd, ph, rd, sd, save_files=False)
         assert mocked_method.call_count == 1
 
     # Test if the 'particle_grow' function is called once
     with mock.patch('kanapy.packing.particle_grow', return_value=(None, None)) as mocked_method:
-        packingRoutine(pd, rd, sd, save_files=False)
+        packingRoutine(pd, ph, rd, sd, save_files=False)
         assert mocked_method.call_count == 1

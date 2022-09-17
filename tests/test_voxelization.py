@@ -202,7 +202,7 @@ def test_reassign_shared_voxels(dec_info):
 
 def test_voxelizationRoutine():    
 
-    # create an temporary input file for user defined statistics
+    # create a temporary input file for user defined statistics
     cwd = os.getcwd()    
     json_dir = cwd + '/json_files'
     dump_dir = cwd + '/dump_files'
@@ -221,7 +221,7 @@ def test_voxelizationRoutine():
 
     RVEcreator(to_write, save_files=True)   
 
-    # create an temporary 'dump' directory for reading files from
+    # create a temporary 'dump' directory for reading files from
     with open(json_dir + '/RVE_data.json') as json_file:
         RVE_data = json.load(json_file)
         
@@ -230,7 +230,11 @@ def test_voxelizationRoutine():
                                     
     sim_box = Simulation_Box(RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ'])
     sim_box.sim_ts = 500
-    Particles = particle_generator(particle_data, sim_box, rve_data)
+    ph = {
+        'Phase name': ['Simulanium'] * particle_data['Number'],
+        'Phase number': [0] * particle_data['Number'],
+    }
+    Particles = particle_generator(particle_data, ph, sim_box, rve_data)
     
     #write_dump(Particles, sim_box)
     

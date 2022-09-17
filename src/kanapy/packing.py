@@ -9,7 +9,7 @@ from kanapy.collisions import collision_routine
 import kanapy.base as kbase
 
 
-def particle_generator(particle_data, sim_box, RVE_data):
+def particle_generator(particle_data, phases, sim_box, RVE_data):
     """
     Initializes ellipsoids by assigning them random positions and speeds within the simulation box.
 
@@ -57,7 +57,7 @@ def particle_generator(particle_data, sim_box, RVE_data):
         quat = np.array([qw, qx, qy, qz])
 
         #Find the phase number
-        phasenum = particle_data['Phase number'][n]
+        phasenum = phases['Phase number'][n]
         
         # instance of Ellipsoid class
         ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat, phasenum=phasenum)
@@ -228,7 +228,7 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
                 ell.force_z += Force * dz / r
     return
 
-def packingRoutine(particle_data, RVE_data, simulation_data, k_rep=0.0, k_att=0.0, save_files=False):
+def packingRoutine(particle_data, phases, RVE_data, simulation_data, k_rep=0.0, k_att=0.0, save_files=False):
     """
     The main function that controls the particle packing routine using: :meth:`particle_grow` & :meth:`particle_generator`
     
@@ -246,7 +246,7 @@ def packingRoutine(particle_data, RVE_data, simulation_data, k_rep=0.0, k_att=0.
     
     print('    Creating particles from distribution statistics')
     # Create instances for particles
-    Particles = particle_generator(particle_data, sim_box, RVE_data)
+    Particles = particle_generator(particle_data, phases, sim_box, RVE_data)
     
     # Growth of particle at each time step
     print('    Particle packing by growth simulation')

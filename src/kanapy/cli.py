@@ -181,7 +181,11 @@ def pack(ctx):
     
         except:
             raise FileNotFoundError('Json files not found, make sure "RVE creator" command is executed first!')
-        packingRoutine(particle_data, RVE_data, simulation_data, save_files=True)
+        phases = {
+            'Phase name': ['Simulanium'] * particle_data['Number'],
+            'Phase number': [0] * particle_data['Number'],
+        }
+        packingRoutine(particle_data, phases, RVE_data, simulation_data, save_files=True)
     except KeyboardInterrupt:
         sys.exit(0)
 

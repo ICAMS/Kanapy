@@ -151,7 +151,7 @@ def test_export_abaqus():
     esd = {1: [1, 2, 4, 5, 10, 11, 13, 3, 6, 7, 8, 9, 16],
            2: [20, 22, 23, 17, 25, 26, 12, 15, 18, 21, 24, 27, 19, 14]}
 
-    simData = {'Periodicity': 'True', 'Output units': 'mm'}
+    rveData = {'Periodic': True, 'Units': 'mm'}
     
     name ='/kanapy_{0}grains.inp'.format(len(esd))
     
@@ -162,7 +162,7 @@ def test_export_abaqus():
     #with pytest.raises(FileNotFoundError):
     #    abaqusoutput()
         
-    export2abaqus(nodes, cwd+name, simData, esd, ed)
+    export2abaqus(nodes, cwd+name, rveData, esd, ed)
     assert os.path.isfile(cwd + name)
     os.remove(cwd + name)
     
