@@ -2,6 +2,7 @@ function [todf,hw] = odfEst(ori,w,hw,odf)
 
 e =[];
 step = 0.5;
+w = w(:)./sum(w);
 for c =1:100
     todf = calcKernelODF(ori,'weights',w,'halfwidth',hw*degree);
     e = [e calcError(odf,todf)];
