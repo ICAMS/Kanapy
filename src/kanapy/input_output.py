@@ -305,7 +305,7 @@ def import_voxels(file, path='./'):
     if path[-1] != '/':
         path += '/'
     if file is None:
-        raise ValueError('Name for pickled microstructure must be given.')
+        raise ValueError('Name for voxel file must be given.')
     data = json.load(open(path + file))
     sh = data['Data']['Shape']
     gr_numbers = np.unique(data['Data']['Values'])

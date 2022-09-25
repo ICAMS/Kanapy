@@ -611,7 +611,7 @@ class Microstructure:
             else:
                 file = self.name + '.stl'
         with open(file, 'w') as f:
-            f.write("solid {}\n".format(self.name));
+            f.write("solid {}\n".format(self.name))
             for ft in self.RVE_data['Facets']:
                 pts = self.RVE_data['Points'][ft]
                 nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
