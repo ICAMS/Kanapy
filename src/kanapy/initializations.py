@@ -199,9 +199,14 @@ def RVEcreator(stats_dict, nsteps=1000, save_files=False):
     Ny = int(stats_dict["RVE"]["Ny"])
     Nz = int(stats_dict["RVE"]["Nz"])
 
-    phase_name = stats_dict["Phase"]["Name"]
-    phase_number = stats_dict["Phase"]["Number"]
-    VF = stats_dict["Phase"]["Volume fraction"]
+    if "Phase" in stats_dict.keys():
+        phase_name = stats_dict["Phase"]["Name"]
+        phase_number = stats_dict["Phase"]["Number"]
+        VF = stats_dict["Phase"]["Volume fraction"]
+    else:
+        phase_name = "Material"
+        phase_number = 0
+        VF = 1.
 
     # Extract other simulation attrributes from input file
     periodicity = str(stats_dict["Simulation"]["periodicity"])
