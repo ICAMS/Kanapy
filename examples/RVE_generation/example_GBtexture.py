@@ -24,8 +24,7 @@ ms_elong = {'Grain type': 'Elongated',
           'Aspect ratio': {'std':1.5, 'mean': 2.0, 'offs': 0.8, 'cutoff_min': 1.0, 'cutoff_max': 4.0},
           'Tilt angle': {'std': 15., 'mean': 90., "cutoff_min": 0.0, "cutoff_max": 180.0},
           'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': Nv, 'Ny': Nv, 'Nz': Nv},
-          'Simulation': {'periodicity': str(periodic), 'output_units': 'mm'},
-          'Phase': {'Name': matname, 'Number': matnumber, 'Volume fraction': 1.0}}
+          'Simulation': {'periodicity': str(periodic), 'output_units': 'mm'}}
 
 ms = knpy.Microstructure(ms_elong)
 ms.init_stats()
