@@ -32,8 +32,8 @@ class EBSDmap:
         eng.workspace["ebsd_w"] = ebsd_full
         ebsd = eng.eval("ebsd_w('indexed')")  # select only indexed pixels in EBSD
         # Texture analysis: if multiple phases exist, select one single phase
-
-        self.ori = eng.getfield(ebsd, 'orientations')  # orientation set from the EBSD
+        ori0 = eng.getfield(ebsd, 'orientations')  # orientation set from the EBSD
+        self.ori = eng.project2FundamentalRegion(ori0)
         self.cs = eng.getfield(ebsd, 'CS')
         # analyze grain boundaries with MTEX function
         grains_full = eng.calcGrains(ebsd, 'boundary', 'tight', 'angle',
