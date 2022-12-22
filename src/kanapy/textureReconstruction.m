@@ -243,4 +243,6 @@ end
 
 end
 
+odfred_f = odfred_f.project2FundamentalRegion;
+
 time = toc
