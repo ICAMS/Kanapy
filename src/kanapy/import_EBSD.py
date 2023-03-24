@@ -26,7 +26,10 @@ class EBSDmap:
         self.eng = eng
         
         # read EBSD map and return the matlab.object of MTEX class EBSD
-        ebsd_full = eng.EBSD.load(fname, matname, 'interface', 'ang',
+        fmt = fname[-3:]
+        if fmt!='ang' and fmt!='ctf':
+            raise ValueError(f'Unknown EBSD format: {fmt}')
+        ebsd_full = eng.EBSD.load(fname, matname, 'interface', fmt,
                                   'convertSpatial2EulerReferenceFrame', 'setting 2')  # 'silent')
         # remove not indexed pixels
         eng.workspace["ebsd_w"] = ebsd_full
