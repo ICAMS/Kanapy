@@ -164,7 +164,7 @@ class EBSDmap:
         orired, odfred, ero = \
             self.eng.textureReconstruction(Ng, 'orientation', self.ori,
                                           'grains', self.grains, nargout=3)
-        orired = self.eng.project2FundamentalRegion(orired)
+        # orired = self.eng.project2FundamentalRegion(orired)
         # this should work, too, but produces an error
         # psi = eng.calcKernel(eng.getfield(grains,'meanOrientation'))
         # orired, odfred, ero = eng.textureReconstruction(Ng,
@@ -312,7 +312,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     ori, odfred, ero = \
         eng.textureReconstruction(num, 'orientation', o, 'kernel', psi,
                                   nargout=3)
-    ori = eng.project2FundamentalRegion(ori)
+    #ori = eng.project2FundamentalRegion(ori)
     if hist is None:
         return np.array(eng.Euler(ori))
     else:
@@ -364,7 +364,7 @@ def createOrisetRandom(num, omega=7.5, hist=None, shared_area=None,
     ori, odfred, ero = \
         eng.textureReconstruction(num, 'orientation', ot, 'kernel', psi,
                                   nargout=3)
-    ori = eng.project2FundamentalRegion(ori)
+    #ori = eng.project2FundamentalRegion(ori)
     if hist is None:
         return np.array(eng.Euler(ori))
     else:
