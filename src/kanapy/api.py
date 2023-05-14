@@ -661,7 +661,7 @@ class Microstructure:
                 f.write('{}, {}, {}\n'.format(ori[0], ori[1], ori[2]))
         return
 
-    def write_voxels(self, sname, file=None, path='./', mesh=True, source=None):
+    def write_voxels(self, sname, file=None, path='./', mesh=True, source=None, dual_phase=False):
         """
         Write voxel structure into JSON file.
 
@@ -672,6 +672,7 @@ class Microstructure:
         path
         mesh
         source
+        dual_phase
 
         Returns
         -------
@@ -695,6 +696,10 @@ class Microstructure:
         today = str(date.today())  # date
         owner = getpass.getuser()  # username
         sys_info = platform.uname()  # system information
+        if dual_phase == True:
+            data_values = [val.item() for val in self.voxels_phase.flatten()]  # item() converts numpy-int64 to python int
+        else:
+            data_values = [val.item() for val in self.voxels.flatten()]
         structure = {
             "Info": {
                 "Owner": owner,
@@ -721,7 +726,7 @@ class Microstructure:
                 "Type"  : 'int',
                 "Shape" : self.voxels.shape,
                 "Order" : 'C',
-                "Values": [val.item() for val in self.voxels.flatten()],  # item() converts numpy-int64 to python int
+                "Values": data_values,
                 "Geometry" : (self.RVE_data['RVE_sizeX'],
                               self.RVE_data['RVE_sizeY'],
                               self.RVE_data['RVE_sizeZ']),
