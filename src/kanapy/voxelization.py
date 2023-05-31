@@ -412,7 +412,7 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
                 elmtSetDict[int(ellipsoid.id)] =\
                     [int(iv) for iv in ellipsoid.inside_voxels]
         else:
-            continue
+            # continue
             # If ellipsoid does'nt contain any voxel inside
             print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissable'
                   .format(int(ellipsoid.id)))
