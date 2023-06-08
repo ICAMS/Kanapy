@@ -521,7 +521,7 @@ def setPaths():
             json.dump(path_dict, outfile, indent=2)                
         
         os.chdir('{}extern/engines/python'.format(userpath1[0:-10])) # remove bin/matlab from matlab path
-        os.system('python setup.py install')
+        os.system('python -m pip install .')
         path = os.path.abspath(__file__)[0:-7] # remove /cli.py from kanapy path
         os.chdir(path)
         os.system('python init_engine.py')
