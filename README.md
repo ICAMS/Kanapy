@@ -73,13 +73,19 @@ to use Kanapy's texture module, a
 (knpy) $ kanapy setupTexture
 ```
 
+**Note:** The installation scripts have been tested for Matlab R2023a with Python 3.9.16. If you are using other Matlab versions, the script "setupTexture" might fail. In this case, you can setup the Matlab Engine API for Python manually. To do so, please follow the instructions given on the [Mathworks&reg;](https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html) website, to (i) Verify your configuration, (ii) Install Engine API, and (iii) Start MATLAB Engine. The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the "environment.yml" file and re-creating the conda environment *knpy*.
+
 # Running tests
 
-Kanapy uses pytest to perform all its unit testing.
+Kanapy uses pytest to perform all its unit testing. Run
 
 ```
 (knpy) $ kanapy runTests          
 ```
+
+to verify the correct installation of Kanapy.   
+
+**Note:** If the texture module (test\_texture.py) fails the test, the cause lies oftentimes in a wrong MATLAB path. Please run "\$ matlab startup_mtex.m" in that case to fix the problem.
 
 # Documentation
 
