@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import kanapy.base as kbase
 
 def collision_routine(E1, E2, damp=0):
     """
@@ -22,7 +21,7 @@ def collision_routine(E1, E2, damp=0):
     """
 
     # call the c++ method
-    overlap_status = kbase.collideDetect(E1.get_coeffs(), E2.get_coeffs(), 
+    overlap_status = collide_detect(E1.get_coeffs(), E2.get_coeffs(),
                                    E1.get_pos(), E2.get_pos(), 
                                    E1.rotation_matrix, E2.rotation_matrix)
 
@@ -86,3 +85,138 @@ def collision_react(ell1, ell2, damp=0.):
     ell1.speedz += z_speed
 
     return
+
+
+def collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j):
+    r"""Implementation of Algebraic separation condition developed by
+    W. Wang et al. 2001 for overlap detection between two static ellipsoids.
+    kudos ChatGPT for support with translation from C++ code
+
+        :param arg0: Coefficients of ellipsoid :math:`i`
+        :type arg0: numpy array
+        :param arg1: Coefficients of ellipsoid :math:`j`
+        :type arg1: numpy array
+        :param arg2: Position of ellipsoid :math:`i`
+        :type arg2: numpy array
+        :param arg3: Position of ellipsoid :math:`j`
+        :type arg3: numpy array
+        :param arg4: Rotation matrix of ellipsoid :math:`i`
+        :type arg4: numpy array
+        :param arg5: Rotation matrix of ellipsoid :math:`j`
+        :type arg5: numpy array
+        :returns: **True** if ellipoids :math:`i, j` overlap, else **False**
+        :rtype: boolean
+    """
+    SMALL = 1.e-12
+
+    # Initialize Matrices A & B with zeros
+    A = np.zeros((4, 4), dtype=float)
+    B = np.zeros((4, 4), dtype=float)
+
+    A[0, 0] = 1 / (coef_i[0] ** 2)
+    A[1, 1] = 1 / (coef_i[1] ** 2)
+    A[2, 2] = 1 / (coef_i[2] ** 2)
+    A[3, 3] = -1
+
+    B[0, 0] = 1 / (coef_j[0] ** 2)
+    B[1, 1] = 1 / (coef_j[1] ** 2)
+    B[2, 2] = 1 / (coef_j[2] ** 2)
+    B[3, 3] = -1
+
+    # Rigid body transformations
+    T_i = np.zeros((4, 4), dtype=float)
+    T_j = np.zeros((4, 4), dtype=float)
+
+    T_i[:3, :3] = A_i
+    T_i[:3, 3] = r_i
+    T_i[3, 3] = 1.0
+
+    T_j[:3, :3] = A_j
+    T_j[:3, 3] = r_j
+    T_j[3, 3] = 1.0
+
+    # Copy the arrays for future operations
+    Ma = np.tile(T_i, (1, 1))
+    Mb = np.tile(T_j, (1, 1))
+
+    # aij of matrix A in det(lambda*A - Ma'*(Mb^-1)'*B*(Mb^-1)*Ma).
+    # bij of matrix b = Ma'*(Mb^-1)'*B*(Mb^-1)*Ma
+    aux = np.linalg.inv(Mb) @ Ma
+    bm = aux.T @ B @ aux
+
+    # Coefficients of the Characteristic Polynomial.
+    T0 = (-A[0, 0] * A[1, 1] * A[2, 2])
+    T1 = (A[0, 0] * A[1, 1] * bm[2, 2] + A[0, 0] * A[2, 2] * bm[1, 1] + A[1, 1] * A[2, 2] * bm[0, 0] - A[0, 0] * A[
+        1, 1] * A[2, 2] * bm[3, 3])
+    T2 = (A[0, 0] * bm[1, 2] * bm[2, 1] - A[0, 0] * bm[1, 1] * bm[2, 2] - A[1, 1] * bm[0, 0] * bm[2, 2] + A[1, 1] * bm[
+        0, 2] * bm[2, 0] -
+          A[2, 2] * bm[0, 0] * bm[1, 1] + A[2, 2] * bm[0, 1] * bm[1, 0] + A[0, 0] * A[1, 1] * bm[2, 2] * bm[3, 3] - A[
+              0, 0] * A[1, 1] * bm[2, 3] * bm[3, 2] +
+          A[0, 0] * A[2, 2] * bm[1, 1] * bm[3, 3] - A[0, 0] * A[2, 2] * bm[1, 3] * bm[3, 1] + A[1, 1] * A[2, 2] * bm[
+              0, 0] * bm[3, 3] -
+          A[1, 1] * A[2, 2] * bm[0, 3] * bm[3, 0])
+    T3 = (bm[0, 0] * bm[1, 1] * bm[2, 2] - bm[0, 0] * bm[1, 2] * bm[2, 1] - bm[0, 1] * bm[1, 0] * bm[2, 2] + bm[0, 1] *
+          bm[1, 2] * bm[2, 0] +
+          bm[0, 2] * bm[1, 0] * bm[2, 1] - bm[0, 2] * bm[1, 1] * bm[2, 0] - A[0, 0] * bm[1, 1] * bm[2, 2] * bm[3, 3] +
+          A[0, 0] * bm[1, 1] * bm[2, 3] * bm[3, 2] +
+          A[0, 0] * bm[1, 2] * bm[2, 1] * bm[3, 3] - A[0, 0] * bm[1, 2] * bm[2, 3] * bm[3, 1] - A[0, 0] * bm[1, 3] * bm[
+              2, 1] * bm[3, 2] +
+          A[0, 0] * bm[1, 3] * bm[2, 2] * bm[3, 1] - A[1, 1] * bm[0, 0] * bm[2, 2] * bm[3, 3] + A[1, 1] * bm[0, 0] * bm[
+              2, 3] * bm[3, 2] +
+          A[1, 1] * bm[0, 2] * bm[2, 0] * bm[3, 3] - A[1, 1] * bm[0, 2] * bm[2, 3] * bm[3, 0] - A[1, 1] * bm[0, 3] * bm[
+              2, 0] * bm[3, 2] +
+          A[1, 1] * bm[0, 3] * bm[2, 2] * bm[3, 0] - A[2, 2] * bm[0, 0] * bm[1, 1] * bm[3, 3] + A[2, 2] * bm[0, 0] * bm[
+              1, 3] * bm[3, 1] +
+          A[2, 2] * bm[0, 1] * bm[1, 0] * bm[3, 3] - A[2, 2] * bm[0, 1] * bm[1, 3] * bm[3, 0] - A[2, 2] * bm[0, 3] * bm[
+              1, 0] * bm[3, 1] +
+          A[2, 2] * bm[0, 3] * bm[1, 1] * bm[3, 0])
+    T4 = (bm[0, 0] * bm[1, 1] * bm[2, 2] * bm[3, 3] - bm[0, 0] * bm[1, 1] * bm[2, 3] * bm[3, 2] - bm[0, 0] * bm[1, 2] *
+          bm[2, 1] * bm[3, 3] +
+          bm[0, 0] * bm[1, 2] * bm[2, 3] * bm[3, 1] + bm[0, 0] * bm[1, 3] * bm[2, 1] * bm[3, 2] - bm[0, 0] * bm[1, 3] *
+          bm[2, 2] * bm[3, 1] -
+          bm[0, 1] * bm[1, 0] * bm[2, 2] * bm[3, 3] + bm[0, 1] * bm[1, 0] * bm[2, 3] * bm[3, 2] + bm[0, 1] * bm[1, 2] *
+          bm[2, 0] * bm[3, 3] -
+          bm[0, 1] * bm[1, 2] * bm[2, 3] * bm[3, 0] - bm[0, 1] * bm[1, 3] * bm[2, 0] * bm[3, 2] + bm[0, 1] * bm[1, 3] *
+          bm[2, 2] * bm[3, 0] +
+          bm[0, 2] * bm[1, 0] * bm[2, 1] * bm[3, 3] - bm[0, 2] * bm[1, 0] * bm[2, 3] * bm[3, 1] - bm[0, 2] * bm[1, 1] *
+          bm[2, 0] * bm[3, 3] +
+          bm[0, 2] * bm[1, 1] * bm[2, 3] * bm[3, 0] + bm[0, 2] * bm[1, 3] * bm[2, 0] * bm[3, 1] - bm[0, 2] * bm[1, 3] *
+          bm[2, 1] * bm[3, 0] -
+          bm[0, 3] * bm[1, 0] * bm[2, 1] * bm[3, 2] + bm[0, 3] * bm[1, 0] * bm[2, 2] * bm[3, 1] + bm[0, 3] * bm[1, 1] *
+          bm[2, 0] * bm[3, 2] -
+          bm[0, 3] * bm[1, 1] * bm[2, 2] * bm[3, 0] - bm[0, 3] * bm[1, 2] * bm[2, 0] * bm[3, 1] + bm[0, 3] * bm[1, 2] *
+          bm[2, 1] * bm[3, 0])
+
+    # Roots of the characteristic_polynomial (lambda0, ... , lambda4).
+    cp = np.array([T0, T1, T2, T3, T4], dtype=float)
+
+    # Solve the polynomial
+    roots = np.roots(cp)
+
+    # Find the real roots where imaginary part doesn't exist
+    real_roots = [root.real for root in roots if abs(root.imag) < SMALL]
+
+    # Count number of real negative roots
+    count_neg = sum(1 for root in real_roots if root < -SMALL)
+
+    # Sort the real roots in ascending order
+    real_roots.sort()
+
+    # Algebraic separation conditions to determine overlapping
+    if count_neg == 2:
+        if abs(real_roots[0] - real_roots[1]) > SMALL:
+            return False
+        else:
+            return True
+    else:
+        return True
+
+# Example usage:
+# coef_i = np.array([a_i, b_i, c_i])
+# coef_j = np.array([a_j, b_j, c_j])
+# r_i = np.array([x_i, y_i, z_i])
+# r_j = np.array([x_j, y_j, z_j])
+# A_i = np.array([[A11_i, A12_i, A13_i], [A21_i, A22_i, A23_i], [A31_i, A32_i, A33_i]])
+# A_j = np.array([[A11_j, A12_j, A13_j], [A21_j, A22_j, A23_j], [A31_j, A32_j, A33_j]])
+# result = collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j)
+

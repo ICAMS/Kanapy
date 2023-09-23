@@ -5,8 +5,7 @@ import numpy as np
 
 from kanapy.input_output import write_dump
 from kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
-from kanapy.collisions import collision_routine
-import kanapy.base as kbase
+from kanapy.collisions import collide_detect
 
 
 def particle_generator(particle_data, phases, sim_box, RVE_data):
@@ -279,7 +278,7 @@ def packingRoutine(particle_data, phases, RVE_data, simulation_data, k_rep=0.0, 
                     # If the bounding spheres collide then check for collision
                     if dist <= (E1.a + E2.a):
                         # Check if ellipsoids overlap and update their speeds accordingly
-                        if kbase.collideDetect(E1.get_coeffs(), E2.get_coeffs(), 
+                        if collide_detect(E1.get_coeffs(), E2.get_coeffs(),
                                     E1.get_pos(), E2.get_pos(), 
                                     E1.rotation_matrix, E2.rotation_matrix):
                             E1.ncollision += 1

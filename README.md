@@ -5,15 +5,9 @@
 
 Kanapy is a python package for generating complex three-dimensional (3D) synthetic
 polycrystalline microstructures that are built based on statistical information about grain geometry, given as grain size distribution and aspect ratio of grains, and crystallographic texture, given in form of orientation distribution functions (ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze the geometry and texture of microstructures given by EBSD maps to generate 3D synthetic microstructures mimicking real ones in a statistical sense. The
-general implementation is done in [Python](http://www.python.org) with
-the performance critical part for the geometry module implemented in
-C++. The Python bindings for the code written in C++ are generated using
-the lightweight header-only library
-[pybind11](https://pybind11.readthedocs.io/en/stable/). The C++ part of
-the implementation utilizes the
-[Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) library
-for efficient linear algebra calculations. The texture module of Kanapy
-is implemented as
+implementation is done in [Python](http://www.python.org).  
+
+The texture module of Kanapy is implemented as
 [MATLAB](https://www.mathworks.com/products/matlab.html) functions using several algorithms implemented in
 [MTEX](https://mtex-toolbox.github.io/) for texture analysis.
 
@@ -52,8 +46,6 @@ The preferred method to install kanapy is through Anaconda or Miniconda
 Python distributions. If you do not have any, we suggest installing
 [miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
-Note, that you also need "cmake" and a C++ compiler, as g++, installed on your system, and the system paths set properly.
-
 Once done, clone the repository to a desired location, create a conda
 environment for the Kanapy installation and install.
 
@@ -62,7 +54,7 @@ $ git clone https://github.com/ICAMS/Kanapy.git ./kanapy
 $ cd kanapy
 $ conda env create -f environment.yml
 $ conda activate knpy
-(knpy) $ pip install -e .
+(knpy) $ python -m pip install .
 ```
 
 Kanapy is now installed along with all its dependencies. If you intend
@@ -104,14 +96,6 @@ The updated HTML documentation can then be found at
 
 # Dependencies
 
-For Linux/Mac OS, Kanapy requires a working C/C++ compiler on your
-machine. The gcc toolchain will work well. For Windows, Kanapy is
-installed as a pre-built distribution (.whl file). In either case, the
-lightweight header-only library pybind11 is used to create Python
-bindings for the code written in C++. The C++ function will be complied
-by linking the Eigen library (present in the directory
-*kanapy/libs/*). CMake builds this extension.
-
 Kanapy's texture module requires
 [MATLAB](https://www.mathworks.com/products/matlab.html) to be installed on your machine. Make sure to use MATLAB v2015a and above. The module uses a local version of [MTEX](https://mtex-toolbox.github.io/) contained in *kanapy/libs* and does not interfere with other installations of MTEX.
 
@@ -122,10 +106,6 @@ Below are the listed dependencies for running kanapy:
 > -   [NumPy](http://numpy.scipy.org) for array manipulation.
 > -   [Scipy](https://www.scipy.org/) for functionalities like
 >     Convexhull.
-> -   [pybind11](https://pybind11.readthedocs.io/en/stable/) for
->     creating python bindings for C++ code.
-> -   [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for
->     C++ linear algebra operations.
 > -   [pytest](https://www.pytest.org) for running kanapy unit tests.
 > -   [sphinx](http://www.sphinx-doc.org/en/master/) for generating
 >     documentation.

@@ -7,7 +7,6 @@ from unittest import mock
 
 import kanapy
 from kanapy.collisions import *
-from kanapy.base import collideDetect
 from kanapy.entities import Ellipsoid
 
 
@@ -96,7 +95,7 @@ def ellip(mocker):
 
 def test_collideDetect(ellip):
 
-    status = collideDetect(ellip[0].get_coeffs(), ellip[1].get_coeffs(),
+    status = collide_detect(ellip[0].get_coeffs(), ellip[1].get_coeffs(),
                            ellip[0].get_pos(), ellip[1].get_pos(),
                            ellip[0].rotation_matrix, ellip[1].rotation_matrix)
 

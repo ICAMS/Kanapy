@@ -415,7 +415,7 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
             # continue
             # If ellipsoid does'nt contain any voxel inside
             print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissable'
-                  .format(int(ellipsoid.id)))
+                  .format(ellipsoid.id))
             sys.exit(0)
     
     # generate array of voxelized structure
