@@ -15,7 +15,7 @@ The texture module of Kanapy is implemented as
 
 # Features
 
--   Kanapy is used through a Command Line Interface (CLI).
+-   Kanapy offers a Python Application Programming Interface (API) and can also be used through a Command Line Interface (CLI).
 -   Possibility to analyze experimental microstructures based on [MTEX](https://mtex-toolbox.github.io/) functions.
 -   Generation of microstructure geometry based on statistical features as grain size distribution and grain aspect ratio distribution.
 -   Crystallographic texture reconstruction using orientations from
@@ -29,16 +29,12 @@ The texture module of Kanapy is implemented as
 -   Collision handling of particles through a two-layer
     collision detection method employing the Octree spatial data
     structure and the bounding sphere hierarchy.
--   Flexibility in the choice of the particle packing time step to be
-    sent for voxelization (meshing).
 -   Option to generate spherical particle position- and radius files
     that can be read by the Voronoi tessellation software
     [Neper](http://neper.sourceforge.net/).
 -   Option to generate input files for the commercial finite-element
     software
-    [Abaqus](https://www.3ds.com/products-services/simulia/products/abaqus/).
--   High-performance for the critical part of the geometry code using
-    Python-C++ bindings.
+    [Abaqus](https://www.3ds.com/products-services/simulia/products/abaqus/)
 
 # Installation
 
@@ -59,13 +55,13 @@ $ conda activate knpy
 
 Kanapy is now installed along with all its dependencies. If you intend
 to use Kanapy's texture module, a
-[MATLAB](https://www.mathworks.com/products/matlab.html) installation is required because the texture module is based on [MTEX](https://mtex-toolbox.github.io/) functions. If MATLAB is available on your system, the texture module is initialized by the command
+[MATLAB](https://www.mathworks.com/products/matlab.html) installation is required because the texture module is based on [MTEX](https://mtex-toolbox.github.io/) functions. Kanapy uses a local version of MTEX stored in libs/mtex, if you want to use another version, please set the paths accordingly. If MATLAB is available on your system, the texture module is initialized by the command
 
 ``` 
 (knpy) $ kanapy setupTexture
 ```
 
-**Note:** The installation scripts have been tested for Matlab R2023a with Python 3.9.16. If you are using other Matlab versions, the script "setupTexture" might fail. In this case, you can setup the Matlab Engine API for Python manually. To do so, please follow the instructions given on the [Mathworks&reg;](https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html) website, to (i) Verify your configuration, (ii) Install Engine API, and (iii) Start MATLAB Engine. The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the "environment.yml" file and re-creating the conda environment *knpy*.
+**Note:** The installation scripts have been tested for Matlab R2023a with Python 3.9.16. If you are using other Matlab versions, the script "setupTexture" might fail. In that case, you can setup the Matlab Engine API for Python manually. To do so, please follow the instructions given on the [Mathworks&reg;](https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html) website, to (i) Verify your configuration, (ii) Install Engine API, and (iii) Start MATLAB Engine. The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the "environment.yml" file and re-creating the conda environment *knpy*.
 
 # Running tests
 
@@ -77,11 +73,11 @@ Kanapy uses pytest to perform all its unit testing. Run
 
 to verify the correct installation of Kanapy.   
 
-**Note:** If the texture module (test\_texture.py) fails the test, the cause lies oftentimes in a wrong MATLAB path. Please run "\$ matlab startup_mtex.m" in that case to fix the problem.
+**Note:** If the texture module (test\_texture.py) fails the test, the cause lies oftentimes in a wrong MATLAB path. Please run "\$ matlab startup_mtex.m" in the directory "libs/mtex" to fix that problem.
 
 # Documentation
 
-Open *kanapy/docs/index.html* in a browser to access the complete documentation for kanapy.
+Open "kanapy/docs/index.html" in a browser to access the complete documentation for kanapy.
 
 The documentation is also available online on GitHub Pages: [https://icams.github.io/Kanapy/](https://icams.github.io/Kanapy/)
 
@@ -91,8 +87,8 @@ The documentation for kanapy is generated using [Sphinx](http://www.sphinx-doc.o
 (knpy) $ kanapy genDocs                    
 ```
 
-The updated HTML documentation can then be found at
-*kanapy/docs/builds/html*.
+The updated HTML documentation can then be found under
+"kanapy/docs/builds/html".
 
 # Dependencies
 
