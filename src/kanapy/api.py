@@ -590,7 +590,8 @@ class Microstructure:
 
     def write_stl(self, file=None):
         """ Write triangles of convex polyhedra forming grains in form of STL
-        files in the format:
+        files in the format
+        '
         solid name
           facet normal n1 n2 n3
             outer loop
@@ -600,11 +601,13 @@ class Microstructure:
             endloop
           endfacet
         endsolid name
+        '
 
         Returns
         -------
         None.
         """
+
         if file is None:
             if self.name == 'Microstructure':
                 file = 'px_{}grains.stl'.format(self.Ngr)

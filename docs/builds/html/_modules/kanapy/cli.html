@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>kanapy.cli &mdash; kanapy 5.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            kanapy
+          </a>
+              <div class="version">
+                5.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../method.html">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kanapy.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">kanapy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">kanapy.cli</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for kanapy.cli</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">click</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">ConvexHull</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">import</span> <span class="n">euclidean</span>
+
+<span class="kn">from</span> <span class="nn">kanapy.grains</span> <span class="kn">import</span> <span class="n">l1_error_est</span>
+<span class="kn">from</span> <span class="nn">kanapy.util</span> <span class="kn">import</span> <span class="n">MAIN_DIR</span><span class="p">,</span> <span class="n">WORK_DIR</span>
+<span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="kn">import</span> <span class="n">read_dump</span><span class="p">,</span> <span class="n">export2abaqus</span>
+<span class="kn">from</span> <span class="nn">kanapy.initializations</span> <span class="kn">import</span> <span class="n">particleStatGenerator</span><span class="p">,</span> <span class="n">RVEcreator</span>
+<span class="kn">from</span> <span class="nn">kanapy.plotting</span> <span class="kn">import</span> <span class="n">plot_output_stats</span>
+<span class="kn">from</span> <span class="nn">kanapy.packing</span> <span class="kn">import</span> <span class="n">packingRoutine</span>
+<span class="kn">from</span> <span class="nn">kanapy.voxelization</span> <span class="kn">import</span> <span class="n">voxelizationRoutine</span>
+<span class="kn">from</span> <span class="nn">kanapy.textures</span> <span class="kn">import</span> <span class="n">textureReduction</span>
+<span class="kn">from</span> <span class="nn">kanapy.smoothingGB</span> <span class="kn">import</span> <span class="n">smoothingRoutine</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">asarray</span>
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>    
+    <span class="k">pass</span>    
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;autoComplete&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">autocomplete</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>    
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Kanapy bash auto completion.&quot;&quot;&quot;</span> 
+       
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>  
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;echo &#39;# For KANAPY bash autocompletion&#39; &gt;&gt; ~/.bashrc&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;echo &#39;. </span><span class="si">{}</span><span class="s2">&#39; &gt;&gt; ~/.bashrc&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="o">+</span><span class="s1">&#39;/src/kanapy/kanapy-complete.sh&#39;</span><span class="p">))</span>  
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;runTests&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-no_texture&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">tests</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">no_texture</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>    
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Runs unittests built within kanapy.&quot;&quot;&quot;</span>  
+    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">WORK_DIR</span> <span class="o">+</span> <span class="s1">&#39;/tests&#39;</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">WORK_DIR</span> <span class="o">+</span> <span class="s1">&#39;/tests&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cp </span><span class="si">{</span><span class="n">MAIN_DIR</span><span class="si">}</span><span class="s1">/tests/unitTest_ODF_MDF_reconstruction.m </span><span class="si">{</span><span class="n">WORK_DIR</span><span class="si">}</span><span class="s1">/tests&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;cp </span><span class="si">{</span><span class="n">MAIN_DIR</span><span class="si">}</span><span class="s1">/tests/shared_surfaceArea.csv </span><span class="si">{</span><span class="n">WORK_DIR</span><span class="si">}</span><span class="s1">/tests&#39;</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">no_texture</span><span class="p">:</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/tests/test_collide_detect_react.py&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="p">)</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/tests/test_entities.py&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="p">)</span>
+        <span class="n">t3</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/tests/test_entities.py&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="p">)</span>
+        <span class="n">t4</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/tests/test_entities.py&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="p">)</span>
+        <span class="n">t5</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/tests/test_entities.py&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pytest </span><span class="si">{</span><span class="n">t1</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t2</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t3</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t4</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t5</span><span class="si">}</span><span class="s2"> -v&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;pytest </span><span class="si">{0}</span><span class="s2">/tests/ -v&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="p">))</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>    
+        
+    
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;genDocs&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">docs</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>    
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Generates a HTML-based reference documentation.&quot;&quot;&quot;</span>
+    
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;make -C </span><span class="si">{0}</span><span class="s2">/docs/ clean &amp;&amp; make -C </span><span class="si">{0}</span><span class="s2">/docs/ html&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="p">))</span>      
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;The HTML documentation can be found at &#39;/path/to/your/kanapy/docs/index.html&#39;&quot;</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    
+       
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;genStats&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Input statistics file name in the current directory.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">createStats</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>    
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Generates particle statistics based on the data provided in the input file.&quot;&quot;&quot;</span>
+                
+    <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Please provide the name of the input file available in the current directory&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;For more info. run: kanapy statgenerate --help</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>         
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">)):</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>     
+        <span class="c1"># Open the user input statistics file and read the data</span>
+        <span class="k">try</span><span class="p">:</span>                
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">f</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+                 <span class="n">stats_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>                   
+                 
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Input file not found, make sure &quot;stat_input.json&quot; file is present in the working directory!&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span>  
+        <span class="n">particleStatGenerator</span><span class="p">(</span><span class="n">stats_dict</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>           
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;genRVE&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Input statistics file name in the current directory.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">createRVE</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>    
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Creates RVE based on the data provided in the input file.&quot;&quot;&quot;</span>
+                
+    <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Please provide the name of the input file available in the current directory&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;For more info. run: kanapy statgenerate --help</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>         
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">)):</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Open the user input statistics file and read the data</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">f</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+                <span class="n">stats_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>                               
+                 
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Input file not found, make sure &quot;stat_input.json&quot; file is present in the working directory!&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+        <span class="n">RVEcreator</span><span class="p">(</span><span class="n">stats_dict</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>   
+                
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;readGrains&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Input file name in the current directory.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-periodic&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;RVE periodicity status.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-units&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;mm&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output unit format.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">readGrains</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">periodic</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">units</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>    
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; Generates particles based on the grain data provided in the input file.&#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Please provide the name of the input file available in the current directory&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;For more info. run: kanapy readGrains --help</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>    
+    <span class="k">elif</span> <span class="p">((</span><span class="n">periodic</span><span class="o">!=</span><span class="s1">&#39;True&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">periodic</span><span class="o">!=</span><span class="s1">&#39;False&#39;</span><span class="p">)):</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, Run: kanapy readGrains again&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;For more info. run: kanapy readGrains --help</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>                
+    <span class="k">elif</span> <span class="p">((</span><span class="n">units</span><span class="o">!=</span><span class="s1">&#39;mm&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">units</span><span class="o">!=</span><span class="s1">&#39;um&#39;</span><span class="p">)):</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, Run: kanapy readGrains again&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;For more info. run: kanapy readGrains --help</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>                            
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">)):</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>          
+        <span class="n">particleCreator</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">f</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="n">periodic</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span>         
+        
+        
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Packs the particles into a simulation box.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+    
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Load the dictionaries from json files</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">particle_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">RVE_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">simulation_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;Json files not found, make sure &quot;RVE creator&quot; command is executed first!&#39;</span><span class="p">)</span>
+        <span class="n">phases</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;Phase name&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Simulanium&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;Phase number&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="n">packingRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">phases</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">simulation_data</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">voxelize</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Generates the RVE by assigning voxels to grains.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+    
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">RVE_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+                <span class="n">particle_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+            
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;RVE_data.json&quot; file exists!&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># Read the required dump file</span>
+        <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Equiaxed&#39;</span><span class="p">:</span>
+            <span class="c1">#filename = cwd + &#39;/dump_files/particle.{0}.dump&#39;.format(800)    </span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">700</span><span class="p">)</span>        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span> 
+    
+        <span class="n">sim_box</span><span class="p">,</span> <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="n">read_dump</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>  
+        <span class="n">voxelizationRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">smoothen</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Generates smoothed grain boundary from a voxelated mesh.&quot;&quot;&quot;</span>    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting Grain boundary smoothing&#39;</span><span class="p">)</span>
+            
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>
+        
+        <span class="k">try</span><span class="p">:</span>                
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/nodes_v.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">hh</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">hx</span> <span class="o">=</span> <span class="n">hh</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">hs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">hy</span> <span class="ow">in</span> <span class="n">hx</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">hs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hy</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">))</span>
+            <span class="n">nodes_v</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">hs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+                    
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtDict.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">elmtDict</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">):</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtSetDict.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>    
+                <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">):</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json files not found, make sure &quot;nodes_v.json&quot;, &quot;elmtDict.json&quot; and &quot;elmtSetDict.json&quot; files exist!&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+
+        <span class="n">smoothingRoutine</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>    
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    
+    <span class="k">return</span>  
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;abaqusOutput&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">abaqusoutput</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Writes out the Abaqus (.inp) file for the voxelized RVE.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Starting Abaqus export for voxelized structure&#39;</span><span class="p">)</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files   </span>
+            
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+                <span class="n">simulation_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>     
+        
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/nodes_v.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">hh</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">hx</span> <span class="o">=</span> <span class="n">hh</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">hs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">hy</span> <span class="ow">in</span> <span class="n">hx</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">hs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hy</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">))</span>
+            <span class="n">nodes_v</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">hs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtDict.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">elmtDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtSetDict.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;kanapy voxelize&quot; command is executed first!&#39;</span><span class="p">)</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/kanapy_</span><span class="si">{0}</span><span class="s1">grains_voxels.inp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">elmtSetDict</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>                  <span class="c1"># remove old file if it exists</span>
+        <span class="n">export2abaqus</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">simulation_data</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">grain_facesDict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;abaqusOutput-smooth&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">abaqusoutput_smooth</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Writes out the Abaqus (.inp) file for the smoothened RVE.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Starting Abaqus export for smoothened structure&#39;</span><span class="p">)</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files   </span>
+            
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+                <span class="n">simulation_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>     
+        
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/nodes_s.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">hh</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">hx</span> <span class="o">=</span> <span class="n">hh</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">hs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">hy</span> <span class="ow">in</span> <span class="n">hx</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">hs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hy</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">))</span>
+            <span class="n">nodes_v</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">hs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtDict.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">elmtDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtSetDict.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+                
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/grain_facesDict.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="n">grain_facesDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;kanapy smoothen&quot; command is executed first!&#39;</span><span class="p">)</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/kanapy_</span><span class="si">{0}</span><span class="s1">grains_smooth.inp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">elmtSetDict</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>                  <span class="c1"># remove old file if it exists</span>
+        <span class="n">export2abaqus</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">simulation_data</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">grain_facesDict</span><span class="o">=</span><span class="n">grain_facesDict</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputStats&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">outputstats</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE </span>
+<span class="sd">    grain volumes and shared grain boundary surface areas info are written out as well.</span>
+<span class="sd">    </span>
+<span class="sd">    .. note:: Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.</span>
+<span class="sd">              RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/nodes_v.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">hh</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">hx</span> <span class="o">=</span> <span class="n">hh</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">hs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">hy</span> <span class="ow">in</span> <span class="n">hx</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">hs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hy</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">))</span>
+        <span class="n">nodes_v</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">hs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtDict.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">inpDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+            <span class="n">elmtDict</span> <span class="o">=</span><span class="nb">dict</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inpDict</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/elmtSetDict.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">inpDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+            <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inpDict</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+            <span class="n">particle_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+            <span class="n">RVE_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
+            <span class="n">simulation_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>    
+          
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;Input statistics, Packing, &amp; Voxelization&quot; commands are executed first!&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+
+    <span class="n">write_output_stat</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">particle_data</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> \
+                      <span class="n">simulation_data</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">extract_volume_sharedGBarea</span><span class="p">(</span><span class="n">elmtDict</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;plotStats&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">plotstats</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Plots the particle- and grain diameter attributes for statistical comparison.</span>
+<span class="sd">    </span>
+<span class="sd">    .. note:: Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/output_statistics.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span> 
+          
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Json file not found, make sure &quot;Input statistics, Packing, Voxelization &amp; Output Statistics&quot; commands are executed first!&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+    <span class="n">plot_output_stats</span><span class="p">(</span><span class="n">data_dict</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;neperOutput&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-timestep&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Time step for which Neper input files will be generated.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">neperoutput</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">timestep</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Writes out particle position and weights files required for tessellation in Neper.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">timestep</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>    
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Please provide the timestep value for generating ouput!&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;For more info. run: kanapy neperoutput --help</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>                
+    <span class="n">write_position_weights</span><span class="p">(</span><span class="n">timestep</span><span class="p">)</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;setupTexture&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">setupTexture</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>    
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Stores the user provided MATLAB &amp; MTEX paths for texture analysis.&quot;&quot;&quot;</span>
+    <span class="n">setPaths</span><span class="p">()</span>                    
+
+
+<div class="viewcode-block" id="chkVersion">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.cli.chkVersion">[docs]</a>
+<span class="k">def</span> <span class="nf">chkVersion</span><span class="p">(</span><span class="n">matlab</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; Read the version of Matlab&#39;&#39;&#39;</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">popen</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> -r quit -nojvm | grep &quot;R20[0-9][0-9][ab]&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">matlab</span><span class="p">))</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>     
+        
+    <span class="k">try</span><span class="p">:</span>                                  <span class="c1"># Find the matlab version available in the system</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">version</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">except</span><span class="p">:</span>                               <span class="c1"># Set NONE if MATLAB installation is corrupt</span>
+        <span class="n">version</span> <span class="o">==</span> <span class="kc">None</span>    
+    <span class="k">return</span> <span class="n">version</span></div>
+
+    
+        
+<div class="viewcode-block" id="setPaths">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.cli.setPaths">[docs]</a>
+<span class="k">def</span> <span class="nf">setPaths</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; Requests user input for MATLAB &amp; MTEX installation paths&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">WORK_DIR</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;Package not properly installed, working directory is missing.&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">WORK_DIR</span> <span class="o">+</span> <span class="s1">&#39;/PATHS.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+        <span class="n">path_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+        
+    <span class="c1"># For MATLAB executable</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">status1</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Is MATLAB installed in this system (yes/no): &#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;yes&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;YES&#39;</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Searching your system for MATLAB ...&#39;</span><span class="p">)</span>
+        <span class="n">MATLAB</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;matlab&quot;</span><span class="p">)</span>        
+
+        <span class="k">if</span> <span class="n">MATLAB</span><span class="p">:</span>
+            <span class="n">decision1</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Found MATLAB in </span><span class="si">{0}</span><span class="s1">, continue (yes/no): &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MATLAB</span><span class="p">))</span>
+            
+            <span class="k">if</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;yes&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;YES&#39;</span><span class="p">:</span>                
+
+                <span class="n">version</span> <span class="o">=</span> <span class="n">chkVersion</span><span class="p">(</span><span class="n">MATLAB</span><span class="p">)</span>        <span class="c1"># Get the MATLAB version</span>
+                <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;MATLAB installation: </span><span class="si">{}</span><span class="s1"> is corrupted!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MATLAB</span><span class="p">),</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">2015</span><span class="p">:</span>
+                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Sorry!, Kanapy is compatible with MATLAB versions 2015a and above</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">userpath1</span> <span class="o">=</span> <span class="n">MATLAB</span>
+
+            <span class="k">elif</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;no&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;n&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;NO&#39;</span><span class="p">:</span>
+                <span class="n">userinput</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Please provide the path to MATLAB executable: &#39;</span><span class="p">)</span>
+                
+                <span class="n">version</span> <span class="o">=</span> <span class="n">chkVersion</span><span class="p">(</span><span class="n">userinput</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;MATLAB installation: </span><span class="si">{}</span><span class="s1"> is corrupted!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">userinput</span><span class="p">),</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">2015</span><span class="p">:</span>
+                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Sorry!, Kanapy is compatible with MATLAB versions 2015a and above</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">userpath1</span> <span class="o">=</span> <span class="n">userinput</span>
+                                    
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, Run: kanapy setuptexture again&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
+                            
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">MATLAB</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No MATLAB executable found!&#39;</span><span class="p">)</span>            
+            <span class="n">userinput</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Please provide the path to MATLAB executable: &#39;</span><span class="p">)</span>
+            
+            <span class="n">version</span> <span class="o">=</span> <span class="n">chkVersion</span><span class="p">(</span><span class="n">userinput</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;MATLAB installation: </span><span class="si">{}</span><span class="s1"> is corrupted!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">userinput</span><span class="p">),</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">2015</span><span class="p">:</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Sorry!, Kanapy is compatible with MATLAB versions 2015a and above</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">userpath1</span> <span class="o">=</span> <span class="n">userinput</span>
+                     
+    <span class="k">elif</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;no&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;n&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;NO&#39;</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Kanapy&#39;s texture analysis code requires MATLAB. Please install it.&quot;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">userpath1</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, Run: kanapy setuptexture again&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>        
+        
+    <span class="c1"># Create a file in the &#39;src/kanapy&#39; folder that stores the paths</span>
+    <span class="k">if</span> <span class="n">userpath1</span><span class="p">:</span>        
+        
+        <span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;MATLABpath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">userpath1</span>
+        <span class="n">path_path</span> <span class="o">=</span> <span class="n">WORK_DIR</span> <span class="o">+</span> <span class="s1">&#39;/PATHS.json&#39;</span>
+        
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">path_path</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_path</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">path_dict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>                
+        
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">extern/engines/python&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">userpath1</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">10</span><span class="p">]))</span> <span class="c1"># remove bin/matlab from matlab path</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python -m pip install .&#39;</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">7</span><span class="p">]</span> <span class="c1"># remove /cli.py from kanapy path</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python init_engine.py&#39;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Kanapy is now configured for texture analysis!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+        <span class="c1"># store paths in Python API?</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;reduceODF&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-ebsd&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;EBSD (.mat) file name located in the current directory.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-grains&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Grains (.mat) file name located in the current directory.&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-kernel&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Optimum kernel shape factor as float (in radians).&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-fit_mad&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;no&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Fit Misorientation Angle Distribution (yes/no).&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">reducetexture</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">ebsd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">grains</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">kernel</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">fit_mad</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Texture reduction algorithm with optional Misorientation angle fitting.&quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">ebsd</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Please provide some EBSD inputs for texture reduction!&#39;</span><span class="p">)</span> 
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;For more info, run: kanapy reducetexture --help</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">arg_dict</span> <span class="o">=</span> <span class="p">{}</span>           
+        <span class="k">if</span> <span class="n">ebsd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ebsd</span><span class="p">)):</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ebsd</span><span class="p">),</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;ebsdMatFile&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ebsd</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">grains</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grains</span><span class="p">)):</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grains</span><span class="p">),</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>        
+                <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;grainsMatFile&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grains</span><span class="p">)</span>
+                
+        <span class="k">if</span> <span class="n">kernel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;kernelShape&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kernel</span>        
+            
+        <span class="k">if</span> <span class="n">fit_mad</span> <span class="o">==</span> <span class="s1">&#39;yes&#39;</span> <span class="ow">or</span> <span class="n">fit_mad</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span> <span class="ow">or</span> <span class="n">fit_mad</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span> <span class="ow">or</span> <span class="n">fit_mad</span> <span class="o">==</span> <span class="s1">&#39;YES&#39;</span><span class="p">:</span> 
+            <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;MisAngDist&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fit_mad</span>            
+            <span class="n">textureReduction</span><span class="p">(</span><span class="n">arg_dict</span><span class="p">)</span>      
+                  
+        <span class="k">elif</span> <span class="n">fit_mad</span> <span class="o">==</span> <span class="s1">&#39;no&#39;</span> <span class="ow">or</span> <span class="n">fit_mad</span> <span class="o">==</span> <span class="s1">&#39;n&#39;</span> <span class="ow">or</span> <span class="n">fit_mad</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span> <span class="ow">or</span> <span class="n">fit_mad</span> <span class="o">==</span> <span class="s1">&#39;NO&#39;</span><span class="p">:</span> 
+            <span class="n">textureReduction</span><span class="p">(</span><span class="n">arg_dict</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Invalid entry! Run: kanapy reducetexture --help</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+    
+<div class="viewcode-block" id="start">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.cli.start">[docs]</a>
+<span class="k">def</span> <span class="nf">start</span><span class="p">():</span>
+    <span class="n">main</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="p">{})</span></div>
+
+
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">start</span><span class="p">()</span>
+
+<span class="c1"># ************************************************************</span>
+<span class="c1"># Functions for RVE handling that are only used in CLI version</span>
+<span class="c1"># ************************************************************</span>
+
+<div class="viewcode-block" id="particleCreator">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.cli.particleCreator">[docs]</a>
+<span class="k">def</span> <span class="nf">particleCreator</span><span class="p">(</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="s1">&#39;True&#39;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">&quot;mm&quot;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates ellipsoid particles based on user-defined inputs.</span>
+
+<span class="sd">    :param inputFile: User-defined grain informationfile for ellipsoid generation.</span>
+<span class="sd">    :type inputFile: document</span>
+
+<span class="sd">    .. note:: 1. Input parameters provided by the user in the input file are:</span>
+
+<span class="sd">                * Grain major diameter (:math:`\mu m`)</span>
+<span class="sd">                * Grain minor diameter (:math:`\mu m`)</span>
+<span class="sd">                * Grain&#39;s major axis tilt angle (degrees) with respect to the +ve X-axis (horizontal axis)</span>
+
+<span class="sd">              2. Other user defined inputs: Periodicity &amp; output units format (:math:`mm` or :math:`\mu m`).</span>
+<span class="sd">                 Default values: periodicity=True &amp; units= :math:`\mu m`.</span>
+
+<span class="sd">              3. Particle, RVE and simulation data are written as JSON files in a folder in the current</span>
+<span class="sd">                 working directory for later access.</span>
+
+<span class="sd">                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.</span>
+<span class="sd">                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
+<span class="sd">                * Simulation attributes such as total number of timesteps, periodicity and Output unit scale (:math:`mm`</span>
+<span class="sd">                  or :math:`\mu m`) for ABAQUS .inp file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------------------------------------&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Welcome to KANAPY - A synthetic polycrystalline microstructure generator&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------------------------------------&#39;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generating particles based on user defined grains&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Open the user input grain file and read the data</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">input_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Input file not found, make sure </span><span class="si">{0}</span><span class="s1"> file is present in the working directory!&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inputFile</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+
+    <span class="c1"># User defined major, minor axes lengths using: (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) &amp; b=c &amp; a=AR*b</span>
+    <span class="n">majDia</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>                          <span class="c1"># Major axis length</span>
+    <span class="n">minDia</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>                          <span class="c1"># Minor axis length</span>
+    <span class="n">minDia2</span> <span class="o">=</span> <span class="n">minDia</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>                           <span class="c1"># Minor2 axis length (assuming spheroid)</span>
+    <span class="n">tilt_angle</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>                      <span class="c1"># Tilt angle</span>
+
+    <span class="c1"># Volume of each ellipsoid</span>
+    <span class="n">volume_array</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">majDia</span><span class="o">*</span><span class="n">minDia</span><span class="o">*</span><span class="n">minDia2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">)</span>
+
+    <span class="c1"># Equivalent diameter of each ellipsoid</span>
+    <span class="n">eq_Dia</span> <span class="o">=</span> <span class="p">(</span><span class="n">majDia</span><span class="o">*</span><span class="n">minDia</span><span class="o">*</span><span class="n">minDia2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="c1"># RVE size: RVE volume = sum(ellipsoidal volume)</span>
+    <span class="n">RVEvol</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">volume_array</span><span class="p">))</span>
+
+    <span class="c1"># Determine the RVE side lengths</span>
+    <span class="n">dia_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">majDia</span><span class="p">)</span>
+    <span class="n">RVEsizeY</span> <span class="o">=</span> <span class="mf">1.1</span><span class="o">*</span><span class="n">dia_max</span>                 <span class="c1"># The Y-side length should accomodate the Biggest dimension of the biggest ellipsoid</span>
+    <span class="n">RVEsizeX</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">RVEvol</span><span class="o">/</span> <span class="n">RVEsizeY</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">RVEsizeZ</span> <span class="o">=</span> <span class="n">RVEsizeX</span>
+
+    <span class="c1"># Voxel resolution : Smallest dimension of the smallest ellipsoid should contain atleast 3 voxels</span>
+    <span class="n">voxel_size</span> <span class="o">=</span> <span class="mf">1.1</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">minDia</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">)</span>
+    <span class="n">Nx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">RVEsizeX</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">))</span>         <span class="c1"># Number of voxel/RVE side</span>
+    <span class="n">Ny</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">RVEsizeY</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">))</span>
+    <span class="n">Nz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">RVEsizeZ</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">))</span>
+
+    <span class="c1"># Re-calculate the voxel resolution</span>
+    <span class="n">voxel_sizeX</span> <span class="o">=</span> <span class="n">RVEsizeX</span> <span class="o">/</span> <span class="n">Nx</span>
+    <span class="n">voxel_sizeY</span> <span class="o">=</span> <span class="n">RVEsizeY</span> <span class="o">/</span> <span class="n">Ny</span>
+    <span class="n">voxel_sizeZ</span> <span class="o">=</span> <span class="n">RVEsizeZ</span> <span class="o">/</span> <span class="n">Nz</span>
+
+    <span class="n">totalEllipsoids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">majDia</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of grains        = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    RVE side lengths (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">RVEsizeX</span><span class="p">,</span> <span class="n">RVEsizeY</span><span class="p">,</span> <span class="n">RVEsizeZ</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Number of voxels (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="n">Nz</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Voxel resolution (X, Y, Z)    = </span><span class="si">{0:.4f}</span><span class="s1">, </span><span class="si">{1:.4f}</span><span class="s1">, </span><span class="si">{2:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">voxel_sizeX</span><span class="p">,</span> <span class="n">voxel_sizeY</span><span class="p">,</span> <span class="n">voxel_sizeZ</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of voxels (C3D8) = </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Nx</span><span class="o">*</span><span class="n">Ny</span><span class="o">*</span><span class="n">Nz</span><span class="p">))</span>
+
+    <span class="c1"># Create dictionaries to store the data generated</span>
+    <span class="n">particle_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Type&#39;</span><span class="p">:</span> <span class="s1">&#39;Elongated&#39;</span><span class="p">,</span> <span class="s1">&#39;Number&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">),</span> <span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">),</span> <span class="s1">&#39;Major_diameter&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">majDia</span><span class="p">),</span>
+                     <span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia</span><span class="p">),</span> <span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia2</span><span class="p">),</span> <span class="s1">&#39;Tilt angle&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">tilt_angle</span><span class="p">)}</span>
+
+    <span class="n">RVE_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;RVE_sizeX&#39;</span><span class="p">:</span> <span class="n">RVEsizeX</span><span class="p">,</span> <span class="s1">&#39;RVE_sizeY&#39;</span><span class="p">:</span> <span class="n">RVEsizeY</span><span class="p">,</span> <span class="s1">&#39;RVE_sizeZ&#39;</span><span class="p">:</span> <span class="n">RVEsizeZ</span><span class="p">,</span>
+                <span class="s1">&#39;Voxel_numberX&#39;</span><span class="p">:</span> <span class="n">Nx</span><span class="p">,</span> <span class="s1">&#39;Voxel_numberY&#39;</span><span class="p">:</span> <span class="n">Ny</span><span class="p">,</span> <span class="s1">&#39;Voxel_numberZ&#39;</span><span class="p">:</span> <span class="n">Nz</span><span class="p">,</span>
+                <span class="s1">&#39;Voxel_resolutionX&#39;</span><span class="p">:</span> <span class="n">voxel_sizeX</span><span class="p">,</span><span class="s1">&#39;Voxel_resolutionY&#39;</span><span class="p">:</span> <span class="n">voxel_sizeY</span><span class="p">,</span> <span class="s1">&#39;Voxel_resolutionZ&#39;</span><span class="p">:</span> <span class="n">voxel_sizeZ</span><span class="p">}</span>
+
+    <span class="n">simulation_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Time steps&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s1">&#39;Periodicity&#39;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">periodic</span><span class="p">),</span> <span class="s1">&#39;Output units&#39;</span><span class="p">:</span> <span class="n">units</span><span class="p">}</span>
+
+    <span class="c1"># Dump the Dictionaries as json files</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">json_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">json_dir</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/RVE_data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/simulation_data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">simulation_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+
+
+
+<div class="viewcode-block" id="extract_volume_sharedGBarea">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.cli.extract_volume_sharedGBarea">[docs]</a>
+<span class="k">def</span> <span class="nf">extract_volume_sharedGBarea</span><span class="p">(</span><span class="n">elmtDict</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates the grain volume and the grain boundary shared surface area between neighbouring grains</span>
+<span class="sd">    and writes them to &#39;grainVolumes.csv&#39; &amp; &#39;shared_surfaceArea.csv&#39; files.</span>
+
+<span class="sd">    --- WARNING --- This function is only used in CLI version of kanapy and</span>
+<span class="sd">                    will no longer be updated.</span>
+<span class="sd">                    The API version uses kanapy/api/calcPolygons which</span>
+<span class="sd">                    offers more functionality.</span>
+
+<span class="sd">    .. note:: 1. RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.</span>
+
+<span class="sd">              2. The grain volumes written to the &#39;grainVolumes.csv&#39; file are sorted in ascending order of grain IDs. And the values are written</span>
+<span class="sd">                 in either :math:`mm` or :math:`\mu m` scale, as requested by the user in the input file.</span>
+
+<span class="sd">              3. The shared surface area written to the &#39;shared_surfaceArea.csv&#39; file are in either :math:`mm` or :math:`\mu m` scale,</span>
+<span class="sd">                 as requested by the user in the input file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Evaluating grain volumes.&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Evaluating shared Grain Boundary surface area between grains.&#39;</span><span class="p">)</span>
+
+    <span class="n">voxel_size</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_resolutionX&#39;</span><span class="p">]</span>
+
+    <span class="n">grain_vol</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># For each grain find its volume and output it</span>
+    <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">elset</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># Convert to</span>
+        <span class="n">gvol</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">elset</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">voxel_size</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">grain_vol</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">gvol</span>
+
+    <span class="c1"># Sort the grain volumes in ascending order of grain IDs</span>
+    <span class="n">gv_sorted_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">grain_vol</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">grain_vol</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+    <span class="n">gv_sorted_values</span> <span class="o">=</span> <span class="p">[[</span><span class="n">grain_vol</span><span class="p">[</span><span class="n">gk</span><span class="p">]]</span> <span class="k">for</span> <span class="n">gk</span> <span class="ow">in</span> <span class="n">gv_sorted_keys</span><span class="p">]</span>
+    <span class="c1"># gv_sorted_values = [[gk,gv] for gk,gv in grain_vol.items()]</span>
+
+    <span class="c1"># For each grain find its outer face ids</span>
+    <span class="n">grain_facesDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">elset</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">outer_faces</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">nodeConn</span> <span class="o">=</span> <span class="p">[</span><span class="n">elmtDict</span><span class="p">[</span><span class="n">el</span><span class="p">]</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">elset</span><span class="p">]</span>        <span class="c1"># For each voxel/element get node connectivity</span>
+        <span class="c1"># create the 6 faces of the voxel</span>
+        <span class="k">for</span> <span class="n">nc</span> <span class="ow">in</span> <span class="n">nodeConn</span><span class="p">:</span>
+            <span class="n">faces</span> <span class="o">=</span> <span class="p">[[</span><span class="n">nc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">7</span><span class="p">]],</span>
+                     <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">4</span><span class="p">]],</span> <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">7</span><span class="p">]],</span>
+                     <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">2</span><span class="p">]]]</span>
+
+            <span class="c1"># Sort each list in ascending order</span>
+            <span class="n">sorted_faces</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span> <span class="k">for</span> <span class="n">fc</span> <span class="ow">in</span> <span class="n">faces</span><span class="p">]</span>
+
+            <span class="c1"># create face ids by joining node id&#39;s</span>
+            <span class="n">face_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">fc</span><span class="p">))</span> <span class="k">for</span> <span class="n">fc</span> <span class="ow">in</span> <span class="n">sorted_faces</span><span class="p">]</span>
+
+            <span class="c1"># Update the set to include only the outer face id&#39;s</span>
+            <span class="k">for</span> <span class="n">fid</span> <span class="ow">in</span> <span class="n">face_ids</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">fid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outer_faces</span><span class="p">:</span>
+                    <span class="n">outer_faces</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">fid</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">outer_faces</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fid</span><span class="p">)</span>
+        <span class="n">grain_facesDict</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span> <span class="o">=</span> <span class="n">outer_faces</span>
+
+    <span class="c1"># Find all combination of grains to check for common area</span>
+    <span class="n">combis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">grain_facesDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="c1"># Find the shared area</span>
+    <span class="n">shared_area</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cb</span> <span class="ow">in</span> <span class="n">combis</span><span class="p">:</span>
+        <span class="n">finter</span> <span class="o">=</span> <span class="n">grain_facesDict</span><span class="p">[</span><span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">grain_facesDict</span><span class="p">[</span><span class="n">cb</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="k">if</span> <span class="n">finter</span><span class="p">:</span>
+            <span class="n">sh_area</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">finter</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">voxel_size</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">shared_area</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cb</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sh_area</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+    <span class="k">if</span> <span class="n">save_files</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Writing grain volumes info. to file (&#39;grainVolumes.csv&#39;)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Write out grain volumes to a file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/grainVolumes.csv&#39;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">gv_sorted_values</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Writing shared GB surface area info. to file (&#39;shared_surfaceArea.csv&#39;)&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Write out shared grain boundary area to a file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/shared_surfaceArea.csv&#39;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;GrainA, GrainB, SharedArea</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">shared_area</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----&gt;DONE!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gv_sorted_values</span><span class="p">,</span> <span class="n">shared_area</span><span class="p">,</span> <span class="n">grain_facesDict</span></div>
+
+
+
+<div class="viewcode-block" id="write_output_stat">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.cli.write_output_stat">[docs]</a>
+<span class="k">def</span> <span class="nf">write_output_stat</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">particle_data</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span>\
+                      <span class="n">simulation_data</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates particle- and output RVE grain statistics with respect to Major,</span>
+<span class="sd">    Minor &amp; Equivalent diameters for comparison</span>
+<span class="sd">    and writes them to &#39;output_statistics.json&#39; file.</span>
+
+<span class="sd">    WARNING: This subroutine is only used by kanapy CLI and will no longer be</span>
+<span class="sd">             maintained.</span>
+<span class="sd">             Kanapy API uses api.calcPolygens and api.get_stats, which offer</span>
+<span class="sd">             more functionality.</span>
+
+<span class="sd">    .. note:: The particle and grain diameter values are written in either</span>
+<span class="sd">              :math:`mm` or :math:`\mu m` scale,</span>
+<span class="sd">              as requested by the user in the input file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Comparing input &amp; output statistics&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Extract from dictionaries</span>
+    <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">]</span>
+    <span class="n">voxel_size</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_resolutionX&#39;</span><span class="p">]</span>
+    <span class="n">RVE_sizeX</span><span class="p">,</span> <span class="n">RVE_sizeY</span><span class="p">,</span> <span class="n">RVE_sizeZ</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeX&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeY&#39;</span><span class="p">],</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeZ&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span><span class="p">:</span>
+        <span class="n">par_majDia</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Major_diameter&#39;</span><span class="p">]</span>
+        <span class="n">par_minDia</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">:</span>
+        <span class="n">periodic</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;False&#39;</span><span class="p">:</span>
+        <span class="n">periodic</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Factor used to generate particle and grains diameters in &#39;mm&#39; or &#39;um&#39; scale</span>
+    <span class="k">if</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Output units&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;mm&#39;</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="s1">&#39;mm&#39;</span>
+        <span class="n">divideBy</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="k">elif</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Output units&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;um&#39;</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="s1">&#39;um&#39;</span>
+        <span class="n">divideBy</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Check if Equiaxed or elongated particles</span>
+    <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Equiaxed&#39;</span><span class="p">:</span>          <span class="c1"># Equiaxed grains (spherical particles)</span>
+
+        <span class="c1"># Find each grain&#39;s equivalent diameter</span>
+        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">num_voxels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">grain_vol</span> <span class="o">=</span> <span class="n">num_voxels</span> <span class="o">*</span> <span class="p">(</span><span class="n">voxel_size</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span>
+            <span class="n">grain_dia</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">grain_vol</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">grain_eqDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grain_dia</span><span class="p">)</span>
+
+        <span class="c1"># write out the particle and grain equivalent diameters to files</span>
+        <span class="n">par_eqDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
+        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
+
+        <span class="c1"># Compute the L1-error</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Spheres&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">}}}</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Create dictionaries to store the data generated</span>
+        <span class="n">output_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number_of_particles/grains&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)),</span>
+                       <span class="s1">&#39;Grain type&#39;</span><span class="p">:</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">],</span>
+                       <span class="s1">&#39;Unit_scale&#39;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span>
+                       <span class="s1">&#39;L1-error&#39;</span><span class="p">:</span><span class="n">error</span><span class="p">,</span>
+                       <span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span>
+                       <span class="s1">&#39;Grain_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">save_files</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Writing particle &amp; grain equivalent, major &amp; minor diameter to file (&#39;output_statistics.json&#39;)&quot;</span><span class="p">)</span>
+            <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+            <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/output_statistics.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">output_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>                                               <span class="c1"># Elongated grains (ellipsoidal particles)</span>
+
+        <span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">grain_majDia</span><span class="p">,</span> <span class="n">grain_minDia</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="c1"># Find all the nodal coordinates belonging to the grain</span>
+        <span class="n">grain_node</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">num_voxels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">grain_vol</span> <span class="o">=</span> <span class="n">num_voxels</span> <span class="o">*</span> <span class="p">(</span><span class="n">voxel_size</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span>
+            <span class="n">grain_dia</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">grain_vol</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">grain_eqDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grain_dia</span><span class="p">)</span>
+
+            <span class="c1"># All nodes belonging to grain</span>
+            <span class="n">nodeset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="n">elmtDict</span><span class="p">[</span><span class="n">el</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodeset</span><span class="p">:</span>
+                        <span class="n">nodeset</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="c1"># Get the coordinates as an array</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">nodes_v</span><span class="p">[</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodeset</span><span class="p">]</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+            <span class="n">grain_node</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span>
+
+        <span class="k">if</span> <span class="n">periodic</span><span class="p">:</span>
+            <span class="c1"># If periodic, find the grains whose perodic halves have to be shifted</span>
+            <span class="n">shiftRight</span><span class="p">,</span> <span class="n">shiftTop</span><span class="p">,</span> <span class="n">shiftBack</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">grain_node</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+                <span class="c1"># Find all nodes on left, Right, Top, Bottom, Front &amp; Back faces</span>
+                <span class="n">nodeLS</span><span class="p">,</span> <span class="n">nodeRS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">nodeTS</span><span class="p">,</span> <span class="n">nodeBS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="n">nodeFS</span><span class="p">,</span> <span class="n">nodeBaS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+
+                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="mf">0.0000</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>       <span class="c1"># nodes on Left face</span>
+                        <span class="n">nodeLS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">RVE_sizeX</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>    <span class="c1"># nodes on Right face</span>
+                        <span class="n">nodeRS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="mf">0.0000</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>       <span class="c1"># nodes on Bottom face</span>
+                        <span class="n">nodeBS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">RVE_sizeY</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>    <span class="c1"># nodes on Top face</span>
+                        <span class="n">nodeTS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="mf">0.0000</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>       <span class="c1"># nodes on Front face</span>
+                        <span class="n">nodeFS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">RVE_sizeZ</span> <span class="o">-</span> <span class="n">coord</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mf">0.00000001</span><span class="p">:</span>    <span class="c1"># nodes on Back face</span>
+                        <span class="n">nodeBaS</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">enum</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeLS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeRS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>   <span class="c1"># grain is periodic, has faces on both Left &amp; Right sides</span>
+                    <span class="n">shiftRight</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>                  <span class="c1"># left set has to be moved to right side</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeBS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeTS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>   <span class="c1"># grain is periodic, has faces on both Top &amp; Bottom sides</span>
+                    <span class="n">shiftTop</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>                    <span class="c1"># bottom set has to be moved to Top side</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeFS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeBaS</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># grain is periodic, has faces on both Front &amp; Back sides</span>
+                    <span class="n">shiftBack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>                   <span class="c1"># front set has to be moved to Back side</span>
+
+            <span class="c1"># For each grain that has to be shifted, pad along x, y, z respectively</span>
+            <span class="k">for</span> <span class="n">grain</span> <span class="ow">in</span> <span class="n">shiftRight</span><span class="p">:</span>
+                <span class="n">pts</span> <span class="o">=</span> <span class="n">grain_node</span><span class="p">[</span><span class="n">grain</span><span class="p">]</span>
+                <span class="c1"># Pad the nodes on the left side by RVE x-dimension</span>
+                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pts</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="n">val</span><span class="o">&gt;=</span><span class="mf">0.0</span> <span class="ow">and</span> <span class="n">val</span><span class="o">&lt;=</span><span class="n">RVE_sizeX</span><span class="o">/</span><span class="mf">2.</span><span class="p">:</span>
+                        <span class="n">pts</span><span class="p">[</span><span class="n">enum</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RVE_sizeX</span>
+
+            <span class="k">for</span> <span class="n">grain</span> <span class="ow">in</span> <span class="n">shiftBack</span><span class="p">:</span>
+                <span class="n">pts</span> <span class="o">=</span> <span class="n">grain_node</span><span class="p">[</span><span class="n">grain</span><span class="p">]</span>
+                <span class="c1"># Pad the nodes on the front side by RVE z-dimension</span>
+                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pts</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="n">val</span><span class="o">&gt;=</span><span class="mf">0.0</span> <span class="ow">and</span> <span class="n">val</span><span class="o">&lt;=</span><span class="n">RVE_sizeZ</span><span class="o">/</span><span class="mf">2.</span><span class="p">:</span>
+                        <span class="n">pts</span><span class="p">[</span><span class="n">enum</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RVE_sizeZ</span>
+
+            <span class="k">for</span> <span class="n">grain</span> <span class="ow">in</span> <span class="n">shiftTop</span><span class="p">:</span>
+                <span class="n">pts</span> <span class="o">=</span> <span class="n">grain_node</span><span class="p">[</span><span class="n">grain</span><span class="p">]</span>
+                <span class="c1"># Pad the nodes on the bottom side by RVE y-dimension</span>
+                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pts</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="n">val</span><span class="o">&gt;=</span><span class="mf">0.0</span> <span class="ow">and</span> <span class="n">val</span><span class="o">&lt;=</span><span class="n">RVE_sizeY</span><span class="o">/</span><span class="mf">2.</span><span class="p">:</span>
+                        <span class="n">pts</span><span class="p">[</span><span class="n">enum</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">RVE_sizeY</span>
+
+        <span class="c1"># For periodic &amp; Non-periodic: create the convex hull and find the major &amp; minor diameters</span>
+        <span class="k">for</span> <span class="n">grain</span><span class="p">,</span> <span class="n">points</span> <span class="ow">in</span> <span class="n">grain_node</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+            <span class="n">hull_pts</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">hull</span><span class="o">.</span><span class="n">vertices</span><span class="p">]</span>
+
+            <span class="c1"># Find the approximate center of the grain using extreme surface points</span>
+            <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">xmax</span><span class="o">-</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">+</span> <span class="p">(</span><span class="n">ymax</span><span class="o">-</span><span class="n">ymin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">zmin</span> <span class="o">+</span> <span class="p">(</span><span class="n">zmax</span><span class="o">-</span><span class="n">zmin</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span><span class="p">])</span>
+
+            <span class="c1"># Find the euclidean distance to all surface points from the center</span>
+            <span class="n">dists</span> <span class="o">=</span> <span class="p">[</span><span class="n">euclidean</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span> <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="n">hull_pts</span><span class="p">]</span>
+            <span class="n">a2</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+            <span class="n">b2</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">dists</span><span class="p">)</span>
+
+            <span class="c1"># Calculate ellipsoid dimensions using eigen values</span>
+            <span class="c1">#ellPoints = points.T</span>
+            <span class="c1">#eigvals, eigvecs = np.linalg.eig(np.cov(ellPoints))</span>
+            <span class="c1">#eigvals = np.sort(eigvals)</span>
+            <span class="c1">#a2, b2 = eigvals[-1], eigvals[-2]</span>
+
+            <span class="n">grain_majDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a2</span><span class="p">)</span>                 <span class="c1"># update the major diameter list</span>
+            <span class="n">grain_minDia</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>                 <span class="c1"># update the minor diameter list</span>
+
+        <span class="c1"># write out the particle and grain equivalent, major, minor diameters to file</span>
+        <span class="n">par_eqDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
+        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
+
+        <span class="n">par_majDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">par_majDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
+        <span class="n">grain_majDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">grain_majDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
+
+        <span class="n">par_minDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">par_minDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
+        <span class="n">grain_minDia</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">grain_minDia</span><span class="p">)</span><span class="o">/</span><span class="n">divideBy</span><span class="p">)</span>
+
+        <span class="c1"># Compute the L1-error</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Ellipsoids&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">},</span>
+                                <span class="s1">&#39;Major diameter&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_majDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_majDia</span><span class="p">},</span>
+                                <span class="s1">&#39;Minor diameter&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_minDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_minDia</span><span class="p">}}}</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Create dictionaries to store the data generated</span>
+        <span class="n">output_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number_of_particles/grains&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">)),</span>
+                       <span class="s1">&#39;Grain type&#39;</span><span class="p">:</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">],</span>
+                       <span class="s1">&#39;Unit_scale&#39;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span>
+                       <span class="s1">&#39;L1-error&#39;</span><span class="p">:</span> <span class="n">error</span><span class="p">,</span>
+                       <span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span>
+                       <span class="s1">&#39;Particle_Major_diameter&#39;</span><span class="p">:</span> <span class="n">par_majDia</span><span class="p">,</span>
+                       <span class="s1">&#39;Particle_Minor_diameter&#39;</span><span class="p">:</span> <span class="n">par_minDia</span><span class="p">,</span>
+                       <span class="s1">&#39;Grain_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">,</span>
+                       <span class="s1">&#39;Grain_Major_diameter&#39;</span><span class="p">:</span> <span class="n">grain_majDia</span><span class="p">,</span>
+                       <span class="s1">&#39;Grain_Minor_diameter&#39;</span><span class="p">:</span> <span class="n">grain_minDia</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">save_files</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Writing particle &amp; grain equivalent, major &amp; minor diameter to file (&#39;output_statistics.json&#39;)&quot;</span><span class="p">)</span>
+            <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+            <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/output_statistics.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">output_data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----&gt;DONE!&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output_data</span></div>
+
+
+
+<div class="viewcode-block" id="write_position_weights">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.cli.write_position_weights">[docs]</a>
+<span class="k">def</span> <span class="nf">write_position_weights</span><span class="p">(</span><span class="n">file_num</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads the (.dump) file to extract information and ouputs the position and weight files for tessellation.</span>
+
+<span class="sd">    :param file_num: Simulation time step for which position and weights output.</span>
+<span class="sd">    :type file_num: int</span>
+
+<span class="sd">    .. note:: 1. Applicable only to spherical particles.</span>
+<span class="sd">              2. The generated &#39;sphere_positions.txt&#39; and &#39;sphere_weights.txt&#39; files can be inputted</span>
+<span class="sd">                 into NEPER for tessellation and meshing.</span>
+<span class="sd">              3. The values of positions and weights are written in :math:`\mu m` scale only.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing position and weights files for NEPER&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">dump_file</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files/particle.</span><span class="si">{0}</span><span class="s1">.dump&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_num</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">lookup</span> <span class="o">=</span> <span class="s2">&quot;ITEM: NUMBER OF ATOMS&quot;</span>
+            <span class="n">lookup2</span> <span class="o">=</span> <span class="s2">&quot;ITEM: BOX BOUNDS ff ff ff&quot;</span>
+            <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">lookup</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">number_particles</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">))</span>
+                    <span class="n">par_line_num</span> <span class="o">=</span> <span class="n">num</span> <span class="o">+</span> <span class="mi">7</span>
+
+                <span class="k">if</span> <span class="n">lookup2</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="n">valuesX</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">))</span>
+                    <span class="n">RVE_minX</span><span class="p">,</span> <span class="n">RVE_maxX</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">valuesX</span><span class="p">))</span>
+
+                    <span class="n">valuesY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">))</span>
+                    <span class="n">RVE_minY</span><span class="p">,</span> <span class="n">RVE_maxY</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">valuesY</span><span class="p">))</span>
+
+                    <span class="n">valuesZ</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">fd</span><span class="p">))</span>
+                    <span class="n">RVE_minZ</span><span class="p">,</span> <span class="n">RVE_maxZ</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">valuesZ</span><span class="p">))</span>
+
+
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    .dump file not found, make sure &quot;Packing&quot; command is executed first!&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+
+    <span class="n">par_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;=</span> <span class="n">par_line_num</span><span class="p">:</span>
+
+                <span class="n">values</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span>
+                <span class="n">int_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">int_values</span>
+
+                <span class="k">if</span> <span class="s1">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="c1"># Duplicates exists (ignore them when writing position</span>
+                    <span class="c1"># and weight files)</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">iden</span> <span class="o">=</span> <span class="n">count</span>
+                    <span class="n">par_dict</span><span class="p">[</span><span class="n">iden</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                      <span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">4</span><span class="p">]]</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;sphere_positions.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">par_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1"> </span><span class="si">{2}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">value</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;sphere_weights.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">par_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----&gt;DONE!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright This work is published under a CC BY-SA 4.0 license.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

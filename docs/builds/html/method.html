@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Modeling &mdash; kanapy 3.2.0 documentation</title>
+  <title>Modeling &mdash; kanapy 5.0.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=ce74c6a2"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -28,14 +29,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> kanapy
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            kanapy
           </a>
               <div class="version">
-                3.2.0
+                5.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -82,8 +87,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Modeling</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Modeling</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/method.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -94,12 +99,12 @@
            <div itemprop="articleBody">
              
   <section id="modeling">
-<h1>Modeling<a class="headerlink" href="#modeling" title="Permalink to this headline"></a></h1>
+<h1>Modeling<a class="headerlink" href="#modeling" title="Link to this heading"></a></h1>
 <section id="geometry">
-<h2>Geometry<a class="headerlink" href="#geometry" title="Permalink to this headline"></a></h2>
+<h2>Geometry<a class="headerlink" href="#geometry" title="Link to this heading"></a></h2>
 <p>Grains in polycrystalline microstructures can be approximated by ellipsoids. To generate synthetic microstructures, packing the particles (ellipsoids) which follow a particular size distribution into a pre-defined domain becomes the objective. The general framework employed in this regard is the collision detection and response system for particles under random motion in the box. Each particle <span class="math notranslate nohighlight">\(i\)</span> in the domain is defined as an ellipsoid in the three-dimensional Euclidean space <span class="math notranslate nohighlight">\(\mathbb{R}^3\)</span>, and random position and velocity vectors <span class="math notranslate nohighlight">\(\mathbf{r}^i\)</span>, <span class="math notranslate nohighlight">\(\mathbf{v}^i\)</span> are assigned to it. During their motion, the particles interact with each other and with the simulation box. The interaction between particles can be modeled by breaking it down into stages of collision detection and response, and the interaction between the particles and the simulation box can be modeled by evaluating if the particle crosses the boundaries of the box. If periodicity is enabled periodic images on the opposite boundaries of the box are created, otherwise the particle position and velocity vectors have to be updated to mimic the bouncing back effect.</p>
 <section id="two-layered-collision-detection">
-<h3>Two layered collision detection<a class="headerlink" href="#two-layered-collision-detection" title="Permalink to this headline"></a></h3>
+<h3>Two layered collision detection<a class="headerlink" href="#two-layered-collision-detection" title="Link to this heading"></a></h3>
 <p>For <span class="math notranslate nohighlight">\(n\)</span> ellipsoids in the domain, the order of computational complexity would be <span class="math notranslate nohighlight">\(O(n^2)\)</span>, since each ellipsoid in the domain is checked for collision with every other ellipsoid. A two-layered collision detection scheme is implemented to overcome this limitation. The outer layer uses an Octree data structure to segregate the ellipsoids into sub-domains; this process is done recursively until there are only a few ellipsoids left in each sub-domain. The inner layer consists of a bounding spheres hierarchy, wherein ellipsoids of each Octree sub-domain are tested for collision only when their corresponding bounding spheres overlap. This effectively reduces the number of collision checks and thus the order of computational complexity to <span class="math notranslate nohighlight">\(O(nlog(n))\)</span>. The general framework of collision detection response systems with two-layer spatial-partitioning data structures has the following features:</p>
 <ul class="simple">
 <li><p>Recursively decompose the given domain into sub-domains based on the Octree data structure.</p></li>
@@ -109,29 +114,29 @@
 <li><p>Test for collision with the simulation domain and create periodic images on the opposite boundaries or mimick the bouncing against the wall effect.</p></li>
 </ul>
 <section id="layer-1-octree-data-structure">
-<h4>Layer 1: Octree data structure<a class="headerlink" href="#layer-1-octree-data-structure" title="Permalink to this headline"></a></h4>
+<h4>Layer 1: Octree data structure<a class="headerlink" href="#layer-1-octree-data-structure" title="Link to this heading"></a></h4>
 <p>To ensure efficient collision checks an Octree data structure is initialized on the simulation box. With pre-defined limits for Octree sub-division and particle assignment, the Octree trunk gets divided into sub-branches recursively. Thus, by only performing collision checks between particles belonging to a particular sub-branch, the overall simulation time is reduced.</p>
 <figure class="align-center" id="id1">
 <img alt="_images/octree.png" src="_images/octree.png" />
 <figcaption>
 <p><span class="caption-text"><strong>Figure</strong>: Simulation domain and its successive sub-branches on two levels, where particles are represented by red filled circles (left).
-Octree data structure depicting three levels of sub-divisions of the tree trunk (right).</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+Octree data structure depicting three levels of sub-divisions of the tree trunk (right).</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 </section>
 <section id="layer-2-bounding-sphere-hierarchy">
-<h4>Layer 2: Bounding sphere hierarchy<a class="headerlink" href="#layer-2-bounding-sphere-hierarchy" title="Permalink to this headline"></a></h4>
+<h4>Layer 2: Bounding sphere hierarchy<a class="headerlink" href="#layer-2-bounding-sphere-hierarchy" title="Link to this heading"></a></h4>
 <figure class="align-center" id="id2">
 <img alt="_images/layers.png" src="_images/layers.png" />
 <figcaption>
 <p><span class="caption-text"><strong>Figure</strong>: Upper layer consists of the Octree sub-branch with particles (left), and lower layer is defined by
-bounding spheres for particles <span class="math notranslate nohighlight">\(i, j\)</span> with radii <span class="math notranslate nohighlight">\(a^i, a^j\)</span> respectively (right).</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+bounding spheres for particles <span class="math notranslate nohighlight">\(i, j\)</span> with radii <span class="math notranslate nohighlight">\(a^i, a^j\)</span> respectively (right).</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 </section>
 </section>
 <section id="overlap-detection">
-<h3>Overlap detection<a class="headerlink" href="#overlap-detection" title="Permalink to this headline"></a></h3>
+<h3>Overlap detection<a class="headerlink" href="#overlap-detection" title="Link to this heading"></a></h3>
 <p>The actual overlap of two static ellipsoids is determined by the algebraic separation condition developed by <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0167839601000498">Wang (2001)</a>. Consider two ellipsoids <span class="math notranslate nohighlight">\(\mathcal{A}: \mathbf{X}^T \mathbf{A} \mathbf{X} = 0\)</span> and <span class="math notranslate nohighlight">\(\mathcal{B}: \mathbf{X}^T \mathbf{B} \mathbf{X} = 0\)</span> in <span class="math notranslate nohighlight">\(\mathbb{R}^3\)</span>, where <span class="math notranslate nohighlight">\(\mathbf{X} = [x, y, z, 1]^T\)</span>, the characteristic equation is given as,</p>
 <div class="math notranslate nohighlight">
 \[f(\lambda) = det(\lambda \: \mathbf{A} + \mathbf{B}) = 0\]</div>
@@ -143,12 +148,12 @@ bounding spheres for particles <span class="math notranslate nohighlight">\(i, j
 </ul>
 </section>
 <section id="particle-ellipsoid-packing">
-<h3>Particle (Ellipsoid) packing<a class="headerlink" href="#particle-ellipsoid-packing" title="Permalink to this headline"></a></h3>
+<h3>Particle (Ellipsoid) packing<a class="headerlink" href="#particle-ellipsoid-packing" title="Link to this heading"></a></h3>
 <p>The user-defined simulation box size and the ellipsoid size distribution are used for creating the simulation box and ellipsoids. The simulation begins by randomly placing ellipsoids of null volume inside the box, and each ellipsoid is given a random velocity vector for movement. As the simulation proceeds, the ellipsoids grow in size along their axes and also collide with one another updating their position and velocities. The simulation terminates once all the ellipsoids have reached their defined volumes; the process is depicted pictorially in the figure below.</p>
 <figure class="align-center" id="id3">
 <img alt="_images/packing.png" src="_images/packing.png" />
 <figcaption>
-<p><span class="caption-text"><strong>Figure</strong>: Ellipsoid packing simulation with partice interactions at three different timesteps.</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><strong>Figure</strong>: Ellipsoid packing simulation with partice interactions at three different timesteps.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <div class="admonition note">
@@ -159,10 +164,10 @@ angular velocity vector <span class="math notranslate nohighlight">\((\mathbf{w}
 </section>
 </section>
 <section id="texture">
-<h2>Texture<a class="headerlink" href="#texture" title="Permalink to this headline"></a></h2>
+<h2>Texture<a class="headerlink" href="#texture" title="Link to this heading"></a></h2>
 <p>In this section a brief summary of the Orientation Distribution Function (ODF) reconstruction is presented. A detailed description of this can be found in <a class="reference external" href="https://scripts.iucr.org/cgi-bin/paper?ks5643">Biswas (2020)</a> as a <span class="math notranslate nohighlight">\(L_1\)</span> minimization scheme. Furthermore, an orientation assignment algorithm is presented which takes the grain boundary texture into consideration during the assignment process.</p>
 <section id="odf-reconstruction-with-discrete-orientations">
-<h3>ODF reconstruction with discrete orientations<a class="headerlink" href="#odf-reconstruction-with-discrete-orientations" title="Permalink to this headline"></a></h3>
+<h3>ODF reconstruction with discrete orientations<a class="headerlink" href="#odf-reconstruction-with-discrete-orientations" title="Link to this heading"></a></h3>
 <p>Crystallographic texture can be represented in the form of a continuous functions called ODF i.e., <span class="math notranslate nohighlight">\(f:SO(3) \rightarrow \mathbb{R}\)</span>. With the availability of Electron Back Scatter Diffraction (EBSD) equipment, the polycrystalline materials are easily characterized in the form of measured crystallographic orientations <span class="math notranslate nohighlight">\(g_i, \ i=1,...,N\)</span>.</p>
 <p>The measured orientations <span class="math notranslate nohighlight">\(g_i\)</span> are used to estimate the ODF by a kernel density estimation <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0047259X13000419">Hielscher (2013)</a>. A bell shaped kernel function <span class="math notranslate nohighlight">\(\psi: \ [0,\pi] \rightarrow \mathbb{R}\)</span> is placed at each <span class="math notranslate nohighlight">\(g_i\)</span>, which when combined together estimates the ODF as</p>
 <div class="math notranslate nohighlight">
@@ -176,7 +181,7 @@ angular velocity vector <span class="math notranslate nohighlight">\((\mathbf{w}
 \[\parallel f(g) - {f^\prime} (q) \parallel_{1} = \int_{SO(3)} \big | f(q) - {f^\prime} (q) \big | \text{d} \hspace{2pt} q\]</div>
 </section>
 <section id="orientation-assignment-process">
-<h3>Orientation assignment process<a class="headerlink" href="#orientation-assignment-process" title="Permalink to this headline"></a></h3>
+<h3>Orientation assignment process<a class="headerlink" href="#orientation-assignment-process" title="Link to this heading"></a></h3>
 <p>In addition to the crystallographic texture, polycrystalline material also have grain boundary texture which is represented in the form of the misorientation distribution function (MDF). Similar to ODF, MDF can be estimated on <span class="math notranslate nohighlight">\(\Delta \phi:SO(3) \rightarrow \mathbb{R}\)</span> due to the disorientation (<span class="math notranslate nohighlight">\(\Delta g_i, \ i=1,...,N_g\)</span>) at grain boundary segments. These can be used to assign the discrete orientations obtained after ODF reconstruction to the grains in the RVE generated by Kanapy’s geometry module. Both the orientations and the disorientations play different roles in the mechanical behavior of the material, a detailed discussion of which can be found in <a class="reference external" href="https://onlinelibrary.wiley.com/doi/full/10.1002/adem.201900275">Biswas (2019)</a>.</p>
 <p>Other than the crystallographic orientation of the grains, the dimension of the grain boundary is also a key aspect. Therefore, to incorporate the effect of the grain boundary dimension, <span class="math notranslate nohighlight">\(\Delta g\)</span> at each segment is weighted as per the segment dimension, as suggested in <a class="reference external" href="https://www.cambridge.org/de/academic/subjects/engineering/materials-science/texture-and-anisotropy-preferred-orientations-polycrystals-and-their-effect-materials-properties?format=PB&amp;isbn=9780521794206">Kocks (2000)</a>. Since the EBSD data is a 2D image this weighting factor is estimated as <span class="math notranslate nohighlight">\(w_i = s_i/S\)</span>, where <span class="math notranslate nohighlight">\(s_i\)</span> is corresponding segment length and <span class="math notranslate nohighlight">\(S = \sum_i^{N_g} s_i\)</span>.</p>
 <p>The disorientation <span class="math notranslate nohighlight">\(\Delta g\)</span> can be represented in axis-angle notation. And within Kanapy’s algorithms we focus on the angle (<span class="math notranslate nohighlight">\(\omega\)</span>) part of <span class="math notranslate nohighlight">\(\Delta g\)</span>, commonly referred to as the disorientation angle. To imitate the statistical distribution from experiments, a Monte-Carlo scheme is suggested in <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S1359645499001378">Miodownik (1999)</a>. This is used here in a <span class="math notranslate nohighlight">\(L_1\)</span> minimization framework similar to the ODF reconstruction discussed earlier.</p>

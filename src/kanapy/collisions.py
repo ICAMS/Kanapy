@@ -3,7 +3,7 @@ import numpy as np
 
 def collision_routine(E1, E2, damp=0):
     """
-    Calls the c++ method :meth:`kanapy.base.collideDetect` to determine whether the given two ellipsoid objects overlap using 
+    Calls the method :meth:'collide_detect' to determine whether the given two ellipsoid objects overlap using
     the Algebraic separation condition developed by W. Wang et al. A detailed description is provided
     therein.
 
@@ -90,22 +90,22 @@ def collision_react(ell1, ell2, damp=0.):
 def collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j):
     r"""Implementation of Algebraic separation condition developed by
     W. Wang et al. 2001 for overlap detection between two static ellipsoids.
-    kudos ChatGPT for support with translation from C++ code
+    Kudos to ChatGPT for support with translation from C++ code.
 
-        :param arg0: Coefficients of ellipsoid :math:`i`
-        :type arg0: numpy array
-        :param arg1: Coefficients of ellipsoid :math:`j`
-        :type arg1: numpy array
-        :param arg2: Position of ellipsoid :math:`i`
-        :type arg2: numpy array
-        :param arg3: Position of ellipsoid :math:`j`
-        :type arg3: numpy array
-        :param arg4: Rotation matrix of ellipsoid :math:`i`
-        :type arg4: numpy array
-        :param arg5: Rotation matrix of ellipsoid :math:`j`
-        :type arg5: numpy array
-        :returns: **True** if ellipoids :math:`i, j` overlap, else **False**
-        :rtype: boolean
+    :param coef_i: Coefficients of ellipsoid :math:`i`
+    :type coef_i: numpy array
+    :param coef_j: Coefficients of ellipsoid :math:`j`
+    :type coef_j: numpy array
+    :param r_i: Position of ellipsoid :math:`i`
+    :type r_i: numpy array
+    :param r_j: Position of ellipsoid :math:`j`
+    :type r_j: numpy array
+    :param A_i: Rotation matrix of ellipsoid :math:`i`
+    :type A_i: numpy array
+    :param A_j: Rotation matrix of ellipsoid :math:`j`
+    :type A_j: numpy array
+    :returns: **True** if ellipsoids :math:`i, j` overlap, else **False**
+    :rtype: boolean
     """
     SMALL = 1.e-12
 

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>kanapy.smoothingGB &mdash; kanapy 5.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            kanapy
+          </a>
+              <div class="version">
+                5.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../method.html">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kanapy.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">kanapy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">kanapy.smoothingGB</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for kanapy.smoothingGB</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="Node">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.Node">[docs]</a>
+<span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>    
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">iden</span><span class="p">,</span><span class="n">px</span><span class="p">,</span><span class="n">py</span><span class="p">,</span><span class="n">pz</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">iden</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">px</span> <span class="o">=</span> <span class="n">px</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">py</span> <span class="o">=</span> <span class="n">py</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pz</span> <span class="o">=</span> <span class="n">pz</span>        
+                
+        <span class="c1"># Store the original position of the node </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oripx</span> <span class="o">=</span> <span class="n">px</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oripy</span> <span class="o">=</span> <span class="n">py</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oripz</span> <span class="o">=</span> <span class="n">pz</span>   
+        
+        <span class="c1"># Velocity of the node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vz</span> <span class="o">=</span> <span class="mf">0.</span>
+
+        <span class="c1"># Acceleration of the node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ay</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">az</span> <span class="o">=</span> <span class="mf">0.</span>        
+        
+        <span class="c1"># List anchors connected to the node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anchors</span> <span class="o">=</span> <span class="p">[]</span>    
+
+<div class="viewcode-block" id="Node.get_pos">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.Node.get_pos">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">px</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pz</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Node.get_Oripos">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.Node.get_Oripos">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_Oripos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">oripx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">oripy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">oripz</span><span class="p">])</span>                 </div>
+
+    
+<div class="viewcode-block" id="Node.get_vel">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.Node.get_vel">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_vel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">vx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vz</span><span class="p">])</span></div>
+
+        
+<div class="viewcode-block" id="Node.update_pos">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.Node.update_pos">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>               
+        <span class="bp">self</span><span class="o">.</span><span class="n">px</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">py</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pz</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vz</span> <span class="o">*</span> <span class="n">dt</span>   </div>
+
+        
+<div class="viewcode-block" id="Node.update_vel">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.Node.update_vel">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_vel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ay</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vz</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">az</span> <span class="o">*</span> <span class="n">dt</span>   </div>
+
+
+<div class="viewcode-block" id="Node.compute_acc">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.Node.compute_acc">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_acc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fx</span><span class="p">,</span><span class="n">fy</span><span class="p">,</span><span class="n">fz</span><span class="p">,</span><span class="n">mass</span><span class="p">):</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">fx</span><span class="o">/</span><span class="n">mass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ay</span> <span class="o">=</span> <span class="n">fy</span><span class="o">/</span><span class="n">mass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">az</span> <span class="o">=</span> <span class="n">fz</span><span class="o">/</span><span class="n">mass</span>       </div>
+</div>
+
+<span class="w">        </span>
+<span class="w">        </span>
+<span class="sd">&quot;&quot;&quot; The function readGrainFaces has some redundancies with</span>
+<span class="sd">kanapy/input_output/extract_volume_sharedGBarea which is only used in </span>
+<span class="sd">kanapy CLI and </span>
+<span class="sd">kanapy/api/calcPolygons which offers more functionality, e.g. polygonization</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="readGrainFaces">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.readGrainFaces">[docs]</a>
+<span class="k">def</span> <span class="nf">readGrainFaces</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span><span class="n">elmtDict</span><span class="p">,</span><span class="n">elmtSetDict</span><span class="p">):</span>
+    <span class="n">RVE_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">RVE_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">grain_facesDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>      <span class="c1"># {Grain: faces} </span>
+    <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">elset</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>               
+
+        <span class="n">outer_faces</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>          <span class="c1"># Stores only outer face IDs</span>
+        <span class="n">face_nodes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>       <span class="c1"># {Faces: nodal connectivity} </span>
+        
+        <span class="n">nodeConn</span> <span class="o">=</span> <span class="p">[</span><span class="n">elmtDict</span><span class="p">[</span><span class="n">el</span><span class="p">]</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">elset</span><span class="p">]</span>    <span class="c1"># Nodal connectivity of a voxel</span>
+
+        <span class="c1"># For each voxel, re-create its 6 faces</span>
+        <span class="k">for</span> <span class="n">nc</span> <span class="ow">in</span> <span class="n">nodeConn</span><span class="p">:</span>
+            <span class="n">faces</span> <span class="o">=</span> <span class="p">[[</span><span class="n">nc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">7</span><span class="p">]],</span>
+                     <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">4</span><span class="p">]],</span> <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">7</span><span class="p">]],</span>
+                     <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">2</span><span class="p">]]]</span>
+                        
+            <span class="c1"># Sort in ascending order</span>
+            <span class="n">sorted_faces</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span> <span class="k">for</span> <span class="n">fc</span> <span class="ow">in</span> <span class="n">faces</span><span class="p">]</span>  
+            
+            <span class="c1"># create face ids by joining node id&#39;s                        </span>
+            <span class="n">face_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">fc</span><span class="p">))</span> <span class="k">for</span> <span class="n">fc</span> <span class="ow">in</span> <span class="n">sorted_faces</span><span class="p">]</span>        
+
+            <span class="c1"># Update {Faces: nodal connectivity} dictionary</span>
+            <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">fid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">face_ids</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">fid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">face_nodes</span><span class="p">:</span>       
+                    <span class="n">face_nodes</span><span class="p">[</span><span class="n">fid</span><span class="p">]</span> <span class="o">=</span> <span class="n">faces</span><span class="p">[</span><span class="n">enum</span><span class="p">]</span>                
+            
+            <span class="c1"># Update the set</span>
+            <span class="k">for</span> <span class="n">fid</span> <span class="ow">in</span> <span class="n">face_ids</span><span class="p">:</span>        
+                <span class="k">if</span> <span class="n">fid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outer_faces</span><span class="p">:</span>
+                    <span class="n">outer_faces</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">fid</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">outer_faces</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fid</span><span class="p">)</span>        
+        
+        <span class="c1"># Update {Grain: faces} dictionary</span>
+        <span class="n">grain_facesDict</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>    
+        <span class="k">for</span> <span class="n">of</span> <span class="ow">in</span> <span class="n">outer_faces</span><span class="p">:</span>
+        
+            <span class="c1"># Don&#39;t add faces belonging to RVE surface</span>
+            <span class="n">conn</span> <span class="o">=</span> <span class="n">face_nodes</span><span class="p">[</span><span class="n">of</span><span class="p">]</span>
+            <span class="n">n1</span> <span class="o">=</span> <span class="n">nodes_v</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span>
+            <span class="n">n2</span> <span class="o">=</span> <span class="n">nodes_v</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span>
+            <span class="n">n3</span> <span class="o">=</span> <span class="n">nodes_v</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span>
+            <span class="n">n4</span> <span class="o">=</span> <span class="n">nodes_v</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">n1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n4</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">RVE_min</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">n1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n4</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">RVE_max</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">continue</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="n">n1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">n2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">n3</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">n4</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">RVE_min</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">n1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">n2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">n3</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">n4</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">RVE_max</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">continue</span>
+                
+            <span class="k">if</span> <span class="p">(</span><span class="n">n1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">n2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">n3</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">n4</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">RVE_min</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">n1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">n2</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">n3</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">n4</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">RVE_max</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+                <span class="k">continue</span>
+                
+            <span class="n">grain_facesDict</span><span class="p">[</span><span class="n">gid</span><span class="p">][</span><span class="n">of</span><span class="p">]</span> <span class="o">=</span> <span class="n">face_nodes</span><span class="p">[</span><span class="n">of</span><span class="p">]</span>  
+        
+    <span class="k">return</span> <span class="n">grain_facesDict</span></div>
+
+        
+
+
+<div class="viewcode-block" id="initalizeSystem">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.initalizeSystem">[docs]</a>
+<span class="k">def</span> <span class="nf">initalizeSystem</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span><span class="n">grain_facesDict</span><span class="p">):</span>
+    
+    <span class="c1"># Initialize all nodes as masses</span>
+    <span class="n">allNodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">Node</span><span class="p">(</span><span class="n">nid</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">nid</span><span class="p">,</span><span class="n">coords</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">)]</span>  
+    
+    <span class="c1"># Create anchors at each face center    </span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating anchors for the spring-mass system&#39;</span><span class="p">)</span>
+    <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grain_facesDict</span><span class="p">))</span>   <span class="c1"># progress bar tqdm</span>
+    
+    <span class="n">anchDict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">nodeAnch</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">fcList</span> <span class="o">=</span> <span class="p">[]</span>   
+    <span class="k">for</span> <span class="n">gid</span><span class="p">,</span><span class="n">ginfo</span> <span class="ow">in</span> <span class="n">grain_facesDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">fc</span><span class="p">,</span><span class="n">conn</span> <span class="ow">in</span> <span class="n">ginfo</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>                   
+            <span class="k">if</span> <span class="n">fc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fcList</span><span class="p">:</span>
+                <span class="n">fcList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span>
+                <span class="n">n1</span> <span class="o">=</span> <span class="n">nodes_v</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span>      <span class="c1"># A corner node</span>
+                <span class="n">n2</span> <span class="o">=</span> <span class="n">nodes_v</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span>      <span class="c1"># its opposite corner</span>
+                <span class="n">ancrpos</span> <span class="o">=</span> <span class="p">((</span><span class="n">n1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">n2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">n1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">n2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">n1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="n">n2</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">anchDict</span><span class="p">[</span><span class="n">fc</span><span class="p">]</span> <span class="o">=</span> <span class="n">ancrpos</span>
+                
+                <span class="n">nodeAnch</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span>
+                <span class="n">nodeAnch</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span>
+                <span class="n">nodeAnch</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span>
+                <span class="n">nodeAnch</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span>
+        
+        <span class="n">pbar</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span> 
+        <span class="n">pbar</span><span class="o">.</span><span class="n">refresh</span><span class="p">()</span>
+        
+    <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>                               <span class="c1"># Close progress bar</span>
+    <span class="c1"># Add the anchor ID to the node class</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">allNodes</span><span class="p">:</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">anchors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">nodeAnch</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">allNodes</span><span class="p">,</span><span class="n">anchDict</span></div>
+
+
+
+<div class="viewcode-block" id="relaxSystem">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.relaxSystem">[docs]</a>
+<span class="k">def</span> <span class="nf">relaxSystem</span><span class="p">(</span><span class="n">allNodes</span><span class="p">,</span><span class="n">anchDict</span><span class="p">,</span><span class="n">dt</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">RVE_xmin</span><span class="p">,</span><span class="n">RVE_xmax</span><span class="p">,</span>
+                         <span class="n">RVE_ymin</span><span class="p">,</span><span class="n">RVE_ymax</span><span class="p">,</span><span class="n">RVE_zmin</span><span class="p">,</span><span class="n">RVE_zmax</span><span class="p">):</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Relaxing the system for equilibrium&#39;</span><span class="p">)</span>                 
+    <span class="n">nodeMass</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">)):</span>        
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">allNodes</span><span class="p">:</span>
+        
+            <span class="c1"># Force calculations</span>
+            <span class="n">fX</span><span class="p">,</span> <span class="n">fY</span><span class="p">,</span> <span class="n">fZ</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span>
+            <span class="k">for</span> <span class="n">anch</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">anchors</span><span class="p">:</span>
+                <span class="n">anX</span><span class="p">,</span><span class="n">anY</span><span class="p">,</span><span class="n">anZ</span> <span class="o">=</span> <span class="n">anchDict</span><span class="p">[</span><span class="n">anch</span><span class="p">]</span>
+                <span class="n">sfX</span> <span class="o">=</span> <span class="o">-</span><span class="n">k</span><span class="o">*</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">px</span> <span class="o">-</span> <span class="n">anX</span><span class="p">)</span>
+                <span class="n">sfY</span> <span class="o">=</span> <span class="o">-</span><span class="n">k</span><span class="o">*</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span> <span class="n">anY</span><span class="p">)</span>
+                <span class="n">sfZ</span> <span class="o">=</span> <span class="o">-</span><span class="n">k</span><span class="o">*</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">pz</span> <span class="o">-</span> <span class="n">anZ</span><span class="p">)</span>
+                
+                <span class="n">dfX</span> <span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">vx</span>
+                <span class="n">dfY</span> <span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">vy</span>
+                <span class="n">dfZ</span> <span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="n">node</span><span class="o">.</span><span class="n">vz</span>
+                     
+                <span class="n">fX</span> <span class="o">+=</span> <span class="n">sfX</span> <span class="o">-</span> <span class="n">dfX</span>
+                <span class="n">fY</span> <span class="o">+=</span> <span class="n">sfY</span> <span class="o">-</span> <span class="n">dfY</span> 
+                <span class="n">fZ</span> <span class="o">+=</span> <span class="n">sfZ</span> <span class="o">-</span> <span class="n">dfZ</span>
+            
+            <span class="c1"># Set force components to zeros for RVE boundary nodes</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">oripx</span> <span class="o">==</span> <span class="n">RVE_xmin</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">oripx</span> <span class="o">==</span> <span class="n">RVE_xmax</span><span class="p">):</span>
+                <span class="n">fX</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">oripy</span> <span class="o">==</span> <span class="n">RVE_ymin</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">oripy</span> <span class="o">==</span> <span class="n">RVE_ymax</span><span class="p">):</span>
+                <span class="n">fY</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">oripz</span> <span class="o">==</span> <span class="n">RVE_zmin</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">oripz</span> <span class="o">==</span> <span class="n">RVE_zmax</span><span class="p">):</span>
+                <span class="n">fZ</span> <span class="o">=</span> <span class="mf">0.0</span>  
+            
+            <span class="c1"># Update node positions</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">compute_acc</span><span class="p">(</span><span class="n">fX</span><span class="p">,</span><span class="n">fY</span><span class="p">,</span><span class="n">fZ</span><span class="p">,</span><span class="n">nodeMass</span><span class="p">)</span>    
+            <span class="n">node</span><span class="o">.</span><span class="n">update_vel</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">update_pos</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">allNodes</span></div>
+
+    
+    
+<div class="viewcode-block" id="smoothingRoutine">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.smoothingGB.smoothingRoutine">[docs]</a>
+<span class="k">def</span> <span class="nf">smoothingRoutine</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="c1">#coords = np.array(list(nodes_v.values()))</span>
+    <span class="n">xvals</span><span class="p">,</span> <span class="n">yvals</span><span class="p">,</span> <span class="n">zvals</span> <span class="o">=</span> <span class="n">nodes_v</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">nodes_v</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">nodes_v</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">RVE_xmin</span><span class="p">,</span> <span class="n">RVE_xmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">xvals</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">xvals</span><span class="p">)</span>
+    <span class="n">RVE_ymin</span><span class="p">,</span> <span class="n">RVE_ymax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">yvals</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">yvals</span><span class="p">)</span>
+    <span class="n">RVE_zmin</span><span class="p">,</span> <span class="n">RVE_zmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">zvals</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">zvals</span><span class="p">)</span>
+    
+    <span class="c1"># Find each grain&#39;s outer face ids and it&#39;s nodal connectivities</span>
+    <span class="n">grain_facesDict</span> <span class="o">=</span> <span class="n">readGrainFaces</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span><span class="n">elmtDict</span><span class="p">,</span><span class="n">elmtSetDict</span><span class="p">)</span>
+    
+    <span class="c1"># Initialize the spring-mass-anchor system</span>
+    <span class="n">allNodes</span><span class="p">,</span><span class="n">anchDict</span> <span class="o">=</span> <span class="n">initalizeSystem</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span><span class="n">grain_facesDict</span><span class="p">)</span>
+    
+    <span class="c1"># Run the simulation</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="mf">0.2</span>   <span class="c1"># time-step</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">100</span>    <span class="c1"># total steps</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>     <span class="c1"># spring constant</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mi">10</span>     <span class="c1"># damping constant</span>
+    <span class="n">allNodes</span> <span class="o">=</span> <span class="n">relaxSystem</span><span class="p">(</span><span class="n">allNodes</span><span class="p">,</span><span class="n">anchDict</span><span class="p">,</span><span class="n">dt</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">RVE_xmin</span><span class="p">,</span>
+                           <span class="n">RVE_xmax</span><span class="p">,</span><span class="n">RVE_ymin</span><span class="p">,</span> <span class="n">RVE_ymax</span><span class="p">,</span><span class="n">RVE_zmin</span><span class="p">,</span><span class="n">RVE_zmax</span><span class="p">)</span>
+            
+    <span class="n">nodes_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">n</span><span class="o">.</span><span class="n">px</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">pz</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">allNodes</span><span class="p">])</span>
+    
+    <span class="k">if</span> <span class="n">save_files</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>          <span class="c1"># Folder to store the json files</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">json_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">json_dir</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/nodes_s.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes_s</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+            
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/grain_facesDict.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">grain_facesDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+               
+    <span class="k">return</span> <span class="n">nodes_s</span><span class="p">,</span> <span class="n">grain_facesDict</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright This work is published under a CC BY-SA 4.0 license.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

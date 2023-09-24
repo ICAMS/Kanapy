@@ -1,16 +1,35 @@
 Code documentation
 ==================
 
-Module collision\_detect\_react 
---------------------------------
+Module API
+----------
 
-.. automodule:: kanapy.collision_detect_react
+.. automodule:: kanapy.api
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module CLI
+----------
+
+.. automodule:: kanapy.cli
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module initialization
+---------------------
+
+.. automodule:: kanapy.initializations
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-.. automodule:: kanapy.base
+Module collisions
+-----------------
+
+.. automodule:: kanapy.collisions
    :members:
    :undoc-members:
    :show-inheritance:
@@ -51,11 +70,34 @@ Module voxelization
    :undoc-members:
    :show-inheritance:
 
+Module grains
+-------------
+
+.. automodule:: kanapy.grains
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module analyze\_texture
 -----------------------
 
-.. automodule:: kanapy.analyze_texture
+.. automodule:: kanapy.textures
    :members:
    :undoc-members:
    :show-inheritance:   
+
+Module plotting
+---------------
+
+.. automodule:: kanapy.plotting
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module smoothing
+----------------
+
+.. automodule:: kanapy.smoothingGB
+   :members:
+   :undoc-members:
+   :show-inheritance:

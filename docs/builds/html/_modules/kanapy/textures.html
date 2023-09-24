@@ -3,17 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.analyze_texture &mdash; kanapy 3.2.0 documentation</title>
+  <title>kanapy.textures &mdash; kanapy 5.0.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -24,14 +25,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> kanapy
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            kanapy
           </a>
               <div class="version">
-                3.2.0
+                5.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -61,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>kanapy.analyze_texture</li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">kanapy.textures</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -72,37 +77,39 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for kanapy.analyze_texture</h1><div class="highlight"><pre>
+  <h1>Source code for kanapy.textures</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">kanapy</span> <span class="kn">import</span> <span class="n">MTEX_AVAIL</span><span class="p">,</span> <span class="n">WORK_DIR</span>
 
-<span class="kn">from</span> <span class="nn">kanapy.util</span> <span class="kn">import</span> <span class="n">ROOT_DIR</span>    
-    
-<div class="viewcode-block" id="checkConfiguration"><a class="viewcode-back" href="../../kanapy.html#kanapy.analyze_texture.checkConfiguration">[docs]</a><span class="k">def</span> <span class="nf">checkConfiguration</span><span class="p">():</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; </span>
-<span class="sd">    Evaluates if Kanapy has been configured for texture analysis by reading the &#39;PATHS.json&#39;</span>
+
+<div class="viewcode-block" id="checkConfiguration">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.textures.checkConfiguration">[docs]</a>
+<span class="k">def</span> <span class="nf">checkConfiguration</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Evaluates if kanapy has been configured for texture analysis by reading the &#39;PATHS.json&#39;</span>
 <span class="sd">    file if it exists.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="n">path_file</span> <span class="o">=</span> <span class="n">ROOT_DIR</span> <span class="o">+</span> <span class="s1">&#39;/PATHS.json&#39;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path_file</span><span class="p">):</span>        
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Your Kanapy is not configured for texture analysis yet! Please run &#39;kanapy setuptexture&#39; to do so.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>            
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>  
-            <span class="n">paths</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>   
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Your Kanapy has been configured for texture analysis!&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        MATLAB executable: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="s1">&#39;MATLABpath&#39;</span><span class="p">]))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        MTEX path:         </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="s1">&#39;MTEXpath&#39;</span><span class="p">]))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        (To update these paths, run: kanapy setuptexture)&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">WORK_DIR</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;Package not properly installed, working directory is missing.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">MTEX_AVAIL</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Kanapy is not configured for texture analysis yet! Please run &#39;python setup_mtex.py&#39; to do so.&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">WORK_DIR</span> <span class="o">+</span> <span class="s1">&#39;/PATHS.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Kanapy has been configured for texture analysis!&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        MATLAB executable: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="s1">&#39;MATLABpath&#39;</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        MTEX path:         </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="s1">&#39;MTEXpath&#39;</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;        (To update these paths, run: python setup_mtex)&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">paths</span></div>
 
 
-<div class="viewcode-block" id="getGrainNumber"><a class="viewcode-back" href="../../kanapy.html#kanapy.analyze_texture.getGrainNumber">[docs]</a><span class="k">def</span> <span class="nf">getGrainNumber</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>    
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="getGrainNumber">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.textures.getGrainNumber">[docs]</a>
+<span class="k">def</span> <span class="nf">getGrainNumber</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>    
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads the number of grains generated in the RVE by kanapy&#39;s geometry module. Or requests the</span>
 <span class="sd">    user to provide the number, which will be used for reduced orientation evaluation.      </span>
 
@@ -110,7 +117,7 @@
 <span class="sd">    :type wd: String                          </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">grain_info</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span>         <span class="c1"># Kanapy generated particle file</span>
+    <span class="n">grain_info</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/particle_data.json&#39;</span>         <span class="c1"># kanapy generated particle file</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
     
     <span class="c1"># If kanapy&#39;s geometry module is executed before: Use it to get the grain number!</span>
@@ -125,19 +132,20 @@
         <span class="k">elif</span> <span class="n">decision</span> <span class="o">==</span> <span class="s1">&#39;no&#39;</span> <span class="ow">or</span> <span class="n">decision</span> <span class="o">==</span> <span class="s1">&#39;n&#39;</span> <span class="ow">or</span> <span class="n">decision</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span> <span class="ow">or</span> <span class="n">decision</span> <span class="o">==</span> <span class="s1">&#39;NO&#39;</span><span class="p">:</span>
             <span class="n">oriNum</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;    Please provide the number of reduced orientations required (integer): &#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Invalid entry!, run: kanapy reducetexture again</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>                
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, run: kanapy reducetexture again&#39;</span><span class="p">)</span>
     <span class="c1"># Else ask the user for input.</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">grain_info</span><span class="p">):</span>        
         <span class="n">oriNum</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;    Please provide the number of reduced orientations required (integer): &#39;</span><span class="p">)</span>  
         <span class="k">if</span> <span class="n">oriNum</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Invalid entry!, run: kanapy reducetexture again</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, run: kanapy reducetexture again&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">oriNum</span></div>
 
 
-<div class="viewcode-block" id="getSharedSurfaceArea"><a class="viewcode-back" href="../../kanapy.html#kanapy.analyze_texture.getSharedSurfaceArea">[docs]</a><span class="k">def</span> <span class="nf">getSharedSurfaceArea</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>    
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="getSharedSurfaceArea">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.textures.getSharedSurfaceArea">[docs]</a>
+<span class="k">def</span> <span class="nf">getSharedSurfaceArea</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>    
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads the grain boundary shared surface area information generated by kanapy&#39;s geometry module. If the file is missing, </span>
 <span class="sd">    it requests the user to provide this file, which will be used by the orientation assignment algorithm.       </span>
 
@@ -145,7 +153,7 @@
 <span class="sd">    :type wd: String                          </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">ssa_info</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/shared_surfaceArea.csv&#39;</span>       <span class="c1"># Kanapy generated file</span>
+    <span class="n">ssa_info</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/shared_surfaceArea.csv&#39;</span>       <span class="c1"># kanapy generated file</span>
 
     <span class="c1"># If kanapy&#39;s geometry module is executed before: Use it to get the shared area info!</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">ssa_info</span><span class="p">):</span>                   
@@ -157,27 +165,24 @@
             <span class="n">ssafile</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/json_files/&#39;</span> <span class="o">+</span> <span class="n">ssafileName</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">ssafile</span><span class="p">):</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ssafileName</span><span class="p">))</span>
-                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File: &#39;</span><span class="si">{</span><span class="n">ssafileName</span><span class="si">}</span><span class="s2">&#39; does not exist in the current working directory!&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Invalid entry!, run: kanapy reducetexture again</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>              
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, run: kanapy reducetexture again</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
               
     <span class="c1"># Else ask the user for input.</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">ssa_info</span><span class="p">):</span>        
         <span class="n">ssafileName</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;    Please provide the shared surface area file name located in the &#39;current/working/directory/json_files&#39; directory! (.csv format): &quot;</span><span class="p">)</span>       
         <span class="n">ssafile</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/json_files/&#39;</span> <span class="o">+</span> <span class="n">ssafileName</span>
-        
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">ssafile</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ssafileName</span><span class="p">))</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File: &#39;</span><span class="si">{</span><span class="n">ssafileName</span><span class="si">}</span><span class="s2">&#39; does not exist in the current working directory!&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ssafile</span></div>
+
                        
 
-<div class="viewcode-block" id="getGrainVolume"><a class="viewcode-back" href="../../kanapy.html#kanapy.analyze_texture.getGrainVolume">[docs]</a><span class="k">def</span> <span class="nf">getGrainVolume</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>    
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="getGrainVolume">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.textures.getGrainVolume">[docs]</a>
+<span class="k">def</span> <span class="nf">getGrainVolume</span><span class="p">(</span><span class="n">wd</span><span class="p">):</span>    
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads the grain volume information generated by kanapy&#39;s geometry module. If the file is missing, </span>
 <span class="sd">    it requests the user to provide this file, which will be used by the orientation assignment algorithm.       </span>
 
@@ -191,12 +196,11 @@
     <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;no&#39;</span> <span class="ow">or</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;n&#39;</span> <span class="ow">or</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span> <span class="ow">or</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;NO&#39;</span><span class="p">:</span>
         <span class="n">volfile</span> <span class="o">=</span> <span class="kc">False</span>            
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Invalid entry!, run: kanapy reducetexture again</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, run: kanapy reducetexture again</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             
     <span class="c1"># If the user requests the grain volumes to be used</span>
     <span class="k">if</span> <span class="n">volfile</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-        <span class="n">vol_info</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/grainVolumes.csv&#39;</span>       <span class="c1"># Kanapy generated file</span>
+        <span class="n">vol_info</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/grainVolumes.csv&#39;</span>       <span class="c1"># kanapy generated file</span>
         
         <span class="c1"># If kanapy&#39;s geometry module is executed before: Use it to get the grain volume info!</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">vol_info</span><span class="p">):</span>                   
@@ -208,12 +212,10 @@
                 <span class="n">volfile</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/json_files/&#39;</span> <span class="o">+</span> <span class="n">volfileName</span> 
 
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">volfile</span><span class="p">):</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">volfileName</span><span class="p">))</span>
-                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File: &#39;</span><span class="si">{</span><span class="n">volfile</span><span class="si">}</span><span class="s2">&#39; does not exist in the current working directory!&quot;</span><span class="p">)</span>
                                        
             <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Invalid entry!, run: kanapy reducetexture again</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>              
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, run: kanapy reducetexture again</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
               
         <span class="c1"># Else ask the user for input.</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">vol_info</span><span class="p">):</span>        
@@ -221,18 +223,20 @@
             <span class="n">volfile</span> <span class="o">=</span> <span class="n">wd</span> <span class="o">+</span> <span class="s1">&#39;/json_files/&#39;</span> <span class="o">+</span> <span class="n">volfileName</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">volfile</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">volfileName</span><span class="p">))</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File: &#39;</span><span class="si">{</span><span class="n">volfile</span><span class="si">}</span><span class="s2">&#39; does not exist in the current working directory!&quot;</span><span class="p">)</span>
                 
         <span class="k">return</span> <span class="n">volfile</span>
     
     <span class="c1"># Else: if user requests not to use it</span>
     <span class="k">elif</span> <span class="n">volfile</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span></div>
+
     
     
-<div class="viewcode-block" id="textureReduction"><a class="viewcode-back" href="../../kanapy.html#kanapy.analyze_texture.textureReduction">[docs]</a><span class="k">def</span> <span class="nf">textureReduction</span><span class="p">(</span><span class="n">kdict</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="textureReduction">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.textures.textureReduction">[docs]</a>
+<span class="k">def</span> <span class="nf">textureReduction</span><span class="p">(</span><span class="n">kdict</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads the grain volume information generated by kanapy&#39;s geometry module. If the file is missing, </span>
 <span class="sd">    it requests the user to provide this file, which will be used by the orientation assignment algorithm.       </span>
 <span class="sd">    </span>
@@ -241,8 +245,8 @@
 <span class="sd">    :param kdict: Key-value pairs of the user specified input to the CLI command: ``kanapy reducetexture``</span>
 <span class="sd">    :type kdict: Python dictionary object                          </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="sd">&#39;&#39;&#39; Calls the MATLAB texture reduction algorithm&#39;&#39;&#39;</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; Calls the MATLAB texture reduction algorithm&#39;&#39;&#39;</span>
     
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting texture reduction&#39;</span><span class="p">)</span> 
@@ -273,11 +277,10 @@
             <span class="n">user_grainsFile</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">user_grainsFileName</span>
             
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">user_grainsFile</span><span class="p">):</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Mentioned file: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user_grainsFileName</span><span class="p">))</span>
-                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File: &#39;</span><span class="si">{</span><span class="n">user_grainsFile</span><span class="si">}</span><span class="s2">&#39; does not exist in the current working directory!&quot;</span><span class="p">)</span>
             
     <span class="c1"># Create a temporary matlab script file that runs Texture reduction algorithm    </span>
-    <span class="n">TRfile</span> <span class="o">=</span> <span class="n">cwd</span><span class="o">+</span><span class="s1">&#39;/textureReduction.m&#39;</span>      <span class="c1"># Temporary &#39;.m&#39; file witten in cwd</span>
+    <span class="n">TRfile</span> <span class="o">=</span> <span class="n">WORK_DIR</span><span class="o">+</span><span class="s1">&#39;/textureReduction.m&#39;</span>      <span class="c1"># Temporary &#39;.m&#39; file</span>
     <span class="n">logFile</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/kanapyTexture.log&#39;</span>        <span class="c1"># Log file.</span>
     
     <span class="k">with</span> <span class="nb">open</span> <span class="p">(</span><span class="n">TRfile</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -304,8 +307,7 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;outputPath=&#39;</span><span class="si">{}</span><span class="s2">&#39;;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cwd</span><span class="p">))</span>
         
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;addpath </span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cwd</span><span class="p">))</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;addpath </span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ROOT_DIR</span><span class="p">))</span> <span class="c1"># add also this dir for the ODF_red.. function                       </span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;addpath </span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">WORK_DIR</span><span class="p">))</span>
         
         <span class="n">command</span> <span class="o">=</span> <span class="s2">&quot;ODF_reduction_algo(MTEXpath,ori_num,&quot;</span>
         <span class="k">if</span> <span class="s2">&quot;ebsdMatFile&quot;</span> <span class="ow">in</span> <span class="n">kdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -328,9 +330,8 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;exit;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="c1"># Run from the terminal </span>
-    <span class="c1">#os.system(&#39;cat {0} | {1} -nosplash -nodesktop -nodisplay -nojvm;&#39;.format(TRfile, path_dict[&#39;MATLABpath&#39;]))         </span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Calling Kanapy-MATLAB scripts ...&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Calling kanapy-MATLAB scripts ...&#39;</span><span class="p">)</span>
     
     <span class="n">cmd1</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> -nosplash -nodesktop -nodisplay -r &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;MATLABpath&#39;</span><span class="p">])</span> 
     <span class="n">cmd2</span> <span class="o">=</span> <span class="s1">&#39;&quot;run(&#39;</span> <span class="o">+</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">TRfile</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;; exit;&quot;&#39;</span>
@@ -346,6 +347,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Completed texture reduction!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">return</span></div>
+
 
 
 </pre></div>

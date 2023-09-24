@@ -23,22 +23,28 @@ given in form of orientation distribution functions (ODF) and
 misorientation distribution functions (MDF). Kanapy offers tools to
 analyze the geometry and texture of microstructures given by EBSD maps
 to generate 3D synthetic microstructures mimicking real ones in a
-statistical sense. The general implementation is done in
-`Python <http://www.python.org>`__ with the performance critical part
-for the geometry module implemented in C++. The Python bindings for the
-code written in C++ are generated using the lightweight header-only
-library `pybind11 <https://pybind11.readthedocs.io/en/stable/>`__. The
-C++ part of the implementation utilizes the
-`Eigen <http://eigen.tuxfamily.org/index.php?title=Main_Page>`__ library
-for efficient linear algebra calculations. The texture module of Kanapy
-is implemented as
+statistical sense. The implementation is done in
+`Python <http://www.python.org>`__.
+
+The texture module of Kanapy is implemented as
 `MATLAB <https://www.mathworks.com/products/matlab.html>`__ functions
 using several algorithms implemented in
 `MTEX <https://mtex-toolbox.github.io/>`__ for texture analysis.
 
 Motivation
 ----------
-An accurate representation of the material microstructure is fundamental in understanding the relationship between microstructure and its corresponding mechanical behavior. In this regard, Kanapy is developed to be a robust and an efficient tool to generate synthetic microstructures within the micro mechanical framework for Finite Element Method (FEM) simulations. It is designed to model simple and complex grain morphologies and to systematically incorporate texture data directly from experiments concurrently maintaining the numerical efficiency of the micromechanical model. Kanapy is developed to overcome the limitations of spatial tessellation methods and to provide an alternative to the existing Random Sequential Addition technique of microstructure geometry generation. 
+An accurate representation of a material's microstructure is fundamental in
+understanding the relationship between microstructure and its corresponding
+mechanical behavior. In this regard, Kanapy is developed to be a robust and
+an efficient tool to generate synthetic microstructures as the basis for
+micromechanical simulations with crystal plasticity methods. The generated
+microstructures can be used for mechanical analysis with Finite Element (FE)
+of spectral solvers. Kanapy is designed to model simple and complex grain
+morphologies and to systematically incorporate texture data directly from
+experiments concurrently maintaining the numerical efficiency of the
+micromechanical model. Kanapy is developed to overcome the limitations of
+spatial tessellation methods and to provide an alternative to the existing
+Random Sequential Addition technique of microstructure geometry generation.
 
 .. figure:: /figs/kanapy_graphical_abstract.png
     :align: center
@@ -47,7 +53,8 @@ An accurate representation of the material microstructure is fundamental in unde
     
 Features
 --------
--  Kanapy is used through a Command Line Interface (CLI).
+-  Kanapy offers a Python Application Programming Interface (API) and can
+   also be used through a Command Line Interface (CLI).
 -  Possibility to analyze experimental microstructures based on
    `MTEX <https://mtex-toolbox.github.io/>`__ functions.
 -  Generation of microstructure geometry based on statistical features
@@ -67,16 +74,12 @@ Features
 -  Collision handling of particles through a two-layer collision
    detection method employing the Octree spatial data structure and the
    bounding sphere hierarchy.
--  Flexibility in the choice of the particle packing time step to be
-   sent for voxelization (meshing).
 -  Option to generate spherical particle position- and radius files that
    can be read by the Voronoi tessellation software
    `Neper <http://neper.sourceforge.net/>`__.
 -  Option to generate input files for the commercial finite-element
    software
    `Abaqus <https://www.3ds.com/products-services/simulia/products/abaqus/>`__.
--  High-performance for the critical part of the geometry code using
-   Python-C++ bindings.
    
 Installation
 ------------
@@ -91,10 +94,10 @@ a desired location and install.
 .. code-block:: console
 
     $ git clone https://github.com/ICAMS/Kanapy.git <location to clone>/kanapy-master
-    $ cd kanapy-master/
+    $ cd kanapy
     $ conda env create -f environment.yml
     $ conda activate knpy
-    (knpy) $ pip install -e .
+    (knpy) $ python -m pip install .
     
     
 Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's 
@@ -108,7 +111,11 @@ command
    (knpy) $ kanapy setupTexture
 
 .. note:: 1. ``knpy`` can be replaced with any name for your environment.
-          2. For older versions of anaconda/miniconda use: ``source activate knpy``
+          2. The installation scripts have been tested for Matlab R2023a with Python 3.9.16. If you are using other Matlab versions, the script
+             "setupTexture" might fail. In that case, you can setup the Matlab
+             Engine API for Python manually. To do so, please follow the instructions
+             given on the Mathworks_ website, to (i) Verify your configuration, (ii) Install Engine API, and (iii) Start MATLAB Engine.
+             The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the "environment.yml" file and re-creating the conda environment *knpy*.
                     
 .. tip:: To learn more about managing environments see Anaconda documentation_.
 
@@ -116,6 +123,7 @@ command
 .. _Github repo: https://github.com/mrgprasad/kanapy
 .. _MATLAB: https://www.mathworks.com/products/matlab.html
 .. _MTEX: https://mtex-toolbox.github.io/
+.. _Mathworks: https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
             
 Running tests
 --------------
@@ -144,13 +152,6 @@ The HTML documentation is then found at *kanapy/docs/builds/html/index.html*
 Dependencies
 ------------
 
-For Linux/Mac OS, Kanapy requires a working C/C++ compiler on your machine. The gcc 
-toolchain will work well. For Windows, Kanapy is installed as a pre-built distribution 
-(.whl file). In either case, the lightweight header-only library pybind11 
-is used to create Python bindings for the code written in C++.
-The C++ function will be complied by linking the Eigen library 
-(present in the directory *kanapy/libs/*). CMake builds this extension.
-
 Kanapy’s texture module requires MATLAB_ to be
 installed on your machine. Make sure to use MATLAB v2015a and above. The
 module uses a local version of MTEX_ contained in *kanapy/libs*
@@ -167,8 +168,6 @@ Below are the listed dependencies for running kanapy:
 
   - NumPy_ for array manipulation.
   - Scipy_ for functionalities like Convexhull.
-  - pybind11_ for creating python bindings for C++ code.
-  - Eigen_ for C++ linear algebra operations.
   - pytest_ for running kanapy unit tests.
   - sphinx_ for generating documentation.
   - MATLAB_ for texture modules.
@@ -176,12 +175,8 @@ Below are the listed dependencies for running kanapy:
   
 .. _NumPy: http://numpy.scipy.org
 .. _Scipy: https://www.scipy.org/
-.. _pybind11: https://pybind11.readthedocs.io/en/stable/
-.. _Eigen: http://eigen.tuxfamily.org/index.php?title=Main_Page
 .. _pytest: https://www.pytest.org
 .. _sphinx: http://www.sphinx-doc.org/en/master/
-.. _MATLAB: https://www.mathworks.com/products/matlab.html
-.. _MTEX: https://mtex-toolbox.github.io/
 
 ^^^^^^^^^^^^^^^^^^^^^^
 Optional dependencies

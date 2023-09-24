@@ -90,6 +90,8 @@ The documentation for kanapy is generated using [Sphinx](http://www.sphinx-doc.o
 The updated HTML documentation can then be found under
 "kanapy/docs/builds/html".
 
+**Note:** Documentation requires Read the Docs Sphinx Theme which can be installed via "$ pip install sphinx-rtd-theme".
+
 # Dependencies
 
 Kanapy's texture module requires
