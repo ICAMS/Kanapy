@@ -26,10 +26,10 @@ class EBSDmap:
         self.eng = eng
         
         # read EBSD map and return the matlab.object of MTEX class EBSD
-        fmt = fname[-3:]
-        if fmt!='ang' and fmt!='ctf':
+        fmt = fname[-3:].lower()
+        if not fmt in ['ang', 'ctf', 'crc']:
             raise ValueError(f'Unknown EBSD format: {fmt}')
-        ebsd_full = eng.EBSD.load(fname, matname, 'interface', fmt,
+        ebsd_full = eng.EBSD.load(fname, matname, 'interface', fmt, 
                                   'convertSpatial2EulerReferenceFrame', 'setting 2')  # 'silent')
         # remove not indexed pixels
         eng.workspace["ebsd_w"] = ebsd_full
@@ -103,7 +103,7 @@ class EBSDmap:
         # grain equivalent diameter
         deq = 2.0*np.array(eng.equivalentRadius(self.grains))[:,0]
         dsig, doffs, dscale = lognorm.fit(deq)  # fit log normal distribution
-        self.gs_param = [dsig, doffs, dscale]
+        self.gs_param = np.array([dsig, doffs, dscale])
         self.gs_data = deq
         if plot:
             # plot distribution of grain sizes
@@ -121,7 +121,7 @@ class EBSDmap:
         # grain aspect ratio
         asp = np.array(eng.aspectRatio(self.grains))[:,0]
         asig, aoffs, ascale = lognorm.fit(asp)  # fit log normal distribution
-        self.ar_param = [asig, aoffs, ascale]
+        self.ar_param = np.array([asig, aoffs, ascale])
         self.ar_data = asp
         if plot:
             # plot distribution of aspect ratios
@@ -138,7 +138,7 @@ class EBSDmap:
         
         # angles of main axis
         omean, osig = norm.fit(omega)  # fit normal distribution
-        self.om_param = [osig, omean]
+        self.om_param = np.array([osig, omean])
         self.om_data = omega
         if plot:
             fig, ax = plt.subplots()
