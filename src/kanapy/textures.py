@@ -239,7 +239,7 @@ def textureReduction(kdict):
     print('')
     print('    Calling kanapy-MATLAB scripts ...')
     
-    cmd1 = "{0} -nosplash -nodesktop -nodisplay -r ".format(path_dict['MATLABpath']) 
+    cmd1 = '"{0}" -nosplash -nodesktop -nodisplay -r '.format(path_dict['MATLABpath']) 
     cmd2 = '"run(' + "'{}')".format(TRfile) + '; exit;"'
     cmd = cmd1+cmd2
     

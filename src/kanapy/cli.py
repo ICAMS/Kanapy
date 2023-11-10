@@ -45,8 +45,8 @@ def tests(ctx, no_texture: bool):
     """ Runs unittests built within kanapy."""  
     shutil.rmtree(WORK_DIR + '/tests', ignore_errors=True)
     os.makedirs(WORK_DIR + '/tests')
-    os.system(f'cp {MAIN_DIR}/tests/unitTest_ODF_MDF_reconstruction.m {WORK_DIR}/tests')
-    os.system(f'cp {MAIN_DIR}/tests/shared_surfaceArea.csv {WORK_DIR}/tests')
+    shutil.copy(f'{MAIN_DIR}/tests/unitTest_ODF_MDF_reconstruction.m', f'{WORK_DIR}/tests')
+    shutil.copy(f'{MAIN_DIR}/tests/shared_surfaceArea.csv', f'{WORK_DIR}/tests')
     click.echo('')
     if no_texture:
         t1 = "{0}/tests/test_collide_detect_react.py".format(MAIN_DIR)
@@ -423,13 +423,13 @@ def setupTexture(ctx):
 
 def chkVersion(matlab):
     ''' Read the version of Matlab'''
-    output = os.popen('{} -r quit -nojvm | grep "R20[0-9][0-9][ab]"'.format(matlab)).read()     
+    output = os.popen('"{}" -r quit -nojvm | grep "R20[0-9][0-9][ab]"'.format(matlab)).read()     
         
     try:                                  # Find the matlab version available in the system
         version = output.split()[0]
         version = int(version[1:-1])
     except:                               # Set NONE if MATLAB installation is corrupt
-        version == None    
+        version = None    
     return version
     
         
@@ -456,8 +456,8 @@ def setPaths():
                 version = chkVersion(MATLAB)        # Get the MATLAB version
                 if version is None:
                     click.echo('')
-                    click.echo('MATLAB installation: {} is corrupted!\n'.format(MATLAB), err=True)
-                    sys.exit(0)
+                    click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
+                    
                 elif version < 2015:
                     click.echo('')
                     click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
@@ -471,8 +471,7 @@ def setPaths():
                 version = chkVersion(userinput)
                 if version is None:
                     click.echo('')
-                    click.echo('MATLAB installation: {} is corrupted!\n'.format(userinput), err=True)
-                    sys.exit(0)
+                    click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
                 elif version < 2015:
                     click.echo('')
                     click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
@@ -491,8 +490,7 @@ def setPaths():
             version = chkVersion(userinput)
             if version is None:
                 click.echo('')
-                click.echo('MATLAB installation: {} is corrupted!\n'.format(userinput), err=True)
-                sys.exit(0)
+                click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
             elif version < 2015:
                 click.echo('')
                 click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
@@ -508,7 +506,7 @@ def setPaths():
         click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
         sys.exit(0)        
         
-    # Create a file in the 'src/kanapy' folder that stores the paths
+    # Create a file in ".kanapy" folder that stores the paths
     if userpath1:        
         
         path_dict['MATLABpath'] = userpath1
@@ -527,7 +525,6 @@ def setPaths():
         os.system('python init_engine.py')
         click.echo('')
         click.echo('Kanapy is now configured for texture analysis!\n')
-        # store paths in Python API?
 
 
 @main.command(name='reduceODF')
