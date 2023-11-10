@@ -27,8 +27,6 @@ def test_analyzeTexture():
         
     if type(path_dict['MATLABpath']) != str:
         raise ModuleNotFoundError('Matlab not installed properly.')
-    if not MTEX_AVAIL:
-        raise ModuleNotFoundError('MTEX not installed properly.')
 
     # Read the MATLAB unittest file and replace the MTEX path in it
     with open (utFile,'r') as f:
