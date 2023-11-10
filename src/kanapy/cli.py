@@ -423,13 +423,15 @@ def setupTexture(ctx):
 
 def chkVersion(matlab):
     ''' Read the version of Matlab'''
-    output = os.popen('"{}" -r quit -nojvm | grep "R20[0-9][0-9][ab]"'.format(matlab)).read()     
-        
-    try:                                  # Find the matlab version available in the system
-        version = output.split()[0]
-        version = int(version[1:-1])
-    except:                               # Set NONE if MATLAB installation is corrupt
-        version = None    
+    ind = matlab.find('R20')
+    if ind < 0:
+        version = None 
+    else:                 # Find the matlab version available in the system
+        try: 
+            version = int(matlab[ind+1:ind+5])
+            click.echo(f'Detected Matlab version R{version}')
+        except:
+            version = None
     return version
     
         
@@ -462,8 +464,7 @@ def setPaths():
                     click.echo('')
                     click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
                     sys.exit(0)
-                else:
-                    userpath1 = MATLAB
+                userpath1 = MATLAB
 
             elif decision1 == 'no' or decision1 == 'n' or decision1 == 'N' or decision1 == 'NO':
                 userinput = input('Please provide the path to MATLAB executable: ')
@@ -476,14 +477,13 @@ def setPaths():
                     click.echo('')
                     click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
                     sys.exit(0)
-                else:
-                    userpath1 = userinput
+                userpath1 = userinput
                                     
             else:
                 click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
                 sys.exit(0) 
                             
-        elif not MATLAB:
+        else:
             print('No MATLAB executable found!')            
             userinput = input('Please provide the path to MATLAB executable: ')
             
@@ -495,8 +495,7 @@ def setPaths():
                 click.echo('')
                 click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
                 sys.exit(0)
-            else:
-                userpath1 = userinput
+            userpath1 = userinput
                      
     elif status1 == 'no' or status1 == 'n' or status1 == 'N' or status1 == 'NO':
         click.echo("Kanapy's texture analysis code requires MATLAB. Please install it.")
@@ -518,8 +517,23 @@ def setPaths():
         with open(path_path,'w') as outfile:
             json.dump(path_dict, outfile, indent=2)                
         
-        os.chdir('{}extern/engines/python'.format(userpath1[0:-10])) # remove bin/matlab from matlab path
-        os.system('python -m pip install .')
+        # check if Matlab Engine library is already installed
+        try:
+            import matab.engine
+            echo.click('Using existing matlab.engine. Please update if required.')
+        except:
+            # if not, install matlab engine
+            ind = userpath1.find('bin')
+            path = '{}extern/engines/python'.format(userpath1[0:ind])
+            os.chdir(path) # remove bin/matlab from matlab path
+            res = os.system('python -m pip install .')
+            if res != 0:
+                click.echo('\n Error in installing matlab.engine')
+                click.echo('Please contact system administrator to run "> python -m pip install ."')
+                click.echo(f'in directory {path}')
+                sys.exit(1)
+        
+        # initalize matlab engine and MTEX for kanapy
         path = os.path.abspath(__file__)[0:-7] # remove /cli.py from kanapy path
         os.chdir(path)
         os.system('python init_engine.py')
