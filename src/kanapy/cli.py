@@ -519,10 +519,11 @@ def setPaths():
         
         # check if Matlab Engine library is already installed
         try:
-            import matab.engine
-            echo.click('Using existing matlab.engine. Please update if required.')
+            import matlab.engine
+            click.echo('Using existing matlab.engine. Please update if required.')
         except:
             # if not, install matlab engine
+            click.echo('Installing matlab.engine...')
             ind = userpath1.find('bin')
             path = '{}extern/engines/python'.format(userpath1[0:ind])
             os.chdir(path) # remove bin/matlab from matlab path
