@@ -132,7 +132,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
             # Find the new surface points of the ellipsoid at their final position
             new_surfPts = ellipsoid.surface_points + ellipsoid.get_pos()
             
-            # Find the bounding box extremums along x, y, and z
+            # Find the bounding box extrema along x, y, and z
             bbox_xmin, bbox_xmax = np.amin(new_surfPts[:, 0]), np.amax(new_surfPts[:, 0])
             bbox_ymin, bbox_ymax = np.amin(new_surfPts[:, 1]), np.amax(new_surfPts[:, 1])
             bbox_zmin, bbox_zmax = np.amin(new_surfPts[:, 2]), np.amax(new_surfPts[:, 2])
@@ -216,7 +216,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
                                                 
             # If scale == 1.0         
             else:    
-                # Each voxel should share atleast 4 nodes with the remaining voxels
+                # Each voxel should share at least 4 nodes with the remaining voxels
                 for vid in inside_ids:
                     nds = elmtDict[vid]
         
@@ -256,7 +256,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
 
 def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
     """
-    Assigns shared voxels between ellipsoids to the ellispoid with the closest center.
+    Assigns shared voxels between ellipsoids to the ellipsoid with the closest center.
 
     :param cooDict: Voxel dictionary containing voxel IDs and center coordinates. 
     :type cooDict: Python dictionary            
@@ -412,11 +412,11 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
                 elmtSetDict[int(ellipsoid.id)] =\
                     [int(iv) for iv in ellipsoid.inside_voxels]
         else:
-            # continue
-            # If ellipsoid does'nt contain any voxel inside
-            print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissable'
+            # If ellipsoid doesn't contain any voxel inside
+            # grain should be removed from list!!!
+            print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissible'
                   .format(ellipsoid.id))
-            sys.exit(0)
+            # sys.exit(0)
     
     # generate array of voxelized structure
     hh = np.zeros(voxX*voxY*voxZ, dtype=int)

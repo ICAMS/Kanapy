@@ -41,15 +41,15 @@ with open(path_path, 'w') as outfile:
     
 setup(
     name='kanapy',
-    version='5.0.0',
+    version='5.0.1',
     author='Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Napat Vajragupta, Alexander Hartmaier',
     author_email='alexander.hartmaier@rub.de',
     classifiers=[        
         'License :: GNU AFFERO GENERAL PUBLIC LICENSE v3',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9'
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],     
     description="Python package for generating complex synthetic polycrystalline microstructures",
     install_requires=['numpy', 'matplotlib', 'scipy', 'seaborn', 'click', 'tqdm',

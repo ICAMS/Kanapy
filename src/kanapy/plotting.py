@@ -227,8 +227,8 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
 
     # Convert to micro meter for plotting
     if dataDict['Unit_scale'] == 'mm':
-        par_eqDia *= 1000
-        grain_eqDia *= 1000
+        par_eqDia *= 1.e-3
+        grain_eqDia *= 1.e-3
 
     # Concatenate both arrays to compute shared bins
     # NOTE: 'doane' produces better estimates for non-normal datasets
