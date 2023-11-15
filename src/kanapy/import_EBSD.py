@@ -326,12 +326,6 @@ def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
                 'Equivalent diameter':
                     {'std': grains[0], 'mean': grains[2], 'offs': grains[1],
                      'cutoff_min': deq_min, 'cutoff_max': deq_max},
-                'Aspect ratio':
-                    {'std': ar[0], 'mean': ar[2], 'offs': ar[1],
-                     'cutoff_min': asp_min, 'cutoff_max': asp_max},
-                'Tilt angle':
-                    {'std': omega[0], 'mean': omega[1],
-                     "cutoff_min": omega_min, "cutoff_max": omega_max},
                 'RVE':
                     {'sideX': lx, 'sideY': ly, 'sideZ': lz,
                      'Nx': nx, 'Ny': ny, 'Nz': nz},
@@ -340,6 +334,11 @@ def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
                 'Phase':{'Name':phasename,
                          'Number':phasenum,
                          'Volume fraction':VF}}
+    if gtype == 'Elongated':
+        ms_stats['Aspect ratio'] = {'std': ar[0], 'mean': ar[2], 'offs': ar[1],
+                 'cutoff_min': asp_min, 'cutoff_max': asp_max}
+        ms_stats['Tilt angle'] = {'std': omega[0], 'mean': omega[1],
+                 'cutoff_min': omega_min, 'cutoff_max': omega_max}
     if save_file:
         cwd = os.getcwd()     
         json_dir = cwd + '/json_files'   # Folder to store the json files

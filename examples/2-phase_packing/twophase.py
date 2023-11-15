@@ -52,5 +52,3 @@ knpy.writeAbaqusPhase(ms.RVE_data['Grains'])
 # smoothen voxelated structure and write Abaqus .inp file
 ms.smoothen()
 ms.output_abq('s')
-
-
