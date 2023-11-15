@@ -217,10 +217,11 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
                 r = np.sqrt(rSq)
                 r2inv = 1. / rSq
                 
+                # add repulsive or attractive force for dual phase systems
                 if ell.phasenum == ell_n.phasenum:
-                    Force = k_rep * ell.q * ell_n.q * r2inv
+                    Force = k_rep * r2inv
                 else:
-                    Force = k_att * ell.q * ell_n.q * r2inv
+                    Force = k_att * r2inv
                 
                 ell.force_x += Force * dx / r 
                 ell.force_y += Force * dy / r

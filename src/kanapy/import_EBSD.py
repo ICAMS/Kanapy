@@ -5,7 +5,6 @@ Tools for analysis of EBSD maps in form of .ang files
 """
 import os
 import json
-import warnings
 import matlab.engine
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +16,55 @@ class EBSDmap:
     and filter out their statistical data needed to generate 
     synthetic RVEs
     '''
-    def __init__(self, fname, matname, gs_min=3, plot=True):
+    def __init__(self, fname, matname=None,
+                 gs_min=3, vf_min=0.03,
+                 plot=True):
+        """
+        Generate microstructural data from EBSD maps
+
+        Parameters
+        ----------
+        fname : str
+            filname incl. path to EBSD file.
+        matname : str, optional
+            Name of material, depracted. The default is None.
+        gs_min : int, optional
+            Minimum grain size in pixels, smaller grains will be disregarded
+            for the statistical analysis. The default is 3.
+        vf_min : int, optional
+            Minimum volume fracture, phases with smaller values will be
+            disregarded. The default is 0.03.
+        plot : bool, optional
+            Plot microstructures. The default is True.
+
+        Returns
+        -------
+        None.
+        
+        Attributes
+        ----------
+        ms_data : list of dict
+            List of dictionaries with phase specific microstructure
+            information.  
+            name : name of phase  
+            vf : volume fraction  
+            ngrain : number of grains in phase
+            ori : matlab object with grain orientations
+            cs : matlab object with crystal structure
+            grains : matlab object with grains in each phase
+            omega : orintations of major grain axis
+            gs_param : statistical grain size parameters
+            gs_data : grain sizes
+            ar_param
+            ar_data
+            om_param
+            om_data
+            
+            
+            
+        eng : handle for Matlab engine with MTEX data
+
+        """
         # start MATLAB Engine to use MTEX commands
         eng = matlab.engine.start_matlab()
         eng.addpath(MTEX_DIR, nargout=0)
@@ -26,160 +73,213 @@ class EBSDmap:
         self.eng = eng
         
         # read EBSD map and return the matlab.object of MTEX class EBSD
-        fmt = fname[-3:].lower()
-        if not fmt in ['ang', 'ctf', 'crc']:
-            raise ValueError(f'Unknown EBSD format: {fmt}')
-        ebsd_full = eng.EBSD.load(fname, matname, 'interface', fmt, 
-                                  'convertSpatial2EulerReferenceFrame', 'setting 2')  # 'silent')
+        #fmt = fname[-3:].lower()
+        #if not fmt in ['ang', 'ctf', 'crc']:
+        #    raise ValueError(f'Unknown EBSD format: {fmt}')
+        ebsd_full = eng.EBSD.load(fname, # matname, 'interface', fmt, 
+                    'convertSpatial2EulerReferenceFrame', 'setting 2')  # 'silent')
         # remove not indexed pixels
         eng.workspace["ebsd_w"] = ebsd_full
+        if plot:
+            eng.plot(ebsd_full)
         ebsd = eng.eval("ebsd_w('indexed')")  # select only indexed pixels in EBSD
-        # Texture analysis: if multiple phases exist, select one single phase
-        ori0 = eng.getfield(ebsd, 'orientations')  # orientation set from the EBSD
-        self.ori = eng.project2FundamentalRegion(ori0)
-        self.cs = eng.getfield(ebsd, 'CS')
-        # analyze grain boundaries with MTEX function
-        grains_full = eng.calcGrains(ebsd, 'boundary', 'tight', 'angle',
-                                     5*(np.pi/180.0))
-        # filter out small grains
-        eng.workspace["grains_w"] = grains_full
-        self.grains = eng.eval("grains_w(grains_w.grainSize > {})".format(gs_min))
-        
-        # use MTEX function to analye grains and plot ellipses around grain centres
-        # calculate orientation, long and short axes of ellipses
-        omega_r, ha, hb = eng.principalComponents(self.grains, nargout=3)
-        omega = np.array(omega_r)[:, 0]
-        hist, bin_edges = np.histogram(omega, bins=30)
-        im = np.argmax(hist)
-        hw = bin_edges[-1] - bin_edges[0]
-        hc = bin_edges[im]
-        hh = (hc-bin_edges[0])/hw
-        if hh < 0.35:
-            # maximum of distribution in lower quartile
-            # shift large omegas to negative values
-            ind = np.nonzero(omega > hc+0.35*hw)[0]
-            omega[ind] -= np.pi
-        elif hh > 0.65:
-            ind = np.nonzero(omega < hc-0.35*hw)[0]
-            omega[ind] += np.pi
-        self.omega=omega
-        self.ngrain = len(omega)
-        if plot:
-            # plot EBSD map
-            eng.plot(ebsd, self.ori)
-            eng.hold('on', nargout=0)
-            # plot grain boundaries into EBSD map
-            eng.plot(eng.getfield(self.grains, 'boundary'), 'linewidth', 2.0, 
-                     'micronbar', 'on')
-            # evalute centres of grains
-            centres = eng.getfield(self.grains, 'centroid')
-            eng.plotEllipse(centres, ha, hb, omega_r, 'lineColor', 'r',
-                            'linewidth', 2.0, nargout=0)
-            eng.hold('off', nargout=0)
-            #eng.exportgraphics(gcf,'ebsd_map.png','Resolution',300)
+        eng.workspace["ebsd"] = ebsd
+        # get list of phases at each pixel in EBSD map
+        plist = np.array(eng.getfield(ebsd, 'phase'))[:, 0]
+        # determine number of phases and generate histogram
+        Nphase = len(np.unique(plist))
+        npx = len(plist)  # total number of pixels in EBSD map
+        phist = np.histogram(plist, Nphase)
+        # read phase names and calculate volume fractions
+        self.ms_data = []
+        for i in range(Nphase):
+            data = dict()  # initialize data dictionary
+            # generate phase-specific ebsd object in MTEX
+            ebsd_h = eng.eval("ebsd('{}')".format(str(i+1)))
+            data['name'] = eng.getfield(ebsd_h, 'mineral')
+            vf = phist[0][i]/npx
+            if vf < vf_min:
+                break
+            data['vf'] = vf
+
+            # Texture analysis: orientation set from the EBSD
+            ori0 = eng.getfield(ebsd_h, 'orientations')
+            data['ori'] = eng.project2FundamentalRegion(ori0)
+            data['cs'] = eng.getfield(ebsd_h, 'CS')
+            # analyze grain boundaries with MTEX function
+            grains_full = eng.calcGrains(ebsd_h, 'boundary', 'tight', 'angle',
+                                         5*(np.pi/180.0))
+            # filter out small grains
+            eng.workspace["grains_w"] = grains_full
+            data['grains'] = eng.eval("grains_w(grains_w.grainSize > {})"
+                                      .format(gs_min))
             
-            ''' ODF plotting produces system failure, use Matlab functions
-            
-            # plot ODF 
-            # estimate the ODF using KDE
-            psi = eng.deLaValleePoussinKernel('halfwidth', 5*np.pi/180.)
-            odf = eng.calcKernelODF(self.ori, 'kernel', psi)
-            
-            h = [eng.Miller(1, 0, 0, self.cs),
-                 eng.Miller(1, 1, 0, self.cs),
-                 eng.Miller(1, 1, 1, self.cs)]
-            
-            # plot pole figure
-            try:
-                eng.plotPDF(odf,h,'contourf', nargout=0)
+            # use MTEX function to analye grains and plot ellipses around grain
+            # centres; calculate orientation, long and short axes of ellipses
+            omega_r, ha, hb = eng.principalComponents(data['grains'],
+                                                      nargout=3)
+            omega = np.array(omega_r)[:, 0]
+            hist, bin_edges = np.histogram(omega, bins=30)
+            im = np.argmax(hist)
+            hw = bin_edges[-1] - bin_edges[0]
+            hc = bin_edges[im]
+            hh = (hc-bin_edges[0])/hw
+            if hh < 0.35:
+                # maximum of distribution in lower quartile
+                # shift large omegas to negative values
+                ind = np.nonzero(omega > hc+0.35*hw)[0]
+                omega[ind] -= np.pi
+            elif hh > 0.65:
+                ind = np.nonzero(omega < hc-0.35*hw)[0]
+                omega[ind] += np.pi
+            data['omega'] = omega
+            data['ngrain'] = len(omega)
+            if plot:
+                # plot EBSD map
+                eng.plot(ebsd_h, data['ori'])
                 eng.hold('on', nargout=0)
-                eng.mtexColorbar
-            except:
-                warnings.warn('ODF too large for plotting')'''
+                # plot grain boundaries into EBSD map
+                eng.plot(eng.getfield(data['grains'], 'boundary'), 'linewidth', 2.0, 
+                         'micronbar', 'on')
+                # evalute centres of grains
+                centres = eng.getfield(data['grains'], 'centroid')
+                eng.plotEllipse(centres, ha, hb, omega_r, 'lineColor', 'r',
+                                'linewidth', 2.0, nargout=0)
+                eng.hold('off', nargout=0)
+                #eng.exportgraphics(gcf,'ebsd_map.png','Resolution',300)
+                
+                ''' ODF plotting produces system failure, use Matlab functions
+                
+                # plot ODF 
+                # estimate the ODF using KDE
+                psi = eng.deLaValleePoussinKernel('halfwidth', 5*np.pi/180.)
+                odf = eng.calcKernelODF(self.ori, 'kernel', psi)
+                
+                h = [eng.Miller(1, 0, 0, self.cs),
+                     eng.Miller(1, 1, 0, self.cs),
+                     eng.Miller(1, 1, 1, self.cs)]
+                
+                # plot pole figure
+                try:
+                    eng.plotPDF(odf,h,'contourf', nargout=0)
+                    eng.hold('on', nargout=0)
+                    eng.mtexColorbar
+                except:
+                    warnings.warn('ODF too large for plotting')'''
         
-        # Evaluate grain shape statistics
-        # generate dict for statistical input for geometry module
-        
-        # grain equivalent diameter
-        deq = 2.0*np.array(eng.equivalentRadius(self.grains))[:,0]
-        dsig, doffs, dscale = lognorm.fit(deq)  # fit log normal distribution
-        self.gs_param = np.array([dsig, doffs, dscale])
-        self.gs_data = deq
-        if plot:
-            # plot distribution of grain sizes
-            fig, ax = plt.subplots()
-            x = np.linspace(np.amin(deq), np.amax(deq), 150)
-            y = lognorm.pdf(x, dsig, loc=doffs, scale=dscale)
-            ax.plot(x, y, '-r', label='fit')
-            dfreq, dbins, art = ax.hist(deq, bins=20, density=True, label='data')
-            plt.legend()
-            plt.title('Histogram of grain equivalent diameters')
-            plt.xlabel('Equivalent diameter (micron)')
-            plt.ylabel('Normalized frequency')
-            plt.show()
-        
-        # grain aspect ratio
-        asp = np.array(eng.aspectRatio(self.grains))[:,0]
-        asig, aoffs, ascale = lognorm.fit(asp)  # fit log normal distribution
-        self.ar_param = np.array([asig, aoffs, ascale])
-        self.ar_data = asp
-        if plot:
-            # plot distribution of aspect ratios
-            fig, ax = plt.subplots()
-            x = np.linspace(np.amin(asp), np.amax(asp), 150)
-            y = lognorm.pdf(x, asig, loc=aoffs, scale=ascale)
-            ax.plot(x, y, '-r', label='fit lognorm')
-            afreq, abins, art = ax.hist(asp, bins=20, density=True, label='density')
-            plt.legend()
-            plt.title('Histogram of grain aspect ratio')
-            plt.xlabel('aspect ratio')
-            plt.ylabel('normalized frequency')
-            plt.show()
-        
-        # angles of main axis
-        omean, osig = norm.fit(omega)  # fit normal distribution
-        self.om_param = np.array([osig, omean])
-        self.om_data = omega
-        if plot:
-            fig, ax = plt.subplots()
-            x = np.linspace(np.amin(omega), np.amax(omega), 150)
-            y = norm.pdf(x, scale=osig, loc=omean)
-            ax.plot(x, y, '-r', label='fit')
-            ofreq, bins, art = \
-                ax.hist(omega, bins=20, density=True, label='data')
-            plt.legend()
-            plt.title('Histogram of tilt angles of major axes')
-            plt.xlabel('angle (rad)')
-            plt.ylabel('normalized frequency')
-            plt.show()
+            # Evaluate grain shape statistics
+            # generate dict for statistical input for geometry module
             
-        print('Analyzed microstructure with {} grains.'.format(self.ngrain))
-        print('Average grain size = {} micron, average aspect ratio = {}, \
-        average tilt angle = {}°'.format(self.gs_param[2].round(3), 
-        self.ar_param[2].round(3), (self.om_param[1]*180/np.pi).round(3)))
+            # grain equivalent diameter
+            deq = 2.0*np.array(eng.equivalentRadius(data['grains']))[:,0]
+            dsig, doffs, dscale = lognorm.fit(deq)  # fit log normal distribution
+            data['gs_param'] = np.array([dsig, doffs, dscale])
+            data['gs_data'] = deq
+            if plot:
+                # plot distribution of grain sizes
+                fig, ax = plt.subplots()
+                x = np.linspace(np.amin(deq), np.amax(deq), 150)
+                y = lognorm.pdf(x, dsig, loc=doffs, scale=dscale)
+                ax.plot(x, y, '-r', label='fit')
+                dfreq, dbins, art = ax.hist(deq, bins=20, density=True,
+                                            label='data')
+                plt.legend()
+                plt.title('Histogram of grain equivalent diameters')
+                plt.xlabel('Equivalent diameter (micron)')
+                plt.ylabel('Normalized frequency')
+                plt.show()
+            
+            # grain aspect ratio
+            asp = np.array(eng.aspectRatio(data['grains']))[:,0]
+            asig, aoffs, ascale = lognorm.fit(asp)  # fit log normal distribution
+            data['ar_param'] = np.array([asig, aoffs, ascale])
+            data['ar_data'] = asp
+            if plot:
+                # plot distribution of aspect ratios
+                fig, ax = plt.subplots()
+                x = np.linspace(np.amin(asp), np.amax(asp), 150)
+                y = lognorm.pdf(x, asig, loc=aoffs, scale=ascale)
+                ax.plot(x, y, '-r', label='fit lognorm')
+                afreq, abins, art = ax.hist(asp, bins=20, density=True, label='density')
+                plt.legend()
+                plt.title('Histogram of grain aspect ratio')
+                plt.xlabel('aspect ratio')
+                plt.ylabel('normalized frequency')
+                plt.show()
+            
+            # angles of main axis
+            omean, osig = norm.fit(omega)  # fit normal distribution
+            data['om_param'] = np.array([osig, omean])
+            data['om_data'] = omega
+            if plot:
+                fig, ax = plt.subplots()
+                x = np.linspace(np.amin(omega), np.amax(omega), 150)
+                y = norm.pdf(x, scale=osig, loc=omean)
+                ax.plot(x, y, '-r', label='fit')
+                ofreq, bins, art = \
+                    ax.hist(omega, bins=20, density=True, label='data')
+                plt.legend()
+                plt.title('Histogram of tilt angles of major axes')
+                plt.xlabel('angle (rad)')
+                plt.ylabel('normalized frequency')
+                plt.show()
+                
+            print('Analyzed microstructure with {} grains.'
+                  .format(data['ngrain']))
+            print('Average grain size = {} micron, average aspect ratio = {}, \
+            average tilt angle = {}°'.format(data['gs_param'][2].round(3), 
+            data['ar_param'][2].round(3), (data['om_param'][1]*180/np.pi).round(3)))
+            self.ms_data.append(data)
         return
     
-    def calcORI(self, Ng, shared_area=None, nbins = 12):
-        # estimate optimum kernel half-width and produce reduced set of orientations
+    def calcORI(self, Ng, iphase=0, shared_area=None, nbins=12):
+        """
+        Estimate optimum kernel half-width and produce reduced set of
+        orientations for given number of grains.
+        
+        Parameters
+        ----------
+        Ng : int
+            Numbr of grains for which orientation is requested.
+        iphase : int, optional
+            Phase for which data is requested. The default is 0.
+        shared_area : array, optional
+            Grain boundary data. The default is None.
+        nbins : int, optional
+            number of bins for GB texture. The default is 12.
+
+        Returns
+        -------
+        ori : (Ng, 3)-array
+            Array with Ng Euler angles.
+
+        """
+        
+        ms = self.ms_data[iphase]
         orired, odfred, ero = \
-            self.eng.textureReconstruction(Ng, 'orientation', self.ori,
-                                          'grains', self.grains, nargout=3)
-        # orired = self.eng.project2FundamentalRegion(orired)
-        # this should work, too, but produces an error
-        # psi = eng.calcKernel(eng.getfield(grains,'meanOrientation'))
-        # orired, odfred, ero = eng.textureReconstruction(Ng,
-        # 'orientation', ori, 'kernelShape', psi, nargout=3)
+            self.eng.textureReconstruction(Ng, 'orientation',
+                    ms['ori'], 'grains', ms['grains'], nargout=3)
+                
         if shared_area is None:
             return np.array(self.eng.Euler(orired))
         else:
             orilist, ein, eout, mbin = \
-                self.eng.gb_textureReconstruction(self.grains, orired, 
+                self.eng.gb_textureReconstruction(ms['grains'], orired, 
                     matlab.double(shared_area), nbins, nargout=4)
             return np.array(self.eng.Euler(orilist))
         
     def showIPF(self):
-        ipfKey = self.eng.ipfColorKey(self.ori, nargout=1)
-        self.eng.plot(ipfKey, nargout=0)
+        """
+        Plot IPF key.
+
+        Returns
+        -------
+        None.
+
+        """
+        for ms in self.ms_data:
+            ipfKey = self.eng.ipfColorKey(ms['ori'], nargout=1)
+            self.eng.plot(ipfKey, nargout=0)
         
 def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
               asp_min=None, asp_max=None, omega_min=None, omega_max=None,

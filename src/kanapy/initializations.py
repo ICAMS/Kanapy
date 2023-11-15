@@ -284,7 +284,7 @@ def RVEcreator(stats_dict, nsteps=1000, save_files=False):
         print("    Periodic box with grains larger the half of box width.")
         print("    Check grain polygons carefully.")
 
-    print('    Total number of grains        = {}'.format(totalEllipsoids))
+    print('    Total number of particles     = {}'.format(totalEllipsoids))
     print('    RVE side lengths (X, Y, Z)    = {0}, {1}, {2}'.format(RVEsizeX, RVEsizeY, RVEsizeZ))
     print('    Number of voxels (X, Y, Z)    = {0}, {1}, {2}'.format(Nx, Ny, Nz))
     print('    Voxel resolution (X, Y, Z)    = {0:.4f}, {1:.4f}, {2:.4f}'.format(voxel_sizeX, voxel_sizeY, voxel_sizeZ))

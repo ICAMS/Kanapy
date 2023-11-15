@@ -8,7 +8,8 @@ from scipy.spatial.distance import euclidean
 from tqdm import tqdm
 
 
-def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr, voxels, phases, vox_centerDict, tol=1.e-3,
+def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr,
+                 voxels, phases, vox_centerDict, tol=1.e-3,
                  dual_phase=False):
     """
     Evaluates the grain volume and the grain boundary shared surface area
@@ -505,7 +506,8 @@ def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr, voxels, phases, 
     return grain_facesDict, shared_area
 
 
-def get_stats(particle_data, Ngr, RVE_data, nphase, dual_phase=False):
+def get_stats(particle_data, Ngr, RVE_data, nphase, 
+              dual_phase=False, phase_list=None):
     """
     Compare the geometries of particles used for packing and the resulting
     grains.
@@ -531,65 +533,48 @@ def get_stats(particle_data, Ngr, RVE_data, nphase, dual_phase=False):
     grain_eqDia = np.zeros(Ngr)
     grain_majDia = np.zeros(Ngr)
     grain_minDia = np.zeros(Ngr)
-    grain_PhaseID = np.zeros(Ngr)
-    grain_PhaseName = np.zeros(Ngr).astype(str)
     for i, igr in enumerate(RVE_data['Grains'].keys()):
         grain_eqDia[i] = RVE_data['Grains'][igr]['eqDia']
         if particle_data['Type'] == 'Elongated':
             grain_minDia[i] = RVE_data['Grains'][igr]['minDia']
             grain_majDia[i] = RVE_data['Grains'][igr]['majDia']
-        if dual_phase:
-            grain_PhaseID[i] = RVE_data['Grains'][igr]['PhaseID']
-            grain_PhaseName[i] = RVE_data['Grains'][igr]['PhaseName']
 
     output_data_list = []
-    indexPhase = []
     if dual_phase:
+        # Compute the L1-error between particle and grain geometries for phases
+        part_PhaseID = np.array(phase_list)
+        grain_PhaseID = np.zeros(Ngr)
+        grain_PhaseName = np.zeros(Ngr).astype(str)
+        for i, igr in enumerate(RVE_data['Grains'].keys()):
+            grain_PhaseID[i] = np.array(RVE_data['Grains'][igr]['PhaseID'])
+            grain_PhaseName[i] = RVE_data['Grains'][igr]['PhaseName']
         for iph in range(nphase):
-            indexPhase.append(grain_PhaseID == iph)
-        # indexPhase = [grain_PhaseID == 0, grain_PhaseID == 1]
-        # Compute the L1-error between particle and grain geometries for phase 0
-        for index in indexPhase:
-            if particle_data['Type'] == 'Elongated':
-                kwargs = {
-                    'Ellipsoids': {'Equivalent': {'Particles': par_eqDia[index], 'Grains': grain_eqDia[index]},
-                                   'Major diameter': {'Particles': par_majDia[index],
-                                                      'Grains': grain_majDia[index]},
-                                   'Minor diameter': {'Particles': par_minDia[index],
-                                                      'Grains': grain_minDia[index]}}}
-            else:
-                kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia[index], 'Grains': grain_eqDia[index]}}}
-
-            error = l1_error_est(**kwargs)
-            print('\n    L1 error between particle and grain geometries: {}' \
-                  .format(round(error, 5)))
+            ind_grn = np.nonzero(grain_PhaseID == iph)
+            ind_par = np.nonzero(part_PhaseID == iph)
+            
+            error = l1_error_est(par_eqDia[ind_par], grain_eqDia[ind_grn])
+            print('\n    L1 error phase {} between particle and grain geometries: {}' \
+                  .format(iph, round(error, 5)))
 
             # Create dictionaries to store the data generated
-            output_data = {'Number_of_particles/grains': int(len(par_eqDia[index])),
+            output_data = {'Number_of_particles/grains': int(len(par_eqDia[ind_par])),
                            'Grain type': particle_data['Type'],
                            'Unit_scale': RVE_data['Units'],
                            'L1-error': error,
-                           'Particle_Equivalent_diameter': par_eqDia[index],
-                           'Grain_Equivalent_diameter': grain_eqDia[index]}
+                           'Particle_Equivalent_diameter': par_eqDia[ind_par],
+                           'Grain_Equivalent_diameter': grain_eqDia[ind_grn]}
             if particle_data['Type'] == 'Elongated':
-                output_data['Particle_Major_diameter'] = par_majDia[index]
-                output_data['Particle_Minor_diameter'] = par_minDia[index]
-                output_data['Grain_Major_diameter'] = grain_majDia[index]
-                output_data['Grain_Minor_diameter'] = grain_minDia[index]
-                output_data['PhaseID'] = grain_PhaseID[index]
-                output_data['PhaseName'] = grain_PhaseName[index]
+                output_data['Particle_Major_diameter'] = par_majDia[ind_par]
+                output_data['Particle_Minor_diameter'] = par_minDia[ind_par]
+                output_data['Grain_Major_diameter'] = grain_majDia[ind_grn]
+                output_data['Grain_Minor_diameter'] = grain_minDia[ind_grn]
+                output_data['PhaseID'] = grain_PhaseID[ind_grn]
+                output_data['PhaseName'] = grain_PhaseName[ind_grn]
             output_data_list.append(output_data)
 
     else:
         # Compute the L1-error between particle and grain geometries
-        if particle_data['Type'] == 'Elongated':
-            kwargs = {'Ellipsoids': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia},
-                                     'Major diameter': {'Particles': par_majDia, 'Grains': grain_majDia},
-                                     'Minor diameter': {'Particles': par_minDia, 'Grains': grain_minDia}}}
-        else:
-            kwargs = {'Spheres': {'Equivalent': {'Particles': par_eqDia, 'Grains': grain_eqDia}}}
-
-        error = l1_error_est(**kwargs)
+        error = l1_error_est(par_eqDia, grain_eqDia)
         print('\n    L1 error between particle and grain geometries: {}' \
               .format(round(error, 5)))
 
@@ -610,59 +595,37 @@ def get_stats(particle_data, Ngr, RVE_data, nphase, dual_phase=False):
     return output_data_list
 
 
-def l1_error_est(**kwargs):
+def l1_error_est(par_eqDia, grain_eqDia):
     r"""
-    Evaluates the L1-error between the particle- and output RVE grain statistics with respect to Major, Minor &
-    Equivalent diameters.
+    Evaluates the L1-error between the particle- and output RVE grain
+    statistics with respect to Major, Minor & Equivalent diameters.
 
-    .. note:: 1. Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.
-                 And RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.
+    .. note:: 1. Particle information is read from (.json) file generated by
+                 :meth:`kanapy.input_output.particleStatGenerator`.
+                 And RVE grain information is read from the (.json) files
+                 generated by :meth:`kanapy.voxelization.voxelizationRoutine`.
 
-              2. The L1-error value is written to the 'output_statistics.json' file.
+              2. The L1-error value is written to the 'output_statistics.json'
+                 file.
     """
 
     print('')
-    print('Computing the L1-error between input and output diameter distributions', end="")
+    print('Computing the L1-error between input and output diameter distributions', 
+          end="")
 
-    if 'Spheres' in kwargs.keys():
-        # Extract the values
-        par_eqDia = np.asarray(kwargs['Spheres']['Equivalent']['Particles'])
-        grain_eqDia = np.asarray(kwargs['Spheres']['Equivalent']['Grains'])
+    # Concatenate both arrays to compute shared bins
+    # NOTE: 'doane' produces better estimates for non-normal datasets
+    total_eqDia = np.concatenate([par_eqDia, grain_eqDia])
+    shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
 
-        # Concatenate both arrays to compute shared bins
-        # NOTE: 'doane' produces better estimates for non-normal datasets
-        total_eqDia = np.concatenate([par_eqDia, grain_eqDia])
-        shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
+    # Compute the histogram for particles and grains
+    hist_par, _ = np.histogram(par_eqDia, bins=shared_bins)
+    hist_gr, _ = np.histogram(grain_eqDia, bins=shared_bins)
 
-        # Compute the histogram for particles and grains
-        hist_par, _ = np.histogram(par_eqDia, bins=shared_bins)
-        hist_gr, _ = np.histogram(grain_eqDia, bins=shared_bins)
+    # Normalize the values
+    hist_par = hist_par/np.sum(hist_par)
+    hist_gr = hist_gr/np.sum(hist_gr)
 
-        # Normalize the values
-        hist_par = hist_par/np.sum(hist_par)
-        hist_gr = hist_gr/np.sum(hist_gr)
-
-        # Compute the L1-error between particles and grains
-        l1_value = np.sum(np.abs(hist_par - hist_gr))
-
-    elif 'Ellipsoids' in kwargs.keys():
-        # Extract the values
-        par_eqDia = np.asarray(kwargs['Ellipsoids']['Equivalent']['Particles'])
-        grain_eqDia = np.asarray(kwargs['Ellipsoids']['Equivalent']['Grains'])
-
-        # Concatenate both arrays to compute shared bins
-        # NOTE: 'doane' produces better estimates for non-normal datasets
-        total_eqDia = np.concatenate([par_eqDia, grain_eqDia])
-        shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
-
-        # Compute the histogram for particles and grains
-        hist_par, _ = np.histogram(par_eqDia, bins=shared_bins)
-        hist_gr, _ = np.histogram(grain_eqDia, bins=shared_bins)
-
-        # Normalize the values
-        hist_par = hist_par/np.sum(hist_par)
-        hist_gr = hist_gr/np.sum(hist_gr)
-
-        # Compute the L1-error between particles and grains
-        l1_value = np.sum(np.abs(hist_par - hist_gr))
+    # Compute the L1-error between particles and grains
+    l1_value = np.sum(np.abs(hist_par - hist_gr))
     return l1_value

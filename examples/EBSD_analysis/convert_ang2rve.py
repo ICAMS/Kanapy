@@ -21,11 +21,12 @@ periodic = True       # create RVE with periodic structure
 
 if knpy.MTEX_AVAIL:
     # read EBSD map and evaluate statistics of microstructural features
-    ebsd = knpy.EBSDmap(fname, matname)
+    ebsd = knpy.EBSDmap(fname)
     # ebsd.showIPF()
-    gs_param = ebsd.gs_param
-    ar_param = ebsd.ar_param
-    om_param = ebsd.om_param
+    ms_data = ebsd.ms_data[0]
+    gs_param = ms_data['gs_param']
+    ar_param = ms_data['ar_param']
+    om_param = ms_data['om_param']
     print('==== Grain size ====')
     print(f'mean equivalent diameter: {gs_param[2].round(3)}, ' +
           f'std. deviation: {gs_param[0].round(3)}, ' +
@@ -60,7 +61,8 @@ ms_stats = knpy.set_stats(gs_param, ar_param, om_param,
 # create and visualize synthetic RVE
 ms = knpy.Microstructure(descriptor=ms_stats, name=fname+'_RVE')
 if knpy.MTEX_AVAIL:
-    ms.init_stats(gs_data=ebsd.gs_data, ar_data=ebsd.ar_data)
+    ms.init_stats(gs_data=ms_data['gs_data'],
+                  ar_data=ms_data['ar_data'])
 else:
     ms.init_stats()
 ms.init_RVE()
@@ -83,10 +85,10 @@ if not knpy.MTEX_AVAIL:
     raise ModuleNotFoundError('Generation of grain orientation sets is only ' +
          'possible with an existing MTEX installation in Matlab.')
 # get list of orientations for grains in RVE matching the ODF of the EBSD map
-ori_rve = ebsd.calcORI(ms.Ngr, ms.shared_area)
+ori_rve = ebsd.calcORI(ms.Ngr, shared_area=ms.shared_area)
 
 # export virtual EBSD map as ang file and analyse with MTEX
-ang_rve = ms.output_ang(ori=ori_rve, cut='xy', pos='top', cs=ebsd.cs,
+ang_rve = ms.output_ang(ori=ori_rve, cut='xy', pos='top', cs=ms_data['cs'],
                         matname=matname, plot=False)
 ebsd_rve = knpy.EBSDmap(ang_rve, matname)
 

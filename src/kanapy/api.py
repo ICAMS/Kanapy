@@ -177,21 +177,25 @@ class Microstructure:
                              save_files=save_files)
 
     def generate_grains(self, save_files=False, dual_phase=False):
-        """ Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE 
-        grain volumes and shared grain boundary surface areas info are written out as well."""
+        """ Writes out the particle- and grain diameter attributes for 
+        statistical comparison. Final RVE grain volumes and shared grain
+        boundary surface areas info are written out as well."""
 
         if self.nodes_v is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
         if self.phases is None:
             raise ValueError('No phases defined.')
 
-        self.grain_facesDict, self.shared_area = calcPolygons(self.RVE_data, self.nodes_v, self.elmtSetDict,
-                                                              self.elmtDict, self.Ngr, self.voxels, self.phases,
-                                                              self.vox_centerDict,
-                                                              dual_phase=dual_phase)  # updates RVE_data
+        self.grain_facesDict, self.shared_area = \
+            calcPolygons(self.RVE_data, self.nodes_v, self.elmtSetDict,
+                         self.elmtDict, self.Ngr, self.voxels, self.phases,
+                         self.vox_centerDict,
+                         dual_phase=dual_phase)  # updates RVE_data
         if self.particle_data is not None:
             self.res_data = \
-                get_stats(self.particle_data, self.Ngr, self.RVE_data, self.nphase, dual_phase=dual_phase)
+                get_stats(self.particle_data, self.Ngr, self.RVE_data,
+                          self.nphase, dual_phase=dual_phase,
+                          phase_list=self.phases['Phase number'])
 
     """
     --------     Plotting methods          --------
@@ -218,10 +222,12 @@ class Microstructure:
                 rve = self.RVE_data
             else:
                 raise ValueError('No polygons for grains defined. Run analyse_RVE first')
-        plot_polygons_3D(rve, cmap=cmap, alpha=alpha, ec=ec, dual_phase=dual_phase)
+        plot_polygons_3D(rve, cmap=cmap, alpha=alpha, ec=ec,
+                         dual_phase=dual_phase)
 
     def plot_stats(self, data=None, gs_data=None, gs_param=None,
-                   ar_data=None, ar_param=None, dual_phase=False, save_files=False):
+                   ar_data=None, ar_param=None, dual_phase=False,
+                   save_files=False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
         if data is None:
@@ -267,7 +273,8 @@ class Microstructure:
 
         """
         self.output_ang(cut=cut, data=data, plot=True, save_files=False,
-                        pos=pos, fname=fname, dual_phase=dual_phase, save_plot=save_files)
+                        pos=pos, fname=fname, dual_phase=dual_phase,
+                        save_plot=save_files)
 
     """
     --------        Output/Export methods        --------
