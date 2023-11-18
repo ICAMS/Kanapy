@@ -17,7 +17,8 @@ from scipy.spatial.transform import Rotation as R
 from scipy.stats import lognorm
 
 
-def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=False,
+def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False,
+                   dual_phase=False, porous=False,
                    mask=None, cmap='prism', alpha=1.0, show=True):
     '''
     Plot voxeles in microstructure, each grain with a different color. Sliced 
@@ -63,8 +64,6 @@ def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=
         colors = np.empty(voxels_phase.shape, dtype=object)
         colors[phase_0] = 'red'
         colors[phase_1] = 'green'
-        #cm = plt.cm.get_cmap(cmap, Ngr)
-        #colors = cm(voxels_phase.astype(int))
         if sliced:
             ix = int(Nx/2)
             iy = int(Ny/2)
@@ -83,6 +82,8 @@ def plot_voxels_3D(voxels, voxels_phase = None, Ngr=1, sliced=False, dual_phase=
         vox_b = np.full(voxels.shape, True, dtype=bool)
     else:
         vox_b = mask
+    if porous:
+        Ngr += 1  # Add color for grain 0 (porous or matrix phase)
     cm = plt.cm.get_cmap(cmap, Ngr)
     colors = cm(voxels.astype(int))
     

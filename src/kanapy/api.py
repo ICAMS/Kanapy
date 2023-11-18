@@ -68,18 +68,43 @@ class Microstructure:
     --------        Routines for user interface        --------
     """
 
-    def init_RVE(self, descriptor=None, nsteps=1000, save_files=False):
-        """ Creates RVE based on the data provided in the input file."""
+    def init_stats(self, descriptor=None, gs_data=None, ar_data=None,
+                   porous=False, save_files=False):
+        """ Generates particle statistics based on the data provided in the 
+        input file."""
         if descriptor is None:
             descriptor = self.descriptor
         if type(descriptor) is not list:
             descriptor = [descriptor]
         self.nphase = len(descriptor)
-        for des in descriptor:
+        if self.nphase > 2:
+            raise ValueError(f'Kanapy currently only supports 2 phases, but Nphase={self.nphase}')
+        if porous:
+            descriptor = descriptor[0:1]
+        if type(gs_data) is not list:
+            gs_data = [gs_data]*len(descriptor)
+        if type(ar_data) is not list:
+            ar_data = [ar_data]*len(descriptor)
+
+        for i, des in enumerate(descriptor):
+            particleStatGenerator(des, gs_data=gs_data[i], ar_data=ar_data[i],
+                                  save_files=save_files)
+
+    def init_RVE(self, descriptor=None, nsteps=1000, porous=False,
+                 save_files=False):
+        """ Creates particle distribution inside simulation box (RVE) based on
+        the data provided in the input file."""
+        if descriptor is None:
+            descriptor = self.descriptor
+        if type(descriptor) is not list:
+            descriptor = [descriptor]
+        elif porous:
+            descriptor = descriptor[0:1]
+        for i, des in enumerate(descriptor):
             particle_data, phases, RVE_data, simulation_data = \
                 RVEcreator(des, nsteps=nsteps, save_files=save_files)
             Ngr = particle_data['Number']
-            if des == descriptor[0]:
+            if i == 0:
                 self.Ngr = Ngr
                 self.particle_data = particle_data
                 self.phases = phases
@@ -110,21 +135,8 @@ class Microstructure:
                     self.phases['Phase number'] = self.phases['Phase number'] + phases['Phase number']
             # if both Equiaxed and Elongated grains are present at the same time, it should be adjusted.
 
-    def init_stats(self, descriptor=None, gs_data=None, ar_data=None,
-                   save_files=False):
-        """ Generates particle statistics based on the data provided in the 
-        input file."""
-        if descriptor is None:
-            descriptor = self.descriptor
-        if type(descriptor) is not list:
-            descriptor = [descriptor]
-
-        for des in descriptor:
-            particleStatGenerator(des, gs_data=gs_data, ar_data=ar_data,
-                                  save_files=save_files)
-
     def pack(self, particle_data=None, RVE_data=None, simulation_data=None,
-             k_rep=0.0, k_att=0.0, save_files=False):
+             k_rep=0.0, k_att=0.0, vf=None, save_files=False):
 
         """ Packs the particles into a simulation box."""
         if particle_data is None:
@@ -136,11 +148,14 @@ class Microstructure:
         if simulation_data is None:
             simulation_data = self.simulation_data
         self.particles, self.simbox = \
-            packingRoutine(particle_data, self.phases, RVE_data, simulation_data,
-                           k_rep=k_rep, k_att=k_att, save_files=save_files)
+            packingRoutine(particle_data, self.phases, RVE_data,
+                           simulation_data,
+                           k_rep=k_rep, k_att=k_att, vf=vf,
+                           save_files=save_files)
 
     def voxelize(self, particle_data=None, RVE_data=None, particles=None,
-                 simbox=None, dual_phase=False, save_files=False):
+                 simbox=None, dual_phase=False, vf=None,
+                 save_files=False):
         """ Generates the RVE by assigning voxels to grains."""
         if particle_data is None:
             particle_data = self.particle_data
@@ -155,7 +170,8 @@ class Microstructure:
         self.nodes_v, self.elmtDict, self.elmtSetDict, \
         self.vox_centerDict, self.voxels, self.voxels_phase = \
             voxelizationRoutine(particle_data, RVE_data, particles, simbox,
-                                save_files=save_files, dual_phase=dual_phase)
+                                dual_phase=dual_phase, vf=vf,
+                                save_files=save_files)
         Ngr = len(self.elmtSetDict.keys())
         if self.Ngr != Ngr:
             warnings.warn(f'Number of grains has changed from {self.Ngr} to {Ngr} during voxelization.')
@@ -207,12 +223,14 @@ class Microstructure:
             raise ValueError('No particle to plot. Run pack first.')
         plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase)
 
-    def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism'):
+    def plot_voxels(self, sliced=True, dual_phase=False, porous=False,
+                    cmap='prism'):
         """ Generate 3D plot of grains in voxelized microstructure. """
         if self.voxels is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
         plot_voxels_3D(self.voxels, self.voxels_phase, Ngr=self.Ngr,
-                       sliced=sliced, dual_phase=dual_phase, cmap=cmap)
+                       sliced=sliced, dual_phase=dual_phase, porous=porous,
+                       cmap=cmap)
 
     def plot_grains(self, rve=None, cmap='prism', alpha=0.4,
                     ec=[0.5, 0.5, 0.5, 0.1], dual_phase=False):
@@ -280,8 +298,9 @@ class Microstructure:
     --------        Output/Export methods        --------
     """
 
-    def output_abq(self, nodes=None, name=None, RVE_data=None,
-                   elmtDict=None, elmtSetDict=None, faces=None):
+    def output_abq(self, nodes=None, name=None,
+                   elmtDict=None, elmtSetDict=None, faces=None,
+                   dual_phase=False, thermal=False, units=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""
         if nodes is None:
             if self.nodes_s is not None and self.grain_facesDict is not None:
@@ -313,16 +332,33 @@ class Microstructure:
 
         if elmtDict is None:
             elmtDict = self.elmtDict
-        if elmtSetDict is None:
-            elmtSetDict = self.elmtSetDict
-        if RVE_data is None:
-            RVE_data = self.RVE_data
+        if units is None:
+            units = self.RVE_data['Units']
+        elif (not units=='mm') and (not units=='um'):
+            raise ValueError(f'Units must be either "mm" or "um", not {units}.')
+        if dual_phase:
+            nct = '2phases'
+            Nvox = self.RVE_data['Voxel_numberX'] *\
+                   self.RVE_data['Voxel_numberY'] *\
+                   self.RVE_data['Voxel_numberZ']
+            elmt_list = self.voxels_phase.reshape(Nvox, order='F')
+            ind1 = np.nonzero(elmt_list==0)[0]
+            ind2 = np.nonzero(elmt_list==1)[0]
+            elmtSetDict = {
+                1 : ind1 + 1,
+                2 : ind2 + 1}
+        else:
+            nct = '{0}grains'.format(len(elmtSetDict))
+            if elmtSetDict is None:
+                elmtSetDict = self.elmtSetDict
         if name is None:
             cwd = os.getcwd()
-            name = cwd + '/kanapy_{0}grains_{1}.inp'.format(len(elmtSetDict), ntag)
+            name = cwd + '/kanapy_{0}_{1}.inp'.format(nct, ntag)
             if os.path.exists(name):
                 os.remove(name)  # remove old file if it exists
-        export2abaqus(nodes, name, RVE_data, elmtSetDict, elmtDict, grain_facesDict=faces)
+        export2abaqus(nodes, name, elmtSetDict, elmtDict,
+                      units=units, grain_facesDict=faces,
+                      dual_phase=dual_phase, thermal=thermal)
         return name
 
     # def output_neper(self, timestep=None):

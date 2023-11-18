@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from kanapy.util import MTEX_DIR, ROOT_DIR
 from scipy.stats import lognorm, norm
+import warnings
 
 class EBSDmap:
     '''Class to store attributes and methods to import EBSD maps
@@ -281,43 +282,53 @@ class EBSDmap:
             ipfKey = self.eng.ipfColorKey(ms['ori'], nargout=1)
             self.eng.plot(ipfKey, nargout=0)
         
-def set_stats(grains, ar, omega, deq_min=None, deq_max=None,
+def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
               asp_min=None, asp_max=None, omega_min=None, omega_max=None,
               size=100, voxels=60, gtype='Elongated', rveunit = 'mm',
-              periodicity=True, VF = None, phasename = None, phasenum = None, save_file=False):
+              periodicity=True, VF = None, phasename = None, phasenum = None,
+              save_file=False):
     '''
     grains = [std deviation, offset , mean grain sizeof lognorm distrib.]
     ar = [std deviation, offset , mean aspect ratio of gamma distrib.]
     omega = [std deviation, mean tilt angle]
     '''
     
+    # type of grains either 'Elongated' or 'Equiaxed'
+    if not (gtype=='Elongated' or gtype=='Equiaxed'):
+        raise ValueError('Wrong grain type given in set_stats: {}'
+                         .format(gtype))
+    if gtype=='Elongated' and (ar is None or omega is None):
+        raise ValueError('If elliptical grains are specified, aspect ratio ' +
+                         '(ar) and orientation (omega) need to be given.')
+    if gtype=='Equiaxed' and (ar is not None or omega is not None):
+        warnings.warn('Equiaxed grains have been specified, but aspect ratio' +
+                      ' (ar) and orientation (omega) have been provided. ' +
+                      'Will change grain type to "Elongated".')
+        gtype = 'Elongated'
+        
     # define cutoff values
     # cutoff deq
     if deq_min is None:
         deq_min = 1.3*grains[1]   # 316L: 8
     if deq_max is None:
         deq_max = grains[1] + grains[2] + 6.*grains[0]  # 316L: 30
-    # cutoff asp
-    if asp_min is None:
-        asp_min = np.maximum(1., ar[1])   # 316L: 1
-    if asp_max is None:
-        asp_max = ar[2] + ar[0]  # 316L: 3
-    # cutoff omega
-    if omega_min is None:
-        omega_min = omega[1] - 2*omega[0]
-    if omega_max is None:
-        omega_max = omega[1] + 2*omega[0]
+    if gtype=='Elongated':
+        # cutoff asp
+        if asp_min is None:
+            asp_min = np.maximum(1., ar[1])   # 316L: 1
+        if asp_max is None:
+            asp_max = ar[2] + ar[0]  # 316L: 3
+        # cutoff omega
+        if omega_min is None:
+            omega_min = omega[1] - 2*omega[0]
+        if omega_max is None:
+            omega_max = omega[1] + 2*omega[0]
 
     # RVE box size
     lx = ly = lz = size  # size of box in each direction
-
     # number of voxels
     nx = ny = nz = voxels  # number of voxels in each direction
     # specify RVE info
-    # type of grains either 'Elongated' or 'Equiaxed'
-    if not (gtype=='Elongated' or gtype=='Equiaxed'):
-        raise ValueError('Wrong grain type given in set_stats: {}'
-                         .format(gtype))
     pbc = 'True' if periodicity else 'False'
 
     # check grain type

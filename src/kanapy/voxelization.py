@@ -92,7 +92,8 @@ def create_voxels(sim_box, voxNums):
     return nodes_v, elmtDict, vox_centerDict
 
 
-def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
+def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict,
+                               vf_target=None):
     """
     Determines voxels belonging to each ellipsoid    
 
@@ -104,21 +105,25 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
     :type elmtDict: Python dictionary       
     """
     print('    Assigning voxels to grains')
+    if vf_target is None:
+        vf_target = 1.0
 
-    # ALl the voxel centers as numpy 2D array and voxel ids
+    # All the voxel centers as numpy 2D array and voxel ids
     test_ids = np.array(list(cooDict.keys()))
+    Nvox = len(test_ids)
     test_points = np.array(list(cooDict.values()))
 
     # array defining ellipsoid growth for each stage of while loop
     growth = iter(list(np.arange(1.0, 10.0, 0.1)))    
     remaining_voxels = set(list(cooDict.keys()))
     assigned_voxels = set()
+    vf_cur = 0.
     
     # Initialize a tqdm progress bar to the Number of voxels in the domain
     pbar = tqdm(total = len(remaining_voxels))
     for ellipsoid in Ellipsoids:
         ellipsoid.inside_voxels = []
-    while len(remaining_voxels) > 0:
+    while vf_cur < vf_target: # len(remaining_voxels) > 0:
         
         # call the growth value for the ellipsoids
         scale = next(growth)
@@ -155,9 +160,11 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
             # Extract the voxel ids inside the hull
             inside_ids = list(bbox_testids[results])
             
-            # Check if the new found voxels share atlest 4 nodes with ellipsoid nodes
-            if scale != 1.0:               
-                # Extract single instance of all nodes currently belonging to the ellipsoid
+            # Check if the new found voxels share atlest 4 nodes with
+            # ellipsoid nodes
+            if not np.isclose(scale, 1.0):               
+                # Extract single instance of all nodes currently belonging
+                # to the ellipsoid
                 all_nodes = [elmtDict[i] for i in ellipsoid.inside_voxels]
                 merged_nodes = list(itertools.chain(*all_nodes))
                 ell_nodes = set(merged_nodes)
@@ -210,7 +217,8 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
                         break
                 
                 # scale ellipsoid dimensions back to original by the growth factor
-                ellipsoid.a, ellipsoid.b, ellipsoid.c = ellipsoid.a/scale, ellipsoid.b/scale, ellipsoid.c/scale   
+                ellipsoid.a, ellipsoid.b, ellipsoid.c = \
+                    ellipsoid.a/scale, ellipsoid.b/scale, ellipsoid.c/scale   
     
                 continue   
                                                 
@@ -231,8 +239,8 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
                         ellipsoid.inside_voxels.append(vid)
                         assigned_voxels.add(vid)                                                                        
                 
-                # scale ellipsoid dimensions back to original by the growth factor
-                ellipsoid.a, ellipsoid.b, ellipsoid.c = ellipsoid.a/scale, ellipsoid.b/scale, ellipsoid.c/scale
+                ## scale ellipsoid dimensions back to original by the growth factor
+                #ellipsoid.a, ellipsoid.b, ellipsoid.c = ellipsoid.a/scale, ellipsoid.b/scale, ellipsoid.c/scale
      
         
         # find the remaining voxels
@@ -249,6 +257,9 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict):
         pbar.reset()
         pbar.update(len(assigned_voxels)) 
         pbar.refresh()
+        
+        # Calculate volume fraction of assigned voxels
+        vf_cur = len(assigned_voxels) / Nvox
             
     pbar.close()    # Close the progress bar
     return
@@ -283,7 +294,8 @@ def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
                 el.inside_voxels.remove(vox)                    
                 
     shared_voxels = set(vox_ellDict.keys())
-    while len(shared_voxels) > 0: 
+    ncyc = 0
+    while len(shared_voxels) > 0 and ncyc < 5: 
         for vox, ells in vox_ellDict.items():  
             if vox in shared_voxels:
                 ells = list(ells) 
@@ -298,7 +310,9 @@ def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
                     common_nodes[ellipsoid.id] = ell_nodes.intersection(nids)
                     len_common_nodes.append(len(common_nodes[ellipsoid.id])) 
                 
-                loc_common_nodes_max = [i for i, x in enumerate(len_common_nodes) if x == max(len_common_nodes)]
+                loc_common_nodes_max = \
+                    [i for i, x in enumerate(len_common_nodes) 
+                           if x == max(len_common_nodes)]
                 
                 if np.any(len_common_nodes) and max(len_common_nodes) >= 4:
                     if len(loc_common_nodes_max) == 1:
@@ -336,38 +350,41 @@ def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
                         assigned_voxel.append(vox) 
                         shared_voxels.remove(vox)     
                                        
-            # ells = list(ells)                                     # convert to list
-            # vox_coord = cooDict[vox]                              # Get the voxel position        
-            # ells_pos = np.array([el.get_pos() for el in ells])    # Get the ellipsoids positions
+            """ells = list(ells)                                     # convert to list
+            vox_coord = cooDict[vox]                              # Get the voxel position        
+            ells_pos = np.array([el.get_pos() for el in ells])    # Get the ellipsoids positions
                     
-            # # Distance b/w points along three axes
-            # XDiff = vox_coord[0] - ells_pos[:, 0]  # 'x'-axis
-            # YDiff = vox_coord[1] - ells_pos[:, 1]  # 'y'-axis
-            # ZDiff = vox_coord[2] - ells_pos[:, 2]  # 'z'-axis
+            # Distance b/w points along three axes
+            XDiff = vox_coord[0] - ells_pos[:, 0]  # 'x'-axis
+            YDiff = vox_coord[1] - ells_pos[:, 1]  # 'y'-axis
+            ZDiff = vox_coord[2] - ells_pos[:, 2]  # 'z'-axis
     
-            # # Find the distance from the 1st ellipsoid
-            # dist = np.sqrt((XDiff**2)+(YDiff**2)+(ZDiff**2))
+            # Find the distance from the 1st ellipsoid
+            dist = np.sqrt((XDiff**2)+(YDiff**2)+(ZDiff**2))
        
-            # clo_loc = np.where(dist == dist.min())[0]             # closest ellipsoid index        
-            # clo_ells = [ells[loc] for loc in clo_loc]             # closest ellipsoids
+            clo_loc = np.where(dist == dist.min())[0]             # closest ellipsoid index        
+            clo_ells = [ells[loc] for loc in clo_loc]             # closest ellipsoids
         
-            # # If '1' closest ellipsoid: assign voxel to it        
-            # if len(clo_ells) == 1:
-            #     clo_ells[0].inside_voxels.append(vox)
-            # # Else: Determine the smallest and assign to it
-            # else:
-            #     #clo_vol = np.array([ce.get_volume() for ce in clo_ells])    # Determine the volumes
-            #     #small_loc = np.where(clo_vol == clo_vol.min())[0]     # Smallest ellipsoid index
-            #     small_ells = [ells[loc] for loc in clo_loc]           # Smallest ellipsoids
+            # If '1' closest ellipsoid: assign voxel to it        
+            if len(clo_ells) == 1:
+                clo_ells[0].inside_voxels.append(vox)
+            # Else: Determine the smallest and assign to it
+            else:
+                #clo_vol = np.array([ce.get_volume() for ce in clo_ells])    # Determine the volumes
+                #small_loc = np.where(clo_vol == clo_vol.min())[0]     # Smallest ellipsoid index
+                small_ells = [ells[loc] for loc in clo_loc]           # Smallest ellipsoids
             
-            #     # assign to the smallest one regardless how many are of the same volume
-            #     small_ells[0].inside_voxels.append(vox)
+                # assign to the smallest one regardless how many are of the same volume
+                small_ells[0].inside_voxels.append(vox)
         
-            # assigned_voxel.append(vox)                                                          
+            assigned_voxel.append(vox)"""
+        ncyc += 1                                                    
     return
     
 
-def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files=False, dual_phase=False):
+def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box,
+                        dual_phase=False, vf=None,
+                        save_files=False):
     """
     The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`, :meth:`create_voxels`
     , :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`
@@ -392,7 +409,8 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
     nodes_v, elmtDict, vox_centerDict = create_voxels(sim_box, (voxX,voxY,voxZ))              
 
     # Find the voxels belonging to each grain by growing ellipsoid each time
-    assign_voxels_to_ellipsoid(vox_centerDict, Ellipsoids, elmtDict)
+    assign_voxels_to_ellipsoid(vox_centerDict, Ellipsoids, elmtDict,
+                               vf_target=vf)
 
     # Create element sets
     elmtSetDict = {}
@@ -418,24 +436,34 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box, save_files
                   .format(ellipsoid.id))
             # sys.exit(0)
     
-    # generate array of voxelized structure
-    hh = np.zeros(voxX*voxY*voxZ, dtype=int)
+    # generate array of voxelized structure with grain IDs
+    # if vf < 1.0, empty voxels will have ID 0
+    Nvox = voxX*voxY*voxZ
+    hh = np.zeros(Nvox, dtype=int)
     for ih, il in elmtSetDict.items():
         il = np.array(il) - 1
         hh[il] = ih
     voxels = np.reshape(hh, (voxX,voxY,voxZ), order='F')
-    #voxels = np.array(voxels, dtype=int)
     
-    hh = np.zeros(voxX*voxY*voxZ, dtype=int)
-    voxels_phase = np.reshape(hh, (voxX,voxY,voxZ), order='F')
-   
-    if dual_phase == True:
+    # generate array of voxelized structure with phase numbers
+    # empty voxels will get phase number 1
+    # if not dual phase, ph
+    if dual_phase:
+        hh = -np.ones(Nvox, dtype=int)
         for ih, il in elmtSetDict.items():
             il = np.array(il) - 1
             hh[il] = Ellipsoids[ih-1].phasenum
-        voxels_phase = np.reshape(hh, (voxX,voxY,voxZ), order='F')
+        ind = np.nonzero(hh < 0.0)[0]
+        hh[ind] = 1
+        vf_cur = 1.0 - len(ind)/Nvox
+    else:
+        hh = np.zeros(voxX*voxY*voxZ, dtype=int)
+    voxels_phase = np.reshape(hh, (voxX,voxY,voxZ), order='F')
 
     print('Completed RVE voxelization')
+    if vf is not None:
+        print(f'Actual volume fraction of particles in box = {vf_cur}')
+        print(f'Target volume fraction = {vf}')
     print('')
     
     if save_files:

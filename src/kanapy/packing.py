@@ -10,9 +10,11 @@ from kanapy.collisions import collide_detect
 
 def particle_generator(particle_data, phases, sim_box, RVE_data):
     """
-    Initializes ellipsoids by assigning them random positions and speeds within the simulation box.
+    Initializes ellipsoids by assigning them random positions and speeds within
+    the simulation box.
 
-    :param particle_data: Ellipsoid information such as such as Major, Minor, Equivalent diameters and its tilt angle. 
+    :param particle_data: Ellipsoid information such as such as Major, Minor,
+          Equivalent diameters and its tilt angle. 
     :type particle_data: Python dictionary 
     :param sim_box: Simulation box representing RVE.
     :type sim_box: :class:`entities.Simulation_Box`
@@ -20,19 +22,19 @@ def particle_generator(particle_data, phases, sim_box, RVE_data):
     :returns: Ellipsoids for the packing routine
     :rtype: list       
     """
-    num_particles = particle_data['Number']                      # Total number of ellipsoids
+    num_particles = particle_data['Number']  # Total number of ellipsoids
     Ellipsoids = []
     # introduce scaling factor to reduce particle overlap for non-peridoc box
     sf = 0.5 if RVE_data['Periodic'] else 0.45
     for n in range(num_particles):
 
-        iden = n+1                                                # ellipsoid 'id'
+        iden = n+1  # ellipsoid 'id'
         if particle_data['Type'] == 'Equiaxed':
             a = b = c = sf * particle_data['Equivalent_diameter'][n]
         else:    
-            a = sf * particle_data['Major_diameter'][n]              # Semi-major length
-            b = sf * particle_data['Minor_diameter1'][n]             # Semi-minor length 1
-            c = sf * particle_data['Minor_diameter2'][n]             # Semi-minor length 2
+            a = sf * particle_data['Major_diameter'][n]   # Semi-major length
+            b = sf * particle_data['Minor_diameter1'][n]  # Semi-minor length 1
+            c = sf * particle_data['Minor_diameter2'][n]  # Semi-minor length 2
 
         # Random placement for ellipsoids
         x = random.uniform(c, sim_box.w - c)
@@ -43,12 +45,15 @@ def particle_generator(particle_data, phases, sim_box, RVE_data):
         if particle_data['Type'] == 'Equiaxed':
             angle = np.radians(90)
         else:
-            angle = np.radians(particle_data['Tilt angle'][n])         # Extract the angle        
-            
-        vec_a = np.array([a*np.cos(angle), a*np.sin(angle), 0.0])   # Tilt vector wrt (+ve) x axis        
-        cross_a = np.cross(np.array([1, 0, 0]), vec_a)              # Do the cross product to find the quaternion axis        
-        norm_cross_a = np.linalg.norm(cross_a, 2)                   # norm of the vector (Magnitude)        
-        quat_axis = cross_a/norm_cross_a                            # normalize the quaternion axis
+            # Extract the angle
+            angle = np.radians(particle_data['Tilt angle'][n])      
+        # Tilt vector wrt (+ve) x axis
+        vec_a = np.array([a*np.cos(angle), a*np.sin(angle), 0.0])
+        # Do the cross product to find the quaternion axis
+        cross_a = np.cross(np.array([1, 0, 0]), vec_a)
+        # norm of the vector (Magnitude)
+        norm_cross_a = np.linalg.norm(cross_a, 2)  
+        quat_axis = cross_a/norm_cross_a  # normalize the quaternion axis
 
         # Find the quaternion components
         qx, qy, qz = quat_axis * np.sin(angle/2)
@@ -71,17 +76,20 @@ def particle_generator(particle_data, phases, sim_box, RVE_data):
         ellipsoid.speedy = ellipsoid.speedy0
         ellipsoid.speedz = ellipsoid.speedz0
 
-        Ellipsoids.append(ellipsoid)                               # adds ellipsoid to list
+        Ellipsoids.append(ellipsoid)  # adds ellipsoid to list
 
     return Ellipsoids
 
 
-def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0, dump=False):
+def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
+                  k_rep=0.0, k_att=0.0, vf=None,
+                  dump=False):
     """
-    Initializes the :class:`entities.Octree` class and performs recursive subdivision with 
-    collision checks and response for the ellipsoids. At each time step of the simulation it 
-    increases the size of the ellipsoid by a factor, which depends on the user-defined value for
-    total number of time steps.
+    Initializes the :class:`entities.Octree` class and performs recursive
+    subdivision with collision checks and response for the ellipsoids. At each
+    time step of the simulation it increases the size of the ellipsoid by a 
+    factor, which depends on the user-defined value for total number of time
+    steps.
 
     :param sim_box: Simulation box representing RVE.
     :type sim_box: :obj:`entities.Simulation_Box`  
@@ -89,22 +97,26 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
     :type Ellipsoids: list    
     :param periodicity: Status of periodicity.
     :type periodicity: boolean 
-    :param nsteps:  Total simulation steps to fill box volume with particle volume.
+    :param nsteps:  Total simulation steps to fill box volume with particle
+         volume.
     :type nsteps: int
     :param dump: Indicate if dump files for particles are written.
     :type dump: boolean
 
 
-    .. note:: :meth:`kanapy.input_output.write_dump` function is called at each time step of the simulation to
-              write output (.dump) files. By default, periodic images are written to the output file, 
+    .. note:: :meth:`kanapy.input_output.write_dump` function is called at each
+              time step of the simulation to write output (.dump) files. 
+              By default, periodic images are written to the output file, 
               but this option can be disabled within the function.         
     """
+    if vf is None:
+        vf = 0.7
     # Reduce the size of the particles to (1/nsteps)th of its original size
     for ell in Ellipsoids:
         ell.a, ell.b, ell.c = ell.oria/nsteps, ell.orib/nsteps, ell.oric/nsteps
 
     # Simulation loop for particle growth and interaction steps
-    end_step = int(0.7*nsteps)  # grow particles only to 70% of box volume
+    end_step = int(vf*nsteps)  # grow particles only to given volume fraction
     for i in tqdm(range(end_step)):
     
         # Initialize Octree and test for collision between ellipsoids
@@ -117,13 +129,9 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
             ellipsoid.ncollision = 0
             
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
-                                sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
+                                sim_box.bottom, sim_box.front, sim_box.back), 
+                      Ellipsoids)
         tree.update()
-        '''if periodicity:
-            damp = 0.
-        else:
-            damp = i/(nsteps)
-        ncoll = tree.collisionsTest(damp)'''
         
         if periodicity:
             for ellipsoid in Ellipsoids:
@@ -142,11 +150,13 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps, k_rep=0.0, k_att=0.0
         Ellipsoids = inter_ell
         
         if (not np.isclose(k_att, 0.0)) or (not np.isclose(k_rep, 0.0)):
-            calculateForce(Ellipsoids, sim_box, periodicity, k_rep=k_rep, k_att=k_att)
+            calculateForce(Ellipsoids, sim_box, periodicity,
+                           k_rep=k_rep, k_att=k_att)
 
         dups = []
         ekin = 0.
-        # Loop over the ellipsoids: move, set Bbox, & check for wall collision / PBC
+        # Loop over the ellipsoids: move, set Bbox, & 
+        # check for wall collision / PBC
         for ellipsoid in Ellipsoids:
             ekin += np.linalg.norm([ellipsoid.speedx, ellipsoid.speedy,
                                     ellipsoid.speedz])
@@ -215,11 +225,13 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
                         
                 rSq = dx*dx + dy*dy + dz*dz
                 r = np.sqrt(rSq)
+                if np.isclose(r,0.):
+                    continue
                 r2inv = 1. / rSq
                 
                 # add repulsive or attractive force for dual phase systems
                 if ell.phasenum == ell_n.phasenum:
-                    Force = k_rep * r2inv
+                    Force = -k_rep * r2inv
                 else:
                     Force = k_att * r2inv
                 
@@ -228,21 +240,29 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
                 ell.force_z += Force * dz / r
     return
 
-def packingRoutine(particle_data, phases, RVE_data, simulation_data, k_rep=0.0, k_att=0.0, save_files=False):
+def packingRoutine(particle_data, phases, RVE_data, simulation_data,
+                   k_rep=0.0, k_att=0.0, vf=None, save_files=False):
     """
-    The main function that controls the particle packing routine using: :meth:`particle_grow` & :meth:`particle_generator`
+    The main function that controls the particle packing routine using:
+        :meth:`particle_grow` & :meth:`particle_generator`
     
-    .. note:: Particle, RVE and simulation data are read from the JSON files generated by :meth:`kanapy.input_output.particleStatGenerator`.
+    .. note:: Particle, RVE and simulation data are read from the JSON files
+              generated by :meth:`kanapy.input_output.particleStatGenerator`.
               They contain the following information:
     
-              * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle. 
-              * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.
-              * Simulation attributes such as total number of timesteps and periodicity.                         
+              * Ellipsoid attributes such as Major, Minor, Equivalent diameters
+                and its tilt angle.  
+              * RVE attributes such as RVE (Simulation domain) size, the number
+                of voxels and the voxel resolution.  
+              * Simulation attributes such as total number of timesteps and
+                periodicity.                         
     """
     print('Starting particle simulation')     
     print('    Creating simulation box of required dimensions')
     # Create an instance of simulation box
-    sim_box = Simulation_Box(RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ'])
+    sim_box = Simulation_Box(RVE_data['RVE_sizeX'],
+                             RVE_data['RVE_sizeY'],
+                             RVE_data['RVE_sizeZ'])
     
     print('    Creating particles from distribution statistics')
     # Create instances for particles
@@ -257,10 +277,13 @@ def packingRoutine(particle_data, phases, RVE_data, simulation_data, k_rep=0.0, 
     elif simulation_data['Periodicity'] == 'False':
         periodic_status = False
     else:
-        raise ValueError('packingRoutine: Wrong value for periodicity in simulation_data')   
+        raise ValueError('packingRoutine: Wrong value for periodicity in ' +
+                         'simulation_data')   
         
     particles, simbox = particle_grow(sim_box, Particles, periodic_status, \
-                                      simulation_data['Time steps'], k_rep=k_rep, k_att=k_att, dump=save_files)
+                            simulation_data['Time steps'],
+                            k_rep=k_rep, k_att=k_att, vf=vf,
+                            dump=save_files)
     
     # statistical evaluation of collisions
     if particles is not None:
@@ -275,10 +298,12 @@ def packingRoutine(particle_data, phases, RVE_data, simulation_data, k_rep=0.0, 
             for E2 in particles:
                 if E1.id != E2.id:
                     # Distance between the centers of ellipsoids
-                    dist = np.linalg.norm(np.subtract(E1.get_pos(), E2.get_pos()))
+                    dist = np.linalg.norm(np.subtract(E1.get_pos(),
+                                                      E2.get_pos()))
                     # If the bounding spheres collide then check for collision
                     if dist <= (E1.a + E2.a):
-                        # Check if ellipsoids overlap and update their speeds accordingly
+                        # Check if ellipsoids overlap and update their speeds
+                        # accordingly
                         if collide_detect(E1.get_coeffs(), E2.get_coeffs(),
                                     E1.get_pos(), E2.get_pos(), 
                                     E1.rotation_matrix, E2.rotation_matrix):

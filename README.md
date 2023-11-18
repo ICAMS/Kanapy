@@ -4,7 +4,7 @@
 [![image](https://img.shields.io/badge/License-GNU%20AGPLv3-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
 Kanapy is a python package for generating complex three-dimensional (3D) synthetic
-polycrystalline microstructures that are built based on statistical information about grain geometry, given as grain size distribution and aspect ratio of grains, and crystallographic texture, given in form of orientation distribution functions (ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze the geometry and texture of microstructures given by EBSD maps to generate 3D synthetic microstructures mimicking real ones in a statistical sense. The
+polycrystalline microstructures. The microstructures are built based on statistical information about grain geometry, given as grain size distribution and aspect ratio of grains, and crystallographic texture, in form of orientation distribution functions (ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze EBSD maps with respect to the geometry and texture of microstructures. Based on this experimental data, it generates 3D synthetic microstructures mimicking real ones in a statistical sense. The
 implementation is done in [Python](http://www.python.org).  
 
 The texture module of Kanapy is implemented as
@@ -60,10 +60,10 @@ to use Kanapy's texture module, a
 ``` 
 (knpy) $ kanapy setupTexture
 ```
-**Note:** The absolute paths to kanapy/src/kanapy and kanapy/libs/mtex should to be added to the MATLABPATH environment variable, see [Mathworks&reg; documentation](https://de.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html#). 
+**Note:** The absolute paths to {user\_dependent\_path}/kanapy/src/kanapy and {user\_dependent\_path}/kanapy/libs/mtex should to be added to the MATLABPATH environment variable, see [Mathworks&reg; documentation](https://de.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html#). 
 
 
-**Note:** The installation scripts have been tested for Matlab R2023a with Python 3.9 and 3.10. If you are using other Matlab versions, the script "setupTexture" might fail. In that case, you can setup the Matlab Engine API for Python manually. To do so, please follow the instructions given on the [Mathworks&reg;](https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html) website, to (i) Verify your configuration, (ii) Install Engine API, and (iii) Start MATLAB Engine. The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the "environment.yml" file and re-creating the conda environment *knpy*.
+**Note:** The installation scripts have been tested for Matlab R2023a with Python 3.9 and 3.10 on current Linux, MacOS and Windows systems. If you are using other Matlab versions or if you do not have write permission in the Matlab-extern/engines/python directory, the script "setupTexture" might fail. In that case, you or a system administrator can setup the Matlab Engine API for Python manually. To do so, please follow the instructions given on [Mathworks&reg;](https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html), to (i) Verify your configuration, (ii) Install Engine API, and (iii) Start MATLAB Engine. The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the "environment.yml" file and re-creating the conda environment *knpy*.
 
 # Running tests
 
@@ -109,14 +109,13 @@ Below are the listed dependencies for running kanapy:
 > -   [pytest](https://www.pytest.org) for running kanapy unit tests.
 > -   [sphinx](http://www.sphinx-doc.org/en/master/) for generating
 >     documentation.
-> -   [MATLAB](https://www.mathworks.com/products/matlab.html) for
->     texture module.
-> -   [MTEX](https://mtex-toolbox.github.io/) for texture module.
-
-### Optional dependencies
-
 > -   [Matplotlib](https://matplotlib.org/) for plotting and
 >     visualizing.
+
+### Optional dependencies
+> -   [MATLAB](https://www.mathworks.com/products/matlab.html) for
+>     texture module (coomercial software).
+> -   [MTEX](https://mtex-toolbox.github.io/) for texture module (Kanapy package contains MTEX version. 5.2.2..
 > -   [OVITO](https://ovito.org/) for visualizing simulation data.
 
 
