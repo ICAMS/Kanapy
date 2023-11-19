@@ -15,14 +15,13 @@ Overview
 .. image:: https://img.shields.io/badge/License-GNU%20AGPLv3-blue
    :target: https://www.gnu.org/licenses/agpl-3.0.html
 
-Kanapy is a python package for generating complex three-dimensional (3D)
-synthetic polycrystalline microstructures that are built based on
-statistical information about grain geometry, given as grain size
-distribution and aspect ratio of grains, and crystallographic texture,
-given in form of orientation distribution functions (ODF) and
-misorientation distribution functions (MDF). Kanapy offers tools to
-analyze the geometry and texture of microstructures given by EBSD maps
-to generate 3D synthetic microstructures mimicking real ones in a
+Kanapy is a python package for generating complex three-dimensional (3D) synthetic
+polycrystalline microstructures. The microstructures are built based on statistical 
+information about grain geometry, given as grain size distribution and aspect ratio of 
+grains, and crystallographic texture, in form of orientation distribution functions 
+(ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze 
+EBSD maps with respect to the geometry and texture of microstructures. Based on this 
+experimental data, it generates 3D synthetic microstructures mimicking real ones in a 
 statistical sense. The implementation is done in
 `Python <http://www.python.org>`__.
 
@@ -80,6 +79,8 @@ Features
 -  Option to generate input files for the commercial finite-element
    software
    `Abaqus <https://www.3ds.com/products-services/simulia/products/abaqus/>`__.
+-  Analysis and RVE generation for 2-phase microstructures.
+-  Import and export of voxelated structures for data transfer between different tools.
    
 Installation
 ------------
@@ -102,20 +103,29 @@ a desired location and install.
     
 Kanapy is now installed along with all its dependencies. If you intend to use Kanapy's 
 texture module, a MATLAB_ installation
-is required because the texture module is based on MTEX_ functions. If MATLAB is
-available on your system, the texture module is initialized by the
-command
+is required because the texture module is based on MTEX_ functions. Kanapy uses a local 
+version of MTEX stored in libs/mtex, if you want to use another version, please set the 
+paths accordingly.  If MATLAB is available on your system, the texture module is 
+initialized by the command
 
 .. code-block:: console
 
    (knpy) $ kanapy setupTexture
 
-.. note:: 1. ``knpy`` can be replaced with any name for your environment.
-          2. The installation scripts have been tested for Matlab R2023a with Python 3.9.16. If you are using other Matlab versions, the script
-             "setupTexture" might fail. In that case, you can setup the Matlab
-             Engine API for Python manually. To do so, please follow the instructions
-             given on the Mathworks_ website, to (i) Verify your configuration, (ii) Install Engine API, and (iii) Start MATLAB Engine.
-             The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the "environment.yml" file and re-creating the conda environment *knpy*.
+.. note:: 1. ``knpy`` can be replaced with any name for your environment.  
+        2. The absolute paths to {user\_dependent\_path}/kanapy/src/kanapy and 
+        {user\_dependent\_path}/kanapy/libs/mtex should to be added to the MATLABPATH 
+        environment variable, see `Mathworks documentation`_.  
+        
+        3. The installation scripts have been tested for Matlab R2023a with Python 3.9 
+        and 3.10. If you are using other Matlab versions, the script
+        "setupTexture" might fail. In that case, you can setup the Matlab
+        Engine API for Python manually. To do so, please follow the instructions
+        given on the Mathworks_ website, to (i) Verify your configuration, (ii) 
+        Install Engine API, and (iii) Start MATLAB Engine.
+        The Python version of the *knpy*-environment can be changed according to the 
+        requirements of the Matlab Engine API by editing the "environment.yml" file 
+        and re-creating the conda environment *knpy*.
                     
 .. tip:: To learn more about managing environments see Anaconda documentation_.
 
@@ -124,6 +134,7 @@ command
 .. _MATLAB: https://www.mathworks.com/products/matlab.html
 .. _MTEX: https://mtex-toolbox.github.io/
 .. _Mathworks: https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
+.. _Mathworks documentation: https://de.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html#
             
 Running tests
 --------------

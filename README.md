@@ -35,6 +35,8 @@ The texture module of Kanapy is implemented as
 -   Option to generate input files for the commercial finite-element
     software
     [Abaqus](https://www.3ds.com/products-services/simulia/products/abaqus/)
+-   Analysis and RVE generation for 2-phase microstructures.
+-   Import and export of voxelated structures for data transfer between different tools.
 
 # Installation
 

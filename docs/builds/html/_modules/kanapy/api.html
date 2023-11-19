@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.api &mdash; kanapy 5.0.0 documentation</title>
+  <title>kanapy.api &mdash; kanapy 5.0.3 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -12,7 +12,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+        <script src="../../_static/documentation_options.js?v=f98c4cc8"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -32,7 +32,7 @@
             kanapy
           </a>
               <div class="version">
-                5.0.0
+                5.0.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -150,20 +150,48 @@
 <span class="sd">    --------        Routines for user interface        --------</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Microstructure.init_RVE">
-<a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.init_RVE">[docs]</a>
-    <span class="k">def</span> <span class="nf">init_RVE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Creates RVE based on the data provided in the input file.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Microstructure.init_stats">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.init_stats">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">porous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates particle statistics based on the data provided in the </span>
+<span class="sd">        input file.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">descriptor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
             <span class="n">descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">descriptor</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nphase</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">des</span> <span class="ow">in</span> <span class="n">descriptor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphase</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Kanapy currently only supports 2 phases, but Nphase=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nphase</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">porous</span><span class="p">:</span>
+            <span class="n">descriptor</span> <span class="o">=</span> <span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">gs_data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">gs_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">gs_data</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">ar_data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">ar_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">ar_data</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">des</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">descriptor</span><span class="p">):</span>
+            <span class="n">particleStatGenerator</span><span class="p">(</span><span class="n">des</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="n">gs_data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ar_data</span><span class="o">=</span><span class="n">ar_data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                  <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Microstructure.init_RVE">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.init_RVE">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_RVE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">porous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Creates particle distribution inside simulation box (RVE) based on</span>
+<span class="sd">        the data provided in the input file.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">descriptor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">descriptor</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">porous</span><span class="p">:</span>
+            <span class="n">descriptor</span> <span class="o">=</span> <span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">des</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">descriptor</span><span class="p">):</span>
             <span class="n">particle_data</span><span class="p">,</span> <span class="n">phases</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">simulation_data</span> <span class="o">=</span> \
                 <span class="n">RVEcreator</span><span class="p">(</span><span class="n">des</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">=</span><span class="n">nsteps</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
             <span class="n">Ngr</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">des</span> <span class="o">==</span> <span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span> <span class="o">=</span> <span class="n">Ngr</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">particle_data</span> <span class="o">=</span> <span class="n">particle_data</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">phases</span> <span class="o">=</span> <span class="n">phases</span>
@@ -195,26 +223,10 @@
 
             <span class="c1"># if both Equiaxed and Elongated grains are present at the same time, it should be adjusted.</span>
 
-<div class="viewcode-block" id="Microstructure.init_stats">
-<a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.init_stats">[docs]</a>
-    <span class="k">def</span> <span class="nf">init_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                   <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates particle statistics based on the data provided in the </span>
-<span class="sd">        input file.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">descriptor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="n">descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">descriptor</span><span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">des</span> <span class="ow">in</span> <span class="n">descriptor</span><span class="p">:</span>
-            <span class="n">particleStatGenerator</span><span class="p">(</span><span class="n">des</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="n">gs_data</span><span class="p">,</span> <span class="n">ar_data</span><span class="o">=</span><span class="n">ar_data</span><span class="p">,</span>
-                                  <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
-
-
 <div class="viewcode-block" id="Microstructure.pack">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.pack">[docs]</a>
     <span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">RVE_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">simulation_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-             <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+             <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Packs the particles into a simulation box.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">particle_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -226,14 +238,17 @@
         <span class="k">if</span> <span class="n">simulation_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">simulation_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simbox</span> <span class="o">=</span> \
-            <span class="n">packingRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phases</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">simulation_data</span><span class="p">,</span>
-                           <span class="n">k_rep</span><span class="o">=</span><span class="n">k_rep</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="n">k_att</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
+            <span class="n">packingRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phases</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span>
+                           <span class="n">simulation_data</span><span class="p">,</span>
+                           <span class="n">k_rep</span><span class="o">=</span><span class="n">k_rep</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="n">k_att</span><span class="p">,</span> <span class="n">vf</span><span class="o">=</span><span class="n">vf</span><span class="p">,</span>
+                           <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.voxelize">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.voxelize">[docs]</a>
     <span class="k">def</span> <span class="nf">voxelize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">RVE_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">particles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">simbox</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                 <span class="n">simbox</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">vf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates the RVE by assigning voxels to grains.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">particle_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">particle_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">particle_data</span>
@@ -248,7 +263,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">nodes_v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elmtDict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elmtSetDict</span><span class="p">,</span> \
         <span class="bp">self</span><span class="o">.</span><span class="n">vox_centerDict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxels_phase</span> <span class="o">=</span> \
             <span class="n">voxelizationRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">particles</span><span class="p">,</span> <span class="n">simbox</span><span class="p">,</span>
-                                <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">)</span>
+                                <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">vf</span><span class="o">=</span><span class="n">vf</span><span class="p">,</span>
+                                <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
         <span class="n">Ngr</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elmtSetDict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span> <span class="o">!=</span> <span class="n">Ngr</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of grains has changed from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">Ngr</span><span class="si">}</span><span class="s1"> during voxelization.&#39;</span><span class="p">)</span>
@@ -276,21 +292,25 @@
 <div class="viewcode-block" id="Microstructure.generate_grains">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.generate_grains">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_grains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes out the particle- and grain diameter attributes for statistical comparison. Final RVE </span>
-<span class="sd">        grain volumes and shared grain boundary surface areas info are written out as well.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes out the particle- and grain diameter attributes for </span>
+<span class="sd">        statistical comparison. Final RVE grain volumes and shared grain</span>
+<span class="sd">        boundary surface areas info are written out as well.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No information about voxelized microstructure. Run voxelize first.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">phases</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No phases defined.&#39;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">grain_facesDict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_area</span> <span class="o">=</span> <span class="n">calcPolygons</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elmtSetDict</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">elmtDict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phases</span><span class="p">,</span>
-                                                              <span class="bp">self</span><span class="o">.</span><span class="n">vox_centerDict</span><span class="p">,</span>
-                                                              <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">)</span>  <span class="c1"># updates RVE_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grain_facesDict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_area</span> <span class="o">=</span> \
+            <span class="n">calcPolygons</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">elmtSetDict</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">elmtDict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phases</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">vox_centerDict</span><span class="p">,</span>
+                         <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">)</span>  <span class="c1"># updates RVE_data</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">particle_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">res_data</span> <span class="o">=</span> \
-                <span class="n">get_stats</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particle_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphase</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">)</span></div>
+                <span class="n">get_stats</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particle_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">nphase</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span>
+                          <span class="n">phase_list</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">phases</span><span class="p">[</span><span class="s1">&#39;Phase number&#39;</span><span class="p">])</span></div>
 
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -308,12 +328,14 @@
 
 <div class="viewcode-block" id="Microstructure.plot_voxels">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.plot_voxels">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_voxels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sliced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">plot_voxels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sliced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">porous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Generate 3D plot of grains in voxelized microstructure. &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No voxels or elements to plot. Run voxelize first.&#39;</span><span class="p">)</span>
         <span class="n">plot_voxels_3D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voxels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxels_phase</span><span class="p">,</span> <span class="n">Ngr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="p">,</span>
-                       <span class="n">sliced</span><span class="o">=</span><span class="n">sliced</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span></div>
+                       <span class="n">sliced</span><span class="o">=</span><span class="n">sliced</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">porous</span><span class="o">=</span><span class="n">porous</span><span class="p">,</span>
+                       <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.plot_grains">
@@ -326,13 +348,15 @@
                 <span class="n">rve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No polygons for grains defined. Run analyse_RVE first&#39;</span><span class="p">)</span>
-        <span class="n">plot_polygons_3D</span><span class="p">(</span><span class="n">rve</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">ec</span><span class="o">=</span><span class="n">ec</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">)</span></div>
+        <span class="n">plot_polygons_3D</span><span class="p">(</span><span class="n">rve</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">ec</span><span class="o">=</span><span class="n">ec</span><span class="p">,</span>
+                         <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.plot_stats">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.plot_stats">[docs]</a>
     <span class="k">def</span> <span class="nf">plot_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                   <span class="n">ar_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                   <span class="n">ar_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                   <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Plots the particle- and grain diameter attributes for statistical </span>
 <span class="sd">        comparison.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -381,7 +405,8 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_ang</span><span class="p">(</span><span class="n">cut</span><span class="o">=</span><span class="n">cut</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                        <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">save_plot</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
+                        <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span>
+                        <span class="n">save_plot</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
 
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -390,8 +415,9 @@
 
 <div class="viewcode-block" id="Microstructure.output_abq">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.output_abq">[docs]</a>
-    <span class="k">def</span> <span class="nf">output_abq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">RVE_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                   <span class="n">elmtDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">output_abq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">elmtDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes out the Abaqus (.inp) file for the generated RVE.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes_s</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">grain_facesDict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -423,16 +449,33 @@
 
         <span class="k">if</span> <span class="n">elmtDict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">elmtDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elmtDict</span>
-        <span class="k">if</span> <span class="n">elmtSetDict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elmtSetDict</span>
-        <span class="k">if</span> <span class="n">RVE_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">RVE_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Units&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">units</span><span class="o">==</span><span class="s1">&#39;mm&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">units</span><span class="o">==</span><span class="s1">&#39;um&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Units must be either &quot;mm&quot; or &quot;um&quot;, not </span><span class="si">{</span><span class="n">units</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
+            <span class="n">nct</span> <span class="o">=</span> <span class="s1">&#39;2phases&#39;</span>
+            <span class="n">Nvox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_numberX&#39;</span><span class="p">]</span> <span class="o">*</span>\
+                   <span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_numberY&#39;</span><span class="p">]</span> <span class="o">*</span>\
+                   <span class="bp">self</span><span class="o">.</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Voxel_numberZ&#39;</span><span class="p">]</span>
+            <span class="n">elmt_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">voxels_phase</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Nvox</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+            <span class="n">ind1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">elmt_list</span><span class="o">==</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ind2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">elmt_list</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="mi">1</span> <span class="p">:</span> <span class="n">ind1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="mi">2</span> <span class="p">:</span> <span class="n">ind2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nct</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">grains&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">elmtSetDict</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">elmtSetDict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elmtSetDict</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/kanapy_</span><span class="si">{0}</span><span class="s1">grains_</span><span class="si">{1}</span><span class="s1">.inp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">elmtSetDict</span><span class="p">),</span> <span class="n">ntag</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/kanapy_</span><span class="si">{0}</span><span class="s1">_</span><span class="si">{1}</span><span class="s1">.inp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nct</span><span class="p">,</span> <span class="n">ntag</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># remove old file if it exists</span>
-        <span class="n">export2abaqus</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">grain_facesDict</span><span class="o">=</span><span class="n">faces</span><span class="p">)</span>
+        <span class="n">export2abaqus</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span>
+                      <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="n">grain_facesDict</span><span class="o">=</span><span class="n">faces</span><span class="p">,</span>
+                      <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="n">thermal</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">name</span></div>
 
 

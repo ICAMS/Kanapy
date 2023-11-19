@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.grains &mdash; kanapy 5.0.0 documentation</title>
+  <title>kanapy.grains &mdash; kanapy 5.0.3 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -12,7 +12,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+        <script src="../../_static/documentation_options.js?v=f98c4cc8"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -32,7 +32,7 @@
             kanapy
           </a>
               <div class="version">
-                5.0.0
+                5.0.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -90,7 +90,8 @@
 
 <div class="viewcode-block" id="calcPolygons">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.grains.calcPolygons">[docs]</a>
-<span class="k">def</span> <span class="nf">calcPolygons</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">,</span> <span class="n">nodes_v</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">Ngr</span><span class="p">,</span> <span class="n">voxels</span><span class="p">,</span> <span class="n">phases</span><span class="p">,</span> <span class="n">vox_centerDict</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.e-3</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">calcPolygons</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">,</span> <span class="n">nodes_v</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">Ngr</span><span class="p">,</span>
+                 <span class="n">voxels</span><span class="p">,</span> <span class="n">phases</span><span class="p">,</span> <span class="n">vox_centerDict</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.e-3</span><span class="p">,</span>
                  <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluates the grain volume and the grain boundary shared surface area</span>
@@ -590,7 +591,8 @@
 
 <div class="viewcode-block" id="get_stats">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.grains.get_stats">[docs]</a>
-<span class="k">def</span> <span class="nf">get_stats</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">Ngr</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">nphase</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_stats</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">Ngr</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">nphase</span><span class="p">,</span> 
+              <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">phase_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compare the geometries of particles used for packing and the resulting</span>
 <span class="sd">    grains.</span>
@@ -616,65 +618,48 @@
     <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Ngr</span><span class="p">)</span>
     <span class="n">grain_majDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Ngr</span><span class="p">)</span>
     <span class="n">grain_minDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Ngr</span><span class="p">)</span>
-    <span class="n">grain_PhaseID</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Ngr</span><span class="p">)</span>
-    <span class="n">grain_PhaseName</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Ngr</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">igr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
         <span class="n">grain_eqDia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;eqDia&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span><span class="p">:</span>
             <span class="n">grain_minDia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;minDia&#39;</span><span class="p">]</span>
             <span class="n">grain_majDia</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;majDia&#39;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
-            <span class="n">grain_PhaseID</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;PhaseID&#39;</span><span class="p">]</span>
-            <span class="n">grain_PhaseName</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;PhaseName&#39;</span><span class="p">]</span>
 
     <span class="n">output_data_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">indexPhase</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
+        <span class="c1"># Compute the L1-error between particle and grain geometries for phases</span>
+        <span class="n">part_PhaseID</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">phase_list</span><span class="p">)</span>
+        <span class="n">grain_PhaseID</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Ngr</span><span class="p">)</span>
+        <span class="n">grain_PhaseName</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Ngr</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">igr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">grain_PhaseID</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;PhaseID&#39;</span><span class="p">])</span>
+            <span class="n">grain_PhaseName</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;PhaseName&#39;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">iph</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nphase</span><span class="p">):</span>
-            <span class="n">indexPhase</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grain_PhaseID</span> <span class="o">==</span> <span class="n">iph</span><span class="p">)</span>
-        <span class="c1"># indexPhase = [grain_PhaseID == 0, grain_PhaseID == 1]</span>
-        <span class="c1"># Compute the L1-error between particle and grain geometries for phase 0</span>
-        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indexPhase</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span><span class="p">:</span>
-                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s1">&#39;Ellipsoids&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">[</span><span class="n">index</span><span class="p">]},</span>
-                                   <span class="s1">&#39;Major diameter&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_majDia</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
-                                                      <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_majDia</span><span class="p">[</span><span class="n">index</span><span class="p">]},</span>
-                                   <span class="s1">&#39;Minor diameter&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_minDia</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
-                                                      <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_minDia</span><span class="p">[</span><span class="n">index</span><span class="p">]}}}</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Spheres&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">[</span><span class="n">index</span><span class="p">]}}}</span>
-
-            <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">    L1 error between particle and grain geometries: </span><span class="si">{}</span><span class="s1">&#39;</span> \
-                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
+            <span class="n">ind_grn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">grain_PhaseID</span> <span class="o">==</span> <span class="n">iph</span><span class="p">)</span>
+            <span class="n">ind_par</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">part_PhaseID</span> <span class="o">==</span> <span class="n">iph</span><span class="p">)</span>
+            
+            <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">[</span><span class="n">ind_par</span><span class="p">],</span> <span class="n">grain_eqDia</span><span class="p">[</span><span class="n">ind_grn</span><span class="p">])</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">    L1 error phase </span><span class="si">{}</span><span class="s1"> between particle and grain geometries: </span><span class="si">{}</span><span class="s1">&#39;</span> \
+                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">iph</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
 
             <span class="c1"># Create dictionaries to store the data generated</span>
-            <span class="n">output_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number_of_particles/grains&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">[</span><span class="n">index</span><span class="p">])),</span>
+            <span class="n">output_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number_of_particles/grains&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">[</span><span class="n">ind_par</span><span class="p">])),</span>
                            <span class="s1">&#39;Grain type&#39;</span><span class="p">:</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">],</span>
                            <span class="s1">&#39;Unit_scale&#39;</span><span class="p">:</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Units&#39;</span><span class="p">],</span>
                            <span class="s1">&#39;L1-error&#39;</span><span class="p">:</span> <span class="n">error</span><span class="p">,</span>
-                           <span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
-                           <span class="s1">&#39;Grain_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">[</span><span class="n">index</span><span class="p">]}</span>
+                           <span class="s1">&#39;Particle_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">[</span><span class="n">ind_par</span><span class="p">],</span>
+                           <span class="s1">&#39;Grain_Equivalent_diameter&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">[</span><span class="n">ind_grn</span><span class="p">]}</span>
             <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span><span class="p">:</span>
-                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;Particle_Major_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">par_majDia</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;Particle_Minor_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">par_minDia</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;Grain_Major_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_majDia</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;Grain_Minor_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_minDia</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;PhaseID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_PhaseID</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;PhaseName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_PhaseName</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;Particle_Major_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">par_majDia</span><span class="p">[</span><span class="n">ind_par</span><span class="p">]</span>
+                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;Particle_Minor_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">par_minDia</span><span class="p">[</span><span class="n">ind_par</span><span class="p">]</span>
+                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;Grain_Major_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_majDia</span><span class="p">[</span><span class="n">ind_grn</span><span class="p">]</span>
+                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;Grain_Minor_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_minDia</span><span class="p">[</span><span class="n">ind_grn</span><span class="p">]</span>
+                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;PhaseID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_PhaseID</span><span class="p">[</span><span class="n">ind_grn</span><span class="p">]</span>
+                <span class="n">output_data</span><span class="p">[</span><span class="s1">&#39;PhaseName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_PhaseName</span><span class="p">[</span><span class="n">ind_grn</span><span class="p">]</span>
             <span class="n">output_data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_data</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Compute the L1-error between particle and grain geometries</span>
-        <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span><span class="p">:</span>
-            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Ellipsoids&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">},</span>
-                                     <span class="s1">&#39;Major diameter&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_majDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_majDia</span><span class="p">},</span>
-                                     <span class="s1">&#39;Minor diameter&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_minDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_minDia</span><span class="p">}}}</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Spheres&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Particles&#39;</span><span class="p">:</span> <span class="n">par_eqDia</span><span class="p">,</span> <span class="s1">&#39;Grains&#39;</span><span class="p">:</span> <span class="n">grain_eqDia</span><span class="p">}}}</span>
-
-        <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">l1_error_est</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">    L1 error between particle and grain geometries: </span><span class="si">{}</span><span class="s1">&#39;</span> \
               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
 
@@ -698,61 +683,39 @@
 
 <div class="viewcode-block" id="l1_error_est">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.grains.l1_error_est">[docs]</a>
-<span class="k">def</span> <span class="nf">l1_error_est</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">l1_error_est</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Evaluates the L1-error between the particle- and output RVE grain statistics with respect to Major, Minor &amp;</span>
-<span class="sd">    Equivalent diameters.</span>
+<span class="sd">    Evaluates the L1-error between the particle- and output RVE grain</span>
+<span class="sd">    statistics with respect to Major, Minor &amp; Equivalent diameters.</span>
 
-<span class="sd">    .. note:: 1. Particle information is read from (.json) file generated by :meth:`kanapy.input_output.particleStatGenerator`.</span>
-<span class="sd">                 And RVE grain information is read from the (.json) files generated by :meth:`kanapy.voxelization.voxelizationRoutine`.</span>
+<span class="sd">    .. note:: 1. Particle information is read from (.json) file generated by</span>
+<span class="sd">                 :meth:`kanapy.input_output.particleStatGenerator`.</span>
+<span class="sd">                 And RVE grain information is read from the (.json) files</span>
+<span class="sd">                 generated by :meth:`kanapy.voxelization.voxelizationRoutine`.</span>
 
-<span class="sd">              2. The L1-error value is written to the &#39;output_statistics.json&#39; file.</span>
+<span class="sd">              2. The L1-error value is written to the &#39;output_statistics.json&#39;</span>
+<span class="sd">                 file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing the L1-error between input and output diameter distributions&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Computing the L1-error between input and output diameter distributions&#39;</span><span class="p">,</span> 
+          <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="s1">&#39;Spheres&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="c1"># Extract the values</span>
-        <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Spheres&#39;</span><span class="p">][</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">][</span><span class="s1">&#39;Particles&#39;</span><span class="p">])</span>
-        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Spheres&#39;</span><span class="p">][</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">][</span><span class="s1">&#39;Grains&#39;</span><span class="p">])</span>
+    <span class="c1"># Concatenate both arrays to compute shared bins</span>
+    <span class="c1"># NOTE: &#39;doane&#39; produces better estimates for non-normal datasets</span>
+    <span class="n">total_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">])</span>
+    <span class="n">shared_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">total_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;doane&#39;</span><span class="p">)</span>
 
-        <span class="c1"># Concatenate both arrays to compute shared bins</span>
-        <span class="c1"># NOTE: &#39;doane&#39; produces better estimates for non-normal datasets</span>
-        <span class="n">total_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">])</span>
-        <span class="n">shared_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">total_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;doane&#39;</span><span class="p">)</span>
+    <span class="c1"># Compute the histogram for particles and grains</span>
+    <span class="n">hist_par</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
+    <span class="n">hist_gr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
 
-        <span class="c1"># Compute the histogram for particles and grains</span>
-        <span class="n">hist_par</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
-        <span class="n">hist_gr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
+    <span class="c1"># Normalize the values</span>
+    <span class="n">hist_par</span> <span class="o">=</span> <span class="n">hist_par</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_par</span><span class="p">)</span>
+    <span class="n">hist_gr</span> <span class="o">=</span> <span class="n">hist_gr</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_gr</span><span class="p">)</span>
 
-        <span class="c1"># Normalize the values</span>
-        <span class="n">hist_par</span> <span class="o">=</span> <span class="n">hist_par</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_par</span><span class="p">)</span>
-        <span class="n">hist_gr</span> <span class="o">=</span> <span class="n">hist_gr</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_gr</span><span class="p">)</span>
-
-        <span class="c1"># Compute the L1-error between particles and grains</span>
-        <span class="n">l1_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hist_par</span> <span class="o">-</span> <span class="n">hist_gr</span><span class="p">))</span>
-
-    <span class="k">elif</span> <span class="s1">&#39;Ellipsoids&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="c1"># Extract the values</span>
-        <span class="n">par_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Ellipsoids&#39;</span><span class="p">][</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">][</span><span class="s1">&#39;Particles&#39;</span><span class="p">])</span>
-        <span class="n">grain_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;Ellipsoids&#39;</span><span class="p">][</span><span class="s1">&#39;Equivalent&#39;</span><span class="p">][</span><span class="s1">&#39;Grains&#39;</span><span class="p">])</span>
-
-        <span class="c1"># Concatenate both arrays to compute shared bins</span>
-        <span class="c1"># NOTE: &#39;doane&#39; produces better estimates for non-normal datasets</span>
-        <span class="n">total_eqDia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">grain_eqDia</span><span class="p">])</span>
-        <span class="n">shared_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">total_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;doane&#39;</span><span class="p">)</span>
-
-        <span class="c1"># Compute the histogram for particles and grains</span>
-        <span class="n">hist_par</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">par_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
-        <span class="n">hist_gr</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">grain_eqDia</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">shared_bins</span><span class="p">)</span>
-
-        <span class="c1"># Normalize the values</span>
-        <span class="n">hist_par</span> <span class="o">=</span> <span class="n">hist_par</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_par</span><span class="p">)</span>
-        <span class="n">hist_gr</span> <span class="o">=</span> <span class="n">hist_gr</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist_gr</span><span class="p">)</span>
-
-        <span class="c1"># Compute the L1-error between particles and grains</span>
-        <span class="n">l1_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hist_par</span> <span class="o">-</span> <span class="n">hist_gr</span><span class="p">))</span>
+    <span class="c1"># Compute the L1-error between particles and grains</span>
+    <span class="n">l1_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hist_par</span> <span class="o">-</span> <span class="n">hist_gr</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">l1_value</span></div>
 
 </pre></div>

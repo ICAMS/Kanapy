@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overview &mdash; kanapy 5.0.0 documentation</title>
+  <title>Overview &mdash; kanapy 5.0.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -13,7 +13,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=ce74c6a2"></script>
+        <script src="_static/documentation_options.js?v=f98c4cc8"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -35,7 +35,7 @@
             kanapy
           </a>
               <div class="version">
-                5.0.0
+                5.0.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -103,14 +103,13 @@
 <a class="reference external image-reference" href="https://doi.org/10.21105/joss.01732"><img alt="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" src="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" /></a>
 <img alt="https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical" src="https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical" />
 <a class="reference external image-reference" href="https://www.gnu.org/licenses/agpl-3.0.html"><img alt="https://img.shields.io/badge/License-GNU%20AGPLv3-blue" src="https://img.shields.io/badge/License-GNU%20AGPLv3-blue" /></a>
-<p>Kanapy is a python package for generating complex three-dimensional (3D)
-synthetic polycrystalline microstructures that are built based on
-statistical information about grain geometry, given as grain size
-distribution and aspect ratio of grains, and crystallographic texture,
-given in form of orientation distribution functions (ODF) and
-misorientation distribution functions (MDF). Kanapy offers tools to
-analyze the geometry and texture of microstructures given by EBSD maps
-to generate 3D synthetic microstructures mimicking real ones in a
+<p>Kanapy is a python package for generating complex three-dimensional (3D) synthetic
+polycrystalline microstructures. The microstructures are built based on statistical
+information about grain geometry, given as grain size distribution and aspect ratio of
+grains, and crystallographic texture, in form of orientation distribution functions
+(ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze
+EBSD maps with respect to the geometry and texture of microstructures. Based on this
+experimental data, it generates 3D synthetic microstructures mimicking real ones in a
 statistical sense. The implementation is done in
 <a class="reference external" href="http://www.python.org">Python</a>.</p>
 <p>The texture module of Kanapy is implemented as
@@ -168,6 +167,8 @@ can be read by the Voronoi tessellation software
 <li><p>Option to generate input files for the commercial finite-element
 software
 <a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>.</p></li>
+<li><p>Analysis and RVE generation for 2-phase microstructures.</p></li>
+<li><p>Import and export of voxelated structures for data transfer between different tools.</p></li>
 </ul>
 </section>
 <section id="installation">
@@ -185,9 +186,10 @@ a desired location and install.</p>
 </div>
 <p>Kanapy is now installed along with all its dependencies. If you intend to use Kanapy’s
 texture module, a <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> installation
-is required because the texture module is based on <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> functions. If MATLAB is
-available on your system, the texture module is initialized by the
-command</p>
+is required because the texture module is based on <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> functions. Kanapy uses a local
+version of MTEX stored in libs/mtex, if you want to use another version, please set the
+paths accordingly.  If MATLAB is available on your system, the texture module is
+initialized by the command</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>setupTexture
 </pre></div>
 </div>
@@ -195,12 +197,19 @@ command</p>
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">knpy</span></code> can be replaced with any name for your environment.</p></li>
-<li><p>The installation scripts have been tested for Matlab R2023a with Python 3.9.16. If you are using other Matlab versions, the script
+</ol>
+<p>2. The absolute paths to {user_dependent_path}/kanapy/src/kanapy and
+{user_dependent_path}/kanapy/libs/mtex should to be added to the MATLABPATH
+environment variable, see <a class="reference external" href="https://de.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html#">Mathworks documentation</a>.</p>
+<p>3. The installation scripts have been tested for Matlab R2023a with Python 3.9
+and 3.10. If you are using other Matlab versions, the script
 “setupTexture” might fail. In that case, you can setup the Matlab
 Engine API for Python manually. To do so, please follow the instructions
-given on the <a class="reference external" href="https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html">Mathworks</a> website, to (i) Verify your configuration, (ii) Install Engine API, and (iii) Start MATLAB Engine.
-The Python version of the <em>knpy</em>-environment can be changed according to the requirements of the Matlab Engine API by editing the “environment.yml” file and re-creating the conda environment <em>knpy</em>.</p></li>
-</ol>
+given on the <a class="reference external" href="https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html">Mathworks</a> website, to (i) Verify your configuration, (ii)
+Install Engine API, and (iii) Start MATLAB Engine.
+The Python version of the <em>knpy</em>-environment can be changed according to the
+requirements of the Matlab Engine API by editing the “environment.yml” file
+and re-creating the conda environment <em>knpy</em>.</p>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>

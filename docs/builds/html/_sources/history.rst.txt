@@ -49,8 +49,17 @@ History
 * Support for 2-phase materials
 * Construction of polyhedral hull for grains
 
-4.0 (2023-09-23)
+4.0 (2022-09-08)
+----------------
+
+* Updated name conventions for functions and files
+* Significant code refactoring
+* Import and export of voxels
+
+5.0 (2023-09-23)
 ----------------
 
 * Pure Python version for easier installation (previous versions used C++ code for collision detection)
+* Improvements in installation procedure of MTEX module
+* Improved handling of 2-phase microstructures (EBSD import, descriptors, packing, voxelization)
 

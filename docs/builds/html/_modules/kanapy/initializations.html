@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.initializations &mdash; kanapy 5.0.0 documentation</title>
+  <title>kanapy.initializations &mdash; kanapy 5.0.3 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -12,7 +12,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=ce74c6a2"></script>
+        <script src="../../_static/documentation_options.js?v=f98c4cc8"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -32,7 +32,7 @@
             kanapy
           </a>
               <div class="version">
-                5.0.0
+                5.0.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -360,16 +360,18 @@
     <span class="c1"># raise value error in case the grains are not voxelated well</span>
     <span class="k">if</span> <span class="n">voxel_sizeX</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Grains will not be voxelated well!&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Please increase the voxel numbers (OR) decrease the RVE side lengths</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Grains with minimum size </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">)</span><span class="si">}</span><span class="s2"> will not be voxelated well!&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Voxel size is </span><span class="si">{</span><span class="n">voxel_sizeX</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Consider increasing the voxel numbers (OR) decreasing the RVE side lengths</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">voxel_sizeX</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39; Voxel size larger than minimum grain size.&#39;</span><span class="p">)</span>
     <span class="c1"># raise warning if large grain occur in periodic box</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">RVEsizeX</span><span class="o">*</span><span class="mf">0.5</span> <span class="ow">and</span> <span class="n">periodicity</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Periodic box with grains larger the half of box width.&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    Check grain polygons carefully.&quot;</span><span class="p">)</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of grains        = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Total number of particles     = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">totalEllipsoids</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    RVE side lengths (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">RVEsizeX</span><span class="p">,</span> <span class="n">RVEsizeY</span><span class="p">,</span> <span class="n">RVEsizeZ</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Number of voxels (X, Y, Z)    = </span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="n">Nz</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Voxel resolution (X, Y, Z)    = </span><span class="si">{0:.4f}</span><span class="s1">, </span><span class="si">{1:.4f}</span><span class="s1">, </span><span class="si">{2:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">voxel_sizeX</span><span class="p">,</span> <span class="n">voxel_sizeY</span><span class="p">,</span> <span class="n">voxel_sizeZ</span><span class="p">))</span>
