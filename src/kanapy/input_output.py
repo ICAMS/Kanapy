@@ -279,7 +279,7 @@ def export2abaqus(nodes, fileName, elmtSetDict, elmtDict, units='mm',
             for i in range(1,3):
                 f.write('**\n')
                 f.write('*Material, name=PHASE{}_MAT\n'.format(i))
-                f.write('*Include, input=Material{}.inp\n'.format(i))
+                f.write('**Include, input=Material{}.inp\n'.format(i))
                 f.write('**\n')
     print('---->DONE!\n')
     return

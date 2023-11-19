@@ -275,9 +275,11 @@ def RVEcreator(stats_dict, nsteps=1000, save_files=False):
     # raise value error in case the grains are not voxelated well
     if voxel_sizeX >= np.amin(eq_Dia) / 3.:
         print(" ")
-        print("    Grains will not be voxelated well!")
-        print("    Please increase the voxel numbers (OR) decrease the RVE side lengths\n")
-        sys.exit(0)
+        print(f"    Grains with minimum size {np.amin(eq_Dia)} will not be voxelated well!")
+        print(f"    Voxel size is {voxel_sizeX}")
+        print("    Consider increasing the voxel numbers (OR) decreasing the RVE side lengths\n")
+        if voxel_sizeX > np.amin(eq_Dia):
+            raise ValueError(' Voxel size larger than minimum grain size.')
     # raise warning if large grain occur in periodic box
     if np.amax(eq_Dia) >= RVEsizeX*0.5 and periodicity:
         print("\n")
