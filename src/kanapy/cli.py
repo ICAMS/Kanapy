@@ -43,10 +43,8 @@ def autocomplete(ctx):
 @click.pass_context
 def tests(ctx, no_texture: bool):    
     """ Runs unittests built within kanapy."""  
-    shutil.rmtree(WORK_DIR + '/tests', ignore_errors=True)
-    os.makedirs(WORK_DIR + '/tests')
-    shutil.copy(f'{MAIN_DIR}/tests/unitTest_ODF_MDF_reconstruction.m', f'{WORK_DIR}/tests')
-    shutil.copy(f'{MAIN_DIR}/tests/shared_surfaceArea.csv', f'{WORK_DIR}/tests')
+    #shutil.rmtree(WORK_DIR + '/tests', ignore_errors=True)
+    #os.makedirs(WORK_DIR + '/tests')
     click.echo('')
     if no_texture:
         t1 = "{0}/tests/test_collide_detect_react.py".format(MAIN_DIR)
@@ -439,7 +437,8 @@ def setPaths():
     ''' Requests user input for MATLAB & MTEX installation paths'''
     if not os.path.exists(WORK_DIR):
         raise FileNotFoundError('Package not properly installed, working directory is missing.')
-    with open(WORK_DIR + '/PATHS.json') as json_file:
+    pathjson = os.path.join(WORK_DIR, 'PATHS.json')
+    with open(pathjson) as json_file:
         path_dict = json.load(json_file)
         
     # For MATLAB executable
@@ -508,8 +507,8 @@ def setPaths():
     # Create a file in ".kanapy" folder that stores the paths
     if userpath1:        
         
-        path_dict['MATLABpath'] = userpath1
-        path_path = WORK_DIR + '/PATHS.json'
+        path_dict['MATLABpath'] = os.path.normpath(userpath1)
+        path_path = os.path.join(WORK_DIR, 'PATHS.json')
         
         if os.path.exists(path_path):
             os.remove(path_path)
@@ -525,7 +524,7 @@ def setPaths():
             # if not, install matlab engine
             click.echo('Installing matlab.engine...')
             ind = userpath1.find('bin')
-            path = '{}extern/engines/python'.format(userpath1[0:ind])
+            path = os.path.join(userpath1[0:ind], 'extern', 'engines', 'python')
             os.chdir(path) # remove bin/matlab from matlab path
             res = os.system('python -m pip install .')
             if res != 0:

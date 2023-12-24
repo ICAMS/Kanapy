@@ -22,10 +22,10 @@ from setuptools import setup, Extension, find_packages
 # create file structure for testing and MTEX support
 # not required otherwise
 MAIN_DIR = os.getcwd()  # directory in which repository is cloned
-WORK_DIR = os.path.expanduser('~') + '/.kanapy'  # working directory for temporary files
-path_path = WORK_DIR + '/PATHS.json'
+WORK_DIR = os.path.join(os.path.expanduser('~'), '.kanapy')  # working directory for temporary files
+path_path = os.path.join(WORK_DIR, 'PATHS.json')
 path_dict = {'MAIN_DIR': MAIN_DIR,
-             'MTEXpath': MAIN_DIR + '/libs/mtex',
+             'MTEXpath': os.path.join(MAIN_DIR, 'libs', 'mtex'),
              'MATLABpath': None}
 if os.path.exists(WORK_DIR):
     if os.path.exists(path_path):
@@ -41,7 +41,7 @@ with open(path_path, 'w') as outfile:
     
 setup(
     name='kanapy',
-    version='5.0.3',
+    version='5.0.4',
     author='Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Napat Vajragupta, Alexander Hartmaier',
     author_email='alexander.hartmaier@rub.de',
     classifiers=[        

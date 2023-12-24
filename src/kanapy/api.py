@@ -10,6 +10,7 @@ Python workflows.
 Authors: Alexander Hartmaier, Golsa Tolooei Eshlghi, Abhishek Biswas
 Institution: ICAMS, Ruhr University Bochum
 
+os.path.normpath(p)
 """
 import os
 import json
@@ -28,8 +29,8 @@ from kanapy.plotting import plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D, plot_output_stats
 
 
-class Microstructure:
-    '''Define class for synthetic microstructures'''
+class Microstructure(object):
+    """Define class for synthetic microstructures"""
 
     def __init__(self, descriptor=None, file=None, name='Microstructure'):
         self.name = name
@@ -50,7 +51,7 @@ class Microstructure:
 
             # Open the user input statistics file and read the data
             try:
-                with open(file) as json_file:
+                with open(os.path.normpath(file)) as json_file:
                     self.descriptor = json.load(json_file)
             except:
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
@@ -353,7 +354,7 @@ class Microstructure:
                 elmtSetDict = self.elmtSetDict
         if name is None:
             cwd = os.getcwd()
-            name = cwd + '/kanapy_{0}_{1}.inp'.format(nct, ntag)
+            name = os.path.normpath(cwd + f'/kanapy_{nct}_{ntag}.inp')
             if os.path.exists(name):
                 os.remove(name)  # remove old file if it exists
         export2abaqus(nodes, name, elmtSetDict, elmtDict,
@@ -738,6 +739,7 @@ class Microstructure:
                 file = path + 'px_{}grains_voxels.json'.format(self.Ngr)
             else:
                 file = path + self.name + '_voxels.json'
+        file = os.path.normpath(file)
         # metadata
         today = str(date.today())  # date
         owner = getpass.getuser()  # username
@@ -827,9 +829,10 @@ class Microstructure:
             path += '/'
         if file is None:
             if self.name == 'Microstructure':
-                file = path + 'px_{}grains_microstructure.pckl'.format(self.Ngr)
+                file = 'px_{}grains_microstructure.pckl'.format(self.Ngr)
             else:
-                file = path + self.name + '_microstructure.pckl'
-        with open(path + file, 'wb') as output:
+                file = self.name + '_microstructure.pckl'
+        file = os.path.normpath(path + file)
+        with open(file, 'wb') as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
         return

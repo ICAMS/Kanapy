@@ -772,6 +772,3 @@ class Octree(object):
             #     self.collisionsTest()
             for particle in self.particles:
                 particle.branches.append(self)
-
-                
-

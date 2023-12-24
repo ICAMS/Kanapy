@@ -26,8 +26,6 @@ def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr,
     -------
     grain_facesDict : TYPE
         DESCRIPTION.
-    gbDict : TYPE
-        DESCRIPTION.
     shared_area : TYPE
         DESCRIPTION.
 
@@ -67,10 +65,10 @@ def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr,
         return face
 
     def check_neigh(nodes, grains, margin):
-        ''' Check if close neighbors of new vertices are already in list
+        """ Check if close neighbors of new vertices are already in list
         # nodes: list of nodes identified as new vertices
         # grains: set of grains containing the nodes in elist
-        # margin: radius in which vertices will be united'''
+        # margin: radius in which vertices will be united"""
 
         # create set of all vertices of all involved grains
         vset = set()
@@ -193,7 +191,7 @@ def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr,
     for i in range(1, Ng + 7):
         grain_facesDict[i] = dict()
 
-    # genrate following objects:
+    # generate following objects:
     # outer_faces: {face_id's of outer voxel faces}  (potential GB facets)
     # face_nodes: {face_id: list with 4 nodes}
     # grain_facesDict: {grain_id: {face_id: list with 4 nodes}}

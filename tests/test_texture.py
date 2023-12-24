@@ -1,75 +1,36 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Tue Jul 12 23:26:59 2022
+Test for reading of EBSD map and reconstruction of texture.
 
+Author: Alexander Hartmaier
+ICAMS, Ruhr University Bochum, Germany
+December 2023
 """
 
 import os
-import shutil
-import json
 import numpy as np
 import pytest
-from kanapy import WORK_DIR, MAIN_DIR, MTEX_AVAIL
-            
+from kanapy import MAIN_DIR, MTEX_AVAIL, EBSDmap, createOriset
+
 @pytest.mark.skipif(MTEX_AVAIL == False, reason="Kanapy is not configured for texture analysis yet!")
-def test_analyzeTexture():
-           
-    pathFile = WORK_DIR + '/PATHS.json'
-    testDir = WORK_DIR + '/tests'
-    utFile = testDir + '/unitTest_ODF_MDF_reconstruction.m'
-    logFile = testDir + '/matlabUnitTest.log'
-    resultFile = testDir + '/matlabResults.txt'
-    
-    # Read the MATLAB & MTEX paths                 
-    with open(pathFile) as json_file:  
-        path_dict = json.load(json_file)
-        
-    if type(path_dict['MATLABpath']) != str:
-        raise ModuleNotFoundError('Matlab not installed properly.')
+def test_readEBSD():
+    fname = MAIN_DIR + '/tests/ebsd_316L_1000x1000.ang'  # name of ang file to be imported
+    # read EBSD map and evaluate statistics of microstructural features
+    ebsd = EBSDmap(os.path.normpath(fname), plot=False)
+    assert(len(ebsd.ms_data) == 1)
+    gs_param = ebsd.ms_data[0]['gs_param']
+    assert(np.abs(gs_param[0] - 0.99765477) < 1.e-5)
+    # get list of orientations for grains in RVE matching the ODF of the EBSD map
+    ori_rve = ebsd.calcORI(20)
+    assert(np.abs(ori_rve[0, 1] - 0.26179939) < 1.e-5)
+    # write Euler angles of grains into Abaqus input file
+    #knpy.writeAbaqusMat(0, ori_rve)
 
-    # Read the MATLAB unittest file and replace the MTEX path in it
-    with open (utFile,'r') as f:
-        data = f.readlines()
-    data[3] = '        r = {\'' + path_dict['MTEXpath'] + '\'};\n' 
-    with open (utFile,'w') as f:
-        data = f.writelines(data)
-                 
-    # Copy file temporarily into the 'tests/' folder
-    filelist = ['ODF_reduction_algo.m', 'splitMean.m', 'odfEst.m',
-                'mdf_Anglefitting_algo_MC.m']
-    for i in filelist:
-        shutil.copy2(MAIN_DIR+'/src/kanapy/'+i, testDir)
+def test_createORI():
+    Ngr = 10
+    ang = [0., 45., 0.]    # Euler angles for Goss texture
+    omega = 7.5         # kernel half-width
+    ori_rve = createOriset(Ngr, ang, omega)
+    assert (np.abs(ori_rve[4, 0] - 0.1121997376282069) < 1.e-5)
 
-    # Create a temporary matlab script file that runs Texture reduction algorithm      
-    TRfile = testDir + '/runUnitTest.m'  # Temporary '.m' file
-
-    with open (TRfile, 'w') as f:
-        f.write("result = runtests('{0}');\n".format(utFile))
-        f.write("T=table(result)\n")  
-        f.write("writetable(T,'{}','Delimiter',' ');\n".format(resultFile))    
-        f.write("exit;")
-
-    cmd1 = "{0} -nosplash -nodesktop -nodisplay -r ".format(path_dict['MATLABpath']) 
-    cmd2 = '"run(' + "'{}')".format(TRfile) + '; exit;"'
-    cmd = cmd1+cmd2
-    os.system(cmd + '> {}'.format(logFile))                   
-    
-    # Read the tabulated result written by MATLAB
-    tabRes = np.loadtxt(resultFile, delimiter=' ', skiprows=1, usecols=(1, 2, 3))
-    
-    # Report back to pytest 
-    passed = int(sum(tabRes[:, 0]))
-    # failed = int(sum(tabRes[:, 1]))
-    # incomplete = int(sum(tabRes[:, 2])
-    assert passed == np.shape(tabRes)[0]
-    
-    # Remove the files once done! 
-    os.remove(TRfile)
-    for i in filelist:
-        os.remove(testDir+'/'+i)
-    # Remove the MATLAB tabulated results file
-    os.remove(resultFile)
-  
-if __name__ == "__main__":   
+if __name__ == "__main__":
     pytest.main([__file__])

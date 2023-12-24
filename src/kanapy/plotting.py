@@ -217,7 +217,8 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
 def plot_output_stats(dataDict, gs_data=None, gs_param=None,
                       ar_data=None, ar_param=None, save_files=False):
     r"""
-    Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots the distributions
+    Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots
+    the distributions.
     """
     print('')
     print('Plotting input & output statistics')
