@@ -16,7 +16,7 @@ matname = 'Iron fcc'  # material name
 matnumber = 4         # material number of austenite in CP UMAT
 nvox = 30             # number of voxels per side
 box_length = 50       # side length of generated RVE
-periodic = True       # create RVE with periodic structure
+periodic = False      # create RVE with periodic structure
 
 
 if knpy.MTEX_AVAIL:
