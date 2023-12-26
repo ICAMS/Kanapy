@@ -8,7 +8,9 @@ from scipy.spatial.distance import euclidean
 from tqdm import tqdm
 
 
-def calc_polygons(rve, mesh, tol=1.e-3):
+def calcPolygons(RVE_data, nodes_v, elmtSetDict, elmtDict, Ngr,
+                 voxels, phases, vox_centerDict, tol=1.e-3,
+                 dual_phase=False):
     """
     Evaluates the grain volume and the grain boundary shared surface area
     between neighbouring grains in voxelized microstrcuture. Generate
@@ -22,7 +24,10 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     Returns
     -------
-    geometry : dict
+    grain_facesDict : TYPE
+        DESCRIPTION.
+    shared_area : TYPE
+        DESCRIPTION.
 
     ISSUES: for periodic structures, large grains with segments in both
     halves of the box and touching one boundary are split wrongly
@@ -41,10 +46,10 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         -------
         face : (3,2)-array of bool
         """
-        n1 = mesh.nodes[conn[0] - 1, :]
-        n2 = mesh.nodes[conn[1] - 1, :]
-        n3 = mesh.nodes[conn[2] - 1, :]
-        n4 = mesh.nodes[conn[3] - 1, :]
+        n1 = nodes_v[conn[0] - 1, :]
+        n2 = nodes_v[conn[1] - 1, :]
+        n3 = nodes_v[conn[2] - 1, :]
+        n4 = nodes_v[conn[3] - 1, :]
         face = np.zeros((3,2), dtype=bool)
         for i in range(3):
             h1 = np.abs(n1[i] - RVE_min[i]) < tol
@@ -71,7 +76,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             vset.update(vert[gid])
         # loop over all combinations
         for i, nid1 in enumerate(nodes):
-            npos1 = mesh.nodes[nid1 - 1]
+            npos1 = nodes_v[nid1 - 1]
             sur1 = [np.abs(npos1[0] - RVE_min[0]) < tol,
                     np.abs(npos1[1] - RVE_min[1]) < tol,
                     np.abs(npos1[2] - RVE_min[2]) < tol,
@@ -79,7 +84,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
                     np.abs(npos1[1] - RVE_max[1]) < tol,
                     np.abs(npos1[2] - RVE_max[2]) < tol]
             for nid2 in vset:
-                npos2 = mesh.nodes[nid2 - 1]
+                npos2 = nodes_v[nid2 - 1]
                 sur2 = [np.abs(npos2[0] - RVE_min[0]) < tol,
                         np.abs(npos2[1] - RVE_min[1]) < tol,
                         np.abs(npos2[2] - RVE_min[2]) < tol,
@@ -112,9 +117,12 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             DESCRIPTION.
 
         """
-        v0 = np.minimum(int(pos[0] / voxel_res[0]), rve.dim[0] - 1)
-        v1 = np.minimum(int(pos[1] / voxel_res[1]), rve.dim[1] - 1)
-        v2 = np.minimum(int(pos[2] / voxel_res[2]), rve.dim[2] - 1)
+        v0 = np.minimum(int(pos[0] / RVE_data['Voxel_resolutionX']),
+                        RVE_data['Voxel_numberX'] - 1)
+        v1 = np.minimum(int(pos[1] / RVE_data['Voxel_resolutionY']),
+                        RVE_data['Voxel_numberY'] - 1)
+        v2 = np.minimum(int(pos[2] / RVE_data['Voxel_resolutionZ']),
+                        RVE_data['Voxel_numberZ'] - 1)
         return (v0, v1, v2)
 
     def tet_in_grain(tet, vertices):
@@ -129,10 +137,10 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         -------
 
         """
-        return geometry['Vertices'][tet[0]] in vertices and \
-               geometry['Vertices'][tet[1]] in vertices and \
-               geometry['Vertices'][tet[2]] in vertices and \
-               geometry['Vertices'][tet[3]] in vertices
+        return RVE_data['Vertices'][tet[0]] in vertices and \
+               RVE_data['Vertices'][tet[1]] in vertices and \
+               RVE_data['Vertices'][tet[2]] in vertices and \
+               RVE_data['Vertices'][tet[3]] in vertices
 
     def vox_in_tet(vox_, tet_):
         """
@@ -149,14 +157,14 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             Voxel lies in tetrahedron
         """
 
-        v_pos = mesh.vox_center_dict[vox_]
+        v_pos = vox_centerDict[vox_]
         contained = True
         for node in tet_:
-            n_pos = geometry['Points'][node]
+            n_pos = RVE_data['Points'][node]
             hh = set(tet_)
             hh.remove(node)
             ind_ = list(hh)
-            f_pos = geometry['Points'][ind_]
+            f_pos = RVE_data['Points'][ind_]
             ctr_ = np.mean(f_pos, axis=0)
             normal = np.cross(f_pos[1, :] - f_pos[0, :], f_pos[2, :] - f_pos[0, :])
             hn = np.linalg.norm(normal)
@@ -171,29 +179,26 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         return contained
 
     # define constants
-    voxel_res = np.divide(rve.size, rve.dim)
-    voxel_size = voxel_res[0]
-    RVE_min = np.amin(mesh.nodes, axis=0)
+    voxel_size = RVE_data['Voxel_resolutionX']
+    RVE_min = np.amin(nodes_v, axis=0)
     if np.any(RVE_min > 1.e-3) or np.any(RVE_min < -1.e-3):
         raise ValueError('Irregular RVE geometry: RVE_min = {}'.format(RVE_min))
-    RVE_max = np.amax(mesh.nodes, axis=0)
-    Ng_max = np.amax(list(mesh.grain_dict.keys()))  # highest grain number
-    Ngr = len(mesh.grain_dict.keys())  # number of grains
+    RVE_max = np.amax(nodes_v, axis=0)
+    Ng = np.amax(list(elmtSetDict.keys()))  # highest grain number
 
     # create dicts for GB facets, including fake facets at surfaces
-    geometry = dict()
     grain_facesDict = dict()  # {Grain: faces}
-    for i in range(1, Ng_max + 7):
+    for i in range(1, Ng + 7):
         grain_facesDict[i] = dict()
 
     # generate following objects:
     # outer_faces: {face_id's of outer voxel faces}  (potential GB facets)
     # face_nodes: {face_id: list with 4 nodes}
     # grain_facesDict: {grain_id: {face_id: list with 4 nodes}}
-    for gid, elset in mesh.grain_dict.items():
+    for gid, elset in elmtSetDict.items():
         outer_faces = set()
         face_nodes = dict()
-        nodeConn = [mesh.voxel_dict[el] for el in elset]  # Nodal connectivity of a voxel
+        nodeConn = [elmtDict[el] for el in elset]  # Nodal connectivity of a voxel
 
         # For each voxel, re-create its 6 faces
         for nc in nodeConn:
@@ -225,14 +230,14 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             for i in range(3):
                 for j in range(2):
                     if fob[i, j]:
-                        grain_facesDict[Ng_max + 1 + 2*i + j][of] = conn
+                        grain_facesDict[Ng + 1 + 2*i + j][of] = conn
 
     # Find all combinations of grains to check for common area
     # analyse grain_facesDict and create object:
     # gbDict: {f{gid1}_{gid2}: list with 4 nodes shared by grains #gid1 and #gid2}
     # shared_area: [[gid1, gid2, GB area]]
     shared_area = []  # GB area
-    gbDict = dict()  # voxel facets on GB
+    gbDict = dict()  # voxel factes on GB
     # Find the shared area and generate gbDict for all pairs of neighboring grains
     combis = list(itertools.combinations(sorted(grain_facesDict.keys()), 2))
     for cb in combis:
@@ -242,10 +247,10 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             [ind.update(grain_facesDict[cb[0]][key]) for key in finter]
             key = 'f{}_{}'.format(cb[0], cb[1])
             gbDict[key] = ind
-            if cb[0] <= Ng_max and cb[1] <= Ng_max:
+            if cb[0] <= Ng and cb[1] <= Ng:
                 # grain facet is not on boundary
                 try:
-                    hull = ConvexHull(mesh.nodes[list(ind), :])
+                    hull = ConvexHull(nodes_v[list(ind), :])
                     shared_area.append([cb[0], cb[1], hull.area])
                 except:
                     sh_area = len(finter) * (voxel_size ** 2)
@@ -260,6 +265,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     # grains_of_vert: {node_number: [grain_id's connected to vertex]}
 
     # for periodic structures vertices at surfaces should be mirrored!!!
+
     vert = dict()
     grains_of_vert = dict()
     for i in grain_facesDict.keys():
@@ -279,7 +285,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
                     # mulitple nodes in intersection
                     # identify end points of triple or quadruple line
                     edge = np.array(list(finter), dtype=int)
-                    rn = mesh.nodes[edge - 1]
+                    rn = nodes_v[edge - 1]
                     dmax = 0.
                     for j, rp0 in enumerate(rn):
                         for k, rp1 in enumerate(rn[j + 1:, :]):
@@ -291,17 +297,17 @@ def calc_polygons(rve, mesh, tol=1.e-3):
                 gr_set = set()
                 j = key0.index('_')
                 igr = int(key0[1:j])
-                if igr <= Ng_max:
+                if igr <= Ng:
                     gr_set.add(igr)
                 igr = int(key0[j + 1:])
-                if igr <= Ng_max:
+                if igr <= Ng:
                     gr_set.add(igr)
                 j = key1.index('_')
                 igr = int(key1[1:j])
-                if igr <= Ng_max:
+                if igr <= Ng:
                     gr_set.add(igr)
                 igr = int(key1[j + 1:])
-                if igr <= Ng_max:
+                if igr <= Ng:
                     gr_set.add(igr)
                 # check if any neighboring nodes are already in list of
                 # vertices. If yes, replace new vertex with existing one
@@ -317,8 +323,8 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     # Store grain-based information and do Delaunay tesselation
     # Sort grains w.r.t number of vertices
-    num_vert = [len(vert[igr]) for igr in mesh.grain_dict.keys()]
-    glist = np.array(list(mesh.grain_dict.keys()), dtype=int)
+    num_vert = [len(vert[igr]) for igr in elmtSetDict.keys()]
+    glist = np.array(list(elmtSetDict.keys()), dtype=int)
     glist = list(glist[np.argsort(num_vert)])
     assert len(glist) == Ngr
 
@@ -354,34 +360,33 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         add_vert = vert[igr].difference(set(vertices))
         grains[igr] = dict()
         grains[igr]['Vertices'] = np.array(list(vert[igr]), dtype=int) - 1
-        grains[igr]['Points'] = mesh.nodes[grains[igr]['Vertices']]
+        grains[igr]['Points'] = nodes_v[grains[igr]['Vertices']]
         center = np.mean(grains[igr]['Points'], axis=0)
         grains[igr]['Center'] = center
         # initialize values to be incrementally updated later
         grains[igr]['Simplices'] = []
         grains[igr]['Volume'] = 0.
         grains[igr]['Area'] = 0.
-        grains[igr]['Phase'] = mesh.grain_phase_dict[igr]
 
         # Construct incremental Delaunay tesselation of
         # structure given by vertices
         vlist = np.array(list(add_vert), dtype=int) - 1
         vertices = np.append(vertices, list(add_vert))
         if step == 0:
-            tetra = Delaunay(mesh.nodes[vlist], incremental=True)
+            tetra = Delaunay(nodes_v[vlist], incremental=True)
         else:
             try:
-                tetra.add_points(mesh.nodes[vlist])
+                tetra.add_points(nodes_v[vlist])
             except:
                 #print(f'Incremental Delaunay tesselation failed for grain {step + 1}. Restarting Delaunay process from there')
                 vlist = np.array(vertices, dtype=int) - 1
-                tetra = Delaunay(mesh.nodes[vlist], incremental=True)
+                tetra = Delaunay(nodes_v[vlist], incremental=True)
 
     tetra.close()
     # store global result of tesselation
-    geometry['Vertices'] = np.array(vertices, dtype=int) - 1
-    geometry['Points'] = tetra.points
-    geometry['Simplices'] = tetra.simplices
+    RVE_data['Vertices'] = np.array(vertices, dtype=int) - 1
+    RVE_data['Points'] = tetra.points
+    RVE_data['Simplices'] = tetra.simplices
 
     # assign simplices (tetrahedra) to grains
     Ntet = len(tetra.simplices)
@@ -390,9 +395,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     tet_to_grain = np.zeros(Ntet, dtype=int)
     for i, tet in tqdm(enumerate(tetra.simplices)):
         ctr = np.mean(tetra.points[tet], axis=0)
-        igr = mesh.grains[get_voxel(ctr)]
-        if (igr == 0) and (0 not in grains.keys()):
-            continue  # special case of porosity, where grain 0 is assigned to pores
+        igr = voxels[get_voxel(ctr)]
         # test if all vertices of tet belong to that grain
         if not tet_in_grain(tet, grains[igr]['Vertices']):
             # try to find a neighboring grain with all vertices of tet
@@ -413,7 +416,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
                 num_vox = []
                 for ngr in neigh_list:
                     nv = 0
-                    for vox in mesh.grain_dict[ngr]:
+                    for vox in elmtSetDict[ngr]:
                         if vox_in_tet(vox, tet):
                             nv += 1
                     num_vox.append(nv)
@@ -451,17 +454,17 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     for key in facet_keys:
         hh = key.split('_')
         facets.append([int(hh[0]), int(hh[1]), int(hh[2])])
-    geometry['Facets'] = np.array(facets)
+    RVE_data['Facets'] = np.array(facets)
 
-    for igr in mesh.grain_dict.keys():
+    for igr in elmtSetDict.keys():
         if grains[igr]['Volume'] < 1.e-5:
             warnings.warn(f'No tet assigned to grain {igr}.')
             if grains[igr]['Simplices']:
                 nf = len(grains[igr]['Simplices'])
                 warnings.warn(f'Grain {igr} contains {nf} tets, but no volume')
-        # Find the Euclidean distance to all surface points from the center
+        # Find the euclidean distance to all surface points from the center
         dists = [euclidean(grains[igr]['Center'], pt) for pt in
-                 mesh.nodes[grains[igr]['Vertices']]]
+                 nodes_v[grains[igr]['Vertices']]]
         if len(dists) == 0:
             warnings.warn(f'Grain {igr} with few vertices: {grains[igr]["Vertices"]}')
             dists = [0.]
@@ -469,39 +472,48 @@ def calc_polygons(rve, mesh, tol=1.e-3):
                                       / (4 * np.pi)) ** (1 / 3)
         grains[igr]['majDia'] = 2.0 * np.amax(dists)
         grains[igr]['minDia'] = 2.0 * np.amin(dists)
+        if dual_phase:
+            grains[igr]['PhaseID'] = phases['Phase number'][igr - 1]
+            grains[igr]['PhaseName'] = phases['Phase name'][igr - 1]
 
-    geometry['Grains'] = grains
-    geometry['GBnodes'] = gbDict
-    geometry['GBarea'] = shared_area
-    geometry['GBfaces'] = grain_facesDict
+    RVE_data['Grains'] = grains
+    RVE_data['GBnodes'] = gbDict
+    RVE_data['GBarea'] = shared_area
     print('Finished generating polyhedral hulls for grains.')
-    vref = np.prod(rve.size)
+    vref = RVE_data['RVE_sizeX'] * \
+           RVE_data['RVE_sizeY'] * \
+           RVE_data['RVE_sizeZ']
     vtot = 0.
     vtot_vox = 0.
-    vunit = vref/np.prod(rve.dim)
-
+    vunit = RVE_data['Voxel_resolutionX'] * \
+            RVE_data['Voxel_resolutionY'] * \
+            RVE_data['Voxel_resolutionZ']
     vol_mae = 0.
-    for igr, grain in geometry['Grains'].items():
+    for igr, grain in RVE_data['Grains'].items():
         vg = grain['Volume']
         vtot += vg
-        vvox = np.count_nonzero(mesh.grains == igr) * vunit
+        vvox = np.count_nonzero(voxels == igr) * vunit
         vtot_vox += vvox
         vol_mae += np.abs(1. - vg / vvox)
+        #print(f'igr: {igr}, vol={vg}, vox={vvox}')
     vol_mae /= Ngr
     if np.abs(vtot - vref) > 1.e-5:
         warnings.warn(f'Inconsistent volume of polyhedral grains: {vtot}, Reference volume: {vref}')
     print(f'Mean absolute error of polyhedral vs. voxel volume of grains: {vol_mae}')
-    return geometry
+
+    return grain_facesDict, shared_area
 
 
-def get_stats(particle_data, geometry, units):
+def get_stats(particle_data, Ngr, RVE_data, nphase, 
+              dual_phase=False, phase_list=None):
     """
     Compare the geometries of particles used for packing and the resulting
     grains.
 
     Parameters
     ----------
-
+    save_files : bool, optional
+        Indicate if output is written to file. The default is False.
 
     Returns
     -------
@@ -509,52 +521,75 @@ def get_stats(particle_data, geometry, units):
         Statistical information about particle and grain geometries.
 
     """
-    nphase = len(particle_data)
-    # convert particle geometries to dicts
-    par_eqDia = dict()
-    par_majDia = dict()
-    par_minDia = dict()
-    for ip, part in enumerate(particle_data):
-        # Analyse geometry of particles used for packing algorithm
-        par_eqDia[ip] = np.array(part['Equivalent_diameter'])
-        if part['Type'] == 'Elongated':
-            par_majDia[ip] = np.array(part['Major_diameter'])
-            par_minDia[ip] = np.array(part['Minor_diameter1'])
+    # Analyse geometry of particles used for packing algorithm
+    par_eqDia = np.array(particle_data['Equivalent_diameter'])
+    if particle_data['Type'] == 'Elongated':
+        par_majDia = np.array(particle_data['Major_diameter'])
+        par_minDia = np.array(particle_data['Minor_diameter1'])
 
-    # convert grain geometries to dicts
-    grain_eqDia = dict()
-    grain_majDia = dict()
-    grain_minDia = dict()
-    for i in range(nphase):
-        grain_eqDia[i] = []
-        grain_majDia[i] = []
-        grain_minDia[i] = []
-    for i, igr in enumerate(geometry['Grains'].keys()):
-        ip = geometry['Grains'][igr]['Phase']
-        grain_eqDia[ip].append(geometry['Grains'][igr]['eqDia'])
-        if part['Type'] == 'Elongated':
-            grain_minDia[ip].append(geometry['Grains'][igr]['minDia'])
-            grain_majDia[ip].append(geometry['Grains'][igr]['majDia'])
+    # Analyse grain geometries
+    grain_eqDia = np.zeros(Ngr)
+    grain_majDia = np.zeros(Ngr)
+    grain_minDia = np.zeros(Ngr)
+    for i, igr in enumerate(RVE_data['Grains'].keys()):
+        grain_eqDia[i] = RVE_data['Grains'][igr]['eqDia']
+        if particle_data['Type'] == 'Elongated':
+            grain_minDia[i] = RVE_data['Grains'][igr]['minDia']
+            grain_majDia[i] = RVE_data['Grains'][igr]['majDia']
 
     output_data_list = []
-    for ip in range(nphase):
+    if dual_phase:
         # Compute the L1-error between particle and grain geometries for phases
-        error = l1_error_est(par_eqDia[ip], grain_eqDia[ip])
-        print('\n    L1 error phase {} between particle and grain geometries: {}' \
-              .format(ip, round(error, 5)))
+        part_PhaseID = np.array(phase_list)
+        grain_PhaseID = np.zeros(Ngr)
+        grain_PhaseName = np.zeros(Ngr).astype(str)
+        for i, igr in enumerate(RVE_data['Grains'].keys()):
+            grain_PhaseID[i] = np.array(RVE_data['Grains'][igr]['PhaseID'])
+            grain_PhaseName[i] = RVE_data['Grains'][igr]['PhaseName']
+        for iph in range(nphase):
+            ind_grn = np.nonzero(grain_PhaseID == iph)
+            ind_par = np.nonzero(part_PhaseID == iph)
+            
+            error = l1_error_est(par_eqDia[ind_par], grain_eqDia[ind_grn])
+            print('\n    L1 error phase {} between particle and grain geometries: {}' \
+                  .format(iph, round(error, 5)))
+
+            # Create dictionaries to store the data generated
+            output_data = {'Number_of_particles/grains': int(len(par_eqDia[ind_par])),
+                           'Grain type': particle_data['Type'],
+                           'Unit_scale': RVE_data['Units'],
+                           'L1-error': error,
+                           'Particle_Equivalent_diameter': par_eqDia[ind_par],
+                           'Grain_Equivalent_diameter': grain_eqDia[ind_grn]}
+            if particle_data['Type'] == 'Elongated':
+                output_data['Particle_Major_diameter'] = par_majDia[ind_par]
+                output_data['Particle_Minor_diameter'] = par_minDia[ind_par]
+                output_data['Grain_Major_diameter'] = grain_majDia[ind_grn]
+                output_data['Grain_Minor_diameter'] = grain_minDia[ind_grn]
+                output_data['PhaseID'] = grain_PhaseID[ind_grn]
+                output_data['PhaseName'] = grain_PhaseName[ind_grn]
+            output_data_list.append(output_data)
+
+    else:
+        # Compute the L1-error between particle and grain geometries
+        error = l1_error_est(par_eqDia, grain_eqDia)
+        print('\n    L1 error between particle and grain geometries: {}' \
+              .format(round(error, 5)))
+
         # Create dictionaries to store the data generated
-        output_data = {'Number': int(len(par_eqDia[ip])),
-                       'Grain_type': particle_data[ip]['Type'],
-                       'Unit_scale': units,
+        output_data = {'Number_of_particles/grains': int(len(par_eqDia)),
+                       'Grain type': particle_data['Type'],
+                       'Unit_scale': RVE_data['Units'],
                        'L1-error': error,
-                       'Particle_Equivalent_diameter': par_eqDia[ip],
-                       'Grain_Equivalent_diameter': np.array(grain_eqDia[ip])}
-        if particle_data[ip]['Type'] == 'Elongated':
-            output_data['Particle_Major_diameter'] = par_majDia[ip]
-            output_data['Particle_Minor_diameter'] = par_minDia[ip]
-            output_data['Grain_Major_diameter'] = np.array(grain_majDia[ip])
-            output_data['Grain_Minor_diameter'] = np.array(grain_minDia[ip])
+                       'Particle_Equivalent_diameter': par_eqDia,
+                       'Grain_Equivalent_diameter': grain_eqDia}
+        if particle_data['Type'] == 'Elongated':
+            output_data['Particle_Major_diameter'] = par_majDia
+            output_data['Particle_Minor_diameter'] = par_minDia
+            output_data['Grain_Major_diameter'] = grain_majDia
+            output_data['Grain_Minor_diameter'] = grain_minDia
         output_data_list.append(output_data)
+
     return output_data_list
 
 

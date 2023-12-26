@@ -19,70 +19,31 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 
-from kanapy.grains import calc_polygons, get_stats
-from kanapy.entities import Simulation_Box
+from kanapy.grains import calcPolygons, get_stats
 from kanapy.input_output import export2abaqus
-from kanapy.initializations import RVE_creator, mesh_creator
+from kanapy.initializations import particleStatGenerator, RVEcreator
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
-from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
+from kanapy.plotting import plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D, plot_output_stats
 
 
-"""
-Class grain(number)
-Attributes:
-•	phase
-•	voxels
-•	facets
-•	vertices
-•	points
-•	center
-•	simplices
-•	particle
-•	eq_dia
-•	maj_dia
-•	min_dia
-•	volume
-•	area
-
-Class geometry()
-Attributes:
-•	vertices
-•	points
-•	simplices
-•	facets
-•	GBnodes
-•	GBarea
-
-Class particle(number)
-Attributes:
-•	equiv_dia
-•	maj_dia
-•	min_dia
-•	phase
-•	…
-
-Class phase(number)
-Attributes:
-•	particles (list of numbers)
-•	grains (list of numbers)
-"""
 class Microstructure(object):
     """Define class for synthetic microstructures"""
 
     def __init__(self, descriptor=None, file=None, name='Microstructure'):
         self.name = name
-        self.ngrains = None
-        self.nparticles = None
-        self.nphases = None
-        self.porosity = None
-        self.rve = None
+        self.particle_data = None
+        self.RVE_data = None
+        self.simulation_data = None
         self.particles = None
-        self.geometry = None
         self.simbox = None
-        self.mesh = None
+        self.nodes_s = None
+        self.nodes_v = None
+        self.voxels = None
+        self.grain_facesDict = None
+        self.elmtSetDict = None
         self.res_data = None
         if descriptor is None:
             if file is None:
@@ -99,115 +60,159 @@ class Microstructure(object):
         else:
             if type(descriptor) is not list:
                 self.descriptor = [descriptor]
-                self.nphases = 1
             else:
                 self.descriptor = descriptor
-                self.nphases = len(self.descriptor)
-                if self.nphases > 2:
-                    raise ValueError(f'Kanapy currently only supports 2 phases, but Nphase={self.nphases}')
             if file is not None:
                 print('WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
-        return
 
     """
     --------        Routines for user interface        --------
     """
 
-    def init_RVE(self, descriptor=None, nsteps=1000, porosity=None):
-        """
-        Creates particle distribution inside simulation box (RVE) based on
-        the data provided in the input file.
-
-        Parameters
-        ----------
-        descriptor
-        nsteps
-        porous
-        save_files
-
-        Returns
-        -------
-
-        """
+    def init_stats(self, descriptor=None, gs_data=None, ar_data=None,
+                   porous=False, save_files=False):
+        """ Generates particle statistics based on the data provided in the 
+        input file."""
         if descriptor is None:
             descriptor = self.descriptor
         if type(descriptor) is not list:
             descriptor = [descriptor]
-        elif porosity is not None:
-            descriptor = descriptor[0:1]  # second phase will be treated as gaps in first phase
-            self.porosity = porosity
+        self.nphase = len(descriptor)
+        if self.nphase > 2:
+            raise ValueError(f'Kanapy currently only supports 2 phases, but Nphase={self.nphase}')
+        if porous:
+            descriptor = descriptor[0:1]
+        if type(gs_data) is not list:
+            gs_data = [gs_data]*len(descriptor)
+        if type(ar_data) is not list:
+            ar_data = [ar_data]*len(descriptor)
 
-        # initialize RVE, including mesh dimensions and particle distribution
-        self.rve = RVE_creator(descriptor, nsteps=nsteps)
-        self.nparticles = self.rve.nparticles
+        for i, des in enumerate(descriptor):
+            particleStatGenerator(des, gs_data=gs_data[i], ar_data=ar_data[i],
+                                  save_files=save_files)
 
-        # store geometry in simbox object
-        self.simbox = Simulation_Box(self.rve.size)
+    def init_RVE(self, descriptor=None, nsteps=1000, porous=False,
+                 save_files=False):
+        """ Creates particle distribution inside simulation box (RVE) based on
+        the data provided in the input file."""
+        if descriptor is None:
+            descriptor = self.descriptor
+        if type(descriptor) is not list:
+            descriptor = [descriptor]
+        elif porous:
+            descriptor = descriptor[0:1]
+        for i, des in enumerate(descriptor):
+            particle_data, phases, RVE_data, simulation_data = \
+                RVEcreator(des, nsteps=nsteps, save_files=save_files)
+            Ngr = particle_data['Number']
+            if i == 0:
+                self.Ngr = Ngr
+                self.particle_data = particle_data
+                self.phases = phases
+                self.RVE_data = RVE_data
+                self.simulation_data = simulation_data
+            else:
+                if des['Grain type'] == 'Elongated':
+                    self.Ngr += Ngr
+                    """This needs to be stored in a phase-specific way"""
+                    self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + \
+                                                                particle_data['Equivalent_diameter']
+                    self.particle_data['Major_diameter'] = self.particle_data['Major_diameter'] + particle_data[
+                        'Major_diameter']
+                    self.particle_data['Minor_diameter1'] = self.particle_data['Minor_diameter1'] + particle_data[
+                        'Minor_diameter1']
+                    self.particle_data['Minor_diameter2'] = self.particle_data['Minor_diameter2'] + particle_data[
+                        'Minor_diameter2']
+                    self.particle_data['Number'] = self.particle_data['Number'] + particle_data['Number']
+                    self.phases['Phase name'] = self.phases['Phase name'] + phases['Phase name']
+                    self.phases['Phase number'] = self.phases['Phase number'] + phases['Phase number']
+                    self.particle_data['Tilt angle'] = self.particle_data['Tilt angle'] + particle_data['Tilt angle']
+                elif des['Grain type'] == 'Equiaxed':
+                    self.Ngr = self.Ngr + Ngr
+                    self.particle_data['Equivalent_diameter'] = self.particle_data['Equivalent_diameter'] + \
+                                                                particle_data['Equivalent_diameter']
+                    self.particle_data['Number'] = self.particle_data['Number'] + particle_data['Number']
+                    self.phases['Phase name'] = self.phases['Phase name'] + phases['Phase name']
+                    self.phases['Phase number'] = self.phases['Phase number'] + phases['Phase number']
+            # if both Equiaxed and Elongated grains are present at the same time, it should be adjusted.
 
-        # initialize voxel structure (= mesh)
-        self.mesh = mesh_creator(self.rve.dim)
-        self.mesh.create_voxels(self.simbox)
-
-
-    def pack(self, particle_data=None, RVE_data=None,
+    def pack(self, particle_data=None, RVE_data=None, simulation_data=None,
              k_rep=0.0, k_att=0.0, vf=None, save_files=False):
 
         """ Packs the particles into a simulation box."""
         if particle_data is None:
-            particle_data = self.rve.particle_data
+            particle_data = self.particle_data
             if particle_data is None:
                 raise ValueError('No particle_data in pack. Run create_RVE first.')
+        if RVE_data is None:
+            RVE_data = self.RVE_data
+        if simulation_data is None:
+            simulation_data = self.simulation_data
         self.particles, self.simbox = \
-            packingRoutine(particle_data, self.rve.periodic,
-                           self.rve.packing_steps, self.simbox,
+            packingRoutine(particle_data, self.phases, RVE_data,
+                           simulation_data,
                            k_rep=k_rep, k_att=k_att, vf=vf,
                            save_files=save_files)
 
-    def voxelize(self, particles=None):
+    def voxelize(self, particle_data=None, RVE_data=None, particles=None,
+                 simbox=None, dual_phase=False, vf=None,
+                 save_files=False):
         """ Generates the RVE by assigning voxels to grains."""
+        if particle_data is None:
+            particle_data = self.particle_data
+        if RVE_data is None:
+            RVE_data = self.RVE_data
         if particles is None:
             particles = self.particles
             if particles is None:
                 raise ValueError('No particles in voxelize. Run pack first.')
+        if simbox is None:
+            simbox = self.simbox
+        self.nodes_v, self.elmtDict, self.elmtSetDict, \
+        self.vox_centerDict, self.voxels, self.voxels_phase = \
+            voxelizationRoutine(particle_data, RVE_data, particles, simbox,
+                                dual_phase=dual_phase, vf=vf,
+                                save_files=save_files)
+        Ngr = len(self.elmtSetDict.keys())
+        if self.Ngr != Ngr:
+            warnings.warn(f'Number of grains has changed from {self.Ngr} to {Ngr} during voxelization.')
+            self.Ngr = Ngr
 
-        self.mesh = \
-            voxelizationRoutine(particles, self.mesh, porosity=self.porosity)
-        Ngr = len(self.mesh.grain_dict.keys())
-        if self.nparticles != Ngr:
-            warnings.warn(f'Number of grains has changed from {self.nparticles} to {Ngr} during voxelization.')
-        self.ngrains = Ngr
-        self.Ngr = Ngr  # legacy notation
-
-    def smoothen(self, nodes_v=None, voxel_dict=None, grain_dict=None,
+    def smoothen(self, nodes_v=None, elmtDict=None, elmtSetDict=None,
                  save_files=False):
         """ Generates smoothed grain boundary from a voxelated mesh."""
         if nodes_v is None:
-            nodes_v = self.mesh.nodes
+            nodes_v = self.nodes_v
             if nodes_v is None:
                 raise ValueError('No nodes_v in smoothen. Run voxelize first.')
-        if voxel_dict is None:
-            voxel_dict = self.mesh.voxel_dict
-        if grain_dict is None:
-            grain_dict = self.mesh.grain_dict
-        self.mesh.nodes_smooth, grain_facesDict = \
-            smoothingRoutine(nodes_v, voxel_dict, grain_dict, save_files=save_files)
-        self.geometry['GBfaces'] = grain_facesDict
+        if elmtDict is None:
+            elmtDict = self.elmtDict
+        if elmtSetDict is None:
+            elmtSetDict = self.elmtSetDict
+        self.nodes_s, self.grain_facesDict = \
+            smoothingRoutine(nodes_v, elmtDict, elmtSetDict,
+                             save_files=save_files)
 
-    def generate_grains(self):
+    def generate_grains(self, save_files=False, dual_phase=False):
         """ Writes out the particle- and grain diameter attributes for 
         statistical comparison. Final RVE grain volumes and shared grain
         boundary surface areas info are written out as well."""
 
-        if self.mesh.nodes is None:
+        if self.nodes_v is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-        if self.mesh.phases is None:
+        if self.phases is None:
             raise ValueError('No phases defined.')
 
-        self.geometry = \
-            calc_polygons(self.rve, self.mesh)  # updates RVE_data
-        if self.rve.particle_data is not None:
+        self.grain_facesDict, self.shared_area = \
+            calcPolygons(self.RVE_data, self.nodes_v, self.elmtSetDict,
+                         self.elmtDict, self.Ngr, self.voxels, self.phases,
+                         self.vox_centerDict,
+                         dual_phase=dual_phase)  # updates RVE_data
+        if self.particle_data is not None:
             self.res_data = \
-                get_stats(self.rve.particle_data, self.geometry, self.rve.units)
+                get_stats(self.particle_data, self.Ngr, self.RVE_data,
+                          self.nphase, dual_phase=dual_phase,
+                          phase_list=self.phases['Phase number'])
 
     """
     --------     Plotting methods          --------
@@ -219,29 +224,28 @@ class Microstructure(object):
             raise ValueError('No particle to plot. Run pack first.')
         plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase)
 
-    def plot_voxels(self, sliced=True, dual_phase=False, porous=None,
+    def plot_voxels(self, sliced=True, dual_phase=False, porous=False,
                     cmap='prism'):
         """ Generate 3D plot of grains in voxelized microstructure. """
-        if self.mesh.grains is None:
+        if self.voxels is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
-        if porous is None:
-            porous = bool(self.porosity)
-        plot_voxels_3D(self.mesh.grains, phases=self.mesh.phases, Ngr=self.ngrains,
+        plot_voxels_3D(self.voxels, self.voxels_phase, Ngr=self.Ngr,
                        sliced=sliced, dual_phase=dual_phase, porous=porous,
                        cmap=cmap)
 
-    def plot_grains(self, geometry=None, cmap='prism', alpha=0.4,
+    def plot_grains(self, rve=None, cmap='prism', alpha=0.4,
                     ec=[0.5, 0.5, 0.5, 0.1], dual_phase=False):
         """ Plot polygonalized microstructure"""
-        if geometry is None:
-            geometry = self.geometry
-        if geometry is None:
-            raise ValueError('No polygons for grains defined. Run analyse_RVE first')
-        plot_polygons_3D(geometry, cmap=cmap, alpha=alpha, ec=ec,
+        if rve is None:
+            if 'Grains' in self.RVE_data.keys():
+                rve = self.RVE_data
+            else:
+                raise ValueError('No polygons for grains defined. Run analyse_RVE first')
+        plot_polygons_3D(rve, cmap=cmap, alpha=alpha, ec=ec,
                          dual_phase=dual_phase)
 
     def plot_stats(self, data=None, gs_data=None, gs_param=None,
-                   ar_data=None, ar_param=None,
+                   ar_data=None, ar_param=None, dual_phase=False,
                    save_files=False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
@@ -251,27 +255,11 @@ class Microstructure(object):
                 raise ValueError('No microstructure data created yet. Run analyse_RVE first.')
         elif type(data) != list:
             data = [data]
-        plot_output_stats(data, gs_data=gs_data, gs_param=gs_param,
-                    ar_data=ar_data, ar_param=ar_param,
-                    save_files=save_files)
+        for dat in data:
+            plot_output_stats(dat, gs_data=gs_data, gs_param=gs_param,
+                              ar_data=ar_data, ar_param=ar_param,
+                              save_files=save_files)
 
-    def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
-                   porous=False, save_files=False):
-        """ Plots initial statistical microstructure descriptors ."""
-        if descriptor is None:
-            descriptor = self.descriptor
-        if type(descriptor) is not list:
-            descriptor = [descriptor]
-        if porous:
-            descriptor = descriptor[0:1]
-        if type(gs_data) is not list:
-            gs_data = [gs_data]*len(descriptor)
-        if type(ar_data) is not list:
-            ar_data = [ar_data]*len(descriptor)
-
-        for i, des in enumerate(descriptor):
-            plot_init_stats(des, gs_data=gs_data[i], ar_data=ar_data[i],
-                                  save_files=save_files)
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):
         """
@@ -351,7 +339,10 @@ class Microstructure(object):
             raise ValueError(f'Units must be either "mm" or "um", not {units}.')
         if dual_phase:
             nct = '2phases'
-            elmt_list = self.mesh.phases.reshape(self.mesh.nvox, order='F')
+            Nvox = self.RVE_data['Voxel_numberX'] *\
+                   self.RVE_data['Voxel_numberY'] *\
+                   self.RVE_data['Voxel_numberZ']
+            elmt_list = self.voxels_phase.reshape(Nvox, order='F')
             ind1 = np.nonzero(elmt_list==0)[0]
             ind2 = np.nonzero(elmt_list==1)[0]
             elmtSetDict = {
@@ -360,7 +351,7 @@ class Microstructure(object):
         else:
             nct = '{0}grains'.format(len(elmtSetDict))
             if elmtSetDict is None:
-                elmtSetDict = self.grain_dict
+                elmtSetDict = self.elmtSetDict
         if name is None:
             cwd = os.getcwd()
             name = os.path.normpath(cwd + f'/kanapy_{nct}_{ntag}.inp')
@@ -668,14 +659,14 @@ class Microstructure(object):
                 file = self.name + '.stl'
         with open(file, 'w') as f:
             f.write("solid {}\n".format(self.name))
-            for ft in self.geometry['Facets']:
-                pts = self.geometry['Points'][ft]
+            for ft in self.RVE_data['Facets']:
+                pts = self.RVE_data['Points'][ft]
                 nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
                 if np.linalg.norm(nv) < 1.e-5:
-                    warnings.warn(f'Acute facet detected. Facet: {ft}')
+                    warnings.warning(f'Acute facet detected. Facet: {ft}')
                     nv = np.cross(pts[1] - pts[0], pts[2] - pts[1])
                     if np.linalg.norm(nv) < 1.e-5:
-                        warnings.warn(f'Irregular facet detected. Facet: {ft}')
+                        warnings.warning(f'Irregular facet detected. Facet: {ft}')
                 nv /= np.linalg.norm(nv)
                 f.write(" facet normal {} {} {}\n"
                         .format(nv[0], nv[1], nv[2]))
@@ -698,7 +689,7 @@ class Microstructure(object):
             else:
                 file = self.name + '_centroid.csv'
         if grains is None:
-            grains = self.geometry['Grains']
+            grains = self.RVE_data['Grains']
         with open(file, 'w') as f:
             for gr in grains.values():
                 # if polyhedral grain has no simplices, center should not be written!!!
@@ -784,7 +775,9 @@ class Microstructure(object):
                 "Shape" : self.voxels.shape,
                 "Order" : 'C',
                 "Values": data_values,
-                "Geometry" : self.mesh.size,
+                "Geometry" : (self.RVE_data['RVE_sizeX'],
+                              self.RVE_data['RVE_sizeY'],
+                              self.RVE_data['RVE_sizeZ']),
                 "Units": {
                     'Length': self.RVE_data['Units'],
                     },
@@ -793,20 +786,20 @@ class Microstructure(object):
         }
         if mesh:
             nout = []
-            for pos in self.mesh.nodes:
+            for pos in self.nodes_v:
                 nout.append([val.item() for val in pos])
             structure['Mesh'] = {
                 "Nodes" : {
                     "Class" : 'coordinates',
                     "Type"  : 'float',
-                    "Shape" : self.mesh.nodes.shape,
+                    "Shape" : self.nodes_v.shape,
                     "Values"  : nout,
                 },
                 "Voxels" : {
                     "Class" : 'node_list',
                     "Type"  : 'int',
-                    "Shape" : (len(self.mesh.voxel_dict.keys()), 8),
-                    "Values"  : [val for val in self.mesh.voxel_dict.values()],
+                    "Shape" : (len(self.elmtDict.keys()), 8),
+                    "Values"  : [val for val in self.elmtDict.values()],
                 }
             }
         with open(file, 'w') as fp:
@@ -843,10 +836,3 @@ class Microstructure(object):
         with open(file, 'wb') as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
         return
-    """
-    --------        legacy methods        --------
-    """
-    def init_stats(self, descriptor=None, gs_data=None, ar_data=None, porous=False, save_files=False):
-        """ Legacy function for plot_stats_init."""
-        print('This legacy function is depracted, please use "plot_stats_init()".')
-        self.plot_stats_init(descriptor, gs_data=gs_data, ar_data=ar_data, porous=porous, save_files=save_files)

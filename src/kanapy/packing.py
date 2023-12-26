@@ -8,7 +8,7 @@ from kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
 from kanapy.collisions import collide_detect
 
 
-def particle_generator(particle_data, phases, sim_box, RVE_data):
+def particle_generator(particle_data, sim_box, periodic):
     """
     Initializes ellipsoids by assigning them random positions and speeds within
     the simulation box.
@@ -22,61 +22,58 @@ def particle_generator(particle_data, phases, sim_box, RVE_data):
     :returns: Ellipsoids for the packing routine
     :rtype: list       
     """
-    num_particles = particle_data['Number']  # Total number of ellipsoids
     Ellipsoids = []
-    # introduce scaling factor to reduce particle overlap for non-peridoc box
-    sf = 0.5 if RVE_data['Periodic'] else 0.45
-    for n in range(num_particles):
+    for particle in particle_data:
+        num_particles = particle['Number']  # Total number of ellipsoids
+        # introduce scaling factor to reduce particle overlap for non-peridoc box
+        sf = 0.5 if periodic else 0.45
+        for n in range(num_particles):
+            iden = n+1  # ellipsoid 'id'
+            if particle['Type'] == 'Equiaxed':
+                a = b = c = sf * particle['Equivalent_diameter'][n]
+            else:
+                a = sf * particle['Major_diameter'][n]   # Semi-major length
+                b = sf * particle['Minor_diameter1'][n]  # Semi-minor length 1
+                c = sf * particle['Minor_diameter2'][n]  # Semi-minor length 2
 
-        iden = n+1  # ellipsoid 'id'
-        if particle_data['Type'] == 'Equiaxed':
-            a = b = c = sf * particle_data['Equivalent_diameter'][n]
-        else:    
-            a = sf * particle_data['Major_diameter'][n]   # Semi-major length
-            b = sf * particle_data['Minor_diameter1'][n]  # Semi-minor length 1
-            c = sf * particle_data['Minor_diameter2'][n]  # Semi-minor length 2
+            # Random placement for ellipsoids
+            x = random.uniform(c, sim_box.w - c)
+            y = random.uniform(c, sim_box.h - c)
+            z = random.uniform(c, sim_box.d - c)
 
-        # Random placement for ellipsoids
-        x = random.uniform(c, sim_box.w - c)
-        y = random.uniform(c, sim_box.h - c)
-        z = random.uniform(c, sim_box.d - c)
+            # Angle represents inclination of Major axis w.r.t positive x-axis
+            if particle['Type'] == 'Equiaxed':
+                angle = 0.5*np.pi
+            else:
+                # Extract the angle
+                angle = particle['Tilt angle'][n]
+            # Tilt vector wrt (+ve) x axis
+            vec_a = np.array([a*np.cos(angle), a*np.sin(angle), 0.0])
+            # Do the cross product to find the quaternion axis
+            cross_a = np.cross(np.array([1, 0, 0]), vec_a)
+            # norm of the vector (Magnitude)
+            norm_cross_a = np.linalg.norm(cross_a, 2)
+            quat_axis = cross_a/norm_cross_a  # normalize the quaternion axis
 
-        # Angle represents inclination of Major axis w.r.t positive x-axis        
-        if particle_data['Type'] == 'Equiaxed':
-            angle = np.radians(90)
-        else:
-            # Extract the angle
-            angle = np.radians(particle_data['Tilt angle'][n])      
-        # Tilt vector wrt (+ve) x axis
-        vec_a = np.array([a*np.cos(angle), a*np.sin(angle), 0.0])
-        # Do the cross product to find the quaternion axis
-        cross_a = np.cross(np.array([1, 0, 0]), vec_a)
-        # norm of the vector (Magnitude)
-        norm_cross_a = np.linalg.norm(cross_a, 2)  
-        quat_axis = cross_a/norm_cross_a  # normalize the quaternion axis
+            # Find the quaternion components
+            qx, qy, qz = quat_axis * np.sin(angle/2)
+            qw = np.cos(angle/2)
+            quat = np.array([qw, qx, qy, qz])
 
-        # Find the quaternion components
-        qx, qy, qz = quat_axis * np.sin(angle/2)
-        qw = np.cos(angle/2)
-        quat = np.array([qw, qx, qy, qz])
+            # instance of Ellipsoid class
+            ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat, phasenum=particle['Phase'])
+            ellipsoid.color = (random.randint(0, 255), random.randint(
+                0, 255), random.randint(0, 255))
 
-        #Find the phase number
-        phasenum = phases['Phase number'][n]
-        
-        # instance of Ellipsoid class
-        ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat, phasenum=phasenum)
-        ellipsoid.color = (random.randint(0, 255), random.randint(
-            0, 255), random.randint(0, 255))
+            # Define random speed values along the 3 axes x, y & z
+            ellipsoid.speedx0 = np.random.uniform(low=-c/20., high=c/20.)
+            ellipsoid.speedy0 = np.random.uniform(low=-c/20., high=c/20.)
+            ellipsoid.speedz0 = np.random.uniform(low=-c/20., high=c/20.)
+            ellipsoid.speedx = ellipsoid.speedx0
+            ellipsoid.speedy = ellipsoid.speedy0
+            ellipsoid.speedz = ellipsoid.speedz0
 
-        # Define random speed values along the 3 axes x, y & z
-        ellipsoid.speedx0 = np.random.uniform(low=-c/20., high=c/20.)
-        ellipsoid.speedy0 = np.random.uniform(low=-c/20., high=c/20.)
-        ellipsoid.speedz0 = np.random.uniform(low=-c/20., high=c/20.)
-        ellipsoid.speedx = ellipsoid.speedx0
-        ellipsoid.speedy = ellipsoid.speedy0
-        ellipsoid.speedz = ellipsoid.speedz0
-
-        Ellipsoids.append(ellipsoid)  # adds ellipsoid to list
+            Ellipsoids.append(ellipsoid)  # adds ellipsoid to list
 
     return Ellipsoids
 
@@ -180,7 +177,7 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
 
 def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
     """
-    Calculate interaction force between eööipsoids
+    Calculate interaction force between ellipsoids.
 
     :param Ellipsoids: 
     :type Ellipsoids: 
@@ -240,7 +237,7 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
                 ell.force_z += Force * dz / r
     return
 
-def packingRoutine(particle_data, phases, RVE_data, simulation_data,
+def packingRoutine(particle_data, periodic, nsteps, sim_box,
                    k_rep=0.0, k_att=0.0, vf=None, save_files=False):
     """
     The main function that controls the particle packing routine using:
@@ -257,31 +254,17 @@ def packingRoutine(particle_data, phases, RVE_data, simulation_data,
               * Simulation attributes such as total number of timesteps and
                 periodicity.                         
     """
-    print('Starting particle simulation')     
-    print('    Creating simulation box of required dimensions')
-    # Create an instance of simulation box
-    sim_box = Simulation_Box(RVE_data['RVE_sizeX'],
-                             RVE_data['RVE_sizeY'],
-                             RVE_data['RVE_sizeZ'])
+    print('Starting particle simulation')
     
     print('    Creating particles from distribution statistics')
     # Create instances for particles
-    Particles = particle_generator(particle_data, phases, sim_box, RVE_data)
+    Particles = particle_generator(particle_data, sim_box, periodic)
     
     # Growth of particle at each time step
     print('    Particle packing by growth simulation')
-    
-    
-    if simulation_data['Periodicity'] == 'True':
-        periodic_status = True
-    elif simulation_data['Periodicity'] == 'False':
-        periodic_status = False
-    else:
-        raise ValueError('packingRoutine: Wrong value for periodicity in ' +
-                         'simulation_data')   
         
-    particles, simbox = particle_grow(sim_box, Particles, periodic_status, \
-                            simulation_data['Time steps'],
+    particles, simbox = particle_grow(sim_box, Particles, periodic, \
+                            nsteps,
                             k_rep=k_rep, k_att=k_att, vf=vf,
                             dump=save_files)
     

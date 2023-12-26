@@ -236,9 +236,9 @@ def test_voxelizationRoutine():
     }
     Particles = particle_generator(particle_data, ph, sim_box, rve_data)
     
-    #write_dump(Particles, sim_box)
-    
-    voxelizationRoutine(particle_data, RVE_data, Particles, sim_box, save_files=True)
+    #write_dump(Particles, simbox)
+
+    voxelizationRoutine(RVE_data, Particles, sim_box, save_files=True)
 
     assert os.path.isfile(json_dir + '/nodes_v.csv')
     assert os.path.isfile(json_dir + '/elmtDict.json')

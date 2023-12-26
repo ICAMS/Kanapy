@@ -51,17 +51,17 @@ class Simulation_Box(object):
     :type d: float   
     """
 
-    def __init__(self, w, h, d):
-        self.w = w           # Width
-        self.h = h           # Height
-        self.d = d           # Depth
-        self.sim_ts = 0      # Initialize simulation time-step
-        self.left = 0
-        self.top = 0
-        self.front = 0
-        self.right = w
-        self.bottom = h
-        self.back = d
+    def __init__(self, size):
+        self.w = size[0]  # Width
+        self.h = size[1]  # Height
+        self.d = size[2]  # Depth
+        self.sim_ts = 0   # Initialize simulation time-step
+        self.left = 0.
+        self.top = 0.
+        self.front = 0.
+        self.right = self.w
+        self.bottom = self.h
+        self.back = self.d
 
 
 class Ellipsoid(object):

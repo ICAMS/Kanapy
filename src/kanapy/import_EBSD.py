@@ -284,8 +284,8 @@ class EBSDmap:
         
 def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
               asp_min=None, asp_max=None, omega_min=None, omega_max=None,
-              size=100, voxels=60, gtype='Elongated', rveunit = 'mm',
-              periodicity=True, VF = None, phasename = None, phasenum = None,
+              size=100, voxels=60, gtype='Elongated', rveunit='mm',
+              periodicity=True, VF = None, phasename=None, phasenum=None,
               save_file=False):
     '''
     grains = [std deviation, offset , mean grain sizeof lognorm distrib.]

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
-import json
+import numpy as np
 import itertools
+import warnings
 from tqdm import tqdm
 from collections import defaultdict
-
-import numpy as np
 from scipy.spatial import ConvexHull
 
 def points_in_convexHull(Points, hull):
@@ -27,73 +24,7 @@ def points_in_convexHull(Points, hull):
     b = np.transpose(np.array([hull.equations[:, -1]]))
     return np.all((A @ np.transpose(Points)) <= np.tile(-b, (1, len(Points))), axis=0)
 
-
-def create_voxels(sim_box, voxNums):
-    """
-    Generates voxels inside the defined RVE (Simulation box)      
-
-    :param sim_box: Simulation box representing RVE dimensions 
-    :type sim_box: :obj:`entities.Cuboid`
-    :param voxNums: Number of voxels along the RVE sides X, Y & Z  
-    :type voxNums: tuple of int
-
-    :returns: * Node list containing coordinates.
-              * Element dictionary containing element IDs and nodal connectivities. 
-              * Voxel dictionary containing voxel ID and center coordinates.
-    :rtype: Tuple of Python dictionaries.
-    """
-    print('    Generating voxels inside RVE')
-    # generate nodes of all voxels from RVE side dimensions        
-    lim_minX, lim_maxX = sim_box.left, sim_box.right
-    lim_minY, lim_maxY = sim_box.top, sim_box.bottom
-    lim_minZ, lim_maxZ = sim_box.front, sim_box.back   # define the cuboidal RVE limits        
-    
-    # generate points within these limits
-    voxNumX,voxNumY,voxNumZ = voxNums[:]    
-    pointsX = np.linspace(lim_minX, lim_maxX, num=voxNumX + 1, endpoint=True)
-    pointsY = np.linspace(lim_minY, lim_maxY, num=voxNumY + 1, endpoint=True)
-    pointsZ = np.linspace(lim_minZ, lim_maxZ, num=voxNumZ + 1, endpoint=True)
-    
-    # duplicate neighbouring points
-    pointsX_dup = [(first, second) for first, second in zip(pointsX, pointsX[1:])]
-    pointsY_dup = [(first, second) for first, second in zip(pointsY, pointsY[1:])]
-    pointsZ_dup = [(first, second) for first, second in zip(pointsZ, pointsZ[1:])]
-
-    verticesDict = {}                       # dictionary to store vertices    
-    elmtDict = defaultdict(list)            # dictionary to store elements and its node ids    
-    vox_centerDict = {}                     # dictionary to store center of each element/voxel
-    node_count, elmt_count = 0, 0
-    # loop over the duplicate pairs
-    for (mk, nk), (mj, nj), (mi, ni) in itertools.product(pointsX_dup, pointsY_dup, pointsZ_dup):
-
-        # Find the center of each voxel and update the center dictionary
-        elmt_count += 1
-        vox_centerDict[elmt_count] = (0.5*(mi + ni), 0.5*(mj + nj), 0.5*(mk + nk))
-
-        # group the 8 nodes of an element and update node & element dictonary accordingly
-        # C3D8 element connectivity is maintained by this list (DON'T change this order)
-        vertices = [(ni, mj, nk), (ni, mj, mk), (mi, mj, mk), (mi, mj, nk),
-                    (ni, nj, nk), (ni, nj, mk), (mi, nj, mk), (mi, nj, nk)]
-
-        for coo in vertices:
-            if coo not in verticesDict.keys():
-                node_count += 1
-                verticesDict[coo] = node_count
-                elmtDict[elmt_count].append(node_count)
-            else:
-                elmtDict[elmt_count].append(verticesDict[coo])
-
-    # node list
-    nodes_v = np.zeros((node_count,3))
-    print('### create voxels', node_count, nodes_v.shape)
-    for pos, i in verticesDict.items():
-        #print('***   ', i, pos)
-        nodes_v[i-1,:] = pos
-    return nodes_v, elmtDict, vox_centerDict
-
-
-def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict,
-                               vf_target=None):
+def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict, vf_target=None):
     """
     Determines voxels belonging to each ellipsoid    
 
@@ -105,7 +36,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict,
     :type elmtDict: Python dictionary       
     """
     print('    Assigning voxels to grains')
-    if vf_target is None:
+    if vf_target is None or vf_target > 1.0:
         vf_target = 1.0
 
     # All the voxel centers as numpy 2D array and voxel ids
@@ -123,7 +54,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict,
     pbar = tqdm(total = len(remaining_voxels))
     for ellipsoid in Ellipsoids:
         ellipsoid.inside_voxels = []
-    while vf_cur < vf_target: # len(remaining_voxels) > 0:
+    while vf_cur < vf_target:
         
         # call the growth value for the ellipsoids
         scale = next(growth)
@@ -382,9 +313,7 @@ def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
     return
     
 
-def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box,
-                        dual_phase=False, vf=None,
-                        save_files=False):
+def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
     """
     The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`, :meth:`create_voxels`
     , :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`
@@ -400,34 +329,29 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box,
     """
     print('')
     print('Starting RVE voxelization')
-    
-    #RVE_sizeX, RVE_sizeY, RVE_sizeZ = RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ']
-    voxX, voxY, voxZ = RVE_data['Voxel_numberX'], RVE_data['Voxel_numberY'], RVE_data['Voxel_numberZ']        
-    #voxel_resX, voxel_resY, voxel_resZ = RVE_data['Voxel_resolutionX'], RVE_data['Voxel_resolutionY'], RVE_data['Voxel_resolutionZ']           
-
-    # create voxels inside the RVE
-    nodes_v, elmtDict, vox_centerDict = create_voxels(sim_box, (voxX,voxY,voxZ))              
 
     # Find the voxels belonging to each grain by growing ellipsoid each time
-    assign_voxels_to_ellipsoid(vox_centerDict, Ellipsoids, elmtDict,
-                               vf_target=vf)
+    if porosity is None:
+        vft = 1.
+    else:
+        vft = 1. - porosity
+    assign_voxels_to_ellipsoid(mesh.vox_center_dict, Ellipsoids, mesh.voxel_dict, vf_target=vft)
 
     # Create element sets
-    elmtSetDict = {}
     for ellipsoid in Ellipsoids:
         if ellipsoid.inside_voxels:
             # If the ellipsoid is a duplicate add the voxels to the original ellipsoid
             if ellipsoid.duplicate is not None:
                 iel = int(ellipsoid.duplicate)
-                if iel not in elmtSetDict:
-                    elmtSetDict[iel] =\
+                if iel not in mesh.grain_dict:
+                    mesh.grain_dict[iel] =\
                         [int(iv) for iv in ellipsoid.inside_voxels]
                 else:
-                    elmtSetDict[iel].extend(
+                    mesh.grain_dict[iel].extend(
                         [int(iv) for iv in ellipsoid.inside_voxels])
             # Else it is the original ellipsoid
             else:
-                elmtSetDict[int(ellipsoid.id)] =\
+                mesh.grain_dict[int(ellipsoid.id)] =\
                     [int(iv) for iv in ellipsoid.inside_voxels]
         else:
             # If ellipsoid doesn't contain any voxel inside
@@ -438,50 +362,33 @@ def voxelizationRoutine(particle_data, RVE_data, Ellipsoids, sim_box,
     
     # generate array of voxelized structure with grain IDs
     # if vf < 1.0, empty voxels will have ID 0
-    Nvox = voxX*voxY*voxZ
-    hh = np.zeros(Nvox, dtype=int)
-    for ih, il in elmtSetDict.items():
+    hh = np.zeros(mesh.nvox, dtype=np.int16)
+    for ih, il in mesh.grain_dict.items():
         il = np.array(il) - 1
         hh[il] = ih
-    voxels = np.reshape(hh, (voxX,voxY,voxZ), order='F')
+    mesh.grains = np.reshape(hh, mesh.dim, order='F')
     
     # generate array of voxelized structure with phase numbers
+    # and dict of phase numbers for each grain
     # empty voxels will get phase number 1
-    # if not dual phase, ph
-    if dual_phase:
-        hh = -np.ones(Nvox, dtype=int)
-        for ih, il in elmtSetDict.items():
-            il = np.array(il) - 1
-            hh[il] = Ellipsoids[ih-1].phasenum
-        ind = np.nonzero(hh < 0.0)[0]
-        hh[ind] = 1
-        vf_cur = 1.0 - len(ind)/Nvox
-    else:
-        hh = np.zeros(voxX*voxY*voxZ, dtype=int)
-    voxels_phase = np.reshape(hh, (voxX,voxY,voxZ), order='F')
+    hh = -np.ones(mesh.nvox, dtype=np.int8)
+    mesh.grain_phase_dict = dict()
+    for ih, il in mesh.grain_dict.items():
+        il = np.array(il) - 1
+        hh[il] = Ellipsoids[ih-1].phasenum
+        mesh.grain_phase_dict[ih] = Ellipsoids[ih-1].phasenum
+    mesh.phases = np.reshape(hh, mesh.dim, order='F')
+    ind = np.nonzero(hh < 0.0)[0]
+    hh[ind] = 1
+    porous_cur = len(ind) / mesh.nvox
 
     print('Completed RVE voxelization')
-    if vf is not None:
-        print(f'Actual volume fraction of particles in box = {vf_cur}')
-        print(f'Target volume fraction = {vf}')
+    if porosity is not None:
+        print(f'Actual volume fraction of particles in box = {1.-porous_cur}')
+        print(f'Target volume fraction = {1.-porosity}')
+    elif porous_cur > 0.:
+        warnings.warn(f'WARNING: {len(ind)} voxels have not been assigned to grains.')
     print('')
-    
-    if save_files:
-        cwd = os.getcwd()
-        json_dir = cwd + '/json_files'          # Folder to store the json files
-        if not os.path.exists(json_dir):
-            os.makedirs(json_dir)
-
-        # Dump the Dictionaries as json files
-        with open(json_dir + '/nodes_v.csv', 'w') as f:
-            for v in nodes_v:
-                f.write('{0}, {1}, {2}\n'.format(v[0], v[1], v[2]))
-
-        with open(json_dir + '/elmtDict.json', 'w') as outfile:
-            json.dump(elmtDict, outfile, indent=2)
-
-        with open(json_dir + '/elmtSetDict.json', 'w') as outfile:
-            json.dump(elmtSetDict, outfile, indent=2)  
                                                                                    
-    return nodes_v, elmtDict, elmtSetDict, vox_centerDict, voxels, voxels_phase
+    return mesh
         
