@@ -1,7 +1,5 @@
 import itertools
 import warnings
-
-import numpy
 import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.spatial.distance import euclidean
@@ -497,8 +495,9 @@ def calc_polygons(rve, mesh, tol=1.e-3):
                       f'Reference volume: {vref}')
     print(f'Total volume of RVE: {vref} {rve.units}^3')
     print(f'Total volume of polyhedral grains: {vtot} {rve.units}^3')
-    print(f'Mean relative error of polyhedral vs. voxel volume of individual grains: {vol_mae/Ngr}')
-    print(f'for mean volume of grains: {vref/Ngr} {rve.units}^3.')
+    print(f'Mean relative error of polyhedral vs. voxel volume of individual ' +
+          f'grains: {round(vol_mae/Ngr, 3)}')
+    print(f'for mean volume of grains: {round(vref/Ngr, 3)} {rve.units}^3.')
     return geometry
 
 

@@ -371,9 +371,9 @@ def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
     # generate array of voxelized structure with phase numbers
     # and dict of phase numbers for each grain
     # empty voxels will get phase number 1
-    hh = -np.ones(mesh.nvox, dtype=np.int8)
+    hh = -np.ones(mesh.nvox, dtype=int)
     mesh.grain_phase_dict = dict()
-    mesh.ngrains_phase = np.zeros(mesh.nphases, dtype=int)
+    mesh.ngrains_phase = np.zeros(mesh.nphases, dtype=np.int8)
     for ih, il in mesh.grain_dict.items():
         il = np.array(il) - 1
         ip = Ellipsoids[ih-1].phasenum

@@ -20,7 +20,7 @@ matname = 'Iron fcc'  # material name
 matnumber = 4         # material number of austenite in CP UMAT
 nvox = 30             # number of voxels per side
 box_length = 50       # side length of generated RVE
-periodic = False      # create RVE with periodic structure
+periodic = True      # create RVE with periodic structure
 
 gs_param = np.array([1.06083584, 6.24824603, 13.9309554])
 ar_param = np.array([0.67525027, 0.76994992, 1.69901906])
@@ -39,21 +39,33 @@ ms_stats = knpy.set_stats(gs_param, ar_param, om_param,
 
 # create and visualize synthetic RVE
 ms = knpy.Microstructure(descriptor=ms_stats, name=fname+'_RVE')
-ms.plot_stats_init()
+#ms.plot_stats_init()  # tested OK
 ms.init_RVE()
 ms.pack()
-ms.plot_ellipsoids()
+#ms.plot_ellipsoids()  # tested ??? in pyCharm
 ms.voxelize()
-ms.plot_voxels(sliced=True)
+#ms.plot_voxels(sliced=True)  # tested OK
 ms.generate_grains()
-ms.plot_grains()
-#ms.res_data[0]['Unit_scale'] = 'um'
-ms.plot_stats(gs_param=gs_param, ar_param=ar_param)
+#ms.plot_grains()  # tested OK
+#ms.plot_stats(gs_param=gs_param, ar_param=ar_param)  # tested OK
+#ms.smoothen()  # tested OK
 
-# compare microstructure on three surfaces 
+# create grain orientations
+if knpy.MTEX_AVAIL:
+    ang = [0, 45, 0]    # Euler angles for Goss texture
+    omega = 7.5         # kernel half-width
+    ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
+    #ori_rnd = knpy.createOrisetRandom(ms.Ngr, Nbase=1000)  # tested OK
+
+# output rve in different formats
+ms.write_voxels(angles=ori_rve, script_name=__file__)
+#ms.pckl()  # tested OK
+#ms.write_stl()  # tested OK
+#ms.write_stl()  # tested OK
+#ms.write_ori(ori_rve)  # tested OK
+
+# compare microstructure on three surfaces
 # for voxelated and polygonalized grains
 #ms.plot_slice(cut='xz', pos='top', data='poly')
 
-# smoothen voxelated structure and write Abaqus .inp file
-#ms.smoothen()
 #ms.output_abq('s')

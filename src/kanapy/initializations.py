@@ -327,8 +327,8 @@ class mesh_creator(object):
         ----------
         self.dim = dim  # dimension tuple: number of voxels in each Cartesian direction
         self.nvox = np.prod(dim)  # number of voxels
-        self.phases = np.zeros(dim, dtype=np.int8)  # field data with phase numbers
-        self.grains = np.zeros(dim, dtype=np.int16)  # field data with grain numbers
+        self.phases = np.zeros(dim, dtype=int)  # field data with phase numbers
+        self.grains = np.zeros(dim, dtype=int)  # field data with grain numbers
         self.voxel_dict = dict()  # stores nodes assigned to each voxel (key; voxel number:int)
         self.grain_dict = dict()  # stored voxels assigned to each grain (key: grain number:int
         self.nodes = None  # array of nodal positions

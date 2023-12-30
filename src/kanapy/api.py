@@ -14,7 +14,7 @@ os.path.normpath(p)
 """
 import os
 import json
-import warnings
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
@@ -28,6 +28,7 @@ from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
 from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D, plot_output_stats
+from kanapy.util import log_level
 
 """
 Class grain(number)
@@ -85,6 +86,7 @@ class Microstructure(object):
         self.simbox = None
         self.mesh = None
         self.res_data = None
+        logging.basicConfig(level=log_level)
         if descriptor is None:
             if file is None:
                 raise ValueError('Please provide either a dictionary with statistics or an input file name')
@@ -174,7 +176,7 @@ class Microstructure(object):
         self.mesh = \
             voxelizationRoutine(particles, self.mesh, porosity=self.porosity)
         if np.any(self.nparticles != self.mesh.ngrains_phase):
-            warnings.warn(f'Number of grains per phase changed from {self.nparticles} to' +
+            logging.info(f'Number of grains per phase changed from {self.nparticles} to' +
                           f'{self.mesh.ngrains_phase} during voxelization.')
         self.ngrains = self.mesh.ngrains_phase
         self.Ngr = np.sum(self.mesh.ngrains_phase, dtype=int)  # legacy notation
@@ -549,7 +551,7 @@ class Microstructure(object):
                 data = 'poly'
             elif self.voxels is None:
                 raise ValueError('Neither polygons nor voxels for grains are present.\
-                                 \nRun voxelize and analyze_RVE first')
+                                 \nRun voxelize and generate_grains first')
             else:
                 data = 'voxels'
         elif data != 'voxels' and data != 'poly':
@@ -558,18 +560,18 @@ class Microstructure(object):
         if data == 'voxels':
             title += ' (Voxels)'
             if cut == 'xy':
-                g_slice = np.array(self.voxels[:, :, iz], dtype=int)
+                g_slice = np.array(self.mesh.grains[:, :, iz], dtype=int)
             elif cut == 'xz':
-                g_slice = np.array(self.voxels[:, iz, :], dtype=int)
+                g_slice = np.array(self.mesh.grains[:, iz, :], dtype=int)
             else:
-                g_slice = np.array(self.voxels[iz, :, :], dtype=int)
+                g_slice = np.array(self.mesh.grains[iz, :, :], dtype=int)
             if dual_phase == True:
                 if cut == 'xy':
-                    g_slice_phase = np.array(self.voxels_phase[:, :, iz], dtype=int)
+                    g_slice_phase = np.array(self.mesh.phases[:, :, iz], dtype=int)
                 elif cut == 'xz':
-                    g_slice_phase = np.array(self.voxels_phase[:, iz, :], dtype=int)
+                    g_slice_phase = np.array(self.mesh.phases[:, iz, :], dtype=int)
                 else:
-                    g_slice_phase = np.array(self.voxels_phase[iz, :, :], dtype=int)
+                    g_slice_phase = np.array(self.mesh.phases[iz, :, :], dtype=int)
         else:
             title += ' (Polygons)'
             xv, yv = np.meshgrid(ix * sx, iy * sy, indexing='ij')
@@ -581,19 +583,19 @@ class Microstructure(object):
             else:
                 mesh_slice = np.array([grain_slice * iz * sz, xv.flatten(), yv.flatten()]).T
             grain_slice = np.zeros(len(ix) * len(iy), dtype=int)
-            for igr in self.RVE_data['Grains'].keys():
-                pts = self.RVE_data['Grains'][igr]['Points']
+            for igr in self.geometry['Grains'].keys():
+                pts = self.geometry['Grains'][igr]['Points']
                 try:
                     tri = Delaunay(pts)
                     i = tri.find_simplex(mesh_slice)
                     ind = np.nonzero(i >= 0)[0]
                     grain_slice[ind] = igr
                 except:
-                    warnings.warn('Grain #{} has no convex hull (Nvertices: {})' \
+                    logging.error('Grain #{} has no convex hull (Nvertices: {})' \
                                   .format(igr, len(pts)))
             if np.any(grain_slice == 0):
                 ind = np.nonzero(grain_slice == 0)[0]
-                warnings.warn('Incomplete slicing for {} pixels in {} slice at {}.' \
+                logging.error('Incomplete slicing for {} pixels in {} slice at {}.' \
                               .format(len(ind), cut, pos))
             g_slice = grain_slice.reshape(xv.shape)
 
@@ -672,10 +674,10 @@ class Microstructure(object):
                 pts = self.geometry['Points'][ft]
                 nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
                 if np.linalg.norm(nv) < 1.e-5:
-                    warnings.warn(f'Acute facet detected. Facet: {ft}')
+                    logging.warning(f'Acute facet detected. Facet: {ft}')
                     nv = np.cross(pts[1] - pts[0], pts[2] - pts[1])
                     if np.linalg.norm(nv) < 1.e-5:
-                        warnings.warn(f'Irregular facet detected. Facet: {ft}')
+                        logging.warning(f'Irregular facet detected. Facet: {ft}')
                 nv /= np.linalg.norm(nv)
                 f.write(" facet normal {} {} {}\n"
                         .format(nv[0], nv[1], nv[2]))
@@ -717,18 +719,18 @@ class Microstructure(object):
                 f.write('{}, {}, {}\n'.format(ori[0], ori[1], ori[2]))
         return
 
-    def write_voxels(self, sname, file=None, path='./', mesh=True, source=None, dual_phase=False):
+    def write_voxels(self, angles=None, script_name=None, file=None, path='./', mesh=True,
+                     source=None):
         """
         Write voxel structure into JSON file.
 
         Parameters
         ----------
-        sname
+        script_name
         file
         path
         mesh
         source
-        dual_phase
 
         Returns
         -------
@@ -741,6 +743,8 @@ class Microstructure(object):
         from pkg_resources import get_distribution
         from json import dump
 
+        if script_name is None:
+            script_name = __file__
         if path[-1] != '/':
             path += '/'
         if file is None:
@@ -753,11 +757,7 @@ class Microstructure(object):
         today = str(date.today())  # date
         owner = getpass.getuser()  # username
         sys_info = platform.uname()  # system information
-        if dual_phase == True:
-            data_values = [val.item() for val in
-                           self.voxels_phase.flatten()]  # item() converts numpy-int64 to python int
-        else:
-            data_values = [val.item() for val in self.voxels.flatten()]
+        # output dict
         structure = {
             "Info": {
                 "Owner": owner,
@@ -777,31 +777,44 @@ class Microstructure(object):
                 "Version": get_distribution('kanapy').version,
                 "Repository": "https://github.com/ICAMS/Kanapy.git",
                 "Input": source,
-                "Script": sname,
+                "Script": script_name,
+                "Material": self.name,
+                "Periodicity": str(self.rve.periodic),
+                "Phase_names": self.rve.phase_names,
             },
             "Data": {
-                "Class": 'phase_numbers',
+                "Description": 'Grain numbers per voxel',
                 "Type": 'int',
-                "Shape": self.voxels.shape,
+                "Shape": self.rve.dim,
+                "Geometry": self.rve.size,
                 "Order": 'C',
-                "Values": data_values,
-                "Geometry": self.mesh.size,
+                "GrainID": [int(val) for val in self.mesh.grains.flatten()],
                 "Units": {
-                    'Length': self.RVE_data['Units'],
-                },
-                "Periodicity": self.RVE_data['Periodic'],
-            }
+                    'Length': self.rve.units,
+                }
+            },
+            "Grains": {
+                "Description": "Grain-related data",
+                "Orientation": "Euler-Bunge angle",
+                "Phase": "Phase number"
+                }
         }
+        for igr in self.mesh.grain_dict.keys():
+                structure["Grains"][igr] = {
+                    "Phase": self.mesh.grain_phase_dict[igr]
+                }
+        if angles is None:
+            logging.info('No angles for grains are given. Writing only geometry of RVE.')
+        else:
+            for i, igr in enumerate(self.mesh.grain_dict.keys()):
+                structure["Grains"][igr]["Orientation"] = list(angles[i, :])
         if mesh:
-            nout = []
-            for pos in self.mesh.nodes:
-                nout.append([val.item() for val in pos])
             structure['Mesh'] = {
                 "Nodes": {
                     "Class": 'coordinates',
                     "Type": 'float',
                     "Shape": self.mesh.nodes.shape,
-                    "Values": nout,
+                    "Values": [list(val) for val in self.mesh.nodes],
                 },
                 "Voxels": {
                     "Class": 'node_list',
@@ -810,6 +823,8 @@ class Microstructure(object):
                     "Values": [val for val in self.mesh.voxel_dict.values()],
                 }
             }
+
+        # write file
         with open(file, 'w') as fp:
             dump(structure, fp, indent=2)
         return

@@ -8,7 +8,7 @@ from kanapy.initializations import set_stats
 from kanapy.plotting import plot_voxels_3D, plot_polygons_3D
 from kanapy.input_output import writeAbaqusMat, writeAbaqusPhase, \
     pickle2microstructure, import_voxels
-from kanapy.util import ROOT_DIR, MAIN_DIR, MTEX_DIR, WORK_DIR
+from kanapy.util import ROOT_DIR, MAIN_DIR, MTEX_DIR, WORK_DIR, log_level
 try:
     from kanapy.import_EBSD import EBSDmap, createOriset, createOrisetRandom
     MTEX_AVAIL = True
