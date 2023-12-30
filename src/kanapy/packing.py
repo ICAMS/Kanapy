@@ -23,12 +23,13 @@ def particle_generator(particle_data, sim_box, periodic):
     :rtype: list       
     """
     Ellipsoids = []
+    id_ctr = 0
     for particle in particle_data:
         num_particles = particle['Number']  # Total number of ellipsoids
         # introduce scaling factor to reduce particle overlap for non-peridoc box
         sf = 0.5 if periodic else 0.45
         for n in range(num_particles):
-            iden = n+1  # ellipsoid 'id'
+            iden = id_ctr + n + 1  # ellipsoid 'id'
             if particle['Type'] == 'Equiaxed':
                 a = b = c = sf * particle['Equivalent_diameter'][n]
             else:
@@ -74,6 +75,7 @@ def particle_generator(particle_data, sim_box, periodic):
             ellipsoid.speedz = ellipsoid.speedz0
 
             Ellipsoids.append(ellipsoid)  # adds ellipsoid to list
+        id_ctr += num_particles
 
     return Ellipsoids
 

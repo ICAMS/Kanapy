@@ -10,7 +10,11 @@ November 2023
 
 import kanapy as knpy
 import numpy as np
-    
+
+import matplotlib
+matplotlib.use('MacOSX')
+
+
 fname = 'ebsd_316L_500x500.ang'  # name of ang file to be imported
 matname = 'Iron fcc'  # material name
 matnumber = 4         # material number of austenite in CP UMAT

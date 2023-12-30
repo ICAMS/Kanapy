@@ -373,10 +373,13 @@ def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
     # empty voxels will get phase number 1
     hh = -np.ones(mesh.nvox, dtype=np.int8)
     mesh.grain_phase_dict = dict()
+    mesh.ngrains_phase = np.zeros(mesh.nphases, dtype=int)
     for ih, il in mesh.grain_dict.items():
         il = np.array(il) - 1
-        hh[il] = Ellipsoids[ih-1].phasenum
-        mesh.grain_phase_dict[ih] = Ellipsoids[ih-1].phasenum
+        ip = Ellipsoids[ih-1].phasenum
+        hh[il] = ip
+        mesh.grain_phase_dict[ih] = ip
+        mesh.ngrains_phase[ip] += 1
     mesh.phases = np.reshape(hh, mesh.dim, order='F')
     ind = np.nonzero(hh < 0.0)[0]
     hh[ind] = 1

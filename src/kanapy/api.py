@@ -29,7 +29,6 @@ from kanapy.smoothingGB import smoothingRoutine
 from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D, plot_output_stats
 
-
 """
 Class grain(number)
 Attributes:
@@ -69,6 +68,8 @@ Attributes:
 •	particles (list of numbers)
 •	grains (list of numbers)
 """
+
+
 class Microstructure(object):
     """Define class for synthetic microstructures"""
 
@@ -146,8 +147,8 @@ class Microstructure(object):
 
         # initialize voxel structure (= mesh)
         self.mesh = mesh_creator(self.rve.dim)
+        self.mesh.nphases = self.nphases
         self.mesh.create_voxels(self.simbox)
-
 
     def pack(self, particle_data=None, RVE_data=None,
              k_rep=0.0, k_att=0.0, vf=None, save_files=False):
@@ -172,11 +173,11 @@ class Microstructure(object):
 
         self.mesh = \
             voxelizationRoutine(particles, self.mesh, porosity=self.porosity)
-        Ngr = len(self.mesh.grain_dict.keys())
-        if self.nparticles != Ngr:
-            warnings.warn(f'Number of grains has changed from {self.nparticles} to {Ngr} during voxelization.')
-        self.ngrains = Ngr
-        self.Ngr = Ngr  # legacy notation
+        if np.any(self.nparticles != self.mesh.ngrains_phase):
+            warnings.warn(f'Number of grains per phase changed from {self.nparticles} to' +
+                          f'{self.mesh.ngrains_phase} during voxelization.')
+        self.ngrains = self.mesh.ngrains_phase
+        self.Ngr = np.sum(self.mesh.ngrains_phase, dtype=int)  # legacy notation
 
     def smoothen(self, nodes_v=None, voxel_dict=None, grain_dict=None,
                  save_files=False):
@@ -226,7 +227,7 @@ class Microstructure(object):
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
         if porous is None:
             porous = bool(self.porosity)
-        plot_voxels_3D(self.mesh.grains, phases=self.mesh.phases, Ngr=self.ngrains,
+        plot_voxels_3D(self.mesh.grains, phases=self.mesh.phases, Ngr=np.sum(self.ngrains),
                        sliced=sliced, dual_phase=dual_phase, porous=porous,
                        cmap=cmap)
 
@@ -252,11 +253,11 @@ class Microstructure(object):
         elif type(data) != list:
             data = [data]
         plot_output_stats(data, gs_data=gs_data, gs_param=gs_param,
-                    ar_data=ar_data, ar_param=ar_param,
-                    save_files=save_files)
+                          ar_data=ar_data, ar_param=ar_param,
+                          save_files=save_files)
 
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
-                   porous=False, save_files=False):
+                        porous=False, save_files=False):
         """ Plots initial statistical microstructure descriptors ."""
         if descriptor is None:
             descriptor = self.descriptor
@@ -265,13 +266,14 @@ class Microstructure(object):
         if porous:
             descriptor = descriptor[0:1]
         if type(gs_data) is not list:
-            gs_data = [gs_data]*len(descriptor)
+            gs_data = [gs_data] * len(descriptor)
         if type(ar_data) is not list:
-            ar_data = [ar_data]*len(descriptor)
+            ar_data = [ar_data] * len(descriptor)
 
         for i, des in enumerate(descriptor):
             plot_init_stats(des, gs_data=gs_data[i], ar_data=ar_data[i],
-                                  save_files=save_files)
+                            save_files=save_files)
+
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):
         """
@@ -346,17 +348,17 @@ class Microstructure(object):
         if elmtDict is None:
             elmtDict = self.elmtDict
         if units is None:
-            units = self.RVE_data['Units']
-        elif (not units=='mm') and (not units=='um'):
+            units = self.rve['units']
+        elif (not units == 'mm') and (not units == 'um'):
             raise ValueError(f'Units must be either "mm" or "um", not {units}.')
         if dual_phase:
             nct = '2phases'
             elmt_list = self.mesh.phases.reshape(self.mesh.nvox, order='F')
-            ind1 = np.nonzero(elmt_list==0)[0]
-            ind2 = np.nonzero(elmt_list==1)[0]
+            ind1 = np.nonzero(elmt_list == 0)[0]
+            ind2 = np.nonzero(elmt_list == 1)[0]
             elmtSetDict = {
-                1 : ind1 + 1,
-                2 : ind2 + 1}
+                1: ind1 + 1,
+                2: ind2 + 1}
         else:
             nct = '{0}grains'.format(len(elmtSetDict))
             if elmtSetDict is None:
@@ -442,15 +444,13 @@ class Microstructure(object):
         """
         cut = cut.lower()
         if cut == 'xy':
-            sizeX = self.RVE_data['RVE_sizeX']
-            sizeY = self.RVE_data['RVE_sizeY']
-            sx = self.RVE_data['Voxel_resolutionX']
-            sy = self.RVE_data['Voxel_resolutionY']
-            sz = self.RVE_data['Voxel_resolutionZ']
-            ix = np.arange(self.RVE_data['Voxel_numberX'])
-            iy = np.arange(self.RVE_data['Voxel_numberY'])
+            sizeX = self.rve['size'][0]
+            sizeY = self.rve['size'][1]
+            (sx, sy, sz) = np.divide(self.rve['size'], self.rve['dim'])
+            ix = np.arange(self.rve['dim'][0])
+            iy = np.arange(self.rve['dim'][0])
             if pos is None or pos == 'top' or pos == 'right':
-                iz = self.RVE_data['Voxel_numberZ'] - 1
+                iz = self.rve['dim'][2] - 1
             elif pos == 'bottom' or pos == 'left':
                 iz = 0
             elif type(pos) == float or type(pos) == int:
@@ -754,7 +754,8 @@ class Microstructure(object):
         owner = getpass.getuser()  # username
         sys_info = platform.uname()  # system information
         if dual_phase == True:
-            data_values = [val.item() for val in self.voxels_phase.flatten()]  # item() converts numpy-int64 to python int
+            data_values = [val.item() for val in
+                           self.voxels_phase.flatten()]  # item() converts numpy-int64 to python int
         else:
             data_values = [val.item() for val in self.voxels.flatten()]
         structure = {
@@ -779,15 +780,15 @@ class Microstructure(object):
                 "Script": sname,
             },
             "Data": {
-                "Class" : 'phase_numbers',
-                "Type"  : 'int',
-                "Shape" : self.voxels.shape,
-                "Order" : 'C',
+                "Class": 'phase_numbers',
+                "Type": 'int',
+                "Shape": self.voxels.shape,
+                "Order": 'C',
                 "Values": data_values,
-                "Geometry" : self.mesh.size,
+                "Geometry": self.mesh.size,
                 "Units": {
                     'Length': self.RVE_data['Units'],
-                    },
+                },
                 "Periodicity": self.RVE_data['Periodic'],
             }
         }
@@ -796,17 +797,17 @@ class Microstructure(object):
             for pos in self.mesh.nodes:
                 nout.append([val.item() for val in pos])
             structure['Mesh'] = {
-                "Nodes" : {
-                    "Class" : 'coordinates',
-                    "Type"  : 'float',
-                    "Shape" : self.mesh.nodes.shape,
-                    "Values"  : nout,
+                "Nodes": {
+                    "Class": 'coordinates',
+                    "Type": 'float',
+                    "Shape": self.mesh.nodes.shape,
+                    "Values": nout,
                 },
-                "Voxels" : {
-                    "Class" : 'node_list',
-                    "Type"  : 'int',
-                    "Shape" : (len(self.mesh.voxel_dict.keys()), 8),
-                    "Values"  : [val for val in self.mesh.voxel_dict.values()],
+                "Voxels": {
+                    "Class": 'node_list',
+                    "Type": 'int',
+                    "Shape": (len(self.mesh.voxel_dict.keys()), 8),
+                    "Values": [val for val in self.mesh.voxel_dict.values()],
                 }
             }
         with open(file, 'w') as fp:
@@ -843,9 +844,11 @@ class Microstructure(object):
         with open(file, 'wb') as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
         return
+
     """
     --------        legacy methods        --------
     """
+
     def init_stats(self, descriptor=None, gs_data=None, ar_data=None, porous=False, save_files=False):
         """ Legacy function for plot_stats_init."""
         print('This legacy function is depracted, please use "plot_stats_init()".')

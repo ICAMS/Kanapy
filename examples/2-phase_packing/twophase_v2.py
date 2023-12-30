@@ -8,9 +8,10 @@ ICAMS, Ruhr University Bochum, Germany
 
 December 2023
 """
-
 import kanapy as knpy
 from math import pi
+import matplotlib
+matplotlib.use('MacOSX')
 
 periodic = False
 vf0 = 0.7

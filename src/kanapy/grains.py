@@ -182,6 +182,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     # create dicts for GB facets, including fake facets at surfaces
     geometry = dict()
+    geometry['Ngrains'] = mesh.ngrains_phase
     grain_facesDict = dict()  # {Grain: faces}
     for i in range(1, Ng_max + 7):
         grain_facesDict[i] = dict()
@@ -475,11 +476,12 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     geometry['GBarea'] = shared_area
     geometry['GBfaces'] = grain_facesDict
     print('Finished generating polyhedral hulls for grains.')
+
+    # Analyse error in polyhedral grain volume
     vref = np.prod(rve.size)
     vtot = 0.
     vtot_vox = 0.
     vunit = vref/np.prod(rve.dim)
-
     vol_mae = 0.
     for igr, grain in geometry['Grains'].items():
         vg = grain['Volume']
@@ -487,10 +489,16 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         vvox = np.count_nonzero(mesh.grains == igr) * vunit
         vtot_vox += vvox
         vol_mae += np.abs(1. - vg / vvox)
-    vol_mae /= Ngr
+    if np.abs(vtot_vox - vref) > 1.e-5:
+        warnings.warn(f'Inconsistent volume of voxelized grains: {vtot_vox}, ' +
+                      f'Reference volume: {vref}')
     if np.abs(vtot - vref) > 1.e-5:
-        warnings.warn(f'Inconsistent volume of polyhedral grains: {vtot}, Reference volume: {vref}')
-    print(f'Mean absolute error of polyhedral vs. voxel volume of grains: {vol_mae}')
+        warnings.warn(f'Inconsistent volume of polyhedral grains: {vtot}, ' +
+                      f'Reference volume: {vref}')
+    print(f'Total volume of RVE: {vref} {rve.units}^3')
+    print(f'Total volume of polyhedral grains: {vtot} {rve.units}^3')
+    print(f'Mean relative error of polyhedral vs. voxel volume of individual grains: {vol_mae/Ngr}')
+    print(f'for mean volume of grains: {vref/Ngr} {rve.units}^3.')
     return geometry
 
 

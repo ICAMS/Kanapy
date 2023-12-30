@@ -9,7 +9,6 @@ from scipy.stats import lognorm, norm
 from collections import defaultdict
 
 
-
 class RVE_creator(object):
     r"""
     Creates an RVE based on user-defined statistics
@@ -79,7 +78,7 @@ class RVE_creator(object):
         self.dim = None  # tuple of number of voxels along Cartesian axes
         self.periodic = None  # Boolean for periodicity of RVE
         self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
-        self.nparticles = 0  # Totel number of particles in RVE
+        self.nparticles = []  # list of particle numbers for each phase
         particle_data = []  # list of cits for statistical particle data for each grains
         phase_names = []  # list of names of phases
         phase_vf = []  # list of volume fractions of phases
@@ -151,18 +150,19 @@ class RVE_creator(object):
                 print("    Periodic box with grains larger the half of box width.")
                 print("    Check grain polygons carefully.")
 
-            print(f'    Statistical data for phase {phase_names[-1]} ({ip})')
+            print(f'    Analyzed statistical data for phase {phase_names[-1]} ({ip})')
             print(f'    Total number of particles  = {totalEllipsoids}')
             pdict['Number'] = totalEllipsoids
             pdict['Equivalent_diameter'] = list(eq_Dia)
             return pdict
+
         def gen_data_elong(pdict):
             # Tilt angle statistics
             # Sample from Normal distribution: It takes mean and std of normal distribution
             tilt_angle = []
             num = pdict['Number']
             while num > 0:
-                tilt = norm.rvs(scale=std_Ori, loc=mean_Ori, size=num)
+                tilt = norm.rvs(scale=std_ori, loc=mean_ori, size=num)
                 index_array = np.where((tilt >= ori_cutoff_min) & (tilt <= ori_cutoff_max))
                 TA = tilt[index_array].tolist()
                 tilt_angle.extend(TA)
@@ -206,7 +206,7 @@ class RVE_creator(object):
         self.dim = None  # tuple of number of voxels along Cartesian axes
         self.periodic = None  # Boolean for periodicity of RVE
         self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
-        self.nparticles = 0  # Totel number of particles in RVE
+        self.nparticles = []  # List of article numbers for each phase
         particle_data = []  # list of cits for statistical particle data for each grains
         phase_names = []  # list of names of phases
         phase_vf = []  # list of volume fractions of phases
@@ -293,24 +293,26 @@ class RVE_creator(object):
                 ar_cutoff_max = stats["Aspect ratio"]["cutoff_max"]
 
                 # Extract grain tilt angle statistics info from dict
-                std_Ori = stats["Tilt angle"]["std"]
-                mean_Ori = stats["Tilt angle"]["mean"]
+                std_ori = stats["Tilt angle"]["std"]
+                mean_ori = stats["Tilt angle"]["mean"]
                 ori_cutoff_min = stats["Tilt angle"]["cutoff_min"]
                 ori_cutoff_max = stats["Tilt angle"]["cutoff_max"]
 
                 # Add attributes for elongated particle to dictionary
                 pdict = gen_data_elong(pdict)
             particle_data.append(pdict)
-            self.nparticles += pdict['Number']
+            self.nparticles.append(pdict['Number'])
         print('  RVE characteristics:')
-        print(f'    RVE side lengths (X, Y, Z) = {self.size}')
+        print(f'    RVE side lengths (X, Y, Z) = {self.size} ({self.units})')
         print(f'    Number of voxels (X, Y, Z) = {self.dim}')
-        print(f'    Voxel resolution (X, Y, Z) = {np.divide(self.size, self.dim).round(4)}')
+        print(f'    Voxel resolution (X, Y, Z) = {np.divide(self.size, self.dim).round(4)}' +
+              f'({self.units})')
         print(f'    Total number of voxels     = {np.prod(self.dim)}\n')
         self.phase_names = phase_names
         self.phase_vf = phase_vf
         self.particle_data = particle_data
         return
+
 
 class mesh_creator(object):
     def __init__(self, dim):
@@ -430,3 +432,80 @@ class mesh_creator(object):
         return
 
 
+def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
+              asp_min=None, asp_max=None, omega_min=None, omega_max=None,
+              size=100, voxels=60, gtype='Elongated', rveunit='um',
+              periodicity=False, VF=None, phasename=None, phasenum=None,
+              save_file=False):
+    '''
+    grains = [std deviation, offset , mean grain sizeof lognorm distrib.]
+    ar = [std deviation, offset , mean aspect ratio of gamma distrib.]
+    omega = [std deviation, mean tilt angle]
+    '''
+
+    # type of grains either 'Elongated' or 'Equiaxed'
+    if not (gtype == 'Elongated' or gtype == 'Equiaxed'):
+        raise ValueError('Wrong grain type given in set_stats: {}'
+                         .format(gtype))
+    if gtype == 'Elongated' and (ar is None or omega is None):
+        raise ValueError('If elliptical grains are specified, aspect ratio ' +
+                         '(ar) and orientation (omega) need to be given.')
+    if gtype == 'Equiaxed' and (ar is not None or omega is not None):
+        warnings.warn('Equiaxed grains have been specified, but aspect ratio' +
+                      ' (ar) and orientation (omega) have been provided. ' +
+                      'Will change grain type to "Elongated".')
+        gtype = 'Elongated'
+
+    # define cutoff values
+    # cutoff deq
+    if deq_min is None:
+        deq_min = 1.3 * grains[1]  # 316L: 8
+    if deq_max is None:
+        deq_max = grains[1] + grains[2] + 6. * grains[0]  # 316L: 30
+    if gtype == 'Elongated':
+        # cutoff asp
+        if asp_min is None:
+            asp_min = np.maximum(1., ar[1])  # 316L: 1
+        if asp_max is None:
+            asp_max = ar[2] + ar[0]  # 316L: 3
+        # cutoff omega
+        if omega_min is None:
+            omega_min = omega[1] - 2 * omega[0]
+        if omega_max is None:
+            omega_max = omega[1] + 2 * omega[0]
+
+    # RVE box size
+    lx = ly = lz = size  # size of box in each direction
+    # number of voxels
+    nx = ny = nz = voxels  # number of voxels in each direction
+    # specify RVE info
+    pbc = 'True' if periodicity else 'False'
+
+    # check grain type
+    # create the corresponding dict with statistical grain geometry information
+    ms_stats = {'Grain type': gtype,
+                'Equivalent diameter':
+                    {'std': grains[0], 'mean': grains[2], 'offs': grains[1],
+                     'cutoff_min': deq_min, 'cutoff_max': deq_max},
+                'RVE':
+                    {'sideX': lx, 'sideY': ly, 'sideZ': lz,
+                     'Nx': nx, 'Ny': ny, 'Nz': nz},
+                'Simulation': {'periodicity': pbc,
+                               'output_units': rveunit},
+                'Phase': {'Name': phasename,
+                          'Number': phasenum,
+                          'Volume fraction': VF}}
+    if gtype == 'Elongated':
+        ms_stats['Aspect ratio'] = {'std': ar[0], 'mean': ar[2], 'offs': ar[1],
+                                    'cutoff_min': asp_min, 'cutoff_max': asp_max}
+        ms_stats['Tilt angle'] = {'std': omega[0], 'mean': omega[1],
+                                  'cutoff_min': omega_min, 'cutoff_max': omega_max}
+    if save_file:
+        cwd = os.getcwd()
+        json_dir = cwd + '/json_files'  # Folder to store the json files
+        if not os.path.exists(json_dir):
+            os.makedirs(json_dir)
+        with open(json_dir + '/stat_info.json', 'w') as outfile:
+            json.dump(ms_stats, outfile, indent=2)
+
+    return ms_stats

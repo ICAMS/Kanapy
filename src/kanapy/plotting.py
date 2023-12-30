@@ -220,7 +220,6 @@ def plot_output_stats(dataDictList, gs_data=None, gs_param=None,
     Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots
     the distributions.
     """
-    print(type(dataDictList), len(dataDictList))
     for ip, dataDict in enumerate(dataDictList):
         print('type(dataDict):', type(dataDict))
         print(f'Plotting input & output statistics for phase {ip}')
@@ -317,6 +316,11 @@ def plot_output_stats(dataDictList, gs_data=None, gs_param=None,
                 x = np.linspace(x0, x1, num=50)
                 y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
                 area = np.trapz(y, x)
+                if np.isclose(area, 0.):
+                    print('AREA', x0, x1)
+                    print(np.amin(grain_eqDia), np.amin(par_eqDia))
+                    print(np.amax(grain_eqDia), np.amax(par_eqDia))
+                    area = 1.
                 y /= area
                 ax[1].plot(x, y, '--k', label='Experiment')
             ax[1].plot(par_eqDia, ypdf1, linestyle='-', linewidth=3.0, label='Input')
