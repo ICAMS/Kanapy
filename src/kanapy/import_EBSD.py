@@ -10,16 +10,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from kanapy.util import MTEX_DIR, ROOT_DIR
 from scipy.stats import lognorm, norm
-import warnings
+import logging
+
 
 class EBSDmap:
     '''Class to store attributes and methods to import EBSD maps
     and filter out their statistical data needed to generate 
     synthetic RVEs
     '''
-    def __init__(self, fname, matname=None,
-                 gs_min=3, vf_min=0.03,
-                 plot=True):
+    def __init__(self, fname, matname=None, gs_min=3, vf_min=0.03, plot=True):
         """
         Generate microstructural data from EBSD maps
 
@@ -66,6 +65,8 @@ class EBSDmap:
         eng : handle for Matlab engine with MTEX data
 
         """
+        if matname is not None:
+            logging.warning('Use of parameter "matname" is depracted.')
         # start MATLAB Engine to use MTEX commands
         eng = matlab.engine.start_matlab()
         eng.addpath(MTEX_DIR, nargout=0)
@@ -166,7 +167,7 @@ class EBSDmap:
                     eng.hold('on', nargout=0)
                     eng.mtexColorbar
                 except:
-                    warnings.warn('ODF too large for plotting')'''
+                    logging.warning('ODF too large for plotting')'''
         
             # Evaluate grain shape statistics
             # generate dict for statistical input for geometry module

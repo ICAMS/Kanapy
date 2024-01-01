@@ -86,6 +86,8 @@ class Microstructure(object):
         self.simbox = None
         self.mesh = None
         self.res_data = None
+        self.from_voxels = False
+
         logging.basicConfig(level=log_level)
         if descriptor is None:
             if file is None:
@@ -98,7 +100,7 @@ class Microstructure(object):
             except:
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
         elif descriptor == 'from_voxels':
-            pass
+            self.from_voxels = True
         else:
             if type(descriptor) is not list:
                 self.descriptor = [descriptor]
@@ -109,7 +111,7 @@ class Microstructure(object):
                 if self.nphases > 2:
                     raise ValueError(f'Kanapy currently only supports 2 phases, but Nphase={self.nphases}')
             if file is not None:
-                print('WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
+                logging.warning('WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
         return
 
     """
@@ -203,8 +205,6 @@ class Microstructure(object):
 
         if self.mesh.nodes is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-        if self.mesh.phases is None:
-            raise ValueError('No phases defined.')
 
         self.geometry = \
             calc_polygons(self.rve, self.mesh)  # updates RVE_data
@@ -321,12 +321,12 @@ class Microstructure(object):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""
         if nodes is None:
             if self.nodes_s is not None and self.grain_facesDict is not None:
-                print('\nWarning: No information about nodes is given, will write smoothened structure')
+                logging.warning('\nWarning: No information about nodes is given, will write smoothened structure')
                 nodes = self.nodes_s
                 faces = self.grain_facesDict
                 ntag = 'smooth'
             elif self.nodes_v is not None:
-                print('\nWarning: No information about nodes is given, will write voxelized structure')
+                logging.warning('\nWarning: No information about nodes is given, will write voxelized structure')
                 nodes = self.nodes_v
                 faces = None
                 ntag = 'voxels'
@@ -779,45 +779,45 @@ class Microstructure(object):
                 "Input": source,
                 "Script": script_name,
                 "Material": self.name,
-                "Periodicity": str(self.rve.periodic),
                 "Phase_names": self.rve.phase_names,
+                "Size": self.rve.size,
+                "Periodicity": str(self.rve.periodic),
+                "Units": {
+                    'Length': self.rve.units,
+                },
             },
             "Data": {
                 "Description": 'Grain numbers per voxel',
                 "Type": 'int',
                 "Shape": self.rve.dim,
-                "Geometry": self.rve.size,
                 "Order": 'C',
-                "GrainID": [int(val) for val in self.mesh.grains.flatten()],
-                "Units": {
-                    'Length': self.rve.units,
-                }
+                "Values": [int(val) for val in self.mesh.grains.flatten()],
             },
             "Grains": {
                 "Description": "Grain-related data",
                 "Orientation": "Euler-Bunge angle",
                 "Phase": "Phase number"
-                }
+            },
         }
         for igr in self.mesh.grain_dict.keys():
                 structure["Grains"][igr] = {
                     "Phase": self.mesh.grain_phase_dict[igr]
                 }
         if angles is None:
-            logging.info('No angles for grains are given. Writing only geometry of RVE.')
+            print('No angles for grains are given. Writing only geometry of RVE.')
         else:
             for i, igr in enumerate(self.mesh.grain_dict.keys()):
                 structure["Grains"][igr]["Orientation"] = list(angles[i, :])
         if mesh:
             structure['Mesh'] = {
                 "Nodes": {
-                    "Class": 'coordinates',
+                    "Description": 'Nodal coordinates',
                     "Type": 'float',
                     "Shape": self.mesh.nodes.shape,
                     "Values": [list(val) for val in self.mesh.nodes],
                 },
                 "Voxels": {
-                    "Class": 'node_list',
+                    "Description": 'Node list per voxel',
                     "Type": 'int',
                     "Shape": (len(self.mesh.voxel_dict.keys()), 8),
                     "Values": [val for val in self.mesh.voxel_dict.values()],
@@ -866,5 +866,5 @@ class Microstructure(object):
 
     def init_stats(self, descriptor=None, gs_data=None, ar_data=None, porous=False, save_files=False):
         """ Legacy function for plot_stats_init."""
-        print('This legacy function is depracted, please use "plot_stats_init()".')
+        logging.warning('This legacy function is depracted, please use "plot_stats_init()".')
         self.plot_stats_init(descriptor, gs_data=gs_data, ar_data=ar_data, porous=porous, save_files=save_files)

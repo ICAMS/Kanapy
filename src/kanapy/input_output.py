@@ -1,9 +1,8 @@
 import os
 import re
-
+import logging
 import numpy as np
 from collections import defaultdict
-
 from kanapy.entities import Ellipsoid, Cuboid
 
 
@@ -119,7 +118,7 @@ def read_dump(dump_file):
     return sim_box, Ellipsoids
 
 
-def export2abaqus(nodes, fileName, elmtSetDict, elmtDict, units='mm',
+def export2abaqus(nodes, fileName, elmtSetDict, voxel_dict, units='mm',
                   grain_facesDict=None, dual_phase=False, thermal=False):
     r"""
     Creates an ABAQUS input file with microstructure morphology information
@@ -222,7 +221,7 @@ def export2abaqus(nodes, fileName, elmtSetDict, elmtDict, units='mm',
         if grain_facesDict is None:
             # export voxelized structure with regular hex mesh
             # Create Elements
-            for k, v in elmtDict.items():
+            for k, v in voxel_dict.items():
                 f.write('{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}\n'.format(
                     k, v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]))
             if dual_phase:
@@ -360,60 +359,109 @@ def pickle2microstructure(file, path='./'):
 def import_voxels(file, path='./'):
     import json
     from kanapy.api import Microstructure
+    from kanapy.initializations import RVE_creator, mesh_creator
+    from kanapy.entities import Simulation_Box
 
     if path[-1] != '/':
         path += '/'
     if file is None:
         raise ValueError('Name for voxel file must be given.')
     data = json.load(open(path + file))
-    sh = data['Data']['Shape']
-    gr_numbers = np.unique(data['Data']['Values'])
-    Ngr = len(gr_numbers)
-    voxels = np.reshape(data['Data']['Values'], sh, order=data['Data']['Order'])
-    delta = np.divide(data['Data']['Geometry'][0], sh)
-    RVE_data = {
-        "RVE_sizeX": data['Data']['Geometry'][0],
-        "RVE_sizeY": data['Data']['Geometry'][1],
-        "RVE_sizeZ": data['Data']['Geometry'][2],
-        "Voxel_numberX": sh[0],
-        "Voxel_numberY": sh[1],
-        "Voxel_numberZ": sh[2],
-        "Voxel_resolutionX": delta[0],
-        "Voxel_resolutionY": delta[1],
-        "Voxel_resolutionZ": delta[2],
-        "Periodic": data['Data']['Periodicity'],
-        "Units": data['Data']['Units']['Length'],
-    }
-    elmtDict = dict()
-    elmtSetDict = dict()
-    vox_centerDict = dict()
-    for ngr in gr_numbers:
-        elmtSetDict[ngr] = []
-    if 'Mesh' in data.keys():
-        nodes_v = np.array(data['Mesh']['Nodes']['Values'])
-        for i, el in enumerate(data['Mesh']['Voxels']['Values']):
-            elmtDict[i+1] = el
-            ind = np.array(el, dtype=int) - 1
-            vox_centerDict[i+1] = np.mean(nodes_v[ind], axis=0)
-            ind = np.divide(vox_centerDict[i+1], delta).astype(int)
-            igr = voxels[ind[0], ind[1], ind[2]]
-            elmtSetDict[igr].append(i+1)
-    else:
-        raise ValueError('Construction of mesh from voxel data not yet implemented.')
 
-    ms = Microstructure('from_voxels')
-    ms.Ngr = Ngr
-    ms.RVE_data = RVE_data
-    ms.elmtDict = elmtDict
-    ms.elmtSetDict = elmtSetDict
-    ms.name = 'Microstructure'
-    ms.nodes_v = nodes_v
-    ms.nphase = 1
-    ms.vox_centerDict = vox_centerDict
-    ms.voxels = voxels
-    ms.voxels_phase = np.zeros(sh, dtype=int)
-    ms.phases = {
-        'Phase name': ['Simulanium']*Ngr,
-        'Phase number': [0]*Ngr,
+    # extract basic model information
+    sh = tuple(data['Data']['Shape'])
+    nvox = np.prod(sh)
+    size = tuple(data['Model']['Size'])
+    gr_numbers = np.unique(data['Data']['Values'])
+    grain_keys = np.asarray(gr_numbers, dtype=str)
+    grains = np.reshape(data['Data']['Values'], sh, order=data['Data']['Order'])
+    ph_names = data['Model']['Phase_names']
+    nphases = len(ph_names)
+    grain_dict = dict()
+    grain_phase_dict = dict()
+    gr_arr = grains.flatten(order='F')
+    if 'Grains' in data.keys():
+        if 'Orientation' in data['Grains'][grain_keys[0]].keys():
+            grain_ori_dict = dict()
+        else:
+            grain_ori_dict = None
+        phase_vf = np.zeros(nphases)
+        ngrain = np.zeros(nphases)
+        phases = np.zeros(nvox)
+        for igr in gr_numbers:
+            ind = np.nonzero(gr_arr == igr)[0]
+            nv = len(ind)
+            ip = data['Grains'][str(igr)]['Phase']
+            phase_vf[ip] += nv
+            grain_dict[igr] = ind + 1
+            grain_phase_dict[igr] = ip
+            ngrain[ip] += 1
+            phases[ind] = ip
+            if grain_ori_dict is not None:
+                grain_ori_dict[igr] = data['Grains'][str(igr)]['Orientation']
+        phase_vf /= nvox
+        if not np.isclose(np.sum(phase_vf), 1.):
+            logging.warning(f'Volume fractions do not add up to 1: {phase_vf}')
+    else:
+        # no grain-level information in data
+        if nphases > 1:
+            logging.error('No grain-level information in data file.' +
+                          'Cannot extract phase information or orientations.' +
+                          'Continuing with single phase model.')
+            nphases = 1
+            phase_vf = 1.
+        for igr in gr_numbers:
+            ind = np.nonzero(gr_arr == igr)[0]
+            grain_dict[igr] = ind + 1
+            grain_phase_dict[igr] = 0
+        ngrain = [len(grain_keys)]
+        phases = np.zeros(nvox)
+
+    # reconstructing microstructure information for RVE
+    stats_dict = {
+        'RVE': {'sideX': size[0], 'sideY': size[1], 'sideZ': size[2],
+                'Nx': sh[0], 'Ny': sh[1], 'Nz': sh[2]},
+        'Simulation': {'periodicity': data['Model']['Periodicity'],
+                       'output_units': data['Model']['Units']['Length']},
+        'Phase': {'Name': 'Simulanium', 'Volume fraction': 1.0}
     }
+    # add phase information and construct list of stats_dict's
+    stats_list = []
+    for i in range(nphases):
+        stats_dict['Phase']['Name'] = ph_names[i]
+        stats_dict['Phase']['Volume fraction'] = phase_vf[i]
+        stats_list.append(stats_dict)
+    # Create microstructure object
+    ms = Microstructure('from_voxels')
+    ms.name = data['Model']['Material']
+    ms.Ngr = np.sum(ngrain)
+    ms.nphases = nphases
+    ms.descriptor = stats_list
+    ms.ngrains = ngrain
+    ms.rve = RVE_creator(stats_list, from_voxels=True)
+    ms.simbox = Simulation_Box(size)
+    # initialize voxel structure (= mesh)
+    ms.mesh = mesh_creator(sh)
+    ms.mesh.nphases = nphases
+    ms.mesh.grains = grains
+    ms.mesh.grain_dict = grain_dict
+    ms.mesh.grain_ori_dict = grain_ori_dict
+    ms.mesh.phases = phases.reshape(sh, order='F')
+    ms.mesh.grain_phase_dict = grain_phase_dict
+    ms.mesh.ngrains_phase = ngrain
+    # import or create mesh
+    voxel_dict = dict()
+    vox_centerDict = dict()
+    if 'Mesh' in data.keys():
+        nodes = np.array(data['Mesh']['Nodes']['Values'])
+        for i, el in enumerate(data['Mesh']['Voxels']['Values']):
+            voxel_dict[i+1] = el
+            ind = np.array(el, dtype=int) - 1
+            vox_centerDict[i+1] = np.mean(nodes[ind], axis=0)
+        ms.mesh.voxel_dict = voxel_dict
+        ms.mesh.vox_center_dict = vox_centerDict
+        ms.mesh.nodes = nodes
+    else:
+        ms.mesh.create_voxels(ms.simbox)
+
     return ms

@@ -3,7 +3,7 @@ import os
 import sys
 
 import numpy as np
-import warnings
+import logging
 import itertools
 from scipy.stats import lognorm, norm
 from collections import defaultdict
@@ -61,7 +61,7 @@ class RVE_creator(object):
                   or :math:`\mu m`) for ABAQUS .inp file.
 
     """
-    def __init__(self, stats_dicts, nsteps=1000):
+    def __init__(self, stats_dicts, nsteps=1000, from_voxels=False):
         """
         Create an RVE object.
 
@@ -84,187 +84,126 @@ class RVE_creator(object):
         phase_vf = []  # list of volume fractions of phases
         """
 
-        def gen_data_basic(pdict):
-            # Compute the Log-normal PDF & CDF.
-            if offs is None:
-                frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
-            else:
-                frozen_lognorm = lognorm(s=sd, loc=offs, scale=mean)
+        def init_particles(particle_data):
+            """
+            Extract statistical microstructure information from data dictionary
+            and initalize particles for packing accordingly
+            """
 
-            xaxis = np.linspace(0.1,200,1000)
-            ycdf = frozen_lognorm.cdf(xaxis)
-
-            # Get the mean value for each pair of neighboring points as centers of bins
-            xaxis = np.vstack([xaxis[1:], xaxis[:-1]]).mean(axis=0)
-
-            # Based on the cutoff specified, get the restricted distribution
-            index_array = np.where((xaxis >= dia_cutoff_min) & (xaxis <= dia_cutoff_max))
-            eq_Dia = xaxis[index_array]          # Selected diameters within the cutoff
-
-            # Compute the number fractions and extract them based on the cut-off
-            number_fraction = np.ediff1d(ycdf)  # better use lognorm.pdf
-            numFra_Dia = number_fraction[index_array]
-
-            # Volume of each ellipsoid
-            volume_array = (4/3)*np.pi*(0.5*eq_Dia)**3
-
-            # Volume fraction for each ellipsoid
-            individualK = np.multiply(numFra_Dia, volume_array)
-            K = individualK/np.sum(individualK)
-
-            # Total number of ellipsoids for packing density 65%
-            num = np.divide(K*phase_vf[-1]*np.prod(self.size), volume_array)*0.65
-            num = np.rint(num).astype(int)       # Round to the nearest integer
-            totalEllipsoids = int(np.sum(num))
-
-            # Duplicate the diameter values
-            eq_Dia = np.repeat(eq_Dia, num)  # better calculate num first
-
-            # Raise value error in case the RVE side length is too small to fit grains inside.
-            if len(eq_Dia) == 0:
-                raise ValueError(
-                    'RVE volume too small to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
-
-            # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain at least 3 voxels
-            voxel_size = np.divide(self.size, self.dim)
-
-            # raise value error if voxel sizes along the 3 directions are not equal
-            dif1 = np.abs(voxel_size[0] - voxel_size[1])
-            dif2 = np.abs(voxel_size[1] - voxel_size[2])
-            dif3 = np.abs(voxel_size[2] - voxel_size[0])
-            if (dif1 > 1.e-5) or (dif2 > 1.e-5) or (dif3 > 1.e-5):
-                raise ValueError('Voxels are not cubic, voxel sizes must be identical in all directions.')
-
-            # raise value error in case the grains are not voxelated well
-            if voxel_size[0] >= np.amin(eq_Dia) / 3.:
-                print(" ")
-                print(f"    Grains with minimum size {np.amin(eq_Dia)} will not be voxelated well!")
-                print(f"    Voxel size is {voxel_size[0]}")
-                print("    Consider increasing the voxel numbers (OR) decreasing the RVE side lengths\n")
-                if voxel_size[0] > np.amin(eq_Dia):
-                    raise ValueError(' Voxel size larger than minimum grain size.')
-
-            # raise warning if large grain occur in periodic box
-            if np.amax(eq_Dia) >= self.size[0] * 0.5 and self.periodic:
-                print("\n")
-                print("    Periodic box with grains larger the half of box width.")
-                print("    Check grain polygons carefully.")
-
-            print(f'    Analyzed statistical data for phase {phase_names[-1]} ({ip})')
-            print(f'    Total number of particles  = {totalEllipsoids}')
-            pdict['Number'] = totalEllipsoids
-            pdict['Equivalent_diameter'] = list(eq_Dia)
-            return pdict
-
-        def gen_data_elong(pdict):
-            # Tilt angle statistics
-            # Sample from Normal distribution: It takes mean and std of normal distribution
-            tilt_angle = []
-            num = pdict['Number']
-            while num > 0:
-                tilt = norm.rvs(scale=std_ori, loc=mean_ori, size=num)
-                index_array = np.where((tilt >= ori_cutoff_min) & (tilt <= ori_cutoff_max))
-                TA = tilt[index_array].tolist()
-                tilt_angle.extend(TA)
-                num = pdict['Number'] - len(tilt_angle)
-
-            # Aspect ratio statistics
-            # Sample from lognormal or gamma distribution:
-            # it takes mean, std and scale of the underlying normal distribution
-            finalAR = []
-            num = pdict['Number']
-            while num > 0:
-                # ar = np.random.lognormal(mean_AR, sd_AR, num)
-                if offs_AR is None:
-                    ar = lognorm.rvs(sd_AR, scale=np.exp(mean_AR), size=num)
+            def gen_data_basic(pdict):
+                # Compute the Log-normal PDF & CDF.
+                if offs is None:
+                    frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
                 else:
-                    ar = lognorm.rvs(sd_AR, loc=offs_AR, scale=mean_AR, size=num)
-                index_array = np.where((ar >= ar_cutoff_min) & (ar <= ar_cutoff_max))
-                AR = ar[index_array].tolist()
-                finalAR.extend(AR)
-                num = pdict['Number'] - len(finalAR)
-            finalAR = np.array(finalAR)
+                    frozen_lognorm = lognorm(s=sd, loc=offs, scale=mean)
 
-            # Calculate the major, minor axes lengths for particles using:
-            # (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b
-            minDia = pdict['Equivalent_diameter'] / finalAR ** (1 / 3)  # Minor axis length
-            majDia = minDia * finalAR  # Major axis length
-            minDia2 = minDia.copy()  # Minor2 axis length (assuming rotational shape)
+                xaxis = np.linspace(0.1, 200, 1000)
+                ycdf = frozen_lognorm.cdf(xaxis)
 
-            # Add data to dictionary to store the data generated
-            pdict['Major_diameter'] = list(majDia)
-            pdict['Minor_diameter1'] = list(minDia)
-            pdict['Minor_diameter2'] = list(minDia2)
-            pdict['Tilt angle'] = list(tilt_angle)
-            return pdict
+                # Get the mean value for each pair of neighboring points as centers of bins
+                xaxis = np.vstack([xaxis[1:], xaxis[:-1]]).mean(axis=0)
 
-        print('Creating an RVE based on user defined statistics')
-        # Extract grain diameter statistics info
-        self.nphases = len(stats_dicts)  # number of phases in RVE
-        self.packing_steps = nsteps  # max number of steps for packing simulation
-        self.size = None  #  tuple of lengths along Cartesian axes
-        self.dim = None  # tuple of number of voxels along Cartesian axes
-        self.periodic = None  # Boolean for periodicity of RVE
-        self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
-        self.nparticles = []  # List of article numbers for each phase
-        particle_data = []  # list of cits for statistical particle data for each grains
-        phase_names = []  # list of names of phases
-        phase_vf = []  # list of volume fractions of phases
+                # Based on the cutoff specified, get the restricted distribution
+                index_array = np.where((xaxis >= dia_cutoff_min) & (xaxis <= dia_cutoff_max))
+                eq_Dia = xaxis[index_array]  # Selected diameters within the cutoff
 
-        # extract data from descriptors of individual phases
-        for ip, stats in enumerate(stats_dicts):
-            # Extract RVE side lengths and voxel numbers, must be provided for phase 0
-            if 'RVE' in stats.keys():
-                size = (stats["RVE"]["sideX"],
-                        stats["RVE"]["sideY"],
-                        stats["RVE"]["sideZ"])
-                nvox = (int(stats["RVE"]["Nx"]),
-                        int(stats["RVE"]["Ny"]),
-                        int(stats["RVE"]["Nz"]))
-                if self.size is None:
-                    self.size = size
-                else:
-                    if self.size != size:
-                        warnings.warn(f'Conflicting RVE sizes in descriptors: {self.size}, {size}.' +
-                                      'Using first value.')
-                if self.dim is None:
-                    self.dim = nvox
-                else:
-                    if self.dim != nvox:
-                        warnings.warn(f'Conflicting RVE voxel dimensions in descriptors: {self.dim}, {nvox}.' +
-                                      'Using first value.')
-            elif ip == 0:
-                raise ValueError('RVE properties must be specified in descriptors for first phase.')
+                # Compute the number fractions and extract them based on the cut-off
+                number_fraction = np.ediff1d(ycdf)  # better use lognorm.pdf
+                numFra_Dia = number_fraction[index_array]
 
-            # Extract other simulation attributes, must be specified for phase 0
-            if "Simulation" in stats.keys():
-                periodic = bool(stats["Simulation"]["periodicity"])
-                if self.periodic is None:
-                    self.periodic = periodic
-                elif self.periodic != periodic:
-                    warnings.warn(f'Inconsistent values for periodicity. Using periodicity: {self.periodic}.')
-                units = str(stats["Simulation"]["output_units"])
-                # Raise ValueError if units are not specified as 'mm' or 'um'
-                if units != 'mm' and units != 'um':
-                    raise ValueError('Output units can only be "mm" or "um"!')
-                if self.units is None:
-                    self.units = units
-                elif self.units != units:
-                    warnings.warn(f'Inconsistent values for units. Using units: {self.units}.')
-            elif ip == 0:
-                raise ValueError('Simulation attributes must be specified in descriptors for first phase.')
+                # Volume of each ellipsoid
+                volume_array = (4 / 3) * np.pi * (0.5 * eq_Dia) ** 3
 
-            # Extract phase information
-            if "Phase" in stats.keys():
-                phase_names.append(stats["Phase"]["Name"])
-                phase_vf.append(stats["Phase"]["Volume fraction"])
-            else:
-                phase_names.append(f'Phase_{ip}')
-                phase_vf.append(1. - np.sum(phase_vf))  # volume fraction can only be unspecified for last phase
-            if np.sum(phase_vf) > 1.:
-                raise ValueError(f"Sum of all phase fractions exceeds 1: {phase_vf}")
+                # Volume fraction for each ellipsoid
+                individualK = np.multiply(numFra_Dia, volume_array)
+                K = individualK / np.sum(individualK)
 
-            # Extract grains shape attributes
+                # Total number of ellipsoids for packing density 65%
+                num = np.divide(K * phase_vf[-1] * np.prod(self.size), volume_array) * 0.65
+                num = np.rint(num).astype(int)  # Round to the nearest integer
+                totalEllipsoids = int(np.sum(num))
+
+                # Duplicate the diameter values
+                eq_Dia = np.repeat(eq_Dia, num)  # better calculate num first
+
+                # Raise value error in case the RVE side length is too small to fit grains inside.
+                if len(eq_Dia) == 0:
+                    raise ValueError(
+                        'RVE volume too small to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
+
+                # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain at least 3 voxels
+                voxel_size = np.divide(self.size, self.dim)
+
+                # raise value error if voxel sizes along the 3 directions are not equal
+                dif1 = np.abs(voxel_size[0] - voxel_size[1])
+                dif2 = np.abs(voxel_size[1] - voxel_size[2])
+                dif3 = np.abs(voxel_size[2] - voxel_size[0])
+                if (dif1 > 1.e-5) or (dif2 > 1.e-5) or (dif3 > 1.e-5):
+                    raise ValueError('Voxels are not cubic, voxel sizes must be identical in all directions.')
+
+                # raise value error in case the grains are not voxelated well
+                if voxel_size[0] >= np.amin(eq_Dia) / 3.:
+                    logging.warning(" ")
+                    logging.warning(f"    Grains with minimum size {np.amin(eq_Dia)} will not be voxelated well!")
+                    logging.warning(f"    Voxel size is {voxel_size[0]}")
+                    logging.warning("    Consider increasing the voxel numbers (OR) decreasing the RVE side lengths\n")
+                    if voxel_size[0] > np.amin(eq_Dia):
+                        raise ValueError(' Voxel size larger than minimum grain size.')
+
+                # raise warning if large grain occur in periodic box
+                if np.amax(eq_Dia) >= self.size[0] * 0.5 and self.periodic:
+                    logging.warning("\n")
+                    logging.warning("    Periodic box with grains larger the half of box width.")
+                    logging.warning("    Check grain polygons carefully.")
+
+                print(f'    Analyzed statistical data for phase {phase_names[-1]} ({ip})')
+                print(f'    Total number of particles  = {totalEllipsoids}')
+                pdict['Number'] = totalEllipsoids
+                pdict['Equivalent_diameter'] = list(eq_Dia)
+                return pdict
+
+            def gen_data_elong(pdict):
+                # Tilt angle statistics
+                # Sample from Normal distribution: It takes mean and std of normal distribution
+                tilt_angle = []
+                num = pdict['Number']
+                while num > 0:
+                    tilt = norm.rvs(scale=std_ori, loc=mean_ori, size=num)
+                    index_array = np.where((tilt >= ori_cutoff_min) & (tilt <= ori_cutoff_max))
+                    TA = tilt[index_array].tolist()
+                    tilt_angle.extend(TA)
+                    num = pdict['Number'] - len(tilt_angle)
+
+                # Aspect ratio statistics
+                # Sample from lognormal or gamma distribution:
+                # it takes mean, std and scale of the underlying normal distribution
+                finalAR = []
+                num = pdict['Number']
+                while num > 0:
+                    # ar = np.random.lognormal(mean_AR, sd_AR, num)
+                    if offs_AR is None:
+                        ar = lognorm.rvs(sd_AR, scale=np.exp(mean_AR), size=num)
+                    else:
+                        ar = lognorm.rvs(sd_AR, loc=offs_AR, scale=mean_AR, size=num)
+                    index_array = np.where((ar >= ar_cutoff_min) & (ar <= ar_cutoff_max))
+                    AR = ar[index_array].tolist()
+                    finalAR.extend(AR)
+                    num = pdict['Number'] - len(finalAR)
+                finalAR = np.array(finalAR)
+
+                # Calculate the major, minor axes lengths for particles using:
+                # (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) & b=c & a=AR*b
+                minDia = pdict['Equivalent_diameter'] / finalAR ** (1 / 3)  # Minor axis length
+                majDia = minDia * finalAR  # Major axis length
+                minDia2 = minDia.copy()  # Minor2 axis length (assuming rotational shape)
+
+                # Add data to dictionary to store the data generated
+                pdict['Major_diameter'] = list(majDia)
+                pdict['Minor_diameter1'] = list(minDia)
+                pdict['Minor_diameter2'] = list(minDia2)
+                pdict['Tilt angle'] = list(tilt_angle)
+                return pdict
+
             if stats["Grain type"] not in ["Elongated", "Equiaxed"]:
                 raise ValueError('The value for "Grain type" must be either "Equiaxed" or "Elongated".')
 
@@ -302,6 +241,77 @@ class RVE_creator(object):
                 pdict = gen_data_elong(pdict)
             particle_data.append(pdict)
             self.nparticles.append(pdict['Number'])
+            return particle_data
+
+        print('Creating an RVE based on user defined statistics')
+        # Extract grain diameter statistics info
+        self.nphases = len(stats_dicts)  # number of phases in RVE
+        self.packing_steps = nsteps  # max number of steps for packing simulation
+        self.size = None  #  tuple of lengths along Cartesian axes
+        self.dim = None  # tuple of number of voxels along Cartesian axes
+        self.periodic = None  # Boolean for periodicity of RVE
+        self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
+        self.nparticles = []  # List of article numbers for each phase
+        particle_data = []  # list of cits for statistical particle data for each grains
+        phase_names = []  # list of names of phases
+        phase_vf = []  # list of volume fractions of phases
+
+        # extract data from descriptors of individual phases
+        for ip, stats in enumerate(stats_dicts):
+            # Extract RVE side lengths and voxel numbers, must be provided for phase 0
+            if 'RVE' in stats.keys():
+                size = (stats["RVE"]["sideX"],
+                        stats["RVE"]["sideY"],
+                        stats["RVE"]["sideZ"])
+                nvox = (int(stats["RVE"]["Nx"]),
+                        int(stats["RVE"]["Ny"]),
+                        int(stats["RVE"]["Nz"]))
+                if self.size is None:
+                    self.size = size
+                else:
+                    if self.size != size:
+                        logging.warning(f'Conflicting RVE sizes in descriptors: {self.size}, {size}.' +
+                                      'Using first value.')
+                if self.dim is None:
+                    self.dim = nvox
+                else:
+                    if self.dim != nvox:
+                        logging.warning(f'Conflicting RVE voxel dimensions in descriptors: {self.dim}, {nvox}.' +
+                                      'Using first value.')
+            elif ip == 0:
+                raise ValueError('RVE properties must be specified in descriptors for first phase.')
+
+            # Extract other simulation attributes, must be specified for phase 0
+            if "Simulation" in stats.keys():
+                periodic = bool(stats["Simulation"]["periodicity"])
+                if self.periodic is None:
+                    self.periodic = periodic
+                elif self.periodic != periodic:
+                    logging.warning(f'Inconsistent values for periodicity. Using periodicity: {self.periodic}.')
+                units = str(stats["Simulation"]["output_units"])
+                # Raise ValueError if units are not specified as 'mm' or 'um'
+                if units != 'mm' and units != 'um':
+                    raise ValueError('Output units can only be "mm" or "um"!')
+                if self.units is None:
+                    self.units = units
+                elif self.units != units:
+                    logging.warning(f'Inconsistent values for units. Using units: {self.units}.')
+            elif ip == 0:
+                raise ValueError('Simulation attributes must be specified in descriptors for first phase.')
+
+            # Extract phase information
+            if "Phase" in stats.keys():
+                phase_names.append(stats["Phase"]["Name"])
+                phase_vf.append(stats["Phase"]["Volume fraction"])
+            else:
+                phase_names.append(f'Phase_{ip}')
+                phase_vf.append(1. - np.sum(phase_vf))  # volume fraction can only be unspecified for last phase
+            if np.sum(phase_vf) > 1.:
+                raise ValueError(f"Sum of all phase fractions exceeds 1: {phase_vf}")
+
+            # Extract grains shape attributes to initialize particles
+            if not from_voxels:
+                particle_data = init_particles(particle_data)
         print('  RVE characteristics:')
         print(f'    RVE side lengths (X, Y, Z) = {self.size} ({self.units})')
         print(f'    Number of voxels (X, Y, Z) = {self.dim}')
@@ -341,7 +351,9 @@ class mesh_creator(object):
         self.nvox = np.prod(dim)  # number of voxels
         self.grains = None
         self.phases = None
-        self.grain_dict = dict()  # stored voxels assigned to each grain (key: grain number:int)
+        self.grain_dict = dict()  # voxels assigned to each grain (key: grain number:int)
+        self.grain_phase_dict = None  # phases per grain (key: grain number:int)
+        self.grain_ori_dict = None  # orientations per grain (key: grain number:int)
         self.voxel_dict = defaultdict(list)  # dictionary to store list of node ids for each element
         self.vox_center_dict = dict()  # dictionary to store center of each voxel as 3-tupel
         self.nodes = None  # array of nodal positions
@@ -427,7 +439,7 @@ class mesh_creator(object):
         self.nodes = np.zeros((node_count, 3))
         print('### create voxels', node_count, self.nodes.shape)
         for pos, i in verticesDict.items():
-            # print('***   ', i, pos)
+            # logging.debug('***   ', i, pos)
             self.nodes[i - 1, :] = pos
         return
 
@@ -451,7 +463,7 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
         raise ValueError('If elliptical grains are specified, aspect ratio ' +
                          '(ar) and orientation (omega) need to be given.')
     if gtype == 'Equiaxed' and (ar is not None or omega is not None):
-        warnings.warn('Equiaxed grains have been specified, but aspect ratio' +
+        logging.warn('Equiaxed grains have been specified, but aspect ratio' +
                       ' (ar) and orientation (omega) have been provided. ' +
                       'Will change grain type to "Elongated".')
         gtype = 'Elongated'

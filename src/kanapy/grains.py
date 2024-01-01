@@ -1,5 +1,5 @@
 import itertools
-import warnings
+import logging
 import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.spatial.distance import euclidean
@@ -454,15 +454,15 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     for igr in mesh.grain_dict.keys():
         if grains[igr]['Volume'] < 1.e-5:
-            warnings.warn(f'No tet assigned to grain {igr}.')
+            logging.warning(f'No tet assigned to grain {igr}.')
             if grains[igr]['Simplices']:
                 nf = len(grains[igr]['Simplices'])
-                warnings.warn(f'Grain {igr} contains {nf} tets, but no volume')
+                logging.warning(f'Grain {igr} contains {nf} tets, but no volume')
         # Find the Euclidean distance to all surface points from the center
         dists = [euclidean(grains[igr]['Center'], pt) for pt in
                  mesh.nodes[grains[igr]['Vertices']]]
         if len(dists) == 0:
-            warnings.warn(f'Grain {igr} with few vertices: {grains[igr]["Vertices"]}')
+            logging.warning(f'Grain {igr} with few vertices: {grains[igr]["Vertices"]}')
             dists = [0.]
         grains[igr]['eqDia'] = 2.0 * (3 * grains[igr]['Volume']
                                       / (4 * np.pi)) ** (1 / 3)
@@ -488,10 +488,10 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         vtot_vox += vvox
         vol_mae += np.abs(1. - vg / vvox)
     if np.abs(vtot_vox - vref) > 1.e-5:
-        warnings.warn(f'Inconsistent volume of voxelized grains: {vtot_vox}, ' +
+        logging.warning(f'Inconsistent volume of voxelized grains: {vtot_vox}, ' +
                       f'Reference volume: {vref}')
     if np.abs(vtot - vref) > 1.e-5:
-        warnings.warn(f'Inconsistent volume of polyhedral grains: {vtot}, ' +
+        logging.warning(f'Inconsistent volume of polyhedral grains: {vtot}, ' +
                       f'Reference volume: {vref}')
     print(f'Total volume of RVE: {vref} {rve.units}^3')
     print(f'Total volume of polyhedral grains: {vtot} {rve.units}^3')

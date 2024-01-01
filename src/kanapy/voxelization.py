@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import itertools
-import warnings
+import logging
 from tqdm import tqdm
 from collections import defaultdict
 from scipy.spatial import ConvexHull
@@ -356,7 +356,7 @@ def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
         else:
             # If ellipsoid doesn't contain any voxel inside
             # grain should be removed from list!!!
-            print('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissible'
+            logging.debug('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissible'
                   .format(ellipsoid.id))
             # sys.exit(0)
     
@@ -390,7 +390,7 @@ def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
         print(f'Actual volume fraction of particles in box = {1.-porous_cur}')
         print(f'Target volume fraction = {1.-porosity}')
     elif porous_cur > 0.:
-        warnings.warn(f'WARNING: {len(ind)} voxels have not been assigned to grains.')
+        logging.warning(f'WARNING: {len(ind)} voxels have not been assigned to grains.')
     print('')
                                                                                    
     return mesh
