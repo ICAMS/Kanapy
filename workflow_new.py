@@ -56,11 +56,12 @@ if knpy.MTEX_AVAIL:
     omega = 7.5         # kernel half-width
     ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
     #ori_rnd = knpy.createOrisetRandom(ms.Ngr, Nbase=1000)  # tested OK
+else:
+    ori_rve = None
 
 # output rve in different formats
 ms.write_voxels(angles=ori_rve, script_name=__file__)
-#ms.pckl()  # tested OK
-#ms.write_stl()  # tested OK
+#ms.pckl()  # tested OK, also reading
 #ms.write_stl()  # tested OK
 #ms.write_ori(ori_rve)  # tested OK
 
@@ -69,3 +70,15 @@ ms.write_voxels(angles=ori_rve, script_name=__file__)
 #ms.plot_slice(cut='xz', pos='top', data='poly')
 
 #ms.output_abq('s')
+
+# read volxels and reconstructu grains
+ms2 = knpy.import_voxels('ebsd_316L_500x500.ang_RVE_voxels.json')
+ms2.plot_voxels()
+ms2.generate_grains()
+ms2.plot_grains()
+ms2.plot_stats()
+ms2.smoothen()
+"""
+for igr,val in ms.mesh.grain_dict.items():
+    print(igr, np.any(val.sort() == grain_dict[igr].sort()))
+"""
