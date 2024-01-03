@@ -26,6 +26,7 @@ from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
+from kanapy.import_EBSD import EBSDmap, createOrisetRandom, createOriset
 from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D, plot_output_stats
 from kanapy.util import log_level
@@ -111,7 +112,8 @@ class Microstructure(object):
                 if self.nphases > 2:
                     raise ValueError(f'Kanapy currently only supports 2 phases, but Nphase={self.nphases}')
             if file is not None:
-                logging.warning('WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
+                logging.warning(
+                    'WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
         return
 
     """
@@ -127,8 +129,7 @@ class Microstructure(object):
         ----------
         descriptor
         nsteps
-        porous
-        save_files
+        porosity
 
         Returns
         -------
@@ -154,7 +155,7 @@ class Microstructure(object):
         self.mesh.nphases = self.nphases
         self.mesh.create_voxels(self.simbox)
 
-    def pack(self, particle_data=None, RVE_data=None,
+    def pack(self, particle_data=None,
              k_rep=0.0, k_att=0.0, vf=None, save_files=False):
 
         """ Packs the particles into a simulation box."""
@@ -179,12 +180,11 @@ class Microstructure(object):
             voxelizationRoutine(particles, self.mesh, porosity=self.porosity)
         if np.any(self.nparticles != self.mesh.ngrains_phase):
             logging.info(f'Number of grains per phase changed from {self.nparticles} to' +
-                          f'{self.mesh.ngrains_phase} during voxelization.')
+                         f'{self.mesh.ngrains_phase} during voxelization.')
         self.ngrains = self.mesh.ngrains_phase
         self.Ngr = np.sum(self.mesh.ngrains_phase, dtype=int)  # legacy notation
 
-    def smoothen(self, nodes_v=None, voxel_dict=None, grain_dict=None,
-                 save_files=False):
+    def smoothen(self, nodes_v=None, voxel_dict=None, grain_dict=None):
         """ Generates smoothed grain boundary from a voxelated mesh."""
         if nodes_v is None:
             nodes_v = self.mesh.nodes
@@ -195,7 +195,7 @@ class Microstructure(object):
         if grain_dict is None:
             grain_dict = self.mesh.grain_dict
         self.mesh.nodes_smooth, grain_facesDict = \
-            smoothingRoutine(nodes_v, voxel_dict, grain_dict, save_files=save_files)
+            smoothingRoutine(nodes_v, voxel_dict, grain_dict)
         self.geometry['GBfaces'] = grain_facesDict
 
     def generate_grains(self):
@@ -208,9 +208,58 @@ class Microstructure(object):
 
         self.geometry = \
             calc_polygons(self.rve, self.mesh)  # updates RVE_data
-        if self.rve.particle_data is not None:
-            self.res_data = \
-                get_stats(self.rve.particle_data, self.geometry, self.rve.units)
+        self.res_data = \
+            get_stats(self.rve.particle_data, self.geometry, self.rve.units, self.rve.nphases)
+
+
+    def generate_orientations(self, input, ang=None, omega=None, Nbase=2000):
+        """
+        Calculates the orientations of grains to give a desired crystallographic texture.
+
+        Parameters
+        ----------
+        input
+        ang
+        omega
+        Nbase
+
+        Returns
+        -------
+
+        """
+        from kanapy import MTEX_AVAIL
+
+        if not MTEX_AVAIL:
+            raise ModuleNotFoundError('MTEX not installed. Run "kanapy setupTexture" first to use this function.')
+        if self.mesh.grains is None:
+            raise ValueError('Grain geometry is not defined. Run voxelize first.')
+        if self.geometry is None:
+            logging.warning('Grain boundary areas are not defined and cannot be considered in orientation assignment.')
+            gba = None
+        else:
+            gba = self.geometry['GBarea']
+
+        ori_dict = dict()
+        for ip, ngr in enumerate(self.ngrains):
+            if type(input) is EBSDmap:
+                ori_rve = input.calcORI(ngr, iphase=ip, shared_area=gba)
+            elif type(input) is str:
+                if input.lower() in ['random', 'rnd']:
+                    ori_rve = createOrisetRandom(ngr, Nbase=Nbase)
+                elif input.lower() in ['unimodal', 'uni_mod', 'uni_modal']:
+                    if ang is None or omega is None:
+                        raise ValueError('To generate orientation sets of type "unimodal" angle "ang" and kernel' +
+                                         'halfwidth "omega" are required.')
+                    ori_rve = createOriset(ngr, ang, omega)
+            else:
+                raise ValueError('Argument to generate grain orientation must be either of type EBSDmap or ' +
+                                 '"random" or "unimodal"')
+            for i, igr in enumerate(self.mesh.grain_dict.keys()):
+                if self.mesh.grain_phase_dict[igr] == ip:
+                    ori_dict[igr] = ori_rve[i, :]
+        self.mesh.grain_ori_dict = ori_dict
+        return
+
 
     """
     --------     Plotting methods          --------
@@ -720,17 +769,19 @@ class Microstructure(object):
         return
 
     def write_voxels(self, angles=None, script_name=None, file=None, path='./', mesh=True,
-                     source=None):
+                     source=None, system=True):
         """
         Write voxel structure into JSON file.
 
         Parameters
         ----------
+        angles
         script_name
         file
         path
         mesh
         source
+        system
 
         Returns
         -------
@@ -753,6 +804,7 @@ class Microstructure(object):
             else:
                 file = path + self.name + '_voxels.json'
         file = os.path.normpath(file)
+        print(f'Writing voxel information of microstructure to {file}.')
         # metadata
         today = str(date.today())  # date
         owner = getpass.getuser()  # username
@@ -765,12 +817,6 @@ class Microstructure(object):
                 "Date": today,
                 "Description": "Voxels of microstructure",
                 "Method": "Synthetic microstructure generator Kanapy",
-                "System": {
-                    "sysname": sys_info[0],
-                    "nodename": sys_info[1],
-                    "release": sys_info[2],
-                    "version": sys_info[3],
-                    "machine": sys_info[4]},
             },
             "Model": {
                 "Creator": "kanapy",
@@ -799,12 +845,24 @@ class Microstructure(object):
                 "Phase": "Phase number"
             },
         }
+        if system:
+            structure["Info"]["System"] = {
+                "sysname": sys_info[0],
+                "nodename": sys_info[1],
+                "release": sys_info[2],
+                "version": sys_info[3],
+                "machine": sys_info[4],
+            }
         for igr in self.mesh.grain_dict.keys():
-                structure["Grains"][igr] = {
-                    "Phase": self.mesh.grain_phase_dict[igr]
-                }
+            structure["Grains"][igr] = {
+                "Phase": self.mesh.grain_phase_dict[igr]
+            }
         if angles is None:
-            print('No angles for grains are given. Writing only geometry of RVE.')
+            if self.mesh.grain_ori_dict is None:
+                logging.info('No angles for grains are given. Writing only geometry of RVE.')
+            else:
+                for igr in self.mesh.grain_dict.keys():
+                    structure["Grains"][igr]["Orientation"] = list(self.mesh.grain_ori_dict[igr])
         else:
             for i, igr in enumerate(self.mesh.grain_dict.keys()):
                 structure["Grains"][igr]["Orientation"] = list(angles[i, :])

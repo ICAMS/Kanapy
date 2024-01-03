@@ -11,7 +11,9 @@ December 2023
 import kanapy as knpy
 from math import pi
 import matplotlib
-matplotlib.use('MacOSX')
+import logging
+logging.basicConfig(level=20)
+#matplotlib.use('MacOSX')
 
 periodic = False
 vf0 = 0.7
@@ -69,3 +71,5 @@ ms.plot_voxels(sliced=True, dual_phase=True)
 ms.generate_grains()
 ms.plot_grains(dual_phase=True)
 ms.plot_stats()
+
+ms.write_voxels(script_name=__file__)

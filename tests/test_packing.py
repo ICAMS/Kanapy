@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import json
-import shutil
 from unittest import mock
-
 import pytest
-import numpy as np
-
 import kanapy
 from kanapy.packing import *
 from kanapy.entities import Ellipsoid, Simulation_Box
@@ -16,11 +10,15 @@ from kanapy.entities import Ellipsoid, Simulation_Box
 
 @pytest.fixture
 def par_sim(mocker):
-    parDict = {'Type': 'Elongated', 'Number': 3, 'Major_diameter': np.array([5.2, 3.6, 2.4]), 'Minor_diameter1': np.array([2.15, 3.6, 1.15]),
-               'Minor_diameter2': np.array([2.15, 3.6, 1.15]), 'Tilt angle': np.array([92, 89.3, 85]),'Phase name':['XXXX', 'XXXX', 'XXXX'], 'Phase number': [0, 0, 0]}
+    parDict = {'Type': 'Elongated',
+               'Number': 3,
+               'Major_diameter': np.array([5.2, 3.6, 2.4]),
+               'Minor_diameter1': np.array([2.15, 3.6, 1.15]),
+               'Minor_diameter2': np.array([2.15, 3.6, 1.15]),
+               'Tilt angle': np.array([92, 89.3, 85]),
+               'Phase': [0, 0, 0]}
 
     sb = mocker.MagicMock()
-
     # Define attributes to mocker object
     sb.w, sb.h, sb.d = 3, 3, 3
     sb.sim_ts = 0
@@ -89,12 +87,8 @@ def rot_surf():
 
 
 def test_particle_generator(par_sim):
-    rve_data = {'Periodic' : False}
-    ph = {
-        'Phase name': ['Simulanium'] * par_sim[0]['Number'],
-        'Phase number': [0] * par_sim[0]['Number'],
-    }
-    ell_list = particle_generator(par_sim[0], ph, par_sim[1], rve_data)
+    periodic = False
+    ell_list = particle_generator([par_sim[0]], par_sim[1], periodic)
 
     for ell in ell_list:
         assert isinstance(ell, Ellipsoid)
@@ -108,55 +102,32 @@ def test_particle_grow(rot_surf):
     ell2.speedx0, ell2.speedy0, ell2.speedz0 = 0.5, -0.025, -0.36
 
     ells = [ell1, ell2]
-    sb = Simulation_Box(10, 10, 10)
+    sb = Simulation_Box((10, 10, 10))
 
     particle_grow(sb, ells, True, 10, dump=True)
-    
-    '''
-    Following results seem to be machine specific
-    assert np.isclose(ell1.x, 0.8248128269258855)
-    assert np.isclose(ell1.y, 0.2703101508583834)
-    assert np.isclose(ell1.z, 0.3898930331254312)
-    assert np.isclose(ell2.x, 3.069971937626122)
-    assert np.isclose(ell2.y, 3.2139632071098028)
-    assert np.isclose(ell2.z, 5.00494231623147)
-    '''
     
     assert np.isclose(ell1.x, 0.86)
     assert np.isclose(ell1.y, 1.025)
     assert np.isclose(ell2.z, 0.08)
-                      
-    '''
-    assert ell1.x > 0.8 and ell1.x < 0.9
-    assert ell1.y > 0.2 and ell1.y < 0.35
-    assert ell2.z > 4.5 and ell2.z < 5.5
-    '''
+
     
 def test_packingRoutine():
-
-    # Prepare the dictionaries to be dumped as json files
-    pd = {'Type': 'Equiaxed', 'Number': 2, 'Equivalent_diameter': [1.651, 1.651], 'Major_diameter': [2.0, 2.0],
-          'Minor_diameter1': [1.5, 1.5], 'Minor_diameter2': [1.5, 1.5], 'Tilt angle': [86, 92],
-          'Phase name':['XXXX', 'XXXX'], 'Phase number': [0, 0]}
-
-    ph = {
-        'Phase name': ['Simulanium']*pd['Number'],
-        'Phase number': [0]*pd['Number'],
-    }
-
-    rd = {'RVE_sizeX': 10, 'RVE_sizeY': 10, 'RVE_sizeZ': 10, 
-          'Voxel_numberX': 3, 'Voxel_numberY': 3, 'Voxel_numberZ': 3, 
-          'Voxel_resolutionX': round(10/3,4), 'Voxel_resolutionY': round(10/3,4),
-          'Voxel_resolutionZ': round(10/3,4), 'Periodic': True}
-
-    sd = {'Time steps': 2, 'Periodicity': 'True'}
+    pd = {'Type': 'Equiaxed',
+          'Number': 2,
+          'Equivalent_diameter': [1.651, 1.651],
+          'Major_diameter': [2.0, 2.0],
+          'Minor_diameter1': [1.5, 1.5],
+          'Minor_diameter2': [1.5, 1.5],
+          'Tilt angle': [86, 92],
+          'Phase': [0, 0]}
+    sb = Simulation_Box((3, 3, 3))
 
     # Test if the 'particle_generator' function is called once
     with mock.patch('kanapy.packing.particle_generator') as mocked_method:
-        packingRoutine(pd, ph, rd, sd, save_files=False)
+        packingRoutine([pd], True, 2, sb, save_files=False)
         assert mocked_method.call_count == 1
 
     # Test if the 'particle_grow' function is called once
     with mock.patch('kanapy.packing.particle_grow', return_value=(None, None)) as mocked_method:
-        packingRoutine(pd, ph, rd, sd, save_files=False)
+        packingRoutine([pd], True, 2, sb, save_files=False)
         assert mocked_method.call_count == 1

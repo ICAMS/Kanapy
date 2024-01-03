@@ -1,84 +1,40 @@
 """
-Read EBSD map, analyse grain statistics and generate a 3D synthetic 
-microstructure in form of an RVE. Grain shape statistics and crystallographic
-texture will be preserved in a statistical sense.
+Create an RVE based on statistical information of a microstructure.
 
 Author: Alexander Hartmaier
 ICAMS, Ruhr University Bochum, Germany
-November 2023
+January 2024
 """
 
 import kanapy as knpy
-import numpy as np
+import logging
+logging.basicConfig(level=20)
 
-import matplotlib
-matplotlib.use('MacOSX')
-
-
-fname = 'ebsd_316L_500x500.ang'  # name of ang file to be imported
-matname = 'Iron fcc'  # material name
-matnumber = 4         # material number of austenite in CP UMAT
-nvox = 30             # number of voxels per side
-box_length = 50       # side length of generated RVE
-periodic = True      # create RVE with periodic structure
-
-gs_param = np.array([1.06083584, 6.24824603, 13.9309554])
-ar_param = np.array([0.67525027, 0.76994992, 1.69901906])
-om_param = np.array([0.53941709, 1.44160447])
-
-# create dictionary with statistical information obtained from EBSD map
-# gs_param : [std deviation, offset of lognorm distrib., mean grain size]
-# ar_param : [std deviation, offset of gamma distrib., mean aspect ration]
-# om_param : [std deviation, mean tilt angle]
-ms_stats = knpy.set_stats(gs_param, ar_param, om_param,
-                          deq_min=8., deq_max=19., asp_min=0.95, asp_max=3.5,
-                          omega_min=0., omega_max=2*np.pi, 
-                          voxels=nvox, size=box_length,
-                          periodicity=periodic,
-                          VF=1.0, phasename=matname, phasenum=0)
+texture = 'random'  # 'random' or 'unimodal'
+matname = 'Simulanium_fcc'
+Nv = 30
+size = 40
+periodic = True
+ms_elong = {'Grain type': 'Elongated',
+          'Equivalent diameter': {'std': 1.0, 'mean': 12.0, 'offs': 4.0, 'cutoff_min': 8.0, 'cutoff_max': 18.0},
+          'Aspect ratio': {'std':1.5, 'mean': 2.0, 'offs': 0.8, 'cutoff_min': 1.0, 'cutoff_max': 4.0},
+          'Tilt angle': {'std': 15., 'mean': 90., "cutoff_min": 0.0, "cutoff_max": 180.0},
+          'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': Nv, 'Ny': Nv, 'Nz': Nv},
+          'Simulation': {'periodicity': str(periodic), 'output_units': 'um'}}
 
 # create and visualize synthetic RVE
-ms = knpy.Microstructure(descriptor=ms_stats, name=fname+'_RVE')
-#ms.plot_stats_init()  # tested OK
+ms = knpy.Microstructure(descriptor=ms_elong, name=matname+texture+'_texture_RVE')
 ms.init_RVE()
 ms.pack()
-#ms.plot_ellipsoids()  # tested ??? in pyCharm
+ms.plot_ellipsoids()
 ms.voxelize()
-#ms.plot_voxels(sliced=True)  # tested OK
+ms.plot_voxels(sliced=True)
 ms.generate_grains()
-#ms.plot_grains()  # tested OK
-#ms.plot_stats(gs_param=gs_param, ar_param=ar_param)  # tested OK
-#ms.smoothen()  # tested OK
+ms.plot_grains()
+ms.plot_stats()
 
-# create grain orientations
-if knpy.MTEX_AVAIL:
-    ang = [0, 45, 0]    # Euler angles for Goss texture
-    omega = 7.5         # kernel half-width
-    ori_rve = knpy.createOriset(ms.Ngr, ang, omega)
-    #ori_rnd = knpy.createOrisetRandom(ms.Ngr, Nbase=1000)  # tested OK
-else:
-    ori_rve = None
+# create grain orientations for Goss or random texture
+ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
 
-# output rve in different formats
-ms.write_voxels(angles=ori_rve, script_name=__file__)
-#ms.pckl()  # tested OK, also reading
-#ms.write_stl()  # tested OK
-#ms.write_ori(ori_rve)  # tested OK
-
-# compare microstructure on three surfaces
-# for voxelated and polygonalized grains
-#ms.plot_slice(cut='xz', pos='top', data='poly')
-
-#ms.output_abq('s')
-
-# read volxels and reconstructu grains
-ms2 = knpy.import_voxels('ebsd_316L_500x500.ang_RVE_voxels.json')
-ms2.plot_voxels()
-ms2.generate_grains()
-ms2.plot_grains()
-ms2.plot_stats()
-ms2.smoothen()
-"""
-for igr,val in ms.mesh.grain_dict.items():
-    print(igr, np.any(val.sort() == grain_dict[igr].sort()))
-"""
+# output rve in voxel format
+ms.write_voxels(script_name=__file__)

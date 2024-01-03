@@ -12,8 +12,7 @@ from scipy.spatial import ConvexHull
 import kanapy
 from kanapy.voxelization import *
 from kanapy.entities import Ellipsoid, Simulation_Box
-from kanapy.initializations import RVEcreator
-from kanapy.input_output import write_dump
+from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.packing import particle_generator
 
 def test_points_in_convexHull():
@@ -147,16 +146,6 @@ def SBox(mocker):
     return sb
 
 
-def test_create_voxels(dec_info, SBox):
-
-    box = SBox
-    nodeDict, elmtDict, vox_centerDict = create_voxels(box, (3,3,3))
-
-    assert (dec_info[0] == nodeDict).all()
-    assert dec_info[1] == elmtDict
-    assert dec_info[2] == vox_centerDict
-
-
 def test_assign_voxels_to_ellipsoid(dec_info):
 
     # Initialize the Ellipsoids
@@ -200,50 +189,30 @@ def test_reassign_shared_voxels(dec_info):
     assert set(ref2) == set(ell2.inside_voxels)
 
 
-def test_voxelizationRoutine():    
-
-    # create a temporary input file for user defined statistics
-    cwd = os.getcwd()    
-    json_dir = cwd + '/json_files'
-    dump_dir = cwd + '/dump_files'
-    stat_inp = cwd + '/input_test.json'
-            
-    # create an temporary 'json' directory for reading files from
-    to_write = {'Grain type': 'Elongated', 'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
-                'Aspect ratio': {'std':0.3, 'mean': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0}, 'Tilt angle': {'std': 28.8, 'mean': 87.4, 
-                "cutoff_min": 75.0, "cutoff_max": 105.0}, 'RVE': {"sideX": 3,"sideY": 3,"sideZ": 3,"Nx": 15,"Ny": 15,"Nz": 15},
+def test_voxelizationRoutine():
+    ms_stats = {'Grain type': 'Elongated',
+                'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
+                'Aspect ratio': {'std':0.3, 'mean': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
+                'Tilt angle': {'std': 28.8, 'mean': 87.4, 'cutoff_min': 75.0, 'cutoff_max': 105.0},
+                'RVE': {"sideX": 3,"sideY": 3,"sideZ": 3,"Nx": 15,"Ny": 15,"Nz": 15},
                 'Simulation': {'periodicity': 'True', 'output_units': 'mm'},
                 'Phase': {'Name': 'XXXX', 'Number': 0, 'Volume fraction': 1.0}}
+    parDict = {'Type': 'Elongated',
+               'Number': 3,
+               'Major_diameter': np.array([5.2, 3.6, 2.4]),
+               'Minor_diameter1': np.array([2.15, 3.6, 1.15]),
+               'Minor_diameter2': np.array([2.15, 3.6, 1.15]),
+               'Tilt angle': np.array([92, 89.3, 85]),
+               'Phase': [0, 0, 0]}
 
-    rve_data = {'Periodic' : False}
-    #with open(stat_inp, 'w') as outfile:
-    #    json.dump(to_write, outfile, indent=2) 
+    rve = RVE_creator([ms_stats])
+    sim_box = Simulation_Box(rve.size, sim_ts=500)
+    mesh = mesh_creator(rve.dim)
+    mesh.nphases = 1
+    mesh.create_voxels(sim_box)
+    Particles = particle_generator([parDict], sim_box, False)
+    mesh = voxelizationRoutine(Particles, mesh)
+    assert mesh.vox_center_dict[5][0] == 0.9
+    assert mesh.voxel_dict[7] == [29, 30, 26, 25, 31, 32, 28, 27]
+    assert mesh.grains.shape == (15, 15, 15)
 
-    RVEcreator(to_write, save_files=True)   
-
-    # create a temporary 'dump' directory for reading files from
-    with open(json_dir + '/RVE_data.json') as json_file:
-        RVE_data = json.load(json_file)
-        
-    with open(json_dir + '/particle_data.json') as json_file:
-        particle_data = json.load(json_file)
-                                    
-    sim_box = Simulation_Box(RVE_data['RVE_sizeX'], RVE_data['RVE_sizeY'], RVE_data['RVE_sizeZ'])
-    sim_box.sim_ts = 500
-    ph = {
-        'Phase name': ['Simulanium'] * particle_data['Number'],
-        'Phase number': [0] * particle_data['Number'],
-    }
-    Particles = particle_generator(particle_data, ph, sim_box, rve_data)
-    
-    #write_dump(Particles, simbox)
-
-    voxelizationRoutine(RVE_data, Particles, sim_box, save_files=True)
-
-    assert os.path.isfile(json_dir + '/nodes_v.csv')
-    assert os.path.isfile(json_dir + '/elmtDict.json')
-    assert os.path.isfile(json_dir + '/elmtSetDict.json')
-
-    #os.remove(stat_inp)  
-    shutil.rmtree(json_dir)
-    shutil.rmtree(dump_dir)

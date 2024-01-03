@@ -243,7 +243,10 @@ class RVE_creator(object):
             self.nparticles.append(pdict['Number'])
             return particle_data
 
-        print('Creating an RVE based on user defined statistics')
+        if from_voxels:
+            print('Creating an RVE from voxel input')
+        else:
+            print('Creating an RVE based on user defined statistics')
         # Extract grain diameter statistics info
         self.nphases = len(stats_dicts)  # number of phases in RVE
         self.packing_steps = nsteps  # max number of steps for packing simulation
@@ -312,6 +315,9 @@ class RVE_creator(object):
             # Extract grains shape attributes to initialize particles
             if not from_voxels:
                 particle_data = init_particles(particle_data)
+            else:
+                particle_data = None
+                self.nparticles = None
         print('  RVE characteristics:')
         print(f'    RVE side lengths (X, Y, Z) = {self.size} ({self.units})')
         print(f'    Number of voxels (X, Y, Z) = {self.dim}')
@@ -437,9 +443,7 @@ class mesh_creator(object):
 
         # nodal positions array
         self.nodes = np.zeros((node_count, 3))
-        print('### create voxels', node_count, self.nodes.shape)
         for pos, i in verticesDict.items():
-            # logging.debug('***   ', i, pos)
             self.nodes[i - 1, :] = pos
         return
 

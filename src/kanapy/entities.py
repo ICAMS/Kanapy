@@ -1,7 +1,6 @@
 import itertools
 import numpy as np
 import random
-
 from kanapy.collisions import collision_routine
 
 
@@ -51,11 +50,11 @@ class Simulation_Box(object):
     :type d: float   
     """
 
-    def __init__(self, size):
+    def __init__(self, size, sim_ts=0):
         self.w = size[0]  # Width
         self.h = size[1]  # Height
         self.d = size[2]  # Depth
-        self.sim_ts = 0   # Initialize simulation time-step
+        self.sim_ts = sim_ts   # Initialize simulation time-step
         self.left = 0.
         self.top = 0.
         self.front = 0.

@@ -1,73 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import shutil
 import pytest
-import json
-
-from kanapy.cli import write_position_weights
-from kanapy.initializations import RVEcreator
+from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.input_output import *
 from kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
 
+
 def test_particleStatGenerator():
+    st_dict = {'Grain type': 'Elongated',
+               'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
+               'Aspect ratio': {'std': 0.3, 'mean': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
+               'Tilt angle': {'std': 28.8, 'mean': 87.4, 'cutoff_min': 75.0, 'cutoff_max': 105.0},
+               'RVE': {'sideX': 8, 'sideY': 8, 'sideZ': 8, 'Nx': 15, 'Ny': 15, 'Nz': 15},
+               'Simulation': {'periodicity': 'True', 'output_units': 'um'},
+               'Phase': {'Name': 'XXXX', 'Number': 0, 'Volume fraction': 1.0}}
 
-    # Test if FileNotFoundError is raised
-    #with pytest.raises(FileNotFoundError):        
-    #    particleStatGenerator('inp.json')
-
-    # create an temporary input file for user defined statistics
-    cwd = os.getcwd()
-    stat_inp = cwd + '/input_test.json'   
-            
-    # Test if ValueError is raised w.r.t output_units
-    to_write = {'Grain type': 'Elongated', 'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
-                'Aspect ratio': {'std':0.3, 'mean': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0}, 'Tilt angle': {'std': 28.8, 'mean': 87.4, 
-                "cutoff_min": 75.0, "cutoff_max": 105.0}, 'RVE': {'sideX': 8, 'sideY': 8, 'sideZ': 8, 'Nx': 15, 'Ny': 15, 'Nz': 15}, 
-                'Simulation': {'periodicity': 'True', 'output_units': 'm'},
-                'Phase': {'Name': 'XXXX', 'Number': 0, 'Volume fraction': 1.0}}
-
-    with open(stat_inp, 'w') as outfile:
-        json.dump(to_write, outfile, indent=2)       
-
-    with pytest.raises(ValueError):            
-        RVEcreator(to_write, save_files=True)
-    os.remove(stat_inp)
-                            
-    # Test the remaining code
-    to_write = {'Grain type': 'Elongated', 'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
-                'Aspect ratio': {'std':0.3, 'mean': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0}, 'Tilt angle': {'std': 28.8, 'mean': 87.4, 
-                "cutoff_min": 75.0, "cutoff_max": 105.0}, 'RVE': {'sideX': 6, 'sideY': 6, 'sideZ': 6, 'Nx': 15, 'Ny': 15, 'Nz': 15}, 
-                'Simulation': {'periodicity': 'True', 'output_units': 'mm'},
-                'Phase': {'Name': 'XXXX', 'Number': 0, 'Volume fraction': 1.0}}    
-
-    with open(stat_inp, 'w') as outfile:
-        json.dump(to_write, outfile, indent=2) 
-    
-    RVEcreator(to_write, save_files=True)
-
-    # Read the json files written by the function
-    json_dir = cwd + '/json_files'
-    with open(json_dir + '/particle_data.json') as json_file:
-        pd = json.load(json_file)
-    with open(json_dir + '/RVE_data.json') as json_file:
-        rd = json.load(json_file)
-    with open(json_dir + '/simulation_data.json') as json_file:
-        sd = json.load(json_file)
-
-    # Dictionaries to verify against
-    compare_rd = {'RVE_sizeX': 6, 'RVE_sizeY': 6, 'RVE_sizeZ': 6,
-                  'Voxel_numberX': 15, 'Voxel_numberY': 15, 'Voxel_numberZ': 15,
-                  'Voxel_resolutionX': 0.4, 'Voxel_resolutionY': 0.4, 'Voxel_resolutionZ': 0.4,
-                  'Periodic': True, 'Units': 'mm'}
-    compare_sd = {'Time steps': 1000, 'Periodicity': 'True', 'Output units': 'mm'}
-    
-    # Verify
-    assert rd == compare_rd
-    assert sd == compare_sd
-
-    os.remove(stat_inp)
-    shutil.rmtree(json_dir)
+    rve = RVE_creator([st_dict])
+    simbox = Simulation_Box(rve.size)
+    mesh = mesh_creator(rve.size)
+    mesh.nphases = 1
+    mesh.create_voxels(simbox)
+    assert rve.dim[0] == 15
+    assert len(rve.particle_data) == 1
+    assert mesh.nodes.shape[1] == 3
+    assert mesh.voxel_dict[1][7] == 8
     
 
 @pytest.fixture
@@ -81,7 +38,7 @@ def temp_dump():
     ells = [ell1, ell2]
 
     # Inititalize the simulation box
-    sbox = Simulation_Box(10, 10, 10)
+    sbox = Simulation_Box((10, 10, 10))
     write_dump(ells, sbox)
     return sbox
 
@@ -107,22 +64,6 @@ def test_read_dump(temp_dump):
     assert isinstance(gen_sbox, Cuboid)
     for gel in genEll:
         assert isinstance(gel, Ellipsoid)
-
-
-def test_write_position_weights(temp_dump):
-
-    # Test if FileNotFoundError is raised
-    with pytest.raises(FileNotFoundError):
-        write_position_weights(26957845264856)
-        
-    # Test the remainder of the code    
-    write_position_weights(0)
-    cwd = os.getcwd()
-    assert os.path.isfile(cwd + '/sphere_positions.txt')
-    assert os.path.isfile(cwd + '/sphere_weights.txt')
-
-    os.remove(cwd + '/sphere_positions.txt')
-    os.remove(cwd + '/sphere_weights.txt')
 
 
 def test_export_abaqus():
@@ -153,43 +94,7 @@ def test_export_abaqus():
 
     
     name ='/kanapy_{0}grains.inp'.format(len(esd))
-    
     cwd = os.getcwd()
-    json_dir = cwd + '/json_files'
-
-    # Test if FileNotFoundError is raised
-    #with pytest.raises(FileNotFoundError):
-    #    abaqusoutput()
-        
     export2abaqus(nodes, cwd+name, esd, ed, units='um')
     assert os.path.isfile(cwd + name)
     os.remove(cwd + name)
-    
-    '''
-    CLI function cannot be tested properly in current setting
-    
-    # Test the remainder of the code
-    if not os.path.exists(json_dir):
-        os.makedirs(json_dir)
-
-    with open(json_dir + '/simulation_data.json', 'w') as outfile:
-        json.dump(simData, outfile)
-        
-    with open(json_dir + '/nodes_v.csv', 'w') as f:
-        for v in nodes:
-            f.write('{0}, {1}, {2}\n'.format(v[0], v[1], v[2]))
-
-    with open(json_dir + '/elmtDict.json', 'w') as outfile:
-        json.dump(ed, outfile)
-
-    with open(json_dir + '/elmtSetDict.json', 'w') as outfile:
-        json.dump(esd, outfile)
-
-    
-    abaqusoutput()
-    assert os.path.isfile(cwd + name)
-    os.remove(cwd + name)'''
-
-    
-    
-

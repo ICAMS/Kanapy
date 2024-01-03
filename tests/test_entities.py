@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import numpy as np
 
 import kanapy
 from kanapy.entities import *
@@ -32,7 +31,7 @@ def test_cub_oct_split(CuboidBox):
 def test_Simulation_Box_init():
 
     # Inititalize the simulation box
-    sbox = Simulation_Box(3, 3, 3)
+    sbox = Simulation_Box((3, 3, 3))
 
     assert sbox.w == 3
     assert sbox.h == 3
@@ -250,7 +249,7 @@ class TestEllipsoid():
                                ([5.0, 5.0, 5.0], 0)])
     def test_wallCollision_Periodic(self, rot_surf, position, duplicates):
 
-        sbox = Simulation_Box(10, 10, 10)
+        sbox = Simulation_Box((10, 10, 10))
         self.ell = Ellipsoid(1, position[0], position[1], position[2], 2.0, 1.5, 1.5, rot_surf[0])
 
         # Test for periodicity == TRUE
@@ -262,7 +261,7 @@ class TestEllipsoid():
                                                   (np.array([9.8, 9.5, 9.25]), [0.02, -0.075, 0.05])])
     def test_wallCollision_Regular(self, rot_surf, position, speeds):
 
-        sbox = Simulation_Box(10, 10, 10)
+        sbox = Simulation_Box((10, 10, 10))
         self.ell = Ellipsoid(1, position[0], position[1], position[2], 2.0, 1.5, 1.5, rot_surf[0])
         self.ell.speedx, self.ell.speedy, self.ell.speedz = -0.02, 0.075, -0.05
 

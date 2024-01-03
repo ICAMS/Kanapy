@@ -208,7 +208,7 @@ def relaxSystem(allNodes,anchDict,dt,N,k,c,RVE_xmin,RVE_xmax,
     return allNodes
     
     
-def smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=False):
+def smoothingRoutine(nodes_v, elmtDict, elmtSetDict):
 
     #coords = np.array(list(nodes_v.values()))
     xvals, yvals, zvals = nodes_v[:,0], nodes_v[:,1], nodes_v[:,2]
@@ -231,18 +231,5 @@ def smoothingRoutine(nodes_v, elmtDict, elmtSetDict, save_files=False):
                            RVE_xmax,RVE_ymin, RVE_ymax,RVE_zmin,RVE_zmax)
             
     nodes_s = np.array([[n.px, n.py, n.pz] for n in allNodes])
-    
-    if save_files:
-        cwd = os.getcwd()
-        json_dir = cwd + '/json_files'          # Folder to store the json files
-        if not os.path.exists(json_dir):
-            os.makedirs(json_dir)
-        
-        with open(json_dir + '/nodes_s.csv', 'w') as f:
-            for v in nodes_s:
-                f.write('{0}, {1}, {2}\n'.format(v[0], v[1], v[2]))
-            
-        with open(json_dir + '/grain_facesDict.json', 'w') as outfile:
-            json.dump(grain_facesDict, outfile, indent=2)
                
     return nodes_s, grain_facesDict

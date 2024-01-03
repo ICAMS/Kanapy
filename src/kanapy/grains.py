@@ -430,6 +430,8 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     facet_keys = set()
     for i, tet in enumerate(tetra.simplices):
         igr = tet_to_grain[i]
+        if (igr == 0) and (0 not in grains.keys()):
+            continue  # special case of porosity, where grain 0 is assigned to pores
         for j, neigh in enumerate(tetra.neighbors[i, :]):
             if neigh == -1 or tet_to_grain[neigh] != igr:
                 ft = []
@@ -501,7 +503,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     return geometry
 
 
-def get_stats(particle_data, geometry, units):
+def get_stats(particle_data, geometry, units, nphases):
     """
     Compare the geometries of particles used for packing and the resulting
     grains.
@@ -516,51 +518,54 @@ def get_stats(particle_data, geometry, units):
         Statistical information about particle and grain geometries.
 
     """
-    nphase = len(particle_data)
-    # convert particle geometries to dicts
-    par_eqDia = dict()
-    par_majDia = dict()
-    par_minDia = dict()
-    for ip, part in enumerate(particle_data):
-        # Analyse geometry of particles used for packing algorithm
-        par_eqDia[ip] = np.array(part['Equivalent_diameter'])
-        if part['Type'] == 'Elongated':
-            par_majDia[ip] = np.array(part['Major_diameter'])
-            par_minDia[ip] = np.array(part['Minor_diameter1'])
+    if particle_data is not None:
+        if nphases != len(particle_data):
+            raise ValueError(f'Inconsistent list length for particle_data for {nphases} phases: {len(particle_data)}')
+        # convert particle geometries to dicts
+        par_eqDia = dict()
+        par_majDia = dict()
+        par_minDia = dict()
+        for ip, part in enumerate(particle_data):
+            # Analyse geometry of particles used for packing algorithm
+            par_eqDia[ip] = np.array(part['Equivalent_diameter'])
+            if part['Type'] == 'Elongated':
+                par_majDia[ip] = np.array(part['Major_diameter'])
+                par_minDia[ip] = np.array(part['Minor_diameter1'])
 
     # convert grain geometries to dicts
     grain_eqDia = dict()
     grain_majDia = dict()
     grain_minDia = dict()
-    for i in range(nphase):
+    for i in range(nphases):
         grain_eqDia[i] = []
         grain_majDia[i] = []
         grain_minDia[i] = []
     for i, igr in enumerate(geometry['Grains'].keys()):
         ip = geometry['Grains'][igr]['Phase']
         grain_eqDia[ip].append(geometry['Grains'][igr]['eqDia'])
-        if part['Type'] == 'Elongated':
-            grain_minDia[ip].append(geometry['Grains'][igr]['minDia'])
-            grain_majDia[ip].append(geometry['Grains'][igr]['majDia'])
+        grain_minDia[ip].append(geometry['Grains'][igr]['minDia'])
+        grain_majDia[ip].append(geometry['Grains'][igr]['majDia'])
 
     output_data_list = []
-    for ip in range(nphase):
-        # Compute the L1-error between particle and grain geometries for phases
-        error = l1_error_est(par_eqDia[ip], grain_eqDia[ip])
-        print('\n    L1 error phase {} between particle and grain geometries: {}' \
-              .format(ip, round(error, 5)))
+    for ip in range(nphases):
         # Create dictionaries to store the data generated
-        output_data = {'Number': int(len(par_eqDia[ip])),
-                       'Grain_type': particle_data[ip]['Type'],
+        output_data = {'Number': geometry['Ngrains'][ip],
                        'Unit_scale': units,
-                       'L1-error': error,
-                       'Particle_Equivalent_diameter': par_eqDia[ip],
-                       'Grain_Equivalent_diameter': np.array(grain_eqDia[ip])}
-        if particle_data[ip]['Type'] == 'Elongated':
-            output_data['Particle_Major_diameter'] = par_majDia[ip]
-            output_data['Particle_Minor_diameter'] = par_minDia[ip]
-            output_data['Grain_Major_diameter'] = np.array(grain_majDia[ip])
-            output_data['Grain_Minor_diameter'] = np.array(grain_minDia[ip])
+                       'Grain_Equivalent_diameter': np.array(grain_eqDia[ip]),
+                       'Grain_Major_diameter': np.array(grain_majDia[ip]),
+                       'Grain_Minor_diameter': np.array(grain_minDia[ip])}
+        if particle_data is not None:
+            # Compute the L1-error between particle and grain geometries for phases
+            error = l1_error_est(par_eqDia[ip], grain_eqDia[ip])
+            print('\n    L1 error phase {} between particle and grain geometries: {}' \
+                  .format(ip, round(error, 5)))
+            # Store Particle data in output dict
+            output_data['Grain_type'] = particle_data[ip]['Type']
+            output_data['Particle_Equivalent_diameter'] = par_eqDia[ip]
+            output_data['L1-error'] = error
+            if particle_data[ip]['Type'] == 'Elongated':
+                output_data['Particle_Major_diameter'] = par_majDia[ip]
+                output_data['Particle_Minor_diameter'] = par_minDia[ip]
         output_data_list.append(output_data)
     return output_data_list
 
