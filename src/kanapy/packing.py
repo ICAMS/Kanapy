@@ -26,7 +26,7 @@ def particle_generator(particle_data, sim_box, periodic):
     id_ctr = 0
     for particle in particle_data:
         num_particles = particle['Number']  # Total number of ellipsoids
-        # introduce scaling factor to reduce particle overlap for non-peridoc box
+        # introduce scaling factor to reduce particle overlap for non-periodic box
         sf = 0.5 if periodic else 0.45
         for n in range(num_particles):
             iden = id_ctr + n + 1  # ellipsoid 'id'
@@ -73,7 +73,6 @@ def particle_generator(particle_data, sim_box, periodic):
             ellipsoid.speedx = ellipsoid.speedx0
             ellipsoid.speedy = ellipsoid.speedy0
             ellipsoid.speedz = ellipsoid.speedz0
-            ellipsoid.phasenum = particle['Phase'][n]
 
             Ellipsoids.append(ellipsoid)  # adds ellipsoid to list
         id_ctr += num_particles

@@ -203,10 +203,11 @@ def test_voxelizationRoutine():
                'Minor_diameter1': np.array([2.15, 3.6, 1.15]),
                'Minor_diameter2': np.array([2.15, 3.6, 1.15]),
                'Tilt angle': np.array([92, 89.3, 85]),
-               'Phase': [0, 0, 0]}
+               'Phase': 0}
 
     rve = RVE_creator([ms_stats])
-    sim_box = Simulation_Box(rve.size, sim_ts=500)
+    sim_box = Simulation_Box(rve.size)
+    sim_box.sim_ts = 500
     mesh = mesh_creator(rve.dim)
     mesh.nphases = 1
     mesh.create_voxels(sim_box)

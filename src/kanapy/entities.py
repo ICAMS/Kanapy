@@ -44,17 +44,18 @@ class Simulation_Box(object):
 
     :param w: width
     :param h: height
+    :param h: height
     :param d: depth of the simulation domain
     :type w: float
     :type h: float
     :type d: float   
     """
 
-    def __init__(self, size, sim_ts=0):
+    def __init__(self, size):
         self.w = size[0]  # Width
         self.h = size[1]  # Height
         self.d = size[2]  # Depth
-        self.sim_ts = sim_ts   # Initialize simulation time-step
+        self.sim_ts = 0   # Initialize simulation time-step
         self.left = 0.
         self.top = 0.
         self.front = 0.

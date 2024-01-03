@@ -49,16 +49,16 @@ ptlbl = []
 points = []
 faces = []
 f2gr = []
-grains = ms.RVE_data['Grains']
+grains = ms.geometry['Grains']
 for igr in grains.keys():
     for fc in grains[igr]['Simplices']:
-        nds = ms.RVE_data['Vertices'][fc]
+        nds = ms.geometry['Vertices'][fc]
         facet = str(sorted(nds))
         if facet in facets:
             continue
         else:
             facets.add(facet)
-        pts = ms.RVE_data['Points'][fc]
+        pts = ms.geometry['Points'][fc]
         faces.append(3)
         f2gr.append(igr)
         for pt in pts:
@@ -78,18 +78,18 @@ pl.add_point_labels(poly_grid.cell_centers(), 'Grain', font_size=24)
 pl.show()
 
 # generate pyvista grid for voxelated structure
-nvox = len(ms.voxels.ravel())
+nvox = ms.mesh.nvox
 cells = np.ones((nvox, 9), dtype=int)*8
-for iv, nodes in ms.elmtDict.items():
+for iv, nodes in ms.mesh.voxel_dict.items():
     cells[iv-1, 1:9] = np.array(nodes) - 1
 celltypes = np.empty(nvox, dtype=np.uint8)
 celltypes[:] = VTK_HEXAHEDRON
-vox_grid = pv.UnstructuredGrid(cells.ravel(), celltypes, ms.nodes_v)
-vox_grid['Grains'] = ms.voxels.ravel(order='F')
+vox_grid = pv.UnstructuredGrid(cells.ravel(), celltypes, ms.mesh.nodes)
+vox_grid['Grains'] = ms.mesh.grains.ravel(order='F')
 vox_grid.plot(show_edges=True)
 
 # generate pyvista grid for smoothened structure
 ms.smoothen()
-smooth_grid = pv.UnstructuredGrid(cells.ravel(), celltypes, ms.nodes_s)
-smooth_grid['Grains'] = ms.voxels.ravel(order='F')
+smooth_grid = pv.UnstructuredGrid(cells.ravel(), celltypes, ms.mesh.nodes_smooth)
+smooth_grid['Grains'] = ms.mesh.grains.ravel(order='F')
 smooth_grid.plot(show_edges=True)

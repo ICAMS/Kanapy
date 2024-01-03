@@ -10,4 +10,4 @@ with open(WORK_DIR + '/PATHS.json') as json_file:
     paths = json.load(json_file)
 MAIN_DIR = paths['MAIN_DIR']  # directory in which repository is cloned
 MTEX_DIR = paths['MTEXpath']  # path to MTEX
-log_level = 10  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR
+log_level = 20  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR

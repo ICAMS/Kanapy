@@ -10,7 +10,7 @@ import kanapy as knpy
 import logging
 logging.basicConfig(level=20)
 
-texture = 'random'  # 'random' or 'unimodal'
+texture = 'unimodal'  # 'random' or 'unimodal'
 matname = 'Simulanium_fcc'
 Nv = 30
 size = 40
