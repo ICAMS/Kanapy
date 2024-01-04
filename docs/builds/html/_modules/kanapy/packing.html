@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.packing &mdash; kanapy 5.0.3 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>kanapy.packing &mdash; kanapy 6.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=f98c4cc8"></script>
+        <script src="../../_static/documentation_options.js?v=b6ed0530"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -32,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                5.0.3
+                6.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -90,7 +92,7 @@
 
 <div class="viewcode-block" id="particle_generator">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.packing.particle_generator">[docs]</a>
-<span class="k">def</span> <span class="nf">particle_generator</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">phases</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">particle_generator</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">periodic</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initializes ellipsoids by assigning them random positions and speeds within</span>
 <span class="sd">    the simulation box.</span>
@@ -104,61 +106,60 @@
 <span class="sd">    :returns: Ellipsoids for the packing routine</span>
 <span class="sd">    :rtype: list       </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">num_particles</span> <span class="o">=</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">]</span>  <span class="c1"># Total number of ellipsoids</span>
     <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="c1"># introduce scaling factor to reduce particle overlap for non-peridoc box</span>
-    <span class="n">sf</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="k">if</span> <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;Periodic&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="mf">0.45</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_particles</span><span class="p">):</span>
+    <span class="n">id_ctr</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="n">particle_data</span><span class="p">:</span>
+        <span class="n">num_particles</span> <span class="o">=</span> <span class="n">particle</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">]</span>  <span class="c1"># Total number of ellipsoids</span>
+        <span class="c1"># introduce scaling factor to reduce particle overlap for non-periodic box</span>
+        <span class="n">sf</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="k">if</span> <span class="n">periodic</span> <span class="k">else</span> <span class="mf">0.45</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_particles</span><span class="p">):</span>
+            <span class="n">iden</span> <span class="o">=</span> <span class="n">id_ctr</span> <span class="o">+</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># ellipsoid &#39;id&#39;</span>
+            <span class="k">if</span> <span class="n">particle</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Equiaxed&#39;</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">=</span> <span class="n">c</span> <span class="o">=</span> <span class="n">sf</span> <span class="o">*</span> <span class="n">particle</span><span class="p">[</span><span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">sf</span> <span class="o">*</span> <span class="n">particle</span><span class="p">[</span><span class="s1">&#39;Major_diameter&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>  <span class="c1"># Semi-major length</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">sf</span> <span class="o">*</span> <span class="n">particle</span><span class="p">[</span><span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>  <span class="c1"># Semi-minor length 1</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">sf</span> <span class="o">*</span> <span class="n">particle</span><span class="p">[</span><span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>  <span class="c1"># Semi-minor length 2</span>
 
-        <span class="n">iden</span> <span class="o">=</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span>  <span class="c1"># ellipsoid &#39;id&#39;</span>
-        <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Equiaxed&#39;</span><span class="p">:</span>
-            <span class="n">a</span> <span class="o">=</span> <span class="n">b</span> <span class="o">=</span> <span class="n">c</span> <span class="o">=</span> <span class="n">sf</span> <span class="o">*</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>    
-            <span class="n">a</span> <span class="o">=</span> <span class="n">sf</span> <span class="o">*</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Major_diameter&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>   <span class="c1"># Semi-major length</span>
-            <span class="n">b</span> <span class="o">=</span> <span class="n">sf</span> <span class="o">*</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>  <span class="c1"># Semi-minor length 1</span>
-            <span class="n">c</span> <span class="o">=</span> <span class="n">sf</span> <span class="o">*</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>  <span class="c1"># Semi-minor length 2</span>
+            <span class="c1"># Random placement for ellipsoids</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">w</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">h</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">d</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
 
-        <span class="c1"># Random placement for ellipsoids</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">w</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">h</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">d</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
+            <span class="c1"># Angle represents inclination of Major axis w.r.t positive x-axis</span>
+            <span class="k">if</span> <span class="n">particle</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Equiaxed&#39;</span><span class="p">:</span>
+                <span class="n">angle</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Extract the angle</span>
+                <span class="n">angle</span> <span class="o">=</span> <span class="n">particle</span><span class="p">[</span><span class="s1">&#39;Tilt angle&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>
+            <span class="c1"># Tilt vector wrt (+ve) x axis</span>
+            <span class="n">vec_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">])</span>
+            <span class="c1"># Do the cross product to find the quaternion axis</span>
+            <span class="n">cross_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">vec_a</span><span class="p">)</span>
+            <span class="c1"># norm of the vector (Magnitude)</span>
+            <span class="n">norm_cross_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cross_a</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">quat_axis</span> <span class="o">=</span> <span class="n">cross_a</span> <span class="o">/</span> <span class="n">norm_cross_a</span>  <span class="c1"># normalize the quaternion axis</span>
 
-        <span class="c1"># Angle represents inclination of Major axis w.r.t positive x-axis        </span>
-        <span class="k">if</span> <span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Equiaxed&#39;</span><span class="p">:</span>
-            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Extract the angle</span>
-            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">particle_data</span><span class="p">[</span><span class="s1">&#39;Tilt angle&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">])</span>      
-        <span class="c1"># Tilt vector wrt (+ve) x axis</span>
-        <span class="n">vec_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">a</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">])</span>
-        <span class="c1"># Do the cross product to find the quaternion axis</span>
-        <span class="n">cross_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">vec_a</span><span class="p">)</span>
-        <span class="c1"># norm of the vector (Magnitude)</span>
-        <span class="n">norm_cross_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cross_a</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  
-        <span class="n">quat_axis</span> <span class="o">=</span> <span class="n">cross_a</span><span class="o">/</span><span class="n">norm_cross_a</span>  <span class="c1"># normalize the quaternion axis</span>
+            <span class="c1"># Find the quaternion components</span>
+            <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span> <span class="o">=</span> <span class="n">quat_axis</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">qw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">quat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">qw</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">])</span>
 
-        <span class="c1"># Find the quaternion components</span>
-        <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span> <span class="o">=</span> <span class="n">quat_axis</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">qw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">quat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">qw</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">])</span>
+            <span class="c1"># instance of Ellipsoid class</span>
+            <span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">Ellipsoid</span><span class="p">(</span><span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">,</span> <span class="n">phasenum</span><span class="o">=</span><span class="n">particle</span><span class="p">[</span><span class="s1">&#39;Phase&#39;</span><span class="p">])</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
 
-        <span class="c1">#Find the phase number</span>
-        <span class="n">phasenum</span> <span class="o">=</span> <span class="n">phases</span><span class="p">[</span><span class="s1">&#39;Phase number&#39;</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>
-        
-        <span class="c1"># instance of Ellipsoid class</span>
-        <span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">Ellipsoid</span><span class="p">(</span><span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">,</span> <span class="n">phasenum</span><span class="o">=</span><span class="n">phasenum</span><span class="p">)</span>
-        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
-            <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+            <span class="c1"># Define random speed values along the 3 axes x, y &amp; z</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedx0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">c</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">c</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">)</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedy0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">c</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">c</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">)</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedz0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">c</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">c</span> <span class="o">/</span> <span class="mf">20.</span><span class="p">)</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedx</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedx0</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedy</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedy0</span>
+            <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedz</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedz0</span>
 
-        <span class="c1"># Define random speed values along the 3 axes x, y &amp; z</span>
-        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedx0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">)</span>
-        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedy0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">)</span>
-        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedz0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">c</span><span class="o">/</span><span class="mf">20.</span><span class="p">)</span>
-        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedx</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedx0</span>
-        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedy</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedy0</span>
-        <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedz</span> <span class="o">=</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedz0</span>
-
-        <span class="n">Ellipsoids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ellipsoid</span><span class="p">)</span>  <span class="c1"># adds ellipsoid to list</span>
+            <span class="n">Ellipsoids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ellipsoid</span><span class="p">)</span>  <span class="c1"># adds ellipsoid to list</span>
+        <span class="n">id_ctr</span> <span class="o">+=</span> <span class="n">num_particles</span>
 
     <span class="k">return</span> <span class="n">Ellipsoids</span></div>
 
@@ -198,12 +199,12 @@
         <span class="n">vf</span> <span class="o">=</span> <span class="mf">0.7</span>
     <span class="c1"># Reduce the size of the particles to (1/nsteps)th of its original size</span>
     <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">oria</span><span class="o">/</span><span class="n">nsteps</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">orib</span><span class="o">/</span><span class="n">nsteps</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">oric</span><span class="o">/</span><span class="n">nsteps</span>
+        <span class="n">ell</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">oria</span> <span class="o">/</span> <span class="n">nsteps</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">orib</span> <span class="o">/</span> <span class="n">nsteps</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">oric</span> <span class="o">/</span> <span class="n">nsteps</span>
 
     <span class="c1"># Simulation loop for particle growth and interaction steps</span>
-    <span class="n">end_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">vf</span><span class="o">*</span><span class="n">nsteps</span><span class="p">)</span>  <span class="c1"># grow particles only to given volume fraction</span>
+    <span class="n">end_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">vf</span> <span class="o">*</span> <span class="n">nsteps</span><span class="p">)</span>  <span class="c1"># grow particles only to given volume fraction</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">end_step</span><span class="p">)):</span>
-    
+
         <span class="c1"># Initialize Octree and test for collision between ellipsoids</span>
         <span class="k">for</span> <span class="n">ellipsoid</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
             <span class="n">ellipsoid</span><span class="o">.</span><span class="n">branches</span> <span class="o">=</span> <span class="p">[]</span>
@@ -212,12 +213,12 @@
                 <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedy</span> <span class="o">=</span> <span class="mf">0.</span>
                 <span class="n">ellipsoid</span><span class="o">.</span><span class="n">speedz</span> <span class="o">=</span> <span class="mf">0.</span>
             <span class="n">ellipsoid</span><span class="o">.</span><span class="n">ncollision</span> <span class="o">=</span> <span class="mi">0</span>
-            
+
         <span class="n">tree</span> <span class="o">=</span> <span class="n">Octree</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Cuboid</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">top</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
-                                <span class="n">sim_box</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">front</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">back</span><span class="p">),</span> 
+                                <span class="n">sim_box</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">front</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">back</span><span class="p">),</span>
                       <span class="n">Ellipsoids</span><span class="p">)</span>
         <span class="n">tree</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-        
+
         <span class="k">if</span> <span class="n">periodicity</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">ellipsoid</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">ncollision</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -233,7 +234,7 @@
         <span class="c1"># find all the items which are not duplicates</span>
         <span class="n">inter_ell</span> <span class="o">=</span> <span class="p">[</span><span class="n">ell</span> <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="n">Ellipsoids</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ell</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)]</span>
         <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="n">inter_ell</span>
-        
+
         <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">k_att</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">k_rep</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)):</span>
             <span class="n">calculateForce</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">,</span>
                            <span class="n">k_rep</span><span class="o">=</span><span class="n">k_rep</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="n">k_att</span><span class="p">)</span>
@@ -257,18 +258,19 @@
 
         <span class="c1"># Update the actual list with duplicates</span>
         <span class="n">Ellipsoids</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dups</span><span class="p">)</span>
-        
+
         <span class="c1"># Update the simulation time</span>
         <span class="n">sim_box</span><span class="o">.</span><span class="n">sim_ts</span> <span class="o">+=</span> <span class="mi">1</span>
-        
+
     <span class="k">return</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span></div>
+
 
 
 <div class="viewcode-block" id="calculateForce">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.packing.calculateForce">[docs]</a>
 <span class="k">def</span> <span class="nf">calculateForce</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">,</span> <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculate interaction force between eööipsoids</span>
+<span class="sd">    Calculate interaction force between ellipsoids.</span>
 
 <span class="sd">    :param Ellipsoids: </span>
 <span class="sd">    :type Ellipsoids: </span>
@@ -282,21 +284,20 @@
 <span class="sd">    :type k_att: float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">w_half</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">w</span><span class="o">/</span><span class="mi">2</span>           
-    <span class="n">h_half</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">h</span><span class="o">/</span><span class="mi">2</span>
-    <span class="n">d_half</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">d</span><span class="o">/</span><span class="mi">2</span> 
-    
-    
-    <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>       
+    <span class="n">w_half</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">w</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">h_half</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">h</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">d_half</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">d</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
         <span class="n">ell</span><span class="o">.</span><span class="n">force_x</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="n">ell</span><span class="o">.</span><span class="n">force_y</span> <span class="o">=</span> <span class="mf">0.</span>
-        <span class="n">ell</span><span class="o">.</span><span class="n">force_z</span> <span class="o">=</span> <span class="mf">0.</span>          
+        <span class="n">ell</span><span class="o">.</span><span class="n">force_z</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="k">for</span> <span class="n">ell_n</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">ell</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">ell_n</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>                
+            <span class="k">if</span> <span class="n">ell</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">ell_n</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
                 <span class="n">dx</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">ell_n</span><span class="o">.</span><span class="n">x</span>
                 <span class="n">dy</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">ell_n</span><span class="o">.</span><span class="n">y</span>
-                <span class="n">dz</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">z</span> <span class="o">-</span> <span class="n">ell_n</span><span class="o">.</span><span class="n">z</span>  
-                
+                <span class="n">dz</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">z</span> <span class="o">-</span> <span class="n">ell_n</span><span class="o">.</span><span class="n">z</span>
+
                 <span class="k">if</span> <span class="n">periodicity</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">dx</span> <span class="o">&gt;</span> <span class="n">w_half</span><span class="p">:</span>
                         <span class="n">dx</span> <span class="o">-=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">w</span>
@@ -307,31 +308,32 @@
                     <span class="k">if</span> <span class="n">dy</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">h_half</span><span class="p">:</span>
                         <span class="n">dy</span> <span class="o">+=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">h</span>
                     <span class="k">if</span> <span class="n">dz</span> <span class="o">&gt;</span> <span class="n">d_half</span><span class="p">:</span>
-                        <span class="n">dz</span> <span class="o">-=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">d</span> 
+                        <span class="n">dz</span> <span class="o">-=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">d</span>
                     <span class="k">if</span> <span class="n">dz</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">d_half</span><span class="p">:</span>
-                        <span class="n">dz</span> <span class="o">+=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">d</span> 
-                        
-                <span class="n">rSq</span> <span class="o">=</span> <span class="n">dx</span><span class="o">*</span><span class="n">dx</span> <span class="o">+</span> <span class="n">dy</span><span class="o">*</span><span class="n">dy</span> <span class="o">+</span> <span class="n">dz</span><span class="o">*</span><span class="n">dz</span>
+                        <span class="n">dz</span> <span class="o">+=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">d</span>
+
+                <span class="n">rSq</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">dx</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">*</span> <span class="n">dy</span> <span class="o">+</span> <span class="n">dz</span> <span class="o">*</span> <span class="n">dz</span>
                 <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rSq</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="mf">0.</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mf">0.</span><span class="p">):</span>
                     <span class="k">continue</span>
                 <span class="n">r2inv</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">rSq</span>
-                
+
                 <span class="c1"># add repulsive or attractive force for dual phase systems</span>
                 <span class="k">if</span> <span class="n">ell</span><span class="o">.</span><span class="n">phasenum</span> <span class="o">==</span> <span class="n">ell_n</span><span class="o">.</span><span class="n">phasenum</span><span class="p">:</span>
                     <span class="n">Force</span> <span class="o">=</span> <span class="o">-</span><span class="n">k_rep</span> <span class="o">*</span> <span class="n">r2inv</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">Force</span> <span class="o">=</span> <span class="n">k_att</span> <span class="o">*</span> <span class="n">r2inv</span>
-                
-                <span class="n">ell</span><span class="o">.</span><span class="n">force_x</span> <span class="o">+=</span> <span class="n">Force</span> <span class="o">*</span> <span class="n">dx</span> <span class="o">/</span> <span class="n">r</span> 
+
+                <span class="n">ell</span><span class="o">.</span><span class="n">force_x</span> <span class="o">+=</span> <span class="n">Force</span> <span class="o">*</span> <span class="n">dx</span> <span class="o">/</span> <span class="n">r</span>
                 <span class="n">ell</span><span class="o">.</span><span class="n">force_y</span> <span class="o">+=</span> <span class="n">Force</span> <span class="o">*</span> <span class="n">dy</span> <span class="o">/</span> <span class="n">r</span>
                 <span class="n">ell</span><span class="o">.</span><span class="n">force_z</span> <span class="o">+=</span> <span class="n">Force</span> <span class="o">*</span> <span class="n">dz</span> <span class="o">/</span> <span class="n">r</span>
     <span class="k">return</span></div>
 
 
+
 <div class="viewcode-block" id="packingRoutine">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.packing.packingRoutine">[docs]</a>
-<span class="k">def</span> <span class="nf">packingRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">phases</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">,</span> <span class="n">simulation_data</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">packingRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">periodic</span><span class="p">,</span> <span class="n">nsteps</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span>
                    <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The main function that controls the particle packing routine using:</span>
@@ -348,34 +350,20 @@
 <span class="sd">              * Simulation attributes such as total number of timesteps and</span>
 <span class="sd">                periodicity.                         </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting particle simulation&#39;</span><span class="p">)</span>     
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating simulation box of required dimensions&#39;</span><span class="p">)</span>
-    <span class="c1"># Create an instance of simulation box</span>
-    <span class="n">sim_box</span> <span class="o">=</span> <span class="n">Simulation_Box</span><span class="p">(</span><span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeX&#39;</span><span class="p">],</span>
-                             <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeY&#39;</span><span class="p">],</span>
-                             <span class="n">RVE_data</span><span class="p">[</span><span class="s1">&#39;RVE_sizeZ&#39;</span><span class="p">])</span>
-    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting particle simulation&#39;</span><span class="p">)</span>
+
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Creating particles from distribution statistics&#39;</span><span class="p">)</span>
     <span class="c1"># Create instances for particles</span>
-    <span class="n">Particles</span> <span class="o">=</span> <span class="n">particle_generator</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">phases</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">RVE_data</span><span class="p">)</span>
-    
+    <span class="n">Particles</span> <span class="o">=</span> <span class="n">particle_generator</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">periodic</span><span class="p">)</span>
+
     <span class="c1"># Growth of particle at each time step</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Particle packing by growth simulation&#39;</span><span class="p">)</span>
-    
-    
-    <span class="k">if</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">:</span>
-        <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">elif</span> <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;False&#39;</span><span class="p">:</span>
-        <span class="n">periodic_status</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;packingRoutine: Wrong value for periodicity in &#39;</span> <span class="o">+</span>
-                         <span class="s1">&#39;simulation_data&#39;</span><span class="p">)</span>   
-        
-    <span class="n">particles</span><span class="p">,</span> <span class="n">simbox</span> <span class="o">=</span> <span class="n">particle_grow</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">Particles</span><span class="p">,</span> <span class="n">periodic_status</span><span class="p">,</span> \
-                            <span class="n">simulation_data</span><span class="p">[</span><span class="s1">&#39;Time steps&#39;</span><span class="p">],</span>
-                            <span class="n">k_rep</span><span class="o">=</span><span class="n">k_rep</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="n">k_att</span><span class="p">,</span> <span class="n">vf</span><span class="o">=</span><span class="n">vf</span><span class="p">,</span>
-                            <span class="n">dump</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
-    
+
+    <span class="n">particles</span><span class="p">,</span> <span class="n">simbox</span> <span class="o">=</span> <span class="n">particle_grow</span><span class="p">(</span><span class="n">sim_box</span><span class="p">,</span> <span class="n">Particles</span><span class="p">,</span> <span class="n">periodic</span><span class="p">,</span>
+                                      <span class="n">nsteps</span><span class="p">,</span>
+                                      <span class="n">k_rep</span><span class="o">=</span><span class="n">k_rep</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="n">k_att</span><span class="p">,</span> <span class="n">vf</span><span class="o">=</span><span class="n">vf</span><span class="p">,</span>
+                                      <span class="n">dump</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
+
     <span class="c1"># statistical evaluation of collisions</span>
     <span class="k">if</span> <span class="n">particles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># check if particles are overlapping after growth</span>
@@ -396,8 +384,8 @@
                         <span class="c1"># Check if ellipsoids overlap and update their speeds</span>
                         <span class="c1"># accordingly</span>
                         <span class="k">if</span> <span class="n">collide_detect</span><span class="p">(</span><span class="n">E1</span><span class="o">.</span><span class="n">get_coeffs</span><span class="p">(),</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_coeffs</span><span class="p">(),</span>
-                                    <span class="n">E1</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span> 
-                                    <span class="n">E1</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">,</span> <span class="n">E2</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">):</span>
+                                          <span class="n">E1</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span>
+                                          <span class="n">E1</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">,</span> <span class="n">E2</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">):</span>
                             <span class="n">E1</span><span class="o">.</span><span class="n">ncollision</span> <span class="o">+=</span> <span class="mi">1</span>
                             <span class="n">ncoll</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Completed particle packing&#39;</span><span class="p">)</span>
@@ -405,7 +393,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Kinetic energy of particles after packing: </span><span class="si">{</span><span class="n">ekin</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Initial kinetic energy: </span><span class="si">{</span><span class="n">ekin0</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    
+
     <span class="k">return</span> <span class="n">particles</span><span class="p">,</span> <span class="n">simbox</span></div>
 
 </pre></div>

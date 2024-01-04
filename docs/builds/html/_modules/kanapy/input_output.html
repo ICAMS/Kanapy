@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.input_output &mdash; kanapy 5.0.3 documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>kanapy.input_output &mdash; kanapy 6.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=f98c4cc8"></script>
+        <script src="../../_static/documentation_options.js?v=b6ed0530"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -32,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                5.0.3
+                6.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -80,10 +82,9 @@
   <h1>Source code for kanapy.input_output</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
-
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-
 <span class="kn">from</span> <span class="nn">kanapy.entities</span> <span class="kn">import</span> <span class="n">Ellipsoid</span><span class="p">,</span> <span class="n">Cuboid</span>
 
 
@@ -129,12 +130,12 @@
 
 <div class="viewcode-block" id="read_dump">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.read_dump">[docs]</a>
-<span class="k">def</span> <span class="nf">read_dump</span><span class="p">(</span><span class="n">dump_file</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">read_dump</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads the (.dump) file to extract information for voxelization (meshing) routine    </span>
 
-<span class="sd">    :param dump_file: Contains information of ellipsoids generated in the packing routine.</span>
-<span class="sd">    :type dump_file: document</span>
+<span class="sd">    :param file: Contains information of ellipsoids generated in the packing routine.</span>
+<span class="sd">    :type file: document</span>
 
 <span class="sd">    :returns: * Cuboid object that represents the RVE.</span>
 <span class="sd">              * List of ellipsoid objects that represent the grains.</span>
@@ -144,7 +145,7 @@
 
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># Read the Simulation box dimensions</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
             <span class="n">lookup</span> <span class="o">=</span> <span class="s2">&quot;ITEM: NUMBER OF ATOMS&quot;</span>
             <span class="n">lookup2</span> <span class="o">=</span> <span class="s2">&quot;ITEM: BOX BOUNDS ff ff ff&quot;</span>
             <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
@@ -163,8 +164,7 @@
                     <span class="n">RVE_minZ</span><span class="p">,</span> <span class="n">RVE_maxZ</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">valuesZ</span><span class="p">))</span>
 
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    .dump file not found, make sure &quot;Packing&quot; command is executed first!&#39;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;.dump file not found, execute packing with option save_files=True&#39;</span><span class="p">)</span>
 
     <span class="c1"># Create an instance of simulation box</span>
     <span class="n">sim_box</span> <span class="o">=</span> <span class="n">Cuboid</span><span class="p">(</span><span class="n">RVE_minX</span><span class="p">,</span> <span class="n">RVE_maxY</span><span class="p">,</span> <span class="n">RVE_maxX</span><span class="p">,</span> <span class="n">RVE_minY</span><span class="p">,</span> <span class="n">RVE_maxZ</span><span class="p">,</span> <span class="n">RVE_minZ</span><span class="p">)</span>
@@ -172,7 +172,7 @@
     <span class="c1"># Read the particle shape &amp; position information</span>
     <span class="c1"># Create instances for ellipsoids &amp; assign values from dump files</span>
     <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;=</span> <span class="n">par_line_num</span><span class="p">:</span>
@@ -207,7 +207,7 @@
 
 <div class="viewcode-block" id="export2abaqus">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.export2abaqus">[docs]</a>
-<span class="k">def</span> <span class="nf">export2abaqus</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">fileName</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mm&#39;</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">export2abaqus</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mm&#39;</span><span class="p">,</span>
                   <span class="n">grain_facesDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates an ABAQUS input file with microstructure morphology information</span>
@@ -291,7 +291,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Units must be either &quot;mm&quot; or &quot;um&quot;, not &quot;</span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s1">&quot;&#39;</span>\
                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">units</span><span class="p">))</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fileName</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** Input file generated by kanapy</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** Nodal coordinates scale in </span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">units</span><span class="p">))</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*HEADING</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -310,7 +310,7 @@
         <span class="k">if</span> <span class="n">grain_facesDict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># export voxelized structure with regular hex mesh</span>
             <span class="c1"># Create Elements</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">voxel_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">, </span><span class="si">{3}</span><span class="s1">, </span><span class="si">{4}</span><span class="s1">, </span><span class="si">{5}</span><span class="s1">, </span><span class="si">{6}</span><span class="s1">, </span><span class="si">{7}</span><span class="s1">, </span><span class="si">{8}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">7</span><span class="p">]))</span>
             <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
@@ -376,7 +376,7 @@
 
 <div class="viewcode-block" id="writeAbaqusMat">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.writeAbaqusMat">[docs]</a>
-<span class="k">def</span> <span class="nf">writeAbaqusMat</span><span class="p">(</span><span class="n">ialloy</span><span class="p">,</span> <span class="n">angles</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">writeAbaqusMat</span><span class="p">(</span><span class="n">ialloy</span><span class="p">,</span> <span class="n">angles</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    angles : Euler angles with number of rows= number of grains and</span>
 <span class="sd">            three columns phi1, Phi, phi2</span>
@@ -386,12 +386,12 @@
     <span class="n">nitem</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
     <span class="n">titem</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">grains&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nitem</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/abq_px_</span><span class="si">{0}</span><span class="s1">_materials.inp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">titem</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>  <span class="c1"># remove old file if it exists</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/abq_px_</span><span class="si">{0}</span><span class="s1">_materials.inp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">titem</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>  <span class="c1"># remove old file if it exists</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** MATERIALS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -449,7 +449,8 @@
         <span class="n">path</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span>
     <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Name for pickled microstructure must be given.&#39;</span><span class="p">)</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">inp</span><span class="p">:</span>
+    <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">file</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">inp</span><span class="p">:</span>
         <span class="n">pcl</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">pcl</span></div>
 
@@ -459,63 +460,119 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.import_voxels">[docs]</a>
 <span class="k">def</span> <span class="nf">import_voxels</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
     <span class="kn">import</span> <span class="nn">json</span>
+    <span class="kn">import</span> <span class="nn">copy</span>
     <span class="kn">from</span> <span class="nn">kanapy.api</span> <span class="kn">import</span> <span class="n">Microstructure</span>
+    <span class="kn">from</span> <span class="nn">kanapy.initializations</span> <span class="kn">import</span> <span class="n">RVE_creator</span><span class="p">,</span> <span class="n">mesh_creator</span>
+    <span class="kn">from</span> <span class="nn">kanapy.entities</span> <span class="kn">import</span> <span class="n">Simulation_Box</span>
 
     <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;/&#39;</span><span class="p">:</span>
         <span class="n">path</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span>
     <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Name for voxel file must be given.&#39;</span><span class="p">)</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">file</span><span class="p">))</span>
-    <span class="n">sh</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Shape&#39;</span><span class="p">]</span>
+    <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="n">file</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">))</span>
+    <span class="c1"># extract basic model information</span>
+    <span class="n">sh</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Shape&#39;</span><span class="p">])</span>
+    <span class="n">nvox</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">sh</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">][</span><span class="s1">&#39;Size&#39;</span><span class="p">])</span>
     <span class="n">gr_numbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Values&#39;</span><span class="p">])</span>
-    <span class="n">Ngr</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gr_numbers</span><span class="p">)</span>
-    <span class="n">voxels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Values&#39;</span><span class="p">],</span> <span class="n">sh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Order&#39;</span><span class="p">])</span>
-    <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Geometry&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">sh</span><span class="p">)</span>
-    <span class="n">RVE_data</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;RVE_sizeX&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Geometry&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
-        <span class="s2">&quot;RVE_sizeY&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Geometry&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
-        <span class="s2">&quot;RVE_sizeZ&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Geometry&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span>
-        <span class="s2">&quot;Voxel_numberX&quot;</span><span class="p">:</span> <span class="n">sh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-        <span class="s2">&quot;Voxel_numberY&quot;</span><span class="p">:</span> <span class="n">sh</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-        <span class="s2">&quot;Voxel_numberZ&quot;</span><span class="p">:</span> <span class="n">sh</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-        <span class="s2">&quot;Voxel_resolutionX&quot;</span><span class="p">:</span> <span class="n">delta</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-        <span class="s2">&quot;Voxel_resolutionY&quot;</span><span class="p">:</span> <span class="n">delta</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-        <span class="s2">&quot;Voxel_resolutionZ&quot;</span><span class="p">:</span> <span class="n">delta</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-        <span class="s2">&quot;Periodic&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">],</span>
-        <span class="s2">&quot;Units&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Units&#39;</span><span class="p">][</span><span class="s1">&#39;Length&#39;</span><span class="p">],</span>
-    <span class="p">}</span>
-    <span class="n">elmtDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-    <span class="n">elmtSetDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-    <span class="n">vox_centerDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">ngr</span> <span class="ow">in</span> <span class="n">gr_numbers</span><span class="p">:</span>
-        <span class="n">elmtSetDict</span><span class="p">[</span><span class="n">ngr</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="s1">&#39;Mesh&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">nodes_v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Mesh&#39;</span><span class="p">][</span><span class="s1">&#39;Nodes&#39;</span><span class="p">][</span><span class="s1">&#39;Values&#39;</span><span class="p">])</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Mesh&#39;</span><span class="p">][</span><span class="s1">&#39;Voxels&#39;</span><span class="p">][</span><span class="s1">&#39;Values&#39;</span><span class="p">]):</span>
-            <span class="n">elmtDict</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">el</span>
-            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-            <span class="n">vox_centerDict</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">vox_centerDict</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">delta</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-            <span class="n">igr</span> <span class="o">=</span> <span class="n">voxels</span><span class="p">[</span><span class="n">ind</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ind</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ind</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
-            <span class="n">elmtSetDict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">grain_keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">gr_numbers</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">grains</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Values&#39;</span><span class="p">],</span> <span class="n">sh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Data&#39;</span><span class="p">][</span><span class="s1">&#39;Order&#39;</span><span class="p">])</span>
+    <span class="n">ph_names</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">][</span><span class="s1">&#39;Phase_names&#39;</span><span class="p">]</span>
+    <span class="n">nphases</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ph_names</span><span class="p">)</span>
+    <span class="n">phases</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nvox</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">grain_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">grain_phase_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">gr_arr</span> <span class="o">=</span> <span class="n">grains</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;Grains&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="s1">&#39;Orientation&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="n">grain_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">grain_ori_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">grain_ori_dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">phase_vf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nphases</span><span class="p">)</span>
+        <span class="n">ngrain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nphases</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">igr</span> <span class="ow">in</span> <span class="n">gr_numbers</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">gr_arr</span> <span class="o">==</span> <span class="n">igr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">nv</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
+            <span class="n">ip</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="nb">str</span><span class="p">(</span><span class="n">igr</span><span class="p">)][</span><span class="s1">&#39;Phase&#39;</span><span class="p">]</span>
+            <span class="n">phase_vf</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">+=</span> <span class="n">nv</span>
+            <span class="n">grain_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ip</span>
+            <span class="n">ngrain</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">phases</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">ip</span>
+            <span class="k">if</span> <span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">grain_ori_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="nb">str</span><span class="p">(</span><span class="n">igr</span><span class="p">)][</span><span class="s1">&#39;Orientation&#39;</span><span class="p">]</span>
+        <span class="n">phase_vf</span> <span class="o">/=</span> <span class="n">nvox</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;HERE 1: phase_vf&#39;</span><span class="p">,</span> <span class="n">phase_vf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">),</span> <span class="mf">1.</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Volume fractions do not add up to 1: </span><span class="si">{</span><span class="n">phase_vf</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Construction of mesh from voxel data not yet implemented.&#39;</span><span class="p">)</span>
+        <span class="c1"># no grain-level information in data</span>
+        <span class="k">if</span> <span class="n">nphases</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No grain-level information in data file.&#39;</span> <span class="o">+</span>
+                          <span class="s1">&#39;Cannot extract phase information or orientations.&#39;</span> <span class="o">+</span>
+                          <span class="s1">&#39;Continuing with single phase model.&#39;</span><span class="p">)</span>
+            <span class="n">nphases</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">igr</span> <span class="ow">in</span> <span class="n">gr_numbers</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">gr_arr</span> <span class="o">==</span> <span class="n">igr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">grain_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ngrain</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">grain_keys</span><span class="p">)]</span>
+        <span class="n">phase_vf</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.</span><span class="p">]</span>
 
-    <span class="n">ms</span> <span class="o">=</span> <span class="n">Microstructure</span><span class="p">(</span><span class="s1">&#39;from_voxels&#39;</span><span class="p">)</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">Ngr</span> <span class="o">=</span> <span class="n">Ngr</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">RVE_data</span> <span class="o">=</span> <span class="n">RVE_data</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">elmtDict</span> <span class="o">=</span> <span class="n">elmtDict</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">elmtSetDict</span> <span class="o">=</span> <span class="n">elmtSetDict</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Microstructure&#39;</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">nodes_v</span> <span class="o">=</span> <span class="n">nodes_v</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">nphase</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">vox_centerDict</span> <span class="o">=</span> <span class="n">vox_centerDict</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">voxels</span> <span class="o">=</span> <span class="n">voxels</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">voxels_phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sh</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">ms</span><span class="o">.</span><span class="n">phases</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;Phase name&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Simulanium&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">Ngr</span><span class="p">,</span>
-        <span class="s1">&#39;Phase number&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">Ngr</span><span class="p">,</span>
+    <span class="c1"># reconstructing microstructure information for RVE</span>
+    <span class="n">stats_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;RVE&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;sideX&#39;</span><span class="p">:</span> <span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;sideY&#39;</span><span class="p">:</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;sideZ&#39;</span><span class="p">:</span> <span class="n">size</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="s1">&#39;Nx&#39;</span><span class="p">:</span> <span class="n">sh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;Ny&#39;</span><span class="p">:</span> <span class="n">sh</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;Nz&#39;</span><span class="p">:</span> <span class="n">sh</span><span class="p">[</span><span class="mi">2</span><span class="p">]},</span>
+        <span class="s1">&#39;Simulation&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;periodicity&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">][</span><span class="s1">&#39;Periodicity&#39;</span><span class="p">],</span>
+                       <span class="s1">&#39;output_units&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">][</span><span class="s1">&#39;Units&#39;</span><span class="p">][</span><span class="s1">&#39;Length&#39;</span><span class="p">]},</span>
+        <span class="s1">&#39;Phase&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Name&#39;</span><span class="p">:</span> <span class="s1">&#39;Simulanium&#39;</span><span class="p">,</span> <span class="s1">&#39;Volume fraction&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
     <span class="p">}</span>
+    <span class="c1"># add phase information and construct list of stats_dict&#39;s</span>
+    <span class="n">stats_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nphases</span><span class="p">):</span>
+        <span class="n">stats_dict</span><span class="p">[</span><span class="s1">&#39;Phase&#39;</span><span class="p">][</span><span class="s1">&#39;Name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ph_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">stats_dict</span><span class="p">[</span><span class="s1">&#39;Phase&#39;</span><span class="p">][</span><span class="s1">&#39;Volume fraction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase_vf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;HERE 2: ph_names[</span><span class="si">{</span><span class="n">ph_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1">], phase_vf: </span><span class="si">{</span><span class="n">phase_vf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">stats_dict</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;HERE 3: &#39;</span><span class="p">,</span> <span class="n">stats_list</span><span class="p">)</span>
+    <span class="c1"># Create microstructure object</span>
+    <span class="n">ms</span> <span class="o">=</span> <span class="n">Microstructure</span><span class="p">(</span><span class="s1">&#39;from_voxels&#39;</span><span class="p">)</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">][</span><span class="s1">&#39;Material&#39;</span><span class="p">]</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">Ngr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ngrain</span><span class="p">)</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">nphases</span> <span class="o">=</span> <span class="n">nphases</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="n">stats_list</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">ngrains</span> <span class="o">=</span> <span class="n">ngrain</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">rve</span> <span class="o">=</span> <span class="n">RVE_creator</span><span class="p">(</span><span class="n">stats_list</span><span class="p">,</span> <span class="n">from_voxels</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">simbox</span> <span class="o">=</span> <span class="n">Simulation_Box</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+    <span class="c1"># initialize voxel structure (= mesh)</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh_creator</span><span class="p">(</span><span class="n">sh</span><span class="p">)</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nphases</span> <span class="o">=</span> <span class="n">nphases</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grains</span> <span class="o">=</span> <span class="n">grains</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span> <span class="o">=</span> <span class="n">grain_dict</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="o">=</span> <span class="n">grain_ori_dict</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">phases</span> <span class="o">=</span> <span class="n">phases</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sh</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span> <span class="o">=</span> <span class="n">grain_phase_dict</span>
+    <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">ngrains_phase</span> <span class="o">=</span> <span class="n">ngrain</span>
+    <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">porosity</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">nvox</span>
+        <span class="n">ms</span><span class="o">.</span><span class="n">porosity</span> <span class="o">=</span> <span class="n">porosity</span>
+        <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">porosity_voxels</span> <span class="o">=</span> <span class="n">porosity</span>
+    <span class="c1"># import or create mesh</span>
+    <span class="n">voxel_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">vox_centerDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s1">&#39;Mesh&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Mesh&#39;</span><span class="p">][</span><span class="s1">&#39;Nodes&#39;</span><span class="p">][</span><span class="s1">&#39;Values&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Mesh&#39;</span><span class="p">][</span><span class="s1">&#39;Voxels&#39;</span><span class="p">][</span><span class="s1">&#39;Values&#39;</span><span class="p">]):</span>
+            <span class="n">voxel_dict</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">el</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">vox_centerDict</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">voxel_dict</span> <span class="o">=</span> <span class="n">voxel_dict</span>
+        <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">vox_center_dict</span> <span class="o">=</span> <span class="n">vox_centerDict</span>
+        <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">nodes</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">create_voxels</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">simbox</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">ms</span></div>
 
 </pre></div>

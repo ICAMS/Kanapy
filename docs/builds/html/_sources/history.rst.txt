@@ -63,3 +63,16 @@ History
 * Improvements in installation procedure of MTEX module
 * Improved handling of 2-phase microstructures (EBSD import, descriptors, packing, voxelization)
 
+5.0.4 (2023-12-28)
+------------------
+
+* Last version with support of Command Line Interface (CLI)
+
+6.0.1 (2024-01-04)
+------------------
+
+ * Completely new internal data structure for improved support of dual-phase and porous structures
+ * Full support of voxel files in JSON format for input and output
+ * CLI tools are deactivated
+ 
+

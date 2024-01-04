@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; kanapy 5.0.3 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Index &mdash; kanapy 6.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=f98c4cc8"></script>
+        <script src="_static/documentation_options.js?v=b6ed0530"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -32,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                5.0.3
+                6.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -123,7 +125,7 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="kanapy.html#kanapy.grains.calcPolygons">calcPolygons() (in module kanapy.grains)</a>
+      <li><a href="kanapy.html#kanapy.grains.calc_polygons">calc_polygons() (in module kanapy.grains)</a>
 </li>
       <li><a href="kanapy.html#kanapy.packing.calculateForce">calculateForce() (in module kanapy.packing)</a>
 </li>
@@ -143,7 +145,7 @@
 </li>
       <li><a href="kanapy.html#kanapy.smoothingGB.Node.compute_acc">compute_acc() (kanapy.smoothingGB.Node method)</a>
 </li>
-      <li><a href="kanapy.html#kanapy.voxelization.create_voxels">create_voxels() (in module kanapy.voxelization)</a>
+      <li><a href="kanapy.html#kanapy.initializations.mesh_creator.create_voxels">create_voxels() (kanapy.initializations.mesh_creator method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.entities.cub_oct_split">cub_oct_split() (in module kanapy.entities)</a>
 </li>
@@ -161,8 +163,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.input_output.export2abaqus">export2abaqus() (in module kanapy.input_output)</a>
 </li>
-      <li><a href="kanapy.html#kanapy.cli.extract_volume_sharedGBarea">extract_volume_sharedGBarea() (in module kanapy.cli)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -170,6 +170,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.api.Microstructure.generate_grains">generate_grains() (kanapy.api.Microstructure method)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.api.Microstructure.generate_orientations">generate_orientations() (kanapy.api.Microstructure method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.entities.Ellipsoid.get_coeffs">get_coeffs() (kanapy.entities.Ellipsoid method)</a>
 </li>
@@ -179,6 +181,8 @@
         <li><a href="kanapy.html#kanapy.entities.Octree.get_cub">(kanapy.entities.Octree method)</a>
 </li>
       </ul></li>
+      <li><a href="kanapy.html#kanapy.initializations.mesh_creator.get_ind">get_ind() (kanapy.initializations.mesh_creator method)</a>
+</li>
       <li><a href="kanapy.html#kanapy.smoothingGB.Node.get_Oripos">get_Oripos() (kanapy.smoothingGB.Node method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.entities.Ellipsoid.get_pos">get_pos() (kanapy.entities.Ellipsoid method)</a>
@@ -331,6 +335,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.entities.Octree.make_neighborlist">make_neighborlist() (kanapy.entities.Octree method)</a>
 </li>
+      <li><a href="kanapy.html#kanapy.initializations.mesh_creator">mesh_creator (class in kanapy.initializations)</a>
+</li>
       <li><a href="kanapy.html#kanapy.api.Microstructure">Microstructure (class in kanapy.api)</a>
 </li>
       <li>
@@ -404,21 +410,19 @@
 </li>
       <li><a href="kanapy.html#kanapy.packing.particle_grow">particle_grow() (in module kanapy.packing)</a>
 </li>
-      <li><a href="kanapy.html#kanapy.cli.particleCreator">particleCreator() (in module kanapy.cli)</a>
-</li>
-      <li><a href="kanapy.html#kanapy.initializations.particleStatGenerator">particleStatGenerator() (in module kanapy.initializations)</a>
-</li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.pckl">pckl() (kanapy.api.Microstructure method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.input_output.pickle2microstructure">pickle2microstructure() (in module kanapy.input_output)</a>
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.plot_ellipsoids">plot_ellipsoids() (kanapy.api.Microstructure method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.plotting.plot_ellipsoids_3D">plot_ellipsoids_3D() (in module kanapy.plotting)</a>
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.plot_grains">plot_grains() (kanapy.api.Microstructure method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="kanapy.html#kanapy.plotting.plot_init_stats">plot_init_stats() (in module kanapy.plotting)</a>
 </li>
       <li><a href="kanapy.html#kanapy.plotting.plot_output_stats">plot_output_stats() (in module kanapy.plotting)</a>
 </li>
@@ -427,6 +431,8 @@
       <li><a href="kanapy.html#kanapy.api.Microstructure.plot_slice">plot_slice() (kanapy.api.Microstructure method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.plot_stats">plot_stats() (kanapy.api.Microstructure method)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.api.Microstructure.plot_stats_init">plot_stats_init() (kanapy.api.Microstructure method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.plot_voxels">plot_voxels() (kanapy.api.Microstructure method)</a>
 </li>
@@ -452,7 +458,7 @@
 </li>
       <li><a href="kanapy.html#kanapy.entities.Ellipsoid.rotationMatrixGen">rotationMatrixGen() (kanapy.entities.Ellipsoid method)</a>
 </li>
-      <li><a href="kanapy.html#kanapy.initializations.RVEcreator">RVEcreator() (in module kanapy.initializations)</a>
+      <li><a href="kanapy.html#kanapy.initializations.RVE_creator">RVE_creator (class in kanapy.initializations)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -461,6 +467,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.entities.Ellipsoid.set_cub">set_cub() (kanapy.entities.Ellipsoid method)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.initializations.set_stats">set_stats() (in module kanapy.initializations)</a>
 </li>
       <li><a href="kanapy.html#kanapy.cli.setPaths">setPaths() (in module kanapy.cli)</a>
 </li>
@@ -528,12 +536,8 @@
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.write_ori">write_ori() (kanapy.api.Microstructure method)</a>
 </li>
-      <li><a href="kanapy.html#kanapy.cli.write_output_stat">write_output_stat() (in module kanapy.cli)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="kanapy.html#kanapy.cli.write_position_weights">write_position_weights() (in module kanapy.cli)</a>
-</li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.write_stl">write_stl() (kanapy.api.Microstructure method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.write_voxels">write_voxels() (kanapy.api.Microstructure method)</a>
