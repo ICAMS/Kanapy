@@ -68,4 +68,4 @@ ms.plot_grains()  # plot grain structure
 ms.plot_stats()  # plot statistical distribution of grain sizes and aspect ratios and compare to input statistics
 
 # Write voxel structure to JSON file
-ms.write_voxels(script_name=__file__, mesh=False)
+ms.write_voxels(script_name=__file__, mesh=False, system=False)
