@@ -110,7 +110,7 @@ class Microstructure(object):
                 self.descriptor = descriptor
                 self.nphases = len(self.descriptor)
                 if self.nphases > 2:
-                    raise ValueError(f'Kanapy currently only supports 2 phases, but Nphase={self.nphases}')
+                    logging.warning(f'Kanapy is only tested for 2 phases, use at own risk for {self.nphases} phases')
             if file is not None:
                 logging.warning(
                     'WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
@@ -140,11 +140,10 @@ class Microstructure(object):
         if type(descriptor) is not list:
             descriptor = [descriptor]
         elif porosity is not None:
-            descriptor = descriptor[0:1]  # second phase will be treated as gaps in first phase
             self.porosity = porosity
 
         # initialize RVE, including mesh dimensions and particle distribution
-        self.rve = RVE_creator(descriptor, nsteps=nsteps)
+        self.rve = RVE_creator(descriptor, nsteps=nsteps, porosity=porosity)
         self.nparticles = self.rve.nparticles
 
         # store geometry in simbox object
@@ -179,7 +178,7 @@ class Microstructure(object):
         self.mesh = \
             voxelizationRoutine(particles, self.mesh, porosity=self.porosity)
         if np.any(self.nparticles != self.mesh.ngrains_phase):
-            logging.info(f'Number of grains per phase changed from {self.nparticles} to' +
+            logging.info(f'Number of grains per phase changed from {self.nparticles} to ' +
                          f'{self.mesh.ngrains_phase} during voxelization.')
         self.ngrains = self.mesh.ngrains_phase
         self.Ngr = np.sum(self.mesh.ngrains_phase, dtype=int)  # legacy notation
@@ -203,13 +202,23 @@ class Microstructure(object):
         statistical comparison. Final RVE grain volumes and shared grain
         boundary surface areas info are written out as well."""
 
-        if self.mesh.nodes is None:
+        if self.mesh.grains is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
+        if self.porosity and 0 in self.mesh.grain_dict.keys():
+            empty_vox = self.mesh.grain_dict.pop(0)
+            grain_store = self.mesh.grain_phase_dict.pop(0)
+            nphases = self.rve.nphases - 1
+        else:
+            empty_vox = None
+            nphases = self.rve.nphases
 
         self.geometry = \
             calc_polygons(self.rve, self.mesh)  # updates RVE_data
         self.res_data = \
-            get_stats(self.rve.particle_data, self.geometry, self.rve.units, self.rve.nphases)
+            get_stats(self.rve.particle_data, self.geometry, self.rve.units, nphases)
+        if empty_vox is not None:
+            self.mesh.grain_dict[0] = empty_vox
+            self.mesh.grain_phase_dict[0] = grain_store
 
 
     def generate_orientations(self, input, ang=None, omega=None, Nbase=2000):
@@ -276,11 +285,14 @@ class Microstructure(object):
         """ Generate 3D plot of grains in voxelized microstructure. """
         if self.mesh.grains is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
+        elif dual_phase:
+            data = self.mesh.phases
+        else:
+            data = self.mesh.grains
         if porous is None:
             porous = bool(self.porosity)
-        plot_voxels_3D(self.mesh.grains, phases=self.mesh.phases, Ngr=np.sum(self.ngrains),
-                       sliced=sliced, dual_phase=dual_phase, porous=porous,
-                       cmap=cmap)
+        plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced, dual_phase=dual_phase,
+                       porous=porous, cmap=cmap)
 
     def plot_grains(self, geometry=None, cmap='prism', alpha=0.4,
                     ec=[0.5, 0.5, 0.5, 0.1], dual_phase=False):
@@ -288,7 +300,7 @@ class Microstructure(object):
         if geometry is None:
             geometry = self.geometry
         if geometry is None:
-            raise ValueError('No polygons for grains defined. Run analyse_RVE first')
+            raise ValueError('No polygons for grains defined. Run generate_grains() first')
         plot_polygons_3D(geometry, cmap=cmap, alpha=alpha, ec=ec,
                          dual_phase=dual_phase)
 
@@ -300,7 +312,7 @@ class Microstructure(object):
         if data is None:
             data = self.res_data
             if data is None:
-                raise ValueError('No microstructure data created yet. Run analyse_RVE first.')
+                raise ValueError('No microstructure data created yet. Run generate_grains() first.')
         elif type(data) != list:
             data = [data]
         plot_output_stats(data, gs_data=gs_data, gs_param=gs_param,

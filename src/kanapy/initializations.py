@@ -61,7 +61,7 @@ class RVE_creator(object):
                   or :math:`\mu m`) for ABAQUS .inp file.
 
     """
-    def __init__(self, stats_dicts, nsteps=1000, from_voxels=False):
+    def __init__(self, stats_dicts, nsteps=1000, from_voxels=False, porosity=False):
         """
         Create an RVE object.
 
@@ -314,7 +314,8 @@ class RVE_creator(object):
 
             # Extract grains shape attributes to initialize particles
             if not from_voxels:
-                particle_data = init_particles(particle_data)
+                if (not porosity) or (ip < self.nphases - 1):
+                    particle_data = init_particles(particle_data)
             else:
                 particle_data = None
                 self.nparticles = None
@@ -364,6 +365,7 @@ class mesh_creator(object):
         self.vox_center_dict = dict()  # dictionary to store center of each voxel as 3-tupel
         self.nodes = None  # array of nodal positions
         self.nodes_smooth = None  # array of nodal positions after smoothening grain boundaries
+        self.porosity_voxels = None  # actual porosity in voxelated structure
         return
 
     def get_ind(self, addr):
@@ -453,11 +455,11 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
               size=100, voxels=60, gtype='Elongated', rveunit='um',
               periodicity=False, VF=None, phasename=None, phasenum=None,
               save_file=False):
-    '''
+    """
     grains = [std deviation, offset , mean grain sizeof lognorm distrib.]
     ar = [std deviation, offset , mean aspect ratio of gamma distrib.]
     omega = [std deviation, mean tilt angle]
-    '''
+    """
 
     # type of grains either 'Elongated' or 'Equiaxed'
     if not (gtype == 'Elongated' or gtype == 'Equiaxed'):

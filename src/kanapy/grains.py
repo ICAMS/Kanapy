@@ -489,14 +489,18 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         vvox = np.count_nonzero(mesh.grains == igr) * vunit
         vtot_vox += vvox
         vol_mae += np.abs(1. - vg / vvox)
-    if np.abs(vtot_vox - vref) > 1.e-5:
+    if np.abs(vtot_vox - vref) > 1.e-5 and not bool(mesh.porosity_voxels):
         logging.warning(f'Inconsistent volume of voxelized grains: {vtot_vox}, ' +
                       f'Reference volume: {vref}')
-    if np.abs(vtot - vref) > 1.e-5:
+    if np.abs(vtot - vref) > 1.e-5 and not bool(mesh.porosity_voxels):
         logging.warning(f'Inconsistent volume of polyhedral grains: {vtot}, ' +
                       f'Reference volume: {vref}')
     print(f'Total volume of RVE: {vref} {rve.units}^3')
     print(f'Total volume of polyhedral grains: {vtot} {rve.units}^3')
+    if bool(mesh.porosity_voxels):
+        geometry['Porosity_grains'] = 1.-vtot/vref
+        print(f'Porosity in voxel structure: {mesh.porosity_voxels}')
+        print(f'Porosity in polyhedral grains: {geometry["Porosity_grains"]}')
     print(f'Mean relative error of polyhedral vs. voxel volume of individual ' +
           f'grains: {round(vol_mae/Ngr, 3)}')
     print(f'for mean volume of grains: {round(vref/Ngr, 3)} {rve.units}^3.')
@@ -585,7 +589,7 @@ def l1_error_est(par_eqDia, grain_eqDia):
     """
 
     print('')
-    print('Computing the L1-error between input and output diameter distributions', 
+    print('Computing the L1-error between input and output diameter distributions.',
           end="")
 
     # Concatenate both arrays to compute shared bins

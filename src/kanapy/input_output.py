@@ -358,6 +358,7 @@ def pickle2microstructure(file, path='./'):
 
 def import_voxels(file, path='./'):
     import json
+    import copy
     from kanapy.api import Microstructure
     from kanapy.initializations import RVE_creator, mesh_creator
     from kanapy.entities import Simulation_Box
@@ -368,7 +369,6 @@ def import_voxels(file, path='./'):
         raise ValueError('Name for voxel file must be given.')
     fname = os.path.normpath(path + file)
     data = json.load(open(fname))
-
     # extract basic model information
     sh = tuple(data['Data']['Shape'])
     nvox = np.prod(sh)
@@ -378,6 +378,7 @@ def import_voxels(file, path='./'):
     grains = np.reshape(data['Data']['Values'], sh, order=data['Data']['Order'])
     ph_names = data['Model']['Phase_names']
     nphases = len(ph_names)
+    phases = np.zeros(nvox, dtype=int)
     grain_dict = dict()
     grain_phase_dict = dict()
     gr_arr = grains.flatten(order='F')
@@ -388,7 +389,6 @@ def import_voxels(file, path='./'):
             grain_ori_dict = None
         phase_vf = np.zeros(nphases)
         ngrain = np.zeros(nphases, dtype=int)
-        phases = np.zeros(nvox, dtype=int)
         for igr in gr_numbers:
             ind = np.nonzero(gr_arr == igr)[0]
             nv = len(ind)
@@ -401,6 +401,7 @@ def import_voxels(file, path='./'):
             if grain_ori_dict is not None:
                 grain_ori_dict[igr] = data['Grains'][str(igr)]['Orientation']
         phase_vf /= nvox
+        print('HERE 1: phase_vf', phase_vf)
         if not np.isclose(np.sum(phase_vf), 1.):
             logging.warning(f'Volume fractions do not add up to 1: {phase_vf}')
     else:
@@ -410,13 +411,12 @@ def import_voxels(file, path='./'):
                           'Cannot extract phase information or orientations.' +
                           'Continuing with single phase model.')
             nphases = 1
-            phase_vf = 1.
         for igr in gr_numbers:
             ind = np.nonzero(gr_arr == igr)[0]
             grain_dict[igr] = ind + 1
             grain_phase_dict[igr] = 0
         ngrain = [len(grain_keys)]
-        phases = np.zeros(nvox, dtype=int)
+        phase_vf = [1.]
 
     # reconstructing microstructure information for RVE
     stats_dict = {
@@ -431,7 +431,9 @@ def import_voxels(file, path='./'):
     for i in range(nphases):
         stats_dict['Phase']['Name'] = ph_names[i]
         stats_dict['Phase']['Volume fraction'] = phase_vf[i]
-        stats_list.append(stats_dict)
+        print(f'HERE 2: ph_names[{ph_names[i]}], phase_vf: {phase_vf[i]}')
+        stats_list.append(copy.deepcopy(stats_dict))
+    print('HERE 3: ', stats_list)
     # Create microstructure object
     ms = Microstructure('from_voxels')
     ms.name = data['Model']['Material']
@@ -450,6 +452,10 @@ def import_voxels(file, path='./'):
     ms.mesh.phases = phases.reshape(sh, order='F')
     ms.mesh.grain_phase_dict = grain_phase_dict
     ms.mesh.ngrains_phase = ngrain
+    if 0 in ms.mesh.grain_dict.keys():
+        porosity = len(ms.mesh.grain_dict[0])/nvox
+        ms.porosity = porosity
+        ms.mesh.porosity_voxels = porosity
     # import or create mesh
     voxel_dict = dict()
     vox_centerDict = dict()

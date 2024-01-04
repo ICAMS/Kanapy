@@ -17,12 +17,12 @@ from scipy.spatial.transform import Rotation as R
 from scipy.stats import lognorm
 
 
-def plot_voxels_3D(grains, phases=None, Ngr=1, sliced=False,
+def plot_voxels_3D(data, Ngr=1, sliced=False,
                    dual_phase=False, porous=False,
                    mask=None, cmap='prism', alpha=1.0, show=True):
-    '''
-    Plot voxeles in microstructure, each grain with a different color. Sliced 
-    indicates whether one eights of the box should be removed to see internal 
+    """
+    Plot voxeles in microstructure, each grain with a different color. Sliced
+    indicates whether one eights of the box should be removed to see internal
     structure. With alpha, the transparency of the grains can be adjusted.
 
     Parameters
@@ -41,7 +41,7 @@ def plot_voxels_3D(grains, phases=None, Ngr=1, sliced=False,
     cmap : color map, optional
         Color map for voxels. The default is 'prism'.
     alpha : float, optional
-        Adjust transparaency of voxels in alpha channel of color map. 
+        Adjust transparaency of voxels in alpha channel of color map.
         The default is 1.0.
     show : bool
         Indicate whether to show the plot or to return the axis for further use
@@ -51,52 +51,29 @@ def plot_voxels_3D(grains, phases=None, Ngr=1, sliced=False,
     ax : matplotlib.axes
         Axes handle for 3D subplot
 
-    '''
-    Nx = grains.shape[0]
-    Ny = grains.shape[1]
-    Nz = grains.shape[2]
-
-    if dual_phase:
-        # phase assignment should be stored in elmtSetDict
-        phase_0 = phases%2==0
-        phase_1 = phases%2==1
-        vox_b = phase_0 | phase_1
-        colors = np.empty(phases.shape, dtype=object)
-        colors[phase_0] = 'red'
-        colors[phase_1] = 'green'
-        if sliced:
-            ix = int(Nx/2)
-            iy = int(Ny/2)
-            iz = int(Nz/2)
-            vox_b[ix:Nx,iy:Ny,iz:Nz] = False            
-        ax = plt.figure().add_subplot(projection='3d')
-        ax.voxels(vox_b, facecolors=colors, edgecolors=colors, shade = True)
-        ax.set(xlabel='x', ylabel='y', zlabel='z')
-        ax.set_title('Dual-phase microstructure')
-        ax.view_init(30, 30)
-        ax.set_xlim(right=Nx)
-        ax.set_ylim(top=Ny)
-        ax.set_zlim(top=Nz)
-        plt.show()
+    """
+    Nx = data.shape[0]
+    Ny = data.shape[1]
+    Nz = data.shape[2]
 
     if mask is None:
-        vox_b = np.full(grains.shape, True, dtype=bool)
+        vox_b = np.full(data.shape, True, dtype=bool)
     else:
         vox_b = mask
-    if porous:
-        Ngr += 1  # Add color for grain 0 (porous or matrix phase)
+    if dual_phase:
+        Ngr = 2
     cm = plt.cm.get_cmap(cmap, Ngr)
-    colors = cm(grains.astype(int))
-    
+    colors = cm(data.astype(int))
+
     if sliced:
-        ix = int(Nx/2)
-        iy = int(Ny/2)
-        iz = int(Nz/2)
-        vox_b[ix:Nx,iy:Ny,iz:Nz] = False
+        ix = int(Nx / 2)
+        iy = int(Ny / 2)
+        iz = int(Nz / 2)
+        vox_b[ix:Nx, iy:Ny, iz:Nz] = False
 
     ax = plt.figure().add_subplot(projection='3d')
-    colors[:,:,:,-1] = alpha   # add semitransparency
-    ax.voxels(vox_b, facecolors=colors, edgecolors=colors, shade = True)
+    colors[:, :, :, -1] = alpha  # add semitransparency
+    ax.voxels(vox_b, facecolors=colors, edgecolors=colors, shade=True)
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.set_title('Voxelated microstructure')
     ax.view_init(30, 30)
@@ -109,7 +86,8 @@ def plot_voxels_3D(grains, phases=None, Ngr=1, sliced=False,
     else:
         return ax
 
-def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1],
+
+def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
                      dual_phase=False):
     '''
     Plot triangularized convex hulls of grains, based on vertices, i.e. 
@@ -146,19 +124,20 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5,0.5,0.5,0.1],
         if dual_phase:
             if grains[igr]['Phase'] == 0:
                 col = 'red'
-            else: 
+            else:
                 col = 'green'
         else:
             col = list(cm(igr))
-            col[-1] = alpha   # change alpha channel to create semi-transparency
+            col[-1] = alpha  # change alpha channel to create semi-transparency
         ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
-                        triangles=grains[igr]['Simplices'], color=col, 
+                        triangles=grains[igr]['Simplices'], color=col,
                         edgecolor=ec, linewidth=1)
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.set_title('Polygonized microstructure')
     ax.view_init(30, 30)
     plt.show()
-    
+
+
 def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
     '''
     Display ellipsoids during or after packing procedure
@@ -175,43 +154,43 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
     None.
 
     '''
-    fig = plt.figure(figsize=plt.figaspect(1),dpi=1200) 
+    fig = plt.figure(figsize=plt.figaspect(1), dpi=1200)
     ax = fig.add_subplot(111, projection='3d')
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.view_init(30, 30)
-    
+
     Npa = len(particles)
     cm = plt.cm.get_cmap(cmap, Npa)
-        
+
     for i, pa in enumerate(particles):
         if pa.duplicate is not None:
             continue
         if dual_phase:
             if pa.phasenum == 0:
                 col = 'red'
-            else: 
+            else:
                 col = 'green'
-            #col = cm(pa.phasenum)
+            # col = cm(pa.phasenum)
         else:
-            col = cm(i+1)  # set to 'b' for only blue ellipsoids
+            col = cm(i + 1)  # set to 'b' for only blue ellipsoids
         qw, qx, qy, qz = pa.quat
         x_c, y_c, z_c = pa.x, pa.y, pa.z
         a, b, c = pa.a, pa.b, pa.c
-        #Rotation
+        # Rotation
         r = R.from_quat([qx, qy, qz, qw])
-        #Local coordinates
+        # Local coordinates
         u = np.linspace(0, 2 * np.pi, 100)
         v = np.linspace(0, np.pi, 100)
         x_local = (a * np.outer(np.cos(u), np.sin(v))).reshape((10000,))
         y_local = (b * np.outer(np.sin(u), np.sin(v))).reshape((10000,))
         z_local = (c * np.outer(np.ones_like(u), np.cos(v))).reshape((10000,))
         points_local = list(np.array([x_local, y_local, z_local]).transpose())
-        #Global coordinates
-        points_global = r.apply(points_local, inverse = True) 
-        x = (points_global[:,0] + np.ones_like(points_global[:,0])*x_c).reshape((100,100))
-        y = (points_global[:,1] + np.ones_like(points_global[:,1])*y_c).reshape((100,100))
-        z = (points_global[:,2] + np.ones_like(points_global[:,2])*z_c).reshape((100,100))
-        ax.plot_surface(x, y, z,  rstride=4, cstride=4, color=col, linewidth=0)
+        # Global coordinates
+        points_global = r.apply(points_local, inverse=True)
+        x = (points_global[:, 0] + np.ones_like(points_global[:, 0]) * x_c).reshape((100, 100))
+        y = (points_global[:, 1] + np.ones_like(points_global[:, 1]) * y_c).reshape((100, 100))
+        z = (points_global[:, 2] + np.ones_like(points_global[:, 2]) * z_c).reshape((100, 100))
+        ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
     plt.show()
 
 

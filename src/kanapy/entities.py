@@ -649,7 +649,8 @@ class Cuboid(object):
 
     def intersect(self, other):
         """
-        Evaluates whether the :class:`Cuboid` object of the ellipsoid intersects with the :class:`Cuboid` object of the :class:`Octree` sub-branch.
+        Evaluates whether the :class:`Cuboid` object of the ellipsoid intersects with the :class:`Cuboid` object
+        of the :class:`Octree` sub-branch.
 
         :param other: Sub-branch cuboid object of the octree
         :type other: object of the class :class:`Cuboid`
@@ -665,9 +666,8 @@ class Cuboid(object):
         cond5 = self.front > other.back
         cond6 = self.back < other.front
 
-        if cond1 or cond2 or cond3 or cond4 or cond5 or cond6:
-            return False
-        return True
+        return not (cond1 or cond2 or cond3 or cond4 or cond5 or cond6)
+
 
 
 class Octree(object):
@@ -768,7 +768,5 @@ class Octree(object):
             for branch in self.branches:
                 branch.update()
         else:
-            # if len(self.particles) > 1:
-            #     self.collisionsTest()
             for particle in self.particles:
                 particle.branches.append(self)
