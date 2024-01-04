@@ -26,7 +26,6 @@ from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
-from kanapy.import_EBSD import EBSDmap, createOrisetRandom, createOriset
 from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D, plot_output_stats
 from kanapy.util import log_level
@@ -220,7 +219,6 @@ class Microstructure(object):
             self.mesh.grain_dict[0] = empty_vox
             self.mesh.grain_phase_dict[0] = grain_store
 
-
     def generate_orientations(self, input, ang=None, omega=None, Nbase=2000):
         """
         Calculates the orientations of grains to give a desired crystallographic texture.
@@ -237,6 +235,11 @@ class Microstructure(object):
 
         """
         from kanapy import MTEX_AVAIL
+        try:
+            from kanapy.import_EBSD import EBSDmap, createOrisetRandom, createOriset
+        except:
+            raise ImportError('Matlab or MTEX not installed properly. ' +
+                              'Run "kanapy setupTexture" first to use this function.')
 
         if not MTEX_AVAIL:
             raise ModuleNotFoundError('MTEX not installed. Run "kanapy setupTexture" first to use this function.')
@@ -268,7 +271,6 @@ class Microstructure(object):
                     ori_dict[igr] = ori_rve[i, :]
         self.mesh.grain_ori_dict = ori_dict
         return
-
 
     """
     --------     Plotting methods          --------
