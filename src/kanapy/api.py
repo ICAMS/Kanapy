@@ -379,62 +379,58 @@ class Microstructure(object):
     """
 
     def output_abq(self, nodes=None, name=None,
-                   elmtDict=None, elmtSetDict=None, faces=None,
+                   voxel_dict=None, grain_dict=None, faces=None,
                    dual_phase=False, thermal=False, units=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""
         if nodes is None:
-            if self.nodes_s is not None and self.grain_facesDict is not None:
-                logging.warning('\nWarning: No information about nodes is given, will write smoothened structure')
-                nodes = self.nodes_s
-                faces = self.grain_facesDict
+            if self.mesh.nodes_smooth is not None and 'GBarea'in self.geometry.keys():
+                logging.warning('\nWarning: No argument "nodes" is given, will write smoothened structure')
+                nodes = self.mesh.nodes_smooth
+                faces = self.geometry['GBarea']
                 ntag = 'smooth'
-            elif self.nodes_v is not None:
-                logging.warning('\nWarning: No information about nodes is given, will write voxelized structure')
-                nodes = self.nodes_v
+            elif self.mesh.nodes is not None:
+                logging.warning('\nWarning: No argument "nodes" is given, will write voxelized structure')
+                nodes = self.mesh.nodes
                 faces = None
                 ntag = 'voxels'
             else:
                 raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-        elif nodes == 'smooth' or nodes == 's':
-            if self.nodes_s is not None and self.grain_facesDict is not None:
-                nodes = self.nodes_s
-                faces = self.grain_facesDict
+        elif nodes in ['smooth', 's']:
+            if self.mesh.nodes_smooth is not None and 'GBarea'in self.geometry.keys():
+                nodes = self.mesh.nodes_smooth
+                faces = self.geometry['GBarea']  # use tet elements for smoothened structure
                 ntag = 'smooth'
             else:
                 raise ValueError('No information about smoothed microstructure. Run smoothen first.')
-        elif nodes == 'voxels' or nodes == 'v':
-            if self.nodes_v is not None:
-                nodes = self.nodes_v
-                faces = None
+        elif nodes in ['voxels', 'v']:
+            if self.mesh.nodes is not None:
+                nodes = self.mesh.nodes
+                faces = None  # use brick elements for voxel structure
                 ntag = 'voxels'
             else:
                 raise ValueError('No information about voxelized microstructure. Run voxelize first.')
 
-        if elmtDict is None:
-            elmtDict = self.elmtDict
+        if voxel_dict is None:
+            voxel_dict = self.mesh.voxel_dict
         if units is None:
-            units = self.rve['units']
+            units = self.rve.units
         elif (not units == 'mm') and (not units == 'um'):
             raise ValueError(f'Units must be either "mm" or "um", not {units}.')
         if dual_phase:
-            nct = '2phases'
-            elmt_list = self.mesh.phases.reshape(self.mesh.nvox, order='F')
-            ind1 = np.nonzero(elmt_list == 0)[0]
-            ind2 = np.nonzero(elmt_list == 1)[0]
-            elmtSetDict = {
-                1: ind1 + 1,
-                2: ind2 + 1}
+            nct = 'dual_phase'
+            if grain_dict is None:
+                grain_dict = self.mesh.grain_phase_dict
         else:
-            nct = '{0}grains'.format(len(elmtSetDict))
-            if elmtSetDict is None:
-                elmtSetDict = self.grain_dict
+            if grain_dict is None:
+                grain_dict = self.mesh.grain_dict
+            nct = '{0}grains'.format(len(grain_dict))
         if name is None:
             cwd = os.getcwd()
             name = os.path.normpath(cwd + f'/kanapy_{nct}_{ntag}.inp')
             if os.path.exists(name):
                 os.remove(name)  # remove old file if it exists
-        export2abaqus(nodes, name, elmtSetDict, elmtDict,
-                      units=units, grain_facesDict=faces,
+        export2abaqus(nodes, name, grain_dict, voxel_dict,
+                      units=units, gb_area=faces,
                       dual_phase=dual_phase, thermal=thermal)
         return name
 
@@ -513,7 +509,7 @@ class Microstructure(object):
             sizeY = self.rve['size'][1]
             (sx, sy, sz) = np.divide(self.rve['size'], self.rve['dim'])
             ix = np.arange(self.rve['dim'][0])
-            iy = np.arange(self.rve['dim'][0])
+            iy = np.arange(self.rve['dim'][1])
             if pos is None or pos == 'top' or pos == 'right':
                 iz = self.rve['dim'][2] - 1
             elif pos == 'bottom' or pos == 'left':
@@ -528,15 +524,16 @@ class Microstructure(object):
             yl = r'y ($\mu$m)'
             title = r'XY slice at z={} $\mu$m'.format(round(iz * sz, 1))
         elif cut == 'xz':
-            sizeX = self.RVE_data['RVE_sizeX']
-            sizeY = self.RVE_data['RVE_sizeZ']
-            sx = self.RVE_data['Voxel_resolutionX']
-            sy = self.RVE_data['Voxel_resolutionZ']
-            sz = self.RVE_data['Voxel_resolutionY']
-            ix = np.arange(self.RVE_data['Voxel_numberX'])
-            iy = np.arange(self.RVE_data['Voxel_numberZ'])
+            sizeX = self.rve.size[0]
+            sizeY = self.rve.size[2]
+            vox_res = np.divide(self.rve.size, self.rve.dim)
+            sx = vox_res[0]
+            sy = vox_res[1]
+            sz = vox_res[2]
+            ix = np.arange(self.rve.dim[0])
+            iy = np.arange(self.rve.dim[2])
             if pos is None or pos == 'top' or pos == 'right':
-                iz = self.RVE_data['Voxel_numberY'] - 1
+                iz = self.rve.dim[1] - 1
             elif pos == 'bottom' or pos == 'left':
                 iz = 0
             elif type(pos) == float or type(pos) == int:
@@ -549,18 +546,19 @@ class Microstructure(object):
             yl = r'z ($\mu$m)'
             title = r'XZ slice at y={} $\mu$m'.format(round(iz * sz, 1))
         elif cut == 'yz':
-            sizeX = self.RVE_data['RVE_sizeY']
-            sizeY = self.RVE_data['RVE_sizeZ']
-            sx = self.RVE_data['Voxel_resolutionY']
-            sy = self.RVE_data['Voxel_resolutionZ']
-            sz = self.RVE_data['Voxel_resolutionX']
-            ix = np.arange(self.RVE_data['Voxel_numberY'])
-            iy = np.arange(self.RVE_data['Voxel_numberZ'])
+            sizeX = self.rve.size[1]
+            sizeY = self.rve.size[2]
+            vox_res = np.divide(self.rve.size, self.rve.dim)
+            sx = vox_res[0]
+            sy = vox_res[1]
+            sz = vox_res[2]
+            ix = np.arange(self.rve.dim[1])
+            iy = np.arange(self.rve.dim[2])
             if pos is None or pos == 'top' or pos == 'right':
-                iz = self.RVE_data['Voxel_numberX'] - 1
+                iz = self.rve.dim[0] - 1
             elif pos == 'bottom' or pos == 'left':
                 iz = 0
-            elif type(pos) == float or type(pos) == int:
+            elif type(pos) is float or type(pos) is int:
                 iz = int(pos / sx)
             else:
                 raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
@@ -610,11 +608,11 @@ class Microstructure(object):
 
         # determine whether polygons or voxels shall be exported
         if data is None:
-            if 'Grains' in self.RVE_data.keys():
+            if 'Grains' in self.geometry.keys():
                 data = 'poly'
-            elif self.voxels is None:
+            elif self.mesh.voxels is None:
                 raise ValueError('Neither polygons nor voxels for grains are present.\
-                                 \nRun voxelize and generate_grains first')
+                                 \nRun voxelize and generate_grains first.')
             else:
                 data = 'voxels'
         elif data != 'voxels' and data != 'poly':

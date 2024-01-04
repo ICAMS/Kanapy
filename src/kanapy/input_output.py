@@ -117,8 +117,8 @@ def read_dump(file):
     return sim_box, Ellipsoids
 
 
-def export2abaqus(nodes, file, elmtSetDict, voxel_dict, units='mm',
-                  grain_facesDict=None, dual_phase=False, thermal=False):
+def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
+                  gb_area=None, dual_phase=False, thermal=False):
     r"""
     Creates an ABAQUS input file with microstructure morphology information
     in the form of nodes, elements and element sets.
@@ -135,7 +135,7 @@ def export2abaqus(nodes, file, elmtSetDict, voxel_dict, units='mm',
     
     def write_grain_sets():
         # Create element sets for grains
-        for k, v in elmtSetDict.items():
+        for k, v in grain_dict.items():
             f.write('*ELSET, ELSET=GRAIN{0}_SET\n'.format(k))
             for enum, el in enumerate(v, 1):
                 if enum % 16 != 0:
@@ -149,7 +149,7 @@ def export2abaqus(nodes, file, elmtSetDict, voxel_dict, units='mm',
                     else:
                         f.write('%d\n' % el)
         # Create sections
-        for k in elmtSetDict.keys():
+        for k in grain_dict.keys():
             f.write(
                 '*Solid Section, elset=GRAIN{0}_SET, material=GRAIN{1}_MAT\n'\
                     .format(k, k))
@@ -157,7 +157,7 @@ def export2abaqus(nodes, file, elmtSetDict, voxel_dict, units='mm',
     
     def write_phase_sets():
         # Create element sets for phases
-        for k, v in elmtSetDict.items():
+        for k, v in grain_dict.items():
             f.write('*ELSET, ELSET=PHASE{0}_SET\n'.format(k))
             for enum, el in enumerate(v, 1):
                 if enum % 16 != 0:
@@ -171,7 +171,7 @@ def export2abaqus(nodes, file, elmtSetDict, voxel_dict, units='mm',
                     else:
                         f.write('%d\n' % el)
         # Create sections
-        for k in elmtSetDict.keys():
+        for k in grain_dict.keys():
             f.write(
                 '*Solid Section, elset=PHASE{0}_SET, material=PHASE{1}_MAT\n'\
                     .format(k, k))
@@ -181,7 +181,7 @@ def export2abaqus(nodes, file, elmtSetDict, voxel_dict, units='mm',
     print('')
     print('Writing ABAQUS (.inp) file', end="")
     # select element type
-    if grain_facesDict is None:
+    if gb_area is None:
         if thermal:
             print('Using brick element type C3D8T for coupled structural-thermal analysis.')
             eltype = 'C3D8T'
@@ -217,7 +217,7 @@ def export2abaqus(nodes, file, elmtSetDict, voxel_dict, units='mm',
             f.write('{0}, {1}, {2}, {3}\n'.format(k + 1, v[0]*scale_fact,
                                         v[1]*scale_fact, v[2]*scale_fact))
         f.write('*ELEMENT, TYPE={0}\n'.format(eltype))
-        if grain_facesDict is None:
+        if gb_area is None:
             # export voxelized structure with regular hex mesh
             # Create Elements
             for k, v in voxel_dict.items():
@@ -232,7 +232,7 @@ def export2abaqus(nodes, file, elmtSetDict, voxel_dict, units='mm',
             fcList = {}
             fcNum = 0
             gr_fcs = defaultdict(list)
-            for gid, ginfo in grain_facesDict.items():
+            for gid, ginfo in enumerate(gb_area):
                 for fc, conn in ginfo.items():
                     if fc not in fcList.keys():
                         fcNum += 1
@@ -284,12 +284,12 @@ def export2abaqus(nodes, file, elmtSetDict, voxel_dict, units='mm',
 
 
 def writeAbaqusMat(ialloy, angles, file=None, path='./', nsdv=200):
-    '''
+    """
     angles : Euler angles with number of rows= number of grains and
             three columns phi1, Phi, phi2
     ialloy : alloy number in the umat, mod_alloys.f
     nsdv : number of state dependant variables default value is 200
-    '''
+    """
     nitem = len(angles)
     titem = '{}grains'.format(nitem)
 
