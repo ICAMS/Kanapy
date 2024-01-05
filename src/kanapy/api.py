@@ -1,7 +1,7 @@
 """ Module defining class Microstructure that contains the necessary
 methods and attributes to analyze experimental microstructures in form
 of EBSD maps to generate statistical descriptors for 3D microstructures, and 
-to create synthetic RVE that fulfill the requires statistical microstructure
+to create synthetic RVE that fulfill the required statistical microstructure
 descriptors.
 
 The methods of the class Microstructure for an API that can be used to generate
@@ -9,8 +9,6 @@ Python workflows.
 
 Authors: Alexander Hartmaier, Golsa Tolooei Eshlghi, Abhishek Biswas
 Institution: ICAMS, Ruhr University Bochum
-
-os.path.normpath(p)
 """
 import os
 import json
@@ -91,9 +89,9 @@ class Microstructure(object):
         logging.basicConfig(level=log_level)
         if descriptor is None:
             if file is None:
-                raise ValueError('Please provide either a dictionary with statistics or an input file name')
+                raise ValueError('Please provide either a dictionary with statistics or an data file name')
 
-            # Open the user input statistics file and read the data
+            # Open the user data statistics file and read the data
             try:
                 with open(os.path.normpath(file)) as json_file:
                     self.descriptor = json.load(json_file)
@@ -122,7 +120,7 @@ class Microstructure(object):
     def init_RVE(self, descriptor=None, nsteps=1000, porosity=None):
         """
         Creates particle distribution inside simulation box (RVE) based on
-        the data provided in the input file.
+        the data provided in the data file.
 
         Parameters
         ----------
@@ -209,6 +207,7 @@ class Microstructure(object):
             nphases = self.rve.nphases - 1
         else:
             empty_vox = None
+            grain_store = None
             nphases = self.rve.nphases
 
         self.geometry = \
@@ -219,16 +218,19 @@ class Microstructure(object):
             self.mesh.grain_dict[0] = empty_vox
             self.mesh.grain_phase_dict[0] = grain_store
 
-    def generate_orientations(self, input, ang=None, omega=None, Nbase=2000):
+    def generate_orientations(self, data, ang=None, omega=None, Nbase=5000,
+                              hist=None, shared_area=None):
         """
         Calculates the orientations of grains to give a desired crystallographic texture.
 
         Parameters
         ----------
-        input
+        data
         ang
         omega
         Nbase
+        hist
+        shared_area
 
         Returns
         -------
@@ -245,24 +247,25 @@ class Microstructure(object):
             raise ModuleNotFoundError('MTEX not installed. Run "kanapy setupTexture" first to use this function.')
         if self.mesh.grains is None:
             raise ValueError('Grain geometry is not defined. Run voxelize first.')
-        if self.geometry is None:
-            logging.warning('Grain boundary areas are not defined and cannot be considered in orientation assignment.')
-            gba = None
-        else:
-            gba = self.geometry['GBarea']
+        if shared_area is None:
+            if self.geometry is None:
+                logging.warning('Grain boundary areas are not defined, cannot be considered in orientation assignment.')
+                gba = None
+            else:
+                gba = self.geometry['GBarea']
 
         ori_dict = dict()
         for ip, ngr in enumerate(self.ngrains):
-            if type(input) is EBSDmap:
-                ori_rve = input.calcORI(ngr, iphase=ip, shared_area=gba)
-            elif type(input) is str:
-                if input.lower() in ['random', 'rnd']:
-                    ori_rve = createOrisetRandom(ngr, Nbase=Nbase)
-                elif input.lower() in ['unimodal', 'uni_mod', 'uni_modal']:
+            if type(data) is EBSDmap:
+                ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba)
+            elif type(data) is str:
+                if data.lower() in ['random', 'rnd']:
+                    ori_rve = createOrisetRandom(ngr, Nbase=Nbase, hist=hist, shared_area=shared_area)
+                elif data.lower() in ['unimodal', 'uni_mod', 'uni_modal']:
                     if ang is None or omega is None:
                         raise ValueError('To generate orientation sets of type "unimodal" angle "ang" and kernel' +
                                          'halfwidth "omega" are required.')
-                    ori_rve = createOriset(ngr, ang, omega)
+                    ori_rve = createOriset(ngr, ang, omega, hist=hist, shared_area=shared_area)
             else:
                 raise ValueError('Argument to generate grain orientation must be either of type EBSDmap or ' +
                                  '"random" or "unimodal"')
@@ -282,8 +285,7 @@ class Microstructure(object):
             raise ValueError('No particle to plot. Run pack first.')
         plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase)
 
-    def plot_voxels(self, sliced=True, dual_phase=False, porous=None,
-                    cmap='prism'):
+    def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism'):
         """ Generate 3D plot of grains in voxelized microstructure. """
         if self.mesh.grains is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
@@ -291,10 +293,7 @@ class Microstructure(object):
             data = self.mesh.phases
         else:
             data = self.mesh.grains
-        if porous is None:
-            porous = bool(self.porosity)
-        plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced, dual_phase=dual_phase,
-                       porous=porous, cmap=cmap)
+        plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced, dual_phase=dual_phase, cmap=cmap)
 
     def plot_grains(self, geometry=None, cmap='prism', alpha=0.4,
                     ec=[0.5, 0.5, 0.5, 0.1], dual_phase=False):
@@ -315,7 +314,7 @@ class Microstructure(object):
             data = self.res_data
             if data is None:
                 raise ValueError('No microstructure data created yet. Run generate_grains() first.')
-        elif type(data) != list:
+        elif type(data) is not list:
             data = [data]
         plot_output_stats(data, gs_data=gs_data, gs_param=gs_param,
                           ar_data=ar_data, ar_param=ar_param,
@@ -383,7 +382,7 @@ class Microstructure(object):
                    dual_phase=False, thermal=False, units=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""
         if nodes is None:
-            if self.mesh.nodes_smooth is not None and 'GBarea'in self.geometry.keys():
+            if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
                 logging.warning('\nWarning: No argument "nodes" is given, will write smoothened structure')
                 nodes = self.mesh.nodes_smooth
                 faces = self.geometry['GBarea']
@@ -396,7 +395,7 @@ class Microstructure(object):
             else:
                 raise ValueError('No information about voxelized microstructure. Run voxelize first.')
         elif nodes in ['smooth', 's']:
-            if self.mesh.nodes_smooth is not None and 'GBarea'in self.geometry.keys():
+            if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
                 nodes = self.mesh.nodes_smooth
                 faces = self.geometry['GBarea']  # use tet elements for smoothened structure
                 ntag = 'smooth'
@@ -477,7 +476,7 @@ class Microstructure(object):
 
         Parameters
         ----------
-        ori : (self.Ngr,)-array, optional
+        ori : (self.Ngr, )-array, optional
             Euler angles of grains. The default is None.
         cut : str, optional
             Define cutting plane of slice as 'xy', 'xz' or 'yz'. The default is 'xy'.
@@ -503,18 +502,24 @@ class Microstructure(object):
             Name of ang file.
 
         """
+        if type(ori) is dict:
+            ori = np.array([val for val in ori.values()])
         cut = cut.lower()
+        if type(pos) is str:
+            pos = pos.lower()
+        botlist = ['bottom', 'bot', 'left', 'b', 'l']
+        toplist = ['top', 'right', 't', 'r']
         if cut == 'xy':
-            sizeX = self.rve['size'][0]
-            sizeY = self.rve['size'][1]
-            (sx, sy, sz) = np.divide(self.rve['size'], self.rve['dim'])
-            ix = np.arange(self.rve['dim'][0])
-            iy = np.arange(self.rve['dim'][1])
-            if pos is None or pos == 'top' or pos == 'right':
-                iz = self.rve['dim'][2] - 1
-            elif pos == 'bottom' or pos == 'left':
+            sizeX = self.rve.size[0]
+            sizeY = self.rve.size[1]
+            (sx, sy, sz) = np.divide(self.rve.size, self.rve.dim)
+            ix = np.arange(self.rve.dim[0])
+            iy = np.arange(self.rve.dim[1])
+            if pos is None or pos in toplist:
+                iz = self.rve.dim[2] - 1
+            elif pos in botlist:
                 iz = 0
-            elif type(pos) == float or type(pos) == int:
+            elif type(pos) is float or type(pos) is int:
                 iz = int(pos / sz)
             else:
                 raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
@@ -532,11 +537,11 @@ class Microstructure(object):
             sz = vox_res[2]
             ix = np.arange(self.rve.dim[0])
             iy = np.arange(self.rve.dim[2])
-            if pos is None or pos == 'top' or pos == 'right':
+            if pos is None or pos in toplist:
                 iz = self.rve.dim[1] - 1
-            elif pos == 'bottom' or pos == 'left':
+            elif pos in botlist:
                 iz = 0
-            elif type(pos) == float or type(pos) == int:
+            elif type(pos) is float or type(pos) is int:
                 iz = int(pos / sy)
             else:
                 raise ValueError('"pos" must be either float or "top", "bottom", "left" or "right"')
@@ -554,9 +559,9 @@ class Microstructure(object):
             sz = vox_res[2]
             ix = np.arange(self.rve.dim[1])
             iy = np.arange(self.rve.dim[2])
-            if pos is None or pos == 'top' or pos == 'right':
+            if pos is None or pos in toplist:
                 iz = self.rve.dim[0] - 1
-            elif pos == 'bottom' or pos == 'left':
+            elif pos in botlist:
                 iz = 0
             elif type(pos) is float or type(pos) is int:
                 iz = int(pos / sx)
@@ -626,7 +631,7 @@ class Microstructure(object):
                 g_slice = np.array(self.mesh.grains[:, iz, :], dtype=int)
             else:
                 g_slice = np.array(self.mesh.grains[iz, :, :], dtype=int)
-            if dual_phase == True:
+            if dual_phase:
                 if cut == 'xy':
                     g_slice_phase = np.array(self.mesh.phases[:, :, iz], dtype=int)
                 elif cut == 'xz':
@@ -652,11 +657,11 @@ class Microstructure(object):
                     ind = np.nonzero(i >= 0)[0]
                     grain_slice[ind] = igr
                 except:
-                    logging.error('Grain #{} has no convex hull (Nvertices: {})' \
+                    logging.error('Grain #{} has no convex hull (Nvertices: {})'
                                   .format(igr, len(pts)))
             if np.any(grain_slice == 0):
                 ind = np.nonzero(grain_slice == 0)[0]
-                logging.error('Incomplete slicing for {} pixels in {} slice at {}.' \
+                logging.error('Incomplete slicing for {} pixels in {} slice at {}.'
                               .format(len(ind), cut, pos))
             g_slice = grain_slice.reshape(xv.shape)
 
@@ -675,7 +680,7 @@ class Microstructure(object):
                         p1 = ori[g_slice[j, i] - 1, 0]
                         P = ori[g_slice[j, i] - 1, 1]
                         p2 = ori[g_slice[j, i] - 1, 2]
-                        f.write('  {0}  {1}  {2}  {3}  {4}   0.0  0.000  0   1  0.000\n' \
+                        f.write('  {0}  {1}  {2}  {3}  {4}   0.0  0.000  0   1  0.000\n'
                                 .format(round(p1, 5), round(P, 5), round(p2, 5),
                                         round(sizeX - i * sx, 5), round(sizeY - j * sy, 5)))
         if plot:
@@ -692,7 +697,7 @@ class Microstructure(object):
                 plt.savefig(fname[:-4] + '.pdf', format='pdf', dpi=300)
             plt.show()
 
-            if dual_phase == True:
+            if dual_phase:
                 fig, ax = plt.subplots(1)
                 ax.grid(False)
                 ax.imshow(g_slice_phase, cmap=cmap, interpolation='none',
@@ -769,12 +774,17 @@ class Microstructure(object):
                 f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2]))
         return
 
-    def write_ori(self, angles, file=None):
+    def write_ori(self, angles=None, file=None):
         if file is None:
             if self.name == 'Microstructure':
                 file = 'px_{}grains_ori.csv'.format(self.Ngr)
             else:
                 file = self.name + '_ori.csv'
+        if angles is None:
+            if self.mesh.grain_ori_dict is None:
+                raise ValueError('No grain orientations given or stored.')
+            angles = [val for val in self.mesh.grain_ori_dict.values()]
+
         with open(file, 'w') as f:
             for ori in angles:
                 f.write('{}, {}, {}\n'.format(ori[0], ori[1], ori[2]))

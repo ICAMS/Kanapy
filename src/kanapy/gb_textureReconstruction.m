@@ -2,9 +2,8 @@ function [orilist,ein,eout,mbin] = ...
     gb_textureReconstruction(inp,orilist,fl,nbin)
 
 tic
-
 RVEgrains = length(unique([fl(:,1); fl(:,2)])); 
-bin_score_area = sparse(fl(:,1),fl(:,2),fl(:,3),RVEgrains,RVEgrains);
+bin_score_area = sparse(fl(:,1),fl(:,2),fl(:,3));  % RVEgrains,RVEgrains had been given as dimensions
 area = bin_score_area(bin_score_area>0);
 
 index = 1:RVEgrains;
@@ -82,4 +81,3 @@ end
 
 end
 time = toc
-

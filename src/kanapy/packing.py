@@ -4,7 +4,7 @@ from tqdm import tqdm
 import numpy as np
 
 from kanapy.input_output import write_dump
-from kanapy.entities import Ellipsoid, Cuboid, Octree, Simulation_Box
+from kanapy.entities import Ellipsoid, Cuboid, Octree
 from kanapy.collisions import collide_detect
 
 
@@ -13,11 +13,13 @@ def particle_generator(particle_data, sim_box, periodic):
     Initializes ellipsoids by assigning them random positions and speeds within
     the simulation box.
 
-    :param particle_data: Ellipsoid information such as such as Major, Minor,
+    :param particle_data: Ellipsoid information such as Major, Minor,
           Equivalent diameters and its tilt angle. 
     :type particle_data: Python dictionary 
     :param sim_box: Simulation box representing RVE.
     :type sim_box: :class:`entities.Simulation_Box`
+    :param periodic: Indicates periodicity of RVE.
+    :type periodic: :class: bool
     
     :returns: Ellipsoids for the packing routine
     :rtype: list       
@@ -48,7 +50,7 @@ def particle_generator(particle_data, sim_box, periodic):
             else:
                 # Extract the angle
                 angle = particle['Tilt angle'][n]
-            # Tilt vector wrt (+ve) x axis
+            # Tilt vector wrt (+ve) x-axis
             vec_a = np.array([a * np.cos(angle), a * np.sin(angle), 0.0])
             # Do the cross product to find the quaternion axis
             cross_a = np.cross(np.array([1, 0, 0]), vec_a)
@@ -99,6 +101,12 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
     :param nsteps:  Total simulation steps to fill box volume with particle
          volume.
     :type nsteps: int
+    :param k_rep: Repulsion factor for particles
+    :type k_rep: float
+    :param k_att: Attraction factor for particles
+    :type k_att: float
+    :param vf: Target volume fraction for particle filling
+    :type vf: float
     :param dump: Indicate if dump files for particles are written.
     :type dump: boolean
 
@@ -208,7 +216,7 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
                 dy = ell.y - ell_n.y
                 dz = ell.z - ell_n.z
 
-                if periodicity == True:
+                if periodicity:
                     if dx > w_half:
                         dx -= sim_box.w
                     if dx <= -w_half:

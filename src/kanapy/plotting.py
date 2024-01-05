@@ -8,27 +8,24 @@ Created on Mon Oct  4 07:52:55 2021
 @author: Alexander Hartmaier, Golsa Tolooei Eshlaghi
 """
 import logging
-import os
-
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
-from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Rotation
 from scipy.stats import lognorm
 
 
-def plot_voxels_3D(data, Ngr=1, sliced=False,
-                   dual_phase=False, porous=False,
+def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
                    mask=None, cmap='prism', alpha=1.0, show=True):
     """
-    Plot voxeles in microstructure, each grain with a different color. Sliced
-    indicates whether one eights of the box should be removed to see internal
+    Plot voxels in microstructure, each grain with a different color. Sliced
+    indicates whether one eighth of the box should be removed to see internal
     structure. With alpha, the transparency of the grains can be adjusted.
 
     Parameters
     ----------
-    grains : int array
-        Grain number associated to each voxel
+    data : int array
+        Grain number or phase number associated to each voxel
     Ngr : int, optional
         Number of grains. The default is 1.
     sliced : Boolean, optional
@@ -41,7 +38,7 @@ def plot_voxels_3D(data, Ngr=1, sliced=False,
     cmap : color map, optional
         Color map for voxels. The default is 'prism'.
     alpha : float, optional
-        Adjust transparaency of voxels in alpha channel of color map.
+        Adjust transparency of voxels in alpha channel of color map.
         The default is 1.0.
     show : bool
         Indicate whether to show the plot or to return the axis for further use
@@ -72,7 +69,7 @@ def plot_voxels_3D(data, Ngr=1, sliced=False,
         vox_b[ix:Nx, iy:Ny, iz:Nz] = False
 
     ax = plt.figure().add_subplot(projection='3d')
-    colors[:, :, :, -1] = alpha  # add semitransparency
+    colors[:, :, :, -1] = alpha  # add semi-transparency
     ax.voxels(vox_b, facecolors=colors, edgecolors=colors, shade=True)
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.set_title('Voxelated microstructure')
@@ -89,29 +86,29 @@ def plot_voxels_3D(data, Ngr=1, sliced=False,
 
 def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
                      dual_phase=False):
-    '''
-    Plot triangularized convex hulls of grains, based on vertices, i.e. 
-    connection points of 4 up to 8 grains or the end pointss of triple or quadriiple 
+    """
+    Plot triangularized convex hulls of grains, based on vertices, i.e.
+    connection points of 4 up to 8 grains or the end points of triple or quadruple
     lines between grains.
 
     Parameters
     ----------
-    grains : dict
-        Dictonary with 'vertices' (node numbers) and 'simplices' (triangles)
-    nodes : (N,nx,ny,nz)-array
-        Nodal positions
+    geometry : dict
+        Dictionary with 'vertices' (node numbers) and 'simplices' (triangles)
     cmap : color map, optional
         Color map for triangles. The default is 'prism'.
     alpha : float, optional
         Transparency of plotted objects. The default is 0.4.
     ec : color, optional
         Color of edges. The default is [0.5,0.5,0.5,0.1].
+    dual_phase : bool, optional
+        Whether to plot red/green contrast for dual phase microstructure or colored grains
 
     Returns
     -------
     None.
 
-    '''
+    """
     grains = geometry['Grains']
     pts = geometry['Points']
     Ng = np.amax(list(grains.keys()))
@@ -139,7 +136,7 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
 
 
 def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
-    '''
+    """
     Display ellipsoids during or after packing procedure
 
     Parameters
@@ -148,12 +145,14 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
         Ellipsoids in microstructure before voxelization.
     cmap : color map, optional
         Color map for ellipsoids. The default is 'prism'.
+    dual_phase : bool, optional
+        Whether to display the ellipsoids in red/green contrast or in colors
 
     Returns
     -------
     None.
 
-    '''
+    """
     fig = plt.figure(figsize=plt.figaspect(1), dpi=1200)
     ax = fig.add_subplot(111, projection='3d')
     ax.set(xlabel='x', ylabel='y', zlabel='z')
@@ -177,7 +176,7 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
         x_c, y_c, z_c = pa.x, pa.y, pa.z
         a, b, c = pa.a, pa.b, pa.c
         # Rotation
-        r = R.from_quat([qx, qy, qz, qw])
+        r = Rotation.from_quat([qx, qy, qz, qw])
         # Local coordinates
         u = np.linspace(0, 2 * np.pi, 100)
         v = np.linspace(0, np.pi, 100)
@@ -256,7 +255,7 @@ def plot_output_stats(dataDictList, gs_data=None, gs_param=None,
             ax[1].set_ylabel('Density', fontsize=18)
             ax[1].tick_params(labelsize=14)
             if save_files:
-                plt.savefig(cwd + "/Equivalent_diameter.png", bbox_inches="tight")
+                plt.savefig("Equivalent_diameter.png", bbox_inches="tight")
             plt.show()
         else:
             # Plot the histogram & PDF
@@ -309,8 +308,7 @@ def plot_output_stats(dataDictList, gs_data=None, gs_param=None,
             ax[1].set_ylabel('Density', fontsize=18)
             ax[1].tick_params(labelsize=14)
             if save_files:
-                cwd = os.getcwd()
-                plt.savefig(cwd + "/Equivalent_diameter.png", bbox_inches="tight")
+                plt.savefig("Equivalent_diameter.png", bbox_inches="tight")
                 print("    'Equivalent_diameter.png' is placed in the current working directory\n")
             plt.show()
 
@@ -376,7 +374,7 @@ def plot_output_stats(dataDictList, gs_data=None, gs_param=None,
             ax[1].set_ylabel('Density', fontsize=18)
             ax[1].tick_params(labelsize=14)
             if save_files:
-                plt.savefig(cwd + "/Aspect_ratio.png", bbox_inches="tight")
+                plt.savefig("Aspect_ratio.png", bbox_inches="tight")
                 print("    'Aspect_ratio.png' is placed in the current working directory\n")
             plt.show()
     return

@@ -19,14 +19,15 @@ def points_in_convexHull(Points, hull):
     :returns: Boolean values representing the status. If inside: **True**, else **False**
     :rtype: numpy array
 
-    .. seealso:: https://stackoverflow.com/questions/21698630/how-can-i-find-if-a-point-lies-inside-or-outside-of-convexhull
+    .. seealso::
+       https://stackoverflow.com/questions/21698630/how-can-i-find-if-a-point-lies-inside-or-outside-of-convexhull
     """
     A = hull.equations[:, 0:-1]
     b = np.transpose(np.array([hull.equations[:, -1]]))
     return np.all((A @ np.transpose(Points)) <= np.tile(-b, (1, len(Points))), axis=0)
 
 
-def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict, vf_target=None):
+def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
     """
     Determines voxels belonging to each ellipsoid    
 
@@ -34,8 +35,10 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict, vf_target=None):
     :type cooDict: Python dictionary
     :param Ellipsoids: Ellipsoids from the packing routine.
     :type Ellipsoids: list
-    :param elmtDict: Element dictionary containing element IDs and nodal connectivities. 
-    :type elmtDict: Python dictionary       
+    :param voxel_dict: Element dictionary containing element IDs and nodal connectivities.
+    :type voxel_dict: Python dictionary
+    :param vf_target: target value for volume fraction of particles (optional, default: None)
+    :type: float
     """
     print('    Assigning voxels to grains')
     if vf_target is None or vf_target > 1.0:
@@ -93,17 +96,17 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict, vf_target=None):
             # Extract the voxel ids inside the hull
             inside_ids = list(bbox_testids[results])
 
-            # Check if the new found voxels share atlest 4 nodes with
+            # Check if the newly found voxels share at least 4 nodes with
             # ellipsoid nodes
             if not np.isclose(scale, 1.0):
                 # Extract single instance of all nodes currently belonging
                 # to the ellipsoid
-                all_nodes = [elmtDict[i] for i in ellipsoid.inside_voxels]
+                all_nodes = [voxel_dict[i] for i in ellipsoid.inside_voxels]
                 merged_nodes = list(itertools.chain(*all_nodes))
                 ell_nodes = set(merged_nodes)
 
                 # Extract single instance of all nodes currently to be tested
-                nids = [elmtDict[vid] for vid in inside_ids]
+                nids = [voxel_dict[vid] for vid in inside_ids]
                 m_nids = list(itertools.chain(*nids))
                 e_nids = set(m_nids)
 
@@ -123,7 +126,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict, vf_target=None):
                         # Find the voxels that have these common nodes
                         int_assigned = set()
                         for vid in inside_ids:
-                            nds = elmtDict[vid]
+                            nds = voxel_dict[vid]
 
                             if len(ell_nodes.intersection(nds)) >= 4:
                                 int_assigned.add(vid)
@@ -140,7 +143,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict, vf_target=None):
                                 inside_ids.remove(
                                     i)  # Remove the assigned voxel from the list
 
-                                nds = set(elmtDict[i])
+                                nds = set(voxel_dict[i])
                                 ell_nodes.update(nds)  # Update the actual ellipsoid node list
                                 e_nids -= nds  # update the current node list (testing)
                         else:
@@ -160,10 +163,10 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict, vf_target=None):
             else:
                 # Each voxel should share at least 4 nodes with the remaining voxels
                 for vid in inside_ids:
-                    nds = elmtDict[vid]
+                    nds = voxel_dict[vid]
 
                     rem_ids = [i for i in inside_ids if i != vid]
-                    all_nodes = [elmtDict[i] for i in rem_ids]
+                    all_nodes = [voxel_dict[i] for i in rem_ids]
                     merged_nodes = list(itertools.chain(*all_nodes))
                     rem_nodes = set(merged_nodes)
 
@@ -173,14 +176,11 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict, vf_target=None):
                         ellipsoid.inside_voxels.append(vid)
                         assigned_voxels.add(vid)
 
-                        ## scale ellipsoid dimensions back to original by the growth factor
-                # ellipsoid.a, ellipsoid.b, ellipsoid.c = ellipsoid.a/scale, ellipsoid.b/scale, ellipsoid.c/scale
-
         # find the remaining voxels
         remaining_voxels = set(list(cooDict.keys())) - assigned_voxels
 
         # Reassign at the end of each growth cycle
-        reassign_shared_voxels(cooDict, Ellipsoids, elmtDict)
+        reassign_shared_voxels(cooDict, Ellipsoids, voxel_dict)
 
         # Update the test_points and ids to remaining voxels
         test_ids = np.array(list(remaining_voxels))
@@ -198,14 +198,16 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, elmtDict, vf_target=None):
     return
 
 
-def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
+def reassign_shared_voxels(cooDict, Ellipsoids, voxel_dict):
     """
     Assigns shared voxels between ellipsoids to the ellipsoid with the closest center.
 
     :param cooDict: Voxel dictionary containing voxel IDs and center coordinates. 
     :type cooDict: Python dictionary            
     :param Ellipsoids: Ellipsoids from the packing routine.
-    :type Ellipsoids: list               
+    :type Ellipsoids: list
+    :param voxel_dict: Dictionary of element definitions
+    :type voxel_dict: dict
     """
     # Find all combination of ellipsoids to check for shared voxels
     combis = list(itertools.combinations(Ellipsoids, 2))
@@ -232,12 +234,12 @@ def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
         for vox, ells in vox_ellDict.items():
             if vox in shared_voxels:
                 ells = list(ells)
-                nids = set(elmtDict[vox])
+                nids = set(voxel_dict[vox])
                 common_nodes = dict()
                 len_common_nodes = list()
 
                 for ellipsoid in ells:
-                    all_nodes = [elmtDict[i] for i in ellipsoid.inside_voxels]
+                    all_nodes = [voxel_dict[i] for i in ellipsoid.inside_voxels]
                     merged_nodes = list(itertools.chain(*all_nodes))
                     ell_nodes = set(merged_nodes)
                     common_nodes[ellipsoid.id] = ell_nodes.intersection(nids)
@@ -317,8 +319,8 @@ def reassign_shared_voxels(cooDict, Ellipsoids, elmtDict):
 
 def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
     """
-    The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`, :meth:`create_voxels`
-    , :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`
+    The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`,
+    :meth:`create_voxels`, :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`
     
     .. note:: 1. The RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution 
                  is read by loading the JSON file that is generated by :meth:`kanapy.input_output.read_dump`.
@@ -395,7 +397,6 @@ def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
         if 0 in mesh.grain_dict.keys():
             raise ValueError('Grain key "0" is reserved for porous structures. Cannot continue with porosity.')
         mesh.grain_dict[0] = ind
-        assert all(np.nonzero(gr_arr == 0)[0] == ind)
         mesh.grain_phase_dict[0] = 1
         mesh.ngrains_phase[1] += 1
     elif porous_cur > 0.:

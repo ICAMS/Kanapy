@@ -12,5 +12,3 @@ eng = matlab.engine.start_matlab()
 eng.addpath(MTEX_DIR, nargout=0)
 eng.addpath(ROOT_DIR, nargout=0)
 eng.startup(nargout=0)
-#eng.startup(nargout=0)
-

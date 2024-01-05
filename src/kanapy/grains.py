@@ -15,8 +15,12 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     Parameters
     ----------
-    tol : TYPE, optional
-        DESCRIPTION. The default is 1.e-3.
+    rve : kanapy object
+        Contains information about RVE geometry
+    mesh : kanapy object
+        Contains information about the voxel mesh and grain definitions for each voxel
+    tol : float, optional
+        Tolerance value. The default is 1.e-3.
 
     Returns
     -------
@@ -43,7 +47,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         n2 = mesh.nodes[conn[1] - 1, :]
         n3 = mesh.nodes[conn[2] - 1, :]
         n4 = mesh.nodes[conn[3] - 1, :]
-        face = np.zeros((3,2), dtype=bool)
+        face = np.zeros((3, 2), dtype=bool)
         for i in range(3):
             h1 = np.abs(n1[i] - RVE_min[i]) < tol
             h2 = np.abs(n2[i] - RVE_min[i]) < tol
@@ -128,9 +132,9 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
         """
         return geometry['Vertices'][tet[0]] in vertices and \
-               geometry['Vertices'][tet[1]] in vertices and \
-               geometry['Vertices'][tet[2]] in vertices and \
-               geometry['Vertices'][tet[3]] in vertices
+            geometry['Vertices'][tet[1]] in vertices and \
+            geometry['Vertices'][tet[2]] in vertices and \
+            geometry['Vertices'][tet[3]] in vertices
 
     def vox_in_tet(vox_, tet_):
         """
@@ -224,7 +228,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             for i in range(3):
                 for j in range(2):
                     if fob[i, j]:
-                        grain_facesDict[Ng_max + 1 + 2*i + j][of] = conn
+                        grain_facesDict[Ng_max + 1 + 2 * i + j][of] = conn
 
     # Find all combinations of grains to check for common area
     # analyse grain_facesDict and create object:
@@ -372,7 +376,6 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             try:
                 tetra.add_points(mesh.nodes[vlist])
             except:
-                #print(f'Incremental Delaunay tesselation failed for grain {step + 1}. Restarting Delaunay process from there')
                 vlist = np.array(vertices, dtype=int) - 1
                 tetra = Delaunay(mesh.nodes[vlist], incremental=True)
 
@@ -424,7 +427,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         vmat = [tetra.points[tet[0]] - dv,
                 tetra.points[tet[1]] - dv,
                 tetra.points[tet[2]] - dv]
-        grains[igr]['Volume'] += np.abs(np.linalg.det(vmat))/6.
+        grains[igr]['Volume'] += np.abs(np.linalg.det(vmat)) / 6.
 
     # Keep only facets at boundary or between different grains
     facet_keys = set()
@@ -481,7 +484,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     vref = np.prod(rve.size)
     vtot = 0.
     vtot_vox = 0.
-    vunit = vref/np.prod(rve.dim)
+    vunit = vref / np.prod(rve.dim)
     vol_mae = 0.
     for igr, grain in geometry['Grains'].items():
         vg = grain['Volume']
@@ -491,19 +494,19 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         vol_mae += np.abs(1. - vg / vvox)
     if np.abs(vtot_vox - vref) > 1.e-5 and not bool(mesh.porosity_voxels):
         logging.warning(f'Inconsistent volume of voxelized grains: {vtot_vox}, ' +
-                      f'Reference volume: {vref}')
+                        f'Reference volume: {vref}')
     if np.abs(vtot - vref) > 1.e-5 and not bool(mesh.porosity_voxels):
         logging.warning(f'Inconsistent volume of polyhedral grains: {vtot}, ' +
-                      f'Reference volume: {vref}')
+                        f'Reference volume: {vref}')
     print(f'Total volume of RVE: {vref} {rve.units}^3')
     print(f'Total volume of polyhedral grains: {vtot} {rve.units}^3')
     if bool(mesh.porosity_voxels):
-        geometry['Porosity_grains'] = 1.-vtot/vref
+        geometry['Porosity_grains'] = 1. - vtot / vref
         print(f'Porosity in voxel structure: {mesh.porosity_voxels}')
         print(f'Porosity in polyhedral grains: {geometry["Porosity_grains"]}')
     print(f'Mean relative error of polyhedral vs. voxel volume of individual ' +
-          f'grains: {round(vol_mae/Ngr, 3)}')
-    print(f'for mean volume of grains: {round(vref/Ngr, 3)} {rve.units}^3.')
+          f'grains: {round(vol_mae / Ngr, 3)}')
+    print(f'for mean volume of grains: {round(vref / Ngr, 3)} {rve.units}^3.')
     return geometry
 
 
@@ -561,7 +564,7 @@ def get_stats(particle_data, geometry, units, nphases):
         if particle_data is not None:
             # Compute the L1-error between particle and grain geometries for phases
             error = l1_error_est(par_eqDia[ip], grain_eqDia[ip])
-            print('\n    L1 error phase {} between particle and grain geometries: {}' \
+            print('\n    L1 error phase {} between particle and grain geometries: {}'
                   .format(ip, round(error, 5)))
             # Store Particle data in output dict
             output_data['Grain_type'] = particle_data[ip]['Type']
@@ -602,8 +605,8 @@ def l1_error_est(par_eqDia, grain_eqDia):
     hist_gr, _ = np.histogram(grain_eqDia, bins=shared_bins)
 
     # Normalize the values
-    hist_par = hist_par/np.sum(hist_par)
-    hist_gr = hist_gr/np.sum(hist_gr)
+    hist_par = hist_par / np.sum(hist_par)
+    hist_gr = hist_gr / np.sum(hist_gr)
 
     # Compute the L1-error between particles and grains
     l1_value = np.sum(np.abs(hist_par - hist_gr))

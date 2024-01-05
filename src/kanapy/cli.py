@@ -17,9 +17,7 @@ def main(ctx):
 @click.option('-no_texture', default=False)
 @click.pass_context
 def tests(ctx, no_texture: bool):    
-    """ Runs unittests built within kanapy."""  
-    #shutil.rmtree(WORK_DIR + '/tests', ignore_errors=True)
-    #os.makedirs(WORK_DIR + '/tests')
+    """ Runs unittests built within kanapy."""
     click.echo('')
     if no_texture:
         t1 = "{0}/tests/test_collide_detect_react.py".format(MAIN_DIR)
@@ -36,7 +34,7 @@ def tests(ctx, no_texture: bool):
 @main.command(name='genDocs')
 @click.pass_context
 def docs(ctx):    
-    """ Generates a HTML-based reference documentation."""
+    """ Generates an HTML-based reference documentation."""
     
     click.echo('')
     os.system("make -C {0}/docs/ clean && make -C {0}/docs/ html".format(MAIN_DIR))      
@@ -53,7 +51,7 @@ def setupTexture(ctx):
 
 
 def chkVersion(matlab):
-    ''' Read the version of Matlab'''
+    """ Read the version of Matlab"""
     ind = matlab.find('R20')
     if ind < 0:
         version = None 
@@ -67,7 +65,7 @@ def chkVersion(matlab):
     
         
 def setPaths():
-    ''' Requests user input for MATLAB & MTEX installation paths'''
+    """ Requests user input for MATLAB & MTEX installation paths"""
     if not os.path.exists(WORK_DIR):
         raise FileNotFoundError('Package not properly installed, working directory is missing.')
     pathjson = os.path.join(WORK_DIR, 'PATHS.json')
@@ -146,7 +144,7 @@ def setPaths():
         if os.path.exists(path_path):
             os.remove(path_path)
 
-        with open(path_path,'w') as outfile:
+        with open(path_path, 'w') as outfile:
             json.dump(path_dict, outfile, indent=2)                
         
         # check if Matlab Engine library is already installed
@@ -158,7 +156,7 @@ def setPaths():
             click.echo('Installing matlab.engine...')
             ind = userpath1.find('bin')
             path = os.path.join(userpath1[0:ind], 'extern', 'engines', 'python')
-            os.chdir(path) # remove bin/matlab from matlab path
+            os.chdir(path)  # remove bin/matlab from matlab path
             res = os.system('python -m pip install .')
             if res != 0:
                 click.echo('\n Error in installing matlab.engine')
@@ -167,7 +165,7 @@ def setPaths():
                 sys.exit(1)
         
         # initalize matlab engine and MTEX for kanapy
-        path = os.path.abspath(__file__)[0:-7] # remove /cli.py from kanapy path
+        path = os.path.abspath(__file__)[0:-7]  # remove /cli.py from kanapy path
         os.chdir(path)
         os.system('python init_engine.py')
         click.echo('')

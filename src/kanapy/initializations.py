@@ -1,7 +1,5 @@
 import json
 import os
-import sys
-
 import numpy as np
 import logging
 import itertools
@@ -12,9 +10,6 @@ from collections import defaultdict
 class RVE_creator(object):
     r"""
     Creates an RVE based on user-defined statistics
-
-    :param inputFile: User-defined statistics file for ellipsoid generation.
-    :type inputFile: document
 
     .. note:: 1. Input parameters provided by the user in the input file are:
 
@@ -37,10 +32,6 @@ class RVE_creator(object):
 
     Generates ellipsoid size distribution (Log-normal) based on user-defined statistics
 
-
-    :param inputFile: User-defined statistics file for ellipsoid generation.
-    :type inputFile: document
-
     .. note:: 1. Input parameters provided by the user in the input file are:
 
                 * Standard deviation for ellipsoid equivalent diameter (Normal distribution)
@@ -61,14 +52,17 @@ class RVE_creator(object):
                   or :math:`\mu m`) for ABAQUS .inp file.
 
     """
+
     def __init__(self, stats_dicts, nsteps=1000, from_voxels=False, porosity=False):
         """
         Create an RVE object.
 
         Parameters
         ----------
-        stats_dict
+        stats_dicts
         nsteps
+        from_voxels
+        porosity
 
         Attributes
         ----------
@@ -129,7 +123,8 @@ class RVE_creator(object):
                 # Raise value error in case the RVE side length is too small to fit grains inside.
                 if len(eq_Dia) == 0:
                     raise ValueError(
-                        'RVE volume too small to fit grains inside, please increase the RVE side length (or) decrease the mean size for diameters!')
+                        'RVE volume too small to fit grains inside, please increase the RVE side length (or) ' +
+                        'decrease the mean size for diameters!')
 
                 # Voxel resolution : Smallest dimension of the smallest ellipsoid should contain at least 3 voxels
                 voxel_size = np.divide(self.size, self.dim)
@@ -250,7 +245,7 @@ class RVE_creator(object):
         # Extract grain diameter statistics info
         self.nphases = len(stats_dicts)  # number of phases in RVE
         self.packing_steps = nsteps  # max number of steps for packing simulation
-        self.size = None  #  tuple of lengths along Cartesian axes
+        self.size = None  # tuple of lengths along Cartesian axes
         self.dim = None  # tuple of number of voxels along Cartesian axes
         self.periodic = None  # Boolean for periodicity of RVE
         self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
@@ -274,13 +269,13 @@ class RVE_creator(object):
                 else:
                     if self.size != size:
                         logging.warning(f'Conflicting RVE sizes in descriptors: {self.size}, {size}.' +
-                                      'Using first value.')
+                                        'Using first value.')
                 if self.dim is None:
                     self.dim = nvox
                 else:
                     if self.dim != nvox:
                         logging.warning(f'Conflicting RVE voxel dimensions in descriptors: {self.dim}, {nvox}.' +
-                                      'Using first value.')
+                                        'Using first value.')
             elif ip == 0:
                 raise ValueError('RVE properties must be specified in descriptors for first phase.')
 
@@ -352,7 +347,7 @@ class mesh_creator(object):
         self.nodes_smooth = None  # array of nodal positions after smoothening grain boundaries
         """
 
-        if not (type(dim) == tuple and len(dim) == 3):
+        if not (type(dim) is tuple and len(dim) == 3):
             raise ValueError(f"Dimension dim must be a 3-tuple, not {type(dim)}, {dim}")
         self.dim = dim  # dimension tuple: number of voxels in each Cartesian direction
         self.nvox = np.prod(dim)  # number of voxels
@@ -370,7 +365,7 @@ class mesh_creator(object):
 
     def get_ind(self, addr):
         """
-        Return the index in an array from an generic address.
+        Return the index in an array from a generic address.
 
         Parameters
         ----------
@@ -385,7 +380,7 @@ class mesh_creator(object):
         elif len(addr) == 0:
             ind = addr
         elif len(addr) == 3:
-            ind = addr[0]*self.dim[1]*self.dim[2] + addr[1]*self.dim[1] + addr[2]
+            ind = addr[0] * self.dim[1] * self.dim[2] + addr[1] * self.dim[1] + addr[2]
         else:
             raise ValueError(f"Address must be a single int or a 3-tuple, not {type(addr)}, {addr}.")
         return ind
@@ -396,8 +391,6 @@ class mesh_creator(object):
 
         :param sim_box: Simulation box representing RVE dimensions
         :type sim_box: :obj:`entities.Cuboid`
-        :param voxNums: Number of voxels along the RVE sides X, Y & Z
-        :type voxNums: tuple of int
 
         :returns: * Node list containing coordinates.
                   * Element dictionary containing element IDs and nodal connectivities.
@@ -469,9 +462,9 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
         raise ValueError('If elliptical grains are specified, aspect ratio ' +
                          '(ar) and orientation (omega) need to be given.')
     if gtype == 'Equiaxed' and (ar is not None or omega is not None):
-        logging.warn('Equiaxed grains have been specified, but aspect ratio' +
-                      ' (ar) and orientation (omega) have been provided. ' +
-                      'Will change grain type to "Elongated".')
+        logging.warning('Equiaxed grains have been specified, but aspect ratio' +
+                        ' (ar) and orientation (omega) have been provided. ' +
+                        'Will change grain type to "Elongated".')
         gtype = 'Elongated'
 
     # define cutoff values
