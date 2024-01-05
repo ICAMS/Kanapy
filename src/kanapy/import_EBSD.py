@@ -70,6 +70,8 @@ class EBSDmap:
         eng = matlab.engine.start_matlab()
         eng.addpath(MTEX_DIR, nargout=0)
         eng.addpath(ROOT_DIR, nargout=0)
+        mat_path = os.path.normpath(MAIN_DIR + '/src/kanapy')
+        eng.addpath(mat_path, nargout=0)
         eng.startup(nargout=0)
         self.eng = eng
 
@@ -312,6 +314,8 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     eng = matlab.engine.start_matlab()
     eng.addpath(MTEX_DIR, nargout=0)
     eng.addpath(ROOT_DIR, nargout=0)
+    mat_path = os.path.normpath(MAIN_DIR + '/src/kanapy')
+    eng.addpath(mat_path, nargout=0)
     eng.startup(nargout=0)
 
     # prepare parameters
@@ -372,6 +376,8 @@ def createOrisetRandom(num, omega=7.5, hist=None, shared_area=None,
     eng = matlab.engine.start_matlab()
     eng.addpath(MTEX_DIR, nargout=0)
     eng.addpath(ROOT_DIR, nargout=0)
+    mat_path = os.path.normpath(MAIN_DIR + '/src/kanapy')
+    eng.addpath(mat_path, nargout=0)
     eng.startup(nargout=0)
 
     omega = omega * np.pi / 180.
