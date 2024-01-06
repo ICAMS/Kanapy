@@ -320,6 +320,10 @@ class RVE_creator(object):
         print(f'    Voxel resolution (X, Y, Z) = {np.divide(self.size, self.dim).round(4)}' +
               f'({self.units})')
         print(f'    Total number of voxels     = {np.prod(self.dim)}\n')
+        print('\nConsidered phases (volume fraction): ')
+        for ip, name in enumerate(phase_names):
+            print(f'{ip}: {name} ({phase_vf[ip]*100.}%)')
+        print('\n')
         self.phase_names = phase_names
         self.phase_vf = phase_vf
         self.particle_data = particle_data

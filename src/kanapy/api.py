@@ -202,6 +202,7 @@ class Microstructure(object):
         if self.mesh.grains is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
         if self.porosity and 0 in self.mesh.grain_dict.keys():
+            # in case of porosity, remove irregular grain 0 from analysis
             empty_vox = self.mesh.grain_dict.pop(0)
             grain_store = self.mesh.grain_phase_dict.pop(0)
             nphases = self.rve.nphases - 1
@@ -215,6 +216,7 @@ class Microstructure(object):
         self.res_data = \
             get_stats(self.rve.particle_data, self.geometry, self.rve.units, nphases)
         if empty_vox is not None:
+            # add removed grain again
             self.mesh.grain_dict[0] = empty_vox
             self.mesh.grain_phase_dict[0] = grain_store
 
@@ -316,9 +318,26 @@ class Microstructure(object):
                 raise ValueError('No microstructure data created yet. Run generate_grains() first.')
         elif type(data) is not list:
             data = [data]
-        plot_output_stats(data, gs_data=gs_data, gs_param=gs_param,
-                          ar_data=ar_data, ar_param=ar_param,
-                          save_files=save_files)
+        if gs_data is None or type(gs_data) is not list:
+            gs_data = [gs_data]*len(data)
+        if gs_param is None or type(gs_param) is not list:
+            gs_param = [gs_param]*len(data)
+        if ar_data is None or type(ar_data) is not list:
+            ar_data = [ar_data]*len(data)
+        if ar_param is None or type(ar_param) is not list:
+            ar_param = [ar_param]*len(data)
+        """
+        gs_data = [ebsd.ms_data[i]['gs_data'] for i in range(Nphases)]
+        gs_param = [ebsd.ms_data[i]['gs_param'] for i in range(Nphases)]
+        ar_data = [ebsd.ms_data[i]['ar_data'] for i in range(Nphases)]
+        ar_param = [ebsd.ms_data[i]['ar_param'] for i in range(Nphases)]
+        """
+
+        for i, ds in enumerate(data):
+            print(f'Plotting input & output statistics for phase {i}')
+            plot_output_stats(ds, gs_data=gs_data[i], gs_param=gs_param[i],
+                              ar_data=ar_data[i], ar_param=ar_param[i],
+                              save_files=save_files)
 
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
                         porous=False, save_files=False):

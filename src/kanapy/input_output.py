@@ -461,5 +461,6 @@ def import_voxels(file, path='./'):
         ms.mesh.nodes = nodes
     else:
         ms.mesh.create_voxels(ms.simbox)
+    print('\n Voxel structure imported.\n')
 
     return ms
