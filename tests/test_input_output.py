@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import pytest
 from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.input_output import *
@@ -44,16 +43,14 @@ def temp_dump():
 
 
 def test_write_dump(temp_dump):
-
     cwd = os.getcwd()
     assert os.path.isfile(
         cwd + '/dump_files/particle.{0}.dump'.format(temp_dump.sim_ts))
+    return
 
 
 def test_read_dump(temp_dump):
-
     cwd = os.getcwd()
-    
     # Test if FileNotFoundError is raised
     with pytest.raises(FileNotFoundError):
         read_dump(cwd + '/dump_files/nonExistingFile.dump')
@@ -64,7 +61,7 @@ def test_read_dump(temp_dump):
     assert isinstance(gen_sbox, Cuboid)
     for gel in genEll:
         assert isinstance(gel, Ellipsoid)
-
+    return
 
 def test_export_abaqus():
 

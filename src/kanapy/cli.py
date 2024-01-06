@@ -28,6 +28,8 @@ def tests(ctx, no_texture: bool):
         os.system(f"pytest {t1} {t2} {t3} {t4} {t5} -v")
     else:
         os.system("pytest {0}/tests/ -v".format(MAIN_DIR))
+    cwd = os.getcwd()
+    shutil.rmtree(os.path.normpath(cwd + "/dump_files"))
     click.echo('')    
         
     
