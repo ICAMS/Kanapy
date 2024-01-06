@@ -3,10 +3,11 @@ Tools for analysis of EBSD maps in form of .ang files
 
 @author: Alexander Hartmaier, Abhishek Biswas, ICAMS, Ruhr-Universität Bochum
 """
+import os
 import matlab.engine
 import numpy as np
 import matplotlib.pyplot as plt
-from kanapy.util import MTEX_DIR, ROOT_DIR
+from kanapy.util import MTEX_DIR, ROOT_DIR, MAIN_DIR
 from scipy.stats import lognorm, norm
 import logging
 
