@@ -374,7 +374,7 @@ class Microstructure(object):
                         save_plot=save_files)
 
     """
-    --------        Output/Export methods        --------
+    --------        Import/Export methods        --------
     """
 
     def output_abq(self, nodes=None, name=None,
@@ -401,13 +401,16 @@ class Microstructure(object):
                 ntag = 'smooth'
             else:
                 raise ValueError('No information about smoothed microstructure. Run smoothen first.')
-        elif nodes in ['voxels', 'v']:
+        elif nodes in ['voxels', 'v', 'voxel']:
             if self.mesh.nodes is not None:
                 nodes = self.mesh.nodes
                 faces = None  # use brick elements for voxel structure
                 ntag = 'voxels'
             else:
                 raise ValueError('No information about voxelized microstructure. Run voxelize first.')
+        else:
+            raise ValueError('Wrong value for parameter "nodes". Must be either "smooth" ' +
+                             f'or "voxels", not {nodes}')
 
         if voxel_dict is None:
             voxel_dict = self.mesh.voxel_dict
@@ -418,7 +421,12 @@ class Microstructure(object):
         if dual_phase:
             nct = 'dual_phase'
             if grain_dict is None:
-                grain_dict = self.mesh.grain_phase_dict
+                grain_dict = dict()
+                for i in range(self.nphases):
+                    grain_dict[i] = list()
+                for igr, ip in self.mesh.grain_phase_dict.items():
+                    grain_dict[ip] = np.concatenate(
+                            (grain_dict[ip] ,self.mesh.grain_dict[igr]))
         else:
             if grain_dict is None:
                 grain_dict = self.mesh.grain_dict
@@ -790,8 +798,8 @@ class Microstructure(object):
                 f.write('{}, {}, {}\n'.format(ori[0], ori[1], ori[2]))
         return
 
-    def write_voxels(self, angles=None, script_name=None, file=None, path='./', mesh=True,
-                     source=None, system=True):
+    def write_voxels(self, angles=None, script_name=None, file=None, path='./',
+                     mesh=True, source=None, system=False):
         """
         Write voxel structure into JSON file.
 

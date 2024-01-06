@@ -144,10 +144,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
                     else:
                         f.write('%d, ' % el)
                 else:
-                    if enum == len(v):
-                        f.write('%d\n' % el)
-                    else:
-                        f.write('%d\n' % el)
+                    f.write('%d\n' % el)
         # Create sections
         for k in grain_dict.keys():
             f.write(
@@ -159,17 +156,14 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         # Create element sets for phases
         for k, v in grain_dict.items():
             f.write('*ELSET, ELSET=PHASE{0}_SET\n'.format(k))
-            for enum, el in enumerate(v, 1):
+            for enum, el in enumerate(v, start=1):
                 if enum % 16 != 0:
                     if enum == len(v):
                         f.write('%d\n' % el)
                     else:
                         f.write('%d, ' % el)
                 else:
-                    if enum == len(v):
-                        f.write('%d\n' % el)
-                    else:
-                        f.write('%d\n' % el)
+                    f.write('%d\n' % el)
         # Create sections
         for k in grain_dict.keys():
             f.write(
@@ -244,7 +238,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
 
             for gid, fcs in gr_fcs.items():
                 f.write('*ELSET, ELSET=GRAIN{}_SET\n'.format(gid))
-                for enum, el in enumerate(fcs, 1):
+                for enum, el in enumerate(fcs, start=1):
                     if enum % 16 != 0:
                         if enum == len(fcs):
                             f.write('%d\n' % el)
@@ -400,7 +394,6 @@ def import_voxels(file, path='./'):
             if grain_ori_dict is not None:
                 grain_ori_dict[igr] = data['Grains'][str(igr)]['Orientation']
         phase_vf /= nvox
-        print('HERE 1: phase_vf', phase_vf)
         if not np.isclose(np.sum(phase_vf), 1.):
             logging.warning(f'Volume fractions do not add up to 1: {phase_vf}')
     else:
@@ -431,9 +424,7 @@ def import_voxels(file, path='./'):
     for i in range(nphases):
         stats_dict['Phase']['Name'] = ph_names[i]
         stats_dict['Phase']['Volume fraction'] = phase_vf[i]
-        print(f'HERE 2: ph_names[{ph_names[i]}], phase_vf: {phase_vf[i]}')
         stats_list.append(copy.deepcopy(stats_dict))
-    print('HERE 3: ', stats_list)
     # Create microstructure object
     ms = Microstructure('from_voxels')
     ms.name = data['Model']['Material']
