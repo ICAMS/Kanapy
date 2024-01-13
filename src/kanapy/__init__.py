@@ -2,7 +2,7 @@
 
 """Top-level package for kanapy."""
 
-from pkg_resources import get_distribution
+from importlib.metadata import version
 from kanapy.api import Microstructure
 from kanapy.initializations import set_stats
 from kanapy.plotting import plot_voxels_3D, plot_polygons_3D
@@ -18,4 +18,4 @@ except:
 __author__ = 'Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi,\
 Alexander Hartmaier'
 __email__ = 'alexander.hartmaier@rub.de'
-__version__ = get_distribution('kanapy').version
+__version__ = version('kanapy')
