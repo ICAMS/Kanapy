@@ -118,6 +118,7 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
     """
     if vf is None:
         vf = 0.7
+    vf = np.minimum(vf, 0.7)  # 70% is largest packing density of ellipsoids
     # Reduce the size of the particles to (1/nsteps)th of its original size
     for ell in Ellipsoids:
         ell.a, ell.b, ell.c = ell.oria / nsteps, ell.orib / nsteps, ell.oric / nsteps

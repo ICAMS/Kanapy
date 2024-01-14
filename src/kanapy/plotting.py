@@ -193,22 +193,29 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
     plt.show()
 
 
-def plot_output_stats(dataDict, gs_data=None, gs_param=None,
-                      ar_data=None, ar_param=None, save_files=False):
+def plot_output_stats(dataDict,
+                      gs_data=None, gs_param=None,
+                      ar_data=None, ar_param=None,
+                      plot_particles=True,
+                      save_files=False):
     r"""
     Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots
     the distributions.
     """
 
     grain_eqDia = np.sort(np.asarray(dataDict['Grain_Equivalent_diameter']))
+    data = [grain_eqDia]
+    label = ['Grains']
     # Convert to micro meter for plotting
     if dataDict['Unit_scale'] == 'mm':
         grain_eqDia *= 1.e-3
-    if 'Particle_Equivalent_diameter' in dataDict.keys():
+    if plot_particles and 'Particle_Equivalent_diameter' in dataDict.keys():
         par_eqDia = np.sort(np.asarray(dataDict['Particle_Equivalent_diameter']))
+        data.append(par_eqDia)
+        label.append('Particles')
         if dataDict['Unit_scale'] == 'mm':
             par_eqDia *= 1.e-3
-        total_eqDia = np.concatenate((par_eqDia, grain_eqDia))
+        total_eqDia = np.concatenate([grain_eqDia, par_eqDia])
         par_data = np.log(par_eqDia)
         mu_par = np.mean(par_data)
         std_par = np.std(par_data)
@@ -218,6 +225,10 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         par_eqDia = None
         total_eqDia = grain_eqDia
         particles = False
+    if gs_data is not None:
+        data.append(gs_data)
+        label.append('Experiment')
+        total_eqDia = np.concatenate([total_eqDia, gs_data])
     # NOTE: 'doane' produces better estimates for non-normal datasets
     shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
     # Get the mean & std of the underlying normal distribution
@@ -228,89 +239,64 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
     # NOTE: lognorm takes mean & std of normal distribution
     grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr))
     binNum = len(shared_bins)
-    # read the data from the file
-    if 'Grain_type' in dataDict.keys() and dataDict['Grain_type'] == 'Equiaxed':
-        # Plot the histogram & PDF
-        sns.set(color_codes=True)
-        fig, ax = plt.subplots(1, 2, figsize=(15, 9))
 
-        # Plot histogram
-        ax[0].hist([par_eqDia, grain_eqDia], density=False, bins=binNum, label=['Particles', 'Grains'])
-        ax[0].legend(loc="upper right", fontsize=16)
-        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
-        ax[0].set_ylabel('Frequency', fontsize=18)
-        ax[0].tick_params(labelsize=14)
+    # Plot the histogram & PDF for equivalent diameter
+    sns.set(color_codes=True)
+    fig, ax = plt.subplots(1, 2, figsize=(15, 9))
 
-        # Plot PDF
+    # Plot histogram
+    ax[0].hist(data, density=False, bins=binNum, label=label)
+    ax[0].legend(loc="upper right", fontsize=16)
+    ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
+    ax[0].set_ylabel('Frequency', fontsize=18)
+    ax[0].tick_params(labelsize=14)
+
+    # Plot PDF
+    ypdf2 = grain_lognorm.pdf(grain_eqDia)
+    area = np.trapz(ypdf2, grain_eqDia)
+    if np.isclose(area, 0.):
+        logging.debug(f'Grain AREA interval: {area}')
+        logging.debug(np.amin(grain_eqDia))
+        logging.debug(np.amax(grain_eqDia))
+        area = 1.
+    ypdf2 /= area
+    ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label='Grains')
+    ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3)
+    if particles:
         ypdf1 = par_lognorm.pdf(par_eqDia)
-        ypdf2 = grain_lognorm.pdf(grain_eqDia)
+        area = np.trapz(ypdf1, par_eqDia)
+        if np.isclose(area, 0.):
+            logging.debug(f'Particle AREA interval: {area}')
+            logging.debug(np.amin(par_eqDia))
+            logging.debug(np.amax(par_eqDia))
+            area = 1.
+        ypdf1 /= area
         ax[1].plot(par_eqDia, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
         ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
-        ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label='Grains')
-        ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3)
+    if gs_param is not None:
+        x0 = np.amin(grain_eqDia)
+        x1 = np.amax(grain_eqDia)
+        x = np.linspace(x0, x1, num=50)
+        y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
+        area = np.trapz(y, x)
+        if np.isclose(area, 0.):
+            logging.debug(f'Expt. AREA interval: {x0}, {x1}')
+            logging.debug(np.amin(grain_eqDia))
+            logging.debug(np.amax(grain_eqDia))
+            area = 1.
+        y /= area
+        ax[1].plot(x, y, '--k', label='Experiment')
 
-        ax[1].legend(loc="upper right", fontsize=16)
-        ax[1].set_xlabel('Equivalent diameter (μm)', fontsize=18)
-        ax[1].set_ylabel('Density', fontsize=18)
-        ax[1].tick_params(labelsize=14)
-        if save_files:
-            plt.savefig("Equivalent_diameter.png", bbox_inches="tight")
-        plt.show()
-    else:
-        # Plot the histogram & PDF
-        sns.set(color_codes=True)
-        fig, ax = plt.subplots(1, 2, figsize=(15, 9))
-        if particles:
-            data = [par_eqDia, grain_eqDia]
-            label = ['Particles', 'Grains']
-        else:
-            data = [grain_eqDia]
-            label = ['Grains']
-        if gs_data is not None:
-            data.append(gs_data)
-            label.append('Experiment')
-        # Plot histogram
-        ax[0].hist(data, density=False, bins=binNum, label=label)
-        ax[0].legend(loc="upper right", fontsize=16)
-        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
-        ax[0].set_ylabel('Frequency', fontsize=18)
-        ax[0].tick_params(labelsize=14)
+    ax[1].legend(loc="upper right", fontsize=16)
+    ax[1].set_xlabel('Equivalent diameter (μm)', fontsize=18)
+    ax[1].set_ylabel('Density', fontsize=18)
+    ax[1].tick_params(labelsize=14)
+    if save_files:
+        plt.savefig("Equivalent_diameter.png", bbox_inches="tight")
+        print("    'Equivalent_diameter.png' is placed in the current working directory\n")
+    plt.show()
 
-        # Plot PDF
-        if particles:
-            ypdf1 = par_lognorm.pdf(par_eqDia)
-            area = np.trapz(ypdf1, par_eqDia)
-            ypdf1 /= area
-            ax[1].plot(par_eqDia, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
-            ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
-        ypdf2 = grain_lognorm.pdf(grain_eqDia)
-        area = np.trapz(ypdf2, grain_eqDia)
-        ypdf2 /= area
-        ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label='Grains')
-        ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3)
-        if gs_param is not None:
-            x0 = np.amin(grain_eqDia)
-            x1 = np.amax(grain_eqDia)
-            x = np.linspace(x0, x1, num=50)
-            y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
-            area = np.trapz(y, x)
-            if np.isclose(area, 0.):
-                logging.debug(f'AREA interval: {x0}, {x1}')
-                logging.debug(np.amin(grain_eqDia))
-                logging.debug(np.amax(grain_eqDia))
-                area = 1.
-            y /= area
-            ax[1].plot(x, y, '--k', label='Experiment')
-
-        ax[1].legend(loc="upper right", fontsize=16)
-        ax[1].set_xlabel('Equivalent diameter (μm)', fontsize=18)
-        ax[1].set_ylabel('Density', fontsize=18)
-        ax[1].tick_params(labelsize=14)
-        if save_files:
-            plt.savefig("Equivalent_diameter.png", bbox_inches="tight")
-            print("    'Equivalent_diameter.png' is placed in the current working directory\n")
-        plt.show()
-
+    if 'Grain_Minor_diameter' in dataDict.keys():
         # Plot the aspect ratio comparison
         ind = np.nonzero(dataDict['Grain_Minor_diameter'] > 1.e-5)[0]
         grain_AR = np.sort(np.asarray(dataDict['Grain_Major_diameter'][ind]) /
@@ -318,11 +304,11 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         # Get the mean & std of the underlying normal distribution
         std_gr, offs_gr, sc_gr = lognorm.fit(grain_AR)
         grain_lognorm = lognorm(std_gr, loc=offs_gr, scale=sc_gr)
-        if particles:
+        if particles and 'Particle_Minor_diameter' in dataDict.keys():
             par_AR = np.sort(np.asarray(dataDict['Particle_Major_diameter']) /
                              np.asarray(dataDict['Particle_Minor_diameter']))
             # Concatenate corresponding arrays to compute shared bins
-            total_AR = np.concatenate((par_AR, grain_AR))
+            total_AR = np.concatenate([par_AR, grain_AR])
             std_par, offs_par, sc_par = lognorm.fit(par_AR)
             par_lognorm = lognorm(std_par, loc=offs_par, scale=sc_par)
             data = [par_AR, grain_AR]
@@ -348,7 +334,7 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         ax[0].tick_params(labelsize=14)
 
         # Plot PDF
-        if particles:
+        if particles and 'Particle_Minor_diameter' in dataDict.keys():
             ypdf1 = par_lognorm.pdf(par_AR)
             area = np.trapz(ypdf1, par_AR)
             ypdf1 /= area
@@ -360,7 +346,7 @@ def plot_output_stats(dataDict, gs_data=None, gs_param=None,
         ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label='Grains')
         ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3)
         if ar_param is not None:
-            x0 = np.amin(grain_AR)
+            x0 = np.amin(1.0)
             x1 = np.amax(grain_AR)
             x = np.linspace(x0, x1, num=100)
             y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])

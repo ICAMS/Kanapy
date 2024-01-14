@@ -136,8 +136,7 @@ class Microstructure(object):
             descriptor = self.descriptor
         if type(descriptor) is not list:
             descriptor = [descriptor]
-        elif porosity is not None:
-            self.porosity = porosity
+        self.porosity = porosity
 
         # initialize RVE, including mesh dimensions and particle distribution
         self.rve = RVE_creator(descriptor, nsteps=nsteps, porosity=porosity)
@@ -159,6 +158,9 @@ class Microstructure(object):
             particle_data = self.rve.particle_data
             if particle_data is None:
                 raise ValueError('No particle_data in pack. Run create_RVE first.')
+        if vf is None and type(self.porosity) is float:
+            vf = np.minimum(1. - self.porosity, 0.7)  # 70% is maximum packing density of ellipsoids
+            print(f'Porosity: Packing up to particle volume fraction of {vf}.')
         self.particles, self.simbox = \
             packingRoutine(particle_data, self.rve.periodic,
                            self.rve.packing_steps, self.simbox,
@@ -307,8 +309,10 @@ class Microstructure(object):
         plot_polygons_3D(geometry, cmap=cmap, alpha=alpha, ec=ec,
                          dual_phase=dual_phase)
 
-    def plot_stats(self, data=None, gs_data=None, gs_param=None,
+    def plot_stats(self, data=None,
+                   gs_data=None, gs_param=None,
                    ar_data=None, ar_param=None,
+                   particles=True,
                    save_files=False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
@@ -337,6 +341,7 @@ class Microstructure(object):
             print(f'Plotting input & output statistics for phase {i}')
             plot_output_stats(ds, gs_data=gs_data[i], gs_param=gs_param[i],
                               ar_data=ar_data[i], ar_param=ar_param[i],
+                              plot_particles=particles,
                               save_files=save_files)
 
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
@@ -445,7 +450,7 @@ class Microstructure(object):
                     grain_dict[i] = list()
                 for igr, ip in self.mesh.grain_phase_dict.items():
                     grain_dict[ip] = np.concatenate(
-                            (grain_dict[ip] ,self.mesh.grain_dict[igr]))
+                            [grain_dict[ip], self.mesh.grain_dict[igr]])
         else:
             if grain_dict is None:
                 grain_dict = self.mesh.grain_dict
