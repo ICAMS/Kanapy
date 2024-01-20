@@ -13,24 +13,6 @@ if ~check_nfft
     disp(' ');
     disp('  MTEX: Error running NFFT with openmp - I''m going to use it without openmp!');
     
-  else
-
-    disp(' ');
-    disp('  MTEX: Error running NFFT!');
-    disp('   ');
-    disp('  The original error message was:');
-    e = lasterror;
-    disp(['  ' e.message]);
-
-    disp(' ');
-    disp(' I did not get NFFT working. This restricts the functionality of MTEX.')
-    disp(' To overcome this restriction you may need to compile the NFFT your own.');
-    if ismac
-      disp(' Please have a look at https://mtex-toolbox.github.io/installation for possible workarounds')
-    else
-      disp(' Please have a look at https://github.com/mtex-toolbox/mtex/blob/develop/extern/nfft_openMP/readme.md');
-    end
-        
   end
   hline()
 end
