@@ -15,7 +15,6 @@ if not knpy.MTEX_AVAIL:
     raise ModuleNotFoundError('MTEX module not available. Run kanapy setupTexture before using this script.')
 
 fname = 'ebsd_316L_500x500.ang'  # name of ang file to be imported
-matname = 'Iron_fcc'  # material name
 nvox = 30             # number of voxels per side
 box_length = 50       # side length of generated RVE in micron
 periodic = False      # create RVE with periodic structure
@@ -24,25 +23,28 @@ periodic = False      # create RVE with periodic structure
 ebsd = knpy.EBSDmap(fname)
 # ebsd.showIPF()
 ms_data = ebsd.ms_data[0]  # analyse only data for majority phase with order parameter "0"
-gs_param = ms_data['gs_param']  # [std deviation, offset of lognorm distrib., mean grain size]
-ar_param = ms_data['ar_param']  # [std deviation, offset of gamma distrib., mean aspect ratio]
-om_param = ms_data['om_param']  # [std deviation, mean tilt angle]
-print('==== Grain size ====')
-print(f'mean equivalent diameter: {gs_param[2].round(3)}, ' +
-      f'std. deviation: {gs_param[0].round(3)}, ' +
-      f'offset: {gs_param[1].round(3)}')
+gs_param = ms_data['gs_param']  # lognorm distr of grain size: [std dev., location, scale]
+ar_param = ms_data['ar_param']  # lognorm distr. of aspect ratios [std dev., loc., scale]
+om_param = ms_data['om_param']  # normal distribution of tilt angles [std dev., mean]
+matname = ms_data['name']  # material name
+print('*** Statistical information on microstructure ***')
+print(f'=== Phase:', matname, '===')
+print('==== Grain size (equivalent grain diameter) ====')
+print(f'scale: {gs_param[2].round(3)}, ' +
+      f'location: {gs_param[1].round(3)}, ' +
+      f'std. deviation: {gs_param[0].round(3)}')
 print('==== Aspect ratio ====')
-print(f'mean value: {ar_param[2].round(3)}, ' +
-      f'std. deviation: {ar_param[0].round(3)}, ' +
-      f'offset: {ar_param[1].round(3)}')
+print(f'scale: {ar_param[2].round(3)}, ' +
+      f'location: {ar_param[1].round(3)}, ' +
+      f'std. deviation: {ar_param[0].round(3)}')
 print('==== Tilt angle ====')
 print(f'mean value: {(om_param[1] * 180 / np.pi).round(3)}, ' +
       f'std. deviation: {(om_param[0] * 180 / np.pi).round(3)}')
 
 # create dictionary with statistical information obtained from EBSD map
 ms_stats = knpy.set_stats(gs_param, ar_param, om_param,
-                          deq_min=8., deq_max=19., asp_min=0.95, asp_max=3.5,
-                          omega_min=0., omega_max=2*np.pi, 
+                          deq_min=8.0, deq_max=19.0, asp_min=0.95, asp_max=3.5,
+                          omega_min=0.0, omega_max=2*np.pi, 
                           voxels=nvox, size=box_length,
                           periodicity=periodic,
                           VF=1.0, phasename=matname, phasenum=0)
