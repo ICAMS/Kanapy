@@ -23,7 +23,7 @@ def collision_routine(E1, E2, damp=0):
                  used to determine whether they overlap.
     """
 
-    # call the c++ method
+    # call the collision detection algorithm
     overlap_status = collide_detect(E1.get_coeffs(), E2.get_coeffs(),
                                     E1.get_pos(), E2.get_pos(),
                                     E1.rotation_matrix, E2.rotation_matrix)

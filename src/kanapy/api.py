@@ -161,6 +161,7 @@ class Microstructure(object):
         if vf is None and type(self.porosity) is float:
             vf = np.minimum(1. - self.porosity, 0.7)  # 70% is maximum packing density of ellipsoids
             print(f'Porosity: Packing up to particle volume fraction of {vf}.')
+            print(f'Porosity: Packing up to particle volume fraction of {vf}.')
         self.particles, self.simbox = \
             packingRoutine(particle_data, self.rve.periodic,
                            self.rve.packing_steps, self.simbox,
@@ -846,7 +847,6 @@ class Microstructure(object):
         import getpass
         from datetime import date
         from pkg_resources import get_distribution
-        from json import dump
 
         if script_name is None:
             script_name = __file__
@@ -938,7 +938,7 @@ class Microstructure(object):
 
         # write file
         with open(file, 'w') as fp:
-            dump(structure, fp, indent=2)
+            json.dump(structure, fp)
         return
 
     def pckl(self, file=None, path='./'):
