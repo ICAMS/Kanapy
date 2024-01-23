@@ -9,7 +9,8 @@ December 2023
 import os
 import numpy as np
 import pytest
-from kanapy import MAIN_DIR, MTEX_AVAIL, EBSDmap, createOriset
+from kanapy import MAIN_DIR, MTEX_AVAIL
+from kanapy.import_EBSD import EBSDmap, createOriset
 
 @pytest.mark.skipif(MTEX_AVAIL == False, reason="Kanapy is not configured for texture analysis yet!")
 def test_readEBSD():
