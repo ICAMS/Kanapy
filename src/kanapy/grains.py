@@ -469,8 +469,9 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         if len(dists) == 0:
             logging.warning(f'Grain {igr} with few vertices: {grains[igr]["Vertices"]}')
             dists = [0.]
-        grains[igr]['eqDia'] = 2.0 * (3 * grains[igr]['Volume']
-                                      / (4 * np.pi)) ** (1 / 3)
+        grains[igr]['eqDia'] = 2.0 * (3.0 * grains[igr]['Volume']
+                                      / (4.0 * np.pi)) ** (1.0 / 3.0)
+        """Make sure to get proper tripod to analyse also oblate particles correctly"""
         grains[igr]['majDia'] = 2.0 * np.amax(dists)
         grains[igr]['minDia'] = 2.0 * np.amin(dists)
 
