@@ -172,6 +172,51 @@ def calc_polygons(rve, mesh, tol=1.e-3):
                 break
         return contained
 
+    def get_diameter(pts):
+        """
+        Get estimate of largest diameter of a set of points.
+        Parameters
+        ----------
+        pts : (N, dim) ndarray
+            Point set in dim dimensions
+
+        Returns
+        -------
+        diameter : (dim)-ndarray
+
+        """
+        ind0 = np.argmin(pts, axis=0)  # index of point with lowest coordinate for each Cartesian axis
+        ind1 = np.argmax(pts, axis=0)  # index of point with highest coordinate for each Cartesian axis
+        v_min = np.array([pts[i, j] for j, i in enumerate(ind0)])  # min. value for each Cartesian axis
+        v_max = np.array([pts[i, j] for j, i in enumerate(ind1)])  # max. value for each Cartesian axis
+        ind_d = np.argmax(v_max - v_min)  # Cartesian axis along which largest distance occurs
+        return pts[ind1[ind_d], :] - pts[ind0[ind_d], :]
+
+    def project_pts(pts, ctr, axis):
+        """
+        Project
+        Parameters
+        ----------
+        pts : (N, dim) ndarray
+            Point set in dim dimensions
+        ctr : (dim)-ndarray
+            Center point of the projection plane
+        axis : (dim)-ndarray
+            Unit vector for axis along which points are projected
+
+        Returns
+        -------
+        ppt : (N, dim) ndarray
+            Points projected to plane with normal axis
+        """
+        dvec = pts - ctr[None, :]  # distance vector b/w points and center point
+        pdist = np.array([np.dot(axis, v) for v in dvec])
+        ppt = np.zeros(pts.shape)
+        for i, p in enumerate(dvec):
+            ppt[i, :] = p - pdist[i]*axis
+        return ppt
+
+
     # define constants
     voxel_res = np.divide(rve.size, rve.dim)
     voxel_size = voxel_res[0]
@@ -356,15 +401,15 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     for step, igr in enumerate(grain_sequence):
         add_vert = vert[igr].difference(set(vertices))
         grains[igr] = dict()
-        grains[igr]['Vertices'] = np.array(list(vert[igr]), dtype=int) - 1
-        grains[igr]['Points'] = mesh.nodes[grains[igr]['Vertices']]
+        grains[igr]['Vertices'] = np.array(list(vert[igr]), dtype=int) - 1  # indices of voxels at grain vertices
+        grains[igr]['Points'] = mesh.nodes[grains[igr]['Vertices']]  # positions of vertices
         center = np.mean(grains[igr]['Points'], axis=0)
-        grains[igr]['Center'] = center
+        grains[igr]['Center'] = center  # position of grain center
         # initialize values to be incrementally updated later
         grains[igr]['Simplices'] = []
         grains[igr]['Volume'] = 0.
         grains[igr]['Area'] = 0.
-        grains[igr]['Phase'] = mesh.grain_phase_dict[igr]
+        grains[igr]['Phase'] = mesh.grain_phase_dict[igr]  # phase number to which grain belongs
 
         # Construct incremental Delaunay tesselation of
         # structure given by vertices
@@ -463,17 +508,46 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             if grains[igr]['Simplices']:
                 nf = len(grains[igr]['Simplices'])
                 logging.warning(f'Grain {igr} contains {nf} tets, but no volume')
-        # Find the Euclidean distance to all surface points from the center
-        dists = [euclidean(grains[igr]['Center'], pt) for pt in
-                 mesh.nodes[grains[igr]['Vertices']]]
-        if len(dists) == 0:
-            logging.warning(f'Grain {igr} with few vertices: {grains[igr]["Vertices"]}')
-            dists = [0.]
         grains[igr]['eqDia'] = 2.0 * (3.0 * grains[igr]['Volume']
                                       / (4.0 * np.pi)) ** (1.0 / 3.0)
-        """Make sure to get proper tripod to analyse also oblate particles correctly"""
-        grains[igr]['majDia'] = 2.0 * np.amax(dists)
-        grains[igr]['minDia'] = 2.0 * np.amin(dists)
+        # Approximate smallest rectangular cuboid around points of grains
+        # to analyse prolate (aspect ratio > 1) and oblate (a.r. < 1) particles correctly
+        pts = grains[igr]['Points']
+        if len(pts) == 0:
+            logging.warning(f'Grain {igr} with few vertices: {grains[igr]["Vertices"]}')
+        dia = get_diameter(pts)  # approx. of largest diameter of grain
+        len_a = np.linalg.norm(dia)  # length of largest side
+        if len_a < 1.e-5:
+            logging.warning(f'Very small grain {igr} with max. diameter = {len_a}')
+        ax_a = dia / len_a  # unit vector along longest side
+        ppt = project_pts(pts, grains[igr]['Center'], ax_a)  # project points onto central plane normal to diameter
+        trans1 = get_diameter(ppt)  # largest side transversal to long axis
+        len_b = np.linalg.norm(trans1)  # length of second-largest side
+        ax_b = trans1 / len_b  # unit vector of second axis (normal to diameter)
+        ax_c = np.cross(ax_a, ax_b)  # calculate third orthogonal axes of rectangular cuboid
+        lpt = project_pts(ppt, np.zeros(3), ax_b)  # project points on third axis
+        pdist = np.array([np.dot(ax_c, v) for v in lpt])  # calculate distance of points on third axis
+        len_c = np.max(pdist) - np.min(pdist)  # get length of shortest side
+        # calculate list of aspect ratios to decide upon most likely rotational symmetry axis
+        ar_list = [np.abs(len_a / len_b - 1.0), np.abs(len_b / len_a - 1.0),
+                   np.abs(len_b / len_c - 1.0), np.abs(len_c / len_b - 1.0),
+                   np.abs(len_c / len_a - 1.0), np.abs(len_a / len_c - 1.0)]
+        ind = np.argmin(ar_list)  # identify two axes with aspect ratio closest to 1
+        if ind in [0, 1]:
+            grains[igr]['majDia'] = len_c  # major diameter along the rotational axis of grain
+            grains[igr]['minDia'] = 0.5 * (len_a + len_b)  # minor diameter is average of transversal axes
+        elif ind in [2, 3]:
+            grains[igr]['majDia'] = len_a
+            grains[igr]['minDia'] = 0.5 * (len_c + len_b)
+        else:
+            grains[igr]['majDia'] = len_b
+            grains[igr]['minDia'] = 0.5 * (len_a + len_c)
+        """
+        for v in ppt:
+            hh = np.dot(v, ax_b)
+            if not np.isclose(hh, 0.):
+                print(v, hh)
+        """
 
     geometry['Grains'] = grains
     geometry['GBnodes'] = gbDict

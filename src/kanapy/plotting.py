@@ -457,7 +457,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
             frozen_lognorm = lognorm(s=sd_AR, scale=np.exp(mean_AR))
         else:
             frozen_lognorm = lognorm(sd_AR, loc=offs_AR, scale=mean_AR)
-        xaxis = np.linspace(0.5 * ar_cutoff_max, 2 * ar_cutoff_max, 500)
+        xaxis = np.linspace(0.5 * ar_cutoff_min, 2 * ar_cutoff_max, 500)
         ypdf = frozen_lognorm.pdf(xaxis)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
         ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)
