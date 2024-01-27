@@ -89,6 +89,18 @@ to verify the correct installation of Kanapy.
 
 **Note:** If the texture module (test\_texture.py) fails the test, the cause lies oftentimes in a wrong MATLAB path. Please run "\$ matlab startup_mtex.m" in the directory "libs/mtex" to fix that problem.
 
+# Updates
+Kanapy is constantly under development and there will be frequent updates with bugfixes and new features. To update Kanapy, follow these steps:
+
+```
+$ cd kanapy
+$ git pull
+$ conda activate knpy
+(knpy) $ python -m pip install .
+```
+
+This will make the new version available in your knpy-environment. If your Kanapy installation has been setup for textures (MTEX module), this feature will not be affected by such updates.
+
 # Documentation
 
 Open "kanapy/docs/index.html" in a browser to access the complete documentation for kanapy.
