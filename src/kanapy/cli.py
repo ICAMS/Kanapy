@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import shutil
 import json
 import click
-from kanapy.util import MAIN_DIR, WORK_DIR
+from kanapy.util import MAIN_DIR, WORK_DIR, ROOT_DIR
 
 
 @click.group()
@@ -16,7 +15,7 @@ def main(ctx):
 @main.command(name='runTests')
 @click.option('-no_texture', default=False)
 @click.pass_context
-def tests(ctx, no_texture: bool):    
+def tests(ctx, no_texture: bool):
     """ Runs unittests built within kanapy."""
     click.echo('')
     if no_texture:
@@ -46,10 +45,11 @@ def docs(ctx):
 
 
 @main.command(name='setupTexture')
+@click.option('-admin', default=False)
 @click.pass_context
-def setupTexture(ctx):    
+def setupTexture(ctx, admin: bool):
     """ Stores the user provided MATLAB & MTEX paths for texture analysis."""
-    setPaths()                    
+    setPaths(admin)
 
 
 def chkVersion(matlab):
@@ -66,12 +66,18 @@ def chkVersion(matlab):
     return version
     
         
-def setPaths():
-    """ Requests user input for MATLAB & MTEX installation paths"""
-    if not os.path.exists(WORK_DIR):
-        raise FileNotFoundError('Package not properly installed, working directory is missing.')
-    pathjson = os.path.join(WORK_DIR, 'PATHS.json')
-    with open(pathjson) as json_file:
+def setPaths(admin):
+    """ Requests user input for MATLAB & MTEX installation paths
+    if admin==True: use paths in MAIN_DIR otherwise use WORK_DIR
+    """
+    if admin:
+        path = ROOT_DIR
+    else:
+        if not os.path.exists(WORK_DIR):
+            raise FileNotFoundError('Package not properly installed, working directory is missing.')
+        path = WORK_DIR
+    path_json = os.path.join(path, 'PATHS.json')
+    with open(path_json) as json_file:
         path_dict = json.load(json_file)
         
     # For MATLAB executable
@@ -94,8 +100,7 @@ def setPaths():
                     
                 elif version < 2015:
                     click.echo('')
-                    click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
-                    sys.exit(0)
+                    raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above')
                 userpath1 = MATLAB
 
             elif decision1 == 'no' or decision1 == 'n' or decision1 == 'N' or decision1 == 'NO':
@@ -107,13 +112,11 @@ def setPaths():
                     click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
                 elif version < 2015:
                     click.echo('')
-                    click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
-                    sys.exit(0)
+                    raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above')
                 userpath1 = userinput
                                     
             else:
-                click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
-                sys.exit(0) 
+                raise ValueError('Invalid entry!, Run: kanapy setuptexture again.')
                             
         else:
             print('No MATLAB executable found!')            
@@ -124,29 +127,22 @@ def setPaths():
                 click.echo('')
                 click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
             elif version < 2015:
-                click.echo('')
-                click.echo('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above\n', err=True)
-                sys.exit(0)
+                raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above.')
             userpath1 = userinput
                      
     elif status1 == 'no' or status1 == 'n' or status1 == 'N' or status1 == 'NO':
-        click.echo("Kanapy's texture analysis code requires MATLAB. Please install it.")
+        click.echo("Kanapy's texture module requires MATLAB. Please install it.")
         click.echo('')
         userpath1 = False
     else:
-        click.echo('Invalid entry!, Run: kanapy setuptexture again', err=True)
-        sys.exit(0)        
+        raise ValueError('Invalid entry!, Run: kanapy setupTexture again')
         
     # Create a file in ".kanapy" folder that stores the paths
-    if userpath1:        
-        
+    if userpath1:
         path_dict['MATLABpath'] = os.path.normpath(userpath1)
-        path_path = os.path.join(WORK_DIR, 'PATHS.json')
-        
-        if os.path.exists(path_path):
-            os.remove(path_path)
-
-        with open(path_path, 'w') as outfile:
+        if os.path.exists(path_json):
+            os.remove(path_json)
+        with open(path_json, 'w') as outfile:
             json.dump(path_dict, outfile, indent=2)                
         
         # check if Matlab Engine library is already installed
@@ -164,7 +160,7 @@ def setPaths():
                 click.echo('\n Error in installing matlab.engine')
                 click.echo('Please contact system administrator to run "> python -m pip install ."')
                 click.echo(f'in directory {path}')
-                sys.exit(1)
+                raise ModuleNotFoundError()
         
         # initalize matlab engine and MTEX for kanapy
         path = os.path.abspath(__file__)[0:-7]  # remove /cli.py from kanapy path

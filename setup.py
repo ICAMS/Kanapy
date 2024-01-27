@@ -16,13 +16,23 @@
 
 import os
 import json
-from setuptools import setup, Extension, find_packages
-
+from setuptools import setup, find_packages
 
 # create file structure for testing and MTEX support
 # not required otherwise
 MAIN_DIR = os.getcwd()  # directory in which repository is cloned
 WORK_DIR = os.path.join(os.path.expanduser('~'), '.kanapy')  # working directory for temporary files
+# check if admin installation is performed
+adm_path = os.path.join(MAIN_DIR, 'admin_flag')
+if os.path.exists(adm_path):
+    with open(adm_path, 'r') as file:
+        adm_flag = file.read()
+    print('*** adm_flag =', adm_flag)
+    if '1' in adm_flag or 'true' in adm_flag.lower():
+        WORK_DIR = MAIN_DIR
+else:
+    print('*** adm_flag not found.')
+
 path_path = os.path.join(WORK_DIR, 'PATHS.json')
 path_dict = {'MAIN_DIR': MAIN_DIR,
              'MTEXpath': os.path.join(MAIN_DIR, 'libs', 'mtex'),
@@ -41,7 +51,7 @@ with open(path_path, 'w') as outfile:
     
 setup(
     name='kanapy',
-    version='6.0.4',
+    version='6.0.5',
     author='Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Napat Vajragupta, Alexander Hartmaier',
     author_email='alexander.hartmaier@rub.de',
     classifiers=[        
@@ -58,7 +68,6 @@ setup(
     package_dir={'': 'src'},
     license="GNU AGPL v3 license",    
     url='https://github.com/ICAMS/Kanapy.git',
-    entry_points={'console_scripts': ['kanapy = kanapy.cli:start']},    
+    entry_points={'console_scripts': ['kanapy = kanapy.cli:start']},
     zip_safe=False,
 )
-
