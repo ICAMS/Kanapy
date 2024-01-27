@@ -99,7 +99,7 @@ $ conda activate knpy
 (knpy) $ python -m pip install .
 ```
 
-This will make the new version available in your knpy-environment. If your Kanapy installation has been setup for textures (MTEX module), this feature will not be affected by such updates.
+This will make the new version available in your knpy-environment. If your Kanapy installation has been setup for textures (MTEX module), this feature will not be affected by such updates. This update routine is also valid for global installations as system administrator.
 
 # Documentation
 
