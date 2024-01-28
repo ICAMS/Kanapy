@@ -342,6 +342,8 @@ def plot_output_stats(dataDict,
             ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
         ypdf2 = grain_lognorm.pdf(grain_AR)
         area = np.trapz(ypdf2, grain_AR)
+        if np.isclose(area, 0.0):
+            area = 1.0
         ypdf2 /= area
         ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label='Grains')
         ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3)

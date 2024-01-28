@@ -172,7 +172,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         return
 
     print('')
-    print('Writing ABAQUS (.inp) file', end="")
+    print(f'Writing RVE as ABAQUS file "{file}"')
     # select element type
     if gb_area is None:
         if thermal:
@@ -263,47 +263,56 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         f.write('*End Instance\n')
         f.write('*End Assembly\n')
         f.write('**\n')
+        f.write('**\n')
+        f.write('** MATERIALS\n')
+        f.write('**\n')
         if dual_phase:
-            f.write('**\n')
-            f.write('** MATERIALS\n')
-            f.write('**\n')
-            for i in range(1, 3):
+            for i in range(1, len(grain_dict.keys())):
                 f.write('**\n')
                 f.write('*Material, name=PHASE{}_MAT\n'.format(i))
                 f.write('**Include, input=Material{}.inp\n'.format(i))
                 f.write('**\n')
+        else:
+            f.write('*Include, input={}mat.inp\n'.format(file[0:-8]))
+            f.write('**\n')
     print('---->DONE!\n')
     return
 
 
 def writeAbaqusMat(ialloy, angles, file=None, path='./', nsdv=200):
     """
-    angles : Euler angles with number of rows= number of grains and
+    angles : dict or (N, 3)-ndarray
+        Dict with Euler angles for each grain or array with number of N rows (= number of grains) and
             three columns phi1, Phi, phi2
-    ialloy : alloy number in the umat, mod_alloys.f
-    nsdv : number of state dependant variables default value is 200
+    ialloy : int
+        Identifier, alloy number in umat: mod_alloys.f
+    nsdv : int
+        Number of state dependant variables default value is 200
     """
-    nitem = len(angles)
-    titem = '{}grains'.format(nitem)
+    if type(angles) is not dict:
+        # converting (N, 3) ndarray to dict
+        gr_ori_dict = dict()
+        for igr, ori in enumerate(angles):
+            gr_ori_dict[igr+1] = ori
+    else:
+        gr_ori_dict = angles
 
+    nitem = len(gr_ori_dict.keys())
     if file is None:
-        cwd = os.getcwd()
-        file = cwd + '/abq_px_{0}_materials.inp'.format(titem)
-        if os.path.exists(file):
-            os.remove(file)  # remove old file if it exists
+        file = f'abq_px_{nitem}_mat.inp'
+    path = os.path.normpath(path)
+    file = os.path.join(path, file)
     with open(file, 'w') as f:
         f.write('**\n')
         f.write('** MATERIALS\n')
         f.write('**\n')
-        for i in range(nitem):
-            f.write('*Material, name=GRAIN{}_MAT\n'.format(i + 1))
+        for igr, ori in gr_ori_dict.items():
+            f.write('*Material, name=GRAIN{}_MAT\n'.format(igr))
             f.write('*Depvar\n')
             f.write('    {}\n'.format(nsdv))
             f.write('*User Material, constants=4\n')
             f.write('{}, {}, {}, {}\n'.format(float(ialloy),
-                                              angles[i, 0],
-                                              angles[i, 1],
-                                              angles[i, 2]))
+                                              ori[0], ori[1], ori[2]))
     return
 
 

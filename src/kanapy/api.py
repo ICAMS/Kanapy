@@ -28,55 +28,57 @@ from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D,
     plot_polygons_3D, plot_output_stats
 from kanapy.util import log_level
 
-"""
-Class grain(number)
-Attributes:
-•	phase
-•	voxels
-•	facets
-•	vertices
-•	points
-•	center
-•	simplices
-•	particle
-•	eq_dia
-•	maj_dia
-•	min_dia
-•	volume
-•	area
-
-Class geometry()
-Attributes:
-•	vertices
-•	points
-•	simplices
-•	facets
-•	GBnodes
-•	GBarea
-
-Class particle(number)
-Attributes:
-•	equiv_dia
-•	maj_dia
-•	min_dia
-•	phase
-•	…
-
-Class phase(number)
-Attributes:
-•	particles (list of numbers)
-•	grains (list of numbers)
-"""
-
 
 class Microstructure(object):
-    """Define class for synthetic microstructures"""
+    """Define class for synthetic microstructures
+
+    Attributes:
+        name : str
+            Name of microstructure
+        nphases : int
+            Number of phases in microstructure
+        ngrains : ndarray
+            Array of grain number in each phase
+        Ngr : int
+            Total number of grains summed over all phases
+        nparticles : list
+            List with number of particles in each phase
+        descriptor : list
+            List of dictionaries describing the microstructure of each phase;
+            Dict Keys: "Grains type", "Equivalent diameter", "Aspect ratio", "Tilt Angle", "RVE", "Simulation"
+        porosity : None or float
+            Indicates porosity of microstructure, if float gives volume fraction of pores
+        from_voxels : bool
+            Indicates whether microstructure object is imported from voxel file, not generated from particle simulation
+        particles : list
+            List of particle objects of class entities containing information object particle geometries
+        rve : object of class RVE_creator
+            Contains information about the RVE
+            Attributes: dim, size, nphases, nparticles, periodic, units, packing_steps, particle_data,
+                phase_names, phase_vf
+        simbox : Object of class Simulation_Box
+            Contains information about geometry of simulation box for particle simulation
+        mesh : object of class mesh_creator
+            Attributes: dim, grain_dict, grain_ori_dict, grain_phase_dict, grains, ngrains_phase. nodes, nodes_smooth,
+                nphases, nvox, phases, porosity_voxels, vox_center_dict, voxel_dict
+        geometry : dict
+            Dictionary of grain geometries;
+            Dict keys: "Ngrains", "Vertices", "Points", "Simplices", "Facets", "Grains", "GBnodes", GBarea" "GBfaces"
+            "Grains" : dictionary with key grain_number
+                Keys:"Vertices", "Points", "Center", "Simplices", "Volume", "Area", "Phase", "eqDia", "majDia", "minDia"
+        res_data : list
+            List of dictionaries containing effective microstructure descriptors for each phase in RVE
+            Dict keys: "Number", "Unit scale", "Grain_type",
+                "Grain_Equivalent_diameter", "Grain_Major_diameter", "Grain_Minor_diameter",
+                "Particle_Equivalent_diameter", "Particle_Major_diameter", "Particle_Minor_diameter",
+                "L1-error"
+    """
 
     def __init__(self, descriptor=None, file=None, name='Microstructure'):
         self.name = name
+        self.nphases = None
         self.ngrains = None
         self.nparticles = None
-        self.nphases = None
         self.porosity = None
         self.rve = None
         self.particles = None
@@ -402,8 +404,7 @@ class Microstructure(object):
     --------        Import/Export methods        --------
     """
 
-    def output_abq(self, nodes=None, name=None,
-                   voxel_dict=None, grain_dict=None, faces=None,
+    def write_abq(self, file=None, path='./', nodes=None, voxel_dict=None, grain_dict=None,
                    dual_phase=False, thermal=False, units=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""
         if nodes is None:
@@ -411,32 +412,34 @@ class Microstructure(object):
                 logging.warning('\nWarning: No argument "nodes" is given, will write smoothened structure')
                 nodes = self.mesh.nodes_smooth
                 faces = self.geometry['GBarea']
-                ntag = 'smooth'
+                ntag = '_smooth'
             elif self.mesh.nodes is not None:
                 logging.warning('\nWarning: No argument "nodes" is given, will write voxelized structure')
                 nodes = self.mesh.nodes
                 faces = None
-                ntag = 'voxels'
+                ntag = '_voxels'
             else:
                 raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-        elif nodes in ['smooth', 's']:
+        elif type(nodes) is not str:
+            faces = None
+            ntag = '_voxels'
+        elif nodes.lower() in ['smooth', 's']:
             if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
                 nodes = self.mesh.nodes_smooth
                 faces = self.geometry['GBarea']  # use tet elements for smoothened structure
-                ntag = 'smooth'
+                ntag = '_smooth'
             else:
                 raise ValueError('No information about smoothed microstructure. Run smoothen first.')
-        elif nodes in ['voxels', 'v', 'voxel']:
+        elif nodes.lower() in ['voxels', 'v', 'voxel']:
             if self.mesh.nodes is not None:
                 nodes = self.mesh.nodes
                 faces = None  # use brick elements for voxel structure
-                ntag = 'voxels'
+                ntag = '_voxels'
             else:
                 raise ValueError('No information about voxelized microstructure. Run voxelize first.')
         else:
             raise ValueError('Wrong value for parameter "nodes". Must be either "smooth" ' +
                              f'or "voxels", not {nodes}')
-
         if voxel_dict is None:
             voxel_dict = self.mesh.voxel_dict
         if units is None:
@@ -444,7 +447,7 @@ class Microstructure(object):
         elif (not units == 'mm') and (not units == 'um'):
             raise ValueError(f'Units must be either "mm" or "um", not {units}.')
         if dual_phase:
-            nct = 'dual_phase'
+            nct = 'abq_dual_phase'
             if grain_dict is None:
                 grain_dict = dict()
                 for i in range(self.nphases):
@@ -455,16 +458,18 @@ class Microstructure(object):
         else:
             if grain_dict is None:
                 grain_dict = self.mesh.grain_dict
-            nct = '{0}grains'.format(len(grain_dict))
-        if name is None:
-            cwd = os.getcwd()
-            name = os.path.normpath(cwd + f'/kanapy_{nct}_{ntag}.inp')
-            if os.path.exists(name):
-                os.remove(name)  # remove old file if it exists
-        export2abaqus(nodes, name, grain_dict, voxel_dict,
+            nct = f'abq_px_{len(grain_dict)}'
+        if file is None:
+            if self.name == 'Microstructure':
+                file = nct + ntag + '_geom.inp'
+            else:
+                file = self.name + ntag + '_geom.inp'
+        path = os.path.normpath(path)
+        file = os.path.join(path, file)
+        export2abaqus(nodes, file, grain_dict, voxel_dict,
                       units=units, gb_area=faces,
                       dual_phase=dual_phase, thermal=thermal)
-        return name
+        return file
 
     # def output_neper(self, timestep=None):
     def output_neper(self):
@@ -742,7 +747,7 @@ class Microstructure(object):
                 plt.show()
         return fname
 
-    def write_stl(self, file=None):
+    def write_stl(self, file=None, path='./'):
         """ Write triangles of convex polyhedra forming grains in form of STL
         files in the format
         '
@@ -761,12 +766,13 @@ class Microstructure(object):
         -------
         None.
         """
-
         if file is None:
             if self.name == 'Microstructure':
                 file = 'px_{}grains.stl'.format(self.Ngr)
             else:
                 file = self.name + '.stl'
+        path = os.path.normpath(path)
+        file = os.path.join(path, file)
         with open(file, 'w') as f:
             f.write("solid {}\n".format(self.name))
             for ft in self.geometry['Facets']:
@@ -792,12 +798,15 @@ class Microstructure(object):
             f.write("endsolid\n")
             return
 
-    def write_centers(self, file=None, grains=None):
+    def write_centers(self, file=None, path='./', grains=None):
+        """Write grain center positions into CSV file."""
         if file is None:
             if self.name == 'Microstructure':
                 file = 'px_{}grains_centroid.csv'.format(self.Ngr)
             else:
                 file = self.name + '_centroid.csv'
+        path = os.path.normpath(path)
+        file = os.path.join(path, file)
         if grains is None:
             grains = self.geometry['Grains']
         with open(file, 'w') as f:
@@ -807,12 +816,14 @@ class Microstructure(object):
                 f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2]))
         return
 
-    def write_ori(self, angles=None, file=None):
+    def write_ori(self, angles=None, file=None, path='./'):
         if file is None:
             if self.name == 'Microstructure':
                 file = 'px_{}grains_ori.csv'.format(self.Ngr)
             else:
                 file = self.name + '_ori.csv'
+        path = os.path.normpath(path)
+        file = os.path.join(path, file)
         if angles is None:
             if self.mesh.grain_ori_dict is None:
                 raise ValueError('No grain orientations given or stored.')
@@ -850,14 +861,13 @@ class Microstructure(object):
 
         if script_name is None:
             script_name = __file__
-        if path[-1] != '/':
-            path += '/'
         if file is None:
             if self.name == 'Microstructure':
-                file = path + 'px_{}grains_voxels.json'.format(self.Ngr)
+                file = f'px_{self.Ngr}grains_voxels.json'
             else:
-                file = path + self.name + '_voxels.json'
-        file = os.path.normpath(file)
+                file = self.name + '_voxels.json'
+        path = os.path.normpath(path)
+        file = os.path.join(path, file)
         print(f'Writing voxel information of microstructure to {file}.')
         # metadata
         today = str(date.today())  # date
@@ -960,14 +970,13 @@ class Microstructure(object):
         """
         import pickle
 
-        if path[-1] != '/':
-            path += '/'
         if file is None:
             if self.name == 'Microstructure':
                 file = 'px_{}grains_microstructure.pckl'.format(self.Ngr)
             else:
                 file = self.name + '_microstructure.pckl'
-        file = os.path.normpath(path + file)
+        path = os.path.normpath(path)
+        file = os.path.join(path, file)
         with open(file, 'wb') as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
         return
@@ -980,3 +989,11 @@ class Microstructure(object):
         """ Legacy function for plot_stats_init."""
         logging.warning('This legacy function is depracted, please use "plot_stats_init()".')
         self.plot_stats_init(descriptor, gs_data=gs_data, ar_data=ar_data, porous=porous, save_files=save_files)
+
+    def output_abq(self, nodes=None, name=None,
+                   voxel_dict=None, grain_dict=None, faces=None,
+                   dual_phase=False, thermal=False, units=None):
+        """ Legacy function for write_abq."""
+        logging.warning('This legacy function is depracted, please use "write_abq()".')
+        self.write_abq(nodes=nodes, name=name, voxel_dict=voxel_dict, grain_dict=grain_dict, faces=faces,
+                       dual_phase=dual_phase, thermal=thermal, units=units)

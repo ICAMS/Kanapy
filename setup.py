@@ -27,11 +27,8 @@ adm_path = os.path.join(MAIN_DIR, 'admin_flag')
 if os.path.exists(adm_path):
     with open(adm_path, 'r') as file:
         adm_flag = file.read()
-    print('*** adm_flag =', adm_flag)
     if '1' in adm_flag or 'true' in adm_flag.lower():
         WORK_DIR = MAIN_DIR
-else:
-    print('*** adm_flag not found.')
 
 path_path = os.path.join(WORK_DIR, 'PATHS.json')
 path_dict = {'MAIN_DIR': MAIN_DIR,
@@ -51,7 +48,7 @@ with open(path_path, 'w') as outfile:
     
 setup(
     name='kanapy',
-    version='6.0.5',
+    version='6.1.0',
     author='Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Napat Vajragupta, Alexander Hartmaier',
     author_email='alexander.hartmaier@rub.de',
     classifiers=[        
