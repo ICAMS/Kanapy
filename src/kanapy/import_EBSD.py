@@ -8,7 +8,7 @@ import matlab.engine
 import numpy as np
 import matplotlib.pyplot as plt
 from kanapy.util import MTEX_DIR, ROOT_DIR, MAIN_DIR
-from scipy.stats import lognorm, norm
+from scipy.stats import lognorm, vonmises
 import logging
 
 
@@ -54,7 +54,7 @@ class EBSDmap:
             grains : matlab object with grains in each phase
             omega : orintations of major grain axis
             gs_param : statistical grain size parameters
-            gs_data : grain sizes
+            gs_data : grain sizesvonmises
             ar_param
             ar_data
             om_param
@@ -173,8 +173,11 @@ class EBSDmap:
             # grain equivalent diameter
             deq = 2.0 * np.array(eng.equivalentRadius(data['grains']))[:, 0]
             dsig, doffs, dscale = lognorm.fit(deq)  # fit log normal distribution
+            med_eq = lognorm.median(dsig, loc=doffs, scale=dscale)
+            std_eq = lognorm.std(dsig, loc=doffs, scale=dscale)
             data['gs_param'] = np.array([dsig, doffs, dscale])
             data['gs_data'] = deq
+            data['gs_moments'] = [med_eq, std_eq]
             if plot:
                 # plot distribution of grain sizes
                 fig, ax = plt.subplots()
@@ -191,8 +194,11 @@ class EBSDmap:
             # grain aspect ratio
             asp = np.array(eng.aspectRatio(data['grains']))[:, 0]
             asig, aoffs, ascale = lognorm.fit(asp)  # fit log normal distribution
+            med_ar = lognorm.median(asig, loc=aoffs, scale=ascale)
+            std_ar = lognorm.std(asig, loc=aoffs, scale=ascale)
             data['ar_param'] = np.array([asig, aoffs, ascale])
             data['ar_data'] = asp
+            data['ar_moments'] = [med_ar, std_ar]
             if plot:
                 # plot distribution of aspect ratios
                 fig, ax = plt.subplots()
@@ -207,13 +213,17 @@ class EBSDmap:
                 plt.show()
 
             # angles of main axis
-            omean, osig = norm.fit(omega)  # fit normal distribution
-            data['om_param'] = np.array([osig, omean])
+            # fit von Mises distribution (circular normal distribution) to data
+            kappa, oloc, oscale = vonmises.fit(omega)
+            med_om = vonmises.median(kappa, loc=oloc, scale=oscale)
+            std_om = vonmises.std(kappa, loc=oloc, scale=oscale)
+            data['om_param'] = np.array([kappa, oloc, oscale])
             data['om_data'] = omega
+            data['om_moments'] = [med_om, std_om]
             if plot:
                 fig, ax = plt.subplots()
-                x = np.linspace(np.amin(omega), np.amax(omega), 150)
-                y = norm.pdf(x, scale=osig, loc=omean)
+                x = np.linspace(-np.pi, np.pi, 200) # np.amin(omega), np.amax(omega), 150)
+                y = vonmises.pdf(x, kappa, loc=oloc, scale=oscale)
                 ax.plot(x, y, '-r', label='fit')
                 ax.hist(omega, bins=20, density=True, label='data')
                 plt.legend()
@@ -224,10 +234,12 @@ class EBSDmap:
 
             print('Analyzed microstructure with {} grains.'
                   .format(data['ngrain']))
-            print('Average grain size = {} micron, average aspect ratio = {}, \
-            average tilt angle = {}°'.format(data['gs_param'][2].round(3),
-                                             data['ar_param'][2].round(3),
-                                             (data['om_param'][1] * 180 / np.pi).round(3)))
+            print(f'Median values: equiv. diameter: {med_eq.round(3)} micron, ' +
+                  f'aspect ratio: {med_ar.round(3)}, ' +
+                  f'tilt angle: {(med_om * 180 / np.pi).round(3)}°')
+            print(f'Std. dev: equivalent diameter: {std_eq.round(3)} micron, ' +
+                  f'aspect ratio: {std_ar.round(3)}, ' +
+                  f'tilt angle: {(std_om * 180 / np.pi).round(3)}°')
             self.ms_data.append(data)
         return
 
