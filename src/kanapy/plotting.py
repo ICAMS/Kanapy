@@ -217,7 +217,7 @@ def plot_output_stats(dataDict,
             par_eqDia *= 1.e-3
         total_eqDia = np.concatenate([grain_eqDia, par_eqDia])
         par_data = np.log(par_eqDia)
-        mu_par = np.mean(par_data)
+        mu_par = np.median(par_data)
         std_par = np.std(par_data)
         par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par))
         particles = True
@@ -231,12 +231,11 @@ def plot_output_stats(dataDict,
         total_eqDia = np.concatenate([total_eqDia, gs_data])
     # NOTE: 'doane' produces better estimates for non-normal datasets
     shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
-    # Get the mean & std of the underlying normal distribution
+    # Get the median & std of the underlying normal distribution
     ind = np.nonzero(grain_eqDia > 1.e-5)[0]
     grain_data = np.log(grain_eqDia[ind])
-    mu_gr = np.mean(grain_data)
+    mu_gr = np.median(grain_data)
     std_gr = np.std(grain_data)
-    # NOTE: lognorm takes mean & std of normal distribution
     grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr))
     binNum = len(shared_bins)
 
@@ -301,16 +300,16 @@ def plot_output_stats(dataDict,
         ind = np.nonzero(dataDict['Grain_Minor_diameter'] > 1.e-5)[0]
         grain_AR = np.sort(np.asarray(dataDict['Grain_Major_diameter'][ind]) /
                            np.asarray(dataDict['Grain_Minor_diameter'][ind]))
-        # Get the mean & std of the underlying normal distribution
-        std_gr, offs_gr, sc_gr = lognorm.fit(grain_AR)
-        grain_lognorm = lognorm(std_gr, loc=offs_gr, scale=sc_gr)
+        # Get the descriptors of the underlying normal distribution
+        sig_gr, loc_gr, sc_gr = lognorm.fit(grain_AR)
+        grain_lognorm = lognorm(sig_gr, loc=loc_gr, scale=sc_gr)
         if particles and 'Particle_Minor_diameter' in dataDict.keys():
             par_AR = np.sort(np.asarray(dataDict['Particle_Major_diameter']) /
                              np.asarray(dataDict['Particle_Minor_diameter']))
             # Concatenate corresponding arrays to compute shared bins
             total_AR = np.concatenate([par_AR, grain_AR])
-            std_par, offs_par, sc_par = lognorm.fit(par_AR)
-            par_lognorm = lognorm(std_par, loc=offs_par, scale=sc_par)
+            sig_par, loc_par, sc_par = lognorm.fit(par_AR)
+            par_lognorm = lognorm(sig_par, loc=loc_par, scale=sc_par)
             data = [par_AR, grain_AR]
             label = ['Particles', 'Grains']
         else:
@@ -373,12 +372,10 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
     """
 
     # Extract grain diameter statistics info from input file
-    sd = stats_dict["Equivalent diameter"]["std"]
-    mean = stats_dict["Equivalent diameter"]["mean"]
-    if "offs" in stats_dict["Equivalent diameter"]:
-        offs = stats_dict["Equivalent diameter"]["offs"]
-    else:
-        offs = None
+    sd = stats_dict["Equivalent diameter"]["sig"]
+    scale = stats_dict["Equivalent diameter"]["scale"]
+    loc = stats_dict["Equivalent diameter"]["loc"]
+
     dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
     dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
 
@@ -387,10 +384,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
     # https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335
 
     # Compute the Log-normal PDF & CDF.
-    if offs is None:
-        frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
-    else:
-        frozen_lognorm = lognorm(s=sd, loc=offs, scale=mean)
+    frozen_lognorm = lognorm(s=sd, loc=loc, scale=scale)
 
     xaxis = np.linspace(0.1, 200, 1000)
     ypdf = frozen_lognorm.pdf(xaxis)
@@ -424,13 +418,11 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
         plt.legend(fontsize=16)
         plt.show()
     elif stats_dict["Grain type"] == "Elongated":
-        # Extract mean grain aspect ratio value info from input file
-        sd_AR = stats_dict["Aspect ratio"]["std"]
-        mean_AR = stats_dict["Aspect ratio"]["mean"]
-        if "offs" in stats_dict["Aspect ratio"]:
-            offs_AR = stats_dict["Aspect ratio"]["offs"]
-        else:
-            offs_AR = None
+        # Extract grain aspect ratio descriptors from input file
+        sd_AR = stats_dict["Aspect ratio"]["sig"]
+        scale_AR = stats_dict["Aspect ratio"]["scale"]
+        loc_AR = stats_dict["Aspect ratio"]["loc"]
+
         ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]
 
@@ -455,10 +447,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
 
         # Plot aspect ratio statistics
         # Compute the Log-normal PDF & CDF.
-        if offs_AR is None:
-            frozen_lognorm = lognorm(s=sd_AR, scale=np.exp(mean_AR))
-        else:
-            frozen_lognorm = lognorm(sd_AR, loc=offs_AR, scale=mean_AR)
+        frozen_lognorm = lognorm(sd_AR, loc=loc_AR, scale=scale_AR)
         xaxis = np.linspace(0.5 * ar_cutoff_min, 2 * ar_cutoff_max, 500)
         ypdf = frozen_lognorm.pdf(xaxis)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)

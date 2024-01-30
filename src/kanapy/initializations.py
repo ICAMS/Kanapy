@@ -3,8 +3,22 @@ import os
 import numpy as np
 import logging
 import itertools
-from scipy.stats import lognorm, norm
+from scipy.stats import lognorm, vonmises
 from collections import defaultdict
+
+
+def stat_names(legacy=False):
+    if legacy:
+        sig = 'std'
+        loc = 'offs'
+        scale = 'mean'
+        kappa = 'kappa'
+    else:
+        sig = 'sig'
+        loc = 'loc'
+        scale = 'scale'
+        kappa = 'kappa'
+    return sig, loc, scale, kappa
 
 
 class RVE_creator(object):
@@ -86,10 +100,7 @@ class RVE_creator(object):
 
             def gen_data_basic(pdict):
                 # Compute the Log-normal PDF & CDF.
-                if offs is None:
-                    frozen_lognorm = lognorm(s=sd, scale=np.exp(mean))
-                else:
-                    frozen_lognorm = lognorm(s=sd, loc=offs, scale=mean)
+                frozen_lognorm = lognorm(s=sig_ED, loc=loc_ED, scale=scale_ED)
 
                 xaxis = np.linspace(0.1, 200, 1000)
                 ycdf = frozen_lognorm.cdf(xaxis)
@@ -163,7 +174,7 @@ class RVE_creator(object):
                 tilt_angle = []
                 num = pdict['Number']
                 while num > 0:
-                    tilt = norm.rvs(scale=std_ori, loc=mean_ori, size=num)
+                    tilt = vonmises.rvs(kappa, loc=loc_ori, size=num)
                     index_array = np.where((tilt >= ori_cutoff_min) & (tilt <= ori_cutoff_max))
                     TA = tilt[index_array].tolist()
                     tilt_angle.extend(TA)
@@ -175,11 +186,7 @@ class RVE_creator(object):
                 finalAR = []
                 num = pdict['Number']
                 while num > 0:
-                    # ar = np.random.lognormal(mean_AR, sd_AR, num)
-                    if offs_AR is None:
-                        ar = lognorm.rvs(sd_AR, scale=np.exp(mean_AR), size=num)
-                    else:
-                        ar = lognorm.rvs(sd_AR, loc=offs_AR, scale=mean_AR, size=num)
+                    ar = lognorm.rvs(sig_AR, loc=loc_AR, scale=scale_AR, size=num)
                     index_array = np.where((ar >= ar_cutoff_min) & (ar <= ar_cutoff_max))
                     AR = ar[index_array].tolist()
                     finalAR.extend(AR)
@@ -203,12 +210,17 @@ class RVE_creator(object):
                 raise ValueError('The value for "Grain type" must be either "Equiaxed" or "Elongated".')
 
             # Attributes for equivalent diameter
-            sd = stats["Equivalent diameter"]["std"]
-            mean = stats["Equivalent diameter"]["mean"]
-            if "offs" in stats["Equivalent diameter"]:
-                offs = stats["Equivalent diameter"]["offs"]
+            if 'mean' in stats['Equivalent diameter'].keys():
+                # load legacy names to ensure compatibility with previous versions
+                sig, loc, scale, kappa = stat_names(legacy=True)
+                logging.warning('Keys for descriptor parameters have changed.\n' +
+                                'Please exchange std->sig, offs->loc, mean->scale')
             else:
-                offs = None
+                sig, loc, scale, kappa = stat_names(legacy=False)
+            sig_ED = stats["Equivalent diameter"][sig]
+            scale_ED = stats["Equivalent diameter"][scale]
+            loc_ED = stats["Equivalent diameter"][loc]
+
             dia_cutoff_min = stats["Equivalent diameter"]["cutoff_min"]
             dia_cutoff_max = stats["Equivalent diameter"]["cutoff_max"]
             # generate dict for particle data
@@ -216,19 +228,16 @@ class RVE_creator(object):
 
             # Additional attributes for elongated grains
             if stats["Grain type"] == "Elongated":
-                # Extract mean grain aspect ratio value info from dict
-                sd_AR = stats["Aspect ratio"]["std"]
-                mean_AR = stats["Aspect ratio"]["mean"]
-                if "offs" in stats["Aspect ratio"]:
-                    offs_AR = stats["Aspect ratio"]["offs"]
-                else:
-                    offs_AR = None
+                # Extract descriptors for aspect ratio distrib. from dict
+                sig_AR = stats["Aspect ratio"][sig]
+                scale_AR = stats["Aspect ratio"][scale]
+                loc_AR = stats["Aspect ratio"][loc]
                 ar_cutoff_min = stats["Aspect ratio"]["cutoff_min"]
                 ar_cutoff_max = stats["Aspect ratio"]["cutoff_max"]
 
                 # Extract grain tilt angle statistics info from dict
-                std_ori = stats["Tilt angle"]["std"]
-                mean_ori = stats["Tilt angle"]["mean"]
+                kappa = stats["Tilt angle"][kappa]
+                loc_ori = stats["Tilt angle"][loc]
                 ori_cutoff_min = stats["Tilt angle"]["cutoff_min"]
                 ori_cutoff_max = stats["Tilt angle"]["cutoff_max"]
 
@@ -322,7 +331,7 @@ class RVE_creator(object):
         print(f'    Total number of voxels     = {np.prod(self.dim)}\n')
         print('\nConsidered phases (volume fraction): ')
         for ip, name in enumerate(phase_names):
-            print(f'{ip}: {name} ({phase_vf[ip]*100.}%)')
+            print(f'{ip}: {name} ({phase_vf[ip] * 100.}%)')
         print('\n')
         self.phase_names = phase_names
         self.phase_vf = phase_vf
@@ -453,9 +462,9 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
               periodicity=False, VF=None, phasename=None, phasenum=None,
               save_file=False):
     """
-    grains = [std deviation, offset , mean grain sizeof lognorm distrib.]
-    ar = [std deviation, offset , mean aspect ratio of gamma distrib.]
-    omega = [std deviation, mean tilt angle]
+    grains = [sigma, loc , scale of lognorm distrib. of equiv. diameter]
+    ar = [sigma, loc, scale of logorm distrib of aspect ratio]
+    omega = [kappa, loc of von Mises distrib. of tilt angle]
     """
 
     # type of grains either 'Elongated' or 'Equiaxed'
@@ -485,9 +494,9 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
             asp_max = ar[2] + ar[0]  # 316L: 3
         # cutoff omega
         if omega_min is None:
-            omega_min = omega[1] - 2 * omega[0]
+            omega_min = -np.pi  # omega[1] - 2 * omega[0]
         if omega_max is None:
-            omega_max = omega[1] + 2 * omega[0]
+            omega_max = np.pi  # omega[1] + 2 * omega[0]
 
     # RVE box size
     lx = ly = lz = size  # size of box in each direction
@@ -498,9 +507,10 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
 
     # check grain type
     # create the corresponding dict with statistical grain geometry information
+    sig, loc, scale, kappa = stat_names(legacy=False)
     ms_stats = {'Grain type': gtype,
                 'Equivalent diameter':
-                    {'std': grains[0], 'mean': grains[2], 'offs': grains[1],
+                    {sig: grains[0], loc: grains[1], scale: grains[2],
                      'cutoff_min': deq_min, 'cutoff_max': deq_max},
                 'RVE':
                     {'sideX': lx, 'sideY': ly, 'sideZ': lz,
@@ -511,9 +521,9 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
                           'Number': phasenum,
                           'Volume fraction': VF}}
     if gtype == 'Elongated':
-        ms_stats['Aspect ratio'] = {'std': ar[0], 'mean': ar[2], 'offs': ar[1],
+        ms_stats['Aspect ratio'] = {sig: ar[0], loc: ar[1], scale: ar[2],
                                     'cutoff_min': asp_min, 'cutoff_max': asp_max}
-        ms_stats['Tilt angle'] = {'std': omega[0], 'mean': omega[1],
+        ms_stats['Tilt angle'] = {kappa: omega[0], loc: omega[1],
                                   'cutoff_min': omega_min, 'cutoff_max': omega_max}
     if save_file:
         cwd = os.getcwd()

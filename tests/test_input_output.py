@@ -8,9 +8,9 @@ from kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
 
 def test_particleStatGenerator():
     st_dict = {'Grain type': 'Elongated',
-               'Equivalent diameter': {'std': 0.531055, 'mean': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
-               'Aspect ratio': {'std': 0.3, 'mean': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
-               'Tilt angle': {'std': 28.8, 'mean': 87.4, 'cutoff_min': 75.0, 'cutoff_max': 105.0},
+               'Equivalent diameter': {'sig': 0.531055, 'loc': 0.0, 'scale': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
+               'Aspect ratio': {'sig': 0.3, 'loc': 0.0, 'scale': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
+               'Tilt angle': {'kappa': 2.1, 'loc': 1.6, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
                'RVE': {'sideX': 8, 'sideY': 8, 'sideZ': 8, 'Nx': 15, 'Ny': 15, 'Nz': 15},
                'Simulation': {'periodicity': 'True', 'output_units': 'um'},
                'Phase': {'Name': 'XXXX', 'Number': 0, 'Volume fraction': 1.0}}

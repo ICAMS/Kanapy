@@ -22,11 +22,11 @@ lside = 40  # side length in micron in each Cartesian direction
 ms_stats_0 = {  # statistical data for dense phase
     "Grain type": "Elongated",
     "Equivalent diameter": {
-        "std": 1.0, "mean": 12.0, "offs": 5.0, "cutoff_min": 8.0, "cutoff_max": 14.0},
+        "sig": 1.0, "scale": 12.0, "loc": 5.0, "cutoff_min": 8.0, "cutoff_max": 14.0},
     "Aspect ratio": {
-        "std": 0.5, "mean": 1.0, "offs": 0.6, "cutoff_min": 1.0, "cutoff_max": 2.4},
+        "sig": 0.5, "scale": 1.0, "loc": -0.1, "cutoff_min": 0.0, "cutoff_max": 2.},
     "Tilt angle": {
-        "std": 1.0, "mean": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
+        "kappa": 1.0, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
     "RVE": {
         "sideX": lside, "sideY": lside, "sideZ": lside,
         "Nx": nvox, "Ny": nvox, "Nz": nvox},
@@ -39,11 +39,11 @@ ms_stats_0 = {  # statistical data for dense phase
 ms_stats_1 = {  # statistical data for porosity (will not be considered explicitly)
     "Grain type": "Elongated",
     "Equivalent diameter": {
-        "std": 1.5, "mean": 9.0, "offs": 6.0, "cutoff_min": 8.0, "cutoff_max": 12.0},
+        "sig": 1.5, "scale": 9.0, "loc": 6.0, "cutoff_min": 8.0, "cutoff_max": 12.0},
     "Aspect ratio": {
-        "std": 1.0, "mean": 3.5, "offs": 1.0, "cutoff_min": 1.6, "cutoff_max": 5.0},
+        "sig": 1.0, "scale": 3.5, "loc": 1.0, "cutoff_min": 1.6, "cutoff_max": 5.0},
     "Tilt angle": {
-        "std": 1.5, "mean": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
+        "kappa": 1.5, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
     "RVE": {
         "sideX": lside, "sideY": lside, "sideZ": lside,
         "Nx": nvox, "Ny": nvox, "Nz": nvox},

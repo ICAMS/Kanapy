@@ -24,9 +24,9 @@ else:
     name = 'px'
 matname = 'Simulanium fcc'
 ms_elong = {'Grain type': 'Elongated', 
-          'Equivalent diameter': {'std': 1.0, 'mean': 12.0, 'offs': 6.0, 'cutoff_min': 10.0, 'cutoff_max': 20.0},
-          'Aspect ratio': {'std':1.5, 'mean': 1.7, 'offs': 0.8, 'cutoff_min': 1.0, 'cutoff_max': 3.0}, 
-          'Tilt angle': {'std': 15., 'mean': 90., "cutoff_min": 0.0, "cutoff_max": 180.0}, 
+          'Equivalent diameter': {'sig': 1.0, 'scale': 12.0, 'loc': 6.0, 'cutoff_min': 10.0, 'cutoff_max': 20.0},
+          'Aspect ratio': {'sig': 1.5, 'scale': 1.7, 'loc': 0.8, 'cutoff_min': 1.0, 'cutoff_max': 3.0},
+          'Tilt angle': {'kappa': 15., 'loc': 90., "cutoff_min": 0.0, "cutoff_max": 180.0},
           'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': Nv, 'Ny': Nv, 'Nz': Nv}, 
           'Simulation': {'periodicity': str(periodic), 'output_units': 'um'},
           'Phase': {'Name': 'Simulanium fcc', 'Number': 0, 'Volume fraction': 1.0}}

@@ -532,22 +532,22 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         ar_list = [np.abs(len_a / len_b - 1.0), np.abs(len_b / len_a - 1.0),
                    np.abs(len_b / len_c - 1.0), np.abs(len_c / len_b - 1.0),
                    np.abs(len_c / len_a - 1.0), np.abs(len_a / len_c - 1.0)]
-        ind = np.argmin(ar_list)  # identify two axes with aspect ratio closest to 1
-        if ind in [0, 1]:
-            grains[igr]['majDia'] = len_c  # major diameter along the rotational axis of grain
-            grains[igr]['minDia'] = 0.5 * (len_a + len_b)  # minor diameter is average of transversal axes
-        elif ind in [2, 3]:
+        minval = np.min(ar_list)
+        if minval > 0.15:
+            # no clear rotational symmetry, choose longest axis as major diameter
             grains[igr]['majDia'] = len_a
-            grains[igr]['minDia'] = 0.5 * (len_c + len_b)
+            grains[igr]['minDia'] = len_c
         else:
-            grains[igr]['majDia'] = len_b
-            grains[igr]['minDia'] = 0.5 * (len_a + len_c)
-        """
-        for v in ppt:
-            hh = np.dot(v, ax_b)
-            if not np.isclose(hh, 0.):
-                print(v, hh)
-        """
+            ind = np.argmin(ar_list)  # identify two axes with aspect ratio closest to 1
+            if ind in [0, 1]:
+                grains[igr]['majDia'] = len_c  # major diameter along the rotational axis of grain
+                grains[igr]['minDia'] = 0.5 * (len_a + len_b)  # minor diameter is average of transversal axes
+            elif ind in [2, 3]:
+                grains[igr]['majDia'] = len_a
+                grains[igr]['minDia'] = 0.5 * (len_c + len_b)
+            else:
+                grains[igr]['majDia'] = len_b
+                grains[igr]['minDia'] = 0.5 * (len_a + len_c)
 
     geometry['Grains'] = grains
     geometry['GBnodes'] = gbDict
