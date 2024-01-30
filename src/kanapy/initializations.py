@@ -90,6 +90,8 @@ class RVE_creator(object):
         particle_data = []  # list of cits for statistical particle data for each grains
         phase_names = []  # list of names of phases
         phase_vf = []  # list of volume fractions of phases
+        ialloy : int
+            Number of alloy in ICAMS CP-UMAT
         """
 
         def init_particles(particle_data):
@@ -258,6 +260,7 @@ class RVE_creator(object):
         self.dim = None  # tuple of number of voxels along Cartesian axes
         self.periodic = None  # Boolean for periodicity of RVE
         self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
+        self.ialloy = None # Number of alloy in ICAMS CP-UMAT
         self.nparticles = []  # List of article numbers for each phase
         particle_data = []  # list of cits for statistical particle data for each grains
         phase_names = []  # list of names of phases
@@ -285,6 +288,9 @@ class RVE_creator(object):
                     if self.dim != nvox:
                         logging.warning(f'Conflicting RVE voxel dimensions in descriptors: {self.dim}, {nvox}.' +
                                         'Using first value.')
+                # Extract Alloy number for ICAMS CP-UMAT
+                if "ialloy" in stats['RVE'].keys():
+                    self.ialloy = stats['RVE']['ialloy']
             elif ip == 0:
                 raise ValueError('RVE properties must be specified in descriptors for first phase.')
 

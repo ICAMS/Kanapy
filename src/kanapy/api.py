@@ -19,7 +19,7 @@ from scipy.spatial import Delaunay
 
 from kanapy.grains import calc_polygons, get_stats
 from kanapy.entities import Simulation_Box
-from kanapy.input_output import export2abaqus
+from kanapy.input_output import export2abaqus, writeAbaqusMat
 from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
@@ -55,7 +55,7 @@ class Microstructure(object):
         rve : object of class RVE_creator
             Contains information about the RVE
             Attributes: dim, size, nphases, nparticles, periodic, units, packing_steps, particle_data,
-                phase_names, phase_vf
+                phase_names, phase_vf, ialloy
         simbox : Object of class Simulation_Box
             Contains information about geometry of simulation box for particle simulation
         mesh : object of class mesh_creator
@@ -87,6 +87,7 @@ class Microstructure(object):
         self.mesh = None
         self.res_data = None
         self.from_voxels = False
+        self.ialloy = None
 
         logging.basicConfig(level=log_level)
         if descriptor is None:
@@ -143,14 +144,8 @@ class Microstructure(object):
         # initialize RVE, including mesh dimensions and particle distribution
         self.rve = RVE_creator(descriptor, nsteps=nsteps, porosity=porosity)
         self.nparticles = self.rve.nparticles
-
         # store geometry in simbox object
         self.simbox = Simulation_Box(self.rve.size)
-
-        # initialize voxel structure (= mesh)
-        self.mesh = mesh_creator(self.rve.dim)
-        self.mesh.nphases = self.nphases
-        self.mesh.create_voxels(self.simbox)
 
     def pack(self, particle_data=None,
              k_rep=0.0, k_att=0.0, vf=None, save_files=False):
@@ -170,12 +165,23 @@ class Microstructure(object):
                            k_rep=k_rep, k_att=k_att, vf=vf,
                            save_files=save_files)
 
-    def voxelize(self, particles=None):
+    def voxelize(self, particles=None, dim=None):
         """ Generates the RVE by assigning voxels to grains."""
         if particles is None:
             particles = self.particles
             if particles is None:
                 raise ValueError('No particles in voxelize. Run pack first.')
+        if dim is None:
+            dim = self.rve.dim
+        else:
+            if len(dim) != 3 or type(dim) is not tuple:
+                raise ValueError(f'"dim" must be a 3-tuple of the voxel numbers in each direction, not {dim}.')
+            self.rve.dim = dim
+
+        # initialize voxel structure (= mesh)
+        self.mesh = mesh_creator(dim)
+        self.mesh.nphases = self.nphases
+        self.mesh.create_voxels(self.simbox)
 
         self.mesh = \
             voxelizationRoutine(particles, self.mesh, porosity=self.porosity)
@@ -267,12 +273,12 @@ class Microstructure(object):
                 ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba)
             elif type(data) is str:
                 if data.lower() in ['random', 'rnd']:
-                    ori_rve = createOrisetRandom(ngr, Nbase=Nbase, hist=hist, shared_area=shared_area)
+                    ori_rve = createOrisetRandom(ngr, Nbase=Nbase, hist=hist, shared_area=gba)
                 elif data.lower() in ['unimodal', 'uni_mod', 'uni_modal']:
                     if ang is None or omega is None:
                         raise ValueError('To generate orientation sets of type "unimodal" angle "ang" and kernel' +
                                          'halfwidth "omega" are required.')
-                    ori_rve = createOriset(ngr, ang, omega, hist=hist, shared_area=shared_area)
+                    ori_rve = createOriset(ngr, ang, omega, hist=hist, shared_area=gba)
             else:
                 raise ValueError('Argument to generate grain orientation must be either of type EBSDmap or ' +
                                  '"random" or "unimodal"')
@@ -326,13 +332,13 @@ class Microstructure(object):
         elif type(data) is not list:
             data = [data]
         if gs_data is None or type(gs_data) is not list:
-            gs_data = [gs_data]*len(data)
+            gs_data = [gs_data] * len(data)
         if gs_param is None or type(gs_param) is not list:
-            gs_param = [gs_param]*len(data)
+            gs_param = [gs_param] * len(data)
         if ar_data is None or type(ar_data) is not list:
-            ar_data = [ar_data]*len(data)
+            ar_data = [ar_data] * len(data)
         if ar_param is None or type(ar_param) is not list:
-            ar_param = [ar_param]*len(data)
+            ar_param = [ar_param] * len(data)
         """
         gs_data = [ebsd.ms_data[i]['gs_data'] for i in range(Nphases)]
         gs_param = [ebsd.ms_data[i]['gs_param'] for i in range(Nphases)]
@@ -405,7 +411,7 @@ class Microstructure(object):
     """
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
-                   dual_phase=False, thermal=False, units=None):
+                  dual_phase=False, thermal=False, units=None, ialloy=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""
         if nodes is None:
             if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
@@ -454,11 +460,13 @@ class Microstructure(object):
                     grain_dict[i] = list()
                 for igr, ip in self.mesh.grain_phase_dict.items():
                     grain_dict[ip] = np.concatenate(
-                            [grain_dict[ip], self.mesh.grain_dict[igr]])
+                        [grain_dict[ip], self.mesh.grain_dict[igr]])
         else:
             if grain_dict is None:
                 grain_dict = self.mesh.grain_dict
             nct = f'abq_px_{len(grain_dict)}'
+        if ialloy is None:
+            ialloy = self.rve.ialloy
         if file is None:
             if self.name == 'Microstructure':
                 file = nct + ntag + '_geom.inp'
@@ -469,9 +477,30 @@ class Microstructure(object):
         export2abaqus(nodes, file, grain_dict, voxel_dict,
                       units=units, gb_area=faces,
                       dual_phase=dual_phase, thermal=thermal)
+        # if orientation exists also write material file with Euler angles
+        if not (self.mesh.grain_ori_dict is None or ialloy is None):
+            writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
+                           file=file[0:-8] + 'mat.inp')
         return file
 
-    # def output_neper(self, timestep=None):
+    def write_abq_ori(self, ialloy=None, ori=None, file=None, path='./', nsdv=200):
+        if ialloy is None:
+            ialloy = self.rve.ialloy
+            if ialloy is None:
+                raise ValueError('Value of material number in ICAMS CP-UMAT (ialloy) not defined.')
+            if ori is None:
+                ori = self.mesh.grain_ori_dict
+                if ori is None:
+                    raise ValueError('No orientations present. Run "generate_oriantations" first.')
+            if file is None:
+                if self.name == 'Microstructure':
+                    file = f'abq_px_{self.Ngr}_mat.inp'
+                else:
+                    file = self.name + '_mat.inp'
+            path = os.path.normpath(path)
+            file = os.path.join(path, file)
+            writeAbaqusMat(ialloy, ori, file=file, nsdv=nsdv)
+
     def output_neper(self):
         """ Writes out particle position and weights files required for
         tessellation in Neper."""

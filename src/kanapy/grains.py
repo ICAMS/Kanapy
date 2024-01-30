@@ -536,7 +536,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         if minval > 0.15:
             # no clear rotational symmetry, choose longest axis as major diameter
             grains[igr]['majDia'] = len_a
-            grains[igr]['minDia'] = len_c
+            grains[igr]['minDia'] = 0.5*(len_b + len_c)
         else:
             ind = np.argmin(ar_list)  # identify two axes with aspect ratio closest to 1
             if ind in [0, 1]:
