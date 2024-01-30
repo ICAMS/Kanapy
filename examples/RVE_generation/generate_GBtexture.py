@@ -21,9 +21,9 @@ size = 40  # size of RVE in micron
 periodic = False  # create periodic (True) or non-periodic (False) RVE
 # define statistical information on microstructure
 ms_elong = {'Grain type': 'Elongated',
-            'Equivalent diameter': {'std': 1.0, 'mean': 12.0, 'offs': 4.0, 'cutoff_min': 8.0, 'cutoff_max': 18.0},
-            'Aspect ratio': {'std': 0.5, 'mean': 2.0, 'offs': 0.8, 'cutoff_min': 1.0, 'cutoff_max': 3.0},
-            "Tilt angle": {"std": 1.0, "mean": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
+            'Equivalent diameter': {'sig': 1.0, 'scale': 12.0, 'loc': 4.0, 'cutoff_min': 8.0, 'cutoff_max': 18.0},
+            'Aspect ratio': {'sig': 0.5, 'scale': 2.0, 'loc': 0.8, 'cutoff_min': 1.0, 'cutoff_max': 3.0},
+            "Tilt angle": {"kappa": 1.0, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
             'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': nvox, 'Ny': nvox, 'Nz': nvox},
             'Simulation': {'periodicity': str(periodic), 'output_units': 'um'}}
 
@@ -75,17 +75,17 @@ if texture == 'goss':
     desc = 'unimodal'
     ang = [0, 45, 0]  # Euler angles (in degrees) for unimodal Goss texture
     omega = 7.5  # kernel half-width in degree
-    Nbase = 5000  # number of orientations from which set is sub-sampled
+    Nbase = 2000  # number of orientations from which set is sub-sampled
 elif texture == 'copper':
     desc = 'unimodal'
     ang = [90, 35, 45]  # Euler angles (in degrees) for unimodal copper texture
     omega = 7.5
-    Nbase = 5000
+    Nbase = 2000
 elif texture == 'random':
     desc = 'random'
     ang = None  # for Random texture, no ODF recreation is necessary
     omega = None
-    Nbase = 5000
+    Nbase = 2000
 else:
     raise ValueError('Texture not defined. Use "goss", "copper" or "random"')
 
