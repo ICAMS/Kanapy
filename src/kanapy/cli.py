@@ -44,6 +44,20 @@ def docs(ctx):
     click.echo('')
 
 
+@main.command(name='copyExamples')
+@click.pass_context
+def docs(ctx):
+    """ Copies examples to local filesystem."""
+
+    click.echo('')
+    dst = os.path.join(os.getcwd(), 'examples')
+    epath = os.path.join(MAIN_DIR, 'examples')
+    if os.path.exists(dst):
+        raise IsADirectoryError('{0} already exists'.format(dst))
+    shutil.copytree(epath, dst)
+    click.echo(f'Copied examples to "{dst}".')
+
+
 @main.command(name='setupTexture')
 @click.option('-admin', default=False)
 @click.pass_context
