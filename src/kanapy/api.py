@@ -404,7 +404,7 @@ class Microstructure(object):
     --------        Import/Export methods        --------
     """
 
-    def write_abq(self, file=None, path='./', nodes=None, voxel_dict=None, grain_dict=None,
+    def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
                    dual_phase=False, thermal=False, units=None):
         """ Writes out the Abaqus (.inp) file for the generated RVE."""
         if nodes is None:
@@ -987,13 +987,15 @@ class Microstructure(object):
 
     def init_stats(self, descriptor=None, gs_data=None, ar_data=None, porous=False, save_files=False):
         """ Legacy function for plot_stats_init."""
-        logging.warning('This legacy function is depracted, please use "plot_stats_init()".')
+        logging.warning('"init_stats" is a legacy function and will be depracted, please use "plot_stats_init()".')
         self.plot_stats_init(descriptor, gs_data=gs_data, ar_data=ar_data, porous=porous, save_files=save_files)
 
     def output_abq(self, nodes=None, name=None,
                    voxel_dict=None, grain_dict=None, faces=None,
                    dual_phase=False, thermal=False, units=None):
         """ Legacy function for write_abq."""
-        logging.warning('This legacy function is depracted, please use "write_abq()".')
-        self.write_abq(nodes=nodes, name=name, voxel_dict=voxel_dict, grain_dict=grain_dict, faces=faces,
+        logging.warning('"output_abq" is a legacy function and will be depracted, please use "write_abq()".')
+        if faces is not None:
+            logging.warning('Parameter "faces" will be determined automatically.')
+        self.write_abq(nodes=nodes, file=name, voxel_dict=voxel_dict, grain_dict=grain_dict,
                        dual_phase=dual_phase, thermal=thermal, units=units)
