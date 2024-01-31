@@ -42,7 +42,7 @@ The texture module of Kanapy is implemented as
 
 # Installation
 
-The preferred method to install kanapy is through Anaconda or Miniconda
+The preferred method to install Kanapy is through Anaconda or Miniconda
 Python distributions. If you do not have any, we suggest installing
 [miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
@@ -71,13 +71,13 @@ to use Kanapy's texture module, a
 
 ## Installation as system administrator
 
-If system administrators with write access to the root directory of the knpy-environment want to install kanapy for all users, they need to run
+If system administrators with write access to the root directory of the knpy-environment want to install Kanapy for all users, they need to run
 
 ``` 
 (knpy) $ python admin_setup.py
 ```
 
-after activating the knpy-environment. This will automatically execute the kanapy installation and texture setup in administrator mode. After that step, users can directly access Kanapy in the conda environment.
+after activating the knpy-environment. This will automatically execute the Kanapy installation and texture setup in administrator mode. After that step, users can directly access Kanapy in the conda environment.
 
 # Running tests
 
@@ -103,13 +103,20 @@ $ conda activate knpy
 
 This will make the new version available in your knpy-environment. If your Kanapy installation has been setup for textures (MTEX module), this feature will not be affected by such updates. This update routine is also valid for global installations as system administrator.
 
+# Examples
+Kanapy comes with several examples in form of Python scripts and Juypter notebooks. If you want to create a local copy of the kanapy/examples directory, please run the command
+
+```
+(knpy) $ kanapy copyExamples          
+```
+
 # Documentation
 
-Open "kanapy/docs/index.html" in a browser to access the complete documentation for kanapy.
+Open "kanapy/docs/index.html" in a browser to access the complete documentation for Kanapy.
 
 The documentation is also available online on GitHub Pages: [https://icams.github.io/Kanapy/](https://icams.github.io/Kanapy/)
 
-The documentation for kanapy is generated using [Sphinx](http://www.sphinx-doc.org/en/master/). You can create or update your local documentation with the command
+The documentation for Kanapy is generated using [Sphinx](http://www.sphinx-doc.org/en/master/). You can create or update your local documentation with the command
 
 ```
 (knpy) $ kanapy genDocs                    
@@ -127,12 +134,12 @@ Kanapy's texture module requires
 
 ### Core dependencies
 
-Below are the listed dependencies for running kanapy:
+Below are the listed dependencies for running Kanapy:
 
 > -   [NumPy](http://numpy.scipy.org) for array manipulation.
 > -   [Scipy](https://www.scipy.org/) for functionalities like
 >     Convexhull.
-> -   [pytest](https://www.pytest.org) for running kanapy unit tests.
+> -   [pytest](https://www.pytest.org) for running Kanapy unit tests.
 > -   [sphinx](http://www.sphinx-doc.org/en/master/) for generating
 >     documentation.
 > -   [Matplotlib](https://matplotlib.org/) for plotting and
@@ -140,8 +147,8 @@ Below are the listed dependencies for running kanapy:
 
 ### Optional dependencies
 > -   [MATLAB](https://www.mathworks.com/products/matlab.html) for
->     texture module (coomercial software).
-> -   [MTEX](https://mtex-toolbox.github.io/) for texture module (Kanapy package contains MTEX version. 5.2.2..
+>     texture module (commercial software).
+> -   [MTEX](https://mtex-toolbox.github.io/) for texture module (Kanapy package contains MTEX version 5.2.2).
 > -   [OVITO](https://ovito.org/) for visualizing simulation data.
 
 
@@ -195,7 +202,7 @@ Kanapy is made available under the GNU AGPLv3
 
 # About
 
-The name kanapy is derived from the sanskrit word
+The name Kanapy is derived from the sanskrit word
 [káṇa](https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3) meaning
 particle. Kanapy is primarily developed at the [Interdisciplinary Center
 for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum -
