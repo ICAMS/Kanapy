@@ -281,13 +281,21 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
 
 def writeAbaqusMat(ialloy, angles, file=None, path='./', nsdv=200):
     """
+    Export Euler angles to Abaqus input deck that can be included in the _geom.inp file.
+
+    Parameters:
+    -----------
+    ialloy : int
+        Identifier, alloy number in ICAMS CP-UMAT: mod_alloys.f
     angles : dict or (N, 3)-ndarray
         Dict with Euler angles for each grain or array with number of N rows (= number of grains) and
             three columns phi1, Phi, phi2
-    ialloy : int
-        Identifier, alloy number in umat: mod_alloys.f
+    file : str
+        Filename, optional (default: None)
+    path : str
+        Path to save file, option (default: './')
     nsdv : int
-        Number of state dependant variables default value is 200
+        Number of state dependant variables, optional (default: 200)
     """
     if type(angles) is not dict:
         # converting (N, 3) ndarray to dict
@@ -315,7 +323,7 @@ def writeAbaqusMat(ialloy, angles, file=None, path='./', nsdv=200):
                                               ori[0], ori[1], ori[2]))
     return
 
-
+""" Function not used
 def writeAbaqusPhase(grains, nsdv=200):
     with open('Material.inp', 'w') as f:
         f.write('** MATERIALS\n')
@@ -327,7 +335,7 @@ def writeAbaqusPhase(grains, nsdv=200):
             f.write('*User Material, constants=1\n')
             f.write('{}\n'.format(float(grains[i + 1]['PhaseID'])))
     return
-
+"""
 
 def pickle2microstructure(file, path='./'):
     """Read pickled microstructure file.

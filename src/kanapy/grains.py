@@ -505,6 +505,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     for igr in mesh.grain_dict.keys():
         if grains[igr]['Volume'] < 1.e-5:
             logging.warning(f'No tet assigned to grain {igr}.')
+            # remove grain from shared area list
             if grains[igr]['Simplices']:
                 nf = len(grains[igr]['Simplices'])
                 logging.warning(f'Grain {igr} contains {nf} tets, but no volume')

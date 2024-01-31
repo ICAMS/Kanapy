@@ -303,11 +303,11 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     Parameters
     ----------
     num : int
-        Numberof Euler angles in set to be created.
+        Number of Euler angles in set to be created.
     ang : (3, ) or (M, 3) array
         Set of Euler angles (in degrees) defining the ODF.
     omega : float
-        Half-wodth of kernel in degrees.
+        Half-width of kernel in degrees.
     hist : array, optional
         Histogram of MDF. The default is None.
     shared_area: array, optional

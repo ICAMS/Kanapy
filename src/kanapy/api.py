@@ -189,7 +189,7 @@ class Microstructure(object):
             logging.info(f'Number of grains per phase changed from {self.nparticles} to ' +
                          f'{self.mesh.ngrains_phase} during voxelization.')
         self.ngrains = self.mesh.ngrains_phase
-        self.Ngr = np.sum(self.mesh.ngrains_phase, dtype=int)  # legacy notation
+        self.Ngr = np.sum(self.mesh.ngrains_phase, dtype=int)
 
     def smoothen(self, nodes_v=None, voxel_dict=None, grain_dict=None):
         """ Generates smoothed grain boundary from a voxelated mesh."""
@@ -224,6 +224,30 @@ class Microstructure(object):
 
         self.geometry = \
             calc_polygons(self.rve, self.mesh)  # updates RVE_data
+        # verify that geometry['Grains'] and mesh.grain_dict are consistent
+        if np.any(self.geometry['Ngrains'] != self.ngrains):
+            logging.warning(f'Only facets for {self.geometry["Ngrains"]} created, but {self.Ngr} grains in voxels.')
+            for igr in self.mesh.grain_dict.keys():
+                if igr not in self.geometry['Grains'].keys():
+                    logging.warning(f'Grain: {igr} not in geometry. Be aware when creating GB textures.')
+        # verify that geometry['GBarea'] is consistent with geometry['Grains']
+        gba = self.geometry['GBarea']
+        ind = []
+        igr = []
+        for i, gblist in enumerate(gba):
+            if not gblist[0] in self.geometry['Grains'].keys():
+                ind.append(i)
+                igr.append(gblist[0])
+                continue
+            if not gblist[1] in self.geometry['Grains'].keys():
+                ind.append(i)
+                igr.append(gblist[1])
+        if len(ind) > 0:
+            for i in ind.reverse():
+                logging.warning(f'Removing {gba[i]} from GBarea as grain {igr[i]} does not exist.')
+                gba.pop(i)
+            self.geometry['GBarea'] = gba
+
         self.res_data = \
             get_stats(self.rve.particle_data, self.geometry, self.rve.units, nphases)
         if empty_vox is not None:
@@ -264,8 +288,12 @@ class Microstructure(object):
             if self.geometry is None:
                 logging.warning('Grain boundary areas are not defined, cannot be considered in orientation assignment.')
                 gba = None
+                if hist is not None:
+                    raise ValueError('If histogram for GB texture is provided, GB areas must be defined.')
             else:
                 gba = self.geometry['GBarea']
+        else:
+            gba = shared_area
 
         ori_dict = dict()
         for ip, ngr in enumerate(self.ngrains):
