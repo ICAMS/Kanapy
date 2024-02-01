@@ -190,6 +190,11 @@ class Microstructure(object):
                          f'{self.mesh.ngrains_phase} during voxelization.')
         self.ngrains = self.mesh.ngrains_phase
         self.Ngr = np.sum(self.mesh.ngrains_phase, dtype=int)
+        # remove grain information if it already exists to avoid inconsistencies
+        if self.geometry is not None:
+            logging.info('Removing polyhedral grain geometries and statistical data after re-meshing.')
+            self.geometry = None
+            self.res_data = None
 
     def smoothen(self, nodes_v=None, voxel_dict=None, grain_dict=None):
         """ Generates smoothed grain boundary from a voxelated mesh."""
@@ -222,7 +227,7 @@ class Microstructure(object):
             grain_store = None
             nphases = self.rve.nphases
 
-        self.geometry = \
+        self.geometry: dict = \
             calc_polygons(self.rve, self.mesh)  # updates RVE_data
         # verify that geometry['Grains'] and mesh.grain_dict are consistent
         if np.any(self.geometry['Ngrains'] != self.ngrains):
