@@ -8,7 +8,8 @@ from kanapy.entities import Ellipsoid, Cuboid
 
 def write_dump(Ellipsoids, sim_box):
     """
-    Writes the (.dump) file, which can be read by visualization software OVITO.  
+    Writes the (.dump) files into a sub-directory "dump_files", which can be read by visualization software OVITO
+    or imported again into Kanapy to avoid the packing simulation.
 
     :param Ellipsoids: Contains information of ellipsoids such as its position, axes lengths and tilt angles 
     :type Ellipsoids: list    
@@ -19,8 +20,8 @@ def write_dump(Ellipsoids, sim_box):
     """
     num_particles = len(Ellipsoids)
     cwd = os.getcwd()
-    output_dir = cwd + '/dump_files'  # output directory
-    dump_outfile = output_dir + '/particle'  # output dump file
+    output_dir = os.path.join(cwd, 'dump_files')
+    dump_outfile = os.path.join(output_dir, 'particle')  # output dump file
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -38,8 +39,8 @@ def write_dump(Ellipsoids, sim_box):
             'OrientationZ OrientationW\n')
         for ell in Ellipsoids:
             qw, qx, qy, qz = ell.quat
-            f.write('{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n'.format(
-                ell.id, ell.x, ell.y, ell.z, ell.a, ell.b, ell.c, qx, qy, qz, qw))
+            f.write('{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11}\n'.format(
+                ell.id, ell.x, ell.y, ell.z, ell.a, ell.b, ell.c, qx, qy, qz, qw, ell.phasenum))
 
 
 def read_dump(file):
@@ -98,8 +99,9 @@ def read_dump(file):
                 a, b, c = values[4], values[5], values[6]  # Semi-major length, Semi-minor length 1 & 2
                 x, y, z = values[1], values[2], values[3]
                 qx, qy, qz, qw = values[7], values[8], values[9], values[10]
+                ip = int(values[11])
                 quat = np.array([qw, qx, qy, qz])
-                ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat)  # instance of Ellipsoid class
+                ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat, phasenum=ip)  # instance of Ellipsoid class
 
                 # Find the original particle if the current is duplicate
                 for c in values[0]:

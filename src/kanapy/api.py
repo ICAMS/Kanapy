@@ -19,7 +19,7 @@ from scipy.spatial import Delaunay
 
 from kanapy.grains import calc_polygons, get_stats
 from kanapy.entities import Simulation_Box
-from kanapy.input_output import export2abaqus, writeAbaqusMat
+from kanapy.input_output import export2abaqus, writeAbaqusMat, read_dump
 from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
@@ -215,7 +215,7 @@ class Microstructure(object):
         statistical comparison. Final RVE grain volumes and shared grain
         boundary surface areas info are written out as well."""
 
-        if self.mesh.grains is None:
+        if self.mesh is None or self.mesh.grains is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
         if self.porosity and 0 in self.mesh.grain_dict.keys():
             # in case of porosity, remove irregular grain 0 from analysis
@@ -317,7 +317,8 @@ class Microstructure(object):
                                  '"random" or "unimodal"')
             for i, igr in enumerate(self.mesh.grain_dict.keys()):
                 if self.mesh.grain_phase_dict[igr] == ip:
-                    ori_dict[igr] = ori_rve[i, :]
+                    ind = i - ip*self.ngrains[0]
+                    ori_dict[igr] = ori_rve[ind, :]
         self.mesh.grain_ori_dict = ori_dict
         return
 
@@ -1042,6 +1043,12 @@ class Microstructure(object):
         with open(file, 'wb') as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
         return
+
+    def import_particles(self, file, path='./'):
+        path = os.path.normpath(path)
+        file = os.path.join(path, file)
+        self.simbox, self.particles = read_dump(file)
+
 
     """
     --------        legacy methods        --------

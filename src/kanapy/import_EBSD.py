@@ -265,13 +265,12 @@ class EBSDmap:
             Array with Ng Euler angles.
 
         """
-
         ms = self.ms_data[iphase]
         orired, odfred, ero = \
             self.eng.textureReconstruction(Ng, 'orientation',
                                            ms['ori'], 'grains', ms['grains'], nargout=3)
 
-        if shared_area is None:
+        if shared_area is None or shared_area == 0:
             return np.array(self.eng.Euler(orired))
         else:
             orilist, ein, eout, mbin = \

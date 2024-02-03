@@ -225,6 +225,9 @@ class RVE_creator(object):
 
             dia_cutoff_min = stats["Equivalent diameter"]["cutoff_min"]
             dia_cutoff_max = stats["Equivalent diameter"]["cutoff_max"]
+            if dia_cutoff_min/dia_cutoff_max > 0.75:
+                raise ValueError('Min/Max values for cutoffs of equiavalent diameter are too close: ' +
+                                 f'Max: {dia_cutoff_max}, Min: {dia_cutoff_min}')
             # generate dict for particle data
             pdict = gen_data_basic(dict({'Type': stats["Grain type"], 'Phase': ip}))
 
@@ -236,12 +239,18 @@ class RVE_creator(object):
                 loc_AR = stats["Aspect ratio"][loc]
                 ar_cutoff_min = stats["Aspect ratio"]["cutoff_min"]
                 ar_cutoff_max = stats["Aspect ratio"]["cutoff_max"]
+                if ar_cutoff_min/ar_cutoff_max > 0.75:
+                    raise ValueError('Min/Max values for cutoffs of aspect ratio are too close: ' +
+                                     f'Max: {ar_cutoff_max}, Min: {ar_cutoff_min}')
 
                 # Extract grain tilt angle statistics info from dict
                 kappa = stats["Tilt angle"][kappa]
                 loc_ori = stats["Tilt angle"][loc]
                 ori_cutoff_min = stats["Tilt angle"]["cutoff_min"]
                 ori_cutoff_max = stats["Tilt angle"]["cutoff_max"]
+                if ori_cutoff_min/ori_cutoff_max > 0.75:
+                    raise ValueError('Min/Max values for cutoffs of orientation of tilt axis are too close: ' +
+                                     f'Max: {ori_cutoff_max}, Min: {ori_cutoff_min}')
 
                 # Add attributes for elongated particle to dictionary
                 pdict = gen_data_elong(pdict)

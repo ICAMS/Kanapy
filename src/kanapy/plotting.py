@@ -244,7 +244,7 @@ def plot_output_stats(dataDict,
     fig, ax = plt.subplots(1, 2, figsize=(15, 9))
 
     # Plot histogram
-    ax[0].hist(data, density=False, bins=binNum, label=label)
+    ax[0].hist(data, density=True, bins=binNum, label=label)
     ax[0].legend(loc="upper right", fontsize=16)
     ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
     ax[0].set_ylabel('Frequency', fontsize=18)
@@ -307,11 +307,11 @@ def plot_output_stats(dataDict,
             par_AR = np.sort(np.asarray(dataDict['Particle_Major_diameter']) /
                              np.asarray(dataDict['Particle_Minor_diameter']))
             # Concatenate corresponding arrays to compute shared bins
-            total_AR = np.concatenate([par_AR, grain_AR])
+            total_AR = np.concatenate([grain_AR, par_AR])
             sig_par, loc_par, sc_par = lognorm.fit(par_AR)
             par_lognorm = lognorm(sig_par, loc=loc_par, scale=sc_par)
-            data = [par_AR, grain_AR]
-            label = ['Particles', 'Grains']
+            data = [grain_AR, par_AR]
+            label = [ 'Grains', 'Particles']
         else:
             total_AR = grain_AR
             data = [grain_AR]
@@ -326,26 +326,28 @@ def plot_output_stats(dataDict,
         sns.set(color_codes=True)
         fig, ax = plt.subplots(1, 2, figsize=(15, 9))
         # Plot histogram
-        ax[0].hist(data, density=False, bins=len(shared_AR), label=label)
+        ax[0].hist(data, density=True, bins=len(shared_AR), label=label)
         ax[0].legend(loc="upper right", fontsize=16)
         ax[0].set_xlabel('Aspect ratio', fontsize=18)
         ax[0].set_ylabel('Frequency', fontsize=18)
         ax[0].tick_params(labelsize=14)
 
         # Plot PDF
+        ypdf2 = grain_lognorm.pdf(grain_AR)
+        area = np.trapz(ypdf2, grain_AR)
+        if np.isclose(area, 0.0):
+            logging.debug('Small area for aspect ratio of grains.')
+            logging.debug(ypdf2, grain_AR)
+            area = 1.0
+        ypdf2 /= area
+        ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label='Grains')
+        ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3)
         if particles and 'Particle_Minor_diameter' in dataDict.keys():
             ypdf1 = par_lognorm.pdf(par_AR)
             area = np.trapz(ypdf1, par_AR)
             ypdf1 /= area
             ax[1].plot(par_AR, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
             ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
-        ypdf2 = grain_lognorm.pdf(grain_AR)
-        area = np.trapz(ypdf2, grain_AR)
-        if np.isclose(area, 0.0):
-            area = 1.0
-        ypdf2 /= area
-        ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label='Grains')
-        ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3)
         if ar_param is not None:
             x0 = np.amin(1.0)
             x1 = np.amax(grain_AR)

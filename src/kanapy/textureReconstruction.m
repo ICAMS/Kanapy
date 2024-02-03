@@ -32,7 +32,7 @@ function [orired_f,odfred_f,ero,varargout]=...
 % Output: reduced orientation set, ODF and L1 error 
 % 
 %% input fields and checks
-
+mtex_progress = 1; % Avoid progress output
 options = {'ebsdMatFile','ebsd','orientation'};
 flag = 1; 
 grains = [];
@@ -136,17 +136,11 @@ end
 
 ll=10;
 hl = 55;
-
 step = 1;
-
 ero=100;
-
 e_mod = [];
-
 lim = 10;
-
 hh=[];
-
 kappa = psi.halfwidth*180/pi; % initial kernel shape
 %%
 tic
@@ -218,7 +212,7 @@ ori_f = S3G(screen==1);
 
 oriseq_p = oriseq(fval>1);
 
-ind = num2cell(fval(fval>1)');
+ind = num2cell(fval(fval>1)'); %'
 pendList = cellfun(@splitMean, oriseq_p, ind, 'UniformOutput', false);
 
 ori_f = [ori_f [pendList{:}]];
@@ -227,12 +221,12 @@ ori_f = [ori_f [pendList{:}]];
 hh = [hh h];
 er = calcError(odf,odfred);
 
-er = calcError(odf,odfred);
+%er = calcError(odf,odfred);
 if er<ero
-    orired_f=ori_f;
+    orired_f = ori_f;
     odfred_f = odfred;
     ohw = h;
-    ero=er;
+    ero = er;
 end
 e_mod = [e_mod er];
 

@@ -48,7 +48,7 @@ i2 = randi([1 max(index)],1);
 % switch index
 index([i1 i2]) = index([i2 i1]);
 orilist([i1 i2]) = orilist([i2 i1]);
-an = angle(orilist'*orilist);
+an = angle(orilist'*orilist); %'
 a_out = an(bin_score_area~=0);
 [~,loc] = histc(a_out,bins);
 et = sparse(loc,1:length(loc),area,nbin,length(loc));
