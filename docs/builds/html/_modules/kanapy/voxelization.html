@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.voxelization &mdash; kanapy 6.0.1 documentation</title>
+  <title>kanapy.voxelization &mdash; kanapy 6.1.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=b6ed0530"></script>
+        <script src="../../_static/documentation_options.js?v=54b8411a"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.0.1
+                6.1.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -103,7 +103,8 @@
 <span class="sd">    :returns: Boolean values representing the status. If inside: **True**, else **False**</span>
 <span class="sd">    :rtype: numpy array</span>
 
-<span class="sd">    .. seealso:: https://stackoverflow.com/questions/21698630/how-can-i-find-if-a-point-lies-inside-or-outside-of-convexhull</span>
+<span class="sd">    .. seealso::</span>
+<span class="sd">       https://stackoverflow.com/questions/21698630/how-can-i-find-if-a-point-lies-inside-or-outside-of-convexhull</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">hull</span><span class="o">.</span><span class="n">equations</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">hull</span><span class="o">.</span><span class="n">equations</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]))</span>
@@ -113,7 +114,7 @@
 
 <div class="viewcode-block" id="assign_voxels_to_ellipsoid">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.voxelization.assign_voxels_to_ellipsoid">[docs]</a>
-<span class="k">def</span> <span class="nf">assign_voxels_to_ellipsoid</span><span class="p">(</span><span class="n">cooDict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">vf_target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">assign_voxels_to_ellipsoid</span><span class="p">(</span><span class="n">cooDict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">,</span> <span class="n">vf_target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Determines voxels belonging to each ellipsoid    </span>
 
@@ -121,8 +122,10 @@
 <span class="sd">    :type cooDict: Python dictionary</span>
 <span class="sd">    :param Ellipsoids: Ellipsoids from the packing routine.</span>
 <span class="sd">    :type Ellipsoids: list</span>
-<span class="sd">    :param elmtDict: Element dictionary containing element IDs and nodal connectivities. </span>
-<span class="sd">    :type elmtDict: Python dictionary       </span>
+<span class="sd">    :param voxel_dict: Element dictionary containing element IDs and nodal connectivities.</span>
+<span class="sd">    :type voxel_dict: Python dictionary</span>
+<span class="sd">    :param vf_target: target value for volume fraction of particles (optional, default: None)</span>
+<span class="sd">    :type: float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Assigning voxels to grains&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">vf_target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">vf_target</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
@@ -180,17 +183,17 @@
             <span class="c1"># Extract the voxel ids inside the hull</span>
             <span class="n">inside_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bbox_testids</span><span class="p">[</span><span class="n">results</span><span class="p">])</span>
 
-            <span class="c1"># Check if the new found voxels share atlest 4 nodes with</span>
+            <span class="c1"># Check if the newly found voxels share at least 4 nodes with</span>
             <span class="c1"># ellipsoid nodes</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">):</span>
                 <span class="c1"># Extract single instance of all nodes currently belonging</span>
                 <span class="c1"># to the ellipsoid</span>
-                <span class="n">all_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">elmtDict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">inside_voxels</span><span class="p">]</span>
+                <span class="n">all_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">inside_voxels</span><span class="p">]</span>
                 <span class="n">merged_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">all_nodes</span><span class="p">))</span>
                 <span class="n">ell_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">merged_nodes</span><span class="p">)</span>
 
                 <span class="c1"># Extract single instance of all nodes currently to be tested</span>
-                <span class="n">nids</span> <span class="o">=</span> <span class="p">[</span><span class="n">elmtDict</span><span class="p">[</span><span class="n">vid</span><span class="p">]</span> <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">inside_ids</span><span class="p">]</span>
+                <span class="n">nids</span> <span class="o">=</span> <span class="p">[</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">vid</span><span class="p">]</span> <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">inside_ids</span><span class="p">]</span>
                 <span class="n">m_nids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">nids</span><span class="p">))</span>
                 <span class="n">e_nids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">m_nids</span><span class="p">)</span>
 
@@ -210,7 +213,7 @@
                         <span class="c1"># Find the voxels that have these common nodes</span>
                         <span class="n">int_assigned</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
                         <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">inside_ids</span><span class="p">:</span>
-                            <span class="n">nds</span> <span class="o">=</span> <span class="n">elmtDict</span><span class="p">[</span><span class="n">vid</span><span class="p">]</span>
+                            <span class="n">nds</span> <span class="o">=</span> <span class="n">voxel_dict</span><span class="p">[</span><span class="n">vid</span><span class="p">]</span>
 
                             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ell_nodes</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">nds</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
                                 <span class="n">int_assigned</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vid</span><span class="p">)</span>
@@ -227,7 +230,7 @@
                                 <span class="n">inside_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span>
                                     <span class="n">i</span><span class="p">)</span>  <span class="c1"># Remove the assigned voxel from the list</span>
 
-                                <span class="n">nds</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">elmtDict</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                                <span class="n">nds</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                                 <span class="n">ell_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">nds</span><span class="p">)</span>  <span class="c1"># Update the actual ellipsoid node list</span>
                                 <span class="n">e_nids</span> <span class="o">-=</span> <span class="n">nds</span>  <span class="c1"># update the current node list (testing)</span>
                         <span class="k">else</span><span class="p">:</span>
@@ -247,10 +250,10 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Each voxel should share at least 4 nodes with the remaining voxels</span>
                 <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">inside_ids</span><span class="p">:</span>
-                    <span class="n">nds</span> <span class="o">=</span> <span class="n">elmtDict</span><span class="p">[</span><span class="n">vid</span><span class="p">]</span>
+                    <span class="n">nds</span> <span class="o">=</span> <span class="n">voxel_dict</span><span class="p">[</span><span class="n">vid</span><span class="p">]</span>
 
                     <span class="n">rem_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inside_ids</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">vid</span><span class="p">]</span>
-                    <span class="n">all_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">elmtDict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rem_ids</span><span class="p">]</span>
+                    <span class="n">all_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rem_ids</span><span class="p">]</span>
                     <span class="n">merged_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">all_nodes</span><span class="p">))</span>
                     <span class="n">rem_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">merged_nodes</span><span class="p">)</span>
 
@@ -260,14 +263,11 @@
                         <span class="n">ellipsoid</span><span class="o">.</span><span class="n">inside_voxels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vid</span><span class="p">)</span>
                         <span class="n">assigned_voxels</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vid</span><span class="p">)</span>
 
-                        <span class="c1">## scale ellipsoid dimensions back to original by the growth factor</span>
-                <span class="c1"># ellipsoid.a, ellipsoid.b, ellipsoid.c = ellipsoid.a/scale, ellipsoid.b/scale, ellipsoid.c/scale</span>
-
         <span class="c1"># find the remaining voxels</span>
         <span class="n">remaining_voxels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cooDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="o">-</span> <span class="n">assigned_voxels</span>
 
         <span class="c1"># Reassign at the end of each growth cycle</span>
-        <span class="n">reassign_shared_voxels</span><span class="p">(</span><span class="n">cooDict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">)</span>
+        <span class="n">reassign_shared_voxels</span><span class="p">(</span><span class="n">cooDict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">)</span>
 
         <span class="c1"># Update the test_points and ids to remaining voxels</span>
         <span class="n">test_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">remaining_voxels</span><span class="p">))</span>
@@ -288,14 +288,16 @@
 
 <div class="viewcode-block" id="reassign_shared_voxels">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.voxelization.reassign_shared_voxels">[docs]</a>
-<span class="k">def</span> <span class="nf">reassign_shared_voxels</span><span class="p">(</span><span class="n">cooDict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">reassign_shared_voxels</span><span class="p">(</span><span class="n">cooDict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Assigns shared voxels between ellipsoids to the ellipsoid with the closest center.</span>
 
 <span class="sd">    :param cooDict: Voxel dictionary containing voxel IDs and center coordinates. </span>
 <span class="sd">    :type cooDict: Python dictionary            </span>
 <span class="sd">    :param Ellipsoids: Ellipsoids from the packing routine.</span>
-<span class="sd">    :type Ellipsoids: list               </span>
+<span class="sd">    :type Ellipsoids: list</span>
+<span class="sd">    :param voxel_dict: Dictionary of element definitions</span>
+<span class="sd">    :type voxel_dict: dict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Find all combination of ellipsoids to check for shared voxels</span>
     <span class="n">combis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
@@ -322,12 +324,12 @@
         <span class="k">for</span> <span class="n">vox</span><span class="p">,</span> <span class="n">ells</span> <span class="ow">in</span> <span class="n">vox_ellDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">vox</span> <span class="ow">in</span> <span class="n">shared_voxels</span><span class="p">:</span>
                 <span class="n">ells</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ells</span><span class="p">)</span>
-                <span class="n">nids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">elmtDict</span><span class="p">[</span><span class="n">vox</span><span class="p">])</span>
+                <span class="n">nids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">vox</span><span class="p">])</span>
                 <span class="n">common_nodes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
                 <span class="n">len_common_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 
                 <span class="k">for</span> <span class="n">ellipsoid</span> <span class="ow">in</span> <span class="n">ells</span><span class="p">:</span>
-                    <span class="n">all_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">elmtDict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">inside_voxels</span><span class="p">]</span>
+                    <span class="n">all_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ellipsoid</span><span class="o">.</span><span class="n">inside_voxels</span><span class="p">]</span>
                     <span class="n">merged_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">all_nodes</span><span class="p">))</span>
                     <span class="n">ell_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">merged_nodes</span><span class="p">)</span>
                     <span class="n">common_nodes</span><span class="p">[</span><span class="n">ellipsoid</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">ell_nodes</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">nids</span><span class="p">)</span>
@@ -410,8 +412,8 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.voxelization.voxelizationRoutine">[docs]</a>
 <span class="k">def</span> <span class="nf">voxelizationRoutine</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">porosity</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`, :meth:`create_voxels`</span>
-<span class="sd">    , :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`</span>
+<span class="sd">    The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`,</span>
+<span class="sd">    :meth:`create_voxels`, :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`</span>
 <span class="sd">    </span>
 <span class="sd">    .. note:: 1. The RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution </span>
 <span class="sd">                 is read by loading the JSON file that is generated by :meth:`kanapy.input_output.read_dump`.</span>
@@ -468,7 +470,7 @@
     <span class="c1"># empty voxels will get phase number 1</span>
     <span class="n">ph_arr</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nvox</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-    <span class="n">mesh</span><span class="o">.</span><span class="n">ngrains_phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nphases</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">ngrains_phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nphases</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">ih</span><span class="p">,</span> <span class="n">il</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">il</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">il</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="n">ip</span> <span class="o">=</span> <span class="n">Ellipsoids</span><span class="p">[</span><span class="n">ih</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">phasenum</span>
@@ -488,7 +490,6 @@
         <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Grain key &quot;0&quot; is reserved for porous structures. Cannot continue with porosity.&#39;</span><span class="p">)</span>
         <span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind</span>
-        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">gr_arr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">ind</span><span class="p">)</span>
         <span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">mesh</span><span class="o">.</span><span class="n">ngrains_phase</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="k">elif</span> <span class="n">porous_cur</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>

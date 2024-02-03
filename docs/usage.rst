@@ -5,9 +5,12 @@ Usage
 ======
 
 Kanapy's CLI
------------- 
+------------
 
-The available commands in Kanapy's CLI and its usage is described here. The ``$ kanapy --help`` command 
+Kanapy provides some basic command line instructions to manage the installation. 
+The  
+
+``$ kanapy --help`` command 
 details this as shown:
 
 .. note:: Make sure that you are within the virtual environment created during the kanapy installation, as 
@@ -23,39 +26,16 @@ details this as shown:
               --help  Show this message and exit.
 
             Commands:
-              abaqusOutput  Writes out the Abaqus (.inp) file for the generated RVE.
-              autoComplete  Kanapy bash auto completion.
+              copyExamples  Creates local copy of Kanapy's example directory.
               genDocs       Generates a HTML-based reference documentation.
-              genRVE        Creates RVE based on the data provided in the input file.
-              genStats      Generates particle statistics based on the data provided in...
-              neperOutput   Writes out particle position and weights files required for...
-              outputStats   Writes out the particle- and grain diameter attributes for...
-              pack          Packs the particles into a simulation box.
-              plotStats     Plots the particle- and grain diameter attributes for...
-              readGrains    Generates particles based on the grain data provided in the...
-              reduceODF     Texture reduction algorithm with optional Misorientation...
-              runTests      Runs unittests built within kanapy.
-              setupTexture  Stores the user provided MATLAB & MTEX paths for texture...
-              voxelize      Generates the RVE by assigning voxels to grains.
-
+              runTests      Runs unittests built-in to Kanapy.
+              setupTexture  Stores the user provided MATLAB & MTEX paths for texture.
   
-The functionality and the arguments of each command listed above can be requested. For example:
 
-.. code-block:: console
+Kanapy's API (incomplete)
+-------------------------
 
-    (knpy) $ kanapy genStats --help
-            Usage: kanapy genStats [OPTIONS]
-
-              Generates particle statistics based on the data provided in the input
-              file.
-
-            Options:
-              -f TEXT  Input statistics file name in the current directory.
-              --help   Show this message and exit.
-
-
-.. note:: Bash auto-completion option is avaiable for Kanapy's CLI commands. Run: :bash:`kanapy autoComplete` to set it up 
-
+Under construction ...
 
 Detailed tutorial
 ------------------           
@@ -91,22 +71,24 @@ An exemplary structure of the input file: ``stat_input.json`` is shown below:
     {
       "Equivalent diameter": 
         {
-          "std": 0.39,
-          "mean": 2.418,
+          "sig": 0.39,
+          "scale": 2.418,
+          "loc": 0.0,
           "cutoff_min": 8.0,
           "cutoff_max": 25.0
         },
       "Aspect ratio": 
         {
-          "std": 0.3,
-          "mean": 0.918,
+          "sig": 0.3,
+          "scale": 0.918,
+          "loc": 0.0
           "cutoff_min": 1.0,
           "cutoff_max": 4.0        
         },           
       "Tilt angle":
         {
-          "std": 15.8774,
-          "mean": 87.4178, 
+          "kappa": 15.8774,
+          "loc": 87.4178, 
           "cutoff_min": 75.0,
           "cutoff_max": 105.0            
         },            
@@ -185,14 +167,18 @@ file will be written out in either :math:`mm` or :math:`\mu m` scale.
 .. _Abaqus: https://www.3ds.com/products-services/simulia/products/abaqus/
 
 
-.. code-block:: console
+.. code-block:: python
 
-    $ conda activate knpy
-    (knpy) $ cd kanapy-master/examples/sphere_packing/
-    (knpy) $ kanapy genStats -f stat_input.json
-    (knpy) $ kanapy genRVE -f stat_input.json
-    (knpy) $ kanapy pack
-    (knpy) $ kanapy neperOutput -timestep 750
+    > ms = knpy.Microstructure(descriptor=ms_elong, name=matname + '_' + texture + '_texture')
+    > ms.init_RVE()  # initialize RVE including particle distribution and structured mesh
+    > ms.plot_stats_init()  # plot initial statistics of equivalent grain diameter and aspect ratio
+    > ms.pack()  # perform particle simulation to distribute grain nuclei in RVE volume
+    > ms.plot_ellipsoids()  # plot final configuration of particles
+    > ms.voxelize()  # assign voxels to grains according to particle configuration
+    > ms.plot_voxels(sliced=True)  # plot voxels colored according to grain number
+    > ms.generate_grains()  # generate a polyhedral hull around each voxelized grain
+    > ms.plot_grains()  # plot polyhedral grains
+    > ms.plot_stats()  # compared final grain statistics with initial parameters
 
 After navigating to the directory where the input file ``stat_input.json`` is located, kanapy's CLI 
 command ``genStats`` is executed along with its argument (name of the input file). It creates an exemplary

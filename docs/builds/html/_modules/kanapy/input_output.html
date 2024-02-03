@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.input_output &mdash; kanapy 6.0.1 documentation</title>
+  <title>kanapy.input_output &mdash; kanapy 6.1.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=b6ed0530"></script>
+        <script src="../../_static/documentation_options.js?v=54b8411a"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.0.1
+                6.1.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -92,21 +92,20 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.write_dump">[docs]</a>
 <span class="k">def</span> <span class="nf">write_dump</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Writes the (.dump) file, which can be read by visualization software OVITO.  </span>
+<span class="sd">    Writes the (.dump) files into a sub-directory &quot;dump_files&quot;, which can be read by visualization software OVITO</span>
+<span class="sd">    or imported again into Kanapy to avoid the packing simulation.</span>
 
 <span class="sd">    :param Ellipsoids: Contains information of ellipsoids such as its position, axes lengths and tilt angles </span>
 <span class="sd">    :type Ellipsoids: list    </span>
 <span class="sd">    :param sim_box: Contains information of the dimensions of the simulation box</span>
-<span class="sd">    :type sim_box: :obj:`Cuboid`    </span>
-<span class="sd">    :param num_particles: Total number of ellipsoids in the simulation box </span>
-<span class="sd">    :type num_particles: int    </span>
+<span class="sd">    :type sim_box: :obj:`Cuboid`</span>
 
 <span class="sd">    .. note:: This function writes (.dump) files containing simulation domain and ellipsoid attribute information. </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">num_particles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">)</span>
     <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/dump_files&#39;</span>  <span class="c1"># output directory</span>
-    <span class="n">dump_outfile</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="s1">&#39;/particle&#39;</span>  <span class="c1"># output dump file</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="s1">&#39;dump_files&#39;</span><span class="p">)</span>
+    <span class="n">dump_outfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;particle&#39;</span><span class="p">)</span>  <span class="c1"># output dump file</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
 
@@ -120,11 +119,12 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">top</span><span class="p">))</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sim_box</span><span class="o">.</span><span class="n">back</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">front</span><span class="p">))</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-            <span class="s1">&#39;ITEM: ATOMS id x y z AsphericalShapeX AsphericalShapeY AsphericalShapeZ OrientationX OrientationY OrientationZ OrientationW</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="s1">&#39;ITEM: ATOMS id x y z AsphericalShapeX AsphericalShapeY AsphericalShapeZ OrientationX OrientationY &#39;</span> <span class="o">+</span>
+            <span class="s1">&#39;OrientationZ OrientationW</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">ell</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
             <span class="n">qw</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span> <span class="o">=</span> <span class="n">ell</span><span class="o">.</span><span class="n">quat</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1"> </span><span class="si">{2}</span><span class="s1"> </span><span class="si">{3}</span><span class="s1"> </span><span class="si">{4}</span><span class="s1"> </span><span class="si">{5}</span><span class="s1"> </span><span class="si">{6}</span><span class="s1"> </span><span class="si">{7}</span><span class="s1"> </span><span class="si">{8}</span><span class="s1"> </span><span class="si">{9}</span><span class="s1"> </span><span class="si">{10}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">ell</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">,</span> <span class="n">qw</span><span class="p">))</span></div>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1"> </span><span class="si">{2}</span><span class="s1"> </span><span class="si">{3}</span><span class="s1"> </span><span class="si">{4}</span><span class="s1"> </span><span class="si">{5}</span><span class="s1"> </span><span class="si">{6}</span><span class="s1"> </span><span class="si">{7}</span><span class="s1"> </span><span class="si">{8}</span><span class="s1"> </span><span class="si">{9}</span><span class="s1"> </span><span class="si">{10}</span><span class="s1"> </span><span class="si">{11}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">ell</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">,</span> <span class="n">qw</span><span class="p">,</span> <span class="n">ell</span><span class="o">.</span><span class="n">phasenum</span><span class="p">))</span></div>
 
 
 
@@ -178,7 +178,7 @@
             <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;=</span> <span class="n">par_line_num</span><span class="p">:</span>
 
                 <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="n">values</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span>
+                <span class="n">values</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\S+&#39;</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span>
                 <span class="n">int_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
                 <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">int_values</span>
 
@@ -186,8 +186,9 @@
                 <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>  <span class="c1"># Semi-major length, Semi-minor length 1 &amp; 2</span>
                 <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
                 <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">,</span> <span class="n">qw</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+                <span class="n">ip</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">11</span><span class="p">])</span>
                 <span class="n">quat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">qw</span><span class="p">,</span> <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">])</span>
-                <span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">Ellipsoid</span><span class="p">(</span><span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">)</span>  <span class="c1"># instance of Ellipsoid class</span>
+                <span class="n">ellipsoid</span> <span class="o">=</span> <span class="n">Ellipsoid</span><span class="p">(</span><span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">,</span> <span class="n">phasenum</span><span class="o">=</span><span class="n">ip</span><span class="p">)</span>  <span class="c1"># instance of Ellipsoid class</span>
 
                 <span class="c1"># Find the original particle if the current is duplicate</span>
                 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
@@ -207,25 +208,26 @@
 
 <div class="viewcode-block" id="export2abaqus">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.export2abaqus">[docs]</a>
-<span class="k">def</span> <span class="nf">export2abaqus</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mm&#39;</span><span class="p">,</span>
-                  <span class="n">grain_facesDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">export2abaqus</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">grain_dict</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;mm&#39;</span><span class="p">,</span>
+                  <span class="n">gb_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates an ABAQUS input file with microstructure morphology information</span>
 <span class="sd">    in the form of nodes, elements and element sets.</span>
 
-<span class="sd">    .. note:: 1. JSON files generated by :meth:`kanapy.voxelization.voxelizationRoutine` are read to generate the ABAQUS (.inp) file.</span>
-<span class="sd">                 The json files contain:</span>
+<span class="sd">    .. note:: 1. JSON files generated by :meth:`kanapy.voxelization.voxelizationRoutine` are read to generate</span>
+<span class="sd">                 the ABAQUS (.inp) file. The json files contain:</span>
 
 <span class="sd">                 * Node ID and its corresponding coordinates</span>
 <span class="sd">                 * Element ID with its nodal connectivities</span>
 <span class="sd">                 * Element sets representing grains (Assembly of elements) </span>
 <span class="sd">                 </span>
-<span class="sd">              2. The nodal coordinates are written out in :math:`mm` or :math:`\mu m` scale, as requested by the user in the input file.</span>
+<span class="sd">              2. The nodal coordinates are written out in :math:`mm` or :math:`\mu m` scale, as requested by the</span>
+<span class="sd">                 user in the input file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="k">def</span> <span class="nf">write_grain_sets</span><span class="p">():</span>
         <span class="c1"># Create element sets for grains</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">grain_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*ELSET, ELSET=GRAIN</span><span class="si">{0}</span><span class="s1">_SET</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">enum</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
@@ -234,44 +236,37 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">, &#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">enum</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
         <span class="c1"># Create sections</span>
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                <span class="s1">&#39;*Solid Section, elset=GRAIN</span><span class="si">{0}</span><span class="s1">_SET, material=GRAIN</span><span class="si">{1}</span><span class="s1">_MAT</span><span class="se">\n</span><span class="s1">&#39;</span>\
-                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+                <span class="s1">&#39;*Solid Section, elset=GRAIN</span><span class="si">{0}</span><span class="s1">_SET, material=GRAIN</span><span class="si">{1}</span><span class="s1">_MAT</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
         <span class="k">return</span>
-    
+
     <span class="k">def</span> <span class="nf">write_phase_sets</span><span class="p">():</span>
         <span class="c1"># Create element sets for phases</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">grain_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*ELSET, ELSET=PHASE</span><span class="si">{0}</span><span class="s1">_SET</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">enum</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">enum</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">, &#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">enum</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
-                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
         <span class="c1"># Create sections</span>
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">elmtSetDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                <span class="s1">&#39;*Solid Section, elset=PHASE</span><span class="si">{0}</span><span class="s1">_SET, material=PHASE</span><span class="si">{1}</span><span class="s1">_MAT</span><span class="se">\n</span><span class="s1">&#39;</span>\
-                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+                <span class="s1">&#39;*Solid Section, elset=PHASE</span><span class="si">{0}</span><span class="s1">_SET, material=PHASE</span><span class="si">{1}</span><span class="s1">_MAT</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
         <span class="k">return</span>
-            
 
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Writing ABAQUS (.inp) file&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Writing RVE as ABAQUS file &quot;</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
     <span class="c1"># select element type</span>
-    <span class="k">if</span> <span class="n">grain_facesDict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">gb_area</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">thermal</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Using brick element type C3D8T for coupled structural-thermal analysis.&#39;</span><span class="p">)</span>
             <span class="n">eltype</span> <span class="o">=</span> <span class="s1">&#39;C3D8T&#39;</span>
@@ -288,7 +283,7 @@
     <span class="k">elif</span> <span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;um&#39;</span><span class="p">:</span>
         <span class="n">scale_fact</span> <span class="o">=</span> <span class="mf">1.</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Units must be either &quot;mm&quot; or &quot;um&quot;, not &quot;</span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s1">&quot;&#39;</span>\
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Units must be either &quot;mm&quot; or &quot;um&quot;, not &quot;</span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">units</span><span class="p">))</span>
 
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -304,10 +299,10 @@
         <span class="c1"># Create nodes</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
             <span class="c1"># Write out coordinates in &#39;mm&#39; or &#39;um&#39;</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">, </span><span class="si">{3}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">scale_fact</span><span class="p">,</span>
-                                        <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">scale_fact</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">scale_fact</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">, </span><span class="si">{1}</span><span class="s1">, </span><span class="si">{2}</span><span class="s1">, </span><span class="si">{3}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">scale_fact</span><span class="p">,</span>
+                                                  <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">scale_fact</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">scale_fact</span><span class="p">))</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*ELEMENT, TYPE=</span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">eltype</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">grain_facesDict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">gb_area</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># export voxelized structure with regular hex mesh</span>
             <span class="c1"># Create Elements</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">voxel_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -322,7 +317,7 @@
             <span class="n">fcList</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="n">fcNum</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">gr_fcs</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">ginfo</span> <span class="ow">in</span> <span class="n">grain_facesDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">ginfo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gb_area</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">fc</span><span class="p">,</span> <span class="n">conn</span> <span class="ow">in</span> <span class="n">ginfo</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">fc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fcList</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                         <span class="n">fcNum</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -335,7 +330,7 @@
 
             <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">fcs</span> <span class="ow">in</span> <span class="n">gr_fcs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*ELSET, ELSET=GRAIN</span><span class="si">{}</span><span class="s1">_SET</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gid</span><span class="p">))</span>
-                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fcs</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fcs</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">enum</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">enum</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">fcs</span><span class="p">):</span>
                             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">el</span><span class="p">)</span>
@@ -360,15 +355,18 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*End Instance</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*End Assembly</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** MATERIALS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** MATERIALS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Material, name=PHASE</span><span class="si">{}</span><span class="s1">_MAT</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**Include, input=Material</span><span class="si">{}</span><span class="s1">.inp</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Include, input=</span><span class="si">{}</span><span class="s1">mat.inp</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">8</span><span class="p">]))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----&gt;DONE!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">return</span></div>
 
@@ -377,52 +375,63 @@
 <div class="viewcode-block" id="writeAbaqusMat">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.writeAbaqusMat">[docs]</a>
 <span class="k">def</span> <span class="nf">writeAbaqusMat</span><span class="p">(</span><span class="n">ialloy</span><span class="p">,</span> <span class="n">angles</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    angles : Euler angles with number of rows= number of grains and</span>
-<span class="sd">            three columns phi1, Phi, phi2</span>
-<span class="sd">    ialloy : alloy number in the umat, mod_alloys.f</span>
-<span class="sd">    nsdv : number of state dependant variables default value is 200</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">nitem</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span>
-    <span class="n">titem</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">grains&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nitem</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Export Euler angles to Abaqus input deck that can be included in the _geom.inp file.</span>
 
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    ialloy : int</span>
+<span class="sd">        Identifier, alloy number in ICAMS CP-UMAT: mod_alloys.f</span>
+<span class="sd">    angles : dict or (N, 3)-ndarray</span>
+<span class="sd">        Dict with Euler angles for each grain or array with number of N rows (= number of grains) and</span>
+<span class="sd">            three columns phi1, Phi, phi2</span>
+<span class="sd">    file : str</span>
+<span class="sd">        Filename, optional (default: None)</span>
+<span class="sd">    path : str</span>
+<span class="sd">        Path to save file, option (default: &#39;./&#39;)</span>
+<span class="sd">    nsdv : int</span>
+<span class="sd">        Number of state dependant variables, optional (default: 200)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">angles</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="c1"># converting (N, 3) ndarray to dict</span>
+        <span class="n">gr_ori_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">igr</span><span class="p">,</span> <span class="n">ori</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">angles</span><span class="p">):</span>
+            <span class="n">gr_ori_dict</span><span class="p">[</span><span class="n">igr</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ori</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gr_ori_dict</span> <span class="o">=</span> <span class="n">angles</span>
+
+    <span class="n">nitem</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gr_ori_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-        <span class="n">file</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/abq_px_</span><span class="si">{0}</span><span class="s1">_materials.inp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">titem</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>  <span class="c1"># remove old file if it exists</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;abq_px_</span><span class="si">{</span><span class="n">nitem</span><span class="si">}</span><span class="s1">_mat.inp&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** MATERIALS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nitem</span><span class="p">):</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Material, name=GRAIN</span><span class="si">{}</span><span class="s1">_MAT</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">igr</span><span class="p">,</span> <span class="n">ori</span> <span class="ow">in</span> <span class="n">gr_ori_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Material, name=GRAIN</span><span class="si">{}</span><span class="s1">_MAT</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">igr</span><span class="p">))</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Depvar</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;    </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nsdv</span><span class="p">))</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*User Material, constants=4</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ialloy</span><span class="p">),</span>
-                                              <span class="n">angles</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-                                              <span class="n">angles</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-                                              <span class="n">angles</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+                                              <span class="n">ori</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ori</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ori</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
     <span class="k">return</span></div>
 
 
-
-<div class="viewcode-block" id="writeAbaqusPhase">
-<a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.writeAbaqusPhase">[docs]</a>
-<span class="k">def</span> <span class="nf">writeAbaqusPhase</span><span class="p">(</span><span class="n">grains</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;Material.inp&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** MATERIALS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">grains</span><span class="p">)):</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Material, name=GRAIN</span><span class="si">{}</span><span class="s1">_mat</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Depvar</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;    </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nsdv</span><span class="p">))</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*User Material, constants=1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">grains</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="s1">&#39;PhaseID&#39;</span><span class="p">])))</span>
-    <span class="k">return</span></div>
-
-
+<span class="sd">&quot;&quot;&quot; Function not used</span>
+<span class="sd">def writeAbaqusPhase(grains, nsdv=200):</span>
+<span class="sd">    with open(&#39;Material.inp&#39;, &#39;w&#39;) as f:</span>
+<span class="sd">        f.write(&#39;** MATERIALS\n&#39;)</span>
+<span class="sd">        f.write(&#39;**\n&#39;)</span>
+<span class="sd">        for i in range(len(grains)):</span>
+<span class="sd">            f.write(&#39;*Material, name=GRAIN{}_mat\n&#39;.format(i + 1))</span>
+<span class="sd">            f.write(&#39;*Depvar\n&#39;)</span>
+<span class="sd">            f.write(&#39;    {}\n&#39;.format(nsdv))</span>
+<span class="sd">            f.write(&#39;*User Material, constants=1\n&#39;)</span>
+<span class="sd">            f.write(&#39;{}\n&#39;.format(float(grains[i + 1][&#39;PhaseID&#39;])))</span>
+<span class="sd">    return</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="pickle2microstructure">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.input_output.pickle2microstructure">[docs]</a>
@@ -503,11 +512,11 @@
             <span class="k">if</span> <span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">grain_ori_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="nb">str</span><span class="p">(</span><span class="n">igr</span><span class="p">)][</span><span class="s1">&#39;Orientation&#39;</span><span class="p">]</span>
         <span class="n">phase_vf</span> <span class="o">/=</span> <span class="n">nvox</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;HERE 1: phase_vf&#39;</span><span class="p">,</span> <span class="n">phase_vf</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">),</span> <span class="mf">1.</span><span class="p">):</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Volume fractions do not add up to 1: </span><span class="si">{</span><span class="n">phase_vf</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># no grain-level information in data</span>
+        <span class="n">grain_ori_dict</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">nphases</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No grain-level information in data file.&#39;</span> <span class="o">+</span>
                           <span class="s1">&#39;Cannot extract phase information or orientations.&#39;</span> <span class="o">+</span>
@@ -533,9 +542,7 @@
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nphases</span><span class="p">):</span>
         <span class="n">stats_dict</span><span class="p">[</span><span class="s1">&#39;Phase&#39;</span><span class="p">][</span><span class="s1">&#39;Name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ph_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="n">stats_dict</span><span class="p">[</span><span class="s1">&#39;Phase&#39;</span><span class="p">][</span><span class="s1">&#39;Volume fraction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase_vf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;HERE 2: ph_names[</span><span class="si">{</span><span class="n">ph_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1">], phase_vf: </span><span class="si">{</span><span class="n">phase_vf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">stats_dict</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;HERE 3: &#39;</span><span class="p">,</span> <span class="n">stats_list</span><span class="p">)</span>
     <span class="c1"># Create microstructure object</span>
     <span class="n">ms</span> <span class="o">=</span> <span class="n">Microstructure</span><span class="p">(</span><span class="s1">&#39;from_voxels&#39;</span><span class="p">)</span>
     <span class="n">ms</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">][</span><span class="s1">&#39;Material&#39;</span><span class="p">]</span>
@@ -555,7 +562,7 @@
     <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span> <span class="o">=</span> <span class="n">grain_phase_dict</span>
     <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">ngrains_phase</span> <span class="o">=</span> <span class="n">ngrain</span>
     <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">porosity</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">nvox</span>
+        <span class="n">porosity</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">nvox</span>
         <span class="n">ms</span><span class="o">.</span><span class="n">porosity</span> <span class="o">=</span> <span class="n">porosity</span>
         <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">porosity_voxels</span> <span class="o">=</span> <span class="n">porosity</span>
     <span class="c1"># import or create mesh</span>
@@ -564,14 +571,15 @@
     <span class="k">if</span> <span class="s1">&#39;Mesh&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Mesh&#39;</span><span class="p">][</span><span class="s1">&#39;Nodes&#39;</span><span class="p">][</span><span class="s1">&#39;Values&#39;</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Mesh&#39;</span><span class="p">][</span><span class="s1">&#39;Voxels&#39;</span><span class="p">][</span><span class="s1">&#39;Values&#39;</span><span class="p">]):</span>
-            <span class="n">voxel_dict</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">el</span>
+            <span class="n">voxel_dict</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">el</span>
             <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-            <span class="n">vox_centerDict</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">vox_centerDict</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">voxel_dict</span> <span class="o">=</span> <span class="n">voxel_dict</span>
         <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">vox_center_dict</span> <span class="o">=</span> <span class="n">vox_centerDict</span>
         <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">nodes</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">ms</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">create_voxels</span><span class="p">(</span><span class="n">ms</span><span class="o">.</span><span class="n">simbox</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> Voxel structure imported.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">ms</span></div>
 

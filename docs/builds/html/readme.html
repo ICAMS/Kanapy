@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overview &mdash; kanapy 6.0.1 documentation</title>
+  <title>Overview &mdash; kanapy 6.1.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=b6ed0530"></script>
+        <script src="_static/documentation_options.js?v=54b8411a"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -37,7 +37,7 @@
             kanapy
           </a>
               <div class="version">
-                6.0.1
+                6.1.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -52,7 +52,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-as-system-administrator">Installation as system administrator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-tests">Running tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#updates">Updates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#documentation-build">Documentation build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#core-dependencies">Core dependencies</a></li>
@@ -132,18 +135,17 @@ experiments concurrently maintaining the numerical efficiency of the
 micromechanical model. Kanapy is developed to overcome the limitations of
 spatial tessellation methods and to provide an alternative to the existing
 Random Sequential Addition technique of microstructure geometry generation.</p>
-<figure class="align-center" id="id4">
+<figure class="align-center" id="id3">
 <img alt="_images/kanapy_graphical_abstract.png" src="_images/kanapy_graphical_abstract.png" />
 <figcaption>
-<p><span class="caption-text"><strong>Figure</strong>: Kanapy workflow.</span><a class="headerlink" href="#id4" title="Link to this image"></a></p>
+<p><span class="caption-text"><strong>Figure</strong>: Kanapy workflow.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 </section>
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>Kanapy offers a Python Application Programming Interface (API) and can
-also be used through a Command Line Interface (CLI).</p></li>
+<li><p>Kanapy offers a Python Application Programming Interface (API).</p></li>
 <li><p>Possibility to analyze experimental microstructures based on
 <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> functions.</p></li>
 <li><p>Generation of microstructure geometry based on statistical features
@@ -169,7 +171,7 @@ can be read by the Voronoi tessellation software
 <li><p>Option to generate input files for the commercial finite-element
 software
 <a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>.</p></li>
-<li><p>Analysis and RVE generation for 2-phase microstructures.</p></li>
+<li><p>Analysis and RVE generation for dual-phase microstructures.</p></li>
 <li><p>Import and export of voxelated structures for data transfer between different tools.</p></li>
 </ul>
 </section>
@@ -218,10 +220,38 @@ and re-creating the conda environment <em>knpy</em>.</p>
 <p>To learn more about managing environments see Anaconda <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">documentation</a>.</p>
 </div>
 </section>
+<section id="installation-as-system-administrator">
+<h2>Installation as system administrator<a class="headerlink" href="#installation-as-system-administrator" title="Link to this heading"></a></h2>
+<p>If system administrators with write access to the root directory of the knpy-environment want to install Kanapy for all users, they need to run</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>python<span class="w"> </span>admin_setup.py
+</pre></div>
+</div>
+<p>after activating the <em>knpy</em>-environment. This will automatically execute the Kanapy installation and texture setup in administrator mode. After that step, users can directly access Kanapy in the conda environment.</p>
+</section>
 <section id="running-tests">
 <h2>Running tests<a class="headerlink" href="#running-tests" title="Link to this heading"></a></h2>
 <p>Kanapy uses pytest to perform all its unit testing.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>runTests
+</pre></div>
+</div>
+</section>
+<section id="updates">
+<h2>Updates<a class="headerlink" href="#updates" title="Link to this heading"></a></h2>
+<p>Kanapy is constantly under development and there will be frequent updates with bugfixes and new features. To update Kanapy, follow these steps:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>kanapy
+<span class="gp">$ </span>git<span class="w"> </span>pull
+<span class="gp">$ </span>conda<span class="w"> </span>activate<span class="w"> </span>knpy
+<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+<p>This will make the new version available in your <em>knpy</em>-environment. If your Kanapy installation has been setup for textures (MTEX module), this feature will not be affected by such updates. This update routine is also valid for global installations as system administrator.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p>Kanapy comes with several examples in form of Python scripts and Juypter notebooks. If you want
+to create a local copy of the kanapy/examples directory within the current working directory (cwd),
+please run the command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>copyExamples
 </pre></div>
 </div>
 </section>
@@ -294,10 +324,11 @@ and does not interfere with other installations of MTEX.</p>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Link to this heading"></a></h2>
 <p>Kanapy is made available under the GNU AGPLv3 <a class="reference external" href="https://www.gnu.org/licenses/agpl-3.0.html">license</a>.</p>
+<p>The additional materials under examples and in the documentation are published under the Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) <a class="reference external" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">license</a>.</p>
 </section>
 <section id="about">
 <h2>About<a class="headerlink" href="#about" title="Link to this heading"></a></h2>
-<p>The name kanapy is derived from the sanskrit word <a class="reference external" href="https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3">káṇa</a> meaning particle. Kanapy is primarily developed at the <a class="reference external" href="http://www.icams.de/content/">Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany</a>. Our goal is to build a complete synthetic microstructure generation tool for research and industry use.</p>
+<p>The name kanapy is derived from the sanskrit word <a class="reference external" href="https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3">káṇa</a> meaning particle. Kanapy is primarily developed at the <a class="reference external" href="http://www.icams.de/content/">Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr University Bochum - Germany</a>. Our goal is to build a complete synthetic microstructure generation tool for research and industry use.</p>
 </section>
 <section id="disclaimer">
 <h2>Disclaimer<a class="headerlink" href="#disclaimer" title="Link to this heading"></a></h2>

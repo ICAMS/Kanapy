@@ -52,8 +52,7 @@ Random Sequential Addition technique of microstructure geometry generation.
     
 Features
 --------
--  Kanapy offers a Python Application Programming Interface (API) and can
-   also be used through a Command Line Interface (CLI).
+-  Kanapy offers a Python Application Programming Interface (API).
 -  Possibility to analyze experimental microstructures based on
    `MTEX <https://mtex-toolbox.github.io/>`__ functions.
 -  Generation of microstructure geometry based on statistical features
@@ -79,7 +78,7 @@ Features
 -  Option to generate input files for the commercial finite-element
    software
    `Abaqus <https://www.3ds.com/products-services/simulia/products/abaqus/>`__.
--  Analysis and RVE generation for 2-phase microstructures.
+-  Analysis and RVE generation for dual-phase microstructures.
 -  Import and export of voxelated structures for data transfer between different tools.
    
 Installation
@@ -135,7 +134,19 @@ initialized by the command
 .. _MTEX: https://mtex-toolbox.github.io/
 .. _Mathworks: https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
 .. _Mathworks documentation: https://de.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html#
-            
+
+Installation as system administrator
+------------------------------------
+
+If system administrators with write access to the root directory of the knpy-environment want to install Kanapy for all users, they need to run
+
+.. code-block:: console
+
+   (knpy) $ python admin_setup.py
+
+
+after activating the *knpy*-environment. This will automatically execute the Kanapy installation and texture setup in administrator mode. After that step, users can directly access Kanapy in the conda environment.
+
 Running tests
 --------------
 Kanapy uses pytest to perform all its unit testing.        
@@ -144,7 +155,32 @@ Kanapy uses pytest to perform all its unit testing.
      
     (knpy) $ kanapy runTests          
     
-      
+Updates
+-------
+
+Kanapy is constantly under development and there will be frequent updates with bugfixes and new features. To update Kanapy, follow these steps:
+
+.. code-block:: console
+
+    $ cd kanapy
+    $ git pull
+    $ conda activate knpy
+    (knpy) $ python -m pip install .
+
+
+This will make the new version available in your *knpy*-environment. If your Kanapy installation has been setup for textures (MTEX module), this feature will not be affected by such updates. This update routine is also valid for global installations as system administrator.
+
+Examples
+--------
+
+Kanapy comes with several examples in form of Python scripts and Juypter notebooks. If you want 
+to create a local copy of the kanapy/examples directory within the current working directory (cwd),
+please run the command
+
+.. code-block:: console
+
+    (knpy) $ kanapy copyExamples          
+
       
 Documentation build
 -------------------
@@ -234,15 +270,15 @@ Related works and applications
 
 License
 -------
-Kanapy is made available under the GNU AGPLv3 license_.
+Kanapy is made available under the GNU AGPLv3 `license <https://www.gnu.org/licenses/agpl-3.0.html>`__.
 
-.. _license: https://www.gnu.org/licenses/agpl-3.0.html
+The additional materials under examples and in the documentation are published under the Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) `license <https://creativecommons.org/licenses/by-nc-sa/4.0/>`__.
 
 
 
 About
 -----
-The name kanapy is derived from the sanskrit word káṇa_ meaning particle. Kanapy is primarily developed at the `Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr-University Bochum - Germany <http://www.icams.de/content/>`__. Our goal is to build a complete synthetic microstructure generation tool for research and industry use. 
+The name kanapy is derived from the sanskrit word káṇa_ meaning particle. Kanapy is primarily developed at the `Interdisciplinary Center for Advanced Materials Simulation (ICAMS), Ruhr University Bochum - Germany <http://www.icams.de/content/>`__. Our goal is to build a complete synthetic microstructure generation tool for research and industry use. 
 
 .. _káṇa: https://en.wiktionary.org/wiki/%E0%A4%95%E0%A4%A3
 

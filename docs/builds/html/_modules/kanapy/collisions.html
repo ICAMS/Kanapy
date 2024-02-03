@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.collisions &mdash; kanapy 6.0.1 documentation</title>
+  <title>kanapy.collisions &mdash; kanapy 6.1.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=b6ed0530"></script>
+        <script src="../../_static/documentation_options.js?v=54b8411a"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.0.1
+                6.1.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -83,6 +83,7 @@
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+
 <div class="viewcode-block" id="collision_routine">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.collisions.collision_routine">[docs]</a>
 <span class="k">def</span> <span class="nf">collision_routine</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -97,21 +98,23 @@
 <span class="sd">    :type E1: object :obj:`Ellipsoid`</span>
 <span class="sd">    :param E2: Ellipsoid :math:`j`</span>
 <span class="sd">    :type E2: object :obj:`Ellipsoid`</span>
+<span class="sd">    :param damp: Damping factor</span>
+<span class="sd">    :type damp: float</span>
 
-<span class="sd">    .. note:: 1. If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is sufficient to </span>
-<span class="sd">                 determine whether they overlap.</span>
-<span class="sd">              2. Else, if either of them is an ellipsoid, then their coefficients, positions &amp; rotation matrices are used</span>
-<span class="sd">                 to determine whether they overlap.                             </span>
+<span class="sd">    .. note:: 1. If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is</span>
+<span class="sd">                 sufficient to determine whether they overlap.</span>
+<span class="sd">              2. Else, if either of them is an ellipsoid, then their coefficients, positions &amp; rotation matrices are</span>
+<span class="sd">                 used to determine whether they overlap.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># call the c++ method</span>
+    <span class="c1"># call the collision detection algorithm</span>
     <span class="n">overlap_status</span> <span class="o">=</span> <span class="n">collide_detect</span><span class="p">(</span><span class="n">E1</span><span class="o">.</span><span class="n">get_coeffs</span><span class="p">(),</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_coeffs</span><span class="p">(),</span>
-                                   <span class="n">E1</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span> 
-                                   <span class="n">E1</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">,</span> <span class="n">E2</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">)</span>
+                                    <span class="n">E1</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span>
+                                    <span class="n">E1</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">,</span> <span class="n">E2</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">overlap_status</span><span class="p">:</span>
-        <span class="n">collision_react</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="n">damp</span><span class="p">)</span>                  <span class="c1"># calculates resultant speed for E1            </span>
-        <span class="n">collision_react</span><span class="p">(</span><span class="n">E2</span><span class="p">,</span> <span class="n">E1</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="n">damp</span><span class="p">)</span>                  <span class="c1"># calculates resultant speed for E2</span>
+        <span class="n">collision_react</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="n">damp</span><span class="p">)</span>  <span class="c1"># calculates resultant speed for E1</span>
+        <span class="n">collision_react</span><span class="p">(</span><span class="n">E2</span><span class="p">,</span> <span class="n">E1</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="n">damp</span><span class="p">)</span>  <span class="c1"># calculates resultant speed for E2</span>
 
     <span class="k">return</span> <span class="n">overlap_status</span></div>
 
@@ -127,6 +130,8 @@
 <span class="sd">    :type ell1: object :obj:`Ellipsoid`</span>
 <span class="sd">    :param ell2: Ellipsoid :math:`j`</span>
 <span class="sd">    :type ell2: object :obj:`Ellipsoid`</span>
+<span class="sd">    :param damp: Damping factor</span>
+<span class="sd">    :type damp: float</span>
 
 <span class="sd">    .. note:: Consider two ellipsoids :math:`i, j` at collision. Let them occupy certain positions in space</span>
 <span class="sd">              defined by the position vectors :math:`\mathbf{r}^{i}, \mathbf{r}^{j}` and have certain </span>
@@ -139,32 +144,35 @@
 <span class="sd">                :height: 45px</span>
 <span class="sd">                :align: center                 </span>
 
-<span class="sd">              where :math:`dx, dy, dz` are defined as the distance between the two ellipsoid centers along :math:`x, y, z` directions given by,</span>
+<span class="sd">              where :math:`dx, dy, dz` are defined as the distance between the two ellipsoid centers along</span>
+<span class="sd">                    :math:`x, y, z` directions given by,</span>
 
 <span class="sd">              .. image:: /figs/dist_ell.png                        </span>
 <span class="sd">                  :width: 110px</span>
 <span class="sd">                  :height: 75px</span>
 <span class="sd">                  :align: center</span>
 
-<span class="sd">              Depending on the magnitudes of :math:`dx, dz` as projected on the :math:`x-z` plane, the angle :math:`\Theta` is computed. </span>
-<span class="sd">              The angles :math:`\Theta` and :math:`\phi` determine the in-plane and out-of-plane directions along which the ellipsoid :math:`i` </span>
-<span class="sd">              would bounce back after collision. Thus, the updated velocity vector components along the :math:`x, y, z` directions are determined by,</span>
+<span class="sd">              Depending on the magnitudes of :math:`dx, dz` as projected on the :math:`x-z` plane, the angle</span>
+<span class="sd">              :math:`\Theta` is computed.</span>
+<span class="sd">              The angles :math:`\Theta` and :math:`\phi` determine the in-plane and out-of-plane directions along which</span>
+<span class="sd">              the ellipsoid :math:`i` would bounce back after collision. Thus, the updated velocity vector components</span>
+<span class="sd">              along the :math:`x, y, z` directions are determined by,</span>
 
 <span class="sd">              .. image:: /figs/velocities_ell.png                        </span>
 <span class="sd">                  :width: 180px</span>
 <span class="sd">                  :height: 80px</span>
 <span class="sd">                  :align: center                        </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ell1_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">([</span><span class="n">ell1</span><span class="o">.</span><span class="n">speedx0</span><span class="p">,</span> <span class="n">ell1</span><span class="o">.</span><span class="n">speedy0</span><span class="p">,</span> <span class="n">ell1</span><span class="o">.</span><span class="n">speedz0</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">damp</span><span class="p">)</span>
+    <span class="n">ell1_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">([</span><span class="n">ell1</span><span class="o">.</span><span class="n">speedx0</span><span class="p">,</span> <span class="n">ell1</span><span class="o">.</span><span class="n">speedy0</span><span class="p">,</span> <span class="n">ell1</span><span class="o">.</span><span class="n">speedz0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">damp</span><span class="p">)</span>
     <span class="n">x_diff</span> <span class="o">=</span> <span class="n">ell2</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">ell1</span><span class="o">.</span><span class="n">x</span>
     <span class="n">y_diff</span> <span class="o">=</span> <span class="n">ell2</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">ell1</span><span class="o">.</span><span class="n">y</span>
     <span class="n">z_diff</span> <span class="o">=</span> <span class="n">ell2</span><span class="o">.</span><span class="n">z</span> <span class="o">-</span> <span class="n">ell1</span><span class="o">.</span><span class="n">z</span>
     <span class="n">elevation_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">y_diff</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">([</span><span class="n">x_diff</span><span class="p">,</span> <span class="n">z_diff</span><span class="p">]))</span>
     <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">z_diff</span><span class="p">,</span> <span class="n">x_diff</span><span class="p">)</span>
-                
-    <span class="n">x_speed</span> <span class="o">=</span> <span class="o">-</span><span class="n">ell1_speed</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">elevation_angle</span><span class="p">)</span>
+
+    <span class="n">x_speed</span> <span class="o">=</span> <span class="o">-</span><span class="n">ell1_speed</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">elevation_angle</span><span class="p">)</span>
     <span class="n">y_speed</span> <span class="o">=</span> <span class="o">-</span><span class="n">ell1_speed</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">elevation_angle</span><span class="p">)</span>
-    <span class="n">z_speed</span> <span class="o">=</span> <span class="o">-</span><span class="n">ell1_speed</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">elevation_angle</span><span class="p">)</span>
+    <span class="n">z_speed</span> <span class="o">=</span> <span class="o">-</span><span class="n">ell1_speed</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">elevation_angle</span><span class="p">)</span>
 
     <span class="c1"># Assign new speeds </span>
     <span class="n">ell1</span><span class="o">.</span><span class="n">speedx</span> <span class="o">+=</span> <span class="n">x_speed</span>
@@ -310,7 +318,6 @@
 <span class="c1"># A_i = np.array([[A11_i, A12_i, A13_i], [A21_i, A22_i, A23_i], [A31_i, A32_i, A33_i]])</span>
 <span class="c1"># A_j = np.array([[A11_j, A12_j, A13_j], [A21_j, A22_j, A23_j], [A31_j, A32_j, A33_j]])</span>
 <span class="c1"># result = collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j)</span>
-
 </pre></div>
 
            </div>

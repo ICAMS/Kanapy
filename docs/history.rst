@@ -46,7 +46,7 @@ History
 3.1 (2022-04-01)
 ----------------
 
-* Support for 2-phase materials
+* Support for dual-phase materials
 * Construction of polyhedral hull for grains
 
 4.0 (2022-09-08)
@@ -61,7 +61,7 @@ History
 
 * Pure Python version for easier installation (previous versions used C++ code for collision detection)
 * Improvements in installation procedure of MTEX module
-* Improved handling of 2-phase microstructures (EBSD import, descriptors, packing, voxelization)
+* Improved handling of dual-phase microstructures (EBSD import, descriptors, packing, voxelization)
 
 5.0.4 (2023-12-28)
 ------------------
@@ -75,4 +75,10 @@ History
  * Full support of voxel files in JSON format for input and output
  * CLI tools are deactivated
  
+6.1.3 (2024-02-03)
+------------------
 
+ * Full support of dual-phase and porous microstructures in analysis of microstructure descriptors
+ * Modified keywords of microstructure descriptors for compatibility with scipy fit functions
+ * Unified notation of input/output methods
+ * New methods and attributes for generation and handling of orientations

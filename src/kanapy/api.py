@@ -55,7 +55,7 @@ class Microstructure(object):
         rve : object of class RVE_creator
             Contains information about the RVE
             Attributes: dim, size, nphases, nparticles, periodic, units, packing_steps, particle_data,
-                phase_names, phase_vf, ialloy
+            phase_names, phase_vf, ialloy
         simbox : Object of class Simulation_Box
             Contains information about geometry of simulation box for particle simulation
         mesh : object of class mesh_creator
@@ -64,14 +64,14 @@ class Microstructure(object):
         geometry : dict
             Dictionary of grain geometries;
             Dict keys: "Ngrains", "Vertices", "Points", "Simplices", "Facets", "Grains", "GBnodes", GBarea" "GBfaces"
-            "Grains" : dictionary with key grain_number
-                Keys:"Vertices", "Points", "Center", "Simplices", "Volume", "Area", "Phase", "eqDia", "majDia", "minDia"
+            "Grains" : dictionary with key grain_number  
+            Keys:"Vertices", "Points", "Center", "Simplices", "Volume", "Area", "Phase", "eqDia", "majDia", "minDia"
         res_data : list
             List of dictionaries containing effective microstructure descriptors for each phase in RVE
             Dict keys: "Number", "Unit scale", "Grain_type",
-                "Grain_Equivalent_diameter", "Grain_Major_diameter", "Grain_Minor_diameter",
-                "Particle_Equivalent_diameter", "Particle_Major_diameter", "Particle_Minor_diameter",
-                "L1-error"
+            "Grain_Equivalent_diameter", "Grain_Major_diameter", "Grain_Minor_diameter",
+            "Particle_Equivalent_diameter", "Particle_Major_diameter", "Particle_Minor_diameter",
+            "L1-error"
     """
 
     def __init__(self, descriptor=None, file=None, name='Microstructure'):
@@ -828,6 +828,7 @@ class Microstructure(object):
         Returns
         -------
         None.
+        
         """
         if file is None:
             if self.name == 'Microstructure':
