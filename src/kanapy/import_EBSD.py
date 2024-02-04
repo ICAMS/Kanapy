@@ -119,19 +119,6 @@ class EBSDmap:
             omega_r, ha, hb = eng.principalComponents(data['grains'],
                                                       nargout=3)
             omega = np.array(omega_r)[:, 0]
-            hist, bin_edges = np.histogram(omega, bins=30)
-            im = np.argmax(hist)
-            hw = bin_edges[-1] - bin_edges[0]
-            hc = bin_edges[im]
-            hh = (hc - bin_edges[0]) / hw
-            if hh < 0.35:
-                # maximum of distribution in lower quartile
-                # shift large omegas to negative values
-                ind = np.nonzero(omega > hc + 0.35 * hw)[0]
-                omega[ind] -= np.pi
-            elif hh > 0.65:
-                ind = np.nonzero(omega < hc - 0.35 * hw)[0]
-                omega[ind] += np.pi
             data['omega'] = omega
             data['ngrain'] = len(omega)
             if plot:
@@ -166,7 +153,13 @@ class EBSDmap:
                     eng.mtexColorbar
                 except:
                     logging.warning('ODF too large for plotting')'''
-
+                # workaround:
+                eng.workspace["ori"] = data['ori']
+                eng.workspace["cs"] = data['cs']
+                try:
+                    eng.eval(f"plotPDF(ori,Miller(0,0,1,cs),'points','all')", nargout=0)
+                except:
+                    logging.warning('Plotting of orientations failed.')
             # Evaluate grain shape statistics
             # generate dict for statistical input for geometry module
 
@@ -225,7 +218,7 @@ class EBSDmap:
                 x = np.linspace(-np.pi, np.pi, 200) # np.amin(omega), np.amax(omega), 150)
                 y = vonmises.pdf(x, kappa, loc=oloc, scale=oscale)
                 ax.plot(x, y, '-r', label='fit')
-                ax.hist(omega, bins=20, density=True, label='data')
+                ax.hist(omega, bins=40, density=True, label='data')
                 plt.legend()
                 plt.title('Histogram of tilt angles of major axes')
                 plt.xlabel('angle (rad)')
