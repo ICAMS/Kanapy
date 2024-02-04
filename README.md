@@ -194,11 +194,15 @@ The preferred way to cite Kanapy is:
     Powder Bed Fusion--Manufactured Metal by Micromechanical Modeling.
     Adv. Eng. Mater., <https://doi.org/10.1002/adem.202000641>
 
-# License
+# Licenses
 
-Kanapy is made available under the GNU AGPLv3
+<a rel="license" href="https://www.gnu.org/licenses/agpl-3.0.html"><img alt="AGPLv3" style="border-width:0;max-height:30px;height:50%;" src="https://www.gnu.org/graphics/agplv3-155x51.png" /></a>
+<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+   <img alt="Creative Commons License" style="border-width:0;max-height:30px;height:100%;" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a>
+
+Kanapy is made available under the GNU Affero General Public License (AGPL) v3
 [license](https://www.gnu.org/licenses/agpl-3.0.html).  
-The additional materials under examples and in the documentation are published under the Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) [license](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+The additional materials under examples and in the documentation are published under the Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) [license](https://creativecommons.org/licenses/by-nc-sa/4.0/). 
 
 # About
 
