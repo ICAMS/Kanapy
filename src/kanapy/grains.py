@@ -194,7 +194,8 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     def project_pts(pts, ctr, axis):
         """
-        Project
+        Project points (pts) to plane defined via center (ctr) and normal vector (axis).
+
         Parameters
         ----------
         pts : (N, dim) ndarray
@@ -202,7 +203,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         ctr : (dim)-ndarray
             Center point of the projection plane
         axis : (dim)-ndarray
-            Unit vector for axis along which points are projected
+            Unit vector for plane normal
 
         Returns
         -------
@@ -220,17 +221,18 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     # define constants
     voxel_res = np.divide(rve.size, rve.dim)
     voxel_size = voxel_res[0]
-    RVE_min = np.amin(mesh.nodes, axis=0)
+    RVE_min = np.min(mesh.nodes, axis=0)
     if np.any(RVE_min > 1.e-3) or np.any(RVE_min < -1.e-3):
         raise ValueError('Irregular RVE geometry: RVE_min = {}'.format(RVE_min))
-    RVE_max = np.amax(mesh.nodes, axis=0)
-    Ng_max = np.amax(list(mesh.grain_dict.keys()))  # highest grain number
+    RVE_max = np.max(mesh.nodes, axis=0)
+    Ng_max = np.max(list(mesh.grain_dict.keys()))  # highest grain number
     Ngr = len(mesh.grain_dict.keys())  # number of grains
 
     # create dicts for GB facets, including fake facets at surfaces
     geometry = dict()
     geometry['Ngrains'] = mesh.ngrains_phase
     grain_facesDict = dict()  # {Grain: faces}
+    gb_vox_dict = dict()
     for i in range(1, Ng_max + 7):
         grain_facesDict[i] = dict()
 
@@ -238,12 +240,14 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     # outer_faces: {face_id's of outer voxel faces}  (potential GB facets)
     # face_nodes: {face_id: list with 4 nodes}
     # grain_facesDict: {grain_id: {face_id: list with 4 nodes}}
+    # gb_vox_dict: {face_id: list with voxels}
+    # Loop over all grains in microstructure
     for gid, elset in mesh.grain_dict.items():
         outer_faces = set()
         face_nodes = dict()
-        nodeConn = [mesh.voxel_dict[el] for el in elset]  # Nodal connectivity of a voxel
+        nodeConn = [mesh.voxel_dict[el] for el in elset]  # list of node sets for each voxel in grain
 
-        # For each voxel, re-create its 6 faces
+        # For each voxel, re-create its 6 faces, each face is list of 4 nodes
         for nc in nodeConn:
             faces = [[nc[0], nc[1], nc[2], nc[3]], [nc[4], nc[5], nc[6], nc[7]],
                      [nc[0], nc[1], nc[5], nc[4]], [nc[3], nc[2], nc[6], nc[7]],
