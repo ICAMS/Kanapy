@@ -12,8 +12,8 @@ import kanapy as knpy
 from math import pi
 
 periodic = True  # create periodic RVE
-vf0 = 0.75  # volume fraction of phase 1 (dense phase)
-vf1 = 1. - vf0  # volume fraction of phase 1 (porosity)
+vf0 = 0.75  # volume fraction of phase 1
+vf1 = 1. - vf0  # volume fraction of phase 2
 name0 = 'Austenite'
 name1 = 'Martensite'
 nvox = 30  # number of voxels in each Cartesian direction (cuboid RVE)
