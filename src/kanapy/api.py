@@ -248,8 +248,10 @@ class Microstructure(object):
                 ind.append(i)
                 igr.append(gblist[1])
         if len(ind) > 0:
-            for i in ind.reverse():
-                logging.warning(f'Removing {gba[i]} from GBarea as grain {igr[i]} does not exist.')
+            ind.reverse()
+            igr.reverse()
+            for j, i in enumerate(ind):
+                logging.warning(f'Removing {gba[i]} from GBarea as grain {igr[j]} does not exist.')
                 gba.pop(i)
             self.geometry['GBarea'] = gba
 

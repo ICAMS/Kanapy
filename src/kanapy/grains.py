@@ -509,17 +509,20 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     for igr in mesh.grain_dict.keys():
         if grains[igr]['Volume'] < 1.e-5:
             logging.warning(f'No tet assigned to grain {igr}.')
-            # remove grain from shared area list
             if grains[igr]['Simplices']:
                 nf = len(grains[igr]['Simplices'])
                 logging.warning(f'Grain {igr} contains {nf} tets, but no volume')
+            grains.pop(igr)
+            continue
         grains[igr]['eqDia'] = 2.0 * (3.0 * grains[igr]['Volume']
                                       / (4.0 * np.pi)) ** (1.0 / 3.0)
         # Approximate smallest rectangular cuboid around points of grains
         # to analyse prolate (aspect ratio > 1) and oblate (a.r. < 1) particles correctly
         pts = grains[igr]['Points']
-        if len(pts) == 0:
-            logging.warning(f'Grain {igr} with few vertices: {grains[igr]["Vertices"]}')
+        if len(pts) < 4:
+            logging.warning(f'Removing grain {igr} with few vertices: {grains[igr]["Vertices"]}')
+            grains.pop(igr)
+            continue
         dia = get_diameter(pts)  # approx. of largest diameter of grain
         len_a = np.linalg.norm(dia)  # length of largest side
         if len_a < 1.e-5:
