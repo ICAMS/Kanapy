@@ -190,6 +190,16 @@ class Microstructure(object):
                          f'{self.mesh.ngrains_phase} during voxelization.')
         self.ngrains = self.mesh.ngrains_phase
         self.Ngr = np.sum(self.mesh.ngrains_phase, dtype=int)
+        # extract volume fractions from voxelized grains
+        if self.nphases > 1:
+            vox_count = np.zeros(self.nphases, dtype=int)
+            for igr, ip in self.mesh.grain_phase_dict.items():
+                vox_count[ip] += len(self.mesh.grain_dict[igr])
+            print('Volume fractions of phases in voxel structure:')
+            for ip in range(self.nphases):
+                vf = 100.0*vox_count[ip]/self.mesh.nvox
+                print(f'{ip}: {self.rve.phase_names[ip]} ({vf.round(1)}%)')
+
         # remove grain information if it already exists to avoid inconsistencies
         if self.geometry is not None:
             logging.info('Removing polyhedral grain geometries and statistical data after re-meshing.')
@@ -248,13 +258,25 @@ class Microstructure(object):
                 ind.append(i)
                 igr.append(gblist[1])
         if len(ind) > 0:
-            ind.reverse()
+            logging.warning(f'{len(ind)} grains are not represented in polyhedral geometry.')
+            logging.warning('Consider increasing the number of voxels, as grains appear to be very irregular.')
+            """ind.reverse()
             igr.reverse()
             for j, i in enumerate(ind):
                 logging.warning(f'Removing {gba[i]} from GBarea as grain {igr[j]} does not exist.')
                 gba.pop(i)
-            self.geometry['GBarea'] = gba
-
+            self.geometry['GBarea'] = gba"""
+        # extract volume fractions from polyhedral grains
+        if self.nphases > 1:
+            ph_vol = np.zeros(self.nphases)
+            for igr, grd in self.geometry['Grains'].items():
+                ip = grd['Phase']
+                ph_vol[ip] += grd['Volume']
+            print('Volume fractions of phases in polyhedral geometry:')
+            for ip in range(self.nphases):
+                vf = 100.0*ph_vol[ip]/np.prod(self.rve.size)
+                print(f'{ip}: {self.rve.phase_names[ip]} ({vf.round(1)}%)')
+        # analyse grains w.r.t. statistical descriptors
         self.res_data = \
             get_stats(self.rve.particle_data, self.geometry, self.rve.units, nphases)
         if empty_vox is not None:
