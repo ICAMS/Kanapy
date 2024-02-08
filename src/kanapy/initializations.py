@@ -67,7 +67,7 @@ class RVE_creator(object):
 
     """
 
-    def __init__(self, stats_dicts, nsteps=1000, from_voxels=False, porosity=False):
+    def __init__(self, stats_dicts, nsteps=1000, from_voxels=False):
         """
         Create an RVE object.
 
@@ -76,7 +76,7 @@ class RVE_creator(object):
         stats_dicts
         nsteps
         from_voxels
-        porosity
+        precipit
 
         Attributes
         ----------
@@ -333,8 +333,7 @@ class RVE_creator(object):
 
             # Extract grains shape attributes to initialize particles
             if not from_voxels:
-                if (not porosity) or (ip < self.nphases - 1):
-                    particle_data = init_particles(particle_data)
+                particle_data = init_particles(particle_data)
             else:
                 particle_data = None
                 self.nparticles = None
@@ -388,7 +387,7 @@ class mesh_creator(object):
         self.vox_center_dict = dict()  # dictionary to store center of each voxel as 3-tupel
         self.nodes = None  # array of nodal positions
         self.nodes_smooth = None  # array of nodal positions after smoothening grain boundaries
-        self.porosity_voxels = None  # actual porosity in voxelated structure
+        self.prec_vf_voxels = None  # actual volume fraction of precipitates in voxelated structure
         return
 
     def get_ind(self, addr):

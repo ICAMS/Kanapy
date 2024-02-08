@@ -453,8 +453,8 @@ def import_voxels(file, path='./'):
     ms.mesh.ngrains_phase = ngrain
     if 0 in ms.mesh.grain_dict.keys():
         porosity = len(ms.mesh.grain_dict[0]) / nvox
-        ms.porosity = porosity
-        ms.mesh.porosity_voxels = porosity
+        ms.precipit = porosity
+        ms.mesh.prec_vf_voxels = porosity
     # import or create mesh
     voxel_dict = dict()
     vox_centerDict = dict()

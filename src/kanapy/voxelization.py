@@ -50,7 +50,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
     test_points = np.array(list(cooDict.values()))
 
     # array defining ellipsoid growth for each stage of while loop
-    growth = iter(list(np.arange(1.0, 10.0, 0.1)))
+    growth = iter(list(np.arange(1.0, 15.0, 0.1)))
     remaining_voxels = set(list(cooDict.keys()))
     assigned_voxels = set()
     vf_cur = 0.
@@ -60,12 +60,10 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
     for ellipsoid in Ellipsoids:
         ellipsoid.inside_voxels = []
     while vf_cur < vf_target:
-
         # call the growth value for the ellipsoids
         scale = next(growth)
 
         for ellipsoid in Ellipsoids:
-
             # scale ellipsoid dimensions by the growth factor and generate surface points
             ellipsoid.a, ellipsoid.b, ellipsoid.c = scale * ellipsoid.a, scale * ellipsoid.b, scale * ellipsoid.c
             ellipsoid.surfacePointsGen()
@@ -317,7 +315,7 @@ def reassign_shared_voxels(cooDict, Ellipsoids, voxel_dict):
     return
 
 
-def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
+def voxelizationRoutine(Ellipsoids, mesh, prec_vf=None):
     """
     The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`,
     :meth:`create_voxels`, :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`
@@ -335,11 +333,10 @@ def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
     print('Starting RVE voxelization')
 
     # Find the voxels belonging to each grain by growing ellipsoid each time
-    if porosity is None:
-        vft = 1.
-    else:
-        vft = 1. - porosity
-    assign_voxels_to_ellipsoid(mesh.vox_center_dict, Ellipsoids, mesh.voxel_dict, vf_target=vft)
+    if prec_vf is None:
+        prec_vf = 1.
+
+    assign_voxels_to_ellipsoid(mesh.vox_center_dict, Ellipsoids, mesh.voxel_dict, vf_target=prec_vf)
 
     # Create element sets
     for ellipsoid in Ellipsoids:
@@ -365,8 +362,8 @@ def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
             # sys.exit(0)
 
     # generate array of voxelized structure with grain IDs
-    # if vf < 1.0, empty voxels will have ID 0
-    gr_arr = np.zeros(mesh.nvox, dtype=np.int16)
+    # if vf < 1.0, empty voxels will have grain ID 0
+    gr_arr = np.zeros(mesh.nvox, dtype=int)
     for ih, il in mesh.grain_dict.items():
         il = np.array(il) - 1
         gr_arr[il] = ih
@@ -374,7 +371,7 @@ def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
 
     # generate array of voxelized structure with phase numbers
     # and dict of phase numbers for each grain
-    # empty voxels will get phase number 1
+    # empty voxels will get phase number 1 and be assigned to grain with key 0
     ph_arr = -np.ones(mesh.nvox, dtype=int)
     mesh.grain_phase_dict = dict()
     mesh.ngrains_phase = np.zeros(mesh.nphases, dtype=int)
@@ -387,19 +384,20 @@ def voxelizationRoutine(Ellipsoids, mesh, porosity=None):
     ind = np.nonzero(ph_arr < 0.0)[0]
     ph_arr[ind] = 1  # assign phase 1 to empty voxels
     mesh.phases = np.reshape(ph_arr, mesh.dim, order='F')
-    porous_cur = len(ind) / mesh.nvox
+    vf_cur = 1.0 - len(ind) / mesh.nvox
 
     print('Completed RVE voxelization')
-    if porosity is not None:
-        print(f'Actual volume fraction of particles in box = {1. - porous_cur}')
-        print(f'Target volume fraction = {1. - porosity}')
-        mesh.porosity_voxels = porous_cur
+    if prec_vf is not None:
+        print(f'Volume fraction of voxelized grains: {vf_cur}')
+        print(f'Target volume fraction = {prec_vf}')
+        mesh.prec_vf_voxels = vf_cur
         if 0 in mesh.grain_dict.keys():
-            raise ValueError('Grain key "0" is reserved for porous structures. Cannot continue with porosity.')
+            raise ValueError('Grain with key "0" already exists. Should be reserved for matrix phase in structures ' +
+            'with precipitates or porosity. Cannot continue with precipitate simulation.')
         mesh.grain_dict[0] = ind
         mesh.grain_phase_dict[0] = 1
         mesh.ngrains_phase[1] += 1
-    elif porous_cur > 0.:
+    elif vf_cur > 0.:
         logging.warning(f'WARNING: {len(ind)} voxels have not been assigned to grains.')
     print('')
 

@@ -46,8 +46,9 @@ class Microstructure(object):
         descriptor : list
             List of dictionaries describing the microstructure of each phase;
             Dict Keys: "Grains type", "Equivalent diameter", "Aspect ratio", "Tilt Angle", "RVE", "Simulation"
-        porosity : None or float
-            Indicates porosity of microstructure, if float gives volume fraction of pores
+        precipit : None or float
+            Indicates microstructure with precipitates/pores/particles in continuous matrix. If type is float,
+             it gives volume the fraction of that precipitate phase
         from_voxels : bool
             Indicates whether microstructure object is imported from voxel file, not generated from particle simulation
         particles : list
@@ -60,7 +61,7 @@ class Microstructure(object):
             Contains information about geometry of simulation box for particle simulation
         mesh : object of class mesh_creator
             Attributes: dim, grain_dict, grain_ori_dict, grain_phase_dict, grains, ngrains_phase. nodes, nodes_smooth,
-                nphases, nvox, phases, porosity_voxels, vox_center_dict, voxel_dict
+                nphases, nvox, phases, prec_vf_voxels, vox_center_dict, voxel_dict
         geometry : dict
             Dictionary of grain geometries;
             Dict keys: "Ngrains", "Vertices", "Points", "Simplices", "Facets", "Grains", "GBnodes", GBarea" "GBfaces"
@@ -79,7 +80,7 @@ class Microstructure(object):
         self.nphases = None
         self.ngrains = None
         self.nparticles = None
-        self.porosity = None
+        self.precipit = None
         self.rve = None
         self.particles = None
         self.geometry = None
@@ -114,13 +115,23 @@ class Microstructure(object):
             if file is not None:
                 logging.warning(
                     'WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
+        if self.nphases == 1 and 'Phase' in self.descriptor[0].keys():
+            vf = self.descriptor[0]['Phase']['Volume fraction']
+            if vf < 1.0:
+                # consider precipitates/pores/particles with volume fraction vf in a matrix
+                # precipitates will be phase 0, matrix phase will get number 1 and be assigned to grain with ID 0
+                self.precipit = vf
+                self.nphases = 2
+                logging.info(f'Only one phase with volume fraction {vf} is given.')
+                logging.info('Will consider a sparse distribution in a matrix phase with phase number 1, ' +
+                             'which will be assigned to grain with ID 0.')
         return
 
     """
     --------        Routines for user interface        --------
     """
 
-    def init_RVE(self, descriptor=None, nsteps=1000, porosity=None):
+    def init_RVE(self, descriptor=None, nsteps=1000):
         """
         Creates particle distribution inside simulation box (RVE) based on
         the data provided in the data file.
@@ -129,7 +140,7 @@ class Microstructure(object):
         ----------
         descriptor
         nsteps
-        porosity
+        precipit
 
         Returns
         -------
@@ -139,10 +150,12 @@ class Microstructure(object):
             descriptor = self.descriptor
         if type(descriptor) is not list:
             descriptor = [descriptor]
-        self.porosity = porosity
 
         # initialize RVE, including mesh dimensions and particle distribution
-        self.rve = RVE_creator(descriptor, nsteps=nsteps, porosity=porosity)
+        self.rve = RVE_creator(descriptor, nsteps=nsteps)
+        if self.precipit is not None:
+            self.rve.phase_names.append('Matrix')
+            self.rve.phase_vf.append(1.0 - self.precipit)
         self.nparticles = self.rve.nparticles
         # store geometry in simbox object
         self.simbox = Simulation_Box(self.rve.size)
@@ -155,10 +168,9 @@ class Microstructure(object):
             particle_data = self.rve.particle_data
             if particle_data is None:
                 raise ValueError('No particle_data in pack. Run create_RVE first.')
-        if vf is None and type(self.porosity) is float:
-            vf = np.minimum(1. - self.porosity, 0.7)  # 70% is maximum packing density of ellipsoids
-            print(f'Porosity: Packing up to particle volume fraction of {vf}.')
-            print(f'Porosity: Packing up to particle volume fraction of {vf}.')
+        if vf is None and self.precipit is not None:
+            vf = np.minimum(self.precipit, 0.7)  # 70% is maximum packing density of ellipsoids
+            print(f'Sparse particles (precipitates/pores): Packing up to particle volume fraction of {vf}.')
         self.particles, self.simbox = \
             packingRoutine(particle_data, self.rve.periodic,
                            self.rve.packing_steps, self.simbox,
@@ -184,7 +196,7 @@ class Microstructure(object):
         self.mesh.create_voxels(self.simbox)
 
         self.mesh = \
-            voxelizationRoutine(particles, self.mesh, porosity=self.porosity)
+            voxelizationRoutine(particles, self.mesh, prec_vf=self.precipit)
         if np.any(self.nparticles != self.mesh.ngrains_phase):
             logging.info(f'Number of grains per phase changed from {self.nparticles} to ' +
                          f'{list(self.mesh.ngrains_phase)} during voxelization.')
@@ -227,8 +239,8 @@ class Microstructure(object):
 
         if self.mesh is None or self.mesh.grains is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-        if self.porosity and 0 in self.mesh.grain_dict.keys():
-            # in case of porosity, remove irregular grain 0 from analysis
+        if self.precipit and 0 in self.mesh.grain_dict.keys():
+            # in case of precipit, remove irregular grain 0 from analysis
             empty_vox = self.mesh.grain_dict.pop(0)
             grain_store = self.mesh.grain_phase_dict.pop(0)
             nphases = self.rve.nphases - 1
@@ -1082,7 +1094,7 @@ class Microstructure(object):
     def init_stats(self, descriptor=None, gs_data=None, ar_data=None, porous=False, save_files=False):
         """ Legacy function for plot_stats_init."""
         logging.warning('"init_stats" is a legacy function and will be depracted, please use "plot_stats_init()".')
-        self.plot_stats_init(descriptor, gs_data=gs_data, ar_data=ar_data, porous=porous, save_files=save_files)
+        self.plot_stats_init(descriptor, gs_data=gs_data, ar_data=ar_data, save_files=save_files)
 
     def output_abq(self, nodes=None, name=None,
                    voxel_dict=None, grain_dict=None, faces=None,

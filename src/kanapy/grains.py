@@ -443,7 +443,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         ctr = np.mean(tetra.points[tet], axis=0)
         igr = mesh.grains[get_voxel(ctr)]
         if (igr == 0) and (0 not in grains.keys()):
-            continue  # special case of porosity, where grain 0 is assigned to pores
+            continue  # special case of precipit, where grain 0 is assigned to pores
         # test if all vertices of tet belong to that grain
         if not tet_in_grain(tet, grains[igr]['Vertices']):
             # try to find a neighboring grain with all vertices of tet
@@ -483,7 +483,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     for i, tet in enumerate(tetra.simplices):
         igr = tet_to_grain[i]
         if (igr == 0) and (0 not in grains.keys()):
-            continue  # special case of porosity, where grain 0 is assigned to pores
+            continue  # special case of precipit, where grain 0 is assigned to pores
         for j, neigh in enumerate(tetra.neighbors[i, :]):
             if neigh == -1 or tet_to_grain[neigh] != igr:
                 ft = []
@@ -575,17 +575,17 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         vvox = np.count_nonzero(mesh.grains == igr) * vunit
         vtot_vox += vvox
         vol_mae += np.abs(1. - vg / vvox)
-    if np.abs(vtot_vox - vref) > 1.e-5 and not bool(mesh.porosity_voxels):
+    if np.abs(vtot_vox - vref) > 1.e-5 and not bool(mesh.prec_vf_voxels):
         logging.warning(f'Inconsistent volume of voxelized grains: {vtot_vox}, ' +
                         f'Reference volume: {vref}')
-    if np.abs(vtot - vref) > 1.e-5 and not bool(mesh.porosity_voxels):
+    if np.abs(vtot - vref) > 1.e-5 and not bool(mesh.prec_vf_voxels):
         logging.warning(f'Inconsistent volume of polyhedral grains: {vtot}, ' +
                         f'Reference volume: {vref}')
     print(f'Total volume of RVE: {vref} {rve.units}^3')
     print(f'Total volume of polyhedral grains: {vtot} {rve.units}^3')
-    if bool(mesh.porosity_voxels):
+    if bool(mesh.prec_vf_voxels):
         geometry['Porosity_grains'] = 1. - vtot / vref
-        print(f'Porosity in voxel structure: {mesh.porosity_voxels}')
+        print(f'Porosity in voxel structure: {mesh.prec_vf_voxels}')
         print(f'Porosity in polyhedral grains: {geometry["Porosity_grains"]}')
     print(f'Mean relative error of polyhedral vs. voxel volume of individual ' +
           f'grains: {round(vol_mae / Ngr, 3)}')
@@ -608,9 +608,7 @@ def get_stats(particle_data, geometry, units, nphases):
         Statistical information about particle and grain geometries.
 
     """
-    if particle_data is not None:
-        if nphases != len(particle_data):
-            raise ValueError(f'Inconsistent list length for particle_data for {nphases} phases: {len(particle_data)}')
+    if particle_data is not None and nphases == len(particle_data):
         # convert particle geometries to dicts
         par_eqDia = dict()
         par_majDia = dict()
