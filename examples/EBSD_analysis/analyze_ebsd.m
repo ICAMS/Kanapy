@@ -21,7 +21,7 @@ ebsd_full = EBSD.load(fname, ...
 % remove non-indexed areas
 ebsd = ebsd_full('indexed');
 % select majority phase
-ebsd_h = ebsd('1')
+ebsd_h = ebsd('1');
 % get crystal symmetry from EBSD map
 cs = getfield(ebsd_h, 'CS');
 % calculate grain boundaries

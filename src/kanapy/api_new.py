@@ -106,6 +106,7 @@ class Microstructure(object):
             if type(descriptor) is not list:
                 self.descriptor = [descriptor]
                 self.nphases = 1
+                if descriptor['']
             else:
                 self.descriptor = descriptor
                 self.nphases = len(self.descriptor)
@@ -120,7 +121,7 @@ class Microstructure(object):
     --------        Routines for user interface        --------
     """
 
-    def init_RVE(self, descriptor=None, nsteps=1000, porosity=None):
+    def init_RVE(self, descriptor=None, nsteps=1000):
         """
         Creates particle distribution inside simulation box (RVE) based on
         the data provided in the data file.
@@ -139,10 +140,10 @@ class Microstructure(object):
             descriptor = self.descriptor
         if type(descriptor) is not list:
             descriptor = [descriptor]
-        self.porosity = porosity
+        assert(self.nphases == len(descriptor))
 
         # initialize RVE, including mesh dimensions and particle distribution
-        self.rve = RVE_creator(descriptor, nsteps=nsteps, porosity=porosity)
+        self.rve = RVE_creator(descriptor, nsteps=nsteps)
         self.nparticles = self.rve.nparticles
         # store geometry in simbox object
         self.simbox = Simulation_Box(self.rve.size)
@@ -156,8 +157,7 @@ class Microstructure(object):
             if particle_data is None:
                 raise ValueError('No particle_data in pack. Run create_RVE first.')
         if vf is None and type(self.porosity) is float:
-            vf = np.minimum(1. - self.porosity, 0.7)  # 70% is maximum packing density of ellipsoids
-            print(f'Porosity: Packing up to particle volume fraction of {vf}.')
+            vf = np.minimum(self.porosity, 0.7)  # 70% is maximum packing density of ellipsoids
             print(f'Porosity: Packing up to particle volume fraction of {vf}.')
         self.particles, self.simbox = \
             packingRoutine(particle_data, self.rve.periodic,
