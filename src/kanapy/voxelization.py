@@ -387,7 +387,7 @@ def voxelizationRoutine(Ellipsoids, mesh, prec_vf=None):
     vf_cur = 1.0 - len(ind) / mesh.nvox
 
     print('Completed RVE voxelization')
-    if prec_vf is not None:
+    if prec_vf is not None and prec_vf < 1.0:
         print(f'Volume fraction of voxelized grains: {vf_cur}')
         print(f'Target volume fraction = {prec_vf}')
         mesh.prec_vf_voxels = vf_cur
