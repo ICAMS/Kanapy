@@ -55,13 +55,13 @@ class Microstructure(object):
             List of particle objects of class entities containing information object particle geometries
         rve : object of class RVE_creator
             Contains information about the RVE
-            Attributes: dim, size, nphases, nparticles, periodic, units, packing_steps, particle_data,
+            Attributes: dim, size, nparticles, periodic, units, packing_steps, particle_data,
             phase_names, phase_vf, ialloy
         simbox : Object of class Simulation_Box
             Contains information about geometry of simulation box for particle simulation
         mesh : object of class mesh_creator
             Attributes: dim, grain_dict, grain_ori_dict, grain_phase_dict, grains, ngrains_phase. nodes, nodes_smooth,
-                nphases, nvox, phases, prec_vf_voxels, vox_center_dict, voxel_dict
+                nvox, phases, prec_vf_voxels, vox_center_dict, voxel_dict
         geometry : dict
             Dictionary of grain geometries;
             Dict keys: "Ngrains", "Vertices", "Points", "Simplices", "Facets", "Grains", "GBnodes", GBarea" "GBfaces"
@@ -196,7 +196,7 @@ class Microstructure(object):
         self.mesh.create_voxels(self.simbox)
 
         self.mesh = \
-            voxelizationRoutine(particles, self.mesh, prec_vf=self.precipit)
+            voxelizationRoutine(particles, self.mesh, self.nphases, prec_vf=self.precipit)
         if np.any(self.nparticles != self.mesh.ngrains_phase):
             logging.info(f'Number of grains per phase changed from {self.nparticles} to ' +
                          f'{list(self.mesh.ngrains_phase)} during voxelization.')
@@ -243,11 +243,11 @@ class Microstructure(object):
             # in case of precipit, remove irregular grain 0 from analysis
             empty_vox = self.mesh.grain_dict.pop(0)
             grain_store = self.mesh.grain_phase_dict.pop(0)
-            nphases = self.rve.nphases - 1
+            nphases = self.nphases - 1
         else:
             empty_vox = None
             grain_store = None
-            nphases = self.rve.nphases
+            nphases = self.nphases
 
         self.geometry: dict = \
             calc_polygons(self.rve, self.mesh)  # updates RVE_data

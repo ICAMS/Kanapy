@@ -315,7 +315,7 @@ def reassign_shared_voxels(cooDict, Ellipsoids, voxel_dict):
     return
 
 
-def voxelizationRoutine(Ellipsoids, mesh, prec_vf=None):
+def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
     """
     The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`,
     :meth:`create_voxels`, :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`
@@ -374,7 +374,7 @@ def voxelizationRoutine(Ellipsoids, mesh, prec_vf=None):
     # empty voxels will get phase number 1 and be assigned to grain with key 0
     ph_arr = -np.ones(mesh.nvox, dtype=int)
     mesh.grain_phase_dict = dict()
-    mesh.ngrains_phase = np.zeros(mesh.nphases, dtype=int)
+    mesh.ngrains_phase = np.zeros(nphases, dtype=int)
     for ih, il in mesh.grain_dict.items():
         il = np.array(il) - 1
         ip = Ellipsoids[ih - 1].phasenum

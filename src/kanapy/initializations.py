@@ -80,7 +80,6 @@ class RVE_creator(object):
 
         Attributes
         ----------
-        self.nphases = len(stats_dicts)  # number of phases in RVE
         self.packing_steps = nsteps  # max number of steps for packing simulation
         self.size = None  #  tuple of lengths along Cartesian axes
         self.dim = None  # tuple of number of voxels along Cartesian axes
@@ -263,7 +262,6 @@ class RVE_creator(object):
         else:
             print('Creating an RVE based on user defined statistics')
         # Extract grain diameter statistics info
-        self.nphases = len(stats_dicts)  # number of phases in RVE
         self.packing_steps = nsteps  # max number of steps for packing simulation
         self.size = None  # tuple of lengths along Cartesian axes
         self.dim = None  # tuple of number of voxels along Cartesian axes

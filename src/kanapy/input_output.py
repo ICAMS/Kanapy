@@ -444,7 +444,6 @@ def import_voxels(file, path='./'):
     ms.simbox = Simulation_Box(size)
     # initialize voxel structure (= mesh)
     ms.mesh = mesh_creator(sh)
-    ms.mesh.nphases = nphases
     ms.mesh.grains = grains
     ms.mesh.grain_dict = grain_dict
     ms.mesh.grain_ori_dict = grain_ori_dict

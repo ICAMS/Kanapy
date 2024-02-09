@@ -209,10 +209,10 @@ def test_voxelizationRoutine():
     sim_box = Simulation_Box(rve.size)
     sim_box.sim_ts = 500
     mesh = mesh_creator(rve.dim)
-    mesh.nphases = 1
+    nphases = 1
     mesh.create_voxels(sim_box)
     Particles = particle_generator([parDict], sim_box, False)
-    mesh = voxelizationRoutine(Particles, mesh)
+    mesh = voxelizationRoutine(Particles, mesh, nphases)
     assert mesh.vox_center_dict[5][0] == 0.9
     assert mesh.voxel_dict[7] == [29, 30, 26, 25, 31, 32, 28, 27]
     assert mesh.grains.shape == (15, 15, 15)
