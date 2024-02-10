@@ -575,7 +575,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         vol_mae += np.abs(1. - vg / vvox)
     if np.abs(vtot_vox - vref) > 1.e-5 and not bool(mesh.prec_vf_voxels):
         logging.warning(f'Inconsistent volume of voxelized grains: {vtot_vox}, ' +
-                        f'Reference volume: {vref}')
+                        f'Reference volume: {vref}. Grians missing in polyhedral structure.')
     if np.abs(vtot - vref) > 1.e-5 and not bool(mesh.prec_vf_voxels):
         logging.warning(f'Inconsistent volume of polyhedral grains: {vtot}, ' +
                         f'Reference volume: {vref}')

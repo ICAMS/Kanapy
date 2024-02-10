@@ -271,7 +271,7 @@ class Microstructure(object):
                 igr.append(gblist[1])
         if len(ind) > 0:
             logging.warning(f'{len(ind)} grains are not represented in polyhedral geometry.')
-            logging.warning('Consider increasing the number of voxels, as grains appear to be very irregular.')
+            #logging.warning('Consider increasing the number of voxels, as grains appear to be very irregular.')
             """ind.reverse()
             igr.reverse()
             for j, i in enumerate(ind):
