@@ -2,7 +2,6 @@ import itertools
 import logging
 import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
-from scipy.spatial.distance import euclidean
 from tqdm import tqdm
 
 
@@ -230,7 +229,6 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     # create dicts for GB facets, including fake facets at surfaces
     geometry = dict()
-    geometry['Ngrains'] = mesh.ngrains_phase
     grain_facesDict = dict()  # {Grain: faces}
     gb_vox_dict = dict()
     for i in range(1, Ng_max + 7):
@@ -593,7 +591,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
     return geometry
 
 
-def get_stats(particle_data, geometry, units, nphases):
+def get_stats(particle_data, geometry, units, nphases, ngrains):
     """
     Compare the geometries of particles used for packing and the resulting
     grains.
@@ -637,7 +635,7 @@ def get_stats(particle_data, geometry, units, nphases):
     output_data_list = []
     for ip in range(nphases):
         # Create dictionaries to store the data generated
-        output_data = {'Number': geometry['Ngrains'][ip],
+        output_data = {'Number': ngrains[ip],
                        'Unit_scale': units,
                        'Grain_Equivalent_diameter': np.array(grain_eqDia[ip]),
                        'Grain_Major_diameter': np.array(grain_majDia[ip]),

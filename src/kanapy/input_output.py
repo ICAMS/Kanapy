@@ -119,10 +119,17 @@ def read_dump(file):
 
 
 def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
-                  gb_area=None, dual_phase=False, thermal=False):
+                  gb_area=None, dual_phase=False, thermal=False,
+                  ialloy=None, grain_phase_dict=None):
     r"""
     Creates an ABAQUS input file with microstructure morphology information
-    in the form of nodes, elements and element sets.
+    in the form of nodes, elements and element sets. If "dual_phase" is true,
+    element sets with phase numbers will be defined and assigned to materials
+    "PHASE_{phase_id}MAT" plain material definitions for phases will be included.
+    Otherwise, it will be assumed that each grain refers to a material
+    "GRAIN_{}grain_id}MAT. In this case, a "_mat.inp" file with the same name
+    trunc will be included, in which the alloy number and Euler angles for each
+    grain must be defined.
 
     .. note:: The nodal coordinates are written out in units of 1 mm or 1 :math:`\mu` m scale, as requested by the
                  user in the input file.
@@ -142,9 +149,15 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
                     f.write('%d\n' % el)
         # Create sections
         for k in grain_dict.keys():
-            f.write(
-                '*Solid Section, elset=GRAIN{0}_SET, material=GRAIN{1}_MAT\n'
-                .format(k, k))
+            if grain_phase_dict is None or grain_phase_dict[k] < nall:
+                f.write(
+                    '*Solid Section, elset=GRAIN{0}_SET, material=GRAIN{1}_MAT\n'
+                    .format(k, k))
+            else:
+                f.write(
+                    '*Solid Section, elset=GRAIN{0}_SET, material=PHASE{1}_MAT\n'
+                    .format(k, grain_phase_dict[k]))
+                ph_set.add(grain_phase_dict[k])
         return
 
     def write_phase_sets():
@@ -164,6 +177,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
             f.write(
                 '*Solid Section, elset=PHASE{0}_SET, material=PHASE{1}_MAT\n'
                 .format(k, k))
+            ph_set.add(k)
         return
 
     print('')
@@ -180,6 +194,11 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         print('Using tet element type SFM3D4.')
         eltype = 'SFM3D4'
 
+    # select material definition
+    if type(ialloy) is not list:
+        ialloy = [ialloy]
+    nall = len(ialloy)
+    ph_set = set()
     # Factor used to generate nodal coordinates in 'mm' or 'um' scale
     if units == 'mm':
         scale_fact = 1.e-3
@@ -262,25 +281,38 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         f.write('** MATERIALS\n')
         f.write('**\n')
         if dual_phase:
-            for i in range(1, len(grain_dict.keys())):
+            # declare plane materials for Abaqus standard materials for each phase
+            for i in ph_set:
                 f.write('**\n')
                 f.write('*Material, name=PHASE{}_MAT\n'.format(i))
                 f.write('**Include, input=Material{}.inp\n'.format(i))
                 f.write('**\n')
         else:
+            # declare plane materials for Abaqus standard materials
+            for i in ph_set:
+                f.write('**\n')
+                f.write('*Material, name=PHASE{}_MAT\n'.format(i))
+            # include file with definition for CP parameters for each grain
+            f.write('**\n')
             f.write('*Include, input={}mat.inp\n'.format(file[0:-8]))
             f.write('**\n')
     print('---->DONE!\n')
     return
 
 
-def writeAbaqusMat(ialloy, angles, file=None, path='./', nsdv=200):
+def writeAbaqusMat(ialloy, angles,
+                   file=None, path='./',
+                   grain_phase_dict=None,
+                   nsdv=200):
     """
-    Export Euler angles to Abaqus input deck that can be included in the _geom.inp file.
+    Export Euler angles to Abaqus input deck that can be included in the _geom.inp file. If
+    parameter "grain_phase_dict" is given, the phase number for each grain will be used to select
+    the corresponding ialloy from a list. If the list ialloy is shorter than the number of phases in
+    grain_phase_dict, no angles for phases with no corresponding ialloy will be written.
 
     Parameters:
     -----------
-    ialloy : int
+    ialloy : int or list
         Identifier, alloy number in ICAMS CP-UMAT: mod_alloys.f
     angles : dict or (N, 3)-ndarray
         Dict with Euler angles for each grain or array with number of N rows (= number of grains) and
@@ -289,9 +321,14 @@ def writeAbaqusMat(ialloy, angles, file=None, path='./', nsdv=200):
         Filename, optional (default: None)
     path : str
         Path to save file, option (default: './')
+    grain_phase_dict: dict
+        Dict with phase for each grain, optional (default: None)
     nsdv : int
         Number of state dependant variables, optional (default: 200)
     """
+    if type(ialloy) is not list:
+        ialloy = [ialloy]
+    nall = len(ialloy)
     if type(angles) is not dict:
         # converting (N, 3) ndarray to dict
         gr_ori_dict = dict()
@@ -299,7 +336,6 @@ def writeAbaqusMat(ialloy, angles, file=None, path='./', nsdv=200):
             gr_ori_dict[igr+1] = ori
     else:
         gr_ori_dict = angles
-
     nitem = len(gr_ori_dict.keys())
     if file is None:
         file = f'abq_px_{nitem}_mat.inp'
@@ -310,11 +346,17 @@ def writeAbaqusMat(ialloy, angles, file=None, path='./', nsdv=200):
         f.write('** MATERIALS\n')
         f.write('**\n')
         for igr, ori in gr_ori_dict.items():
+            if grain_phase_dict is None:
+                ip = 0
+            else:
+                ip = grain_phase_dict[igr]
+                if ip > nall - 1:
+                    continue
             f.write('*Material, name=GRAIN{}_MAT\n'.format(igr))
             f.write('*Depvar\n')
             f.write('    {}\n'.format(nsdv))
             f.write('*User Material, constants=4\n')
-            f.write('{}, {}, {}, {}\n'.format(float(ialloy),
+            f.write('{}, {}, {}, {}\n'.format(float(ialloy[ip]),
                                               ori[0], ori[1], ori[2]))
     return
 

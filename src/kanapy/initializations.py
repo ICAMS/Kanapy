@@ -224,7 +224,7 @@ class RVE_creator(object):
 
             dia_cutoff_min = stats["Equivalent diameter"]["cutoff_min"]
             dia_cutoff_max = stats["Equivalent diameter"]["cutoff_max"]
-            if dia_cutoff_min/dia_cutoff_max > 0.75:
+            if dia_cutoff_min / dia_cutoff_max > 0.75:
                 raise ValueError('Min/Max values for cutoffs of equiavalent diameter are too close: ' +
                                  f'Max: {dia_cutoff_max}, Min: {dia_cutoff_min}')
             # generate dict for particle data
@@ -238,7 +238,7 @@ class RVE_creator(object):
                 loc_AR = stats["Aspect ratio"][loc]
                 ar_cutoff_min = stats["Aspect ratio"]["cutoff_min"]
                 ar_cutoff_max = stats["Aspect ratio"]["cutoff_max"]
-                if ar_cutoff_min/ar_cutoff_max > 0.75:
+                if ar_cutoff_min / ar_cutoff_max > 0.75:
                     raise ValueError('Min/Max values for cutoffs of aspect ratio are too close: ' +
                                      f'Max: {ar_cutoff_max}, Min: {ar_cutoff_min}')
 
@@ -247,7 +247,7 @@ class RVE_creator(object):
                 loc_ori = stats["Tilt angle"][loc]
                 ori_cutoff_min = stats["Tilt angle"]["cutoff_min"]
                 ori_cutoff_max = stats["Tilt angle"]["cutoff_max"]
-                if ori_cutoff_min/ori_cutoff_max > 0.75:
+                if ori_cutoff_min / ori_cutoff_max > 0.75:
                     raise ValueError('Min/Max values for cutoffs of orientation of tilt axis are too close: ' +
                                      f'Max: {ori_cutoff_max}, Min: {ori_cutoff_min}')
 
@@ -267,11 +267,12 @@ class RVE_creator(object):
         self.dim = None  # tuple of number of voxels along Cartesian axes
         self.periodic = None  # Boolean for periodicity of RVE
         self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
-        self.ialloy = None # Number of alloy in ICAMS CP-UMAT
+        self.ialloy = None  # Number of alloy in ICAMS CP-UMAT
         self.nparticles = []  # List of article numbers for each phase
         particle_data = []  # list of cits for statistical particle data for each grains
         phase_names = []  # list of names of phases
         phase_vf = []  # list of volume fractions of phases
+        ialloy = []
 
         # extract data from descriptors of individual phases
         for ip, stats in enumerate(stats_dicts):
@@ -297,13 +298,17 @@ class RVE_creator(object):
                                         'Using first value.')
                 # Extract Alloy number for ICAMS CP-UMAT
                 if "ialloy" in stats['RVE'].keys():
-                    self.ialloy = stats['RVE']['ialloy']
+                    ialloy.append(stats['RVE']['ialloy'])
             elif ip == 0:
                 raise ValueError('RVE properties must be specified in descriptors for first phase.')
 
             # Extract other simulation attributes, must be specified for phase 0
             if "Simulation" in stats.keys():
-                periodic = bool(stats["Simulation"]["periodicity"])
+                peri = stats["Simulation"]["periodicity"]
+                if type(peri) is bool:
+                    periodic = peri
+                else:
+                    periodic = True if peri == 'True' else False
                 if self.periodic is None:
                     self.periodic = periodic
                 elif self.periodic != periodic:
@@ -348,6 +353,11 @@ class RVE_creator(object):
         self.phase_names = phase_names
         self.phase_vf = phase_vf
         self.particle_data = particle_data
+        nall = len(ialloy)
+        if nall > 0:
+            if nall != len(phase_vf):
+                logging.warning(f'{nall} values of "ialloy" provided, but only {len(phase_vf)} phases defined.')
+            self.ialloy = ialloy
         return
 
 
@@ -515,7 +525,10 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
     # number of voxels
     nx = ny = nz = voxels  # number of voxels in each direction
     # specify RVE info
-    pbc = 'True' if periodicity else 'False'
+    if type(periodicity) is bool:
+        pbc = periodicity
+    else:
+        pbc = True if periodicity == 'True' else False
 
     # check grain type
     # create the corresponding dict with statistical grain geometry information

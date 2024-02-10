@@ -64,7 +64,7 @@ class Microstructure(object):
                 nvox, phases, prec_vf_voxels, vox_center_dict, voxel_dict
         geometry : dict
             Dictionary of grain geometries;
-            Dict keys: "Ngrains", "Vertices", "Points", "Simplices", "Facets", "Grains", "GBnodes", GBarea" "GBfaces"
+            Dict keys: "Vertices", "Points", "Simplices", "Facets", "Grains", "GBnodes", GBarea" "GBfaces"
             "Grains" : dictionary with key grain_number  
             Keys:"Vertices", "Points", "Center", "Simplices", "Volume", "Area", "Phase", "eqDia", "majDia", "minDia"
         res_data : list
@@ -252,11 +252,11 @@ class Microstructure(object):
         self.geometry: dict = \
             calc_polygons(self.rve, self.mesh)  # updates RVE_data
         # verify that geometry['Grains'] and mesh.grain_dict are consistent
-        if np.any(self.geometry['Ngrains'] != self.ngrains):
+        """if np.any(self.geometry['Ngrains'] != self.ngrains):
             logging.warning(f'Only facets for {self.geometry["Ngrains"]} created, but {self.Ngr} grains in voxels.')
             for igr in self.mesh.grain_dict.keys():
                 if igr not in self.geometry['Grains'].keys():
-                    logging.warning(f'Grain: {igr} not in geometry. Be aware when creating GB textures.')
+                    logging.warning(f'Grain: {igr} not in geometry. Be aware when creating GB textures.')"""
         # verify that geometry['GBarea'] is consistent with geometry['Grains']
         gba = self.geometry['GBarea']
         ind = []
@@ -290,7 +290,8 @@ class Microstructure(object):
                 print(f'{ip}: {self.rve.phase_names[ip]} ({vf.round(1)}%)')
         # analyse grains w.r.t. statistical descriptors
         self.res_data = \
-            get_stats(self.rve.particle_data, self.geometry, self.rve.units, nphases)
+            get_stats(self.rve.particle_data, self.geometry, self.rve.units,
+                      nphases, self.mesh.ngrains_phase)
         if empty_vox is not None:
             # add removed grain again
             self.mesh.grain_dict[0] = empty_vox
@@ -481,8 +482,36 @@ class Microstructure(object):
     """
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
-                  dual_phase=False, thermal=False, units=None, ialloy=None):
-        """ Writes out the Abaqus (.inp) file for the generated RVE."""
+                  dual_phase=False, thermal=False, units=None,
+                  ialloy=None, nsdv=200):
+        """
+        Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
+        a string indicating if voxel ("v") or smoothened ("s") mesh should be written. It can also
+        provide an array of nodal positions. If dual_phase is true, the
+        generated deck contains plain material definitions for each phase. Material parameters must
+        be specified by the user. If ialloy is provided, the generated deck material definitions
+        for each grain. For dual phase structures to be used with crystal plasticity, ialloy
+        can be a list with all required material definitions. If the list ialloy is shorted than the
+        number of phases in the RVE, plain material definitions for the remaining phases will
+        be included in the input deck.
+
+        Parameters
+        ----------
+        nodes
+        file
+        path
+        voxel_dict
+        grain_dict
+        dual_phase
+        thermal
+        units
+        ialloy
+        nsdv
+
+        Returns
+        -------
+
+        """
         if nodes is None:
             if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
                 logging.warning('\nWarning: No argument "nodes" is given, will write smoothened structure')
@@ -537,6 +566,13 @@ class Microstructure(object):
             nct = f'abq_px_{len(grain_dict)}'
         if ialloy is None:
             ialloy = self.rve.ialloy
+        if type(ialloy) is list and len(ialloy) > self.nphases:
+            raise ValueError('List of values in ialloy is larger than number of phases in RVE.' +
+                             f'({len(ialloy)} > {self.nphases})')
+        if self.nphases > 1:
+            grpd = self.mesh.grain_phase_dict
+        else:
+            grpd = None
         if file is None:
             if self.name == 'Microstructure':
                 file = nct + ntag + '_geom.inp'
@@ -546,11 +582,14 @@ class Microstructure(object):
         file = os.path.join(path, file)
         export2abaqus(nodes, file, grain_dict, voxel_dict,
                       units=units, gb_area=faces,
-                      dual_phase=dual_phase, thermal=thermal)
+                      dual_phase=dual_phase,
+                      ialloy=ialloy, grain_phase_dict=grpd,
+                      thermal=thermal)
         # if orientation exists also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
             writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
-                           file=file[0:-8] + 'mat.inp')
+                           file=file[0:-8] + 'mat.inp',
+                           grain_phase_dict=grpd, nsdv=nsdv)
         return file
 
     def write_abq_ori(self, ialloy=None, ori=None, file=None, path='./', nsdv=200):
@@ -1025,7 +1064,7 @@ class Microstructure(object):
             if self.mesh.grain_ori_dict is None:
                 logging.info('No angles for grains are given. Writing only geometry of RVE.')
             else:
-                for igr in self.mesh.grain_dict.keys():
+                for igr in self.mesh.grain_ori_dict.keys():
                     structure["Grains"][igr]["Orientation"] = list(self.mesh.grain_ori_dict[igr])
         else:
             for i, igr in enumerate(self.mesh.grain_dict.keys()):
