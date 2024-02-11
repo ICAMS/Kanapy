@@ -25,11 +25,11 @@ ms_elong = {'Grain type': 'Elongated',
 # create and visualize synthetic RVE
 # create kanapy microstructure object
 ms = knpy.Microstructure(descriptor=ms_elong, name=matname + '_' + texture + '_texture')
-ms.init_RVE()  # initialize RVE including particle distribution and structured mesh
+ms.init_RVE()  # initialize RVE including particle distribution
 ms.plot_stats_init()  # plot initial statistics of equivalent grain diameter and aspect ratio
 ms.pack()  # perform particle simulation to distribute grain nuclei in RVE volume
 ms.plot_ellipsoids()  # plot final configuration of particles
-ms.voxelize()  # assign voxels to grains according to particle configuration
+ms.voxelize()  # create structured mesh and assign voxels to grains according to particles
 ms.plot_voxels(sliced=True)  # plot voxels colored according to grain number
 ms.generate_grains()  # generate a polyhedral hull around each voxelized grain
 ms.plot_grains()  # plot polyhedral grains
