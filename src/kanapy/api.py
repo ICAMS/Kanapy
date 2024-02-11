@@ -103,6 +103,8 @@ class Microstructure(object):
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
         elif descriptor == 'from_voxels':
             self.from_voxels = True
+        elif descriptor == 'cuboid':
+            self.cuboid = True
         else:
             if type(descriptor) is not list:
                 self.descriptor = [descriptor]
@@ -328,7 +330,7 @@ class Microstructure(object):
             raise ValueError('Grain geometry is not defined. Run voxelize first.')
         if shared_area is None:
             if self.geometry is None:
-                logging.warning('Grain boundary areas are not defined, cannot be considered in orientation assignment.')
+                #logging.warning('Grain boundary areas are not defined, cannot be considered in orientation assignment.')
                 gba = None
                 if hist is not None:
                     raise ValueError('If histogram for GB texture is provided, GB areas must be defined.')
@@ -585,7 +587,7 @@ class Microstructure(object):
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
                       thermal=thermal)
-        # if orientation exists also write material file with Euler angles
+        # if orientation exists and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
             writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
                            file=file[0:-8] + 'mat.inp',
@@ -597,18 +599,18 @@ class Microstructure(object):
             ialloy = self.rve.ialloy
             if ialloy is None:
                 raise ValueError('Value of material number in ICAMS CP-UMAT (ialloy) not defined.')
+        if ori is None:
+            ori = self.mesh.grain_ori_dict
             if ori is None:
-                ori = self.mesh.grain_ori_dict
-                if ori is None:
-                    raise ValueError('No orientations present. Run "generate_oriantations" first.')
-            if file is None:
-                if self.name == 'Microstructure':
-                    file = f'abq_px_{self.Ngr}_mat.inp'
-                else:
-                    file = self.name + '_mat.inp'
-            path = os.path.normpath(path)
-            file = os.path.join(path, file)
-            writeAbaqusMat(ialloy, ori, file=file, nsdv=nsdv)
+                raise ValueError('No orientations present. Run "generate_oriantations" first.')
+        if file is None:
+            if self.name == 'Microstructure':
+                file = f'abq_px_{self.Ngr}_mat.inp'
+            else:
+                file = self.name + '_mat.inp'
+        path = os.path.normpath(path)
+        file = os.path.join(path, file)
+        writeAbaqusMat(ialloy, ori, file=file, nsdv=nsdv)
 
     def output_neper(self):
         """ Writes out particle position and weights files required for
