@@ -263,7 +263,7 @@ class EBSDmap:
             self.eng.textureReconstruction(Ng, 'orientation',
                                            ms['ori'], 'grains', ms['grains'], nargout=3)
 
-        if shared_area is None or shared_area == 0:
+        if shared_area is None:
             return np.array(self.eng.Euler(orired))
         else:
             orilist, ein, eout, mbin = \

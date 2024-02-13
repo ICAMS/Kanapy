@@ -329,15 +329,18 @@ class Microstructure(object):
         if self.mesh.grains is None:
             raise ValueError('Grain geometry is not defined. Run voxelize first.')
         if shared_area is None:
-            if self.geometry is None:
-                #logging.warning('Grain boundary areas are not defined, cannot be considered in orientation assignment.')
+            if hist is None:
                 gba = None
-                if hist is not None:
-                    raise ValueError('If histogram for GB texture is provided, GB areas must be defined.')
             else:
+                if self.geometry is None:
+                    raise ValueError('If histogram for GB texture is provided, GB areas must be defined.\n' +
+                                     'Run generate_grains() first, to calculate GB areas.')
                 gba = self.geometry['GBarea']
         else:
-            gba = shared_area
+            if shared_area == 0:
+                gba = None
+            else:
+                gba = shared_area
 
         ori_dict = dict()
         for ip, ngr in enumerate(self.ngrains):
