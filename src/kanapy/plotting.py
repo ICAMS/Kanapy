@@ -16,7 +16,8 @@ from scipy.stats import lognorm
 
 
 def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
-                   mask=None, cmap='prism', alpha=1.0, show=True):
+                   mask=None, cmap='prism', alpha=1.0, show=True,
+                   clist=None):
     """
     Plot voxels in microstructure, each grain with a different color. Sliced
     indicates whether one eighth of the box should be removed to see internal
@@ -42,6 +43,8 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
         The default is 1.0.
     show : bool
         Indicate whether to show the plot or to return the axis for further use
+    clist : (Ngr, 3)-ndarray
+        List of RGB colors for each grain
 
     Returns
     -------
@@ -59,8 +62,21 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
         vox_b = mask
     if dual_phase:
         Ngr = 2
-    cm = plt.cm.get_cmap(cmap, Ngr)
-    colors = cm(data.astype(int))
+    if clist is None:
+        cm = plt.cm.get_cmap(cmap, Ngr)
+        colors = cm(data.astype(int))
+    else:
+        colors = np.ones((Nx, Ny, Nz, 4))
+        grl = np.unique(data)
+        if grl[0] == 0:
+            grl = grl[1:]
+        for i in range(Nx):
+            for j in range(Ny):
+                for k in range(Nz):
+                    igr = data[i, j, k]
+                    if igr > 0:
+                        ind = np.where(grl == igr)[0]
+                        colors[i, j, k, 0:3] = clist[ind[0]]
 
     if sliced:
         ix = int(Nx / 2)

@@ -12,7 +12,6 @@ setMTEXpref('zAxisDirection','outOfPlane');
 
 % which files to be imported
 fname = 'ebsd_316L_500x500.ang';
-fname = '/Users/alexander/Documents/Projekte/HybridWelding-GhazalMoeini/EBSD/AlSi10Mg_SLM_cast_SLM_100X.ctf';
 
 %% Import the Data
 % create an EBSD variable containing the data

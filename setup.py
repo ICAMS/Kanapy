@@ -48,7 +48,7 @@ with open(path_path, 'w') as outfile:
     
 setup(
     name='kanapy',
-    version='6.1.5',
+    version='6.1.6',
     author='Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Napat Vajragupta, Alexander Hartmaier',
     author_email='alexander.hartmaier@rub.de',
     classifiers=[        

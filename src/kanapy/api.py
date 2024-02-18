@@ -374,7 +374,8 @@ class Microstructure(object):
             raise ValueError('No particle to plot. Run pack first.')
         plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase)
 
-    def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism'):
+    def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism',
+                    ori = None):
         """ Generate 3D plot of grains in voxelized microstructure. """
         if self.mesh.grains is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
@@ -382,7 +383,21 @@ class Microstructure(object):
             data = self.mesh.phases
         else:
             data = self.mesh.grains
-        plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced, dual_phase=dual_phase, cmap=cmap)
+        if ori is not None:
+            try:
+                from kanapy.import_EBSD import get_ipf_colors
+                if type(ori) is bool and ori:
+                    ori = np.array([val for val in self.mesh.grain_ori_dict.values()])
+                """Create possibility to pass actual CS to MTEX"""
+                clist = get_ipf_colors(ori)
+            except:
+                logging.error('Orientations can only be plotted if MTEX is available.')
+                clist = None
+        else:
+            clist = None
+
+        plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced,
+                       dual_phase=dual_phase, cmap=cmap, clist=clist)
 
     def plot_grains(self, geometry=None, cmap='prism', alpha=0.4,
                     ec=[0.5, 0.5, 0.5, 0.1], dual_phase=False):

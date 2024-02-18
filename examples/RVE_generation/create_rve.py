@@ -36,8 +36,11 @@ ms.plot_grains()  # plot polyhedral grains
 ms.plot_stats()  # compared final grain statistics with initial parameters
 
 # create grain orientations for Goss or random texture
+# Note: Angles are given in degrees
 if knpy.MTEX_AVAIL:
     ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
+    print('Plotting grain colors according to IPF key.')
+    ms.plot_voxels(ori=True)
 
 # output rve in voxel format
 ms.write_voxels(script_name=__file__, mesh=False, system=False)

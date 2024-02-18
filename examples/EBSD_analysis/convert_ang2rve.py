@@ -28,7 +28,7 @@ ar_param = ms_data['ar_param']  # lognorm distr. of aspect ratios [std dev., loc
 om_param = ms_data['om_param']  # normal distribution of tilt angles [std dev., mean]
 matname = ms_data['name']  # material name
 print('*** Statistical information on microstructure ***')
-print(f'=== Phase:', matname, '===')
+print(f'=== Phase: {matname} ===')
 print('==== Grain size (equivalent grain diameter) ====')
 print(f'scale: {gs_param[2].round(3)}, ' +
       f'location: {gs_param[1].round(3)}, ' +
@@ -65,6 +65,7 @@ ms.plot_stats(gs_param=gs_param, ar_param=ar_param)  # compare final grain stati
 
 # generate and assign grains orientations
 ms.generate_orientations(ebsd)
+ms.plot_voxels(ori=True)
 
 # output rve in voxel format
 ms.write_voxels(script_name=__file__, mesh=False, system=False)

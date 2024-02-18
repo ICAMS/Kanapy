@@ -364,9 +364,9 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
     # generate array of voxelized structure with grain IDs
     # if vf < 1.0, empty voxels will have grain ID 0
     gr_arr = np.zeros(mesh.nvox, dtype=int)
-    for ih, il in mesh.grain_dict.items():
-        il = np.array(il) - 1
-        gr_arr[il] = ih
+    for igr, vlist in mesh.grain_dict.items():
+        vlist = np.array(vlist) - 1
+        gr_arr[vlist] = igr
     mesh.grains = np.reshape(gr_arr, mesh.dim, order='F')
 
     # generate array of voxelized structure with phase numbers
@@ -375,11 +375,11 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
     ph_arr = -np.ones(mesh.nvox, dtype=int)
     mesh.grain_phase_dict = dict()
     mesh.ngrains_phase = np.zeros(nphases, dtype=int)
-    for ih, il in mesh.grain_dict.items():
-        il = np.array(il) - 1
-        ip = Ellipsoids[ih - 1].phasenum
-        ph_arr[il] = ip
-        mesh.grain_phase_dict[ih] = ip
+    for igr, vlist in mesh.grain_dict.items():
+        vlist = np.array(vlist) - 1
+        ip = Ellipsoids[igr - 1].phasenum
+        ph_arr[vlist] = ip
+        mesh.grain_phase_dict[igr] = ip
         mesh.ngrains_phase[ip] += 1
     ind = np.nonzero(ph_arr < 0.0)[0]
     ph_arr[ind] = 1  # assign phase 1 to empty voxels
@@ -388,7 +388,8 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
 
     print('Completed RVE voxelization')
     if prec_vf is not None and prec_vf < 1.0:
-        print(f'Volume fraction of voxelized grains: {vf_cur}')
+        print('Dispersed phase (precipitates/porosity):')
+        print(f'Volume fraction in voxelized grains: {vf_cur}')
         print(f'Target volume fraction = {prec_vf}')
         mesh.prec_vf_voxels = vf_cur
         if 0 in mesh.grain_dict.keys():
@@ -397,8 +398,9 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
         mesh.grain_dict[0] = ind
         mesh.grain_phase_dict[0] = 1
         mesh.ngrains_phase[1] += 1
-    elif vf_cur > 0.:
+    elif vf_cur < 1.0:
         logging.warning(f'WARNING: {len(ind)} voxels have not been assigned to grains.')
+        """Try to assign empty voxels to neighbor grain"""
     print('')
 
     return mesh

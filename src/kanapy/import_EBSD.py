@@ -283,6 +283,37 @@ class EBSDmap:
         for ms in self.ms_data:
             ipfKey = self.eng.ipfColorKey(ms['ori'], nargout=1)
             self.eng.plot(ipfKey, nargout=0)
+            
+            
+def get_ipf_colors(ori_list):
+    """
+    Get colors of list of orientations (in radians).
+    Assumes cubic crystal symmtry and cubic specimen symmetry.
+
+    Parameters
+    ----------
+    ori_list: (N, 3) ndarray
+        List of N Euler angles in radians
+    
+    Returns
+    -------
+    colors: (N, 3) ndarray
+        List of RGB values
+
+    """
+    # start Matlab engine
+    eng = matlab.engine.start_matlab()
+    eng.addpath(MTEX_DIR, nargout=0)
+    eng.addpath(ROOT_DIR, nargout=0)
+    mat_path = os.path.join(MAIN_DIR, 'src', 'kanapy')
+    eng.addpath(mat_path, nargout=0)
+    eng.startup(nargout=0)
+    
+    # get colors
+    """Create possibility to pass CS to MTEX"""
+    colors = eng.get_ipf_col(ori_list, nargout=1)
+    return np.array(colors)
+        
 
 
 def createOriset(num, ang, omega, hist=None, shared_area=None,
@@ -319,7 +350,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     eng = matlab.engine.start_matlab()
     eng.addpath(MTEX_DIR, nargout=0)
     eng.addpath(ROOT_DIR, nargout=0)
-    mat_path = os.path.normpath(MAIN_DIR + '/src/kanapy')
+    mat_path = os.path.join(MAIN_DIR, 'src', 'kanapy')
     eng.addpath(mat_path, nargout=0)
     eng.startup(nargout=0)
 
