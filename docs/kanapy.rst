@@ -9,6 +9,7 @@ Module API
    :undoc-members:
    :show-inheritance:
 
+
 Module CLI
 ----------
 
@@ -17,28 +18,11 @@ Module CLI
    :undoc-members:
    :show-inheritance:
 
+
 Module initialization
 ---------------------
 
 .. automodule:: kanapy.initializations
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module collisions
------------------
-
-.. automodule:: kanapy.collisions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-      
-Module entities
----------------
-
-.. automodule:: kanapy.entities
    :members:
    :undoc-members:
    :show-inheritance:
@@ -61,7 +45,25 @@ Module packing
    :undoc-members:
    :show-inheritance:
 
+
+Module entities
+---------------
+
+.. automodule:: kanapy.entities
+   :members:
+   :undoc-members:
+   :show-inheritance:
    
+   
+Module collisions
+-----------------
+
+.. automodule:: kanapy.collisions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 Module voxelization
 -------------------
 
@@ -69,6 +71,7 @@ Module voxelization
    :members:
    :undoc-members:
    :show-inheritance:
+
 
 Module grains
 -------------
@@ -78,13 +81,15 @@ Module grains
    :undoc-members:
    :show-inheritance:
 
-Module analyze\_texture
------------------------
+
+Module texture
+--------------
 
 .. automodule:: kanapy.textures
    :members:
    :undoc-members:
    :show-inheritance:   
+
 
 Module plotting
 ---------------
@@ -93,6 +98,7 @@ Module plotting
    :members:
    :undoc-members:
    :show-inheritance:
+
 
 Module smoothing
 ----------------

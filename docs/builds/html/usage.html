@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; kanapy 6.1.3 documentation</title>
+  <title>Usage &mdash; kanapy 6.1.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=54b8411a"></script>
+        <script src="_static/documentation_options.js?v=0cb1dfa4"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -38,7 +38,7 @@
             kanapy
           </a>
               <div class="version">
-                6.1.3
+                6.1.6
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -53,20 +53,23 @@
 <li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#kanapy-s-cli">Kanapy’s CLI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#kanapy-s-api-incomplete">Kanapy’s API (incomplete)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#detailed-tutorial">Detailed tutorial</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#geometry-examples">Geometry examples</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#input-file-structure">Input file structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#workflows-for-sphere-packing">Workflows for sphere packing</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#workflows-for-ellipsoid-packing">Workflows for ellipsoid packing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kanapy-s-api-incomplete">Kanapy’s API (incomplete)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#microstructure-descriptors">Microstructure descriptors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tutorials">Tutorials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#notebooks">Notebooks</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#texture-examples">Texture examples</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#workflow-for-odf-reconstruction">Workflow for ODF reconstruction</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#workflow-for-odf-reconstruction-with-orientation-assignment">Workflow for ODF reconstruction with orientation assignment</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#visualize-the-packing-simulation">Visualize the packing simulation</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#outdated-cli-contents">Outdated CLI contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#workflows-for-sphere-packing">Workflows for sphere packing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#workflows-for-ellipsoid-packing">Workflows for ellipsoid packing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#texture-examples">Texture examples</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#workflow-for-odf-reconstruction">Workflow for ODF reconstruction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#workflow-for-odf-reconstruction-with-orientation-assignment">Workflow for ODF reconstruction with orientation assignment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visualize-the-packing-simulation">Visualize the packing simulation</a></li>
 </ul>
 </li>
 </ul>
@@ -113,7 +116,7 @@ details this as shown:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Make sure that you are within the virtual environment created during the kanapy installation, as
-this environment contains the installed kanapy and its required dependencies.</p>
+this environment contains the kanapy instalation and its required dependencies.</p>
 </div>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>activate<span class="w"> </span>knpy
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>--help
@@ -133,36 +136,16 @@ this environment contains the installed kanapy and its required dependencies.</p
 <section id="kanapy-s-api-incomplete">
 <h2>Kanapy’s API (incomplete)<a class="headerlink" href="#kanapy-s-api-incomplete" title="Link to this heading"></a></h2>
 <p>Under construction …</p>
-</section>
-<section id="detailed-tutorial">
-<h2>Detailed tutorial<a class="headerlink" href="#detailed-tutorial" title="Link to this heading"></a></h2>
-<p>Four examples come bundled along with the kanapy package. Each example describes a particular workflow that is
-either related to the geometry module or the texture module. Hence the examples are sub-categorized here under
-two sub-sections: Geometry examples and Texture examples. A detailed description of these examples is presented here.
-The two examples <code class="docutils literal notranslate"><span class="pre">sphere_packing</span></code> and <code class="docutils literal notranslate"><span class="pre">ellipsoid_packing</span></code> depict the different workflows
-that have to be setup for generating synthetic microstructures with equiaxed and elongated
-grains, respectively. And the two examples <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction</span></code> and <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction_with_orientation_assignment</span></code>
-depict the workflows for reconstructing ODF from EBSD data and assigning orientations to RVE grains, respectively.
-For a detailed understanding of the general framework of the packing simulations or the ODF reconstruction, please
-refer to: <a class="reference internal" href="method.html#modeling"><span class="std std-ref">Modeling</span></a>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>New examples must be created in a separate directory. It allows the kanapy modules
-an easy access to the json, dump and other files created during the simulation.</p>
-</div>
-<section id="geometry-examples">
-<h3>Geometry examples<a class="headerlink" href="#geometry-examples" title="Link to this heading"></a></h3>
-<p>Both examples <code class="docutils literal notranslate"><span class="pre">sphere_packing</span></code> and <code class="docutils literal notranslate"><span class="pre">ellipsoid_packing</span></code> contain an input file wherein the user can
-specify the statistical parameters required for the simulation.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The json and dump files help in making the various kanapy geometry modules independent
-of one another during execution.</p>
-</div>
-<section id="input-file-structure">
-<h4>Input file structure<a class="headerlink" href="#input-file-structure" title="Link to this heading"></a></h4>
-<p>An exemplary structure of the input file: <code class="docutils literal notranslate"><span class="pre">stat_input.json</span></code> is shown below:</p>
+<p>The central element of Kanapy are statistical microstructure descriptors, which are used
+to generate the microstructure geometry and its texture in the different Kanapy modules.
+For multiphase microstructures, each phase has its own statistical descriptors and the
+respective dictionaries and combined to a list.</p>
+<section id="microstructure-descriptors">
+<h3>Microstructure descriptors<a class="headerlink" href="#microstructure-descriptors" title="Link to this heading"></a></h3>
+<p>An exemplary structure of the descriptor dictionary is shown below:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;Grain type&quot;</span>:
+<span class="w">    </span><span class="s2">&quot;Elongated&quot;</span>,
 <span class="w">  </span><span class="s2">&quot;Equivalent diameter&quot;</span>:
 <span class="w">    </span><span class="o">{</span>
 <span class="w">      </span><span class="s2">&quot;sig&quot;</span>:<span class="w"> </span><span class="m">0</span>.39,
@@ -199,53 +182,116 @@ of one another during execution.</p>
 <span class="w">    </span><span class="o">{</span>
 <span class="w">      </span><span class="s2">&quot;periodicity&quot;</span>:<span class="w"> </span><span class="s2">&quot;True&quot;</span>,
 <span class="w">      </span><span class="s2">&quot;output_units&quot;</span>:<span class="w"> </span><span class="s2">&quot;mm&quot;</span>
+<span class="w">    </span><span class="o">}</span>,
+<span class="w">  </span><span class="s2">&quot;Phase&quot;</span>:
+<span class="w">    </span><span class="o">{</span>
+<span class="w">      </span><span class="s2">&quot;Name&quot;</span>:<span class="w"> </span><span class="s2">&quot;Simulanium&quot;</span>,
+<span class="w">      </span><span class="s2">&quot;Number&quot;</span>:<span class="w"> </span><span class="m">1</span>,
+<span class="w">      </span><span class="s2">&quot;Volume fraction&quot;</span>:<span class="w"> </span><span class="m">1</span>.0
 <span class="w">    </span><span class="o">}</span>
 <span class="o">}</span>
 </pre></div>
 </div>
-<p>The input file is built in the JSON file format, with the following keywords: <code class="docutils literal notranslate"><span class="pre">Equivalent</span> <span class="pre">diameter,</span> <span class="pre">Aspect</span> <span class="pre">ratio,</span>
-<span class="pre">Tilt</span> <span class="pre">angle,</span> <span class="pre">RVE,</span> <span class="pre">Simulation</span></code>.</p>
+<p>Sample dictionaries are provided in the examples shown below. Note that descriptors can
+be stored and read from JSON files. In the following the essentail keywords:
+<code class="docutils literal notranslate"><span class="pre">Grain</span> <span class="pre">type,</span> <span class="pre">Equivalent</span> <span class="pre">diameter,</span> <span class="pre">Aspect</span> <span class="pre">ratio,</span> <span class="pre">Tilt</span> <span class="pre">angle,</span> <span class="pre">RVE,</span> <span class="pre">Simulation,</span> <span class="pre">Phase</span></code> are described</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>The keyword <code class="docutils literal notranslate"><span class="pre">Equivalent</span> <span class="pre">diameter</span></code> takes in four arguments to generate a
+<li><p><code class="docutils literal notranslate"><span class="pre">Grain</span> <span class="pre">type</span></code> (mandatory): Either “Elongated” or “Equiaxed”</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Equivalent</span> <span class="pre">diameter</span></code> (mandatory): takes in four arguments to generate a
 log-normal distribution for the particle’s equivalent diameter; they are the
 <a class="reference external" href="https://en.wikipedia.org/wiki/Normal_distribution">Normal distribution’s</a> standard deviation and mean, and the minimum
 and maximum cut-off values for the diameter. The values should correspond to <span class="math notranslate nohighlight">\(\mu m\)</span> scale.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Aspect</span> <span class="pre">ratio</span></code> takes the mean and the standard deviation value value as input. If the resultant
+<li><p><code class="docutils literal notranslate"><span class="pre">Aspect</span> <span class="pre">ratio</span></code> takes the mean and the standard deviation value value as input. If the resultant
 microstructure contains equiaxed grains then this field is not necessary.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Tilt</span> <span class="pre">angle</span></code> keyword represents the tilt angle of particles with
+<li><p><code class="docutils literal notranslate"><span class="pre">Tilt</span> <span class="pre">angle</span></code> keyword represents the tilt angle of particles with
 respect to the positive x-axis. Hence, to generate a distribution, it takes in
 two arguments: the normal distribution’s mean and the standard deviation. If the resultant
 microstructure contains equiaxed grains then this field is also not necessary.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">RVE</span></code> keyword takes two types of input: the side lengths of the final RVE
+<li><p><code class="docutils literal notranslate"><span class="pre">RVE</span></code> takes two types of input: the side lengths of the final RVE
 required and the number of voxels per RVE side length.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">Simulation</span></code> keyword takes in two inputs: A boolean value for periodicity (True/False)
-and the required unit scale (<span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span>) for the output
+<li><p><code class="docutils literal notranslate"><span class="pre">Simulation</span></code>  takes in two inputs: A boolean value for periodicity (True/False)
+and the required unit scale (‘mm’ or ‘um’ = <span class="math notranslate nohighlight">\(\mu m\)</span>) for the output
 ABAQUS .inp file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Phase</span></code> (optional) Information about phase name, number and volume fraction.</p></li>
 </ul>
 </div></blockquote>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
 <li><p>The user may choose not to use the built-in voxelization (meshing) routine
-for meshing the final RVE. Nevertheless, a value for <cite>voxel_per_side</cite> has to be provided.</p></li>
+for meshing the final RVE. Nevertheless, a value for the number of voxels
+per side has to be provided.</p></li>
 <li><p>A good estimation for <cite>Nx, Ny &amp; Nz</cite> value can be made by keeping the
 following point in mind: The smallest dimension of the smallest ellipsoid/sphere
 should contain at least 3 voxels.</p></li>
-<li><p>The size of voxels should be the same along X, Y &amp; Z directions (voxel_sizeX = voxel_sizeY = voxel_sizeZ).
+<li><p>The size of voxels should be the same along X, Y &amp; Z directions
+(voxel_sizeX = voxel_sizeY = voxel_sizeZ).
 It is determined using: voxel size = RVE side length/Voxel per side.</p></li>
 <li><p>Particles grow during the simulation. At the start of the simulation, all particles
 are initialized with null volume. At each time step, they grow in size by the
-value: diameter/1000. Therefore, the last timestep would naturally contain particles
-in their actual size.</p></li>
+value: diameter/1000. Since the maximum packing density of ellipsoides is
+about 65%, the full space filling structure is achieved during voxelization.</p></li>
 <li><p>The input unit scale should be in <span class="math notranslate nohighlight">\(\mu m\)</span> and the user can choose between
-<span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> as the unit scale in which output the
+‘mm’ or ‘um’ (= <span class="math notranslate nohighlight">\(\mu m\)</span>) as the unit scale in which output to the
 ABAQUS .inp file will be written.</p></li>
 </ol>
 </div>
 </section>
+<section id="tutorials">
+<h3>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading"></a></h3>
+<p>Several examples in form of Python scripts and Jupyter notebooks come bundled along with
+the kanapy package. Each example describes a particular workflow and demonstrates the use
+of the geometry module and the texture module. Note, that the latter requires a complete
+Kanapy installation including MTEX, that can be setup with the ‘kanapy setupTexture’
+command.</p>
+<section id="notebooks">
+<h4>Notebooks<a class="headerlink" href="#notebooks" title="Link to this heading"></a></h4>
+<ul>
+<li><div class="line-block">
+<div class="line"><a class="reference external" href="_static/generate_rve.html">generate_rve.ipynb</a></div>
+<div class="line">The basic steps of using Kanapy to generate synthetic
+representative volume elements (RVE) are demonstrated. The RVE can
+be exported in standard FEA formats.</div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line"><a class="reference external" href="_static/ebsd2rve.html">ebsd2rve.ipynb</a></div>
+<div class="line">An EBSD map aof a austenitic steel produced by additive
+manufacturing is analyzed with respect to statistical
+microstructure descriptors. The descriptors are the basis to build
+an RVE.</div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line"><a class="reference external" href="_static/dispersed_phase.html">dispersed_phase.ipynb</a></div>
+<div class="line">A polycrystal with a second phase dispersed along the grain
+boundaries is generated.</div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+</section>
+<section id="outdated-cli-contents">
+<h2>Outdated CLI contents<a class="headerlink" href="#outdated-cli-contents" title="Link to this heading"></a></h2>
+<p>The following sections refer mainly to CLI commands from previous Kanapy versions.
+To be updated …</p>
+<p>Hence the examples are sub-categorized here under
+two sub-sections: Geometry examples and Texture examples. A detailed description of these examples is presented here.
+The two examples <code class="docutils literal notranslate"><span class="pre">sphere_packing</span></code> and <code class="docutils literal notranslate"><span class="pre">ellipsoid_packing</span></code> depict the different workflows
+that have to be setup for generating synthetic microstructures with equiaxed and elongated
+grains, respectively. And the two examples <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction</span></code> and <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction_with_orientation_assignment</span></code>
+depict the workflows for reconstructing ODF from EBSD data and assigning orientations to RVE grains, respectively.
+For a detailed understanding of the general framework of the packing simulations or the ODF reconstruction, please
+refer to: <a class="reference internal" href="method.html#modeling"><span class="std std-ref">Modeling</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>New examples must be created in a separate directory. It allows the kanapy modules
+an easy access to the json, dump and other files created during the simulation.</p>
+</div>
 <section id="workflows-for-sphere-packing">
-<h4>Workflows for sphere packing<a class="headerlink" href="#workflows-for-sphere-packing" title="Link to this heading"></a></h4>
+<h3>Workflows for sphere packing<a class="headerlink" href="#workflows-for-sphere-packing" title="Link to this heading"></a></h3>
 <p>This example demonstrates the workflow for generating synthetic microstructures with
 equiaxed grains. The principle involved in generating such microstructures are described
 in the sub-section <a class="reference internal" href="applications.html#microstructure-with-equiaxed-grains"><span class="std std-ref">Microstructure with equiaxed grains</span></a>. With respect to the final RVE mesh,
@@ -334,7 +380,7 @@ software <a class="reference external" href="https://ovito.org/">OVITO</a>; this
 visualization, refer to <a class="reference internal" href="#visualize-the-packing-simulation"><span class="std std-ref">Visualize the packing simulation</span></a>.</p>
 </section>
 <section id="workflows-for-ellipsoid-packing">
-<h4>Workflows for ellipsoid packing<a class="headerlink" href="#workflows-for-ellipsoid-packing" title="Link to this heading"></a></h4>
+<h3>Workflows for ellipsoid packing<a class="headerlink" href="#workflows-for-ellipsoid-packing" title="Link to this heading"></a></h3>
 <p>This example demonstrates the workflow for generating synthetic microstructures with
 elongated grains. The principle involved in generating such microstructures is described
 in the sub-section <a class="reference internal" href="applications.html#microstructure-with-elongated-grains"><span class="std std-ref">Microstructure with elongated grains</span></a>. With respect to the final RVE mesh,
@@ -366,10 +412,8 @@ depending on the user requirement specified in the input file.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">plotStats</span></code> command outputs figures comparing the input and output diameter &amp; aspect ratio distributions.</p></li>
 </ol>
 </div>
-</section>
-</section>
 <section id="texture-examples">
-<h3>Texture examples<a class="headerlink" href="#texture-examples" title="Link to this heading"></a></h3>
+<h4>Texture examples<a class="headerlink" href="#texture-examples" title="Link to this heading"></a></h4>
 <p>Both examples <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction</span></code> and <code class="docutils literal notranslate"><span class="pre">ODF_reconstruction_with_orientation_assignment</span></code> require MATLAB &amp; MTEX to be
 installed in your system. If your kanapy is not configured for texture analysis, please run the following command:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>activate<span class="w"> </span>knpy
@@ -383,8 +427,10 @@ installed in your system. If your kanapy is not configured for texture analysis,
 <li><p>The required input files must be placed in the working directory from where the kanapy commands are run.</p></li>
 </ol>
 </div>
+</section>
+</section>
 <section id="workflow-for-odf-reconstruction">
-<h4>Workflow for ODF reconstruction<a class="headerlink" href="#workflow-for-odf-reconstruction" title="Link to this heading"></a></h4>
+<h3>Workflow for ODF reconstruction<a class="headerlink" href="#workflow-for-odf-reconstruction" title="Link to this heading"></a></h3>
 <p>This example demonstrates the workflow for reconstructing ODF from experimental EBSD data. The principle involved
 in generating the reduced ODF is described in the sub-section <a class="reference internal" href="applications.html#odf-reconstruction"><span class="std std-ref">ODF reconstruction</span></a>. Kanapy requires the EBSD data
 saved as (.mat) file format. In this regard, an exemplary EBSD file (<cite>ebsd_316L.mat</cite>) is provided in the <code class="docutils literal notranslate"><span class="pre">../kanapy-master/examples/ODF_reconstruction/</span></code> folder.</p>
@@ -428,7 +474,7 @@ the initial (<span class="math notranslate nohighlight">\(\kappa\)</span>) and t
 </div>
 </section>
 <section id="workflow-for-odf-reconstruction-with-orientation-assignment">
-<h4>Workflow for ODF reconstruction with orientation assignment<a class="headerlink" href="#workflow-for-odf-reconstruction-with-orientation-assignment" title="Link to this heading"></a></h4>
+<h3>Workflow for ODF reconstruction with orientation assignment<a class="headerlink" href="#workflow-for-odf-reconstruction-with-orientation-assignment" title="Link to this heading"></a></h3>
 <p>This example demonstrates the workflow for reconstructing ODF from experimental EBSD data and then determining the optimal
 assignment of orientations to RVE grains. The principle involved in optimal orientation assignment is described in the
 sub-section <a class="reference internal" href="applications.html#odf-reconstruction-with-orientation-assignment"><span class="std std-ref">ODF reconstruction with orientation assignment</span></a>. In addition to the EBSD data, Kanapy requires
@@ -483,7 +529,7 @@ with a specific grain number that it should be assigned to.</p></li>
 </div>
 </section>
 <section id="visualize-the-packing-simulation">
-<h4>Visualize the packing simulation<a class="headerlink" href="#visualize-the-packing-simulation" title="Link to this heading"></a></h4>
+<h3>Visualize the packing simulation<a class="headerlink" href="#visualize-the-packing-simulation" title="Link to this heading"></a></h3>
 <p>You can view the data generated by the simulation (after the simulation
 is complete or during the simulation) by launching OVITO and reading in
 the dump files generated by kanapy from the <code class="docutils literal notranslate"><span class="pre">../sphere_packing/dump_files/</span></code> directory.
@@ -503,7 +549,6 @@ of the GUI) in the file import panel after loading the dump files. The required 
 and components are shown here:</p>
 <a class="reference internal image-reference" href="_images/UI_options.png"><img alt="_images/UI_options.png" src="_images/UI_options.png" style="width: 750px;" /></a>
 <p>For further viewing customizations refer to OVITO’s <a class="reference external" href="https://ovito.org/manual/">documentation</a>.</p>
-</section>
 </section>
 </section>
 </section>

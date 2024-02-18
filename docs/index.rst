@@ -1,5 +1,5 @@
 Welcome to kanapy's documentation!
-======================================
+==================================
 
 .. toctree::
    :maxdepth: 2

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Code documentation &mdash; kanapy 6.1.3 documentation</title>
+  <title>Code documentation &mdash; kanapy 6.1.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=54b8411a"></script>
+        <script src="_static/documentation_options.js?v=0cb1dfa4"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -38,7 +38,7 @@
             kanapy
           </a>
               <div class="version">
-                6.1.3
+                6.1.6
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -101,10 +101,22 @@
 <li class="toctree-l3"><a class="reference internal" href="#kanapy.initializations.stat_names"><code class="docutils literal notranslate"><span class="pre">stat_names()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.collisions">Module collisions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.collisions.collide_detect"><code class="docutils literal notranslate"><span class="pre">collide_detect()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.collisions.collision_react"><code class="docutils literal notranslate"><span class="pre">collision_react()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.collisions.collision_routine"><code class="docutils literal notranslate"><span class="pre">collision_routine()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.input_output">Module input_output</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.export2abaqus"><code class="docutils literal notranslate"><span class="pre">export2abaqus()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.import_stats"><code class="docutils literal notranslate"><span class="pre">import_stats()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.import_voxels"><code class="docutils literal notranslate"><span class="pre">import_voxels()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.pickle2microstructure"><code class="docutils literal notranslate"><span class="pre">pickle2microstructure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.read_dump"><code class="docutils literal notranslate"><span class="pre">read_dump()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.writeAbaqusMat"><code class="docutils literal notranslate"><span class="pre">writeAbaqusMat()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.write_dump"><code class="docutils literal notranslate"><span class="pre">write_dump()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.write_stats"><code class="docutils literal notranslate"><span class="pre">write_stats()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.packing">Module packing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.packing.calculateForce"><code class="docutils literal notranslate"><span class="pre">calculateForce()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.packing.packingRoutine"><code class="docutils literal notranslate"><span class="pre">packingRoutine()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.packing.particle_generator"><code class="docutils literal notranslate"><span class="pre">particle_generator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.packing.particle_grow"><code class="docutils literal notranslate"><span class="pre">particle_grow()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-kanapy.entities">Module entities</a><ul>
@@ -141,20 +153,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#kanapy.entities.cub_oct_split"><code class="docutils literal notranslate"><span class="pre">cub_oct_split()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.input_output">Module input_output</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.export2abaqus"><code class="docutils literal notranslate"><span class="pre">export2abaqus()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.import_voxels"><code class="docutils literal notranslate"><span class="pre">import_voxels()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.pickle2microstructure"><code class="docutils literal notranslate"><span class="pre">pickle2microstructure()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.read_dump"><code class="docutils literal notranslate"><span class="pre">read_dump()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.writeAbaqusMat"><code class="docutils literal notranslate"><span class="pre">writeAbaqusMat()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.input_output.write_dump"><code class="docutils literal notranslate"><span class="pre">write_dump()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.packing">Module packing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.packing.calculateForce"><code class="docutils literal notranslate"><span class="pre">calculateForce()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.packing.packingRoutine"><code class="docutils literal notranslate"><span class="pre">packingRoutine()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.packing.particle_generator"><code class="docutils literal notranslate"><span class="pre">particle_generator()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.packing.particle_grow"><code class="docutils literal notranslate"><span class="pre">particle_grow()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.collisions">Module collisions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.collisions.collide_detect"><code class="docutils literal notranslate"><span class="pre">collide_detect()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.collisions.collision_react"><code class="docutils literal notranslate"><span class="pre">collision_react()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.collisions.collision_routine"><code class="docutils literal notranslate"><span class="pre">collision_routine()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-kanapy.voxelization">Module voxelization</a><ul>
@@ -170,12 +172,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#kanapy.grains.l1_error_est"><code class="docutils literal notranslate"><span class="pre">l1_error_est()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.textures">Module analyze_texture</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.textures.checkConfiguration"><code class="docutils literal notranslate"><span class="pre">checkConfiguration()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.textures.getGrainNumber"><code class="docutils literal notranslate"><span class="pre">getGrainNumber()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.textures.getGrainVolume"><code class="docutils literal notranslate"><span class="pre">getGrainVolume()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.textures.getSharedSurfaceArea"><code class="docutils literal notranslate"><span class="pre">getSharedSurfaceArea()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#kanapy.textures.textureReduction"><code class="docutils literal notranslate"><span class="pre">textureReduction()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-kanapy.textures">Module texture</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.textures.EBSDmap"><code class="docutils literal notranslate"><span class="pre">EBSDmap</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kanapy.textures.EBSDmap.calcORI"><code class="docutils literal notranslate"><span class="pre">EBSDmap.calcORI()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kanapy.textures.EBSDmap.showIPF"><code class="docutils literal notranslate"><span class="pre">EBSDmap.showIPF()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.textures.createOriset"><code class="docutils literal notranslate"><span class="pre">createOriset()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.textures.createOrisetRandom"><code class="docutils literal notranslate"><span class="pre">createOrisetRandom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kanapy.textures.get_ipf_colors"><code class="docutils literal notranslate"><span class="pre">get_ipf_colors()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-kanapy.plotting">Module plotting</a><ul>
@@ -266,25 +271,28 @@ Institution: ICAMS, Ruhr University Bochum</p>
 <dt>descriptor<span class="classifier">list</span></dt><dd><p>List of dictionaries describing the microstructure of each phase;
 Dict Keys: “Grains type”, “Equivalent diameter”, “Aspect ratio”, “Tilt Angle”, “RVE”, “Simulation”</p>
 </dd>
-<dt>porosity<span class="classifier">None or float</span></dt><dd><p>Indicates porosity of microstructure, if float gives volume fraction of pores</p>
+<dt>precipit<span class="classifier">None or float</span></dt><dd><dl class="simple">
+<dt>Indicates microstructure with precipitates/pores/particles in continuous matrix. If type is float,</dt><dd><p>it gives volume the fraction of that precipitate phase</p>
+</dd>
+</dl>
 </dd>
 <dt>from_voxels<span class="classifier">bool</span></dt><dd><p>Indicates whether microstructure object is imported from voxel file, not generated from particle simulation</p>
 </dd>
 <dt>particles<span class="classifier">list</span></dt><dd><p>List of particle objects of class entities containing information object particle geometries</p>
 </dd>
 <dt>rve<span class="classifier">object of class RVE_creator</span></dt><dd><p>Contains information about the RVE
-Attributes: dim, size, nphases, nparticles, periodic, units, packing_steps, particle_data,
+Attributes: dim, size, nparticles, periodic, units, packing_steps, particle_data,
 phase_names, phase_vf, ialloy</p>
 </dd>
 <dt>simbox<span class="classifier">Object of class Simulation_Box</span></dt><dd><p>Contains information about geometry of simulation box for particle simulation</p>
 </dd>
 <dt>mesh<span class="classifier">object of class mesh_creator</span></dt><dd><dl class="simple">
-<dt>Attributes: dim, grain_dict, grain_ori_dict, grain_phase_dict, grains, ngrains_phase. nodes, nodes_smooth,</dt><dd><p>nphases, nvox, phases, porosity_voxels, vox_center_dict, voxel_dict</p>
+<dt>Attributes: dim, grain_dict, grain_ori_dict, grain_phase_dict, grains, ngrains_phase. nodes, nodes_smooth,</dt><dd><p>nvox, phases, prec_vf_voxels, vox_center_dict, voxel_dict</p>
 </dd>
 </dl>
 </dd>
 <dt>geometry<span class="classifier">dict</span></dt><dd><p>Dictionary of grain geometries;
-Dict keys: “Ngrains”, “Vertices”, “Points”, “Simplices”, “Facets”, “Grains”, “GBnodes”, GBarea” “GBfaces”
+Dict keys: “Vertices”, “Points”, “Simplices”, “Facets”, “Grains”, “GBnodes”, GBarea” “GBfaces”
 “Grains” : dictionary with key grain_number  
 Keys:”Vertices”, “Points”, “Center”, “Simplices”, “Volume”, “Area”, “Phase”, “eqDia”, “majDia”, “minDia”</p>
 </dd>
@@ -330,14 +338,14 @@ shared_area</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="kanapy.api.Microstructure.init_RVE">
-<span class="sig-name descname"><span class="pre">init_RVE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">descriptor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">porosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/api.html#Microstructure.init_RVE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.api.Microstructure.init_RVE" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">init_RVE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">descriptor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/api.html#Microstructure.init_RVE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.api.Microstructure.init_RVE" title="Link to this definition"></a></dt>
 <dd><p>Creates particle distribution inside simulation box (RVE) based on
 the data provided in the data file.</p>
 <section id="id1">
 <h3>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <p>descriptor
 nsteps
-porosity</p>
+precipit</p>
 </section>
 <section id="id2">
 <h3>Returns<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
@@ -493,7 +501,7 @@ comparison.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="kanapy.api.Microstructure.plot_voxels">
-<span class="sig-name descname"><span class="pre">plot_voxels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sliced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'prism'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/api.html#Microstructure.plot_voxels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.api.Microstructure.plot_voxels" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot_voxels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sliced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'prism'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ori</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/api.html#Microstructure.plot_voxels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.api.Microstructure.plot_voxels" title="Link to this definition"></a></dt>
 <dd><p>Generate 3D plot of grains in voxelized microstructure.</p>
 </dd></dl>
 
@@ -511,8 +519,32 @@ comparison.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="kanapy.api.Microstructure.write_abq">
-<span class="sig-name descname"><span class="pre">write_abq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voxel_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grain_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thermal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ialloy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/api.html#Microstructure.write_abq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.api.Microstructure.write_abq" title="Link to this definition"></a></dt>
-<dd><p>Writes out the Abaqus (.inp) file for the generated RVE.</p>
+<span class="sig-name descname"><span class="pre">write_abq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voxel_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grain_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thermal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ialloy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsdv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/api.html#Microstructure.write_abq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.api.Microstructure.write_abq" title="Link to this definition"></a></dt>
+<dd><p>Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
+a string indicating if voxel (“v”) or smoothened (“s”) mesh should be written. It can also
+provide an array of nodal positions. If dual_phase is true, the
+generated deck contains plain material definitions for each phase. Material parameters must
+be specified by the user. If ialloy is provided, the generated deck material definitions
+for each grain. For dual phase structures to be used with crystal plasticity, ialloy
+can be a list with all required material definitions. If the list ialloy is shorted than the
+number of phases in the RVE, plain material definitions for the remaining phases will
+be included in the input deck.</p>
+<section id="id9">
+<h3>Parameters<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<p>nodes
+file
+path
+voxel_dict
+grain_dict
+dual_phase
+thermal
+units
+ialloy
+nsdv</p>
+</section>
+<section id="id10">
+<h3>Returns<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+</section>
 </dd></dl>
 
 <dl class="py method">
@@ -553,8 +585,8 @@ vertex p3x p3y p3z</p>
 </div></blockquote>
 <p>endsolid name
 ‘</p>
-<section id="id9">
-<h3>Returns<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<section id="id11">
+<h3>Returns<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
 <p>None.</p>
 </section>
 </dd></dl>
@@ -563,8 +595,8 @@ vertex p3x p3y p3z</p>
 <dt class="sig sig-object py" id="kanapy.api.Microstructure.write_voxels">
 <span class="sig-name descname"><span class="pre">write_voxels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">script_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/api.html#Microstructure.write_voxels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.api.Microstructure.write_voxels" title="Link to this definition"></a></dt>
 <dd><p>Write voxel structure into JSON file.</p>
-<section id="id10">
-<h3>Parameters<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<section id="id12">
+<h3>Parameters<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
 <p>angles
 script_name
 file
@@ -573,8 +605,8 @@ mesh
 source
 system</p>
 </section>
-<section id="id11">
-<h3>Returns<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<section id="id13">
+<h3>Returns<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
 </section>
 </dd></dl>
 
@@ -606,7 +638,7 @@ if admin==True: use paths in MAIN_DIR otherwise use WORK_DIR</p>
 <span id="module-initialization"></span><h2>Module initialization<a class="headerlink" href="#module-kanapy.initializations" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="kanapy.initializations.RVE_creator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kanapy.initializations.</span></span><span class="sig-name descname"><span class="pre">RVE_creator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats_dicts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_voxels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">porosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/initializations.html#RVE_creator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.initializations.RVE_creator" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kanapy.initializations.</span></span><span class="sig-name descname"><span class="pre">RVE_creator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats_dicts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_voxels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/initializations.html#RVE_creator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.initializations.RVE_creator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Creates an RVE based on user-defined statistics</p>
 <div class="admonition note">
@@ -702,12 +734,12 @@ or <span class="math notranslate nohighlight">\(\mu m\)</span>) for ABAQUS .inp 
 <dt class="sig sig-object py" id="kanapy.initializations.mesh_creator.get_ind">
 <span class="sig-name descname"><span class="pre">get_ind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">addr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/initializations.html#mesh_creator.get_ind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.initializations.mesh_creator.get_ind" title="Link to this definition"></a></dt>
 <dd><p>Return the index in an array from a generic address.</p>
-<section id="id12">
-<h3>Parameters<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<section id="id14">
+<h3>Parameters<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
 <p>addr</p>
 </section>
-<section id="id13">
-<h3>Returns<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<section id="id15">
+<h3>Returns<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
 </section>
 </dd></dl>
 
@@ -727,93 +759,263 @@ omega = [kappa, loc of von Mises distrib. of tilt angle]</p>
 <dd></dd></dl>
 
 </section>
-<section id="module-kanapy.collisions">
-<span id="module-collisions"></span><h2>Module collisions<a class="headerlink" href="#module-kanapy.collisions" title="Link to this heading"></a></h2>
+<section id="module-kanapy.input_output">
+<span id="module-input-output"></span><h2>Module input_output<a class="headerlink" href="#module-kanapy.input_output" title="Link to this heading"></a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="kanapy.collisions.collide_detect">
-<span class="sig-prename descclassname"><span class="pre">kanapy.collisions.</span></span><span class="sig-name descname"><span class="pre">collide_detect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coef_i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coef_j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A_i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A_j</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/collisions.html#collide_detect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.collisions.collide_detect" title="Link to this definition"></a></dt>
-<dd><p>Implementation of Algebraic separation condition developed by
-W. Wang et al. 2001 for overlap detection between two static ellipsoids.
-Kudos to ChatGPT for support with translation from C++ code.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>coef_i</strong> (<em>numpy array</em>) – Coefficients of ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
-<li><p><strong>coef_j</strong> (<em>numpy array</em>) – Coefficients of ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
-<li><p><strong>r_i</strong> (<em>numpy array</em>) – Position of ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
-<li><p><strong>r_j</strong> (<em>numpy array</em>) – Position of ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
-<li><p><strong>A_i</strong> (<em>numpy array</em>) – Rotation matrix of ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
-<li><p><strong>A_j</strong> (<em>numpy array</em>) – Rotation matrix of ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>True</strong> if ellipsoids <span class="math notranslate nohighlight">\(i, j\)</span> overlap, else <strong>False</strong></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>boolean</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.collisions.collision_react">
-<span class="sig-prename descclassname"><span class="pre">kanapy.collisions.</span></span><span class="sig-name descname"><span class="pre">collision_react</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ell1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ell2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/collisions.html#collision_react"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.collisions.collision_react" title="Link to this definition"></a></dt>
-<dd><p>Evaluates and modifies the magnitude and direction of the ellipsoid’s velocity after collision.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ell1</strong> (object <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
-<li><p><strong>ell2</strong> (object <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
-<li><p><strong>damp</strong> (<em>float</em>) – Damping factor</p></li>
-</ul>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="kanapy.input_output.export2abaqus">
+<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">export2abaqus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grain_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voxel_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gb_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thermal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ialloy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grain_phase_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#export2abaqus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.export2abaqus" title="Link to this definition"></a></dt>
+<dd><p>Creates an ABAQUS input file with microstructure morphology information
+in the form of nodes, elements and element sets. If “dual_phase” is true,
+element sets with phase numbers will be defined and assigned to materials
+“PHASE_{phase_id}MAT” plain material definitions for phases will be included.
+Otherwise, it will be assumed that each grain refers to a material
+“GRAIN_{}grain_id}MAT. In this case, a “_mat.inp” file with the same name
+trunc will be included, in which the alloy number and Euler angles for each
+grain must be defined.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Consider two ellipsoids <span class="math notranslate nohighlight">\(i, j\)</span> at collision. Let them occupy certain positions in space
-defined by the position vectors <span class="math notranslate nohighlight">\(\mathbf{r}^{i}, \mathbf{r}^{j}\)</span> and have certain 
-velocities represented by <span class="math notranslate nohighlight">\(\mathbf{v}^{i}, \mathbf{v}^{j}\)</span> respectively. The objective
-is to  find the velocity vectors after collision. The elevation angle <span class="math notranslate nohighlight">\(\phi\)</span> between
-the ellipsoids is determined by,</p>
-<a class="reference internal image-reference" href="_images/elevation_ell.png"><img alt="_images/elevation_ell.png" class="align-center" src="_images/elevation_ell.png" style="width: 200px; height: 45px;" /></a>
-<dl class="simple">
-<dt>where <span class="math notranslate nohighlight">\(dx, dy, dz\)</span> are defined as the distance between the two ellipsoid centers along</dt><dd><p><span class="math notranslate nohighlight">\(x, y, z\)</span> directions given by,</p>
-</dd>
-</dl>
-<a class="reference internal image-reference" href="_images/dist_ell.png"><img alt="_images/dist_ell.png" class="align-center" src="_images/dist_ell.png" style="width: 110px; height: 75px;" /></a>
-<p>Depending on the magnitudes of <span class="math notranslate nohighlight">\(dx, dz\)</span> as projected on the <span class="math notranslate nohighlight">\(x-z\)</span> plane, the angle
-<span class="math notranslate nohighlight">\(\Theta\)</span> is computed.
-The angles <span class="math notranslate nohighlight">\(\Theta\)</span> and <span class="math notranslate nohighlight">\(\phi\)</span> determine the in-plane and out-of-plane directions along which
-the ellipsoid <span class="math notranslate nohighlight">\(i\)</span> would bounce back after collision. Thus, the updated velocity vector components
-along the <span class="math notranslate nohighlight">\(x, y, z\)</span> directions are determined by,</p>
-<a class="reference internal image-reference" href="_images/velocities_ell.png"><img alt="_images/velocities_ell.png" class="align-center" src="_images/velocities_ell.png" style="width: 180px; height: 80px;" /></a>
+<p>The nodal coordinates are written out in units of 1 mm or 1 <span class="math notranslate nohighlight">\(\mu\)</span> m scale, as requested by the
+user in the input file.</p>
 </div>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="kanapy.collisions.collision_routine">
-<span class="sig-prename descclassname"><span class="pre">kanapy.collisions.</span></span><span class="sig-name descname"><span class="pre">collision_routine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/collisions.html#collision_routine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.collisions.collision_routine" title="Link to this definition"></a></dt>
-<dd><p>Calls the method :meth:’collide_detect’ to determine whether the given two ellipsoid objects overlap using
-the Algebraic separation condition developed by W. Wang et al. A detailed description is provided
-therein.</p>
-<p>Also calls the <a class="reference internal" href="#kanapy.collisions.collision_react" title="kanapy.collisions.collision_react"><code class="xref py py-meth docutils literal notranslate"><span class="pre">collision_react()</span></code></a> to evaluate the response after collision.</p>
+<dt class="sig sig-object py" id="kanapy.input_output.import_stats">
+<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">import_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#import_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.import_stats" title="Link to this definition"></a></dt>
+<dd><p>Write statistical descriptors of microstructure to JSON file.</p>
+<section id="id16">
+<h3>Parameters<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>file<span class="classifier">string</span></dt><dd><p>File name of pickled microstructure to be read.</p>
+</dd>
+<dt>path<span class="classifier">string</span></dt><dd><p>Path under which pickle-files are stored (optional, default: ‘./’)</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h3>Returns<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>desc<span class="classifier">list or dict</span></dt><dd><p>(List of) dict with statistical microstructure descriptors</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.input_output.import_voxels">
+<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">import_voxels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#import_voxels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.import_voxels" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.input_output.pickle2microstructure">
+<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">pickle2microstructure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#pickle2microstructure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.pickle2microstructure" title="Link to this definition"></a></dt>
+<dd><p>Read pickled microstructure file.</p>
+<section id="id18">
+<h3>Parameters<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>file<span class="classifier">string</span></dt><dd><p>File name of pickled microstructure to be read.</p>
+</dd>
+<dt>path<span class="classifier">string</span></dt><dd><p>Path under which pickle-files are stored (optional, default: ‘./’)</p>
+</dd>
+</dl>
+</section>
+<section id="id19">
+<h3>Returns<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>pcl<span class="classifier">Material object</span></dt><dd><p>unpickled microstructure</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.input_output.read_dump">
+<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">read_dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#read_dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.read_dump" title="Link to this definition"></a></dt>
+<dd><p>Reads the (.dump) file to extract information for voxelization (meshing) routine</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>document</em>) – Contains information of ellipsoids generated in the packing routine.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>Cuboid object that represents the RVE.</p></li>
+<li><p>List of ellipsoid objects that represent the grains.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple of python objects (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Cuboid</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.input_output.writeAbaqusMat">
+<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">writeAbaqusMat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ialloy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grain_phase_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsdv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#writeAbaqusMat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.writeAbaqusMat" title="Link to this definition"></a></dt>
+<dd><p>Export Euler angles to Abaqus input deck that can be included in the _geom.inp file. If
+parameter “grain_phase_dict” is given, the phase number for each grain will be used to select
+the corresponding ialloy from a list. If the list ialloy is shorter than the number of phases in
+grain_phase_dict, no angles for phases with no corresponding ialloy will be written.</p>
+<section id="id20">
+<h3>Parameters:<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ialloy<span class="classifier">int or list</span></dt><dd><p>Identifier, alloy number in ICAMS CP-UMAT: mod_alloys.f</p>
+</dd>
+<dt>angles<span class="classifier">dict or (N, 3)-ndarray</span></dt><dd><dl class="simple">
+<dt>Dict with Euler angles for each grain or array with number of N rows (= number of grains) and</dt><dd><p>three columns phi1, Phi, phi2</p>
+</dd>
+</dl>
+</dd>
+<dt>file<span class="classifier">str</span></dt><dd><p>Filename, optional (default: None)</p>
+</dd>
+<dt>path<span class="classifier">str</span></dt><dd><p>Path to save file, option (default: ‘./’)</p>
+</dd>
+<dt>grain_phase_dict: dict</dt><dd><p>Dict with phase for each grain, optional (default: None)</p>
+</dd>
+<dt>nsdv<span class="classifier">int</span></dt><dd><p>Number of state dependant variables, optional (default: 200)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.input_output.write_dump">
+<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">write_dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ellipsoids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#write_dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.write_dump" title="Link to this definition"></a></dt>
+<dd><p>Writes the (.dump) files into a sub-directory “dump_files”, which can be read by visualization software OVITO
+or imported again into Kanapy to avoid the packing simulation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>E1</strong> (object <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
-<li><p><strong>E2</strong> (object <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
-<li><p><strong>damp</strong> (<em>float</em>) – Damping factor</p></li>
+<li><p><strong>Ellipsoids</strong> (<em>list</em>) – Contains information of ellipsoids such as its position, axes lengths and tilt angles</p></li>
+<li><p><strong>sim_box</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Cuboid</span></code>) – Contains information of the dimensions of the simulation box</p></li>
 </ul>
 </dd>
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<ol class="arabic simple">
-<li><p>If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is
-sufficient to determine whether they overlap.</p></li>
-<li><p>Else, if either of them is an ellipsoid, then their coefficients, positions &amp; rotation matrices are
-used to determine whether they overlap.</p></li>
-</ol>
+<p>This function writes (.dump) files containing simulation domain and ellipsoid attribute information.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.input_output.write_stats">
+<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">write_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#write_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.write_stats" title="Link to this definition"></a></dt>
+<dd><p>Write statistical descriptors of microstructure to JSON file.</p>
+<section id="id21">
+<h3>Parameters<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>file<span class="classifier">string</span></dt><dd><p>File name of pickled microstructure to be read.</p>
+</dd>
+<dt>path<span class="classifier">string</span></dt><dd><p>Path under which pickle-files are stored (optional, default: ‘./’)</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h3>Returns<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>desc<span class="classifier">list or dict</span></dt><dd><p>(List of) dict with statistical microstructure descriptors</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-kanapy.packing">
+<span id="module-packing"></span><h2>Module packing<a class="headerlink" href="#module-kanapy.packing" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.packing.calculateForce">
+<span class="sig-prename descclassname"><span class="pre">kanapy.packing.</span></span><span class="sig-name descname"><span class="pre">calculateForce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ellipsoids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodicity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_rep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_att</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#calculateForce"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.packing.calculateForce" title="Link to this definition"></a></dt>
+<dd><p>Calculate interaction force between ellipsoids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Ellipsoids</strong> – </p>
+</dd>
+</dl>
+<p>:param sim_box :
+:type sim_box:
+:param periodicity:
+:type periodicity:
+:param k_rep: optional, default is 0.0
+:type k_rep: float
+:param k_att: optional, default is 0.0
+:type k_att: float</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.packing.packingRoutine">
+<span class="sig-prename descclassname"><span class="pre">kanapy.packing.</span></span><span class="sig-name descname"><span class="pre">packingRoutine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_rep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_att</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#packingRoutine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.packing.packingRoutine" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>The main function that controls the particle packing routine using:</dt><dd><p><a class="reference internal" href="#kanapy.packing.particle_grow" title="kanapy.packing.particle_grow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">particle_grow()</span></code></a> &amp; <a class="reference internal" href="#kanapy.packing.particle_generator" title="kanapy.packing.particle_generator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">particle_generator()</span></code></a></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Particle, RVE and simulation data are read from the JSON files
+generated by <code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.particleStatGenerator()</span></code>.
+They contain the following information:</p>
+<ul class="simple">
+<li><p>Ellipsoid attributes such as Major, Minor, Equivalent diameters
+and its tilt angle.</p></li>
+<li><p>RVE attributes such as RVE (Simulation domain) size, the number
+of voxels and the voxel resolution.</p></li>
+<li><p>Simulation attributes such as total number of timesteps and
+periodicity.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.packing.particle_generator">
+<span class="sig-prename descclassname"><span class="pre">kanapy.packing.</span></span><span class="sig-name descname"><span class="pre">particle_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#particle_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.packing.particle_generator" title="Link to this definition"></a></dt>
+<dd><p>Initializes ellipsoids by assigning them random positions and speeds within
+the simulation box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>particle_data</strong> (<em>Python dictionary</em>) – Ellipsoid information such as Major, Minor,
+Equivalent diameters and its tilt angle.</p></li>
+<li><p><strong>sim_box</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">entities.Simulation_Box</span></code>) – Simulation box representing RVE.</p></li>
+<li><p><strong>periodic</strong> – Indicates periodicity of RVE.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Ellipsoids for the packing routine</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.packing.particle_grow">
+<span class="sig-prename descclassname"><span class="pre">kanapy.packing.</span></span><span class="sig-name descname"><span class="pre">particle_grow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ellipsoids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodicity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_rep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_att</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#particle_grow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.packing.particle_grow" title="Link to this definition"></a></dt>
+<dd><p>Initializes the <code class="xref py py-class docutils literal notranslate"><span class="pre">entities.Octree</span></code> class and performs recursive
+subdivision with collision checks and response for the ellipsoids. At each
+time step of the simulation it increases the size of the ellipsoid by a 
+factor, which depends on the user-defined value for total number of time
+steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sim_box</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">entities.Simulation_Box</span></code>) – Simulation box representing RVE.</p></li>
+<li><p><strong>Ellipsoids</strong> (<em>list</em>) – Ellipsoids for the packing routine.</p></li>
+<li><p><strong>periodicity</strong> (<em>boolean</em>) – Status of periodicity.</p></li>
+<li><p><strong>nsteps</strong> (<em>int</em>) – Total simulation steps to fill box volume with particle
+volume.</p></li>
+<li><p><strong>k_rep</strong> (<em>float</em>) – Repulsion factor for particles</p></li>
+<li><p><strong>k_att</strong> (<em>float</em>) – Attraction factor for particles</p></li>
+<li><p><strong>vf</strong> (<em>float</em>) – Target volume fraction for particle filling</p></li>
+<li><p><strong>dump</strong> (<em>boolean</em>) – Indicate if dump files for particles are written.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#kanapy.input_output.write_dump" title="kanapy.input_output.write_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.write_dump()</span></code></a> function is called at each
+time step of the simulation to write output (.dump) files. 
+By default, periodic images are written to the output file, 
+but this option can be disabled within the function.</p>
 </div>
 </dd></dl>
 
@@ -1137,218 +1339,93 @@ by calling <code class="xref py py-meth docutils literal notranslate"><span clas
 </dd></dl>
 
 </section>
-<section id="module-kanapy.input_output">
-<span id="module-input-output"></span><h2>Module input_output<a class="headerlink" href="#module-kanapy.input_output" title="Link to this heading"></a></h2>
+<section id="module-kanapy.collisions">
+<span id="module-collisions"></span><h2>Module collisions<a class="headerlink" href="#module-kanapy.collisions" title="Link to this heading"></a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="kanapy.input_output.export2abaqus">
-<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">export2abaqus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grain_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voxel_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gb_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thermal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#export2abaqus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.export2abaqus" title="Link to this definition"></a></dt>
-<dd><p>Creates an ABAQUS input file with microstructure morphology information
-in the form of nodes, elements and element sets.</p>
+<dt class="sig sig-object py" id="kanapy.collisions.collide_detect">
+<span class="sig-prename descclassname"><span class="pre">kanapy.collisions.</span></span><span class="sig-name descname"><span class="pre">collide_detect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coef_i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coef_j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A_i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">A_j</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/collisions.html#collide_detect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.collisions.collide_detect" title="Link to this definition"></a></dt>
+<dd><p>Implementation of Algebraic separation condition developed by
+W. Wang et al. 2001 for overlap detection between two static ellipsoids.
+Kudos to ChatGPT for support with translation from C++ code.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coef_i</strong> (<em>numpy array</em>) – Coefficients of ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p><strong>coef_j</strong> (<em>numpy array</em>) – Coefficients of ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
+<li><p><strong>r_i</strong> (<em>numpy array</em>) – Position of ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p><strong>r_j</strong> (<em>numpy array</em>) – Position of ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
+<li><p><strong>A_i</strong> (<em>numpy array</em>) – Rotation matrix of ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p><strong>A_j</strong> (<em>numpy array</em>) – Rotation matrix of ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>True</strong> if ellipsoids <span class="math notranslate nohighlight">\(i, j\)</span> overlap, else <strong>False</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.collisions.collision_react">
+<span class="sig-prename descclassname"><span class="pre">kanapy.collisions.</span></span><span class="sig-name descname"><span class="pre">collision_react</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ell1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ell2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/collisions.html#collision_react"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.collisions.collision_react" title="Link to this definition"></a></dt>
+<dd><p>Evaluates and modifies the magnitude and direction of the ellipsoid’s velocity after collision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ell1</strong> (object <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p><strong>ell2</strong> (object <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
+<li><p><strong>damp</strong> (<em>float</em>) – Damping factor</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Consider two ellipsoids <span class="math notranslate nohighlight">\(i, j\)</span> at collision. Let them occupy certain positions in space
+defined by the position vectors <span class="math notranslate nohighlight">\(\mathbf{r}^{i}, \mathbf{r}^{j}\)</span> and have certain 
+velocities represented by <span class="math notranslate nohighlight">\(\mathbf{v}^{i}, \mathbf{v}^{j}\)</span> respectively. The objective
+is to  find the velocity vectors after collision. The elevation angle <span class="math notranslate nohighlight">\(\phi\)</span> between
+the ellipsoids is determined by,</p>
+<a class="reference internal image-reference" href="_images/elevation_ell.png"><img alt="_images/elevation_ell.png" class="align-center" src="_images/elevation_ell.png" style="width: 200px; height: 45px;" /></a>
+<dl class="simple">
+<dt>where <span class="math notranslate nohighlight">\(dx, dy, dz\)</span> are defined as the distance between the two ellipsoid centers along</dt><dd><p><span class="math notranslate nohighlight">\(x, y, z\)</span> directions given by,</p>
+</dd>
+</dl>
+<a class="reference internal image-reference" href="_images/dist_ell.png"><img alt="_images/dist_ell.png" class="align-center" src="_images/dist_ell.png" style="width: 110px; height: 75px;" /></a>
+<p>Depending on the magnitudes of <span class="math notranslate nohighlight">\(dx, dz\)</span> as projected on the <span class="math notranslate nohighlight">\(x-z\)</span> plane, the angle
+<span class="math notranslate nohighlight">\(\Theta\)</span> is computed.
+The angles <span class="math notranslate nohighlight">\(\Theta\)</span> and <span class="math notranslate nohighlight">\(\phi\)</span> determine the in-plane and out-of-plane directions along which
+the ellipsoid <span class="math notranslate nohighlight">\(i\)</span> would bounce back after collision. Thus, the updated velocity vector components
+along the <span class="math notranslate nohighlight">\(x, y, z\)</span> directions are determined by,</p>
+<a class="reference internal image-reference" href="_images/velocities_ell.png"><img alt="_images/velocities_ell.png" class="align-center" src="_images/velocities_ell.png" style="width: 180px; height: 80px;" /></a>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kanapy.collisions.collision_routine">
+<span class="sig-prename descclassname"><span class="pre">kanapy.collisions.</span></span><span class="sig-name descname"><span class="pre">collision_routine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">E1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/collisions.html#collision_routine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.collisions.collision_routine" title="Link to this definition"></a></dt>
+<dd><p>Calls the method :meth:’collide_detect’ to determine whether the given two ellipsoid objects overlap using
+the Algebraic separation condition developed by W. Wang et al. A detailed description is provided
+therein.</p>
+<p>Also calls the <a class="reference internal" href="#kanapy.collisions.collision_react" title="kanapy.collisions.collision_react"><code class="xref py py-meth docutils literal notranslate"><span class="pre">collision_react()</span></code></a> to evaluate the response after collision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>E1</strong> (object <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p><strong>E2</strong> (object <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>) – Ellipsoid <span class="math notranslate nohighlight">\(j\)</span></p></li>
+<li><p><strong>damp</strong> (<em>float</em>) – Damping factor</p></li>
+</ul>
+</dd>
+</dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ol class="arabic simple">
-<li><p>JSON files generated by <a class="reference internal" href="#kanapy.voxelization.voxelizationRoutine" title="kanapy.voxelization.voxelizationRoutine"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.voxelization.voxelizationRoutine()</span></code></a> are read to generate
-the ABAQUS (.inp) file. The json files contain:</p>
-<ul class="simple">
-<li><p>Node ID and its corresponding coordinates</p></li>
-<li><p>Element ID with its nodal connectivities</p></li>
-<li><p>Element sets representing grains (Assembly of elements)</p></li>
-</ul>
-</li>
-<li><p>The nodal coordinates are written out in <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale, as requested by the
-user in the input file.</p></li>
+<li><p>If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is
+sufficient to determine whether they overlap.</p></li>
+<li><p>Else, if either of them is an ellipsoid, then their coefficients, positions &amp; rotation matrices are
+used to determine whether they overlap.</p></li>
 </ol>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.input_output.import_voxels">
-<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">import_voxels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#import_voxels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.import_voxels" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.input_output.pickle2microstructure">
-<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">pickle2microstructure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#pickle2microstructure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.pickle2microstructure" title="Link to this definition"></a></dt>
-<dd><p>Read pickled microstructure file.</p>
-<section id="id14">
-<h3>Parameters<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
-<dl class="simple">
-<dt>file<span class="classifier">string</span></dt><dd><p>File name of pickled microstructure to be read.</p>
-</dd>
-<dt>path<span class="classifier">string</span></dt><dd><p>Path under which pickle-files are stored (optional, default: ‘./’)</p>
-</dd>
-</dl>
-</section>
-<section id="id15">
-<h3>Returns<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
-<dl class="simple">
-<dt>pcl<span class="classifier">Material object</span></dt><dd><p>unpickled microstructure</p>
-</dd>
-</dl>
-</section>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.input_output.read_dump">
-<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">read_dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#read_dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.read_dump" title="Link to this definition"></a></dt>
-<dd><p>Reads the (.dump) file to extract information for voxelization (meshing) routine</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>file</strong> (<em>document</em>) – Contains information of ellipsoids generated in the packing routine.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>Cuboid object that represents the RVE.</p></li>
-<li><p>List of ellipsoid objects that represent the grains.</p></li>
-</ul>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple of python objects (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Cuboid</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Ellipsoid</span></code>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.input_output.writeAbaqusMat">
-<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">writeAbaqusMat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ialloy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsdv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#writeAbaqusMat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.writeAbaqusMat" title="Link to this definition"></a></dt>
-<dd><p>Export Euler angles to Abaqus input deck that can be included in the _geom.inp file.</p>
-<section id="id16">
-<h3>Parameters:<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
-<dl class="simple">
-<dt>ialloy<span class="classifier">int</span></dt><dd><p>Identifier, alloy number in ICAMS CP-UMAT: mod_alloys.f</p>
-</dd>
-<dt>angles<span class="classifier">dict or (N, 3)-ndarray</span></dt><dd><dl class="simple">
-<dt>Dict with Euler angles for each grain or array with number of N rows (= number of grains) and</dt><dd><p>three columns phi1, Phi, phi2</p>
-</dd>
-</dl>
-</dd>
-<dt>file<span class="classifier">str</span></dt><dd><p>Filename, optional (default: None)</p>
-</dd>
-<dt>path<span class="classifier">str</span></dt><dd><p>Path to save file, option (default: ‘./’)</p>
-</dd>
-<dt>nsdv<span class="classifier">int</span></dt><dd><p>Number of state dependant variables, optional (default: 200)</p>
-</dd>
-</dl>
-</section>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.input_output.write_dump">
-<span class="sig-prename descclassname"><span class="pre">kanapy.input_output.</span></span><span class="sig-name descname"><span class="pre">write_dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ellipsoids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/input_output.html#write_dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.input_output.write_dump" title="Link to this definition"></a></dt>
-<dd><p>Writes the (.dump) files into a sub-directory “dump_files”, which can be read by visualization software OVITO
-or imported again into Kanapy to avoid the packing simulation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>Ellipsoids</strong> (<em>list</em>) – Contains information of ellipsoids such as its position, axes lengths and tilt angles</p></li>
-<li><p><strong>sim_box</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Cuboid</span></code>) – Contains information of the dimensions of the simulation box</p></li>
-</ul>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This function writes (.dump) files containing simulation domain and ellipsoid attribute information.</p>
-</div>
-</dd></dl>
-
-</section>
-<section id="module-kanapy.packing">
-<span id="module-packing"></span><h2>Module packing<a class="headerlink" href="#module-kanapy.packing" title="Link to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.packing.calculateForce">
-<span class="sig-prename descclassname"><span class="pre">kanapy.packing.</span></span><span class="sig-name descname"><span class="pre">calculateForce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ellipsoids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodicity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_rep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_att</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#calculateForce"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.packing.calculateForce" title="Link to this definition"></a></dt>
-<dd><p>Calculate interaction force between ellipsoids.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>Ellipsoids</strong> – </p>
-</dd>
-</dl>
-<p>:param sim_box :
-:type sim_box:
-:param periodicity:
-:type periodicity:
-:param k_rep: optional, default is 0.0
-:type k_rep: float
-:param k_att: optional, default is 0.0
-:type k_att: float</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.packing.packingRoutine">
-<span class="sig-prename descclassname"><span class="pre">kanapy.packing.</span></span><span class="sig-name descname"><span class="pre">packingRoutine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_rep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_att</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#packingRoutine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.packing.packingRoutine" title="Link to this definition"></a></dt>
-<dd><dl class="simple">
-<dt>The main function that controls the particle packing routine using:</dt><dd><p><a class="reference internal" href="#kanapy.packing.particle_grow" title="kanapy.packing.particle_grow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">particle_grow()</span></code></a> &amp; <a class="reference internal" href="#kanapy.packing.particle_generator" title="kanapy.packing.particle_generator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">particle_generator()</span></code></a></p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Particle, RVE and simulation data are read from the JSON files
-generated by <code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.particleStatGenerator()</span></code>.
-They contain the following information:</p>
-<ul class="simple">
-<li><p>Ellipsoid attributes such as Major, Minor, Equivalent diameters
-and its tilt angle.</p></li>
-<li><p>RVE attributes such as RVE (Simulation domain) size, the number
-of voxels and the voxel resolution.</p></li>
-<li><p>Simulation attributes such as total number of timesteps and
-periodicity.</p></li>
-</ul>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.packing.particle_generator">
-<span class="sig-prename descclassname"><span class="pre">kanapy.packing.</span></span><span class="sig-name descname"><span class="pre">particle_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#particle_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.packing.particle_generator" title="Link to this definition"></a></dt>
-<dd><p>Initializes ellipsoids by assigning them random positions and speeds within
-the simulation box.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>particle_data</strong> (<em>Python dictionary</em>) – Ellipsoid information such as Major, Minor,
-Equivalent diameters and its tilt angle.</p></li>
-<li><p><strong>sim_box</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">entities.Simulation_Box</span></code>) – Simulation box representing RVE.</p></li>
-<li><p><strong>periodic</strong> – Indicates periodicity of RVE.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Ellipsoids for the packing routine</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.packing.particle_grow">
-<span class="sig-prename descclassname"><span class="pre">kanapy.packing.</span></span><span class="sig-name descname"><span class="pre">particle_grow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ellipsoids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodicity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_rep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_att</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dump</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/packing.html#particle_grow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.packing.particle_grow" title="Link to this definition"></a></dt>
-<dd><p>Initializes the <code class="xref py py-class docutils literal notranslate"><span class="pre">entities.Octree</span></code> class and performs recursive
-subdivision with collision checks and response for the ellipsoids. At each
-time step of the simulation it increases the size of the ellipsoid by a 
-factor, which depends on the user-defined value for total number of time
-steps.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sim_box</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">entities.Simulation_Box</span></code>) – Simulation box representing RVE.</p></li>
-<li><p><strong>Ellipsoids</strong> (<em>list</em>) – Ellipsoids for the packing routine.</p></li>
-<li><p><strong>periodicity</strong> (<em>boolean</em>) – Status of periodicity.</p></li>
-<li><p><strong>nsteps</strong> (<em>int</em>) – Total simulation steps to fill box volume with particle
-volume.</p></li>
-<li><p><strong>k_rep</strong> (<em>float</em>) – Repulsion factor for particles</p></li>
-<li><p><strong>k_att</strong> (<em>float</em>) – Attraction factor for particles</p></li>
-<li><p><strong>vf</strong> (<em>float</em>) – Target volume fraction for particle filling</p></li>
-<li><p><strong>dump</strong> (<em>boolean</em>) – Indicate if dump files for particles are written.</p></li>
-</ul>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><a class="reference internal" href="#kanapy.input_output.write_dump" title="kanapy.input_output.write_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.write_dump()</span></code></a> function is called at each
-time step of the simulation to write output (.dump) files. 
-By default, periodic images are written to the output file, 
-but this option can be disabled within the function.</p>
 </div>
 </dd></dl>
 
@@ -1415,7 +1492,7 @@ but this option can be disabled within the function.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="kanapy.voxelization.voxelizationRoutine">
-<span class="sig-prename descclassname"><span class="pre">kanapy.voxelization.</span></span><span class="sig-name descname"><span class="pre">voxelizationRoutine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ellipsoids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">porosity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/voxelization.html#voxelizationRoutine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.voxelization.voxelizationRoutine" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">kanapy.voxelization.</span></span><span class="sig-name descname"><span class="pre">voxelizationRoutine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ellipsoids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nphases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prec_vf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/voxelization.html#voxelizationRoutine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.voxelization.voxelizationRoutine" title="Link to this definition"></a></dt>
 <dd><p>The main function that controls the voxelization routine using: <a class="reference internal" href="#kanapy.input_output.read_dump" title="kanapy.input_output.read_dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.input_output.read_dump()</span></code></a>,
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">create_voxels()</span></code>, <a class="reference internal" href="#kanapy.voxelization.assign_voxels_to_ellipsoid" title="kanapy.voxelization.assign_voxels_to_ellipsoid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assign_voxels_to_ellipsoid()</span></code></a>, <a class="reference internal" href="#kanapy.voxelization.reassign_shared_voxels" title="kanapy.voxelization.reassign_shared_voxels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reassign_shared_voxels()</span></code></a></p>
 <div class="admonition note">
@@ -1446,8 +1523,8 @@ elements each representing a grain of the RVE.</p></li>
 between neighbouring grains in voxelized microstrcuture. Generate
 vertices as contact points between 3 or more grains. Generate
 polyhedral convex hull for vertices.</p>
-<section id="id17">
-<h3>Parameters<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<section id="id23">
+<h3>Parameters<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>rve<span class="classifier">kanapy object</span></dt><dd><p>Contains information about RVE geometry</p>
 </dd>
@@ -1457,8 +1534,8 @@ polyhedral convex hull for vertices.</p>
 </dd>
 </dl>
 </section>
-<section id="id18">
-<h3>Returns<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<section id="id24">
+<h3>Returns<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
 <p>geometry : dict</p>
 <p>ISSUES: for periodic structures, large grains with segments in both
 halves of the box and touching one boundary are split wrongly</p>
@@ -1467,14 +1544,14 @@ halves of the box and touching one boundary are split wrongly</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="kanapy.grains.get_stats">
-<span class="sig-prename descclassname"><span class="pre">kanapy.grains.</span></span><span class="sig-name descname"><span class="pre">get_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nphases</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/grains.html#get_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.grains.get_stats" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">kanapy.grains.</span></span><span class="sig-name descname"><span class="pre">get_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particle_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nphases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrains</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/grains.html#get_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.grains.get_stats" title="Link to this definition"></a></dt>
 <dd><p>Compare the geometries of particles used for packing and the resulting
 grains.</p>
-<section id="id19">
-<h3>Parameters<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<section id="id25">
+<h3>Parameters<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
 </section>
-<section id="id20">
-<h3>Returns<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<section id="id26">
+<h3>Returns<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>output_data<span class="classifier">dict</span></dt><dd><p>Statistical information about particle and grain geometries.</p>
 </dd>
@@ -1502,61 +1579,141 @@ file.</p></li>
 
 </section>
 <section id="module-kanapy.textures">
-<span id="module-analyze-texture"></span><h2>Module analyze_texture<a class="headerlink" href="#module-kanapy.textures" title="Link to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.textures.checkConfiguration">
-<span class="sig-prename descclassname"><span class="pre">kanapy.textures.</span></span><span class="sig-name descname"><span class="pre">checkConfiguration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#checkConfiguration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.checkConfiguration" title="Link to this definition"></a></dt>
-<dd><p>Evaluates if kanapy has been configured for texture analysis by reading the ‘PATHS.json’
-file if it exists.</p>
+<span id="module-texture"></span><h2>Module texture<a class="headerlink" href="#module-kanapy.textures" title="Link to this heading"></a></h2>
+<p>Tools for analysis of EBSD maps in form of .ang files</p>
+<p>&#64;author: Alexander Hartmaier, Abhishek Biswas, ICAMS, Ruhr-Universität Bochum</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="kanapy.textures.EBSDmap">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kanapy.textures.</span></span><span class="sig-name descname"><span class="pre">EBSDmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gs_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vf_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.03</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#EBSDmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.EBSDmap" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to store attributes and methods to import EBSD maps
+and filter out their statistical data needed to generate
+synthetic RVEs</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="kanapy.textures.EBSDmap.calcORI">
+<span class="sig-name descname"><span class="pre">calcORI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iphase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shared_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#EBSDmap.calcORI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.EBSDmap.calcORI" title="Link to this definition"></a></dt>
+<dd><p>Estimate optimum kernel half-width and produce reduced set of
+orientations for given number of grains.</p>
+<section id="id27">
+<h3>Parameters<a class="headerlink" href="#id27" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>Ng<span class="classifier">int</span></dt><dd><p>Numbr of grains for which orientation is requested.</p>
+</dd>
+<dt>iphase<span class="classifier">int, optional</span></dt><dd><p>Phase for which data is requested. The default is 0.</p>
+</dd>
+<dt>shared_area<span class="classifier">array, optional</span></dt><dd><p>Grain boundary data. The default is None.</p>
+</dd>
+<dt>nbins<span class="classifier">int, optional</span></dt><dd><p>number of bins for GB texture. The default is 12.</p>
+</dd>
+</dl>
+</section>
+<section id="id28">
+<h3>Returns<a class="headerlink" href="#id28" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ori<span class="classifier">(Ng, 3)-array</span></dt><dd><p>Array with Ng Euler angles.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kanapy.textures.EBSDmap.showIPF">
+<span class="sig-name descname"><span class="pre">showIPF</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#EBSDmap.showIPF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.EBSDmap.showIPF" title="Link to this definition"></a></dt>
+<dd><p>Plot IPF key.</p>
+<section id="id29">
+<h3>Returns<a class="headerlink" href="#id29" title="Link to this heading"></a></h3>
+<p>None.</p>
+</section>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="kanapy.textures.getGrainNumber">
-<span class="sig-prename descclassname"><span class="pre">kanapy.textures.</span></span><span class="sig-name descname"><span class="pre">getGrainNumber</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#getGrainNumber"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.getGrainNumber" title="Link to this definition"></a></dt>
-<dd><p>Reads the number of grains generated in the RVE by kanapy’s geometry module. Or requests the
-user to provide the number, which will be used for reduced orientation evaluation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>wd</strong> (<em>String</em>) – Path to the current working directory.</p>
+<dt class="sig sig-object py" id="kanapy.textures.createOriset">
+<span class="sig-prename descclassname"><span class="pre">kanapy.textures.</span></span><span class="sig-name descname"><span class="pre">createOriset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ang</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shared_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'m-3m'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nbase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#createOriset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.createOriset" title="Link to this definition"></a></dt>
+<dd><p>Create a set of num Euler angles according to the ODF defined by the 
+set of Euler angles ang and the kernel half-width omega.
+Example: Goss texture: ang = [0, 45, 0], omega = 5</p>
+<section id="id30">
+<h3>Parameters<a class="headerlink" href="#id30" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>num<span class="classifier">int</span></dt><dd><p>Number of Euler angles in set to be created.</p>
+</dd>
+<dt>ang<span class="classifier">(3, ) or (M, 3) array</span></dt><dd><p>Set of Euler angles (in degrees) defining the ODF.</p>
+</dd>
+<dt>omega<span class="classifier">float</span></dt><dd><p>Half-width of kernel in degrees.</p>
+</dd>
+<dt>hist<span class="classifier">array, optional</span></dt><dd><p>Histogram of MDF. The default is None.</p>
+</dd>
+<dt>shared_area: array, optional</dt><dd><p>The shared area between pairs of grains. The default in None.</p>
+</dd>
+<dt>cs<span class="classifier">str, optional</span></dt><dd><p>Crystal symmetry group. The default is ‘m3m’.</p>
+</dd>
+<dt>Nbase<span class="classifier">int, optional</span></dt><dd><p>Base number of orientations for random texture. The default is 10000</p>
 </dd>
 </dl>
+</section>
+<section id="id31">
+<h3>Returns<a class="headerlink" href="#id31" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ori<span class="classifier">(num, 3) array</span></dt><dd><p>Set of Euler angles</p>
+</dd>
+</dl>
+</section>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="kanapy.textures.getGrainVolume">
-<span class="sig-prename descclassname"><span class="pre">kanapy.textures.</span></span><span class="sig-name descname"><span class="pre">getGrainVolume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#getGrainVolume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.getGrainVolume" title="Link to this definition"></a></dt>
-<dd><p>Reads the grain volume information generated by kanapy’s geometry module. If the file is missing, 
-it requests the user to provide this file, which will be used by the orientation assignment algorithm.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>wd</strong> (<em>String</em>) – Path to the current working directory.</p>
+<dt class="sig sig-object py" id="kanapy.textures.createOrisetRandom">
+<span class="sig-prename descclassname"><span class="pre">kanapy.textures.</span></span><span class="sig-name descname"><span class="pre">createOrisetRandom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shared_area</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'m-3m'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nbase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#createOrisetRandom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.createOrisetRandom" title="Link to this definition"></a></dt>
+<dd><p>Create a set of num Euler angles for Random texture. 
+Other than knpy.createOriset() this method does not create an artificial
+EBSD which is reduced in a second step to num discrete orientations but 
+directly samples num randomly distributed orientations.s</p>
+<section id="id32">
+<h3>Parameters<a class="headerlink" href="#id32" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>num<span class="classifier">int</span></dt><dd><p>Number of Euler angles in set to be created.</p>
+</dd>
+<dt>omega<span class="classifier">float</span></dt><dd><p>Halfwidth of kernel in degrees (optional, default: 7.5)</p>
+</dd>
+<dt>hist<span class="classifier">array, optional</span></dt><dd><p>Histogram of MDF. The default is None.</p>
+</dd>
+<dt>shared_area: array, optional</dt><dd><p>The shared area between pairs of grains. The default in None.</p>
+</dd>
+<dt>cs<span class="classifier">str, optional</span></dt><dd><p>Crystal symmetry group. The default is ‘m3m’.</p>
+</dd>
+<dt>Nbase<span class="classifier">int, optional</span></dt><dd><p>Base number of orientations for random texture. The default is 5000</p>
 </dd>
 </dl>
+</section>
+<section id="id33">
+<h3>Returns<a class="headerlink" href="#id33" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ori<span class="classifier">(num, 3) array</span></dt><dd><p>Set of Euler angles</p>
+</dd>
+</dl>
+</section>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="kanapy.textures.getSharedSurfaceArea">
-<span class="sig-prename descclassname"><span class="pre">kanapy.textures.</span></span><span class="sig-name descname"><span class="pre">getSharedSurfaceArea</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#getSharedSurfaceArea"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.getSharedSurfaceArea" title="Link to this definition"></a></dt>
-<dd><p>Reads the grain boundary shared surface area information generated by kanapy’s geometry module. If the file is missing, 
-it requests the user to provide this file, which will be used by the orientation assignment algorithm.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>wd</strong> (<em>String</em>) – Path to the current working directory.</p>
+<dt class="sig sig-object py" id="kanapy.textures.get_ipf_colors">
+<span class="sig-prename descclassname"><span class="pre">kanapy.textures.</span></span><span class="sig-name descname"><span class="pre">get_ipf_colors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ori_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#get_ipf_colors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.get_ipf_colors" title="Link to this definition"></a></dt>
+<dd><p>Get colors of list of orientations (in radians).
+Assumes cubic crystal symmtry and cubic specimen symmetry.</p>
+<section id="id34">
+<h3>Parameters<a class="headerlink" href="#id34" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>ori_list: (N, 3) ndarray</dt><dd><p>List of N Euler angles in radians</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="kanapy.textures.textureReduction">
-<span class="sig-prename descclassname"><span class="pre">kanapy.textures.</span></span><span class="sig-name descname"><span class="pre">textureReduction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kdict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/textures.html#textureReduction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.textures.textureReduction" title="Link to this definition"></a></dt>
-<dd><p>Reads the grain volume information generated by kanapy’s geometry module. If the file is missing, 
-it requests the user to provide this file, which will be used by the orientation assignment algorithm.</p>
-<p>Also calls kanapy’s MATLAB functions to evaluate the ODF reconstruction with/without orientation assignment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kdict</strong> (<em>Python dictionary object</em>) – Key-value pairs of the user specified input to the CLI command: <code class="docutils literal notranslate"><span class="pre">kanapy</span> <span class="pre">reducetexture</span></code></p>
+</section>
+<section id="id35">
+<h3>Returns<a class="headerlink" href="#id35" title="Link to this heading"></a></h3>
+<dl class="simple">
+<dt>colors: (N, 3) ndarray</dt><dd><p>List of RGB values</p>
 </dd>
 </dl>
+</section>
 </dd></dl>
 
 </section>
@@ -1569,8 +1726,8 @@ it requests the user to provide this file, which will be used by the orientation
 <dt class="sig sig-object py" id="kanapy.plotting.plot_ellipsoids_3D">
 <span class="sig-prename descclassname"><span class="pre">kanapy.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_ellipsoids_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'prism'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/plotting.html#plot_ellipsoids_3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.plotting.plot_ellipsoids_3D" title="Link to this definition"></a></dt>
 <dd><p>Display ellipsoids during or after packing procedure</p>
-<section id="id21">
-<h3>Parameters<a class="headerlink" href="#id21" title="Link to this heading"></a></h3>
+<section id="id36">
+<h3>Parameters<a class="headerlink" href="#id36" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>particles<span class="classifier">Class particles</span></dt><dd><p>Ellipsoids in microstructure before voxelization.</p>
 </dd>
@@ -1580,8 +1737,8 @@ it requests the user to provide this file, which will be used by the orientation
 </dd>
 </dl>
 </section>
-<section id="id22">
-<h3>Returns<a class="headerlink" href="#id22" title="Link to this heading"></a></h3>
+<section id="id37">
+<h3>Returns<a class="headerlink" href="#id37" title="Link to this heading"></a></h3>
 <p>None.</p>
 </section>
 </dd></dl>
@@ -1605,8 +1762,8 @@ the distributions.</p>
 <dd><p>Plot triangularized convex hulls of grains, based on vertices, i.e.
 connection points of 4 up to 8 grains or the end points of triple or quadruple
 lines between grains.</p>
-<section id="id23">
-<h3>Parameters<a class="headerlink" href="#id23" title="Link to this heading"></a></h3>
+<section id="id38">
+<h3>Parameters<a class="headerlink" href="#id38" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>geometry<span class="classifier">dict</span></dt><dd><p>Dictionary with ‘vertices’ (node numbers) and ‘simplices’ (triangles)</p>
 </dd>
@@ -1620,20 +1777,20 @@ lines between grains.</p>
 </dd>
 </dl>
 </section>
-<section id="id24">
-<h3>Returns<a class="headerlink" href="#id24" title="Link to this heading"></a></h3>
+<section id="id39">
+<h3>Returns<a class="headerlink" href="#id39" title="Link to this heading"></a></h3>
 <p>None.</p>
 </section>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="kanapy.plotting.plot_voxels_3D">
-<span class="sig-prename descclassname"><span class="pre">kanapy.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_voxels_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ngr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sliced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'prism'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/plotting.html#plot_voxels_3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.plotting.plot_voxels_3D" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">kanapy.plotting.</span></span><span class="sig-name descname"><span class="pre">plot_voxels_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ngr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sliced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual_phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'prism'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/kanapy/plotting.html#plot_voxels_3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kanapy.plotting.plot_voxels_3D" title="Link to this definition"></a></dt>
 <dd><p>Plot voxels in microstructure, each grain with a different color. Sliced
 indicates whether one eighth of the box should be removed to see internal
 structure. With alpha, the transparency of the grains can be adjusted.</p>
-<section id="id25">
-<h3>Parameters<a class="headerlink" href="#id25" title="Link to this heading"></a></h3>
+<section id="id40">
+<h3>Parameters<a class="headerlink" href="#id40" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>data<span class="classifier">int array</span></dt><dd><p>Grain number or phase number associated to each voxel</p>
 </dd>
@@ -1653,10 +1810,12 @@ The default is 1.0.</p>
 </dd>
 <dt>show<span class="classifier">bool</span></dt><dd><p>Indicate whether to show the plot or to return the axis for further use</p>
 </dd>
+<dt>clist<span class="classifier">(Ngr, 3)-ndarray</span></dt><dd><p>List of RGB colors for each grain</p>
+</dd>
 </dl>
 </section>
-<section id="id26">
-<h3>Returns<a class="headerlink" href="#id26" title="Link to this heading"></a></h3>
+<section id="id41">
+<h3>Returns<a class="headerlink" href="#id41" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>ax<span class="classifier">matplotlib.axes</span></dt><dd><p>Axes handle for 3D subplot</p>
 </dd>

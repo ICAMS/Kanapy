@@ -14,7 +14,7 @@ The
 details this as shown:
 
 .. note:: Make sure that you are within the virtual environment created during the kanapy installation, as 
-          this environment contains the installed kanapy and its required dependencies.
+          this environment contains the kanapy instalation and its required dependencies.
           
 .. code-block:: console
 
@@ -37,38 +37,22 @@ Kanapy's API (incomplete)
 
 Under construction ...
 
-Detailed tutorial
-------------------           
-Four examples come bundled along with the kanapy package. Each example describes a particular workflow that is 
-either related to the geometry module or the texture module. Hence the examples are sub-categorized here under 
-two sub-sections: Geometry examples and Texture examples. A detailed description of these examples is presented here. 
-The two examples ``sphere_packing`` and ``ellipsoid_packing`` depict the different workflows 
-that have to be setup for generating synthetic microstructures with equiaxed and elongated 
-grains, respectively. And the two examples ``ODF_reconstruction`` and ``ODF_reconstruction_with_orientation_assignment``
-depict the workflows for reconstructing ODF from EBSD data and assigning orientations to RVE grains, respectively. 
-For a detailed understanding of the general framework of the packing simulations or the ODF reconstruction, please 
-refer to: :ref:`Modeling`.
+The central element of Kanapy are statistical microstructure descriptors, which are used 
+to generate the microstructure geometry and its texture in the different Kanapy modules. 
+For multiphase microstructures, each phase has its own statistical descriptors and the 
+respective dictionaries and combined to a list.
 
-.. note:: New examples must be created in a separate directory. It allows the kanapy modules 
-          an easy access to the json, dump and other files created during the simulation.
-             
-^^^^^^^^^^^^^^^^^^
-Geometry examples
-^^^^^^^^^^^^^^^^^^
-Both examples ``sphere_packing`` and ``ellipsoid_packing`` contain an input file wherein the user can 
-specify the statistical parameters required for the simulation. 
 
-.. note:: The json and dump files help in making the various kanapy geometry modules independent 
-          of one another during execution.
-
-"""""""""""""""""""""
-Input file structure
-"""""""""""""""""""""
-An exemplary structure of the input file: ``stat_input.json`` is shown below:
+""""""""""""""""""""""""""
+Microstructure descriptors
+""""""""""""""""""""""""""
+An exemplary structure of the descriptor dictionary is shown below:
 
 .. code-block::
 
     {
+      "Grain type": 
+        "Elongated",
       "Equivalent diameter": 
         {
           "sig": 0.39,
@@ -105,44 +89,103 @@ An exemplary structure of the input file: ``stat_input.json`` is shown below:
         {
           "periodicity": "True",                                         
           "output_units": "mm"         
+        },
+      "Phase": 
+        {
+          "Name": "Simulanium",
+          "Number": 1,
+          "Volume fraction": 1.0
         }
     }
     
-The input file is built in the JSON file format, with the following keywords: ``Equivalent diameter, Aspect ratio, 
-Tilt angle, RVE, Simulation``. 
+Sample dictionaries are provided in the examples shown below. Note that descriptors can 
+be stored and read from JSON files. In the following the essentail keywords: 
+``Grain type, Equivalent diameter, Aspect ratio, Tilt angle, RVE, Simulation, Phase`` are described 
 
-  - The keyword ``Equivalent diameter`` takes in four arguments to generate a 
+  - ``Grain type`` (mandatory): Either "Elongated" or "Equiaxed"
+  - ``Equivalent diameter`` (mandatory): takes in four arguments to generate a 
     log-normal distribution for the particle's equivalent diameter; they are the 
     `Normal distribution's`_ standard deviation and mean, and the minimum 
     and maximum cut-off values for the diameter. The values should correspond to :math:`\mu m` scale.
-  - The ``Aspect ratio`` takes the mean and the standard deviation value value as input. If the resultant 
+  - ``Aspect ratio`` takes the mean and the standard deviation value value as input. If the resultant 
     microstructure contains equiaxed grains then this field is not necessary.
-  - The ``Tilt angle`` keyword represents the tilt angle of particles with 
+  - ``Tilt angle`` keyword represents the tilt angle of particles with 
     respect to the positive x-axis. Hence, to generate a distribution, it takes in 
     two arguments: the normal distribution's mean and the standard deviation. If the resultant 
     microstructure contains equiaxed grains then this field is also not necessary. 
-  - The ``RVE`` keyword takes two types of input: the side lengths of the final RVE 
+  - ``RVE`` takes two types of input: the side lengths of the final RVE 
     required and the number of voxels per RVE side length. 
-  - The ``Simulation`` keyword takes in two inputs: A boolean value for periodicity (True/False) 
-    and the required unit scale (:math:`mm` or :math:`\mu m`) for the output 
+  - ``Simulation``  takes in two inputs: A boolean value for periodicity (True/False) 
+    and the required unit scale ('mm' or 'um' = :math:`\mu m`) for the output 
     ABAQUS .inp file.
+  - ``Phase`` (optional) Information about phase name, number and volume fraction.
 
 .. note:: 1. The user may choose not to use the built-in voxelization (meshing) routine 
-             for meshing the final RVE. Nevertheless, a value for `voxel_per_side` has to be provided.
+             for meshing the final RVE. Nevertheless, a value for the number of voxels 
+             per side has to be provided.
           2. A good estimation for `Nx, Ny & Nz` value can be made by keeping the 
              following point in mind: The smallest dimension of the smallest ellipsoid/sphere 
              should contain at least 3 voxels.
-          3. The size of voxels should be the same along X, Y & Z directions (voxel_sizeX = voxel_sizeY = voxel_sizeZ). 
+          3. The size of voxels should be the same along X, Y & Z directions 
+             (voxel_sizeX = voxel_sizeY = voxel_sizeZ). 
              It is determined using: voxel size = RVE side length/Voxel per side. 
           4. Particles grow during the simulation. At the start of the simulation, all particles 
              are initialized with null volume. At each time step, they grow in size by the 
-             value: diameter/1000. Therefore, the last timestep would naturally contain particles 
-             in their actual size. 
+             value: diameter/1000. Since the maximum packing density of ellipsoides is 
+             about 65%, the full space filling structure is achieved during voxelization.
           5. The input unit scale should be in :math:`\mu m` and the user can choose between 
-             :math:`mm` or :math:`\mu m` as the unit scale in which output the 
+             'mm' or 'um' (= :math:`\mu m`) as the unit scale in which output to the 
              ABAQUS .inp file will be written. 
 
 .. _Normal distribution's: https://en.wikipedia.org/wiki/Normal_distribution   
+
+"""""""""
+Tutorials
+"""""""""     
+Several examples in form of Python scripts and Jupyter notebooks come bundled along with 
+the kanapy package. Each example describes a particular workflow and demonstrates the use
+of the geometry module and the texture module. Note, that the latter requires a complete 
+Kanapy installation including MTEX, that can be setup with the 'kanapy setupTexture' 
+command.
+
+^^^^^^^^^
+Notebooks
+^^^^^^^^^
+
+-  | `generate_rve.ipynb <_static/generate_rve.html>`__
+   | The basic steps of using Kanapy to generate synthetic
+     representative volume elements (RVE) are demonstrated. The RVE can
+     be exported in standard FEA formats.
+
+-  | `ebsd2rve.ipynb <_static/ebsd2rve.html>`__
+   | An EBSD map aof a austenitic steel produced by additive
+     manufacturing is analyzed with respect to statistical
+     microstructure descriptors. The descriptors are the basis to build
+     an RVE.
+
+-  | `dispersed_phase.ipynb <_static/dispersed_phase.html>`__
+   | A polycrystal with a second phase dispersed along the grain
+     boundaries is generated.
+
+
+Outdated CLI contents
+---------------------
+
+The following sections refer mainly to CLI commands from previous Kanapy versions.
+To be updated ...
+
+
+Hence the examples are sub-categorized here under 
+two sub-sections: Geometry examples and Texture examples. A detailed description of these examples is presented here. 
+The two examples ``sphere_packing`` and ``ellipsoid_packing`` depict the different workflows 
+that have to be setup for generating synthetic microstructures with equiaxed and elongated 
+grains, respectively. And the two examples ``ODF_reconstruction`` and ``ODF_reconstruction_with_orientation_assignment``
+depict the workflows for reconstructing ODF from EBSD data and assigning orientations to RVE grains, respectively. 
+For a detailed understanding of the general framework of the packing simulations or the ODF reconstruction, please 
+refer to: :ref:`Modeling`.
+
+.. note:: New examples must be created in a separate directory. It allows the kanapy modules 
+          an easy access to the json, dump and other files created during the simulation.
 
 
 """""""""""""""""""""""""""""
