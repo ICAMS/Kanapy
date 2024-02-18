@@ -319,7 +319,7 @@ class Microstructure(object):
         """
         from kanapy import MTEX_AVAIL
         try:
-            from kanapy.import_EBSD import EBSDmap, createOrisetRandom, createOriset
+            from kanapy.textures import EBSDmap, createOrisetRandom, createOriset
         except:
             raise ImportError('Matlab or MTEX not installed properly. ' +
                               'Run "kanapy setupTexture" first to use this function.')
@@ -385,7 +385,7 @@ class Microstructure(object):
             data = self.mesh.grains
         if ori is not None:
             try:
-                from kanapy.import_EBSD import get_ipf_colors
+                from kanapy.textures import get_ipf_colors
                 if type(ori) is bool and ori:
                     ori = np.array([val for val in self.mesh.grain_ori_dict.values()])
                 """Create possibility to pass actual CS to MTEX"""

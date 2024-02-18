@@ -10,7 +10,7 @@ from kanapy.input_output import writeAbaqusMat, pickle2microstructure, import_vo
     import_stats, write_stats
 from kanapy.util import ROOT_DIR, MAIN_DIR, MTEX_DIR, WORK_DIR, log_level
 try:
-    from kanapy.import_EBSD import EBSDmap, createOriset, createOrisetRandom,\
+    from kanapy.textures import EBSDmap, createOriset, createOrisetRandom,\
         get_ipf_colors
     MTEX_AVAIL = True
 except:
