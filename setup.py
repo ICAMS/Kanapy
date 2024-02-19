@@ -21,12 +21,17 @@ from setuptools import setup, find_packages
 # create file structure for MTEX support
 # not required otherwise
 MAIN_DIR = os.getcwd()  # directory in which repository is cloned
-env_path = os.environ['CONDA_PREFIX']  # get path to environment
+try:
+    path_path = os.environ['CONDA_PREFIX']  # get path to environment
+except:
+    path_path = os.path.join(os.path.expanduser('~'), '.kanapy')  # otherwise fall back to user home
+    if not os.path.exists(path_path):
+        os.makedirs(path_path)
 
 #create PATHS dictionary
-path_path = os.path.join(env_path, 'PATHS.json')
+path_path = os.path.join(path_path, 'PATHS.json')
 path_dict = {'MAIN_DIR': MAIN_DIR,
-             'ENV_DIR': env_path,
+             'ENV_DIR': path_path,
              'MTEXpath': os.path.join(MAIN_DIR, 'libs', 'mtex')}
 
 # safe paths in installation directory and in working directory (latter will have priority for reading in kanapy.util)
