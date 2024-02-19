@@ -18,34 +18,22 @@ import os
 import json
 from setuptools import setup, find_packages
 
-# create file structure for testing and MTEX support
+# create file structure for MTEX support
 # not required otherwise
 MAIN_DIR = os.getcwd()  # directory in which repository is cloned
-WORK_DIR = os.path.join(os.path.expanduser('~'), '.kanapy')  # working directory for temporary files
-# check if admin installation is performed
-adm_path = os.path.join(MAIN_DIR, 'admin_flag')
-if os.path.exists(adm_path):
-    with open(adm_path, 'r') as file:
-        adm_flag = file.read()
-    if '1' in adm_flag or 'true' in adm_flag.lower():
-        WORK_DIR = MAIN_DIR
+env_path = os.environ['CONDA_PREFIX']  # get path to environment
 
-path_path = os.path.join(WORK_DIR, 'PATHS.json')
+#create PATHS dictionary
+path_path = os.path.join(env_path, 'PATHS.json')
 path_dict = {'MAIN_DIR': MAIN_DIR,
-             'MTEXpath': os.path.join(MAIN_DIR, 'libs', 'mtex'),
-             'MATLABpath': None}
-if os.path.exists(WORK_DIR):
-    if os.path.exists(path_path):
-        with open(path_path, 'r') as json_file:
-            paths = json.load(json_file)
-        if 'MATLABpath' in paths.keys():
-            path_dict['MATLABpath'] = paths['MATLABpath']
-else:
-    os.makedirs(WORK_DIR)
-    
+             'ENV_DIR': env_path,
+             'MTEXpath': os.path.join(MAIN_DIR, 'libs', 'mtex')}
+
+# safe paths in installation directory and in working directory (latter will have priority for reading in kanapy.util)
 with open(path_path, 'w') as outfile:
     json.dump(path_dict, outfile, indent=2)
-    
+
+# execute setup procedure
 setup(
     name='kanapy',
     version='6.1.6',

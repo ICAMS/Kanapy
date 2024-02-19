@@ -26,7 +26,6 @@ from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
 from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D, plot_output_stats
-from kanapy.util import log_level
 
 
 class Microstructure(object):
@@ -90,7 +89,6 @@ class Microstructure(object):
         self.from_voxels = False
         self.ialloy = None
 
-        logging.basicConfig(level=log_level)
         if descriptor is None:
             if file is None:
                 raise ValueError('Please provide either a dictionary with statistics or an data file name')

@@ -9,11 +9,22 @@ December 2023
 import os
 import numpy as np
 import pytest
-from kanapy import MAIN_DIR, MTEX_AVAIL
-from kanapy.textures import EBSDmap, createOriset
+from kanapy import MAIN_DIR, MTEX_AVAIL, MTEX_DIR
 
-@pytest.mark.skipif(MTEX_AVAIL == False, reason="Kanapy is not configured for texture analysis yet!")
+@pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
+def test_mex():
+    path_mex = os.path.join(MTEX_DIR, 'mex')
+    dir_list = os.listdir(path_mex)
+    exist = False
+    for fn in dir_list:
+        if fn[:16] == 'SO3Grid_find.mex':
+            exist = True
+            break
+    assert exist
+
+@pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
 def test_readEBSD():
+    from kanapy.textures import EBSDmap
     fname = MAIN_DIR + '/tests/ebsd_316L_1000x1000.ang'  # name of ang file to be imported
     # read EBSD map and evaluate statistics of microstructural features
     ebsd = EBSDmap(os.path.normpath(fname), plot=False)
@@ -23,15 +34,12 @@ def test_readEBSD():
     # get list of orientations for grains in RVE matching the ODF of the EBSD map
     ori_rve = ebsd.calcORI(20)
     assert(np.abs(ori_rve[0, 1] - 0.26179939) < 1.e-5)
-    # write Euler angles of grains into Abaqus input file
-    #knpy.writeAbaqusMat(0, ori_rve)
 
+@pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
 def test_createORI():
+    from kanapy.textures import createOriset
     Ngr = 10
     ang = [0., 45., 0.]    # Euler angles for Goss texture
     omega = 7.5         # kernel half-width
     ori_rve = createOriset(Ngr, ang, omega)
     assert (np.abs(ori_rve[4, 0] - 0.1121997376282069) < 1.e-5)
-
-if __name__ == "__main__":
-    pytest.main([__file__])

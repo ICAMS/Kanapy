@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 import os
 import json
+import logging
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))  # root directory of package
-WORK_DIR = os.path.expanduser('~') + '/.kanapy'  # working directory for temporary files
-path_json = os.path.join(WORK_DIR, 'PATHS.json')
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))  # root directory of package, where source code is located
+path_path = os.environ['CONDA_PREFIX']
+path_json = os.path.join(path_path, 'PATHS.json')
 if not os.path.exists(path_json):
-    # no user-specific path file in working directory, try if admin installation with paths in ROOT_DIR
-    path_json = os.path.join(ROOT_DIR, 'PATHS.json')
-    if not os.path.exists(path_json):
-        raise FileNotFoundError('Package not properly installed, no PATH.json in working or root directory.')
-with open(path_json) as json_file:
-    paths = json.load(json_file)
-MAIN_DIR = paths['MAIN_DIR']  # directory in which repository is cloned
-MTEX_DIR = paths['MTEXpath']  # path to MTEX
-log_level = 20  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR
+    logging.error(f'Package not properly installed for MTEX, no file {path_json}.')
+    MAIN_DIR = None
+    MTEX_DIR = None
+else:
+    with open(path_json) as json_file:
+        paths = json.load(json_file)
+    MAIN_DIR = paths['MAIN_DIR']  # directory in which repository is cloned
+    MTEX_DIR = paths['MTEXpath']  # path to MTEX
+    ENV_DIR = paths["ENV_DIR"]  # path to knpy environment

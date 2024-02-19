@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
-import json
 import click
-from kanapy.util import MAIN_DIR, WORK_DIR, ROOT_DIR
+from kanapy.util import MAIN_DIR, ROOT_DIR
 
 
 @click.group()
@@ -28,7 +27,7 @@ def tests(ctx, no_texture: bool):
     else:
         os.system("pytest {0}/tests/ -v".format(MAIN_DIR))
     cwd = os.getcwd()
-    shutil.rmtree(os.path.normpath(cwd + "/dump_files"))
+    shutil.rmtree(os.path.join(cwd, "dump_files"))
     click.echo('')    
         
     
@@ -59,11 +58,10 @@ def docs(ctx):
 
 
 @main.command(name='setupTexture')
-@click.option('-admin', default=False)
 @click.pass_context
-def setupTexture(ctx, admin: bool):
+def setupTexture(ctx):
     """ Stores the user provided MATLAB & MTEX paths for texture analysis."""
-    setPaths(admin)
+    setPaths()
 
 
 def chkVersion(matlab):
@@ -80,19 +78,10 @@ def chkVersion(matlab):
     return version
     
         
-def setPaths(admin):
-    """ Requests user input for MATLAB & MTEX installation paths
-    if admin==True: use paths in MAIN_DIR otherwise use WORK_DIR
+def setPaths():
+    """ Requests user input for MATLAB & MTEX installation paths,
+    starts matlab engine and initializes MTEX.
     """
-    if admin:
-        path = ROOT_DIR
-    else:
-        if not os.path.exists(WORK_DIR):
-            raise FileNotFoundError('Package not properly installed, working directory is missing.')
-        path = WORK_DIR
-    path_json = os.path.join(path, 'PATHS.json')
-    with open(path_json) as json_file:
-        path_dict = json.load(json_file)
         
     # For MATLAB executable
     click.echo('')
@@ -151,14 +140,8 @@ def setPaths(admin):
     else:
         raise ValueError('Invalid entry!, Run: kanapy setupTexture again')
         
-    # Create a file in ".kanapy" folder that stores the paths
+    # Create a file that stores the paths
     if userpath1:
-        path_dict['MATLABpath'] = os.path.normpath(userpath1)
-        if os.path.exists(path_json):
-            os.remove(path_json)
-        with open(path_json, 'w') as outfile:
-            json.dump(path_dict, outfile, indent=2)                
-        
         # check if Matlab Engine library is already installed
         try:
             import matlab.engine
@@ -166,9 +149,9 @@ def setPaths(admin):
         except:
             # if not, install matlab engine
             click.echo('Installing matlab.engine...')
-            ind = userpath1.find('bin')
-            path = os.path.join(userpath1[0:ind], 'extern', 'engines', 'python')
-            os.chdir(path)  # remove bin/matlab from matlab path
+            ind = userpath1.find('bin')  # remove bin/matlab from matlab path
+            path = os.path.join(userpath1[0:ind], 'extern', 'engines', 'python')  # complete path to matlab engine
+            os.chdir(path)
             res = os.system('python -m pip install .')
             if res != 0:
                 click.echo('\n Error in installing matlab.engine')
