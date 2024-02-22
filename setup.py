@@ -16,25 +16,30 @@
 
 import os
 import json
+import sys
+import logging
 from setuptools import setup, find_packages
 
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # create file structure for MTEX support
 # not required otherwise
 MAIN_DIR = os.getcwd()  # directory in which repository is cloned
 try:
     path_path = os.environ['CONDA_PREFIX']  # get path to environment
-except:
+except Exception as e:
     path_path = os.path.join(os.path.expanduser('~'), '.kanapy')  # otherwise fall back to user home
+    logging.error(f'Possibly installing Kanapy without conda environment. Exception occurred: {e}')
+    logging.error(f'Creating a working directory for Kanapy under: {path_path} to store path information.')
     if not os.path.exists(path_path):
         os.makedirs(path_path)
 
 #create PATHS dictionary
-path_path = os.path.join(path_path, 'PATHS.json')
 path_dict = {'MAIN_DIR': MAIN_DIR,
              'ENV_DIR': path_path,
              'MTEXpath': os.path.join(MAIN_DIR, 'libs', 'mtex')}
 
 # safe paths in installation directory and in working directory (latter will have priority for reading in kanapy.util)
+path_path = os.path.join(path_path, 'PATHS.json')
 with open(path_path, 'w') as outfile:
     json.dump(path_dict, outfile, indent=2)
 

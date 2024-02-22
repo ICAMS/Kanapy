@@ -97,7 +97,8 @@ class Microstructure(object):
             try:
                 with open(os.path.normpath(file)) as json_file:
                     self.descriptor = json.load(json_file)
-            except:
+            except Exception as e:
+                logging.error(f'An unexpected exception occurred: {e}')
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
         elif descriptor == 'from_voxels':
             self.from_voxels = True
@@ -318,8 +319,9 @@ class Microstructure(object):
         from kanapy import MTEX_AVAIL
         try:
             from kanapy.textures import EBSDmap, createOrisetRandom, createOriset
-        except:
-            raise ImportError('Matlab or MTEX not installed properly. ' +
+        except Exception as e:
+            logging.error(f'An unexpected exception occurred: {e}')
+            raise ImportError('Matlab or MTEX might not be installed properly. ' +
                               'Run "kanapy setupTexture" first to use this function.')
 
         if not MTEX_AVAIL:
@@ -388,7 +390,8 @@ class Microstructure(object):
                     ori = np.array([val for val in self.mesh.grain_ori_dict.values()])
                 """Create possibility to pass actual CS to MTEX"""
                 clist = get_ipf_colors(ori)
-            except:
+            except Exception as e:
+                logging.error(f'An unexpected exception occurred: {e}')
                 logging.error('Orientations can only be plotted if MTEX is available.')
                 clist = None
         else:
@@ -850,7 +853,8 @@ class Microstructure(object):
                     i = tri.find_simplex(mesh_slice)
                     ind = np.nonzero(i >= 0)[0]
                     grain_slice[ind] = igr
-                except:
+                except Exception as e:
+                    logging.error(f'An unexpected exception occurred: {e}')
                     logging.error('Grain #{} has no convex hull (Nvertices: {})'
                                   .format(igr, len(pts)))
             if np.any(grain_slice == 0):
