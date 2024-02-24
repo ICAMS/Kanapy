@@ -88,7 +88,7 @@ def rot_surf():
 
 def test_particle_generator(par_sim):
     periodic = False
-    ell_list = particle_generator([par_sim[0]], par_sim[1], periodic)
+    ell_list = particle_generator([par_sim[0]], par_sim[1], periodic, None)
 
     for ell in ell_list:
         assert isinstance(ell, Ellipsoid)
@@ -106,9 +106,9 @@ def test_particle_grow(rot_surf):
 
     particle_grow(sb, ells, True, 10, dump=True)
     
-    assert np.isclose(ell1.x, 0.86)
-    assert np.isclose(ell1.y, 1.025)
-    assert np.isclose(ell2.z, 0.08)
+    assert np.isclose(ell1.x, 0.9)
+    assert np.isclose(ell1.y, 0.875)
+    assert np.isclose(ell2.z, 0.8)
 
     
 def test_packingRoutine():

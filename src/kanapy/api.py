@@ -102,8 +102,6 @@ class Microstructure(object):
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
         elif descriptor == 'from_voxels':
             self.from_voxels = True
-        elif descriptor == 'cuboid':
-            self.cuboid = True
         else:
             if type(descriptor) is not list:
                 self.descriptor = [descriptor]
@@ -119,7 +117,7 @@ class Microstructure(object):
         if self.nphases == 1 and 'Phase' in self.descriptor[0].keys():
             vf = self.descriptor[0]['Phase']['Volume fraction']
             if vf < 1.0:
-                # consider precipitates/pores/particles with volume fraction vf in a matrix
+                # consider precipitates/pores/particles with volume fraction fill_factor in a matrix
                 # precipitates will be phase 0, matrix phase will get number 1 and be assigned to grain with ID 0
                 self.precipit = vf
                 self.nphases = 2
@@ -141,7 +139,6 @@ class Microstructure(object):
         ----------
         descriptor
         nsteps
-        precipit
 
         Returns
         -------
@@ -162,21 +159,25 @@ class Microstructure(object):
         self.simbox = Simulation_Box(self.rve.size)
 
     def pack(self, particle_data=None,
-             k_rep=0.0, k_att=0.0, vf=None, save_files=False):
+             k_rep=0.0, k_att=0.0, fill_factor=None,
+             poly=None, save_files=False):
 
         """ Packs the particles into a simulation box."""
         if particle_data is None:
             particle_data = self.rve.particle_data
             if particle_data is None:
                 raise ValueError('No particle_data in pack. Run create_RVE first.')
-        if vf is None and self.precipit is not None:
-            vf = np.minimum(self.precipit, 0.7)  # 70% is maximum packing density of ellipsoids
-            print(f'Sparse particles (precipitates/pores): Packing up to particle volume fraction of {vf}.')
+        if fill_factor is None and self.precipit is not None:
+            fill_factor = 1.0  # pack to full volume fraction defined in particles
+            print(f'Sparse particles (precipitates/pores): '
+                  f'Packing up to particle volume fraction of {(100*self.precipit):.1f}%.')
+            if self.precipit > 0.65:
+                print('Overlap of particles will occur since volume fraction > 65%')
         self.particles, self.simbox = \
             packingRoutine(particle_data, self.rve.periodic,
                            self.rve.packing_steps, self.simbox,
-                           k_rep=k_rep, k_att=k_att, vf=vf,
-                           save_files=save_files)
+                           k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
+                           poly=poly, save_files=save_files)
 
     def voxelize(self, particles=None, dim=None):
         """ Generates the RVE by assigning voxels to grains."""
@@ -907,7 +908,7 @@ class Microstructure(object):
                 plt.show()
         return fname
 
-    def write_stl(self, file=None, path='./'):
+    def write_stl(self, data='grains', file=None, path='./'):
         """ Write triangles of convex polyhedra forming grains in form of STL
         files in the format
         '
@@ -927,6 +928,37 @@ class Microstructure(object):
         None.
         
         """
+        def write_facet(nv, pts, ft):
+            if np.linalg.norm(nv) < 1.e-5:
+                logging.warning(f'Acute facet detected. Facet: {ft}')
+                nv = np.cross(pts[1] - pts[0], pts[2] - pts[1])
+                if np.linalg.norm(nv) < 1.e-5:
+                    logging.warning(f'Irregular facet detected. Facet: {ft}')
+            nv /= np.linalg.norm(nv)
+            f.write(" facet normal {} {} {}\n"
+                    .format(nv[0], nv[1], nv[2]))
+            f.write(" outer loop\n")
+            f.write("   vertex {} {} {}\n"
+                    .format(pts[0, 0], pts[0, 1], pts[0, 2]))
+            f.write("   vertex {} {} {}\n"
+                    .format(pts[1, 0], pts[1, 1], pts[1, 2]))
+            f.write("   vertex {} {} {}\n"
+                    .format(pts[2, 0], pts[2, 1], pts[2, 2]))
+            f.write("  endloop\n")
+            f.write(" endfacet\n")
+        def write_grains():
+            for ft in self.geometry['Facets']:
+                pts = self.geometry['Points'][ft]
+                nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
+                write_facet(nv, pts, ft)
+
+        def write_particles():
+            for pa in self.particles:
+                for ft in pa.inner.convex_hull:
+                    pts = pa.inner.points[ft]
+                    nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
+                    write_facet(nv, pts, ft)
+
         if file is None:
             if self.name == 'Microstructure':
                 file = 'px_{}grains.stl'.format(self.Ngr)
@@ -936,28 +968,17 @@ class Microstructure(object):
         file = os.path.join(path, file)
         with open(file, 'w') as f:
             f.write("solid {}\n".format(self.name))
-            for ft in self.geometry['Facets']:
-                pts = self.geometry['Points'][ft]
-                nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
-                if np.linalg.norm(nv) < 1.e-5:
-                    logging.warning(f'Acute facet detected. Facet: {ft}')
-                    nv = np.cross(pts[1] - pts[0], pts[2] - pts[1])
-                    if np.linalg.norm(nv) < 1.e-5:
-                        logging.warning(f'Irregular facet detected. Facet: {ft}')
-                nv /= np.linalg.norm(nv)
-                f.write(" facet normal {} {} {}\n"
-                        .format(nv[0], nv[1], nv[2]))
-                f.write(" outer loop\n")
-                f.write("   vertex {} {} {}\n"
-                        .format(pts[0, 0], pts[0, 1], pts[0, 2]))
-                f.write("   vertex {} {} {}\n"
-                        .format(pts[1, 0], pts[1, 1], pts[1, 2]))
-                f.write("   vertex {} {} {}\n"
-                        .format(pts[2, 0], pts[2, 1], pts[2, 2]))
-                f.write("  endloop\n")
-                f.write(" endfacet\n")
+            if data in ['particles', 'pa', 'p']:
+                if self.particles[0].inner is None:
+                    logging.error("Particles don't contain inner polyhedron, cannot write STL file.")
+                else:
+                    for pa in self.particles:
+                        pa.sync_poly()
+                    write_particles()
+            else:
+                write_grains()
             f.write("endsolid\n")
-            return
+        return
 
     def write_centers(self, file=None, path='./', grains=None):
         """Write grain center positions into CSV file."""

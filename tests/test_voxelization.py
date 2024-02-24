@@ -211,7 +211,7 @@ def test_voxelizationRoutine():
     mesh = mesh_creator(rve.dim)
     nphases = 1
     mesh.create_voxels(sim_box)
-    Particles = particle_generator([parDict], sim_box, False)
+    Particles = particle_generator([parDict], sim_box, False, None)
     mesh = voxelizationRoutine(Particles, mesh, nphases)
     assert mesh.vox_center_dict[5][0] == 0.9
     assert mesh.voxel_dict[7] == [29, 30, 26, 25, 31, 32, 28, 27]

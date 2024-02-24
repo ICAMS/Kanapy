@@ -1,7 +1,9 @@
 import itertools
+import logging
 import numpy as np
 import random
 from kanapy.collisions import collision_routine
+from scipy.spatial import Delaunay
 
 
 def cub_oct_split(cub):
@@ -82,7 +84,7 @@ class Ellipsoid(object):
               3. An empty list for storing voxels belonging to the ellipsoid is initialized.                   
     """
 
-    def __init__(self, iden, x, y, z, a, b, c, quat, phasenum=0, dup=None):
+    def __init__(self, iden, x, y, z, a, b, c, quat, phasenum=0, dup=None, points=None):
         self.id = iden
         self.x = x
         self.y = y
@@ -110,6 +112,10 @@ class Ellipsoid(object):
         self.branches = []
         self.neighborlist = set()
         self.ncollision = 0
+        if points is None:
+            self.inner = None
+        else:
+            self.inner = self.create_poly(points)  # create a Delaunay tesselation of points
 
     def get_pos(self):
         """
@@ -190,18 +196,16 @@ class Ellipsoid(object):
         # Do the dot product with rotation matrix
         self.surface_points = stacked_xyz.dot(self.rotation_matrix)
 
-    def growth(self, factor):
+    def growth(self, fac):
         """
-        Increases the size of the ellipsoid along its axes governed by the user defined value
+        Increases the size of the ellipsoid along its axes governed by the volume increment
 
-        :param factor: Parameter that controls the total simulation time 
-        :type factor: float
-
-        .. note:: Increment value is determined as the ratio of particle size to the total simulation time       
+        :param dv: Volume increment per time step
+        :type dv: float
         """
-        self.a += self.oria / factor
-        self.b += self.orib / factor
-        self.c += self.oric / factor
+        self.a = self.oria * fac
+        self.b = self.orib * fac
+        self.c = self.oric * fac
         self.set_cub()
 
     def Bbox(self):
@@ -237,6 +241,41 @@ class Ellipsoid(object):
         self.Bbox()
         self.cub = Cuboid(self.bbox_xmin, self.bbox_ymin, self.bbox_xmax,
                           self.bbox_ymax, self.bbox_zmin, self.bbox_zmax)
+
+    def create_poly(self, points):
+        """
+        Creates a polygon inside the ellipsoid
+        """
+
+        return Delaunay(points.dot(self.rotation_matrix))
+
+    def sync_poly(self):
+        """
+        Moves the center of the polygon to the center of the ellipsoid and
+        scales the hull to fit inside the ellipsoid
+        """
+        opts = self.inner.points
+        Npts = len(opts)
+        p_ctr = np.average(opts, axis=0)
+        e_ctr = self.get_pos()
+        pts = opts - p_ctr[None, :]  # shift center of points to origin
+        pts = pts.dot(self.rotation_matrix.transpose())  # rotate points back into global coordinates
+        ind0 = np.argmin(pts, axis=0)  # index of point with lowest coordinate for each Cartesian axis
+        ind1 = np.argmax(pts, axis=0)  # index of point with highest coordinate for each Cartesian axis
+        v_min = np.array([pts[i, j] for j, i in enumerate(ind0)])  # min. value for each Cartesian axis
+        v_max = np.array([pts[i, j] for j, i in enumerate(ind1)])  # max. value for each Cartesian axis
+        dim = v_max - v_min  # extension of polygon along each axis
+        fac = 1.6 * np.divide(np.array([self.a, self.b, self.c]), dim)  # scaling factors for each axis
+        pts *= fac  # scale points to dimensions of ellipsoid
+        pts = pts.dot(self.rotation_matrix)  # rotate back into ellipsoid frame
+        pts += e_ctr[None, :]  # shift center to center of ellipsoid
+        # update points Delaunay tesselation
+        self.inner = Delaunay(pts)
+        # check if surface points of ellipsoid are all outside polyhedron
+        self.surfacePointsGen()
+        if any(self.inner.find_simplex(self.surface_points) >= 0):
+            logging.error(f'Polyhedron too large for ellipsoid {self.id}. Reduce scale.')
+
 
     def move(self):
         """

@@ -8,7 +8,7 @@ from kanapy.entities import Ellipsoid, Cuboid, Octree
 from kanapy.collisions import collide_detect
 
 
-def particle_generator(particle_data, sim_box, periodic):
+def particle_generator(particle_data, sim_box, periodic, poly):
     """
     Initializes ellipsoids by assigning them random positions and speeds within
     the simulation box.
@@ -20,16 +20,19 @@ def particle_generator(particle_data, sim_box, periodic):
     :type sim_box: :class:`entities.Simulation_Box`
     :param periodic: Indicates periodicity of RVE.
     :type periodic: :class: bool
+    :param poly: Points defining primitive polygon inside ellipsoid (optional).
+    :type periodic: :class: ndarry(N, 3)
     
     :returns: Ellipsoids for the packing routine
     :rtype: list       
     """
     Ellipsoids = []
     id_ctr = 0
+    vell = 0.
+    # introduce scaling factor to reduce particle overlap for non-periodic box
+    sf = 0.5 # if periodic else 0.45
     for particle in particle_data:
         num_particles = particle['Number']  # Total number of ellipsoids
-        # introduce scaling factor to reduce particle overlap for non-periodic box
-        sf = 0.5 if periodic else 0.45
         for n in range(num_particles):
             iden = id_ctr + n + 1  # ellipsoid 'id'
             if particle['Type'] == 'Equiaxed':
@@ -40,8 +43,8 @@ def particle_generator(particle_data, sim_box, periodic):
                 c = sf * particle['Minor_diameter2'][n]  # Semi-minor length 2
 
             # Random placement for ellipsoids
-            x = random.uniform(c, sim_box.w - c)
-            y = random.uniform(c, sim_box.h - c)
+            x = random.uniform(a, sim_box.w - a)
+            y = random.uniform(b, sim_box.h - b)
             z = random.uniform(c, sim_box.d - c)
 
             # Angle represents inclination of Major axis w.r.t positive x-axis
@@ -64,7 +67,8 @@ def particle_generator(particle_data, sim_box, periodic):
             quat = np.array([qw, qx, qy, qz])
 
             # instance of Ellipsoid class
-            ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat, phasenum=particle['Phase'])
+            ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat,
+                                  phasenum=particle['Phase'], points=poly)
             ellipsoid.color = (random.randint(0, 255), random.randint(
                 0, 255), random.randint(0, 255))
 
@@ -75,15 +79,17 @@ def particle_generator(particle_data, sim_box, periodic):
             ellipsoid.speedx = ellipsoid.speedx0
             ellipsoid.speedy = ellipsoid.speedy0
             ellipsoid.speedz = ellipsoid.speedz0
+            vell += ellipsoid.get_volume()
 
             Ellipsoids.append(ellipsoid)  # adds ellipsoid to list
         id_ctr += num_particles
+        print(f'    Total volume of generated ellipsoids: {vell}')
 
     return Ellipsoids
 
 
 def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
-                  k_rep=0.0, k_att=0.0, vf=None,
+                  k_rep=0.0, k_att=0.0, fill_factor=None,
                   dump=False):
     """
     Initializes the :class:`entities.Octree` class and performs recursive
@@ -105,8 +111,8 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
     :type k_rep: float
     :param k_att: Attraction factor for particles
     :type k_att: float
-    :param vf: Target volume fraction for particle filling
-    :type vf: float
+    :param fill_factor: Target volume fraction for particle filling
+    :type fill_factor: float
     :param dump: Indicate if dump files for particles are written.
     :type dump: boolean
 
@@ -116,15 +122,24 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
               By default, periodic images are written to the output file, 
               but this option can be disabled within the function.         
     """
-    if vf is None:
-        vf = 0.7
-    vf = np.minimum(vf, 0.7)  # 70% is largest packing density of ellipsoids
-    # Reduce the size of the particles to (1/nsteps)th of its original size
+    if fill_factor is None:
+        fill_factor = 0.65  # 65% should be largest packing density of ellipsoids
+    # Reduce the volume of the particles to (1/nsteps)th of its original value
+    end_step = int(fill_factor * nsteps) - 1  # grow particles only to given volume fraction
+    fac = nsteps**(-1/3)
+    vorig = 0.
+    ve = 0.
     for ell in Ellipsoids:
-        ell.a, ell.b, ell.c = ell.oria / nsteps, ell.orib / nsteps, ell.oric / nsteps
+        ell.a, ell.b, ell.c = ell.oria * fac, ell.orib * fac, ell.oric * fac
+        ve += ell.get_volume()
+        vorig += ell.oria*ell.orib*ell.oric*np.pi*4/3
+    dv = vorig / nsteps
+    print(f'Volume of simulation box: {sim_box.w*sim_box.h*sim_box.d}')
+    print(f'Volume of unscaled particles: {vorig}')
+    print(f'Initial volume of scaled ellipsoids: {ve}, targeted final volume: {ve+end_step*dv}')
+    print(f'Volume increment per time step: {dv}')
 
     # Simulation loop for particle growth and interaction steps
-    end_step = int(vf * nsteps)  # grow particles only to given volume fraction
     for i in tqdm(range(end_step)):
 
         # Initialize Octree and test for collision between ellipsoids
@@ -165,13 +180,14 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
         ekin = 0.
         # Loop over the ellipsoids: move, set Bbox, & 
         # check for wall collision / PBC
+        sc_fac = ((i + 1) / nsteps)**(1/3)  # scale factor for semi-axes during growth
         for ellipsoid in Ellipsoids:
             ekin += np.linalg.norm([ellipsoid.speedx, ellipsoid.speedy,
                                     ellipsoid.speedz])
             # Move the ellipsoid according to collision status
             ellipsoid.move()
             # grow the ellipsoid
-            ellipsoid.growth(nsteps)
+            ellipsoid.growth(sc_fac)
             # Check for wall collision or create duplicates
             ell_dups = ellipsoid.wallCollision(sim_box, periodicity)
             dups.extend(ell_dups)
@@ -183,7 +199,11 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
 
         # Update the simulation time
         sim_box.sim_ts += 1
-
+    ve = 0.
+    for ell in Ellipsoids:
+        if type(ell.id) is int:
+            ve += ell.get_volume()
+    print(f'Actual final volume of ellipsoids: {ve}')
     return Ellipsoids, sim_box
 
 
@@ -250,7 +270,7 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
 
 
 def packingRoutine(particle_data, periodic, nsteps, sim_box,
-                   k_rep=0.0, k_att=0.0, vf=None, save_files=False):
+                   k_rep=0.0, k_att=0.0, fill_factor=None, poly=None, save_files=False):
     """
     The main function that controls the particle packing routine using:
         :meth:`particle_grow` & :meth:`particle_generator`
@@ -270,14 +290,14 @@ def packingRoutine(particle_data, periodic, nsteps, sim_box,
 
     print('    Creating particles from distribution statistics')
     # Create instances for particles
-    Particles = particle_generator(particle_data, sim_box, periodic)
+    Particles = particle_generator(particle_data, sim_box, periodic, poly)
 
     # Growth of particle at each time step
     print('    Particle packing by growth simulation')
 
     particles, simbox = particle_grow(sim_box, Particles, periodic,
                                       nsteps,
-                                      k_rep=k_rep, k_att=k_att, vf=vf,
+                                      k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
                                       dump=save_files)
 
     # statistical evaluation of collisions

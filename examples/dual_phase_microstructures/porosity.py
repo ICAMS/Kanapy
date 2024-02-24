@@ -13,7 +13,7 @@ import numpy as np
 from math import pi
 
 periodic = True  # create periodic RVE
-vf_pores = 0.10  # volume fraction of pores (or precipitates)
+vf_pores = 0.20  # volume fraction of pores (or precipitates)
 name = 'Pores'
 nvox = 40  # number of voxels in each Cartesian direction (cuboid RVE)
 lside = 30  # side length in micron in each Cartesian direction
@@ -54,9 +54,6 @@ for igr, ip in ms.mesh.grain_phase_dict.items():
             i, j, k = np.unravel_index(nv-1, ms.mesh.dim, order='F')
             mask[i, j, k] = True
 knpy.plot_voxels_3D(ms.mesh.grains, Ngr=ms.Ngr, mask=mask)
-#ms.generate_grains()  # construct polyhedral hull for each grain
-#ms.plot_grains()  # plot grain structure
-#ms.plot_stats()  # plot statistical distribution of grain sizes and aspect ratios and compare to input statistics
 
 # Write voxel structure to JSON file
 ms.write_voxels(script_name=__file__, mesh=False, system=False)

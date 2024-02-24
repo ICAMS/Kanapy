@@ -188,24 +188,32 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
             # col = cm(pa.phasenum)
         else:
             col = cm(i + 1)  # set to 'b' for only blue ellipsoids
-        qw, qx, qy, qz = pa.quat
-        x_c, y_c, z_c = pa.x, pa.y, pa.z
-        a, b, c = pa.a, pa.b, pa.c
-        # Rotation
-        r = Rotation.from_quat([qx, qy, qz, qw])
-        # Local coordinates
-        u = np.linspace(0, 2 * np.pi, 100)
-        v = np.linspace(0, np.pi, 100)
-        x_local = (a * np.outer(np.cos(u), np.sin(v))).reshape((10000,))
-        y_local = (b * np.outer(np.sin(u), np.sin(v))).reshape((10000,))
-        z_local = (c * np.outer(np.ones_like(u), np.cos(v))).reshape((10000,))
-        points_local = list(np.array([x_local, y_local, z_local]).transpose())
-        # Global coordinates
-        points_global = r.apply(points_local, inverse=True)
-        x = (points_global[:, 0] + np.ones_like(points_global[:, 0]) * x_c).reshape((100, 100))
-        y = (points_global[:, 1] + np.ones_like(points_global[:, 1]) * y_c).reshape((100, 100))
-        z = (points_global[:, 2] + np.ones_like(points_global[:, 2]) * z_c).reshape((100, 100))
-        ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
+        if pa.inner is not None:
+            pa.sync_poly()
+            pts = pa.inner.points
+            ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
+                            triangles=pa.inner.convex_hull, color=col,
+                            edgecolor='k', linewidth=1)
+            col = [0.7, 0.7, 0.7, 0.3]
+        else:
+            qw, qx, qy, qz = pa.quat
+            x_c, y_c, z_c = pa.x, pa.y, pa.z
+            a, b, c = pa.a, pa.b, pa.c
+            # Rotation
+            r = Rotation.from_quat([qx, qy, qz, qw])
+            # Local coordinates
+            u = np.linspace(0, 2 * np.pi, 100)
+            v = np.linspace(0, np.pi, 100)
+            x_local = (a * np.outer(np.cos(u), np.sin(v))).reshape((10000,))
+            y_local = (b * np.outer(np.sin(u), np.sin(v))).reshape((10000,))
+            z_local = (c * np.outer(np.ones_like(u), np.cos(v))).reshape((10000,))
+            points_local = list(np.array([x_local, y_local, z_local]).transpose())
+            # Global coordinates
+            points_global = r.apply(points_local, inverse=True)
+            x = (points_global[:, 0] + np.ones_like(points_global[:, 0]) * x_c).reshape((100, 100))
+            y = (points_global[:, 1] + np.ones_like(points_global[:, 1]) * y_c).reshape((100, 100))
+            z = (points_global[:, 2] + np.ones_like(points_global[:, 2]) * z_c).reshape((100, 100))
+            ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
     plt.show()
 
 

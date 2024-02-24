@@ -28,6 +28,14 @@ def collision_routine(E1, E2, damp=0):
                                     E1.get_pos(), E2.get_pos(),
                                     E1.rotation_matrix, E2.rotation_matrix)
 
+    # check if inner polyhedra overlap if present
+    """if overlap_status and E1.inner is not None and E2.inner is not None:
+        E1.sync_poly()
+        E2.sync_poly()
+        if all(E1.inner.find_simplex(E2.inner.points) < 0) and\
+           all(E2.inner.find_simplex(E1.inner.points) < 0):
+            overlap_status = False"""
+
     if overlap_status:
         collision_react(E1, E2, damp=damp)  # calculates resultant speed for E1
         collision_react(E2, E1, damp=damp)  # calculates resultant speed for E2

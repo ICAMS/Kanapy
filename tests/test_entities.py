@@ -183,11 +183,11 @@ class TestEllipsoid():
         # Initialize the Ellipsoid
         self.ell = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5, rot_surf[0])
 
-        self.ell.growth(1000)
+        self.ell.growth(0.5)
 
-        assert self.ell.a == 2.0 + (2.0/1000)
-        assert self.ell.b == 1.5 + (1.5/1000)
-        assert self.ell.c == 1.5 + (1.5/1000)
+        assert self.ell.a == 0.5*self.ell.oria
+        assert self.ell.b == 0.5*self.ell.orib
+        assert self.ell.c == 0.5*self.ell.oric
 
     def test_Bbox(self, rot_surf):
 

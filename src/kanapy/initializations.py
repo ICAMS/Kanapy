@@ -67,7 +67,7 @@ class RVE_creator(object):
 
     """
 
-    def __init__(self, stats_dicts, nsteps=1000, from_voxels=False):
+    def __init__(self, stats_dicts, nsteps=1000, from_voxels=False, poly=None):
         """
         Create an RVE object.
 
@@ -76,7 +76,7 @@ class RVE_creator(object):
         stats_dicts
         nsteps
         from_voxels
-        precipit
+        poly
 
         Attributes
         ----------
@@ -124,9 +124,24 @@ class RVE_creator(object):
                 individualK = np.multiply(numFra_Dia, volume_array)
                 K = individualK / np.sum(individualK)
 
-                # Total number of ellipsoids for packing density 65%
-                num = np.divide(K * phase_vf[-1] * np.prod(self.size), volume_array) * 0.65
-                num = np.rint(num).astype(int)  # Round to the nearest integer
+                # Total number of ellipsoids for packing density given by volume fraction
+                num_f = np.divide(K * phase_vf[-1] * np.prod(self.size), volume_array)
+                """print(f'Particle numbers: {num_f}')
+                print(f'Total volume of particles: {np.sum(np.multiply(num_f, volume_array))}')"""
+                # Rounding particle numbers to integer values keeping total volume constant
+                num = np.zeros(len(num_f), dtype=int)
+                rest = 0.0
+                for i, val in enumerate(num_f):
+                    v1 = np.rint(val).astype(int)
+                    rest += v1 - val
+                    if abs(rest) > 1.0:
+                        sr = np.sign(rest).astype(int)
+                        rest -= sr
+                        v1 -= sr
+                    num[i] = v1
+                """print(f'Volume after rounding: {np.sum(np.multiply(num, volume_array))}')
+                print(f'Particle numbers: {num}')
+                print(f'Phase volume fraction: {phase_vf[-1]}')"""
                 totalEllipsoids = int(np.sum(num))
 
                 # Duplicate the diameter values

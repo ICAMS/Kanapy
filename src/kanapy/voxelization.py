@@ -362,7 +362,7 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
             # sys.exit(0)
 
     # generate array of voxelized structure with grain IDs
-    # if vf < 1.0, empty voxels will have grain ID 0
+    # if fill_factor < 1.0, empty voxels will have grain ID 0
     gr_arr = np.zeros(mesh.nvox, dtype=int)
     for igr, vlist in mesh.grain_dict.items():
         vlist = np.array(vlist) - 1
