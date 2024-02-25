@@ -101,7 +101,7 @@ class Ellipsoid(object):
         self.speedy = 0.
         self.speedz = 0.
         self.rotationMatrixGen()  # Initialize roatation matrix for the ellipsoid
-        self.surfacePointsGen()  # Initialize surface points for the ellipsoid
+        self.surface_points = self.surfacePointsGen()  # Initialize surface points for the ellipsoid
         self.inside_voxels = []  # List that stores voxels belonging to the ellipsoid
         self.set_cub()  # sets particle cuboid for collision testing with octree boxes
         self.duplicate = dup  # Duplicate status used for voxelization
@@ -174,15 +174,15 @@ class Ellipsoid(object):
                                              [xY + wZ, 1.0 - (xX + zZ), yZ - wX],
                                              [xZ - wY, yZ + wX, 1.0 - (xX + yY)]])
 
-    def surfacePointsGen(self):
+    def surfacePointsGen(self, nang=20):
         """
         Generates points on the outer surface of the ellipsoid using the rotation matrix from :meth:`rotationMatrixGen`
 
         :rtype: numpy array
         """
         # Points on the outer surface of Ellipsoid
-        u = np.linspace(0, 2 * np.pi, 20)
-        v = np.linspace(0, np.pi, 20)
+        u = np.linspace(0, 2 * np.pi, nang)
+        v = np.linspace(0, np.pi, nang)
 
         # Cartesian coordinates that correspond to the spherical angles:
         xval = self.a * np.outer(np.cos(u), np.sin(v))
@@ -194,7 +194,7 @@ class Ellipsoid(object):
             (xval.ravel(), yval.ravel(), zval.ravel()), axis=1)
 
         # Do the dot product with rotation matrix
-        self.surface_points = stacked_xyz.dot(self.rotation_matrix)
+        return stacked_xyz.dot(self.rotation_matrix)
 
     def growth(self, fac):
         """
@@ -216,7 +216,7 @@ class Ellipsoid(object):
         :rtype: numpy array
         """
         # Add position vector
-        self.surfacePointsGen()
+        self.surface_points = self.surfacePointsGen()
         new_surfPts = self.surface_points + self.get_pos()
 
         self.bbox_xmin, self.bbox_xmax = np.amin(
@@ -246,14 +246,15 @@ class Ellipsoid(object):
         """
         Creates a polygon inside the ellipsoid
         """
-
         return Delaunay(points.dot(self.rotation_matrix))
 
-    def sync_poly(self):
+    def sync_poly(self, scale=1.6):
         """
         Moves the center of the polygon to the center of the ellipsoid and
         scales the hull to fit inside the ellipsoid
         """
+        if self.inner is None:
+            return
         opts = self.inner.points
         Npts = len(opts)
         p_ctr = np.average(opts, axis=0)
@@ -265,16 +266,16 @@ class Ellipsoid(object):
         v_min = np.array([pts[i, j] for j, i in enumerate(ind0)])  # min. value for each Cartesian axis
         v_max = np.array([pts[i, j] for j, i in enumerate(ind1)])  # max. value for each Cartesian axis
         dim = v_max - v_min  # extension of polygon along each axis
-        fac = 1.6 * np.divide(np.array([self.a, self.b, self.c]), dim)  # scaling factors for each axis
+        fac = scale * np.divide(np.array([self.a, self.b, self.c]), dim)  # scaling factors for each axis
         pts *= fac  # scale points to dimensions of ellipsoid
         pts = pts.dot(self.rotation_matrix)  # rotate back into ellipsoid frame
         pts += e_ctr[None, :]  # shift center to center of ellipsoid
         # update points Delaunay tesselation
         self.inner = Delaunay(pts)
         # check if surface points of ellipsoid are all outside polyhedron
-        self.surfacePointsGen()
+        """self.surface_points = self.surfacePointsGen() + e_ctr[None, :]
         if any(self.inner.find_simplex(self.surface_points) >= 0):
-            logging.error(f'Polyhedron too large for ellipsoid {self.id}. Reduce scale.')
+            logging.error(f'Polyhedron too large for ellipsoid {self.id}. Reduce scale.')"""
 
 
     def move(self):

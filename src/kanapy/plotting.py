@@ -153,7 +153,7 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
 
 def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
     """
-    Display ellipsoids during or after packing procedure
+    Display ellipsoids after packing procedure
 
     Parameters
     ----------
@@ -188,31 +188,69 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
             # col = cm(pa.phasenum)
         else:
             col = cm(i + 1)  # set to 'b' for only blue ellipsoids
-        if pa.inner is not None:
-            pa.sync_poly()
-            pts = pa.inner.points
-            ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
-                            triangles=pa.inner.convex_hull, color=col,
-                            edgecolor='k', linewidth=1)
-            col = [0.7, 0.7, 0.7, 0.3]
+
+        pts = pa.surfacePointsGen(nang=100)
+        ctr = pa.get_pos()
+        x = (pts[:, 0] + ctr[None, 0]).reshape((100, 100))
+        y = (pts[:, 1] + ctr[None, 1]).reshape((100, 100))
+        z = (pts[:, 2] + ctr[None, 2]).reshape((100, 100))
+        ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
+    plt.show()
+
+
+def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True):
+    """
+    Display inner polyhedra of ellipsoids after packing procedure
+
+    Parameters
+    ----------
+    particles : Class particles
+        Ellipsoids in microstructure before voxelization.
+    cmap : color map, optional
+        Color map for ellipsoids. The default is 'prism'.
+    dual_phase : bool, optional
+        Whether to display the ellipsoids in red/green contrast or in colors
+    plot_hull : bool, optional
+        Whether to display the ellipsoids as hulls. Defaults to True
+
+    Returns
+    -------
+    None.
+
+    """
+    fig = plt.figure(figsize=plt.figaspect(1), dpi=1200)
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set(xlabel='x', ylabel='y', zlabel='z')
+    ax.view_init(30, 30)
+
+    Npa = len(particles)
+    cm = plt.cm.get_cmap(cmap, Npa)
+
+    for i, pa in enumerate(particles):
+        if pa.duplicate is not None:
+            continue
+        if pa.inner is None:
+            logging.error(f'Ellipsoid {pa.id} without inner polygon cannot be plotted.')
+            continue
+        if dual_phase:
+            if pa.phasenum == 0:
+                col = 'red'
+            else:
+                col = 'green'
         else:
-            qw, qx, qy, qz = pa.quat
-            x_c, y_c, z_c = pa.x, pa.y, pa.z
-            a, b, c = pa.a, pa.b, pa.c
-            # Rotation
-            r = Rotation.from_quat([qx, qy, qz, qw])
-            # Local coordinates
-            u = np.linspace(0, 2 * np.pi, 100)
-            v = np.linspace(0, np.pi, 100)
-            x_local = (a * np.outer(np.cos(u), np.sin(v))).reshape((10000,))
-            y_local = (b * np.outer(np.sin(u), np.sin(v))).reshape((10000,))
-            z_local = (c * np.outer(np.ones_like(u), np.cos(v))).reshape((10000,))
-            points_local = list(np.array([x_local, y_local, z_local]).transpose())
-            # Global coordinates
-            points_global = r.apply(points_local, inverse=True)
-            x = (points_global[:, 0] + np.ones_like(points_global[:, 0]) * x_c).reshape((100, 100))
-            y = (points_global[:, 1] + np.ones_like(points_global[:, 1]) * y_c).reshape((100, 100))
-            z = (points_global[:, 2] + np.ones_like(points_global[:, 2]) * z_c).reshape((100, 100))
+            col = cm(i + 1)  # set to 'b' for only blue ellipsoids
+        pa.sync_poly(scale=1.2)
+        pts = pa.inner.points
+        ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
+                        triangles=pa.inner.convex_hull, color=col,
+                        edgecolor='k', linewidth=1)
+        if plot_hull:
+            col = [0.7, 0.7, 0.7, 0.3]
+            pts = pa.surfacePointsGen(nang=100)
+            ctr = pa.get_pos()
+            x = (pts[:, 0] + ctr[None, 0]).reshape((100, 100))
+            y = (pts[:, 1] + ctr[None, 1]).reshape((100, 100))
+            z = (pts[:, 2] + ctr[None, 2]).reshape((100, 100))
             ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
     plt.show()
 

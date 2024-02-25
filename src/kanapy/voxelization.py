@@ -2,6 +2,7 @@
 import numpy as np
 import itertools
 import logging
+from copy import deepcopy
 from tqdm import tqdm
 from collections import defaultdict
 from scipy.spatial import ConvexHull
@@ -59,24 +60,26 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
     pbar = tqdm(total=len(remaining_voxels))
     for ellipsoid in Ellipsoids:
         ellipsoid.inside_voxels = []
+
     while vf_cur < vf_target:
         # call the growth value for the ellipsoids
         scale = next(growth)
-
+        print('Voxelization loop', scale, vf_cur, vf_target)
         for ellipsoid in Ellipsoids:
             # scale ellipsoid dimensions by the growth factor and generate surface points
             ellipsoid.a, ellipsoid.b, ellipsoid.c = scale * ellipsoid.a, scale * ellipsoid.b, scale * ellipsoid.c
-            ellipsoid.surfacePointsGen()
-
+            surface_points = ellipsoid.surfacePointsGen()
             # Find the new surface points of the ellipsoid at their final position
-            new_surfPts = ellipsoid.surface_points + ellipsoid.get_pos()
+            new_surfPts = surface_points + ellipsoid.get_pos()
 
+            # create a convex hull from the surface points
+            hull = ConvexHull(new_surfPts, incremental=False)
             # Find the bounding box extrema along x, y, and z
             bbox_xmin, bbox_xmax = np.amin(new_surfPts[:, 0]), np.amax(new_surfPts[:, 0])
             bbox_ymin, bbox_ymax = np.amin(new_surfPts[:, 1]), np.amax(new_surfPts[:, 1])
             bbox_zmin, bbox_zmax = np.amin(new_surfPts[:, 2]), np.amax(new_surfPts[:, 2])
 
-            # Find the numpy indices of all voxels within the bounding box                                                    
+            # Find the numpy indices of all voxels within the bounding box
             in_bbox_idx = np.where((test_points[:, 0] >= bbox_xmin) & (test_points[:, 0] <= bbox_xmax)
                                    & (test_points[:, 1] >= bbox_ymin) & (test_points[:, 1] <= bbox_ymax)
                                    & (test_points[:, 2] >= bbox_zmin) & (test_points[:, 2] <= bbox_zmax))[0]
@@ -84,9 +87,6 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
             # extract the actual voxel ids and coordinates from the reduced numpy indices
             bbox_testids = test_ids[in_bbox_idx]  # voxels ids
             bbox_testPts = test_points[in_bbox_idx]  # coordinates
-
-            # create a convex hull from the surface points
-            hull = ConvexHull(new_surfPts, incremental=False)
 
             # check if the extracted points are within the hull
             results = points_in_convexHull(bbox_testPts, hull)
@@ -329,6 +329,54 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
                 * Element set dictionary containing element set ID and group of 
                   elements each representing a grain of the RVE.                                 
     """
+
+    def ell2vox():
+        assign_voxels_to_ellipsoid(mesh.vox_center_dict, Ellipsoids, mesh.voxel_dict, vf_target=prec_vf)
+        # Create element sets
+        for ellipsoid in Ellipsoids:
+            if ellipsoid.inside_voxels:
+                # If the ellipsoid is a duplicate add the voxels to the original ellipsoid
+                if ellipsoid.duplicate is not None:
+                    iel = int(ellipsoid.duplicate)
+                    if iel not in mesh.grain_dict:
+                        mesh.grain_dict[iel] = \
+                            [int(iv) for iv in ellipsoid.inside_voxels]
+                    else:
+                        mesh.grain_dict[iel].extend(
+                            [int(iv) for iv in ellipsoid.inside_voxels])
+                # Else it is the original ellipsoid
+                else:
+                    mesh.grain_dict[int(ellipsoid.id)] = \
+                        [int(iv) for iv in ellipsoid.inside_voxels]
+            else:
+                # If ellipsoid doesn't contain any voxel inside
+                # grain should be removed from list!!!
+                logging.debug('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissible'
+                              .format(ellipsoid.id))
+                # sys.exit(0)
+
+    def poly2vox():
+        for pa in Ellipsoids:
+            if pa.duplicate is not None:
+                gid = pa.duplicate
+                pa.inner = pa.create_poly(Ellipsoids[gid].inner.points)
+            else:
+                gid = pa.id
+            pa.sync_poly()
+            vox = []
+            # search for voxel centers inside the polygon
+            for iv, ctr in mesh.vox_center_dict.items():
+                if pa.inner.find_simplex(ctr) >= 0:
+                    if type(iv) is not int:
+                        print(iv, ctr)
+                        iv = int(iv)
+                    vox.append(iv)
+            if gid in mesh.grain_dict.keys():
+                for iv in vox:
+                    mesh.grain_dict[gid].append(iv)
+            else:
+                mesh.grain_dict[gid] = vox
+
     print('')
     print('Starting RVE voxelization')
 
@@ -336,30 +384,11 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
     if prec_vf is None:
         prec_vf = 1.
 
-    assign_voxels_to_ellipsoid(mesh.vox_center_dict, Ellipsoids, mesh.voxel_dict, vf_target=prec_vf)
-
-    # Create element sets
-    for ellipsoid in Ellipsoids:
-        if ellipsoid.inside_voxels:
-            # If the ellipsoid is a duplicate add the voxels to the original ellipsoid
-            if ellipsoid.duplicate is not None:
-                iel = int(ellipsoid.duplicate)
-                if iel not in mesh.grain_dict:
-                    mesh.grain_dict[iel] = \
-                        [int(iv) for iv in ellipsoid.inside_voxels]
-                else:
-                    mesh.grain_dict[iel].extend(
-                        [int(iv) for iv in ellipsoid.inside_voxels])
-            # Else it is the original ellipsoid
-            else:
-                mesh.grain_dict[int(ellipsoid.id)] = \
-                    [int(iv) for iv in ellipsoid.inside_voxels]
-        else:
-            # If ellipsoid doesn't contain any voxel inside
-            # grain should be removed from list!!!
-            logging.debug('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissible'
-                          .format(ellipsoid.id))
-            # sys.exit(0)
+    # decide if voxels shall be assigned to ellipsoids or inner polygons
+    if Ellipsoids[0].inner is None:
+        ell2vox()
+    else:
+        poly2vox()
 
     # generate array of voxelized structure with grain IDs
     # if fill_factor < 1.0, empty voxels will have grain ID 0
@@ -389,13 +418,13 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
     print('Completed RVE voxelization')
     if prec_vf is not None and prec_vf < 1.0:
         print('Dispersed phase (precipitates/porosity):')
-        print(f'Volume fraction in voxelized grains: {vf_cur}')
+        print(f'Volume fraction in voxelized grains: {vf_cur:.4f}')
         print(f'Target volume fraction = {prec_vf}')
         mesh.prec_vf_voxels = vf_cur
         if 0 in mesh.grain_dict.keys():
             raise ValueError('Grain with key "0" already exists. Should be reserved for matrix phase in structures ' +
-            'with precipitates or porosity. Cannot continue with precipitate simulation.')
-        mesh.grain_dict[0] = ind
+                             'with precipitates or porosity. Cannot continue with precipitate simulation.')
+        mesh.grain_dict[0] = ind + 1
         mesh.grain_phase_dict[0] = 1
         mesh.ngrains_phase[1] += 1
     elif vf_cur < 1.0:

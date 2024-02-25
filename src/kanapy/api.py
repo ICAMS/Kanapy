@@ -25,7 +25,7 @@ from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
 from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
-    plot_polygons_3D, plot_output_stats
+    plot_polygons_3D, plot_output_stats, plot_particles_3D
 
 
 class Microstructure(object):
@@ -210,9 +210,13 @@ class Microstructure(object):
             for igr, ip in self.mesh.grain_phase_dict.items():
                 vox_count[ip] += len(self.mesh.grain_dict[igr])
             print('Volume fractions of phases in voxel structure:')
+            vt = 0.
             for ip in range(self.nphases):
                 vf = 100.0*vox_count[ip]/self.mesh.nvox
+                vt += vf
                 print(f'{ip}: {self.rve.phase_names[ip]} ({vf.round(1)}%)')
+            if not np.isclose(vt, 1.0):
+                logging.warning(f'Volume fractions of phases in voxels do not add up to 1. Value: {vt}')
 
         # remove grain information if it already exists to avoid inconsistencies
         if self.geometry is not None:
@@ -375,8 +379,17 @@ class Microstructure(object):
             raise ValueError('No particle to plot. Run pack first.')
         plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase)
 
+    def plot_particles(self, cmap='prism', dual_phase=False, plot_hull=True):
+        """ Generates plot of particles"""
+        if self.particles is None:
+            raise ValueError('No particle to plot. Run pack first.')
+        if self.particles[0].inner is None:
+            raise ValueError('Ellipsoids without inner polygon cannot be plotted.')
+        plot_particles_3D(self.particles, cmap=cmap,
+                          dual_phase=dual_phase, plot_hull=plot_hull)
+
     def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism',
-                    ori = None):
+                    ori=None):
         """ Generate 3D plot of grains in voxelized microstructure. """
         if self.mesh.grains is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
