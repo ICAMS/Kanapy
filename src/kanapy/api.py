@@ -1113,8 +1113,8 @@ class Microstructure(object):
                 "machine": sys_info[4],
             }
         for igr in self.mesh.grain_dict.keys():
-            structure["Grains"][igr] = {
-                "Phase": self.mesh.grain_phase_dict[igr]
+            structure["Grains"][int(igr)] = {
+                "Phase": int(self.mesh.grain_phase_dict[igr])
             }
         if angles is None:
             if self.mesh.grain_ori_dict is None:
