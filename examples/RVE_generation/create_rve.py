@@ -40,8 +40,7 @@ ms.plot_stats()  # compared final grain statistics with initial parameters
 if knpy.MTEX_AVAIL:
     ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
     print('Plotting grain colors according to IPF key.')
-    ms.plot_voxels(ori=True)
+    ms.plot_voxels(ori=True, sliced=False)
 
 # output rve in voxel format
 ms.write_voxels(script_name=__file__, mesh=False, system=False)
-
