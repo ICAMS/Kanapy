@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import time
 import numpy as np
+from scipy.spatial import Delaunay
 
 
 def collision_routine(E1, E2):
@@ -22,12 +24,19 @@ def collision_routine(E1, E2):
     """
 
     # call the collision detection algorithm
+    start = time.time()
     overlap_status = collide_detect(E1.get_coeffs(), E2.get_coeffs(),
                                     E1.get_pos(), E2.get_pos(),
                                     E1.rotation_matrix, E2.rotation_matrix)
+    end = time.time()
+    tcd = end-start
+    start = time.time()
     if overlap_status:
-        collision_react(E1, E2)  # calculates resultant contact forces of both particles
-    return overlap_status
+        overlap_status = collision_react(E1, E2)  # calculates resultant contact forces of both particles
+    end = time.time()
+    tcr = end-start
+
+    return overlap_status, tcd, tcr
 
 
 def collision_react(ell1, ell2):
@@ -70,20 +79,49 @@ def collision_react(ell1, ell2):
                   :align: center                        
 
     """
-    cdir = ell1.get_pos() - ell2.get_pos()
-    dst = np.linalg.norm(cdir)
-    eqd1 = ell1.get_volume()**(1/3)
-    eqd2 = ell2.get_volume()**(1/3)
-    val = (0.5*(eqd1 + eqd2) / dst)**3
+    if ell1.inner is None:
+        pts1 = ell1.surfacePointsGen(nang=180)
+        hull1 = Delaunay(pts1)
+    else:
+        ell1.sync_poly()
+        pts1 = ell1.inner.points
+        hull1 = ell1.inner
+    if ell2.inner is None:
+        pts2 = ell2.surfacePointsGen(nang=180)
+        hull2 = Delaunay(pts2)
+    else:
+        ell2.sync_poly()
+        pts2 = ell2.inner.points
+        hull2 = ell2.inner
+
+    ind12 = np.nonzero(hull1.find_simplex(pts2) >= 0)[0]
+    if len(ind12) == 0:
+        # no overlapping vertices on convex hulls
+        return False
+    ind21 = np.nonzero(hull2.find_simplex(pts1) >= 0)[0]
+    if len(ind21) == 0:
+        return False
+
+    pos_i1 = np.average(pts1[ind21], axis=0)
+    pos_i2 = np.average(pts2[ind12], axis=0)
+    ctr1 = ell1.get_pos()
+    ctr2 = ell2.get_pos()
+    dir1 = ctr1 - pos_i1
+    dir2 = ctr2 - pos_i2
+    dst1 = np.linalg.norm(dir1)
+    dst2 = np.linalg.norm(dir2)
+    fac = np.average([dst1, dst2])
+    val = np.linalg.norm(pos_i1 - pos_i2) / fac
     val = np.minimum(5.0, val)
 
-    ell1.force_x += val * cdir[0] / dst
-    ell1.force_y += val * cdir[1] / dst
-    ell1.force_z += val * cdir[2] / dst
-    ell2.force_x -= val * cdir[0] / dst
-    ell2.force_y -= val * cdir[1] / dst
-    ell2.force_z -= val * cdir[2] / dst
-    return
+    ell1.force_x += val * dir1[0] / dst1
+    ell1.force_y += val * dir1[1] / dst1
+    ell1.force_z += val * dir1[2] / dst1
+    ell2.force_x += val * dir2[0] / dst2
+    ell2.force_y += val * dir2[1] / dst2
+    ell2.force_z += val * dir2[2] / dst2
+
+    return True
 
 
 def collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j):

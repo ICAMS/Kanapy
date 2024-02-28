@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def collision_routine(E1, E2):
+def collision_routine(E1, E2, damp=0):
     """
     Calls the method :meth:'collide_detect' to determine whether the given two ellipsoid objects overlap using
     the Algebraic separation condition developed by W. Wang et al. A detailed description is provided
@@ -14,6 +14,8 @@ def collision_routine(E1, E2):
     :type E1: object :obj:`Ellipsoid`
     :param E2: Ellipsoid :math:`j`
     :type E2: object :obj:`Ellipsoid`
+    :param damp: Damping factor
+    :type damp: float
 
     .. note:: 1. If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is
                  sufficient to determine whether they overlap.
@@ -25,12 +27,15 @@ def collision_routine(E1, E2):
     overlap_status = collide_detect(E1.get_coeffs(), E2.get_coeffs(),
                                     E1.get_pos(), E2.get_pos(),
                                     E1.rotation_matrix, E2.rotation_matrix)
+
     if overlap_status:
-        collision_react(E1, E2)  # calculates resultant contact forces of both particles
+        collision_react(E1, E2, damp=damp)  # calculates resultant speed for E1
+        collision_react(E2, E1, damp=damp)  # calculates resultant speed for E2
+
     return overlap_status
 
 
-def collision_react(ell1, ell2):
+def collision_react(ell1, ell2, damp=0.):
     r"""
     Evaluates and modifies the magnitude and direction of the ellipsoid's velocity after collision.    
 
@@ -38,6 +43,8 @@ def collision_react(ell1, ell2):
     :type ell1: object :obj:`Ellipsoid`
     :param ell2: Ellipsoid :math:`j`
     :type ell2: object :obj:`Ellipsoid`
+    :param damp: Damping factor
+    :type damp: float
 
     .. note:: Consider two ellipsoids :math:`i, j` at collision. Let them occupy certain positions in space
               defined by the position vectors :math:`\mathbf{r}^{i}, \mathbf{r}^{j}` and have certain 
@@ -69,20 +76,42 @@ def collision_react(ell1, ell2):
                   :height: 80px
                   :align: center                        
 
-    """
-    cdir = ell1.get_pos() - ell2.get_pos()
-    dst = np.linalg.norm(cdir)
-    eqd1 = ell1.get_volume()**(1/3)
-    eqd2 = ell2.get_volume()**(1/3)
-    val = (0.5*(eqd1 + eqd2) / dst)**3
-    val = np.minimum(5.0, val)
+    ell1_speed = np.linalg.norm([ell1.speedx0, ell1.speedy0, ell1.speedz0]) * (1. - damp)
+    x_diff = ell2.x - ell1.x
+    y_diff = ell2.y - ell1.y
+    z_diff = ell2.z - ell1.z
+    elevation_angle = np.arctan2(y_diff, np.linalg.norm([x_diff, z_diff]))
+    angle = np.arctan2(z_diff, x_diff)
 
-    ell1.force_x += val * cdir[0] / dst
-    ell1.force_y += val * cdir[1] / dst
-    ell1.force_z += val * cdir[2] / dst
-    ell2.force_x -= val * cdir[0] / dst
-    ell2.force_y -= val * cdir[1] / dst
-    ell2.force_z -= val * cdir[2] / dst
+    x_speed = -ell1_speed * np.cos(angle) * np.cos(elevation_angle)
+    y_speed = -ell1_speed * np.sin(elevation_angle)
+    z_speed = -ell1_speed * np.sin(angle) * np.cos(elevation_angle)
+
+    # Assign new speeds 
+    ell1.speedx += x_speed
+    ell1.speedy += y_speed
+    ell1.speedz += z_speed
+    """
+    # check if inner polyhedra overlap if present
+    """if overlap_status and E1.inner is not None and E2.inner is not None:
+        E1.sync_poly()
+        E2.sync_poly()
+        if all(E1.inner.find_simplex(E2.inner.points) < 0) and\
+           all(E2.inner.find_simplex(E1.inner.points) < 0):
+            overlap_status = False"""
+    x_diff = ell1.x - ell2.x
+    y_diff = ell1.y - ell2.y
+    z_diff = ell1.z - ell2.z
+    r2inv = 1.0/((x_diff/ell1.a) ** 3 + (y_diff/ell1.b) ** 3 + (z_diff/ell1.c) ** 3)
+    r2inv = np.sign(r2inv) * np.minimum(np.abs(r2inv), 2.)
+
+    elevation_angle = np.arctan2(y_diff, np.linalg.norm([x_diff, z_diff]))
+    angle = np.arctan2(z_diff, x_diff)
+
+    ell1.force_x += r2inv #* np.cos(angle) * np.cos(elevation_angle)
+    ell1.force_y += r2inv #* np.sin(elevation_angle)
+    ell1.force_z += r2inv #* np.sin(angle) * np.cos(elevation_angle)
+
     return
 
 

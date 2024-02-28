@@ -64,7 +64,6 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
     while vf_cur < vf_target:
         # call the growth value for the ellipsoids
         scale = next(growth)
-        print('Voxelization loop', scale, vf_cur, vf_target)
         for ellipsoid in Ellipsoids:
             # scale ellipsoid dimensions by the growth factor and generate surface points
             ellipsoid.a, ellipsoid.b, ellipsoid.c = scale * ellipsoid.a, scale * ellipsoid.b, scale * ellipsoid.c
@@ -282,35 +281,6 @@ def reassign_shared_voxels(cooDict, Ellipsoids, voxel_dict):
                             clo_ells[small_loc].inside_voxels.append(vox)
                         assigned_voxel.append(vox)
                         shared_voxels.remove(vox)
-
-            """ells = list(ells)                                     # convert to list
-            vox_coord = cooDict[vox]                              # Get the voxel position        
-            ells_pos = np.array([el.get_pos() for el in ells])    # Get the ellipsoids positions
-                    
-            # Distance b/w points along three axes
-            XDiff = vox_coord[0] - ells_pos[:, 0]  # 'x'-axis
-            YDiff = vox_coord[1] - ells_pos[:, 1]  # 'y'-axis
-            ZDiff = vox_coord[2] - ells_pos[:, 2]  # 'z'-axis
-    
-            # Find the distance from the 1st ellipsoid
-            dist = np.sqrt((XDiff**2)+(YDiff**2)+(ZDiff**2))
-       
-            clo_loc = np.where(dist == dist.min())[0]             # closest ellipsoid index        
-            clo_ells = [ells[loc] for loc in clo_loc]             # closest ellipsoids
-        
-            # If '1' closest ellipsoid: assign voxel to it        
-            if len(clo_ells) == 1:
-                clo_ells[0].inside_voxels.append(vox)
-            # Else: Determine the smallest and assign to it
-            else:
-                #clo_vol = np.array([ce.get_volume() for ce in clo_ells])    # Determine the volumes
-                #small_loc = np.where(clo_vol == clo_vol.min())[0]     # Smallest ellipsoid index
-                small_ells = [ells[loc] for loc in clo_loc]           # Smallest ellipsoids
-            
-                # assign to the smallest one regardless how many are of the same volume
-                small_ells[0].inside_voxels.append(vox)
-        
-            assigned_voxel.append(vox)"""
         ncyc += 1
     return
 
@@ -356,6 +326,7 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
                 # sys.exit(0)
 
     def poly2vox():
+        assigned_vox = set()
         for pa in Ellipsoids:
             if pa.duplicate is not None:
                 gid = pa.duplicate
@@ -367,10 +338,23 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
             # search for voxel centers inside the polygon
             for iv, ctr in mesh.vox_center_dict.items():
                 if pa.inner.find_simplex(ctr) >= 0:
-                    if type(iv) is not int:
-                        print(iv, ctr)
-                        iv = int(iv)
-                    vox.append(iv)
+                    if iv in assigned_vox:
+                        # voxel has already been assigned to different grain.
+                        # check nearest center and re-assign if necessary
+                        dst1 = np.linalg.norm(ctr - pa.get_pos())
+                        for igr, vlist in mesh.grain_dict.items():
+                            if iv in vlist:
+                                dst2 = np.linalg.norm(ctr - Ellipsoids[igr-1].get_pos())
+                                if dst1 < dst2:
+                                    vox.append(iv)
+                                    pa.inside_voxels.append(iv)
+                                    mesh.grain_dict[igr].remove(iv)
+                                    Ellipsoids[igr-1].inside_voxels.remove(iv)
+                                break
+                    else:
+                        assigned_vox.add(iv)
+                        vox.append(iv)
+                        pa.inside_voxels.append(iv)
             if gid in mesh.grain_dict.keys():
                 for iv in vox:
                     mesh.grain_dict[gid].append(iv)

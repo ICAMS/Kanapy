@@ -104,11 +104,12 @@ def test_particle_grow(rot_surf):
     ells = [ell1, ell2]
     sb = Simulation_Box((10, 10, 10))
 
-    particle_grow(sb, ells, True, 10, dump=True)
-    
-    assert np.isclose(ell1.x, 0.9)
-    assert np.isclose(ell1.y, 0.875)
-    assert np.isclose(ell2.z, 0.8)
+    particles, simbox = particle_grow(sb, ells, True, 10, dump=True)
+
+    assert np.isclose(ell1.a, 1.5874010519681996)
+    assert np.isclose(ell1.oria, 2.0)
+    assert np.isclose(ell2.get_volume(), 9.424777960769381)
+    assert particles[0] == ell1
 
     
 def test_packingRoutine():
