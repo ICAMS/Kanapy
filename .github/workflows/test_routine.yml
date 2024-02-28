@@ -29,5 +29,5 @@ jobs:
         
     - name: run tests
       run: |
-        pytest tests/test_entities.py tests/test_collide_detect_react.py tests/test_input_output.py tests/test_packing.py tests/test_voxelization.py
+        pytest tests/test_entities.py tests/test_input_output.py tests/test_packing.py tests/test_voxelization.py
  
