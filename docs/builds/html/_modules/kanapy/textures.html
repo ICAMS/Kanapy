@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.textures &mdash; kanapy 6.1.6 documentation</title>
+  <title>kanapy.textures &mdash; kanapy 6.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=0cb1dfa4"></script>
+        <script src="../../_static/documentation_options.js?v=80ea5fc2"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.1.6
+                6.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -131,7 +131,7 @@
 <span class="sd">            List of dictionaries with phase specific microstructure</span>
 <span class="sd">            information.  </span>
 <span class="sd">            name : name of phase  </span>
-<span class="sd">            vf : volume fraction  </span>
+<span class="sd">            vf : volume fraction</span>
 <span class="sd">            ngrain : number of grains in phase</span>
 <span class="sd">            ori : matlab object with grain orientations</span>
 <span class="sd">            cs : matlab object with crystal structure</span>
@@ -155,7 +155,7 @@
         <span class="n">eng</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">start_matlab</span><span class="p">()</span>
         <span class="n">eng</span><span class="o">.</span><span class="n">addpath</span><span class="p">(</span><span class="n">MTEX_DIR</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">eng</span><span class="o">.</span><span class="n">addpath</span><span class="p">(</span><span class="n">ROOT_DIR</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">mat_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">MAIN_DIR</span> <span class="o">+</span> <span class="s1">&#39;/src/kanapy&#39;</span><span class="p">)</span>
+        <span class="n">mat_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="p">,</span> <span class="s1">&#39;src&#39;</span><span class="p">,</span> <span class="s1">&#39;kanapy&#39;</span><span class="p">)</span>
         <span class="n">eng</span><span class="o">.</span><span class="n">addpath</span><span class="p">(</span><span class="n">mat_path</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">eng</span><span class="o">.</span><span class="n">startup</span><span class="p">(</span><span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eng</span> <span class="o">=</span> <span class="n">eng</span>
@@ -511,7 +511,7 @@
     <span class="n">eng</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">start_matlab</span><span class="p">()</span>
     <span class="n">eng</span><span class="o">.</span><span class="n">addpath</span><span class="p">(</span><span class="n">MTEX_DIR</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">eng</span><span class="o">.</span><span class="n">addpath</span><span class="p">(</span><span class="n">ROOT_DIR</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">mat_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">MAIN_DIR</span> <span class="o">+</span> <span class="s1">&#39;/src/kanapy&#39;</span><span class="p">)</span>
+    <span class="n">mat_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">MAIN_DIR</span> <span class="o">+</span> <span class="s1">&#39;src&#39;</span> <span class="o">+</span> <span class="s1">&#39;kanapy&#39;</span><span class="p">)</span>
     <span class="n">eng</span><span class="o">.</span><span class="n">addpath</span><span class="p">(</span><span class="n">mat_path</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">eng</span><span class="o">.</span><span class="n">startup</span><span class="p">(</span><span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 

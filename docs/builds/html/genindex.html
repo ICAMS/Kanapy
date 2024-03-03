@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; kanapy 6.1.6 documentation</title>
+  <title>Index &mdash; kanapy 6.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=0cb1dfa4"></script>
+        <script src="_static/documentation_options.js?v=80ea5fc2"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.1.6
+                6.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -108,6 +108,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="kanapy.html#kanapy.grains.arr2mat">arr2mat() (in module kanapy.grains)</a>
+</li>
       <li><a href="kanapy.html#kanapy.voxelization.assign_voxels_to_ellipsoid">assign_voxels_to_ellipsoid() (in module kanapy.voxelization)</a>
 </li>
   </ul></td>
@@ -138,11 +140,15 @@
 </li>
       <li><a href="kanapy.html#kanapy.collisions.collision_routine">collision_routine() (in module kanapy.collisions)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.entities.Octree.collisionsTest">collisionsTest() (kanapy.entities.Octree method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.smoothingGB.Node.compute_acc">compute_acc() (kanapy.smoothingGB.Node method)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.grains.con_fun">con_fun() (in module kanapy.grains)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.entities.Ellipsoid.create_poly">create_poly() (kanapy.entities.Ellipsoid method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.initializations.mesh_creator.create_voxels">create_voxels() (kanapy.initializations.mesh_creator method)</a>
 </li>
@@ -190,10 +196,10 @@
 </li>
       <li><a href="kanapy.html#kanapy.textures.get_ipf_colors">get_ipf_colors() (in module kanapy.textures)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.smoothingGB.Node.get_Oripos">get_Oripos() (kanapy.smoothingGB.Node method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.entities.Ellipsoid.get_pos">get_pos() (kanapy.entities.Ellipsoid method)</a>
 
       <ul>
@@ -201,6 +207,10 @@
 </li>
       </ul></li>
       <li><a href="kanapy.html#kanapy.grains.get_stats">get_stats() (in module kanapy.grains)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.grains.get_stats_part">get_stats_part() (in module kanapy.grains)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.grains.get_stats_vox">get_stats_vox() (in module kanapy.grains)</a>
 </li>
       <li><a href="kanapy.html#kanapy.smoothingGB.Node.get_vel">get_vel() (kanapy.smoothingGB.Node method)</a>
 </li>
@@ -425,17 +435,23 @@
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.plot_grains">plot_grains() (kanapy.api.Microstructure method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="kanapy.html#kanapy.plotting.plot_init_stats">plot_init_stats() (in module kanapy.plotting)</a>
 </li>
       <li><a href="kanapy.html#kanapy.plotting.plot_output_stats">plot_output_stats() (in module kanapy.plotting)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="kanapy.html#kanapy.api.Microstructure.plot_particles">plot_particles() (kanapy.api.Microstructure method)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.plotting.plot_particles_3D">plot_particles_3D() (in module kanapy.plotting)</a>
 </li>
       <li><a href="kanapy.html#kanapy.plotting.plot_polygons_3D">plot_polygons_3D() (in module kanapy.plotting)</a>
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.plot_slice">plot_slice() (kanapy.api.Microstructure method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.plot_stats">plot_stats() (kanapy.api.Microstructure method)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.grains.plot_stats_dict">plot_stats_dict() (in module kanapy.grains)</a>
 </li>
       <li><a href="kanapy.html#kanapy.api.Microstructure.plot_stats_init">plot_stats_init() (kanapy.api.Microstructure method)</a>
 </li>
@@ -444,6 +460,8 @@
       <li><a href="kanapy.html#kanapy.plotting.plot_voxels_3D">plot_voxels_3D() (in module kanapy.plotting)</a>
 </li>
       <li><a href="kanapy.html#kanapy.voxelization.points_in_convexHull">points_in_convexHull() (in module kanapy.voxelization)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.grains.pts_in_ellips">pts_in_ellips() (in module kanapy.grains)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -496,6 +514,8 @@
       <li><a href="kanapy.html#kanapy.entities.Octree.subdivide_particles">subdivide_particles() (kanapy.entities.Octree method)</a>
 </li>
       <li><a href="kanapy.html#kanapy.entities.Ellipsoid.surfacePointsGen">surfacePointsGen() (kanapy.entities.Ellipsoid method)</a>
+</li>
+      <li><a href="kanapy.html#kanapy.entities.Ellipsoid.sync_poly">sync_poly() (kanapy.entities.Ellipsoid method)</a>
 </li>
   </ul></td>
 </tr></table>

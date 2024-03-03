@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.grains &mdash; kanapy 6.1.6 documentation</title>
+  <title>kanapy.grains &mdash; kanapy 6.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=0cb1dfa4"></script>
+        <script src="../../_static/documentation_options.js?v=80ea5fc2"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.1.6
+                6.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -80,10 +80,20 @@
            <div itemprop="articleBody">
              
   <h1>Source code for kanapy.grains</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">itertools</span>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Subroutines for analysis of grains in microstructure</span>
+
+<span class="sd">@author: Alexander Hartmaier</span>
+<span class="sd">ICAMS, Ruhr University Bochum, Germany</span>
+<span class="sd">March 2024</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">ConvexHull</span><span class="p">,</span> <span class="n">Delaunay</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 
@@ -297,9 +307,8 @@
         <span class="n">pdist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dvec</span><span class="p">])</span>
         <span class="n">ppt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">pts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dvec</span><span class="p">):</span>
-            <span class="n">ppt</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">p</span> <span class="o">-</span> <span class="n">pdist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">axis</span>
+            <span class="n">ppt</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">p</span> <span class="o">-</span> <span class="n">pdist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">axis</span>
         <span class="k">return</span> <span class="n">ppt</span>
-
 
     <span class="c1"># define constants</span>
     <span class="n">voxel_res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
@@ -626,7 +635,7 @@
         <span class="k">if</span> <span class="n">minval</span> <span class="o">&gt;</span> <span class="mf">0.15</span><span class="p">:</span>
             <span class="c1"># no clear rotational symmetry, choose longest axis as major diameter</span>
             <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;majDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">len_a</span>
-            <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;minDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">len_b</span> <span class="o">+</span> <span class="n">len_c</span><span class="p">)</span>
+            <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;minDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_b</span> <span class="o">+</span> <span class="n">len_c</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">ar_list</span><span class="p">)</span>  <span class="c1"># identify two axes with aspect ratio closest to 1</span>
             <span class="k">if</span> <span class="n">ind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
@@ -742,6 +751,253 @@
         <span class="n">output_data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_data</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">output_data_list</span></div>
 
+
+
+<div class="viewcode-block" id="arr2mat">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.grains.arr2mat">[docs]</a>
+<span class="k">def</span> <span class="nf">arr2mat</span><span class="p">(</span><span class="n">mc</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a numpy array into a symmetric matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mc</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">mc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">4</span><span class="p">]],</span>
+                     <span class="p">[</span><span class="n">mc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
+                     <span class="p">[</span><span class="n">mc</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">2</span><span class="p">]]])</span></div>
+
+
+
+<div class="viewcode-block" id="con_fun">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.grains.con_fun">[docs]</a>
+<span class="k">def</span> <span class="nf">con_fun</span><span class="p">(</span><span class="n">mc</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constraint: matrix must be positive definite, for symmetric matrix all eigenvalues</span>
+<span class="sd">    must be positive. Constraint will penalize negative eigenvalues.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">arr2mat</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigval</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span></div>
+
+
+
+<div class="viewcode-block" id="pts_in_ellips">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.grains.pts_in_ellips">[docs]</a>
+<span class="k">def</span> <span class="nf">pts_in_ellips</span><span class="p">(</span><span class="n">Mcomp</span><span class="p">,</span> <span class="n">pts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Check how well points fulfill equation of ellipsoid</span>
+<span class="sd">    (pts-ctr)^T M (pts-ctr) = 1</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Mcomp</span>
+<span class="sd">    pts</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">Mcomp</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Matrix components must be given as array with shape (6,), not </span><span class="si">{</span><span class="n">Mcomp</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">ctr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">pcent</span> <span class="o">=</span> <span class="n">pts</span> <span class="o">-</span> <span class="n">ctr</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pcent</span><span class="p">:</span>
+        <span class="n">mp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">arr2mat</span><span class="p">(</span><span class="n">Mcomp</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">score</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_stats_dict">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.grains.plot_stats_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_stats_dict</span><span class="p">(</span><span class="n">sdict</span><span class="p">):</span>
+    <span class="n">cts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">nb</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">sd</span> <span class="ow">in</span> <span class="n">sdict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">counts</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">sd</span><span class="p">)</span>
+        <span class="n">cts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+        <span class="n">val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Semi-axis </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">nb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">nb</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bins</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">nb</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">cts</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x (micron)&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;frequency&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="get_stats_vox">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.grains.get_stats_vox">[docs]</a>
+<span class="k">def</span> <span class="nf">get_stats_vox</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">minval</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get statistics about the microstructure from voxels, by fitting a 3D ellipsoid to</span>
+<span class="sd">    each grain.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mesh</span>
+<span class="sd">    minval</span>
+<span class="sd">    show_plot</span>
+<span class="sd">    verbose</span>
+<span class="sd">    ax_max</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ax_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">minval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="n">ax_max</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">cons</span> <span class="o">=</span> <span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;ineq&#39;</span><span class="p">,</span> <span class="s1">&#39;fun&#39;</span><span class="p">:</span> <span class="n">con_fun</span><span class="p">})</span>  <span class="c1"># constraints for minimization</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">}</span>  <span class="c1"># options for minimization</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>  <span class="c1"># start value of matrix for minimization</span>
+    <span class="n">arr_a</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_b</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_c</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">igr</span><span class="p">,</span> <span class="n">vlist</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">vlist</span><span class="p">:</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">iv</span><span class="p">])</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nodes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">pts_all</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">pts_all</span><span class="p">)</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">hull</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">hull</span><span class="o">.</span><span class="n">vertices</span><span class="p">]</span>  <span class="c1"># outer nodes of grain no. igr</span>
+        <span class="c1"># find best fitting ellipsoid to points</span>
+        <span class="n">rdict</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">pts_in_ellips</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mc</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">pts</span><span class="p">,),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;SLSQP&#39;</span><span class="p">,</span>
+                         <span class="n">constraints</span><span class="o">=</span><span class="n">cons</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimization failed for grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">])</span>
+            <span class="k">continue</span>
+        <span class="nb">eval</span><span class="p">,</span> <span class="n">evec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">arr2mat</span><span class="p">(</span><span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">eval</span> <span class="o">&lt;=</span> <span class="n">minval</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Matrix for grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1"> not positive definite or semi-axes too large. &#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39;Eigenvalues: </span><span class="si">{</span><span class="nb">eval</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimization succeeded for grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1"> after </span><span class="si">{</span><span class="n">rdict</span><span class="p">[</span><span class="s2">&quot;nit&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1"> iterations.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Eigenvalues: </span><span class="si">{</span><span class="nb">eval</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Eigenvectors: </span><span class="si">{</span><span class="n">evec</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1"># Semi-axes of ellipsoid</span>
+        <span class="n">ea</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">eb</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ec</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">arr_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ea</span><span class="p">)</span>
+        <span class="n">arr_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eb</span><span class="p">)</span>
+        <span class="n">arr_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Plot points on hull with fitted ellipsoid</span>
+<span class="sd">        # Points on the outer surface of optimal ellipsoid</span>
+<span class="sd">        nang = 100</span>
+<span class="sd">        col = [0.7, 0.7, 0.7, 0.5]</span>
+<span class="sd">        ctr = np.average(pts, axis=0)</span>
+<span class="sd">        u = np.linspace(0, 2 * np.pi, nang)</span>
+<span class="sd">        v = np.linspace(0, np.pi, nang)</span>
+
+<span class="sd">        # Cartesian coordinates that correspond to the spherical angles:</span>
+<span class="sd">        xval = ea * np.outer(np.cos(u), np.sin(v))</span>
+<span class="sd">        yval = eb * np.outer(np.sin(u), np.sin(v))</span>
+<span class="sd">        zval = ec * np.outer(np.ones_like(u), np.cos(v))</span>
+
+<span class="sd">        # combine the three 2D arrays element wise</span>
+<span class="sd">        surf_pts = np.stack(</span>
+<span class="sd">            (xval.ravel(), yval.ravel(), zval.ravel()), axis=1)</span>
+<span class="sd">        surf_pts = surf_pts.dot(evec.transpose())  # rotate to eigenvector frame</span>
+<span class="sd">        fig = plt.figure()</span>
+<span class="sd">        ax = fig.add_subplot(projection=&#39;3d&#39;)</span>
+<span class="sd">        x = (surf_pts[:, 0] + ctr[None, 0]).reshape((100, 100))</span>
+<span class="sd">        y = (surf_pts[:, 1] + ctr[None, 1]).reshape((100, 100))</span>
+<span class="sd">        z = (surf_pts[:, 2] + ctr[None, 2]).reshape((100, 100))</span>
+<span class="sd">        ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)</span>
+<span class="sd">        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], marker=&#39;o&#39;)</span>
+<span class="sd">        plt.show()&quot;&quot;&quot;</span>
+
+    <span class="n">vox_stats_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">arr_a</span><span class="p">,</span>
+        <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">arr_b</span><span class="p">,</span>
+        <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">arr_c</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
+        <span class="n">plot_stats_dict</span><span class="p">(</span><span class="n">vox_stats_dict</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">vox_stats_dict</span></div>
+
+
+
+<div class="viewcode-block" id="get_stats_part">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.grains.get_stats_part">[docs]</a>
+<span class="k">def</span> <span class="nf">get_stats_part</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">minval</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax_max</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Extract statistics about the microstructure from particles. If inner structure is contained</span>
+<span class="sd">    by fitting a 3D ellipsoid to each structure.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    part</span>
+<span class="sd">    minval</span>
+<span class="sd">    show_plot</span>
+<span class="sd">    verbose</span>
+<span class="sd">    ax_max</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ax_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">minval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="n">ax_max</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">cons</span> <span class="o">=</span> <span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;ineq&#39;</span><span class="p">,</span> <span class="s1">&#39;fun&#39;</span><span class="p">:</span> <span class="n">con_fun</span><span class="p">})</span>  <span class="c1"># constraints for minimization</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">}</span>  <span class="c1"># options for minimization</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>  <span class="c1"># start value of matrix for minimization</span>
+    <span class="n">arr_a</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_b</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_c</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">pc</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pc</span><span class="o">.</span><span class="n">inner</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pts</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">points</span>
+            <span class="n">rdict</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">pts_in_ellips</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mc</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">pts</span><span class="p">,),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;SLSQP&#39;</span><span class="p">,</span>
+                             <span class="n">constraints</span><span class="o">=</span><span class="n">cons</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimization failed for particle </span><span class="si">{</span><span class="n">pc</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">])</span>
+                <span class="k">continue</span>
+            <span class="nb">eval</span><span class="p">,</span> <span class="n">evec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">arr2mat</span><span class="p">(</span><span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">eval</span> <span class="o">&lt;=</span> <span class="n">minval</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Matrix for particle </span><span class="si">{</span><span class="n">pc</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s1"> not positive definite or semi-axes too large. &#39;</span>
+                          <span class="sa">f</span><span class="s1">&#39;Eigenvalues: </span><span class="si">{</span><span class="nb">eval</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimization succeeded for particle </span><span class="si">{</span><span class="n">pc</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s1"> after </span><span class="si">{</span><span class="n">rdict</span><span class="p">[</span><span class="s2">&quot;nit&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1"> iterations.&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Eigenvalues: </span><span class="si">{</span><span class="nb">eval</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Eigenvectors: </span><span class="si">{</span><span class="n">evec</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="c1"># Semi-axes of ellipsoid</span>
+            <span class="n">ea</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">eb</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">ec</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">arr_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ea</span><span class="p">)</span>
+            <span class="n">arr_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eb</span><span class="p">)</span>
+            <span class="n">arr_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arr_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">arr_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">arr_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="n">part_stats_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">arr_a</span><span class="p">,</span>
+        <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">arr_b</span><span class="p">,</span>
+        <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">arr_c</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
+        <span class="n">plot_stats_dict</span><span class="p">(</span><span class="n">part_stats_dict</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">part_stats_dict</span></div>
 
 
 <div class="viewcode-block" id="l1_error_est">

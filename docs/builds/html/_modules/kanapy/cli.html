@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.cli &mdash; kanapy 6.1.6 documentation</title>
+  <title>kanapy.cli &mdash; kanapy 6.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=0cb1dfa4"></script>
+        <script src="../../_static/documentation_options.js?v=80ea5fc2"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.1.6
+                6.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -83,9 +83,8 @@
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">click</span>
-<span class="kn">from</span> <span class="nn">kanapy.util</span> <span class="kn">import</span> <span class="n">MAIN_DIR</span><span class="p">,</span> <span class="n">WORK_DIR</span><span class="p">,</span> <span class="n">ROOT_DIR</span>
+<span class="kn">from</span> <span class="nn">kanapy.util</span> <span class="kn">import</span> <span class="n">MAIN_DIR</span><span class="p">,</span> <span class="n">ROOT_DIR</span>
 
 
 <span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
@@ -110,7 +109,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;pytest </span><span class="si">{0}</span><span class="s2">/tests/ -v&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MAIN_DIR</span><span class="p">))</span>
     <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">cwd</span> <span class="o">+</span> <span class="s2">&quot;/dump_files&quot;</span><span class="p">))</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="s2">&quot;dump_files&quot;</span><span class="p">))</span>
     <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>    
         
     
@@ -141,11 +140,10 @@
 
 
 <span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;setupTexture&#39;</span><span class="p">)</span>
-<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;-admin&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
-<span class="k">def</span> <span class="nf">setupTexture</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">admin</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">setupTexture</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Stores the user provided MATLAB &amp; MTEX paths for texture analysis.&quot;&quot;&quot;</span>
-    <span class="n">setPaths</span><span class="p">(</span><span class="n">admin</span><span class="p">)</span>
+    <span class="n">setPaths</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="chkVersion">
@@ -167,19 +165,10 @@
         
 <div class="viewcode-block" id="setPaths">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.cli.setPaths">[docs]</a>
-<span class="k">def</span> <span class="nf">setPaths</span><span class="p">(</span><span class="n">admin</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Requests user input for MATLAB &amp; MTEX installation paths</span>
-<span class="sd">    if admin==True: use paths in MAIN_DIR otherwise use WORK_DIR</span>
+<span class="k">def</span> <span class="nf">setPaths</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Requests user input for MATLAB &amp; MTEX installation paths,</span>
+<span class="sd">    starts matlab engine and initializes MTEX.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">admin</span><span class="p">:</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">ROOT_DIR</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">WORK_DIR</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;Package not properly installed, working directory is missing.&#39;</span><span class="p">)</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">WORK_DIR</span>
-    <span class="n">path_json</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;PATHS.json&#39;</span><span class="p">)</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_json</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
-        <span class="n">path_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
         
     <span class="c1"># For MATLAB executable</span>
     <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -238,14 +227,8 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, Run: kanapy setupTexture again&#39;</span><span class="p">)</span>
         
-    <span class="c1"># Create a file in &quot;.kanapy&quot; folder that stores the paths</span>
+    <span class="c1"># Create a file that stores the paths</span>
     <span class="k">if</span> <span class="n">userpath1</span><span class="p">:</span>
-        <span class="n">path_dict</span><span class="p">[</span><span class="s1">&#39;MATLABpath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">userpath1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path_json</span><span class="p">):</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">path_json</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_json</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
-            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">path_dict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>                
-        
         <span class="c1"># check if Matlab Engine library is already installed</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span> <span class="nn">matlab.engine</span>
@@ -253,9 +236,9 @@
         <span class="k">except</span><span class="p">:</span>
             <span class="c1"># if not, install matlab engine</span>
             <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Installing matlab.engine...&#39;</span><span class="p">)</span>
-            <span class="n">ind</span> <span class="o">=</span> <span class="n">userpath1</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;bin&#39;</span><span class="p">)</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">userpath1</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">ind</span><span class="p">],</span> <span class="s1">&#39;extern&#39;</span><span class="p">,</span> <span class="s1">&#39;engines&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">)</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>  <span class="c1"># remove bin/matlab from matlab path</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">userpath1</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;bin&#39;</span><span class="p">)</span>  <span class="c1"># remove bin/matlab from matlab path</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">userpath1</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">ind</span><span class="p">],</span> <span class="s1">&#39;extern&#39;</span><span class="p">,</span> <span class="s1">&#39;engines&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">)</span>  <span class="c1"># complete path to matlab engine</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
             <span class="n">res</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python -m pip install .&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> Error in installing matlab.engine&#39;</span><span class="p">)</span>

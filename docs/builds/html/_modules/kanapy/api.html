@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.api &mdash; kanapy 6.1.6 documentation</title>
+  <title>kanapy.api &mdash; kanapy 6.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=0cb1dfa4"></script>
+        <script src="../../_static/documentation_options.js?v=80ea5fc2"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.1.6
+                6.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -107,8 +107,7 @@
 <span class="kn">from</span> <span class="nn">kanapy.voxelization</span> <span class="kn">import</span> <span class="n">voxelizationRoutine</span>
 <span class="kn">from</span> <span class="nn">kanapy.smoothingGB</span> <span class="kn">import</span> <span class="n">smoothingRoutine</span>
 <span class="kn">from</span> <span class="nn">kanapy.plotting</span> <span class="kn">import</span> <span class="n">plot_init_stats</span><span class="p">,</span> <span class="n">plot_voxels_3D</span><span class="p">,</span> <span class="n">plot_ellipsoids_3D</span><span class="p">,</span> \
-    <span class="n">plot_polygons_3D</span><span class="p">,</span> <span class="n">plot_output_stats</span>
-<span class="kn">from</span> <span class="nn">kanapy.util</span> <span class="kn">import</span> <span class="n">log_level</span>
+    <span class="n">plot_polygons_3D</span><span class="p">,</span> <span class="n">plot_output_stats</span><span class="p">,</span> <span class="n">plot_particles_3D</span>
 
 
 <div class="viewcode-block" id="Microstructure">
@@ -174,7 +173,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">from_voxels</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ialloy</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">log_level</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Please provide either a dictionary with statistics or an data file name&#39;</span><span class="p">)</span>
@@ -183,12 +181,11 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">file</span><span class="p">))</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;An unexpected exception occurred: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;File: &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
         <span class="k">elif</span> <span class="n">descriptor</span> <span class="o">==</span> <span class="s1">&#39;from_voxels&#39;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">from_voxels</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="n">descriptor</span> <span class="o">==</span> <span class="s1">&#39;cuboid&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cuboid</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">descriptor</span><span class="p">]</span>
@@ -204,7 +201,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s1">&#39;Phase&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">vf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Phase&#39;</span><span class="p">][</span><span class="s1">&#39;Volume fraction&#39;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">vf</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
-                <span class="c1"># consider precipitates/pores/particles with volume fraction vf in a matrix</span>
+                <span class="c1"># consider precipitates/pores/particles with volume fraction fill_factor in a matrix</span>
                 <span class="c1"># precipitates will be phase 0, matrix phase will get number 1 and be assigned to grain with ID 0</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="o">=</span> <span class="n">vf</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">=</span> <span class="mi">2</span>
@@ -228,7 +225,6 @@
 <span class="sd">        ----------</span>
 <span class="sd">        descriptor</span>
 <span class="sd">        nsteps</span>
-<span class="sd">        precipit</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -252,21 +248,25 @@
 <div class="viewcode-block" id="Microstructure.pack">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.pack">[docs]</a>
     <span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-             <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">vf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+             <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fill_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">poly</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Packs the particles into a simulation box.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">particle_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">particle_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">particle_data</span>
             <span class="k">if</span> <span class="n">particle_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No particle_data in pack. Run create_RVE first.&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">vf</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">vf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precipit</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">)</span>  <span class="c1"># 70% is maximum packing density of ellipsoids</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Sparse particles (precipitates/pores): Packing up to particle volume fraction of </span><span class="si">{</span><span class="n">vf</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fill_factor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fill_factor</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># pack to full volume fraction defined in particles</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Sparse particles (precipitates/pores): &#39;</span>
+                  <span class="sa">f</span><span class="s1">&#39;Packing up to particle volume fraction of </span><span class="si">{</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">precipit</span><span class="p">)</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">%.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="o">&gt;</span> <span class="mf">0.65</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Overlap of particles will occur since volume fraction &gt; 65%&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simbox</span> <span class="o">=</span> \
             <span class="n">packingRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">periodic</span><span class="p">,</span>
                            <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">packing_steps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simbox</span><span class="p">,</span>
-                           <span class="n">k_rep</span><span class="o">=</span><span class="n">k_rep</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="n">k_att</span><span class="p">,</span> <span class="n">vf</span><span class="o">=</span><span class="n">vf</span><span class="p">,</span>
-                           <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
+                           <span class="n">k_rep</span><span class="o">=</span><span class="n">k_rep</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="n">k_att</span><span class="p">,</span> <span class="n">fill_factor</span><span class="o">=</span><span class="n">fill_factor</span><span class="p">,</span>
+                           <span class="n">poly</span><span class="o">=</span><span class="n">poly</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.voxelize">
@@ -302,9 +302,13 @@
             <span class="k">for</span> <span class="n">igr</span><span class="p">,</span> <span class="n">ip</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">vox_count</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">])</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Volume fractions of phases in voxel structure:&#39;</span><span class="p">)</span>
+            <span class="n">vt</span> <span class="o">=</span> <span class="mf">0.</span>
             <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="p">):</span>
-                <span class="n">vf</span> <span class="o">=</span> <span class="mf">100.0</span><span class="o">*</span><span class="n">vox_count</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nvox</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">vf</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s1">%)&#39;</span><span class="p">)</span>
+                <span class="n">vf</span> <span class="o">=</span> <span class="n">vox_count</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nvox</span>
+                <span class="n">vt</span> <span class="o">+=</span> <span class="n">vf</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="p">(</span><span class="n">vf</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">%)&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">vt</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">):</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Volume fractions of phases in voxels do not add up to 1. Value: </span><span class="si">{</span><span class="n">vt</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="c1"># remove grain information if it already exists to avoid inconsistencies</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -421,8 +425,9 @@
         <span class="kn">from</span> <span class="nn">kanapy</span> <span class="kn">import</span> <span class="n">MTEX_AVAIL</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">kanapy.textures</span> <span class="kn">import</span> <span class="n">EBSDmap</span><span class="p">,</span> <span class="n">createOrisetRandom</span><span class="p">,</span> <span class="n">createOriset</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;Matlab or MTEX not installed properly. &#39;</span> <span class="o">+</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;An unexpected exception occurred: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;Matlab or MTEX might not be installed properly. &#39;</span> <span class="o">+</span>
                               <span class="s1">&#39;Run &quot;kanapy setupTexture&quot; first to use this function.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">MTEX_AVAIL</span><span class="p">:</span>
@@ -479,10 +484,22 @@
         <span class="n">plot_ellipsoids_3D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="Microstructure.plot_particles">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.plot_particles">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plot_hull</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates plot of particles&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No particle to plot. Run pack first.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Ellipsoids without inner polygon cannot be plotted.&#39;</span><span class="p">)</span>
+        <span class="n">plot_particles_3D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+                          <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">plot_hull</span><span class="o">=</span><span class="n">plot_hull</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="Microstructure.plot_voxels">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.plot_voxels">[docs]</a>
     <span class="k">def</span> <span class="nf">plot_voxels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sliced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span>
-                    <span class="n">ori</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                    <span class="n">ori</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Generate 3D plot of grains in voxelized microstructure. &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grains</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No voxels or elements to plot. Run voxelize first.&#39;</span><span class="p">)</span>
@@ -497,7 +514,8 @@
                     <span class="n">ori</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
 <span class="w">                </span><span class="sd">&quot;&quot;&quot;Create possibility to pass actual CS to MTEX&quot;&quot;&quot;</span>
                 <span class="n">clist</span> <span class="o">=</span> <span class="n">get_ipf_colors</span><span class="p">(</span><span class="n">ori</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;An unexpected exception occurred: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Orientations can only be plotted if MTEX is available.&#39;</span><span class="p">)</span>
                 <span class="n">clist</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
@@ -983,7 +1001,8 @@
                     <span class="n">i</span> <span class="o">=</span> <span class="n">tri</span><span class="o">.</span><span class="n">find_simplex</span><span class="p">(</span><span class="n">mesh_slice</span><span class="p">)</span>
                     <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                     <span class="n">grain_slice</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">igr</span>
-                <span class="k">except</span><span class="p">:</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;An unexpected exception occurred: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Grain #</span><span class="si">{}</span><span class="s1"> has no convex hull (Nvertices: </span><span class="si">{}</span><span class="s1">)&#39;</span>
                                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">igr</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pts</span><span class="p">)))</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">grain_slice</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
@@ -1039,7 +1058,7 @@
 
 <div class="viewcode-block" id="Microstructure.write_stl">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.write_stl">[docs]</a>
-    <span class="k">def</span> <span class="nf">write_stl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">write_stl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s1">&#39;grains&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Write triangles of convex polyhedra forming grains in form of STL</span>
 <span class="sd">        files in the format</span>
 <span class="sd">        &#39;</span>
@@ -1059,6 +1078,37 @@
 <span class="sd">        None.</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">write_facet</span><span class="p">(</span><span class="n">nv</span><span class="p">,</span> <span class="n">pts</span><span class="p">,</span> <span class="n">ft</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Acute facet detected. Facet: </span><span class="si">{</span><span class="n">ft</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">nv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Irregular facet detected. Facet: </span><span class="si">{</span><span class="n">ft</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">nv</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nv</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; facet normal </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nv</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; outer loop</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;   vertex </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;   vertex </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;   vertex </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;  endloop</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; endfacet</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">write_grains</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">ft</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Facets&#39;</span><span class="p">]:</span>
+                <span class="n">pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Points&#39;</span><span class="p">][</span><span class="n">ft</span><span class="p">]</span>
+                <span class="n">nv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># facet normal</span>
+                <span class="n">write_facet</span><span class="p">(</span><span class="n">nv</span><span class="p">,</span> <span class="n">pts</span><span class="p">,</span> <span class="n">ft</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">write_particles</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">pa</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">ft</span> <span class="ow">in</span> <span class="n">pa</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">convex_hull</span><span class="p">:</span>
+                    <span class="n">pts</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">ft</span><span class="p">]</span>
+                    <span class="n">nv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># facet normal</span>
+                    <span class="n">write_facet</span><span class="p">(</span><span class="n">nv</span><span class="p">,</span> <span class="n">pts</span><span class="p">,</span> <span class="n">ft</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Microstructure&#39;</span><span class="p">:</span>
                 <span class="n">file</span> <span class="o">=</span> <span class="s1">&#39;px_</span><span class="si">{}</span><span class="s1">grains.stl&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="p">)</span>
@@ -1068,28 +1118,17 @@
         <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;solid </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">ft</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Facets&#39;</span><span class="p">]:</span>
-                <span class="n">pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Points&#39;</span><span class="p">][</span><span class="n">ft</span><span class="p">]</span>
-                <span class="n">nv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># facet normal</span>
-                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Acute facet detected. Facet: </span><span class="si">{</span><span class="n">ft</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-                    <span class="n">nv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
-                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Irregular facet detected. Facet: </span><span class="si">{</span><span class="n">ft</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-                <span class="n">nv</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nv</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; facet normal </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nv</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; outer loop</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;   vertex </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;   vertex </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;   vertex </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;  endloop</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; endfacet</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">data</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;particles&#39;</span><span class="p">,</span> <span class="s1">&#39;pa&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Particles don&#39;t contain inner polyhedron, cannot write STL file.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">pa</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">:</span>
+                        <span class="n">pa</span><span class="o">.</span><span class="n">sync_poly</span><span class="p">()</span>
+                    <span class="n">write_particles</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">write_grains</span><span class="p">()</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;endsolid</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">return</span></div>
+        <span class="k">return</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.write_centers">
@@ -1220,8 +1259,8 @@
                 <span class="s2">&quot;machine&quot;</span><span class="p">:</span> <span class="n">sys_info</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
             <span class="p">}</span>
         <span class="k">for</span> <span class="n">igr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">structure</span><span class="p">[</span><span class="s2">&quot;Grains&quot;</span><span class="p">][</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;Phase&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span>
+            <span class="n">structure</span><span class="p">[</span><span class="s2">&quot;Grains&quot;</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">igr</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;Phase&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">])</span>
             <span class="p">}</span>
         <span class="k">if</span> <span class="n">angles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
