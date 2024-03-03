@@ -8,6 +8,7 @@ from kanapy.initializations import set_stats
 from kanapy.plotting import plot_voxels_3D, plot_polygons_3D
 from kanapy.input_output import writeAbaqusMat, pickle2microstructure, import_voxels,\
     import_stats, write_stats
+from kanapy.grains import get_stats_vox, get_stats_part
 from kanapy.util import ROOT_DIR, MAIN_DIR, MTEX_DIR
 
 log_level = 20  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR

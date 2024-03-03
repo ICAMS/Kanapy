@@ -1,7 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+Subroutines for analysis of grains in microstructure
+
+@author: Alexander Hartmaier
+ICAMS, Ruhr University Bochum, Germany
+March 2024
+"""
 import itertools
 import logging
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull, Delaunay
+from scipy.optimize import minimize
 from tqdm import tqdm
 
 
@@ -213,9 +223,8 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         pdist = np.array([np.dot(axis, v) for v in dvec])
         ppt = np.zeros(pts.shape)
         for i, p in enumerate(dvec):
-            ppt[i, :] = p - pdist[i]*axis
+            ppt[i, :] = p - pdist[i] * axis
         return ppt
-
 
     # define constants
     voxel_res = np.divide(rve.size, rve.dim)
@@ -542,7 +551,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         if minval > 0.15:
             # no clear rotational symmetry, choose longest axis as major diameter
             grains[igr]['majDia'] = len_a
-            grains[igr]['minDia'] = 0.5*(len_b + len_c)
+            grains[igr]['minDia'] = 0.5 * (len_b + len_c)
         else:
             ind = np.argmin(ar_list)  # identify two axes with aspect ratio closest to 1
             if ind in [0, 1]:
@@ -655,6 +664,235 @@ def get_stats(particle_data, geometry, units, nphases, ngrains):
         output_data_list.append(output_data)
     return output_data_list
 
+
+def arr2mat(mc):
+    """
+    Converts a numpy array into a symmetric matrix.
+
+    Parameters
+    ----------
+    mc
+
+    Returns
+    -------
+
+    """
+    return np.array([[mc[0], mc[5], mc[4]],
+                     [mc[5], mc[1], mc[3]],
+                     [mc[4], mc[3], mc[2]]])
+
+
+def con_fun(mc):
+    """Constraint: matrix must be positive definite, for symmetric matrix all eigenvalues
+    must be positive. Constraint will penalize negative eigenvalues.
+    """
+    eigval, eigvec = np.linalg.eig(arr2mat(mc))
+    return np.min(eigval) * 1000
+
+
+def pts_in_ellips(Mcomp, pts):
+    """ Check how well points fulfill equation of ellipsoid
+    (pts-ctr)^T M (pts-ctr) = 1
+
+    Parameters
+    ----------
+    Mcomp
+    pts
+
+    Returns
+    -------
+
+    """
+    if Mcomp.shape != (6,):
+        raise ValueError(f'Matrix components must be given as array with shape (6,), not {Mcomp.shape}')
+    ctr = np.average(pts, axis=0)
+    pcent = pts - ctr[np.newaxis, :]
+    score = 0.
+    for x in pcent:
+        mp = np.matmul(arr2mat(Mcomp), x)
+        score += np.abs(np.dot(x, mp) - 1.0)
+    return score / len(pts)
+
+
+def plot_stats_dict(sdict):
+    cts = []
+    val = []
+    label = []
+    nb = 0
+    for key, sd in sdict.items():
+        counts, bins = np.histogram(sd)
+        cts.append(counts)
+        val.append(bins[:-1])
+        label.append(f'Semi-axis {key}')
+        nb = np.maximum(nb, len(bins))
+    plt.hist(val, bins=nb, weights=cts, density=True, label=label)
+    plt.legend()
+    plt.xlabel('x (micron)')
+    plt.ylabel('frequency')
+    plt.show()
+
+
+def get_stats_vox(mesh, minval=1.e-5, show_plot=True, verbose=False, ax_max=None):
+    """
+    Get statistics about the microstructure from voxels, by fitting a 3D ellipsoid to
+    each grain.
+
+    Parameters
+    ----------
+    mesh
+    minval
+    show_plot
+    verbose
+    ax_max
+
+    Returns
+    -------
+
+    """
+    if ax_max is not None:
+        minval = max(minval, 1./ax_max**2)
+    cons = ({'type': 'ineq', 'fun': con_fun})  # constraints for minimization
+    opt = {'maxiter': 200}  # options for minimization
+    mc = np.array([1., 1., 1., 0., 0., 0.])  # start value of matrix for minimization
+    arr_a = []
+    arr_b = []
+    arr_c = []
+    for igr, vlist in mesh.grain_dict.items():
+        nodes = set()
+        for iv in vlist:
+            nodes.update(mesh.voxel_dict[iv])
+        ind = np.array(list(nodes), dtype=int) - 1
+        pts_all = mesh.nodes[ind, :]
+        hull = ConvexHull(pts_all)
+        pts = hull.points[hull.vertices]  # outer nodes of grain no. igr
+        # find best fitting ellipsoid to points
+        rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method='SLSQP',
+                         constraints=cons, options=opt)
+        if not rdict['success']:
+            if verbose:
+                print(f'Optimization failed for grain {igr}')
+                print(rdict['message'])
+            continue
+        eval, evec = np.linalg.eig(arr2mat(rdict['x']))
+        if any(eval <= minval):
+            if verbose:
+                print(f'Matrix for grain {igr} not positive definite or semi-axes too large. '
+                      f'Eigenvalues: {eval}')
+            continue
+        if verbose:
+            print(f'Optimization succeeded for grain {igr} after {rdict["nit"]} iterations.')
+            print(f'Eigenvalues: {eval}')
+            print(f'Eigenvectors: {evec}')
+        # Semi-axes of ellipsoid
+        ea = 1. / np.sqrt(eval[0])
+        eb = 1. / np.sqrt(eval[1])
+        ec = 1. / np.sqrt(eval[2])
+        arr_a.append(ea)
+        arr_b.append(eb)
+        arr_c.append(ec)
+
+        """ Plot points on hull with fitted ellipsoid
+        # Points on the outer surface of optimal ellipsoid
+        nang = 100
+        col = [0.7, 0.7, 0.7, 0.5]
+        ctr = np.average(pts, axis=0)
+        u = np.linspace(0, 2 * np.pi, nang)
+        v = np.linspace(0, np.pi, nang)
+
+        # Cartesian coordinates that correspond to the spherical angles:
+        xval = ea * np.outer(np.cos(u), np.sin(v))
+        yval = eb * np.outer(np.sin(u), np.sin(v))
+        zval = ec * np.outer(np.ones_like(u), np.cos(v))
+
+        # combine the three 2D arrays element wise
+        surf_pts = np.stack(
+            (xval.ravel(), yval.ravel(), zval.ravel()), axis=1)
+        surf_pts = surf_pts.dot(evec.transpose())  # rotate to eigenvector frame
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        x = (surf_pts[:, 0] + ctr[None, 0]).reshape((100, 100))
+        y = (surf_pts[:, 1] + ctr[None, 1]).reshape((100, 100))
+        z = (surf_pts[:, 2] + ctr[None, 2]).reshape((100, 100))
+        ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
+        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], marker='o')
+        plt.show()"""
+
+    vox_stats_dict = {
+        'a': arr_a,
+        'b': arr_b,
+        'c': arr_c
+    }
+    if show_plot:
+        plot_stats_dict(vox_stats_dict)
+
+    return vox_stats_dict
+
+
+def get_stats_part(part, minval=1.e-5, show_plot=True, verbose=False, ax_max=None):
+    """ Extract statistics about the microstructure from particles. If inner structure is contained
+    by fitting a 3D ellipsoid to each structure.
+
+    Parameters
+    ----------
+    part
+    minval
+    show_plot
+    verbose
+    ax_max
+
+    Returns
+    -------
+
+    """
+    if ax_max is not None:
+        minval = max(minval, 1./ax_max**2)
+    cons = ({'type': 'ineq', 'fun': con_fun})  # constraints for minimization
+    opt = {'maxiter': 200}  # options for minimization
+    mc = np.array([1., 1., 1., 0., 0., 0.])  # start value of matrix for minimization
+    arr_a = []
+    arr_b = []
+    arr_c = []
+    for pc in part:
+        if pc.inner is not None:
+            pts = pc.inner.points
+            rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method='SLSQP',
+                             constraints=cons, options=opt)
+            if not rdict['success']:
+                if verbose:
+                    print(f'Optimization failed for particle {pc.id}')
+                    print(rdict['message'])
+                continue
+            eval, evec = np.linalg.eig(arr2mat(rdict['x']))
+            if any(eval <= minval):
+                if verbose:
+                    print(f'Matrix for particle {pc.id} not positive definite or semi-axes too large. '
+                          f'Eigenvalues: {eval}')
+                continue
+            if verbose:
+                print(f'Optimization succeeded for particle {pc.id} after {rdict["nit"]} iterations.')
+                print(f'Eigenvalues: {eval}')
+                print(f'Eigenvectors: {evec}')
+            # Semi-axes of ellipsoid
+            ea = 1. / np.sqrt(eval[0])
+            eb = 1. / np.sqrt(eval[1])
+            ec = 1. / np.sqrt(eval[2])
+            arr_a.append(ea)
+            arr_b.append(eb)
+            arr_c.append(ec)
+        else:
+            arr_a.append(pc.a)
+            arr_b.append(pc.b)
+            arr_c.append(pc.c)
+
+    part_stats_dict = {
+        'a': arr_a,
+        'b': arr_b,
+        'c': arr_c
+    }
+    if show_plot:
+        plot_stats_dict(part_stats_dict)
+
+    return part_stats_dict
 
 def l1_error_est(par_eqDia, grain_eqDia):
     r"""

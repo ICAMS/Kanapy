@@ -81,7 +81,7 @@ def particle_generator(particle_data, sim_box, periodic, poly):
 
 def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
                   k_rep=0.0, k_att=0.0, fill_factor=None,
-                  dump=False):
+                  dump=False, verbose=False):
     """
     Initializes the :class:`entities.Octree` class and performs recursive
     subdivision with collision checks and response for the ellipsoids. At each
@@ -106,6 +106,8 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
     :type fill_factor: float
     :param dump: Indicate if dump files for particles are written.
     :type dump: boolean
+    :param verbose: Indicate if detailed output in iteration steps occurs
+    :type verbose: bool
 
 
     .. note:: :meth:`kanapy.input_output.write_dump` function is called at each
@@ -186,7 +188,7 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
         nc = tree.collisionsTest()
         #print('Collision Test done', nc)
         ncol += nc
-        """if i % 100 == 0:
+        if verbose and i % 100 == 0:
             print(f'Total time {time:.1f}/{end_step} | iteration {i}/{Niter} | '
                   f'collisions in last period: {ncol} | time step: {dt:.5f} | '
                   f'kinetic energy: {ekin}')
@@ -198,7 +200,7 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
                     # stop fast particle and move it closer to the center
                     stop_part(ell)
                     if ell.duplicate is not None:
-                        stop_part([ell.duplicate])"""
+                        stop_part([ell.duplicate])
 
         if dump and (i - 1) % ndump == 0:
             # Dump the ellipsoid information to be read by OVITO 
@@ -299,7 +301,8 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
 
 
 def packingRoutine(particle_data, periodic, nsteps, sim_box,
-                   k_rep=0.0, k_att=0.0, fill_factor=None, poly=None, save_files=False):
+                   k_rep=0.0, k_att=0.0, fill_factor=None, poly=None,
+                   save_files=False, verbose=False):
     """
     The main function that controls the particle packing routine using:
         :meth:`particle_grow` & :meth:`particle_generator`
@@ -327,7 +330,7 @@ def packingRoutine(particle_data, periodic, nsteps, sim_box,
     particles, simbox = particle_grow(sim_box, Particles, periodic,
                                             nsteps,
                                             k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
-                                            dump=save_files)
+                                            dump=save_files, verbose=verbose)
 
     # statistical evaluation of collisions
     if particles is not None:
