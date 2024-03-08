@@ -3,6 +3,7 @@ import os
 import json
 import logging
 
+poly_scale = 1.6
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))  # root directory of package, where source code is located
 paths = None
 try:

@@ -1,8 +1,7 @@
 import itertools
-import logging
 import numpy as np
 import random
-from kanapy.collisions import collision_react, collision_routine
+from kanapy.collisions import collision_routine
 from scipy.spatial import Delaunay
 
 
@@ -248,11 +247,13 @@ class Ellipsoid(object):
         """
         return Delaunay(points.dot(self.rotation_matrix))
 
-    def sync_poly(self, scale=1.6):
+    def sync_poly(self, scale=None):
         """
         Moves the center of the polygon to the center of the ellipsoid and
         scales the hull to fit inside the ellipsoid
         """
+        if scale is None:
+            from kanapy import poly_scale as scale
         if self.inner is None:
             return
         opts = self.inner.points
