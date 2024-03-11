@@ -47,7 +47,7 @@ class EBSDmap:
             List of dictionaries with phase specific microstructure
             information.  
             name : name of phase  
-            fill_factor : volume fraction
+            vf : volume fraction
             ngrain : number of grains in phase
             ori : matlab object with grain orientations
             cs : matlab object with crystal structure
@@ -100,7 +100,7 @@ class EBSDmap:
             vf = phist[0][i] / npx
             if vf < vf_min:
                 break
-            data['fill_factor'] = vf
+            data['vf'] = vf
 
             # Texture analysis: orientation set from the EBSD
             ori0 = eng.getfield(ebsd_h, 'orientations')

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.entities &mdash; kanapy 6.1.6 documentation</title>
+  <title>kanapy.entities &mdash; kanapy 6.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=0cb1dfa4"></script>
+        <script src="../../_static/documentation_options.js?v=80ea5fc2"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.1.6
+                6.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -81,9 +81,11 @@
              
   <h1>Source code for kanapy.entities</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">kanapy.collisions</span> <span class="kn">import</span> <span class="n">collision_routine</span>
+<span class="kn">from</span> <span class="nn">kanapy.collisions</span> <span class="kn">import</span> <span class="n">collision_react</span><span class="p">,</span> <span class="n">collision_routine</span>
+<span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">Delaunay</span>
 
 
 <div class="viewcode-block" id="cub_oct_split">
@@ -172,24 +174,24 @@
 <span class="sd">              3. An empty list for storing voxels belonging to the ellipsoid is initialized.                   </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">,</span> <span class="n">phasenum</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dup</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">,</span> <span class="n">phasenum</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dup</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">iden</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xold</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yold</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zold</span> <span class="o">=</span> <span class="n">z</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">quat</span> <span class="o">=</span> <span class="n">quat</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">oria</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">orib</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">oric</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>  <span class="c1"># Store the original size of the particle</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">speedx0</span> <span class="o">=</span> <span class="mf">0.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">speedy0</span> <span class="o">=</span> <span class="mf">0.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">speedz0</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">speedx</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">speedy</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">speedz</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rotationMatrixGen</span><span class="p">()</span>  <span class="c1"># Initialize roatation matrix for the ellipsoid</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">surfacePointsGen</span><span class="p">()</span>  <span class="c1"># Initialize surface points for the ellipsoid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surfacePointsGen</span><span class="p">()</span>  <span class="c1"># Initialize surface points for the ellipsoid</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inside_voxels</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List that stores voxels belonging to the ellipsoid</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_cub</span><span class="p">()</span>  <span class="c1"># sets particle cuboid for collision testing with octree boxes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">duplicate</span> <span class="o">=</span> <span class="n">dup</span>  <span class="c1"># Duplicate status used for voxelization</span>
@@ -200,6 +202,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">branches</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">neighborlist</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ncollision</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">points</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_poly</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>  <span class="c1"># create a Delaunay tesselation of points</span>
 
 <div class="viewcode-block" id="Ellipsoid.get_pos">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.entities.Ellipsoid.get_pos">[docs]</a>
@@ -272,15 +278,15 @@
 
 <div class="viewcode-block" id="Ellipsoid.surfacePointsGen">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.entities.Ellipsoid.surfacePointsGen">[docs]</a>
-    <span class="k">def</span> <span class="nf">surfacePointsGen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">surfacePointsGen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nang</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates points on the outer surface of the ellipsoid using the rotation matrix from :meth:`rotationMatrixGen`</span>
 
 <span class="sd">        :rtype: numpy array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Points on the outer surface of Ellipsoid</span>
-        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
-        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">nang</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">nang</span><span class="p">)</span>
 
         <span class="c1"># Cartesian coordinates that correspond to the spherical angles:</span>
         <span class="n">xval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
@@ -292,23 +298,21 @@
             <span class="p">(</span><span class="n">xval</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">yval</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">zval</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Do the dot product with rotation matrix</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">surface_points</span> <span class="o">=</span> <span class="n">stacked_xyz</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">stacked_xyz</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Ellipsoid.growth">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.entities.Ellipsoid.growth">[docs]</a>
-    <span class="k">def</span> <span class="nf">growth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">growth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fac</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Increases the size of the ellipsoid along its axes governed by the user defined value</span>
+<span class="sd">        Increases the size of the ellipsoid along its axes governed by the volume increment</span>
 
-<span class="sd">        :param factor: Parameter that controls the total simulation time </span>
-<span class="sd">        :type factor: float</span>
-
-<span class="sd">        .. note:: Increment value is determined as the ratio of particle size to the total simulation time       </span>
+<span class="sd">        :param dv: Volume increment per time step</span>
+<span class="sd">        :type dv: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">oria</span> <span class="o">/</span> <span class="n">factor</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orib</span> <span class="o">/</span> <span class="n">factor</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">oric</span> <span class="o">/</span> <span class="n">factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">oria</span> <span class="o">*</span> <span class="n">fac</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orib</span> <span class="o">*</span> <span class="n">fac</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">oric</span> <span class="o">*</span> <span class="n">fac</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_cub</span><span class="p">()</span></div>
 
 
@@ -322,7 +326,7 @@
 <span class="sd">        :rtype: numpy array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Add position vector</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">surfacePointsGen</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">surface_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surfacePointsGen</span><span class="p">()</span>
         <span class="n">new_surfPts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_points</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pos</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">bbox_xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_xmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span>
@@ -355,21 +359,67 @@
                           <span class="bp">self</span><span class="o">.</span><span class="n">bbox_ymax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_zmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_zmax</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="Ellipsoid.create_poly">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.entities.Ellipsoid.create_poly">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_poly</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a polygon inside the ellipsoid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Delaunay</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Ellipsoid.sync_poly">
+<a class="viewcode-back" href="../../kanapy.html#kanapy.entities.Ellipsoid.sync_poly">[docs]</a>
+    <span class="k">def</span> <span class="nf">sync_poly</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.6</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Moves the center of the polygon to the center of the ellipsoid and</span>
+<span class="sd">        scales the hull to fit inside the ellipsoid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">points</span>
+        <span class="n">Npts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+        <span class="n">p_ctr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">e_ctr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pos</span><span class="p">()</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">opts</span> <span class="o">-</span> <span class="n">p_ctr</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># shift center of points to origin</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>  <span class="c1"># rotate points back into global coordinates</span>
+        <span class="n">ind0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with lowest coordinate for each Cartesian axis</span>
+        <span class="n">ind1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with highest coordinate for each Cartesian axis</span>
+        <span class="n">v_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ind0</span><span class="p">)])</span>  <span class="c1"># min. value for each Cartesian axis</span>
+        <span class="n">v_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ind1</span><span class="p">)])</span>  <span class="c1"># max. value for each Cartesian axis</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="n">v_max</span> <span class="o">-</span> <span class="n">v_min</span>  <span class="c1"># extension of polygon along each axis</span>
+        <span class="n">fac</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">]),</span> <span class="n">dim</span><span class="p">)</span>  <span class="c1"># scaling factors for each axis</span>
+        <span class="n">pts</span> <span class="o">*=</span> <span class="n">fac</span>  <span class="c1"># scale points to dimensions of ellipsoid</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">)</span>  <span class="c1"># rotate back into ellipsoid frame</span>
+        <span class="n">pts</span> <span class="o">+=</span> <span class="n">e_ctr</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># shift center to center of ellipsoid</span>
+        <span class="c1"># update points Delaunay tesselation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner</span> <span class="o">=</span> <span class="n">Delaunay</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>
+        <span class="c1"># check if surface points of ellipsoid are all outside polyhedron</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;self.surface_points = self.surfacePointsGen() + e_ctr[None, :]</span>
+<span class="sd">        if any(self.inner.find_simplex(self.surface_points) &gt;= 0):</span>
+<span class="sd">            logging.error(f&#39;Polyhedron too large for ellipsoid {self.id}. Reduce scale.&#39;)&quot;&quot;&quot;</span></div>
+
+
 <div class="viewcode-block" id="Ellipsoid.move">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.entities.Ellipsoid.move">[docs]</a>
-    <span class="k">def</span> <span class="nf">move</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Moves the ellipsoid by updating its position vector according to Eulerian integration method </span>
+<span class="sd">        Moves the ellipsoid by updating its position vector according to the Verlet integration method</span>
 
 <span class="sd">        .. note:: The :class:`~Cuboid` object of the ellipsoid has to be updated everytime it moves</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">speedx</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">speedy</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">speedz</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">speedx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_x</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">speedy</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_y</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">speedz</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_z</span>
+        <span class="n">xx</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xold</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_x</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="n">yy</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">yold</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_y</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="n">zz</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">zold</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_z</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">speedx</span> <span class="o">=</span> <span class="p">(</span><span class="n">xx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xold</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">speedy</span> <span class="o">=</span> <span class="p">(</span><span class="n">yy</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">yold</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">speedz</span> <span class="o">=</span> <span class="p">(</span><span class="n">zz</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">zold</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">xx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">yy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">zz</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_cub</span><span class="p">()</span></div>
 
 
@@ -798,32 +848,32 @@
                 <span class="n">diff</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">left</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_xmin</span>
                 <span class="c1"># move the ellipsoid in opposite direction after bouncing</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">diff</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">speedx</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_ymin</span> <span class="o">&lt;</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">top</span><span class="p">:</span>
                 <span class="n">diff</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">top</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_ymin</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">diff</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">speedy</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">yold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_zmin</span> <span class="o">&lt;</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">front</span><span class="p">:</span>
                 <span class="n">diff</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">front</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_zmin</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">+=</span> <span class="n">diff</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">speedz</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">zold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_xmax</span> <span class="o">&gt;</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">right</span><span class="p">:</span>
                 <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_xmax</span> <span class="o">-</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">right</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">-=</span> <span class="n">diff</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">speedx</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">xold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_ymax</span> <span class="o">&gt;</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">bottom</span><span class="p">:</span>
                 <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_ymax</span> <span class="o">-</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">bottom</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-=</span> <span class="n">diff</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">speedy</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">yold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_zmax</span> <span class="o">&gt;</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">back</span><span class="p">:</span>
                 <span class="n">diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_zmax</span> <span class="o">-</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">back</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">-=</span> <span class="n">diff</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">speedz</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">zold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span>
         <span class="k">return</span> <span class="n">duplicates</span></div>
 </div>
 
@@ -965,18 +1015,25 @@
 <span class="sd">        Finds the neighborlist for each particle</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">:</span>
+            <span class="n">particle</span><span class="o">.</span><span class="n">neighborlist</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">branch</span> <span class="ow">in</span> <span class="n">particle</span><span class="o">.</span><span class="n">branches</span><span class="p">:</span>
                 <span class="n">particle</span><span class="o">.</span><span class="n">neighborlist</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">branch</span><span class="o">.</span><span class="n">particles</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Octree.collisionsTest">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.entities.Octree.collisionsTest">[docs]</a>
-    <span class="k">def</span> <span class="nf">collisionsTest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">collisionsTest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Tests for collision between all ellipsoids in the particle list of octree         </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_neighborlist</span><span class="p">()</span>
         <span class="n">ncoll</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">colp</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ppar</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">timecd</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="n">timecr</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="n">third</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">3.0</span>
         <span class="k">for</span> <span class="n">E1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">E2</span> <span class="ow">in</span> <span class="n">E1</span><span class="o">.</span><span class="n">neighborlist</span><span class="p">:</span>
                 <span class="n">id1</span> <span class="o">=</span> <span class="n">E1</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">E1</span><span class="o">.</span><span class="n">duplicate</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">E1</span><span class="o">.</span><span class="n">duplicate</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">))</span>
@@ -984,13 +1041,21 @@
                 <span class="k">if</span> <span class="n">id2</span> <span class="o">&gt;</span> <span class="n">id1</span><span class="p">:</span>
                     <span class="c1"># Distance between the centers of ellipsoids</span>
                     <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">E1</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_pos</span><span class="p">()))</span>
+                    <span class="n">psize</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">E1</span><span class="o">.</span><span class="n">get_volume</span><span class="p">()</span> <span class="o">**</span> <span class="n">third</span> <span class="o">+</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_volume</span><span class="p">()</span> <span class="o">**</span> <span class="n">third</span><span class="p">)</span>
                     <span class="c1"># If the bounding spheres collide then check for collision</span>
-                    <span class="k">if</span> <span class="n">dist</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="n">E1</span><span class="o">.</span><span class="n">a</span> <span class="o">+</span> <span class="n">E2</span><span class="o">.</span><span class="n">a</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">dist</span> <span class="o">&lt;=</span> <span class="n">psize</span><span class="p">:</span>
                         <span class="c1"># Check if ellipsoids overlap and update their speeds accordingly</span>
-                        <span class="k">if</span> <span class="n">collision_routine</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="n">damp</span><span class="p">):</span>
+                        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">ppar</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">dist</span><span class="p">,</span> <span class="n">psize</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">collision_routine</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">):</span>
+                            <span class="n">colp</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">dist</span><span class="p">,</span> <span class="n">psize</span><span class="p">])</span>
                             <span class="n">ncoll</span> <span class="o">+=</span> <span class="mi">1</span>
                             <span class="n">E1</span><span class="o">.</span><span class="n">ncollision</span> <span class="o">+=</span> <span class="mi">1</span>
                             <span class="n">E2</span><span class="o">.</span><span class="n">ncollision</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># print(f&#39;Checked {count} pairs with {ncoll} collisions.&#39;)</span>
+        <span class="c1"># print(f&#39;collision time: {timecd}, force time: {timecr}&#39;)</span>
+        <span class="c1"># print(f&#39;Pair params:&#39;, ppar)</span>
+        <span class="c1"># print(f&#39;Collisions:&#39;, colp)</span>
         <span class="k">return</span> <span class="n">ncoll</span></div>
 
 

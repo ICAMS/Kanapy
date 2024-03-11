@@ -82,3 +82,15 @@ History
  * Modified keywords of microstructure descriptors for compatibility with scipy fit functions
  * Unified notation of input/output methods
  * New methods and attributes for generation and handling of orientations
+ 
+6.2.1 (2024-02-25)
+------------------
+
+ * Improved installation process, paths stored in local copy of package
+ * Possibility to include inner polyhedral structures into ellipsoids
+ 
+6.3.1 (2024-03-03)
+------------------
+
+ * Trajectories integrated by Verlet algorithm during packing
+ * Extract statistical microstructure data from voxels, particles and polyhedra 

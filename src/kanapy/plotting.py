@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Subroutines for plotting of microstructures
@@ -239,7 +238,7 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True)
                 col = 'green'
         else:
             col = cm(i + 1)  # set to 'b' for only blue ellipsoids
-        pa.sync_poly(scale=1.2)
+        pa.sync_poly()
         pts = pa.inner.points
         ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
                         triangles=pa.inner.convex_hull, color=col,

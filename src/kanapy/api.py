@@ -212,9 +212,9 @@ class Microstructure(object):
             print('Volume fractions of phases in voxel structure:')
             vt = 0.
             for ip in range(self.nphases):
-                vf = 100.0*vox_count[ip]/self.mesh.nvox
+                vf = vox_count[ip]/self.mesh.nvox
                 vt += vf
-                print(f'{ip}: {self.rve.phase_names[ip]} ({vf.round(1)}%)')
+                print(f'{ip}: {self.rve.phase_names[ip]} ({(vf*100):.3f}%)')
             if not np.isclose(vt, 1.0):
                 logging.warning(f'Volume fractions of phases in voxels do not add up to 1. Value: {vt}')
 

@@ -209,13 +209,13 @@ class TestEllipsoid():
 
         # Initialize the Ellipsoid
         self.ell = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5, rot_surf[0])
-        self.ell.speedx, self.ell.speedy, self.ell.speedz = -0.02, 0.075, -0.05
+        self.ell.force_x, self.ell.force_y, self.ell.force_z = -0.02, 0.075, -0.05
 
-        self.ell.move()
+        self.ell.move(1.0)
 
-        assert self.ell.x == 1 + (-0.02)
-        assert self.ell.y == 0.5 + (0.075)
-        assert self.ell.z == 0.75 + (-0.05)
+        assert np.isclose(self.ell.x, 0.98)
+        assert np.isclose(self.ell.y, 0.575)
+        assert np.isclose(self.ell.z, 0.7)
 
     def test_gravity(self, rot_surf):
 
@@ -257,20 +257,19 @@ class TestEllipsoid():
         assert len(dups) == duplicates
                                                           
                 
-    @pytest.mark.parametrize("position, speeds", [(np.array([0.2, 0.5, 0.75]), [0.02, -0.075, 0.05]), 
-                                                  (np.array([9.8, 9.5, 9.25]), [0.02, -0.075, 0.05])])
-    def test_wallCollision_Regular(self, rot_surf, position, speeds):
+    @pytest.mark.parametrize("position", [(np.array([0.1, 5.0, 0.75]))])
+    def test_wallCollision_Regular(self, rot_surf, position):
 
         sbox = Simulation_Box((10, 10, 10))
         self.ell = Ellipsoid(1, position[0], position[1], position[2], 2.0, 1.5, 1.5, rot_surf[0])
-        self.ell.speedx, self.ell.speedy, self.ell.speedz = -0.02, 0.075, -0.05
 
         # Test for periodicity == FALSE
-        self.ell.wallCollision(sbox, False)
-        assert self.ell.speedx == speeds[0]
-        assert self.ell.speedy == speeds[1]
-        assert self.ell.speedz == speeds[2]
-
+        dup = self.ell.wallCollision(sbox, False)
+        assert dup == []
+        assert np.isclose(self.ell.x, 1.6072736670942065)
+        assert np.isclose(self.ell.y, 5.0)
+        assert np.isclose(self.ell.z, 1.5)
+        assert np.isclose(self.ell.xold, self.ell.x)
         assert isinstance(self.ell.get_cub(), Cuboid)
 
 
@@ -323,7 +322,7 @@ class TestOctree():
 
     def test_collisions(self, rot_surf):
 
-        cbox = Cuboid(0, 0, 10, 10, 0, 10)              # Initialize the Cuboid
+        cbox = Cuboid(0, 0, 10, 10, 0, 10)  # Initialize the Cuboid
 
         # Initialize the Ellipsoids
         ell1 = Ellipsoid(1, 1, 0.5, 0.75, 2.0, 1.5, 1.5, rot_surf[0])
@@ -335,15 +334,14 @@ class TestOctree():
         self.tree = Octree(0, cbox, particles=[ell1, ell2])
         self.tree.update()
         #self.tree.subdivide_particles()
-        self.tree.collisionsTest()
+        nc = self.tree.collisionsTest()
 
-        assert round(ell1.speedx, 6) == -0.035037
-        assert round(ell1.speedy, 6) == -0.045938
-        assert round(ell1.speedz, 6) == -0.072021
-
-        assert round(ell2.speedx, 6) == 0.233994
-        assert round(ell2.speedy, 6) == 0.306793
-        assert round(ell2.speedz, 6) == 0.480988
+        assert nc == 1
+        assert np.isclose(ell1.force_x, -0.5361842103706771)
+        assert np.isclose(ell2.force_x, 0.5361842103706771)
+        assert np.isclose(ell1.force_y + ell2.force_y, 0.0)
+        assert np.isclose(ell1.force_z, -1.1021564324286142)
+        assert np.isclose(ell2.force_z, 1.1021564324286142)
 
     def test_update1(self, mocker, rot_surf):
 

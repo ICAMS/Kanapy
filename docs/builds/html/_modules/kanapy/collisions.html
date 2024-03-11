@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.collisions &mdash; kanapy 6.1.6 documentation</title>
+  <title>kanapy.collisions &mdash; kanapy 6.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,7 +14,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=0cb1dfa4"></script>
+        <script src="../../_static/documentation_options.js?v=80ea5fc2"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.1.6
+                6.3.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -86,7 +86,7 @@
 
 <div class="viewcode-block" id="collision_routine">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.collisions.collision_routine">[docs]</a>
-<span class="k">def</span> <span class="nf">collision_routine</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">collision_routine</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calls the method :meth:&#39;collide_detect&#39; to determine whether the given two ellipsoid objects overlap using</span>
 <span class="sd">    the Algebraic separation condition developed by W. Wang et al. A detailed description is provided</span>
@@ -98,8 +98,6 @@
 <span class="sd">    :type E1: object :obj:`Ellipsoid`</span>
 <span class="sd">    :param E2: Ellipsoid :math:`j`</span>
 <span class="sd">    :type E2: object :obj:`Ellipsoid`</span>
-<span class="sd">    :param damp: Damping factor</span>
-<span class="sd">    :type damp: float</span>
 
 <span class="sd">    .. note:: 1. If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is</span>
 <span class="sd">                 sufficient to determine whether they overlap.</span>
@@ -111,18 +109,15 @@
     <span class="n">overlap_status</span> <span class="o">=</span> <span class="n">collide_detect</span><span class="p">(</span><span class="n">E1</span><span class="o">.</span><span class="n">get_coeffs</span><span class="p">(),</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_coeffs</span><span class="p">(),</span>
                                     <span class="n">E1</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span> <span class="n">E2</span><span class="o">.</span><span class="n">get_pos</span><span class="p">(),</span>
                                     <span class="n">E1</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">,</span> <span class="n">E2</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">)</span>
-
     <span class="k">if</span> <span class="n">overlap_status</span><span class="p">:</span>
-        <span class="n">collision_react</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="n">damp</span><span class="p">)</span>  <span class="c1"># calculates resultant speed for E1</span>
-        <span class="n">collision_react</span><span class="p">(</span><span class="n">E2</span><span class="p">,</span> <span class="n">E1</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="n">damp</span><span class="p">)</span>  <span class="c1"># calculates resultant speed for E2</span>
-
+        <span class="n">collision_react</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">)</span>  <span class="c1"># calculates resultant contact forces of both particles</span>
     <span class="k">return</span> <span class="n">overlap_status</span></div>
 
 
 
 <div class="viewcode-block" id="collision_react">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.collisions.collision_react">[docs]</a>
-<span class="k">def</span> <span class="nf">collision_react</span><span class="p">(</span><span class="n">ell1</span><span class="p">,</span> <span class="n">ell2</span><span class="p">,</span> <span class="n">damp</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">collision_react</span><span class="p">(</span><span class="n">ell1</span><span class="p">,</span> <span class="n">ell2</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluates and modifies the magnitude and direction of the ellipsoid&#39;s velocity after collision.    </span>
 
@@ -130,8 +125,6 @@
 <span class="sd">    :type ell1: object :obj:`Ellipsoid`</span>
 <span class="sd">    :param ell2: Ellipsoid :math:`j`</span>
 <span class="sd">    :type ell2: object :obj:`Ellipsoid`</span>
-<span class="sd">    :param damp: Damping factor</span>
-<span class="sd">    :type damp: float</span>
 
 <span class="sd">    .. note:: Consider two ellipsoids :math:`i, j` at collision. Let them occupy certain positions in space</span>
 <span class="sd">              defined by the position vectors :math:`\mathbf{r}^{i}, \mathbf{r}^{j}` and have certain </span>
@@ -162,23 +155,21 @@
 <span class="sd">                  :width: 180px</span>
 <span class="sd">                  :height: 80px</span>
 <span class="sd">                  :align: center                        </span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ell1_speed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">([</span><span class="n">ell1</span><span class="o">.</span><span class="n">speedx0</span><span class="p">,</span> <span class="n">ell1</span><span class="o">.</span><span class="n">speedy0</span><span class="p">,</span> <span class="n">ell1</span><span class="o">.</span><span class="n">speedz0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">damp</span><span class="p">)</span>
-    <span class="n">x_diff</span> <span class="o">=</span> <span class="n">ell2</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">ell1</span><span class="o">.</span><span class="n">x</span>
-    <span class="n">y_diff</span> <span class="o">=</span> <span class="n">ell2</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">ell1</span><span class="o">.</span><span class="n">y</span>
-    <span class="n">z_diff</span> <span class="o">=</span> <span class="n">ell2</span><span class="o">.</span><span class="n">z</span> <span class="o">-</span> <span class="n">ell1</span><span class="o">.</span><span class="n">z</span>
-    <span class="n">elevation_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">y_diff</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">([</span><span class="n">x_diff</span><span class="p">,</span> <span class="n">z_diff</span><span class="p">]))</span>
-    <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">z_diff</span><span class="p">,</span> <span class="n">x_diff</span><span class="p">)</span>
+    <span class="n">cdir</span> <span class="o">=</span> <span class="n">ell1</span><span class="o">.</span><span class="n">get_pos</span><span class="p">()</span> <span class="o">-</span> <span class="n">ell2</span><span class="o">.</span><span class="n">get_pos</span><span class="p">()</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cdir</span><span class="p">)</span>
+    <span class="n">eqd1</span> <span class="o">=</span> <span class="n">ell1</span><span class="o">.</span><span class="n">get_volume</span><span class="p">()</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">eqd2</span> <span class="o">=</span> <span class="n">ell2</span><span class="o">.</span><span class="n">get_volume</span><span class="p">()</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">eqd1</span> <span class="o">+</span> <span class="n">eqd2</span><span class="p">)</span> <span class="o">/</span> <span class="n">dst</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
 
-    <span class="n">x_speed</span> <span class="o">=</span> <span class="o">-</span><span class="n">ell1_speed</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">elevation_angle</span><span class="p">)</span>
-    <span class="n">y_speed</span> <span class="o">=</span> <span class="o">-</span><span class="n">ell1_speed</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">elevation_angle</span><span class="p">)</span>
-    <span class="n">z_speed</span> <span class="o">=</span> <span class="o">-</span><span class="n">ell1_speed</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">elevation_angle</span><span class="p">)</span>
-
-    <span class="c1"># Assign new speeds </span>
-    <span class="n">ell1</span><span class="o">.</span><span class="n">speedx</span> <span class="o">+=</span> <span class="n">x_speed</span>
-    <span class="n">ell1</span><span class="o">.</span><span class="n">speedy</span> <span class="o">+=</span> <span class="n">y_speed</span>
-    <span class="n">ell1</span><span class="o">.</span><span class="n">speedz</span> <span class="o">+=</span> <span class="n">z_speed</span>
-
+    <span class="n">ell1</span><span class="o">.</span><span class="n">force_x</span> <span class="o">+=</span> <span class="n">val</span> <span class="o">*</span> <span class="n">cdir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">dst</span>
+    <span class="n">ell1</span><span class="o">.</span><span class="n">force_y</span> <span class="o">+=</span> <span class="n">val</span> <span class="o">*</span> <span class="n">cdir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">dst</span>
+    <span class="n">ell1</span><span class="o">.</span><span class="n">force_z</span> <span class="o">+=</span> <span class="n">val</span> <span class="o">*</span> <span class="n">cdir</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">dst</span>
+    <span class="n">ell2</span><span class="o">.</span><span class="n">force_x</span> <span class="o">-=</span> <span class="n">val</span> <span class="o">*</span> <span class="n">cdir</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">dst</span>
+    <span class="n">ell2</span><span class="o">.</span><span class="n">force_y</span> <span class="o">-=</span> <span class="n">val</span> <span class="o">*</span> <span class="n">cdir</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">dst</span>
+    <span class="n">ell2</span><span class="o">.</span><span class="n">force_z</span> <span class="o">-=</span> <span class="n">val</span> <span class="o">*</span> <span class="n">cdir</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">dst</span>
     <span class="k">return</span></div>
 
 

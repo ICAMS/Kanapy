@@ -5,7 +5,7 @@ import numpy as np
 
 from kanapy.input_output import write_dump
 from kanapy.entities import Ellipsoid, Cuboid, Octree
-from kanapy.collisions import collide_detect
+from kanapy.collisions import collision_routine, collide_detect
 
 
 def particle_generator(particle_data, sim_box, periodic, poly):
@@ -30,7 +30,7 @@ def particle_generator(particle_data, sim_box, periodic, poly):
     id_ctr = 0
     vell = 0.
     # introduce scaling factor to reduce particle overlap for non-periodic box
-    sf = 0.5 # if periodic else 0.45
+    sf = 0.5  # if periodic else 0.45
     for particle in particle_data:
         num_particles = particle['Number']  # Total number of ellipsoids
         for n in range(num_particles):
@@ -71,16 +71,7 @@ def particle_generator(particle_data, sim_box, periodic, poly):
                                   phasenum=particle['Phase'], points=poly)
             ellipsoid.color = (random.randint(0, 255), random.randint(
                 0, 255), random.randint(0, 255))
-
-            # Define random speed values along the 3 axes x, y & z
-            ellipsoid.speedx0 = np.random.uniform(low=-c / 20., high=c / 20.)
-            ellipsoid.speedy0 = np.random.uniform(low=-c / 20., high=c / 20.)
-            ellipsoid.speedz0 = np.random.uniform(low=-c / 20., high=c / 20.)
-            ellipsoid.speedx = ellipsoid.speedx0
-            ellipsoid.speedy = ellipsoid.speedy0
-            ellipsoid.speedz = ellipsoid.speedz0
             vell += ellipsoid.get_volume()
-
             Ellipsoids.append(ellipsoid)  # adds ellipsoid to list
         id_ctr += num_particles
         print(f'    Total volume of generated ellipsoids: {vell}')
@@ -90,7 +81,7 @@ def particle_generator(particle_data, sim_box, periodic, poly):
 
 def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
                   k_rep=0.0, k_att=0.0, fill_factor=None,
-                  dump=False):
+                  dump=False, verbose=False):
     """
     Initializes the :class:`entities.Octree` class and performs recursive
     subdivision with collision checks and response for the ellipsoids. At each
@@ -115,6 +106,8 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
     :type fill_factor: float
     :param dump: Indicate if dump files for particles are written.
     :type dump: boolean
+    :param verbose: Indicate if detailed output in iteration steps occurs
+    :type verbose: bool
 
 
     .. note:: :meth:`kanapy.input_output.write_dump` function is called at each
@@ -122,47 +115,94 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
               By default, periodic images are written to the output file, 
               but this option can be disabled within the function.         
     """
+
+    def t_step(N):
+        return K * N ** m
+
+    def stop_part(ell):
+        ell.speedx = 0.
+        ell.speedy = 0.
+        ell.speedz = 0.
+        ell.force_x = 0.
+        ell.force_y = 0.
+        ell.force_z = 0
+        ell.x *= 0.9
+        ell.y *= 0.9
+        ell.z *= 0.9
+        ell.oldx = ell.x
+        ell.oldy = ell.y
+        ell.oldz = ell.z
+        return
+
     if fill_factor is None:
         fill_factor = 0.65  # 65% should be largest packing density of ellipsoids
     # Reduce the volume of the particles to (1/nsteps)th of its original value
     end_step = int(fill_factor * nsteps) - 1  # grow particles only to given volume fraction
-    fac = nsteps**(-1/3)
+    m = -1 / 2.5
+    K = 5
+    Niter = 1
+    time = 0
+    while time < end_step:
+        time += t_step(Niter)
+        Niter += 1
+    fac = nsteps ** (-1 / 3)
     vorig = 0.
     ve = 0.
     for ell in Ellipsoids:
         ell.a, ell.b, ell.c = ell.oria * fac, ell.orib * fac, ell.oric * fac
         ve += ell.get_volume()
-        vorig += ell.oria*ell.orib*ell.oric*np.pi*4/3
+        vorig += ell.oria * ell.orib * ell.oric * np.pi * 4 / 3
     dv = vorig / nsteps
-    print(f'Volume of simulation box: {sim_box.w*sim_box.h*sim_box.d}')
+    print(f'Volume of simulation box: {sim_box.w * sim_box.h * sim_box.d}')
     print(f'Volume of unscaled particles: {vorig}')
-    print(f'Initial volume of scaled ellipsoids: {ve}, targeted final volume: {ve+end_step*dv}')
+    print(f'Initial volume of scaled ellipsoids: {ve}, targeted final volume: {ve + end_step * dv}')
     print(f'Volume increment per time step: {dv}')
 
     # Simulation loop for particle growth and interaction steps
-    for i in tqdm(range(end_step)):
-
+    damping = 0.4
+    ncol = 0
+    ndump = np.maximum(int(Niter / 1000), 1)
+    time = 0
+    for i in tqdm(range(1, Niter)):
+        dt = t_step(i)
+        time += dt
         # Initialize Octree and test for collision between ellipsoids
-        for ellipsoid in Ellipsoids:
-            ellipsoid.branches = []
-            if periodicity:
-                ellipsoid.speedx = 0.
-                ellipsoid.speedy = 0.
-                ellipsoid.speedz = 0.
-            ellipsoid.ncollision = 0
+
+        ekin = 0.
+        for ell in Ellipsoids:
+            # apply damping force opposite to current movement
+            ell.force_x = -damping * ell.speedx / dt
+            ell.force_y = -damping * ell.speedy / dt
+            ell.force_z = -damping * ell.speedz / dt
+            ekin += ell.speedx ** 2 + ell.speedy ** 2 + ell.speedz ** 2
+            ell.ncollision = 0
+            ell.branches = []
 
         tree = Octree(0, Cuboid(sim_box.left, sim_box.top, sim_box.right,
-                                sim_box.bottom, sim_box.front, sim_box.back),
-                      Ellipsoids)
+                      sim_box.bottom, sim_box.front, sim_box.back), Ellipsoids)
+        if (not np.isclose(k_att, 0.0)) or (not np.isclose(k_rep, 0.0)):
+            calculateForce(Ellipsoids, sim_box, periodicity,
+                           k_rep=k_rep, k_att=k_att)
         tree.update()
+        #print('Tree updated', i, time)
+        nc = tree.collisionsTest()
+        #print('Collision Test done', nc)
+        ncol += nc
+        if verbose and i % 100 == 0:
+            print(f'Total time {time:.1f}/{end_step} | iteration {i}/{Niter} | '
+                  f'collisions in last period: {ncol} | time step: {dt:.5f} | '
+                  f'kinetic energy: {ekin}')
+            ncol = 0
+            for ell in Ellipsoids:
+                speed = np.sqrt(ell.speedx ** 2 + ell.speedy ** 2 + ell.speedz ** 2)
+                if speed > 2.:
+                    print('Fast particle:', ell.id, speed, ell.x, ell.y, ell.z)
+                    # stop fast particle and move it closer to the center
+                    stop_part(ell)
+                    if ell.duplicate is not None:
+                        stop_part([ell.duplicate])
 
-        if periodicity:
-            for ellipsoid in Ellipsoids:
-                if ellipsoid.ncollision == 0:
-                    ellipsoid.speedx = ellipsoid.speedx0
-                    ellipsoid.speedy = ellipsoid.speedy0
-                    ellipsoid.speedz = ellipsoid.speedz0
-        if dump:
+        if dump and (i - 1) % ndump == 0:
             # Dump the ellipsoid information to be read by OVITO 
             # (Includes duplicates at periodic boundaries)
             write_dump(Ellipsoids, sim_box)
@@ -172,28 +212,22 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
         inter_ell = [ell for ell in Ellipsoids if not isinstance(ell.id, str)]
         Ellipsoids = inter_ell
 
-        if (not np.isclose(k_att, 0.0)) or (not np.isclose(k_rep, 0.0)):
-            calculateForce(Ellipsoids, sim_box, periodicity,
-                           k_rep=k_rep, k_att=k_att)
-
         dups = []
-        ekin = 0.
         # Loop over the ellipsoids: move, set Bbox, & 
         # check for wall collision / PBC
-        sc_fac = ((i + 1) / nsteps)**(1/3)  # scale factor for semi-axes during growth
+        sc_fac = (time / nsteps) ** (1 / 3)  # scale factor for semi-axes during growth
+        #print('Loop over ellipsoids:', i, time)
         for ellipsoid in Ellipsoids:
-            ekin += np.linalg.norm([ellipsoid.speedx, ellipsoid.speedy,
-                                    ellipsoid.speedz])
-            # Move the ellipsoid according to collision status
-            ellipsoid.move()
             # grow the ellipsoid
             ellipsoid.growth(sc_fac)
+            # Move the ellipsoid according to collision status
+            ellipsoid.move(dt)
             # Check for wall collision or create duplicates
             ell_dups = ellipsoid.wallCollision(sim_box, periodicity)
             dups.extend(ell_dups)
             # Update the BBox of the ellipsoid
             ellipsoid.set_cub()
-
+        #print('Done:', i, time)
         # Update the actual list with duplicates
         Ellipsoids.extend(dups)
 
@@ -228,10 +262,7 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
     d_half = sim_box.d / 2
 
     for ell in Ellipsoids:
-        ell.force_x = 0.
-        ell.force_y = 0.
-        ell.force_z = 0.
-        for ell_n in Ellipsoids:
+        for ell_n in ell.neighborlist:
             if ell.id != ell_n.id:
                 dx = ell.x - ell_n.x
                 dy = ell.y - ell_n.y
@@ -259,9 +290,9 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
 
                 # add repulsive or attractive force for dual phase systems
                 if ell.phasenum == ell_n.phasenum:
-                    Force = -k_rep * r2inv
+                    Force = k_rep * r2inv
                 else:
-                    Force = k_att * r2inv
+                    Force = -k_att * r2inv
 
                 ell.force_x += Force * dx / r
                 ell.force_y += Force * dy / r
@@ -270,7 +301,8 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
 
 
 def packingRoutine(particle_data, periodic, nsteps, sim_box,
-                   k_rep=0.0, k_att=0.0, fill_factor=None, poly=None, save_files=False):
+                   k_rep=0.0, k_att=0.0, fill_factor=None, poly=None,
+                   save_files=False, verbose=False):
     """
     The main function that controls the particle packing routine using:
         :meth:`particle_grow` & :meth:`particle_generator`
@@ -296,38 +328,36 @@ def packingRoutine(particle_data, periodic, nsteps, sim_box,
     print('    Particle packing by growth simulation')
 
     particles, simbox = particle_grow(sim_box, Particles, periodic,
-                                      nsteps,
-                                      k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
-                                      dump=save_files)
+                                            nsteps,
+                                            k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
+                                            dump=save_files, verbose=verbose)
 
     # statistical evaluation of collisions
     if particles is not None:
         # check if particles are overlapping after growth
         ncoll = 0
-        ekin0 = 0.
         ekin = 0.
         for E1 in particles:
             E1.ncollision = 0
-            ekin0 += np.linalg.norm([E1.speedx0, E1.speedy0, E1.speedz0])
-            ekin += np.linalg.norm([E1.speedx, E1.speedy, E1.speedz])
+            ekin += E1.speedx ** 2 + E1.speedy ** 2 + E1.speedz ** 2
             for E2 in particles:
-                if E1.id != E2.id:
+                id1 = E1.id if E1.duplicate is None else (E1.duplicate + len(particles))
+                id2 = E2.id if E2.duplicate is None else (E2.duplicate + len(particles))
+                if id2 > id1:
                     # Distance between the centers of ellipsoids
                     dist = np.linalg.norm(np.subtract(E1.get_pos(),
                                                       E2.get_pos()))
                     # If the bounding spheres collide then check for collision
-                    if dist <= (E1.a + E2.a):
+                    if dist <= np.max([E1.a, E1.b, E1.c]) + np.max([E2.a, E2.b, E2.c]):
                         # Check if ellipsoids overlap and update their speeds
                         # accordingly
-                        if collide_detect(E1.get_coeffs(), E2.get_coeffs(),
-                                          E1.get_pos(), E2.get_pos(),
-                                          E1.rotation_matrix, E2.rotation_matrix):
+                        if collision_routine(E1, E2):
                             E1.ncollision += 1
+                            E2.ncollision += 1
                             ncoll += 1
         print('Completed particle packing')
         print(f'{ncoll} overlapping particles detected after packing')
         print(f'Kinetic energy of particles after packing: {ekin}')
-        print(f'Initial kinetic energy: {ekin0}')
         print('')
 
     return particles, simbox

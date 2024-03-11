@@ -1,5 +1,4 @@
 import itertools
-import logging
 import numpy as np
 import random
 from kanapy.collisions import collision_routine
@@ -89,14 +88,14 @@ class Ellipsoid(object):
         self.x = x
         self.y = y
         self.z = z
+        self.xold = x
+        self.yold = y
+        self.zold = z
         self.a = a
         self.b = b
         self.c = c
         self.quat = quat
         self.oria, self.orib, self.oric = a, b, c  # Store the original size of the particle
-        self.speedx0 = 0.
-        self.speedy0 = 0.
-        self.speedz0 = 0.
         self.speedx = 0.
         self.speedy = 0.
         self.speedz = 0.
@@ -248,11 +247,13 @@ class Ellipsoid(object):
         """
         return Delaunay(points.dot(self.rotation_matrix))
 
-    def sync_poly(self, scale=1.6):
+    def sync_poly(self, scale=None):
         """
         Moves the center of the polygon to the center of the ellipsoid and
         scales the hull to fit inside the ellipsoid
         """
+        if scale is None:
+            from kanapy import poly_scale as scale
         if self.inner is None:
             return
         opts = self.inner.points
@@ -277,20 +278,24 @@ class Ellipsoid(object):
         if any(self.inner.find_simplex(self.surface_points) >= 0):
             logging.error(f'Polyhedron too large for ellipsoid {self.id}. Reduce scale.')"""
 
-
-    def move(self):
+    def move(self, dt):
         """
-        Moves the ellipsoid by updating its position vector according to Eulerian integration method 
+        Moves the ellipsoid by updating its position vector according to the Verlet integration method
 
         .. note:: The :class:`~Cuboid` object of the ellipsoid has to be updated everytime it moves
         """
-        self.x += self.speedx
-        self.y += self.speedy
-        self.z += self.speedz
-
-        self.speedx += self.force_x
-        self.speedy += self.force_y
-        self.speedz += self.force_z
+        xx = 2.0 * self.x - self.xold + self.force_x * dt * dt
+        yy = 2.0 * self.y - self.yold + self.force_y * dt * dt
+        zz = 2.0 * self.z - self.zold + self.force_z * dt * dt
+        self.speedx = (xx - self.xold) / (2.0 * dt)
+        self.speedy = (yy - self.yold) / (2.0 * dt)
+        self.speedz = (zz - self.zold) / (2.0 * dt)
+        self.xold = self.x
+        self.yold = self.y
+        self.zold = self.z
+        self.x = xx
+        self.y = yy
+        self.z = zz
         self.set_cub()
 
     def gravity_effect(self, value):
@@ -713,32 +718,32 @@ class Ellipsoid(object):
                 diff = sim_box.left - self.bbox_xmin
                 # move the ellipsoid in opposite direction after bouncing
                 self.x += diff
-                self.speedx *= -1
+                self.xold = self.x
 
             if self.bbox_ymin < sim_box.top:
                 diff = sim_box.top - self.bbox_ymin
                 self.y += diff
-                self.speedy *= -1
+                self.yold = self.y
 
             if self.bbox_zmin < sim_box.front:
                 diff = sim_box.front - self.bbox_zmin
                 self.z += diff
-                self.speedz *= -1
+                self.zold = self.z
 
             if self.bbox_xmax > sim_box.right:
                 diff = self.bbox_xmax - sim_box.right
                 self.x -= diff
-                self.speedx *= -1
+                self.xold = self.x
 
             if self.bbox_ymax > sim_box.bottom:
                 diff = self.bbox_ymax - sim_box.bottom
                 self.y -= diff
-                self.speedy *= -1
+                self.yold = self.y
 
             if self.bbox_zmax > sim_box.back:
                 diff = self.bbox_zmax - sim_box.back
                 self.z -= diff
-                self.speedz *= -1
+                self.zold = self.z
         return duplicates
 
 
@@ -856,15 +861,22 @@ class Octree(object):
         Finds the neighborlist for each particle
         """
         for particle in self.particles:
+            particle.neighborlist = set()
             for branch in particle.branches:
                 particle.neighborlist.update(branch.particles)
 
-    def collisionsTest(self, damp=0.):
+    def collisionsTest(self):
         """
         Tests for collision between all ellipsoids in the particle list of octree         
         """
         self.make_neighborlist()
         ncoll = 0
+        count = 0
+        colp = []
+        ppar = []
+        timecd = 0.
+        timecr = 0.
+        third = 1.0 / 3.0
         for E1 in self.particles:
             for E2 in E1.neighborlist:
                 id1 = E1.id if E1.duplicate is None else (E1.duplicate + len(self.particles))
@@ -872,13 +884,21 @@ class Octree(object):
                 if id2 > id1:
                     # Distance between the centers of ellipsoids
                     dist = np.linalg.norm(np.subtract(E1.get_pos(), E2.get_pos()))
+                    psize = 0.5 * (E1.get_volume() ** third + E2.get_volume() ** third)
                     # If the bounding spheres collide then check for collision
-                    if dist <= (E1.a + E2.a):
+                    if dist <= psize:
                         # Check if ellipsoids overlap and update their speeds accordingly
-                        if collision_routine(E1, E2, damp=damp):
+                        count += 1
+                        ppar.append([dist, psize])
+                        if collision_routine(E1, E2):
+                            colp.append([dist, psize])
                             ncoll += 1
                             E1.ncollision += 1
                             E2.ncollision += 1
+        # print(f'Checked {count} pairs with {ncoll} collisions.')
+        # print(f'collision time: {timecd}, force time: {timecr}')
+        # print(f'Pair params:', ppar)
+        # print(f'Collisions:', colp)
         return ncoll
 
     def update(self):
