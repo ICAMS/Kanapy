@@ -179,10 +179,10 @@ def pts_in_ellips(Mcomp, pts):
 
 
 def calc_stats_dict(a, b, c, eqd):
-    arr_a = np.sorted(a)
-    arr_b = np.sorted(b)
-    arr_c = np.sorted(c)
-    arr_eqd = np.sorted(eqd)
+    arr_a = np.sort(a)
+    arr_b = np.sort(b)
+    arr_c = np.sort(c)
+    arr_eqd = np.sort(eqd)
     a_sig, a_sc = get_ln_param(arr_a)
     b_sig, b_sc = get_ln_param(arr_b)
     c_sig, c_sc = get_ln_param(arr_c)
@@ -296,8 +296,24 @@ def get_stats_vox(mesh, minval=1.e-5, show_plot=True, verbose=False, ax_max=None
         ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
         ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], marker='o')
         plt.show()"""
-    # calculate statistical parameters
+    # calculate and print statistical parameters
     vox_stats_dict = calc_stats_dict(arr_a, arr_b, arr_c, arr_eqd)
+    print('\n--------------------------------------------------------')
+    print('Statistical microstructure parameters in voxel structure')
+    print('--------------------------------------------------------')
+    print('Median lengths of semi-axes of fitted ellipsoids in micron')
+    print(f'a: {vox_stats_dict["a_scale"]:.3f}, b: {vox_stats_dict["b_scale"]:.3f}, '
+          f'c: {vox_stats_dict["c_scale"]:.3f}')
+    av_std = np.mean([vox_stats_dict['a_sig'], vox_stats_dict['b_sig'], vox_stats_dict['c_sig']])
+    print(f'Average standard deviation of semi-axes: {av_std:.4f}')
+    print('\nAssuming rotational symmetry in grains')
+    print(f'Median grain size along rotational axis: {vox_stats_dict["ax_rot"]:.3f} micron')
+    print(f'Median grain size transversal to rotational axis: {vox_stats_dict["ax_trans"]:.3f} micron')
+    print(f'Median aspect ratio: {vox_stats_dict["aspect_ratio"]:.3f}')
+    print('\nGrain size')
+    print(f'Median equivalent grain diameter: {vox_stats_dict["eqd_scale"]:.3f} micron')
+    print(f'Standard deviation of equivalent grain diameter: {vox_stats_dict["eqd_sig"]:.4f}')
+    print('--------------------------------------------------------')
     if show_plot:
         plot_stats_dict(vox_stats_dict, title='Statistics of voxel structure')
 
@@ -360,6 +376,22 @@ def get_stats_poly(grains, minval=1.e-5, show_plot=True, verbose=False, ax_max=N
 
     # calculate statistical parameters
     poly_stats_dict = calc_stats_dict(arr_a, arr_b, arr_c, arr_eqd)
+    print('\n----------------------------------------------------------')
+    print('Statistical microstructure parameters of polyhedral grains')
+    print('----------------------------------------------------------')
+    print('Median lengths of semi-axes of fitted ellipsoids in micron')
+    print(f'a: {poly_stats_dict["a_scale"]:.3f}, b: {poly_stats_dict["b_scale"]:.3f}, '
+          f'c: {poly_stats_dict["c_scale"]:.3f}')
+    av_std = np.mean([poly_stats_dict['a_sig'], poly_stats_dict['b_sig'], poly_stats_dict['c_sig']])
+    print(f'Average standard deviation of semi-axes: {av_std:.4f}')
+    print('\nAssuming rotational symmetry in grains')
+    print(f'Median grain size along rotational axis: {poly_stats_dict["ax_rot"]:.3f} micron')
+    print(f'Median grain size transversal to rotational axis: {poly_stats_dict["ax_trans"]:.3f} micron')
+    print(f'Median aspect ratio: {poly_stats_dict["aspect_ratio"]:.3f}')
+    print('\nGrain size')
+    print(f'Median equivalent grain diameter: {poly_stats_dict["eqd_scale"]:.3f} micron')
+    print(f'Standard deviation of equivalent grain diameter: {poly_stats_dict["eqd_sig"]:.4f}')
+    print('--------------------------------------------------------')
     if show_plot:
         title = 'Statistics of polyhedral grains'
         plot_stats_dict(poly_stats_dict, title=title)
@@ -430,6 +462,22 @@ def get_stats_part(part, minval=1.e-5, show_plot=True, verbose=False, ax_max=Non
 
     # calculate statistical parameters
     part_stats_dict = calc_stats_dict(arr_a, arr_b, arr_c, arr_eqd)
+    print('\n--------------------------------------------------')
+    print('Statistical microstructure parameters of particles')
+    print('--------------------------------------------------')
+    print('Median lengths of semi-axes of fitted ellipsoids in micron')
+    print(f'a: {part_stats_dict["a_scale"]:.3f}, b: {part_stats_dict["b_scale"]:.3f}, '
+          f'c: {part_stats_dict["c_scale"]:.3f}')
+    av_std = np.mean([part_stats_dict['a_sig'], part_stats_dict['b_sig'], part_stats_dict['c_sig']])
+    print(f'Average standard deviation of semi-axes: {av_std:.4f}')
+    print('\nAssuming rotational symmetry in grains')
+    print(f'Median grain size along rotational axis: {part_stats_dict["ax_rot"]:.3f} micron')
+    print(f'Median grain size transversal to rotational axis: {part_stats_dict["ax_trans"]:.3f} micron')
+    print(f'Median aspect ratio: {part_stats_dict["aspect_ratio"]:.3f}')
+    print('\nGrain size')
+    print(f'Median equivalent grain diameter: {part_stats_dict["eqd_scale"]:.3f} micron')
+    print(f'Standard deviation of equivalent grain diameter: {part_stats_dict["eqd_sig"]:.4f}')
+    print('--------------------------------------------------------')
     if show_plot:
         if part[0].inner is None:
             title = 'Particle statistics'

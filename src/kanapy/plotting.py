@@ -372,7 +372,7 @@ def plot_output_stats(dataDict,
             sig_par, loc_par, sc_par = lognorm.fit(par_AR)
             par_lognorm = lognorm(sig_par, loc=loc_par, scale=sc_par)
             data = [grain_AR, par_AR]
-            label = [ 'Grains', 'Particles']
+            label = ['Grains', 'Particles']
         else:
             total_AR = grain_AR
             data = [grain_AR]
@@ -537,3 +537,88 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
         input("    Press [enter] to continue")
         print("    'Input_distribution.png' is placed in the current working directory\n")
     return
+
+
+def plot_stats_dict(sdict, title=None, save_files=False):
+    """
+    Plot statistical data on semi axes of effective ellipsoids in RVE
+    as histogram.
+
+    Parameters
+    ----------
+    sdict
+    title
+
+    Returns
+    -------
+
+    """
+    shared_bins = np.histogram_bin_edges(sdict['eqd'], bins='doane')
+    binNum = len(shared_bins)
+    # Plot the histogram & PDF for equivalent diameter
+    sns.set(color_codes=True)
+    # Plot PDF
+    loc = 0.0
+    sig = sdict['eqd_sig']
+    sc = sdict['eqd_scale']
+    xval = np.linspace(np.min(sdict['eqd']), np.max(sdict['eqd']), 50, endpoint=True)
+    ypdf = lognorm.pdf(xval, sig, loc=loc, scale=sc)
+    plt.plot(xval, ypdf, linestyle='-', linewidth=3.0, label='PDF')
+    plt.fill_between(xval, 0, ypdf, alpha=0.3)
+    # Plot histogram
+    plt.hist(sdict['eqd'], density=True, bins=binNum, label='Data')
+    plt.legend(loc="upper right", fontsize=16)
+    plt.xlabel('equivalent diameter (μm)', fontsize=16)
+    plt.ylabel('density', fontsize=16)
+    plt.tick_params(labelsize=14)
+    if title is not None:
+        plt.title(title, fontsize=20)
+    if save_files:
+        plt.savefig("equivalent_diameter.png", bbox_inches="tight")
+        print("    'equivalent_diameter.png' is placed in the current working directory\n")
+    plt.show()
+
+    # plot statistics of semi-axes
+    cts = []
+    val = []
+    xmin_gl = np.inf
+    xmax_gl = 0.
+    label = []
+    nb = 0
+    for key in ['a', 'b', 'c']:
+        counts, bins = np.histogram(sdict[key])
+        cts.append(counts)
+        val.append(bins[:-1])
+        label.append(f'Semi-axis {key}')
+        nb = np.maximum(nb, len(bins))
+        xmin_gl = min(xmin_gl, min(sdict[key]))
+        xmax_gl = max(xmax_gl, max(sdict[key]))
+
+    # Plot the histogram & PDF
+    sns.set(color_codes=True)
+    fig, ax = plt.subplots(1, 2, figsize=(16, 7))
+    # Plot histogram
+    ax[0].hist(val, weights=cts, density=False, bins=nb, label=label)
+    ax[0].legend(loc="upper right", fontsize=16)
+    ax[0].set_xlabel('length of semi-axis (μm)', fontsize=18)
+    ax[0].set_ylabel('frequency', fontsize=18)
+    ax[0].tick_params(labelsize=14)
+    # Plot PDF
+    xval = np.linspace(xmin_gl, xmax_gl, 50, endpoint=True)
+    for i, key in enumerate(['a', 'b', 'c']):
+        ypdf = lognorm.pdf(xval, sdict[f'{key}_sig'], loc=loc, scale=sdict[f'{key}_scale'])
+        ax[1].plot(xval, ypdf, linestyle='-', linewidth=3.0, label=label[i])
+        ax[1].fill_between(xval, ypdf, alpha=0.3)
+    ax[1].legend(loc="upper right", fontsize=16)
+    ax[1].set_xlabel('length of semi-axis (μm)', fontsize=18)
+    ax[1].set_ylabel('density', fontsize=18)
+    ax[1].tick_params(labelsize=14)
+    if title is not None:
+        ax[0].set_title(title, fontsize=20)
+        ax[1].set_title(title, fontsize=20)
+    if save_files:
+        plt.savefig("semi_axes.png", bbox_inches="tight")
+        print("    'semi_axes.png' is placed in the current working directory\n")
+    plt.show()
+    return
+

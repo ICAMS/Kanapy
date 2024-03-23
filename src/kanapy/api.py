@@ -17,7 +17,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 
-from kanapy.grains import calc_polygons, get_stats
+from kanapy.grains import calc_polygons
+from kanapy.rve_stats import get_stats
 from kanapy.entities import Simulation_Box
 from kanapy.input_output import export2abaqus, writeAbaqusMat, read_dump
 from kanapy.initializations import RVE_creator, mesh_creator
@@ -66,12 +67,6 @@ class Microstructure(object):
             Dict keys: "Vertices", "Points", "Simplices", "Facets", "Grains", "GBnodes", GBarea" "GBfaces"
             "Grains" : dictionary with key grain_number  
             Keys:"Vertices", "Points", "Center", "Simplices", "Volume", "Area", "Phase", "eqDia", "majDia", "minDia"
-        res_data : list
-            List of dictionaries containing effective microstructure descriptors for each phase in RVE
-            Dict keys: "Number", "Unit scale", "Grain_type",
-            "Grain_Equivalent_diameter", "Grain_Major_diameter", "Grain_Minor_diameter",
-            "Particle_Equivalent_diameter", "Particle_Major_diameter", "Particle_Minor_diameter",
-            "L1-error"
     """
 
     def __init__(self, descriptor=None, file=None, name='Microstructure'):
@@ -85,7 +80,6 @@ class Microstructure(object):
         self.geometry = None
         self.simbox = None
         self.mesh = None
-        self.res_data = None
         self.from_voxels = False
         self.ialloy = None
 
@@ -160,7 +154,7 @@ class Microstructure(object):
 
     def pack(self, particle_data=None,
              k_rep=0.0, k_att=0.0, fill_factor=None,
-             poly=None, save_files=False):
+             poly=None, save_files=False, verbose=False):
 
         """ Packs the particles into a simulation box."""
         if particle_data is None:
@@ -177,7 +171,7 @@ class Microstructure(object):
             packingRoutine(particle_data, self.rve.periodic,
                            self.rve.packing_steps, self.simbox,
                            k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
-                           poly=poly, save_files=save_files)
+                           poly=poly, save_files=save_files, verbose=verbose)
 
     def voxelize(self, particles=None, dim=None):
         """ Generates the RVE by assigning voxels to grains."""
@@ -222,7 +216,6 @@ class Microstructure(object):
         if self.geometry is not None:
             logging.info('Removing polyhedral grain geometries and statistical data after re-meshing.')
             self.geometry = None
-            self.res_data = None
 
     def smoothen(self, nodes_v=None, voxel_dict=None, grain_dict=None):
         """ Generates smoothed grain boundary from a voxelated mesh."""
@@ -249,11 +242,9 @@ class Microstructure(object):
             # in case of precipit, remove irregular grain 0 from analysis
             empty_vox = self.mesh.grain_dict.pop(0)
             grain_store = self.mesh.grain_phase_dict.pop(0)
-            nphases = self.nphases - 1
         else:
             empty_vox = None
             grain_store = None
-            nphases = self.nphases
 
         self.geometry: dict = \
             calc_polygons(self.rve, self.mesh)  # updates RVE_data
@@ -294,10 +285,6 @@ class Microstructure(object):
             for ip in range(self.nphases):
                 vf = 100.0*ph_vol[ip]/np.prod(self.rve.size)
                 print(f'{ip}: {self.rve.phase_names[ip]} ({vf.round(1)}%)')
-        # analyse grains w.r.t. statistical descriptors
-        self.res_data = \
-            get_stats(self.rve.particle_data, self.geometry, self.rve.units,
-                      nphases, self.mesh.ngrains_phase)
         if empty_vox is not None:
             # add removed grain again
             self.mesh.grain_dict[0] = empty_vox
@@ -431,8 +418,17 @@ class Microstructure(object):
                    save_files=False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
-        if data is None:
-            data = self.res_data
+        if self.precipit and 0 in self.mesh.grain_dict.keys():
+            # in case of precipit, remove irregular grain 0 from analysis
+            nphases = self.nphases - 1
+        else:
+            nphases = self.nphases
+        if data is None or \
+           (type(data) is str and data.lower() in ['p', 'part', 'particles']):
+            if self.rve.particle_data is not None:
+                # analyse grains w.r.t. statistical descriptors
+                data = get_stats(self.rve.particle_data, self.geometry, self.rve.units,
+                                 nphases, self.mesh.ngrains_phase)
             if data is None:
                 raise ValueError('No microstructure data created yet. Run generate_grains() first.')
         elif type(data) is not list:
