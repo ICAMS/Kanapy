@@ -9,76 +9,11 @@ Subroutines for analysis of statistical descriptors of RVEs:
 ICAMS, Ruhr University Bochum, Germany
 March 2024
 """
-
+import logging
 import numpy as np
 from scipy.optimize import minimize
 from scipy.spatial import ConvexHull
 from kanapy.plotting import plot_stats_dict
-
-
-def get_stats(particle_data, geometry, units, nphases, ngrains):
-    """
-    Compare the geometries of particles used for packing and the resulting
-    grains.
-
-    Parameters
-    ----------
-
-
-    Returns
-    -------
-    output_data : dict
-        Statistical information about particle and grain geometries.
-
-    """
-    if particle_data is not None and nphases == len(particle_data):
-        # convert particle geometries to dicts
-        par_eqDia = dict()
-        par_majDia = dict()
-        par_minDia = dict()
-        for ip, part in enumerate(particle_data):
-            # Analyse geometry of particles used for packing algorithm
-            par_eqDia[ip] = np.array(part['Equivalent_diameter'])
-            if part['Type'] == 'Elongated':
-                par_majDia[ip] = np.array(part['Major_diameter'])
-                par_minDia[ip] = np.array(part['Minor_diameter1'])
-
-    # convert grain geometries to dicts
-    grain_eqDia = dict()
-    grain_majDia = dict()
-    grain_minDia = dict()
-    for i in range(nphases):
-        grain_eqDia[i] = []
-        grain_majDia[i] = []
-        grain_minDia[i] = []
-    for i, igr in enumerate(geometry['Grains'].keys()):
-        ip = geometry['Grains'][igr]['Phase']
-        grain_eqDia[ip].append(geometry['Grains'][igr]['eqDia'])
-        grain_minDia[ip].append(geometry['Grains'][igr]['minDia'])
-        grain_majDia[ip].append(geometry['Grains'][igr]['majDia'])
-
-    output_data_list = []
-    for ip in range(nphases):
-        # Create dictionaries to store the data generated
-        output_data = {'Number': ngrains[ip],
-                       'Unit_scale': units,
-                       'Grain_Equivalent_diameter': np.array(grain_eqDia[ip]),
-                       'Grain_Major_diameter': np.array(grain_majDia[ip]),
-                       'Grain_Minor_diameter': np.array(grain_minDia[ip])}
-        if particle_data is not None:
-            # Compute the L1-error between particle and grain geometries for phases
-            error = l1_error_est(par_eqDia[ip], grain_eqDia[ip])
-            print('\n    L1 error phase {} between particle and grain geometries: {}'
-                  .format(ip, round(error, 5)))
-            # Store Particle data in output dict
-            output_data['Grain_type'] = particle_data[ip]['Type']
-            output_data['Particle_Equivalent_diameter'] = par_eqDia[ip]
-            output_data['L1-error'] = error
-            if particle_data[ip]['Type'] == 'Elongated':
-                output_data['Particle_Major_diameter'] = par_majDia[ip]
-                output_data['Particle_Minor_diameter'] = par_minDia[ip]
-        output_data_list.append(output_data)
-    return output_data_list
 
 
 def arr2mat(mc):
@@ -128,21 +63,17 @@ def find_rot_axis(len_a, len_b, len_c):
                np.abs(len_c / len_a - 1.0), np.abs(len_a / len_c - 1.0)]
     minval = np.min(ar_list)
     if minval > 0.15:
-        # no clear rotational symmetry, choose longest axis as rot_ax diameter
-        rot_ax = len_a
-        trans_ax = 0.5 * (len_b + len_c)
+        # no clear rotational symmetry, choose the longest axis as rotation axis
+        irot = np.argmax([len_a, len_b, len_c])
     else:
         ind = np.argmin(ar_list)  # identify two axes with aspect ratio closest to 1
         if ind in [0, 1]:
-            rot_ax = len_c  # rot_ax diameter along the rotational axis of grain
-            trans_ax = 0.5 * (len_a + len_b)  # trans_ax diameter is average of transversal axes
+            irot = 2
         elif ind in [2, 3]:
-            rot_ax = len_a
-            trans_ax = 0.5 * (len_c + len_b)
+            irot = 0
         else:
-            rot_ax = len_b
-            trans_ax = 0.5 * (len_a + len_c)
-    return rot_ax, trans_ax
+            irot = 1
+    return irot
 
 
 def get_ln_param(data):
@@ -187,7 +118,21 @@ def calc_stats_dict(a, b, c, eqd):
     b_sig, b_sc = get_ln_param(arr_b)
     c_sig, c_sc = get_ln_param(arr_c)
     e_sig, e_sc = get_ln_param(arr_eqd)
-    vrot, vtrans = find_rot_axis(a_sc, b_sc, c_sc)
+    irot = find_rot_axis(a_sc, b_sc, c_sc)
+    if irot == 0:
+        arr_ar = 2.0 * np.divide(arr_a, (arr_b + arr_c))
+        ar_sc = 2.0 * a_sc / (b_sc + c_sc)
+    elif irot == 1:
+        arr_ar = 2.0 * np.divide(arr_b, (arr_a + arr_c))
+        ar_sc = 2.0 * b_sc / (a_sc + c_sc)
+    elif irot == 2:
+        arr_ar = 2.0 * np.divide(arr_c, (arr_b + arr_a))
+        ar_sc = 2.0 * c_sc / (b_sc + a_sc)
+    else:
+        logging.error(f'Wrong index of rotation axis: irot = {irot}')
+        arr_ar = -1.
+        ar_sc = -1.
+    # print(f'  ***   AR Median: {np.median(arr_ar)}, {ar_sc}', irot)
     sd = {
         'a': arr_a,
         'b': arr_b,
@@ -201,9 +146,10 @@ def calc_stats_dict(a, b, c, eqd):
         'b_scale': b_sc,
         'c_scale': c_sc,
         'eqd_scale': e_sc,
-        'ax_rot': vrot,
-        'ax_trans': vtrans,
-        'aspect_ratio': vrot / vtrans
+        'ind_rot': irot,
+        'ar': np.sort(arr_ar),
+        'ar_scale': ar_sc,
+        'ar_sig': np.std(arr_ar)
     }
     return sd
 
@@ -271,7 +217,8 @@ def get_stats_vox(mesh, minval=1.e-5, show_plot=True, verbose=False, ax_max=None
         arr_c.append(ec)
         arr_eqd.append(eqd)
 
-        """ Plot points on hull with fitted ellipsoid
+        """ Plot points on hull with fitted ellipsoid -- only for debugging
+        import matplotlib.pyplot as plt
         # Points on the outer surface of optimal ellipsoid
         nang = 100
         col = [0.7, 0.7, 0.7, 0.5]
@@ -298,22 +245,22 @@ def get_stats_vox(mesh, minval=1.e-5, show_plot=True, verbose=False, ax_max=None
         plt.show()"""
     # calculate and print statistical parameters
     vox_stats_dict = calc_stats_dict(arr_a, arr_b, arr_c, arr_eqd)
-    print('\n--------------------------------------------------------')
-    print('Statistical microstructure parameters in voxel structure')
-    print('--------------------------------------------------------')
-    print('Median lengths of semi-axes of fitted ellipsoids in micron')
-    print(f'a: {vox_stats_dict["a_scale"]:.3f}, b: {vox_stats_dict["b_scale"]:.3f}, '
-          f'c: {vox_stats_dict["c_scale"]:.3f}')
-    av_std = np.mean([vox_stats_dict['a_sig'], vox_stats_dict['b_sig'], vox_stats_dict['c_sig']])
-    print(f'Average standard deviation of semi-axes: {av_std:.4f}')
-    print('\nAssuming rotational symmetry in grains')
-    print(f'Median grain size along rotational axis: {vox_stats_dict["ax_rot"]:.3f} micron')
-    print(f'Median grain size transversal to rotational axis: {vox_stats_dict["ax_trans"]:.3f} micron')
-    print(f'Median aspect ratio: {vox_stats_dict["aspect_ratio"]:.3f}')
-    print('\nGrain size')
-    print(f'Median equivalent grain diameter: {vox_stats_dict["eqd_scale"]:.3f} micron')
-    print(f'Standard deviation of equivalent grain diameter: {vox_stats_dict["eqd_sig"]:.4f}')
-    print('--------------------------------------------------------')
+    if verbose:
+        print('\n--------------------------------------------------------')
+        print('Statistical microstructure parameters in voxel structure')
+        print('--------------------------------------------------------')
+        print('Median lengths of semi-axes of fitted ellipsoids in micron')
+        print(f'a: {vox_stats_dict["a_scale"]:.3f}, b: {vox_stats_dict["b_scale"]:.3f}, '
+              f'c: {vox_stats_dict["c_scale"]:.3f}')
+        av_std = np.mean([vox_stats_dict['a_sig'], vox_stats_dict['b_sig'], vox_stats_dict['c_sig']])
+        print(f'Average standard deviation of semi-axes: {av_std:.4f}')
+        print('\nAssuming rotational symmetry in grains')
+        print(f'Rotational axis: {vox_stats_dict["ind_rot"]}')
+        print(f'Median aspect ratio: {vox_stats_dict["ar_scale"]:.3f}')
+        print('\nGrain size')
+        print(f'Median equivalent grain diameter: {vox_stats_dict["eqd_scale"]:.3f} micron')
+        print(f'Standard deviation of equivalent grain diameter: {vox_stats_dict["eqd_sig"]:.4f}')
+        print('--------------------------------------------------------')
     if show_plot:
         plot_stats_dict(vox_stats_dict, title='Statistics of voxel structure', save_files=save_files)
 
@@ -376,22 +323,22 @@ def get_stats_poly(grains, minval=1.e-5, show_plot=True, verbose=False, ax_max=N
 
     # calculate statistical parameters
     poly_stats_dict = calc_stats_dict(arr_a, arr_b, arr_c, arr_eqd)
-    print('\n----------------------------------------------------------')
-    print('Statistical microstructure parameters of polyhedral grains')
-    print('----------------------------------------------------------')
-    print('Median lengths of semi-axes of fitted ellipsoids in micron')
-    print(f'a: {poly_stats_dict["a_scale"]:.3f}, b: {poly_stats_dict["b_scale"]:.3f}, '
-          f'c: {poly_stats_dict["c_scale"]:.3f}')
-    av_std = np.mean([poly_stats_dict['a_sig'], poly_stats_dict['b_sig'], poly_stats_dict['c_sig']])
-    print(f'Average standard deviation of semi-axes: {av_std:.4f}')
-    print('\nAssuming rotational symmetry in grains')
-    print(f'Median grain size along rotational axis: {poly_stats_dict["ax_rot"]:.3f} micron')
-    print(f'Median grain size transversal to rotational axis: {poly_stats_dict["ax_trans"]:.3f} micron')
-    print(f'Median aspect ratio: {poly_stats_dict["aspect_ratio"]:.3f}')
-    print('\nGrain size')
-    print(f'Median equivalent grain diameter: {poly_stats_dict["eqd_scale"]:.3f} micron')
-    print(f'Standard deviation of equivalent grain diameter: {poly_stats_dict["eqd_sig"]:.4f}')
-    print('--------------------------------------------------------')
+    if verbose:
+        print('\n----------------------------------------------------------')
+        print('Statistical microstructure parameters of polyhedral grains')
+        print('----------------------------------------------------------')
+        print('Median lengths of semi-axes of fitted ellipsoids in micron')
+        print(f'a: {poly_stats_dict["a_scale"]:.3f}, b: {poly_stats_dict["b_scale"]:.3f}, '
+              f'c: {poly_stats_dict["c_scale"]:.3f}')
+        av_std = np.mean([poly_stats_dict['a_sig'], poly_stats_dict['b_sig'], poly_stats_dict['c_sig']])
+        print(f'Average standard deviation of semi-axes: {av_std:.4f}')
+        print('\nAssuming rotational symmetry in grains')
+        print(f'Rotational axis: {poly_stats_dict["ind_rot"]}')
+        print(f'Median aspect ratio: {poly_stats_dict["ar_scale"]:.3f}')
+        print('\nGrain size')
+        print(f'Median equivalent grain diameter: {poly_stats_dict["eqd_scale"]:.3f} micron')
+        print(f'Standard deviation of equivalent grain diameter: {poly_stats_dict["eqd_sig"]:.4f}')
+        print('--------------------------------------------------------')
     if show_plot:
         title = 'Statistics of polyhedral grains'
         plot_stats_dict(poly_stats_dict, title=title, save_files=save_files)
@@ -462,22 +409,22 @@ def get_stats_part(part, minval=1.e-5, show_plot=True, verbose=False, ax_max=Non
 
     # calculate statistical parameters
     part_stats_dict = calc_stats_dict(arr_a, arr_b, arr_c, arr_eqd)
-    print('\n--------------------------------------------------')
-    print('Statistical microstructure parameters of particles')
-    print('--------------------------------------------------')
-    print('Median lengths of semi-axes of fitted ellipsoids in micron')
-    print(f'a: {part_stats_dict["a_scale"]:.3f}, b: {part_stats_dict["b_scale"]:.3f}, '
-          f'c: {part_stats_dict["c_scale"]:.3f}')
-    av_std = np.mean([part_stats_dict['a_sig'], part_stats_dict['b_sig'], part_stats_dict['c_sig']])
-    print(f'Average standard deviation of semi-axes: {av_std:.4f}')
-    print('\nAssuming rotational symmetry in grains')
-    print(f'Median grain size along rotational axis: {part_stats_dict["ax_rot"]:.3f} micron')
-    print(f'Median grain size transversal to rotational axis: {part_stats_dict["ax_trans"]:.3f} micron')
-    print(f'Median aspect ratio: {part_stats_dict["aspect_ratio"]:.3f}')
-    print('\nGrain size')
-    print(f'Median equivalent grain diameter: {part_stats_dict["eqd_scale"]:.3f} micron')
-    print(f'Standard deviation of equivalent grain diameter: {part_stats_dict["eqd_sig"]:.4f}')
-    print('--------------------------------------------------------')
+    if verbose:
+        print('\n--------------------------------------------------')
+        print('Statistical microstructure parameters of particles')
+        print('--------------------------------------------------')
+        print('Median lengths of semi-axes of fitted ellipsoids in micron')
+        print(f'a: {part_stats_dict["a_scale"]:.3f}, b: {part_stats_dict["b_scale"]:.3f}, '
+              f'c: {part_stats_dict["c_scale"]:.3f}')
+        av_std = np.mean([part_stats_dict['a_sig'], part_stats_dict['b_sig'], part_stats_dict['c_sig']])
+        print(f'Average standard deviation of semi-axes: {av_std:.4f}')
+        print('\nAssuming rotational symmetry in grains')
+        print(f'Rotational axis: {part_stats_dict["ind_rot"]}')
+        print(f'Median aspect ratio: {part_stats_dict["ar_scale"]:.3f}')
+        print('\nGrain size')
+        print(f'Median equivalent grain diameter: {part_stats_dict["eqd_scale"]:.3f} micron')
+        print(f'Standard deviation of equivalent grain diameter: {part_stats_dict["eqd_sig"]:.4f}')
+        print('--------------------------------------------------------')
     if show_plot:
         if part[0].inner is None:
             title = 'Particle statistics'
@@ -486,39 +433,3 @@ def get_stats_part(part, minval=1.e-5, show_plot=True, verbose=False, ax_max=Non
         plot_stats_dict(part_stats_dict, title=title, save_files=save_files)
 
     return part_stats_dict
-
-
-def l1_error_est(par_eqDia, grain_eqDia):
-    r"""
-    Evaluates the L1-error between the particle- and output RVE grain
-    statistics with respect to Major, Minor & Equivalent diameters.
-
-    .. note:: 1. Particle information is read from (.json) file generated by
-                 :meth:`kanapy.input_output.particleStatGenerator`.
-                 And RVE grain information is read from the (.json) files
-                 generated by :meth:`kanapy.voxelization.voxelizationRoutine`.
-
-              2. The L1-error value is written to the 'output_statistics.json'
-                 file.
-    """
-
-    print('')
-    print('Computing the L1-error between input and output diameter distributions.',
-          end="")
-
-    # Concatenate both arrays to compute shared bins
-    # NOTE: 'doane' produces better estimates for non-normal datasets
-    total_eqDia = np.concatenate([par_eqDia, grain_eqDia])
-    shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
-
-    # Compute the histogram for particles and grains
-    hist_par, _ = np.histogram(par_eqDia, bins=shared_bins)
-    hist_gr, _ = np.histogram(grain_eqDia, bins=shared_bins)
-
-    # Normalize the values
-    hist_par = hist_par / np.sum(hist_par)
-    hist_gr = hist_gr / np.sum(hist_gr)
-
-    # Compute the L1-error between particles and grains
-    l1_value = np.sum(np.abs(hist_par - hist_gr))
-    return l1_value

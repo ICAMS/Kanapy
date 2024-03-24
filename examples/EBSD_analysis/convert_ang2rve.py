@@ -15,9 +15,9 @@ if not knpy.MTEX_AVAIL:
     raise ModuleNotFoundError('MTEX module not available. Run kanapy setupTexture before using this script.')
 
 fname = 'ebsd_316L_500x500.ang'  # name of ang file to be imported
-nvox = 30             # number of voxels per side
-box_length = 50       # side length of generated RVE in micron
-periodic = False      # create RVE with periodic structure
+nvox = 30         # number of voxels per side
+box_length = 50   # side length of generated RVE in micron
+periodic = False  # create RVE with periodic structure
 
 # read EBSD map and evaluate statistics of microstructural features
 ebsd = knpy.EBSDmap(fname)
@@ -43,8 +43,8 @@ print(f'mean value: {(om_param[1] * 180 / np.pi).round(3)}, ' +
 
 # create dictionary with statistical information obtained from EBSD map
 ms_stats = knpy.set_stats(gs_param, ar_param, om_param,
-                          deq_min=8.0, deq_max=19.0, asp_min=0.95, asp_max=3.5,
-                          omega_min=0.0, omega_max=2*np.pi, 
+                          deq_min=8.0, deq_max=17.0, asp_min=3.5, asp_max=5.0,
+                          omega_min=0.0, omega_max=np.pi,
                           voxels=nvox, size=box_length,
                           periodicity=periodic,
                           VF=1.0, phasename=matname, phasenum=0)
@@ -61,7 +61,8 @@ ms.voxelize()  # assign voxels to grains according to particle configuration
 ms.plot_voxels(sliced=False)  # plot voxels colored according to grain number
 ms.generate_grains()  # generate a polyhedral hull around each voxelized grain
 ms.plot_grains()  # plot polyhedral grains
-ms.plot_stats(gs_param=gs_param, ar_param=ar_param)  # compare final grain statistics with initial parameters
+ms.plot_stats('g', gs_param=gs_param, ar_param=ar_param,
+              show_plot=False)  # compare final grain statistics with initial parameters
 
 # generate and assign grains orientations
 ms.generate_orientations(ebsd)

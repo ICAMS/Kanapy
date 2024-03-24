@@ -254,37 +254,49 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True)
     plt.show()
 
 
-def plot_output_stats(dataDict,
+def plot_output_stats(data_list, labels,
                       gs_data=None, gs_param=None,
                       ar_data=None, ar_param=None,
-                      plot_particles=True,
                       save_files=False):
     r"""
     Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots
     the distributions.
     """
-
-    grain_eqDia = np.sort(np.asarray(dataDict['Grain_Equivalent_diameter']))
+    if 'Grains' not in labels and 'Voxels' not in labels:
+        raise ValueError('Either grains or voxels must be provided for statistical analysis.')
+    if 'Grains' in labels:
+        # if grain information is given plot this for comparison
+        ind = labels.index('Grains')
+    else:
+        # otherwise use voxel statistics
+        ind = labels.index('Voxels')
+    # process equiv. diameter data
+    grain_eqDia = data_list[ind]['eqd']
     data = [grain_eqDia]
-    label = ['Grains']
-    # Convert to micro meter for plotting
-    if dataDict['Unit_scale'] == 'mm':
-        grain_eqDia *= 1.e-3
-    if plot_particles and 'Particle_Equivalent_diameter' in dataDict.keys():
-        par_eqDia = np.sort(np.asarray(dataDict['Particle_Equivalent_diameter']))
+    label = [labels[ind]]
+    mu_gr = data_list[ind]['eqd_scale']
+    std_gr = data_list[ind]['eqd_sig']
+    grain_lognorm = lognorm(std_gr, scale=mu_gr)
+    # process aspect ratio data
+    grain_AR = data_list[ind]['ar']
+    sig_ar = data_list[ind]['ar_sig']
+    sc_ar = data_list[ind]['ar_scale']
+    ar_lognorm = lognorm(sig_ar, scale=sc_ar)
+
+    if 'Partcls' in labels:
+        ind = labels.index('Partcls')
+        par_eqDia = data_list[ind]['eqd']
         data.append(par_eqDia)
         label.append('Particles')
-        if dataDict['Unit_scale'] == 'mm':
-            par_eqDia *= 1.e-3
-        total_eqDia = np.concatenate([grain_eqDia, par_eqDia])
-        par_data = np.log(par_eqDia)
-        mu_par = np.median(par_data)
-        std_par = np.std(par_data)
-        par_lognorm = lognorm(s=std_par, scale=np.exp(mu_par))
+
+        total_eqDia = np.concatenate(data)
+        mu_par = data_list[ind]['eqd_scale']
+        std_par = data_list[ind]['eqd_sig']
+        par_lognorm = lognorm(s=std_par, scale=mu_par)
         particles = True
     else:
         par_eqDia = None
-        total_eqDia = grain_eqDia
+        total_eqDia = data[0]
         particles = False
     if gs_data is not None:
         data.append(gs_data)
@@ -292,12 +304,6 @@ def plot_output_stats(dataDict,
         total_eqDia = np.concatenate([total_eqDia, gs_data])
     # NOTE: 'doane' produces better estimates for non-normal datasets
     shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
-    # Get the median & std of the underlying normal distribution
-    ind = np.nonzero(grain_eqDia > 1.e-5)[0]
-    grain_data = np.log(grain_eqDia[ind])
-    mu_gr = np.median(grain_data)
-    std_gr = np.std(grain_data)
-    grain_lognorm = lognorm(s=std_gr, scale=np.exp(mu_gr))
     binNum = len(shared_bins)
 
     # Plot the histogram & PDF for equivalent diameter
@@ -307,8 +313,8 @@ def plot_output_stats(dataDict,
     # Plot histogram
     ax[0].hist(data, density=True, bins=binNum, label=label)
     ax[0].legend(loc="upper right", fontsize=16)
-    ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
-    ax[0].set_ylabel('Frequency', fontsize=18)
+    ax[0].set_xlabel('equivalent diameter (μm)', fontsize=18)
+    ax[0].set_ylabel('frequency', fontsize=18)
     ax[0].tick_params(labelsize=14)
 
     # Plot PDF
@@ -320,7 +326,7 @@ def plot_output_stats(dataDict,
         logging.debug(np.amax(grain_eqDia))
         area = 1.
     ypdf2 /= area
-    ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label='Grains')
+    ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
     ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3)
     if particles:
         ypdf1 = par_lognorm.pdf(par_eqDia)
@@ -334,8 +340,11 @@ def plot_output_stats(dataDict,
         ax[1].plot(par_eqDia, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
         ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
     if gs_param is not None:
-        x0 = np.amin(grain_eqDia)
-        x1 = np.amax(grain_eqDia)
+        x0 = np.min(grain_eqDia)
+        x1 = np.max(grain_eqDia)
+        if particles:
+            x0 = min(np.min(par_eqDia), x0)
+            x1 = max(np.max(par_eqDia), x1)
         x = np.linspace(x0, x1, num=50)
         y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
         area = np.trapz(y, x)
@@ -348,84 +357,81 @@ def plot_output_stats(dataDict,
         ax[1].plot(x, y, '--k', label='Experiment')
 
     ax[1].legend(loc="upper right", fontsize=16)
-    ax[1].set_xlabel('Equivalent diameter (μm)', fontsize=18)
-    ax[1].set_ylabel('Density', fontsize=18)
+    ax[1].set_xlabel('equivalent diameter (μm)', fontsize=18)
+    ax[1].set_ylabel('density', fontsize=18)
     ax[1].tick_params(labelsize=14)
     if save_files:
-        plt.savefig("Equivalent_diameter.png", bbox_inches="tight")
-        print("    'Equivalent_diameter.png' is placed in the current working directory\n")
+        fname = 'equiv_diameter_comp.png'
+        plt.savefig(fname, bbox_inches="tight")
+        print(f"    '{fname}' is placed in the current working directory\n")
     plt.show()
 
-    if 'Grain_Minor_diameter' in dataDict.keys():
-        # Plot the aspect ratio comparison
-        ind = np.nonzero(dataDict['Grain_Minor_diameter'] > 1.e-5)[0]
-        grain_AR = np.sort(np.asarray(dataDict['Grain_Major_diameter'][ind]) /
-                           np.asarray(dataDict['Grain_Minor_diameter'][ind]))
-        # Get the descriptors of the underlying normal distribution
-        sig_gr, loc_gr, sc_gr = lognorm.fit(grain_AR)
-        grain_lognorm = lognorm(sig_gr, loc=loc_gr, scale=sc_gr)
-        if particles and 'Particle_Minor_diameter' in dataDict.keys():
-            par_AR = np.sort(np.asarray(dataDict['Particle_Major_diameter']) /
-                             np.asarray(dataDict['Particle_Minor_diameter']))
-            # Concatenate corresponding arrays to compute shared bins
-            total_AR = np.concatenate([grain_AR, par_AR])
-            sig_par, loc_par, sc_par = lognorm.fit(par_AR)
-            par_lognorm = lognorm(sig_par, loc=loc_par, scale=sc_par)
-            data = [grain_AR, par_AR]
-            label = ['Grains', 'Particles']
-        else:
-            total_AR = grain_AR
-            data = [grain_AR]
-            label = ['Grains']
-        if ar_data is not None:
-            data.append(ar_data)
-            label.append('Experiment')
-        # Find the corresponding shared bin edges
-        shared_AR = np.histogram_bin_edges(total_AR, bins='doane')
+    # Plot the aspect ratio comparison
+    if particles:
+        ind = labels.index('Partcls')
+        par_AR = data_list[ind]['ar']
+        # Concatenate corresponding arrays to compute shared bins
+        total_AR = np.concatenate([grain_AR, par_AR])
+        sig_par = data_list[ind]['ar_sig']
+        sc_par = data_list[ind]['ar_scale']
+        par_lognorm = lognorm(sig_par, scale=sc_par)
+        data = [grain_AR, par_AR]
+    else:
+        total_AR = grain_AR
+        data = [grain_AR]
+    if ar_data is not None:
+        data.append(ar_data)
+        label.append('Experiment')
+    # Find the corresponding shared bin edges
+    shared_AR = np.histogram_bin_edges(total_AR, bins='doane')
 
-        # Plot the histogram & PDF
-        sns.set(color_codes=True)
-        fig, ax = plt.subplots(1, 2, figsize=(15, 9))
-        # Plot histogram
-        ax[0].hist(data, density=True, bins=len(shared_AR), label=label)
-        ax[0].legend(loc="upper right", fontsize=16)
-        ax[0].set_xlabel('Aspect ratio', fontsize=18)
-        ax[0].set_ylabel('Frequency', fontsize=18)
-        ax[0].tick_params(labelsize=14)
+    # Plot the histogram & PDF
+    sns.set(color_codes=True)
+    fig, ax = plt.subplots(1, 2, figsize=(15, 9))
+    # Plot histogram
+    ax[0].hist(data, density=True, bins=len(shared_AR), label=label)
+    ax[0].legend(loc="upper right", fontsize=16)
+    ax[0].set_xlabel('aspect ratio', fontsize=18)
+    ax[0].set_ylabel('frequency', fontsize=18)
+    ax[0].tick_params(labelsize=14)
 
-        # Plot PDF
-        ypdf2 = grain_lognorm.pdf(grain_AR)
-        area = np.trapz(ypdf2, grain_AR)
-        if np.isclose(area, 0.0):
-            logging.debug('Small area for aspect ratio of grains.')
-            logging.debug(ypdf2, grain_AR)
-            area = 1.0
-        ypdf2 /= area
-        ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label='Grains')
-        ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3)
-        if particles and 'Particle_Minor_diameter' in dataDict.keys():
-            ypdf1 = par_lognorm.pdf(par_AR)
-            area = np.trapz(ypdf1, par_AR)
-            ypdf1 /= area
-            ax[1].plot(par_AR, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
-            ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
-        if ar_param is not None:
-            x0 = np.amin(1.0)
-            x1 = np.amax(grain_AR)
-            x = np.linspace(x0, x1, num=100)
-            y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
-            area = np.trapz(y, x)
-            y /= area
-            ax[1].plot(x, y, '--k', label='Experiment')
+    # Plot PDF
+    ypdf2 = ar_lognorm.pdf(grain_AR)
+    area = np.trapz(ypdf2, grain_AR)
+    if np.isclose(area, 0.0):
+        logging.debug('Small area for aspect ratio of grains.')
+        logging.debug(ypdf2, grain_AR)
+        area = 1.0
+    ypdf2 /= area
+    ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
+    ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3)
+    if particles:
+        ypdf1 = par_lognorm.pdf(par_AR)
+        area = np.trapz(ypdf1, par_AR)
+        ypdf1 /= area
+        ax[1].plot(par_AR, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
+        ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
+    if ar_param is not None:
+        x0 = np.min(grain_AR)
+        x1 = np.max(grain_AR)
+        if particles:
+            x0 = min(x0, np.min(par_AR))
+            x1 = max(x1, np.max(par_AR))
+        x = np.linspace(x0, x1, num=100)
+        y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
+        area = np.trapz(y, x)
+        y /= area
+        ax[1].plot(x, y, '--k', label='Experiment')
 
-        ax[1].legend(loc="upper right", fontsize=16)
-        ax[1].set_xlabel('Aspect ratio', fontsize=18)
-        ax[1].set_ylabel('Density', fontsize=18)
-        ax[1].tick_params(labelsize=14)
-        if save_files:
-            plt.savefig("Aspect_ratio.png", bbox_inches="tight")
-            print("    'Aspect_ratio.png' is placed in the current working directory\n")
-        plt.show()
+    ax[1].legend(loc="upper right", fontsize=16)
+    ax[1].set_xlabel('aspect ratio', fontsize=18)
+    ax[1].set_ylabel('density', fontsize=18)
+    ax[1].tick_params(labelsize=14)
+    if save_files:
+        fname = "aspect_ratio_comp.png"
+        plt.savefig(fname, bbox_inches="tight")
+        print(f"    '{fname}' is placed in the current working directory\n")
+    plt.show()
     return
 
 
@@ -447,10 +453,8 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
     # https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335
 
     # Compute the Log-normal PDF & CDF.
-    frozen_lognorm = lognorm(s=sd, loc=loc, scale=scale)
-
     xaxis = np.linspace(0.1, 200, 1000)
-    ypdf = frozen_lognorm.pdf(xaxis)
+    ypdf = lognorm.pdf(xaxis, sd, loc=loc, scale=scale)
 
     # Find the location at which CDF > 0.99
     # cdf_idx = np.where(ycdf > 0.99)[0][0]
@@ -510,9 +514,8 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
 
         # Plot aspect ratio statistics
         # Compute the Log-normal PDF & CDF.
-        frozen_lognorm = lognorm(sd_AR, loc=loc_AR, scale=scale_AR)
         xaxis = np.linspace(0.5 * ar_cutoff_min, 2 * ar_cutoff_max, 500)
-        ypdf = frozen_lognorm.pdf(xaxis)
+        ypdf = lognorm.pdf(xaxis, sd_AR, loc=loc_AR, scale=scale_AR)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
         ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)
         ax[1].set_xlabel('Aspect ratio', fontsize=18)
@@ -574,8 +577,12 @@ def plot_stats_dict(sdict, title=None, save_files=False):
     if title is not None:
         plt.title(title, fontsize=20)
     if save_files:
-        plt.savefig("equivalent_diameter.png", bbox_inches="tight")
-        print("    'equivalent_diameter.png' is placed in the current working directory\n")
+        if title is None:
+            fname = 'equiv_diameter.png'
+        else:
+            fname = f'equiv_diameter_{title}.png'
+        plt.savefig(fname, bbox_inches="tight")
+        print(f"    '{fname}' is placed in the current working directory\n")
     plt.show()
 
     # plot statistics of semi-axes
@@ -617,8 +624,12 @@ def plot_stats_dict(sdict, title=None, save_files=False):
         ax[0].set_title(title, fontsize=20)
         ax[1].set_title(title, fontsize=20)
     if save_files:
-        plt.savefig("semi_axes.png", bbox_inches="tight")
-        print("    'semi_axes.png' is placed in the current working directory\n")
+        if title is None:
+            fname = 'semi_axes.png'
+        else:
+            fname = f'semi_axes_{title}.png'
+        plt.savefig(fname, bbox_inches="tight")
+        print(f"    '{fname}' is placed in the current working directory\n")
     plt.show()
     return
 
