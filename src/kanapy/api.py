@@ -25,6 +25,7 @@ from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.packing import packingRoutine
 from kanapy.voxelization import voxelizationRoutine
 from kanapy.smoothingGB import smoothingRoutine
+from kanapy.rve_stats import get_stats_vox, get_stats_part, get_stats_poly
 from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D, plot_output_stats, plot_particles_3D
 
@@ -164,7 +165,7 @@ class Microstructure(object):
         if fill_factor is None and self.precipit is not None:
             fill_factor = 1.0  # pack to full volume fraction defined in particles
             print(f'Sparse particles (precipitates/pores): '
-                  f'Packing up to particle volume fraction of {(100*self.precipit):.1f}%.')
+                  f'Packing up to particle volume fraction of {(100 * self.precipit):.1f}%.')
             if self.precipit > 0.65:
                 print('Overlap of particles will occur since volume fraction > 65%')
         self.particles, self.simbox = \
@@ -206,9 +207,9 @@ class Microstructure(object):
             print('Volume fractions of phases in voxel structure:')
             vt = 0.
             for ip in range(self.nphases):
-                vf = vox_count[ip]/self.mesh.nvox
+                vf = vox_count[ip] / self.mesh.nvox
                 vt += vf
-                print(f'{ip}: {self.rve.phase_names[ip]} ({(vf*100):.3f}%)')
+                print(f'{ip}: {self.rve.phase_names[ip]} ({(vf * 100):.3f}%)')
             if not np.isclose(vt, 1.0):
                 logging.warning(f'Volume fractions of phases in voxels do not add up to 1. Value: {vt}')
 
@@ -268,7 +269,7 @@ class Microstructure(object):
                 igr.append(gblist[1])
         if len(ind) > 0:
             logging.warning(f'{len(ind)} grains are not represented in polyhedral geometry.')
-            #logging.warning('Consider increasing the number of voxels, as grains appear to be very irregular.')
+            # logging.warning('Consider increasing the number of voxels, as grains appear to be very irregular.')
             """ind.reverse()
             igr.reverse()
             for j, i in enumerate(ind):
@@ -283,7 +284,7 @@ class Microstructure(object):
                 ph_vol[ip] += grd['Volume']
             print('Volume fractions of phases in polyhedral geometry:')
             for ip in range(self.nphases):
-                vf = 100.0*ph_vol[ip]/np.prod(self.rve.size)
+                vf = 100.0 * ph_vol[ip] / np.prod(self.rve.size)
                 print(f'{ip}: {self.rve.phase_names[ip]} ({vf.round(1)}%)')
         if empty_vox is not None:
             # add removed grain again
@@ -351,7 +352,7 @@ class Microstructure(object):
                                  '"random" or "unimodal"')
             for i, igr in enumerate(self.mesh.grain_dict.keys()):
                 if self.mesh.grain_phase_dict[igr] == ip:
-                    ind = i - ip*self.ngrains[0]
+                    ind = i - ip * self.ngrains[0]
                     ori_dict[igr] = ori_rve[ind, :]
         self.mesh.grain_ori_dict = ori_dict
         return
@@ -415,7 +416,8 @@ class Microstructure(object):
                    gs_data=None, gs_param=None,
                    ar_data=None, ar_param=None,
                    particles=True,
-                   save_files=False):
+                   save_files=False,
+                   show_plot=True, verbose=False, ax_max=None):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
         if self.precipit and 0 in self.mesh.grain_dict.keys():
@@ -424,13 +426,28 @@ class Microstructure(object):
         else:
             nphases = self.nphases
         if data is None or \
-           (type(data) is str and data.lower() in ['p', 'part', 'particles']):
-            if self.rve.particle_data is not None:
-                # analyse grains w.r.t. statistical descriptors
-                data = get_stats(self.rve.particle_data, self.geometry, self.rve.units,
-                                 nphases, self.mesh.ngrains_phase)
-            if data is None:
-                raise ValueError('No microstructure data created yet. Run generate_grains() first.')
+                (type(data) is str and 'p' in data.lower()):
+            # analyse particle statistics
+            if self.particles is None:
+                logging.error('Particle statistics requested, but no particles defined.')
+                return
+            part_stats = get_stats_part(self.particles, show_plot=show_plot,
+                                        verbose=verbose, ax_max=ax_max, save_files=save_files)
+        if data is None or \
+                (type(data) is str and 'v' in data.lower()):
+            # analyse voxel statistics
+            if self.mesh is None:
+                logging.error('Particle statistics requested, but no particles defined.')
+                return
+            vox_stats = get_stats_vox(self.mesh, show_plot=show_plot,
+                                      verbose=verbose, ax_max=ax_max, save_files=save_files)
+
+        if self.rve.particle_data is not None:
+            # analyse grains w.r.t. statistical descriptors
+            data = get_stats(self.rve.particle_data, self.geometry, self.rve.units,
+                             nphases, self.mesh.ngrains_phase)
+        if data is None:
+            raise ValueError('No microstructure data created yet. Run generate_grains() first.')
         elif type(data) is not list:
             data = [data]
         if gs_data is None or type(gs_data) is not list:
@@ -937,6 +954,7 @@ class Microstructure(object):
         None.
         
         """
+
         def write_facet(nv, pts, ft):
             if np.linalg.norm(nv) < 1.e-5:
                 logging.warning(f'Acute facet detected. Facet: {ft}')
@@ -955,6 +973,7 @@ class Microstructure(object):
                     .format(pts[2, 0], pts[2, 1], pts[2, 2]))
             f.write("  endloop\n")
             f.write(" endfacet\n")
+
         def write_grains():
             for ft in self.geometry['Facets']:
                 pts = self.geometry['Points'][ft]
@@ -1176,7 +1195,6 @@ class Microstructure(object):
         path = os.path.normpath(path)
         file = os.path.join(path, file)
         self.simbox, self.particles = read_dump(file)
-
 
     """
     --------        legacy methods        --------
