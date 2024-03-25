@@ -154,7 +154,9 @@ def calc_stats_dict(a, b, c, eqd):
     return sd
 
 
-def get_stats_vox(mesh, minval=1.e-5, show_plot=True, verbose=False, ax_max=None, save_files=False):
+def get_stats_vox(mesh, iphase=None, ax_max=None,
+                  minval=1.e-5, show_plot=True,
+                  verbose=False, save_files=False):
     """
     Get statistics about the microstructure from voxels, by fitting a 3D ellipsoid to
     each grain.
@@ -182,6 +184,9 @@ def get_stats_vox(mesh, minval=1.e-5, show_plot=True, verbose=False, ax_max=None
     arr_c = []
     arr_eqd = []
     for igr, vlist in mesh.grain_dict.items():
+        # decide if phase-specific analysis is performed
+        if iphase is not None and iphase != mesh.grain_phase_dict[igr]:
+            continue
         nodes = set()
         for iv in vlist:
             nodes.update(mesh.voxel_dict[iv])
@@ -262,12 +267,19 @@ def get_stats_vox(mesh, minval=1.e-5, show_plot=True, verbose=False, ax_max=None
         print(f'Standard deviation of equivalent grain diameter: {vox_stats_dict["eqd_sig"]:.4f}')
         print('--------------------------------------------------------')
     if show_plot:
-        plot_stats_dict(vox_stats_dict, title='Statistics of voxel structure', save_files=save_files)
+        if iphase is None:
+            title = 'Statistics of voxel structure'
+        else:
+            title = f'Statistics of voxel structure (phase {iphase})'
+        plot_stats_dict(vox_stats_dict, title=title, save_files=save_files)
 
     return vox_stats_dict
 
 
-def get_stats_poly(grains, minval=1.e-5, show_plot=True, verbose=False, ax_max=None, save_files=False):
+def get_stats_poly(grains, iphase=None, ax_max=None,
+                   phase_dict=None,
+                   minval=1.e-5, show_plot=True,
+                   verbose=False, save_files=False):
     """ Extract statistics about the microstructure from polyhedral grains
         by fitting a 3D ellipsoid to each polyhedron.
 
@@ -283,6 +295,8 @@ def get_stats_poly(grains, minval=1.e-5, show_plot=True, verbose=False, ax_max=N
         -------
 
         """
+    if iphase is not None and phase_dict is None:
+        logging.error('Error in get_stats_poly: phase number provided, but no phase_dict present.')
     if ax_max is not None:
         minval = max(minval, 1. / ax_max ** 2)
     cons = ({'type': 'ineq', 'fun': con_fun})  # constraints for minimization
@@ -293,6 +307,9 @@ def get_stats_poly(grains, minval=1.e-5, show_plot=True, verbose=False, ax_max=N
     arr_c = []
     arr_eqd = []
     for gid, pc in grains.items():
+        # decide if phase-specific analysis is performed
+        if iphase is not None and iphase != phase_dict[gid]:
+            continue
         pts = pc['Points']
         rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method='SLSQP',
                          constraints=cons, options=opt)
@@ -340,13 +357,18 @@ def get_stats_poly(grains, minval=1.e-5, show_plot=True, verbose=False, ax_max=N
         print(f'Standard deviation of equivalent grain diameter: {poly_stats_dict["eqd_sig"]:.4f}')
         print('--------------------------------------------------------')
     if show_plot:
-        title = 'Statistics of polyhedral grains'
+        if iphase is None:
+            title = 'Statistics of polyhedral grains'
+        else:
+            title = f'Statistics of polyhedral grains (phase {iphase})'
         plot_stats_dict(poly_stats_dict, title=title, save_files=save_files)
 
     return poly_stats_dict
 
 
-def get_stats_part(part, minval=1.e-5, show_plot=True, verbose=False, ax_max=None, save_files=False):
+def get_stats_part(part, iphase=None, ax_max=None,
+                   minval=1.e-5, show_plot=True,
+                   verbose=False, save_files=False):
     """ Extract statistics about the microstructure from particles. If inner structure is contained
     by fitting a 3D ellipsoid to each structure.
 
@@ -372,6 +394,9 @@ def get_stats_part(part, minval=1.e-5, show_plot=True, verbose=False, ax_max=Non
     arr_c = []
     arr_eqd = []
     for pc in part:
+        # decide if phase-specific analysis is performed
+        if iphase is not None and iphase != pc.phasenum:
+            continue
         if pc.inner is not None:
             pts = pc.inner.points
             rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method='SLSQP',
@@ -430,6 +455,8 @@ def get_stats_part(part, minval=1.e-5, show_plot=True, verbose=False, ax_max=Non
             title = 'Particle statistics'
         else:
             title = 'Statistics of inner particle structures'
+        if iphase is not None:
+            title += f' (phase {iphase})'
         plot_stats_dict(part_stats_dict, title=title, save_files=save_files)
 
     return part_stats_dict

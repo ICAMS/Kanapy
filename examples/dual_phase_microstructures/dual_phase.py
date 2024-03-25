@@ -24,7 +24,7 @@ ms_stats_0 = {  # statistical data for dense phase
     "Equivalent diameter": {
         "sig": 1.0, "scale": 12.0, "loc": 5.0, "cutoff_min": 8.0, "cutoff_max": 14.0},
     "Aspect ratio": {
-        "sig": 0.5, "scale": 1.0, "loc": 0.6, "cutoff_min": 1.0, "cutoff_max": 2.4},
+        "sig": 0.5, "scale": 1.0, "loc": 0.6, "cutoff_min": 1.0, "cutoff_max": 2.2},
     "Tilt angle": {
         "kappa": 1.0, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
     "RVE": {
@@ -39,9 +39,9 @@ ms_stats_0 = {  # statistical data for dense phase
 ms_stats_1 = {  # statistical data for porosity (will not be considered explicitly)
     "Grain type": "Elongated",
     "Equivalent diameter": {
-        "sig": 1.5, "scale": 9.0, "loc": 6.0, "cutoff_min": 8.0, "cutoff_max": 12.0},
+        "sig": 1.5, "scale": 9.0, "loc": 5.0, "cutoff_min": 7.0, "cutoff_max": 10.0},
     "Aspect ratio": {
-        "sig": 1.0, "scale": 3.5, "loc": 1.0, "cutoff_min": 1.6, "cutoff_max": 5.0},
+        "sig": 0.5, "scale": 3.5, "loc": 1.0, "cutoff_min": 2.6, "cutoff_max": 5.0},
     "Tilt angle": {
         "kappa": 1.5, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
     "RVE": {
@@ -65,7 +65,7 @@ ms.voxelize()  # assigning particles to voxels, empty voxels will be considered 
 ms.plot_voxels(sliced=True, dual_phase=True)  # plot voxels, dual_phase=False will plot colored voxels for phase 0
 ms.generate_grains()  # construct polyhedral hull for each grain
 ms.plot_grains(dual_phase=True)  # plot grain structure (dual_phase=True will plot colored grains for phase 0)
-ms.plot_stats()  # plot statistical distribution of grain sizes and aspect ratios and compare to input statistics
+ms.plot_stats(dual_phase=True)  # plot phase-specific statistical information of RVE (for dual_phase=False: entire RVE)
 
 # Write voxel structure to JSON file
 ms.write_voxels(script_name=__file__, mesh=False, system=False)

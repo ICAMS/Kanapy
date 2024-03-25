@@ -254,7 +254,7 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True)
     plt.show()
 
 
-def plot_output_stats(data_list, labels,
+def plot_output_stats(data_list, labels, iphase=None,
                       gs_data=None, gs_param=None,
                       ar_data=None, ar_param=None,
                       save_files=False):
@@ -316,6 +316,8 @@ def plot_output_stats(data_list, labels,
     ax[0].set_xlabel('equivalent diameter (μm)', fontsize=18)
     ax[0].set_ylabel('frequency', fontsize=18)
     ax[0].tick_params(labelsize=14)
+    if iphase is not None:
+        ax[0].set_title(f'Phase {iphase}')
 
     # Plot PDF
     ypdf2 = grain_lognorm.pdf(grain_eqDia)
@@ -360,6 +362,8 @@ def plot_output_stats(data_list, labels,
     ax[1].set_xlabel('equivalent diameter (μm)', fontsize=18)
     ax[1].set_ylabel('density', fontsize=18)
     ax[1].tick_params(labelsize=14)
+    if iphase is not None:
+        ax[1].set_title(f'Phase {iphase}')
     if save_files:
         fname = 'equiv_diameter_comp.png'
         plt.savefig(fname, bbox_inches="tight")
@@ -394,6 +398,8 @@ def plot_output_stats(data_list, labels,
     ax[0].set_xlabel('aspect ratio', fontsize=18)
     ax[0].set_ylabel('frequency', fontsize=18)
     ax[0].tick_params(labelsize=14)
+    if iphase is not None:
+        ax[0].set_title(f'Phase {iphase}')
 
     # Plot PDF
     ypdf2 = ar_lognorm.pdf(grain_AR)
@@ -427,6 +433,8 @@ def plot_output_stats(data_list, labels,
     ax[1].set_xlabel('aspect ratio', fontsize=18)
     ax[1].set_ylabel('density', fontsize=18)
     ax[1].tick_params(labelsize=14)
+    if iphase is not None:
+        ax[1].set_title(f'Phase {iphase}')
     if save_files:
         fname = "aspect_ratio_comp.png"
         plt.savefig(fname, bbox_inches="tight")
@@ -566,6 +574,7 @@ def plot_stats_dict(sdict, title=None, save_files=False):
     sc = sdict['eqd_scale']
     xval = np.linspace(np.min(sdict['eqd']), np.max(sdict['eqd']), 50, endpoint=True)
     ypdf = lognorm.pdf(xval, sig, loc=loc, scale=sc)
+    plt.figure(figsize=(12, 9))
     plt.plot(xval, ypdf, linestyle='-', linewidth=3.0, label='PDF')
     plt.fill_between(xval, 0, ypdf, alpha=0.3)
     # Plot histogram

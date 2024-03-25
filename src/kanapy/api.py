@@ -418,88 +418,95 @@ class Microstructure(object):
     def plot_stats(self, data=None,
                    gs_data=None, gs_param=None,
                    ar_data=None, ar_param=None,
+                   dual_phase=False,
                    save_files=False,
                    show_plot=True, verbose=False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
         ax_max = np.prod(self.rve.size) ** (1 / 3)
-        stats_list = []
-        labels = []
-        if self.precipit and 0 in self.mesh.grain_dict.keys():
-            # in case of precipit, remove irregular grain 0 from analysis
-            nphases = self.nphases - 1
-        else:
+        if dual_phase:
             nphases = self.nphases
-        if data is None or \
-                (type(data) is str and 'p' in data.lower()):
-            # analyse particle statistics
-            if self.particles is None:
-                logging.error('Particle statistics requested, but no particles defined. '
-                              'Run "pack()" first.')
-                return
-            part_stats = get_stats_part(self.particles, show_plot=show_plot,
-                                        verbose=verbose, ax_max=ax_max, save_files=save_files)
-            stats_list.append(part_stats)
-            labels.append("Partcls")
-
-        if data is None or \
-                (type(data) is str and 'v' in data.lower()):
-            # analyse voxel statistics
-            if self.mesh is None:
-                logging.error('Voxel statistics requested, but no voxel mesh defined. '
-                              'Run "voxelize()" first.')
-                return
-            vox_stats = get_stats_vox(self.mesh, show_plot=show_plot,
-                                      verbose=verbose, ax_max=ax_max, save_files=save_files)
-            stats_list.append(vox_stats)
-            labels.append('Voxels')
-        if data is None or \
-                (type(data) is str and 'g' in data.lower()):
-            # analyse voxel statistics
-            if self.geometry is None:
-                logging.error('Geometry statistics requested, but no polyhedral grains defined. '
-                              'Run "generate_grains()" first.')
-                return
-            grain_stats = get_stats_poly(self.geometry['Grains'], show_plot=show_plot,
-                                         verbose=verbose, ax_max=ax_max, save_files=save_files)
-            stats_list.append(grain_stats)
-            labels.append('Grains')
-        print('\nStatistical microstructure parameters of RVE')
-        print('--------------------------------------------')
-        print(f'Type\t| a (µm) \t| b (µm) \t| c (µm) \t| std.dev\t| rot.axis\t| asp.ratio\t| std.dev\t|'
-              f' equ.dia. (µm)\t| std.dev')
-        for i, sd in enumerate(stats_list):
-            av_std = np.mean([sd['a_sig'], sd['b_sig'], sd['c_sig']])
-            print(f'{labels[i]}\t|  {sd["a_scale"]:.3f}\t|  {sd["b_scale"]:.3f}\t|  {sd["c_scale"]:.3f}\t|  '
-                  f'{av_std:.4f}\t|     {sd["ind_rot"]}   \t|  {sd["ar_scale"]:.3f}\t|  {sd["ar_sig"]:.4f}\t|     '
-                  f'{sd["eqd_scale"]:.3f} \t|  {sd["eqd_sig"]:.4f}')
-        self.rve_stats = stats_list
-        self.rve_stats_labels = labels
-        # analyse grains w.r.t. statistical descriptors
-        cdat = [stats_list]
-        ldat = [labels]
-        if type(cdat) is not list:
-            cdat = [data]
+            if self.precipit and 0 in self.mesh.grain_dict.keys():
+                # in case of precipit, remove irregular grain 0 from analysis
+                nphases -= 1
+        else:
+            nphases = 1
         if gs_data is None or type(gs_data) is not list:
-            gs_data = [gs_data] * len(cdat)
+            gs_data = [gs_data] * nphases
         if gs_param is None or type(gs_param) is not list:
-            gs_param = [gs_param] * len(cdat)
+            gs_param = [gs_param] * nphases
         if ar_data is None or type(ar_data) is not list:
-            ar_data = [ar_data] * len(cdat)
+            ar_data = [ar_data] * nphases
         if ar_param is None or type(ar_param) is not list:
-            ar_param = [ar_param] * len(cdat)
+            ar_param = [ar_param] * nphases
         """
-        gs_data = [ebsd.ms_data[i]['gs_data'] for i in range(Nphases)]
-        gs_param = [ebsd.ms_data[i]['gs_param'] for i in range(Nphases)]
-        ar_data = [ebsd.ms_data[i]['ar_data'] for i in range(Nphases)]
-        ar_param = [ebsd.ms_data[i]['ar_param'] for i in range(Nphases)]
+        gs_data = [ebsd.ms_data[i]['gs_data'] for i in range(nphases)]
+        gs_param = [ebsd.ms_data[i]['gs_param'] for i in range(nphases)]
+        ar_data = [ebsd.ms_data[i]['ar_data'] for i in range(nphases)]
+        ar_param = [ebsd.ms_data[i]['ar_param'] for i in range(nphases)]
         """
+        iphase = None
+        for ip in range(nphases):
+            stats_list = []
+            labels = []
+            if dual_phase:
+                iphase = ip
+                print(f'Plotting input & output statistics for phase {ip}')
+            if data is None or \
+                    (type(data) is str and 'p' in data.lower()):
+                # analyse particle statistics
+                if self.particles is None:
+                    logging.error('Particle statistics requested, but no particles defined. '
+                                  'Run "pack()" first.')
+                    return
+                part_stats = get_stats_part(self.particles, iphase=iphase, ax_max=ax_max,
+                                            show_plot=show_plot,
+                                            verbose=verbose, save_files=save_files)
+                stats_list.append(part_stats)
+                labels.append("Partcls")
 
-        for i, ds in enumerate(cdat):
-            print(f'Plotting input & output statistics for phase {i}')
-            plot_output_stats(ds, ldat[i],
-                              gs_data=gs_data[i], gs_param=gs_param[i],
-                              ar_data=ar_data[i], ar_param=ar_param[i],
+            if data is None or \
+                    (type(data) is str and 'v' in data.lower()):
+                # analyse voxel statistics
+                if self.mesh is None:
+                    logging.error('Voxel statistics requested, but no voxel mesh defined. '
+                                  'Run "voxelize()" first.')
+                    return
+                vox_stats = get_stats_vox(self.mesh, iphase=iphase, ax_max=ax_max,
+                                          show_plot=show_plot,
+                                          verbose=verbose, save_files=save_files)
+                stats_list.append(vox_stats)
+                labels.append('Voxels')
+            if data is None or \
+                    (type(data) is str and 'g' in data.lower()):
+                # analyse voxel statistics
+                if self.geometry is None:
+                    logging.error('Geometry statistics requested, but no polyhedral grains defined. '
+                                  'Run "generate_grains()" first.')
+                    return
+                grain_stats = get_stats_poly(self.geometry['Grains'], iphase=iphase, ax_max=ax_max,
+                                             show_plot=show_plot, phase_dict=self.mesh.grain_phase_dict,
+                                             verbose=verbose, save_files=save_files)
+                stats_list.append(grain_stats)
+                labels.append('Grains')
+            if dual_phase:
+                print(f'\nStatistical microstructure parameters of phase {iphase} in RVE')
+                print('-------------------------------------------------------')
+            else:
+                print('\nStatistical microstructure parameters of RVE')
+                print('--------------------------------------------')
+            print(f'Type\t| a (µm) \t| b (µm) \t| c (µm) \t| std.dev\t| rot.axis\t| asp.ratio\t| std.dev\t|'
+                  f' equ.dia. (µm)\t| std.dev')
+            for i, sd in enumerate(stats_list):
+                av_std = np.mean([sd['a_sig'], sd['b_sig'], sd['c_sig']])
+                print(f'{labels[i]}\t|  {sd["a_scale"]:.3f}\t|  {sd["b_scale"]:.3f}\t|  {sd["c_scale"]:.3f}\t|  '
+                      f'{av_std:.4f}\t|     {sd["ind_rot"]}   \t|  {sd["ar_scale"]:.3f}\t|  {sd["ar_sig"]:.4f}\t|     '
+                      f'{sd["eqd_scale"]:.3f} \t|  {sd["eqd_sig"]:.4f}')
+            self.rve_stats = stats_list
+            self.rve_stats_labels = labels
+            plot_output_stats(stats_list, labels, iphase=iphase,
+                              gs_data=gs_data[ip], gs_param=gs_param[ip],
+                              ar_data=ar_data[ip], ar_param=ar_param[ip],
                               save_files=save_files)
 
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
