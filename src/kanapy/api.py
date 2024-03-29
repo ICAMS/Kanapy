@@ -70,6 +70,8 @@ class Microstructure(object):
         rve_stats : list
             List of dictionaries containing statistical information on different RVE types: particles, voxels,
             polyhedral grains
+        rve_stats_labels : list
+            List of strings containing the labels for the RVE types, i.e. Partcls, Voxels, Grains
     """
 
     def __init__(self, descriptor=None, file=None, name='Microstructure'):
@@ -84,6 +86,7 @@ class Microstructure(object):
         self.simbox = None
         self.mesh = None
         self.rve_stats = None
+        self.rve_stats_labels = None
         self.from_voxels = False
         self.ialloy = None
 
@@ -451,10 +454,11 @@ class Microstructure(object):
             labels = []
             if dual_phase:
                 iphase = ip
-                print(f'Plotting input & output statistics for phase {ip}')
-            if data is None or \
-                    (type(data) is str and 'p' in data.lower()):
-                # analyse particle statistics
+                print(f'Plotting statistical information for phase {ip}')
+
+            # Analyze and plot particles statistics
+            if (data is None and self.particles is not None) or \
+               (type(data) is str and 'p' in data.lower()):
                 if self.particles is None:
                     logging.error('Particle statistics requested, but no particles defined. '
                                   'Run "pack()" first.')
@@ -465,9 +469,9 @@ class Microstructure(object):
                 stats_list.append(part_stats)
                 labels.append("Partcls")
 
-            if data is None or \
-                    (type(data) is str and 'v' in data.lower()):
-                # analyse voxel statistics
+            # Analyze and plot statistics of voxel structure in RVE
+            if (data is None and self.mesh is not None) or \
+               (type(data) is str and 'v' in data.lower()):
                 if self.mesh is None:
                     logging.error('Voxel statistics requested, but no voxel mesh defined. '
                                   'Run "voxelize()" first.')
@@ -477,9 +481,10 @@ class Microstructure(object):
                                           verbose=verbose, save_files=save_files)
                 stats_list.append(vox_stats)
                 labels.append('Voxels')
-            if data is None or \
-                    (type(data) is str and 'g' in data.lower()):
-                # analyse voxel statistics
+
+            # Analyze and plot statistics of polyhedral grains in RVE
+            if (data is None and self.geometry is not None) or \
+               (type(data) is str and 'g' in data.lower()):
                 if self.geometry is None:
                     logging.error('Geometry statistics requested, but no polyhedral grains defined. '
                                   'Run "generate_grains()" first.')
@@ -489,6 +494,7 @@ class Microstructure(object):
                                              verbose=verbose, save_files=save_files)
                 stats_list.append(grain_stats)
                 labels.append('Grains')
+
             if dual_phase:
                 print(f'\nStatistical microstructure parameters of phase {iphase} in RVE')
                 print('-------------------------------------------------------')

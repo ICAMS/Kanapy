@@ -99,7 +99,7 @@ class Ellipsoid(object):
         self.speedx = 0.
         self.speedy = 0.
         self.speedz = 0.
-        self.rotationMatrixGen()  # Initialize roatation matrix for the ellipsoid
+        self.rotation_matrix = self.rotationMatrixGen()  # Initialize roatation matrix for the ellipsoid
         self.surface_points = self.surfacePointsGen()  # Initialize surface points for the ellipsoid
         self.inside_voxels = []  # List that stores voxels belonging to the ellipsoid
         self.set_cub()  # sets particle cuboid for collision testing with octree boxes
@@ -151,6 +151,8 @@ class Ellipsoid(object):
 
         w, x, y, z = self.quat
         Nq = w * w + x * x + y * y + z * z
+        if Nq < FLOAT_EPS:
+            return np.eye(3)
 
         s = 2.0 / Nq
         X = x * s
@@ -166,12 +168,9 @@ class Ellipsoid(object):
         yZ = y * Z
         zZ = z * Z
 
-        if Nq < FLOAT_EPS:
-            self.rotation_matrix = np.eye(3)
-        else:
-            self.rotation_matrix = np.array([[1.0 - (yY + zZ), xY - wZ, xZ + wY],
-                                             [xY + wZ, 1.0 - (xX + zZ), yZ - wX],
-                                             [xZ - wY, yZ + wX, 1.0 - (xX + yY)]])
+        return np.array([[1.0 - (yY + zZ), xY - wZ, xZ + wY],
+                         [xY + wZ, 1.0 - (xX + zZ), yZ - wX],
+                         [xZ - wY, yZ + wX, 1.0 - (xX + yY)]])
 
     def surfacePointsGen(self, nang=20):
         """

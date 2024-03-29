@@ -114,7 +114,7 @@ class EBSDmap:
             data['grains'] = eng.eval("grains_w(grains_w.grainSize > {})"
                                       .format(gs_min))
 
-            # use MTEX function to analye grains and plot ellipses around grain
+            # use MTEX function to analyze grains and plot ellipses around grain
             # centres; calculate orientation, long and short axes of ellipses
             omega_r, ha, hb = eng.principalComponents(data['grains'],
                                                       nargout=3)
@@ -165,9 +165,11 @@ class EBSDmap:
 
             # grain equivalent diameter
             deq = 2.0 * np.array(eng.equivalentRadius(data['grains']))[:, 0]
-            dsig, doffs, dscale = lognorm.fit(deq)  # fit log normal distribution
-            med_eq = lognorm.median(dsig, loc=doffs, scale=dscale)
-            std_eq = lognorm.std(dsig, loc=doffs, scale=dscale)
+            # dsig, doffs, dscale = lognorm.fit(deq)  # fit log normal distribution
+            doffs = 0.
+            deq_log = np.log(deq)
+            dscale = med_eq = np.exp(np.median(deq_log))  # lognorm.median(dsig, loc=doffs, scale=dscale)
+            dsig = std_eq = np.std(deq_log)  # lognorm.std(dsig, loc=doffs, scale=dscale)
             data['gs_param'] = np.array([dsig, doffs, dscale])
             data['gs_data'] = deq
             data['gs_moments'] = [med_eq, std_eq]
@@ -186,9 +188,11 @@ class EBSDmap:
 
             # grain aspect ratio
             asp = np.array(eng.aspectRatio(data['grains']))[:, 0]
-            asig, aoffs, ascale = lognorm.fit(asp)  # fit log normal distribution
-            med_ar = lognorm.median(asig, loc=aoffs, scale=ascale)
-            std_ar = lognorm.std(asig, loc=aoffs, scale=ascale)
+            # asig, aoffs, ascale = lognorm.fit(asp)  # fit log normal distribution
+            aoffs = 0.
+            asp_log = np.log(asp)
+            ascale = med_ar = np.exp(np.median(asp_log))  # lognorm.median(asig, loc=aoffs, scale=ascale)
+            asig = std_ar = np.std(asp_log)  # lognorm.std(asig, loc=aoffs, scale=ascale)
             data['ar_param'] = np.array([asig, aoffs, ascale])
             data['ar_data'] = asp
             data['ar_moments'] = [med_ar, std_ar]
@@ -207,17 +211,18 @@ class EBSDmap:
 
             # angles of main axis
             # fit von Mises distribution (circular normal distribution) to data
-            kappa, oloc, oscale = vonmises.fit(omega)
-            med_om = vonmises.median(kappa, loc=oloc, scale=oscale)
-            std_om = vonmises.std(kappa, loc=oloc, scale=oscale)
-            data['om_param'] = np.array([kappa, oloc, oscale])
-            data['om_data'] = omega
+            omega_p = 2.0*omega - np.pi  # rescale angles from [0, pi] to [-pi,pi] for von Mises distr. fit
+            kappa, oloc, oscale = vonmises.fit(omega_p)
+            med_om = vonmises.median(kappa, loc=oloc)  # scale parameter has no effect on vonmises distribution
+            std_om = vonmises.std(kappa, loc=oloc)
+            data['om_param'] = np.array([kappa, oloc])
+            data['om_data'] = omega_p
             data['om_moments'] = [med_om, std_om]
             if plot:
                 fig, ax = plt.subplots()
-                x = np.linspace(-np.pi, np.pi, 200) # np.amin(omega), np.amax(omega), 150)
-                y = vonmises.pdf(x, kappa, loc=oloc, scale=oscale)
-                ax.plot(x, y, '-r', label='fit')
+                x = np.linspace(-np.pi, np.pi, 200)  # np.amin(omega), np.amax(omega), 150)
+                y = vonmises.pdf(x, kappa, loc=oloc)
+                ax.plot(0.5*(x+np.pi), 2*y, '-r', label='fit')
                 ax.hist(omega, bins=40, density=True, label='data')
                 plt.legend()
                 plt.title('Histogram of tilt angles of major axes')

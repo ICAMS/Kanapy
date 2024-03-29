@@ -109,6 +109,72 @@ def pts_in_ellips(Mcomp, pts):
     return score / len(pts)
 
 
+def get_diameter(pts):
+    """
+    Get estimate of largest diameter of a set of points.
+    Parameters
+    ----------
+    pts : (N, dim) ndarray
+        Point set in dim dimensions
+
+    Returns
+    -------
+    diameter : (dim)-ndarray
+
+    """
+    ind0 = np.argmin(pts, axis=0)  # index of point with lowest coordinate for each Cartesian axis
+    ind1 = np.argmax(pts, axis=0)  # index of point with highest coordinate for each Cartesian axis
+    v_min = np.array([pts[i, j] for j, i in enumerate(ind0)])  # min. value for each Cartesian axis
+    v_max = np.array([pts[i, j] for j, i in enumerate(ind1)])  # max. value for each Cartesian axis
+    ind_d = np.argmax(v_max - v_min)  # Cartesian axis along which largest distance occurs
+    return pts[ind1[ind_d], :] - pts[ind0[ind_d], :]
+
+def project_pts(pts, ctr, axis):
+    """
+    Project points (pts) to plane defined via center (ctr) and normal vector (axis).
+
+    Parameters
+    ----------
+    pts : (N, dim) ndarray
+        Point set in dim dimensions
+    ctr : (dim)-ndarray
+        Center point of the projection plane
+    axis : (dim)-ndarray
+        Unit vector for plane normal
+
+    Returns
+    -------
+    ppt : (N, dim) ndarray
+        Points projected to plane with normal axis
+    """
+    dvec = pts - ctr[None, :]  # distance vector b/w points and center point
+    pdist = np.array([np.dot(axis, v) for v in dvec])
+    ppt = np.zeros(pts.shape)
+    for i, p in enumerate(dvec):
+        ppt[i, :] = p - pdist[i] * axis
+    return ppt
+
+
+def bbox(pts):
+    # Approximate smallest rectangular cuboid around points of grains
+    # to analyse prolate (aspect ratio > 1) and oblate (a.r. < 1) particles correctly
+    dia = get_diameter(pts)  # approx. of largest diameter of grain
+    ctr = np.mean(pts, axis=0)  # approx. center of grain
+    len_a = np.linalg.norm(dia)  # length of largest side
+    if len_a < 1.e-5:
+        logging.warning(f'Very small grain at {ctr} with max. diameter = {len_a}')
+    ax_a = dia / len_a  # unit vector along longest side
+    ppt = project_pts(pts, ctr, ax_a)  # project points onto central plane normal to diameter
+    trans1 = get_diameter(ppt)  # largest side transversal to long axis
+    len_b = np.linalg.norm(trans1)  # length of second-largest side
+    ax_b = trans1 / len_b  # unit vector of second axis (normal to diameter)
+    ax_c = np.cross(ax_a, ax_b)  # calculate third orthogonal axes of rectangular cuboid
+    lpt = project_pts(ppt, np.zeros(3), ax_b)  # project points on third axis
+    pdist = np.array([np.dot(ax_c, v) for v in lpt])  # calculate distance of points on third axis
+    len_c = np.max(pdist) - np.min(pdist)  # get length of shortest side
+    return 0.5*len_a, 0.5*len_b, 0.5*len_c
+
+
 def calc_stats_dict(a, b, c, eqd):
     arr_a = np.sort(a)
     arr_b = np.sort(b)
@@ -154,6 +220,102 @@ def calc_stats_dict(a, b, c, eqd):
     return sd
 
 
+def get_stats_part(part, iphase=None, ax_max=None,
+                   minval=1.e-5, show_plot=True,
+                   verbose=False, save_files=False):
+    """ Extract statistics about the microstructure from particles. If inner structure is contained
+    by fitting a 3D ellipsoid to each structure.
+
+    Parameters
+    ----------
+    part
+    minval
+    show_plot
+    verbose
+    ax_max
+
+    Returns
+    -------
+
+    """
+    if ax_max is not None:
+        minval = max(minval, 1. / ax_max ** 2)
+    cons = ({'type': 'ineq', 'fun': con_fun})  # constraints for minimization
+    opt = {'maxiter': 200}  # options for minimization
+    mc = np.array([1., 1., 1., 0., 0., 0.])  # start value of matrix for minimization
+    arr_a = []
+    arr_b = []
+    arr_c = []
+    arr_eqd = []
+    for pc in part:
+        # decide if phase-specific analysis is performed
+        if iphase is not None and iphase != pc.phasenum:
+            continue
+        if pc.inner is not None:
+            pts = pc.inner.points
+            rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method='SLSQP',
+                             constraints=cons, options=opt)
+            if not rdict['success']:
+                if verbose:
+                    print(f'Optimization failed for particle {pc.id}')
+                    print(rdict['message'])
+                continue
+            eval, evec = np.linalg.eig(arr2mat(rdict['x']))
+            if any(eval <= minval):
+                if verbose:
+                    print(f'Matrix for particle {pc.id} not positive definite or semi-axes too large. '
+                          f'Eigenvalues: {eval}')
+                continue
+            if verbose:
+                print(f'Optimization succeeded for particle {pc.id} after {rdict["nit"]} iterations.')
+                print(f'Eigenvalues: {eval}')
+                print(f'Eigenvectors: {evec}')
+            # Semi-axes of ellipsoid
+            ea = 1. / np.sqrt(eval[0])
+            eb = 1. / np.sqrt(eval[1])
+            ec = 1. / np.sqrt(eval[2])
+            eqd = 2.0 * (ea * eb * ec) ** (1.0 / 3.0)
+            arr_a.append(ea)
+            arr_b.append(eb)
+            arr_c.append(ec)
+            arr_eqd.append(eqd)
+        else:
+            eqd = 2.0 * (pc.a * pc.b * pc.c) ** (1.0 / 3.0)
+            arr_a.append(pc.a)
+            arr_b.append(pc.b)
+            arr_c.append(pc.c)
+            arr_eqd.append(eqd)
+
+    # calculate statistical parameters
+    part_stats_dict = calc_stats_dict(arr_a, arr_b, arr_c, arr_eqd)
+    if verbose:
+        print('\n--------------------------------------------------')
+        print('Statistical microstructure parameters of particles')
+        print('--------------------------------------------------')
+        print('Median lengths of semi-axes of fitted ellipsoids in micron')
+        print(f'a: {part_stats_dict["a_scale"]:.3f}, b: {part_stats_dict["b_scale"]:.3f}, '
+              f'c: {part_stats_dict["c_scale"]:.3f}')
+        av_std = np.mean([part_stats_dict['a_sig'], part_stats_dict['b_sig'], part_stats_dict['c_sig']])
+        print(f'Average standard deviation of semi-axes: {av_std:.4f}')
+        print('\nAssuming rotational symmetry in grains')
+        print(f'Rotational axis: {part_stats_dict["ind_rot"]}')
+        print(f'Median aspect ratio: {part_stats_dict["ar_scale"]:.3f}')
+        print('\nGrain size')
+        print(f'Median equivalent grain diameter: {part_stats_dict["eqd_scale"]:.3f} micron')
+        print(f'Standard deviation of equivalent grain diameter: {part_stats_dict["eqd_sig"]:.4f}')
+        print('--------------------------------------------------------')
+    if show_plot:
+        if part[0].inner is None:
+            title = 'Particle statistics'
+        else:
+            title = 'Statistics of inner particle structures'
+        if iphase is not None:
+            title += f' (phase {iphase})'
+        plot_stats_dict(part_stats_dict, title=title, save_files=save_files)
+
+    return part_stats_dict
+
+
 def get_stats_vox(mesh, iphase=None, ax_max=None,
                   minval=1.e-5, show_plot=True,
                   verbose=False, save_files=False):
@@ -195,6 +357,9 @@ def get_stats_vox(mesh, iphase=None, ax_max=None,
         hull = ConvexHull(pts_all)
         eqd = 2.0 * (gfac * hull.volume) ** (1.0 / 3.0)
         pts = hull.points[hull.vertices]  # outer nodes of grain no. igr
+        # find bounding box to hull points
+        ea, eb, ec = bbox(pts)
+        """
         # find best fitting ellipsoid to points
         rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method='SLSQP',
                          constraints=cons, options=opt)
@@ -216,13 +381,9 @@ def get_stats_vox(mesh, iphase=None, ax_max=None,
         # Semi-axes of ellipsoid
         ea = 1. / np.sqrt(eval[0])
         eb = 1. / np.sqrt(eval[1])
-        ec = 1. / np.sqrt(eval[2])
-        arr_a.append(ea)
-        arr_b.append(eb)
-        arr_c.append(ec)
-        arr_eqd.append(eqd)
+        ec = 1. / np.sqrt(eval[2])"""
 
-        """ Plot points on hull with fitted ellipsoid -- only for debugging
+        """# Plot points on hull with fitted ellipsoid -- only for debugging
         import matplotlib.pyplot as plt
         # Points on the outer surface of optimal ellipsoid
         nang = 100
@@ -248,6 +409,10 @@ def get_stats_vox(mesh, iphase=None, ax_max=None,
         ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
         ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], marker='o')
         plt.show()"""
+        arr_a.append(ea)
+        arr_b.append(eb)
+        arr_c.append(ec)
+        arr_eqd.append(eqd)
     # calculate and print statistical parameters
     vox_stats_dict = calc_stats_dict(arr_a, arr_b, arr_c, arr_eqd)
     if verbose:
@@ -364,99 +529,3 @@ def get_stats_poly(grains, iphase=None, ax_max=None,
         plot_stats_dict(poly_stats_dict, title=title, save_files=save_files)
 
     return poly_stats_dict
-
-
-def get_stats_part(part, iphase=None, ax_max=None,
-                   minval=1.e-5, show_plot=True,
-                   verbose=False, save_files=False):
-    """ Extract statistics about the microstructure from particles. If inner structure is contained
-    by fitting a 3D ellipsoid to each structure.
-
-    Parameters
-    ----------
-    part
-    minval
-    show_plot
-    verbose
-    ax_max
-
-    Returns
-    -------
-
-    """
-    if ax_max is not None:
-        minval = max(minval, 1. / ax_max ** 2)
-    cons = ({'type': 'ineq', 'fun': con_fun})  # constraints for minimization
-    opt = {'maxiter': 200}  # options for minimization
-    mc = np.array([1., 1., 1., 0., 0., 0.])  # start value of matrix for minimization
-    arr_a = []
-    arr_b = []
-    arr_c = []
-    arr_eqd = []
-    for pc in part:
-        # decide if phase-specific analysis is performed
-        if iphase is not None and iphase != pc.phasenum:
-            continue
-        if pc.inner is not None:
-            pts = pc.inner.points
-            rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method='SLSQP',
-                             constraints=cons, options=opt)
-            if not rdict['success']:
-                if verbose:
-                    print(f'Optimization failed for particle {pc.id}')
-                    print(rdict['message'])
-                continue
-            eval, evec = np.linalg.eig(arr2mat(rdict['x']))
-            if any(eval <= minval):
-                if verbose:
-                    print(f'Matrix for particle {pc.id} not positive definite or semi-axes too large. '
-                          f'Eigenvalues: {eval}')
-                continue
-            if verbose:
-                print(f'Optimization succeeded for particle {pc.id} after {rdict["nit"]} iterations.')
-                print(f'Eigenvalues: {eval}')
-                print(f'Eigenvectors: {evec}')
-            # Semi-axes of ellipsoid
-            ea = 1. / np.sqrt(eval[0])
-            eb = 1. / np.sqrt(eval[1])
-            ec = 1. / np.sqrt(eval[2])
-            eqd = 2.0 * (ea * eb * ec) ** (1.0 / 3.0)
-            arr_a.append(ea)
-            arr_b.append(eb)
-            arr_c.append(ec)
-            arr_eqd.append(eqd)
-        else:
-            eqd = 2.0 * (pc.a * pc.b * pc.c) ** (1.0 / 3.0)
-            arr_a.append(pc.a)
-            arr_b.append(pc.b)
-            arr_c.append(pc.c)
-            arr_eqd.append(eqd)
-
-    # calculate statistical parameters
-    part_stats_dict = calc_stats_dict(arr_a, arr_b, arr_c, arr_eqd)
-    if verbose:
-        print('\n--------------------------------------------------')
-        print('Statistical microstructure parameters of particles')
-        print('--------------------------------------------------')
-        print('Median lengths of semi-axes of fitted ellipsoids in micron')
-        print(f'a: {part_stats_dict["a_scale"]:.3f}, b: {part_stats_dict["b_scale"]:.3f}, '
-              f'c: {part_stats_dict["c_scale"]:.3f}')
-        av_std = np.mean([part_stats_dict['a_sig'], part_stats_dict['b_sig'], part_stats_dict['c_sig']])
-        print(f'Average standard deviation of semi-axes: {av_std:.4f}')
-        print('\nAssuming rotational symmetry in grains')
-        print(f'Rotational axis: {part_stats_dict["ind_rot"]}')
-        print(f'Median aspect ratio: {part_stats_dict["ar_scale"]:.3f}')
-        print('\nGrain size')
-        print(f'Median equivalent grain diameter: {part_stats_dict["eqd_scale"]:.3f} micron')
-        print(f'Standard deviation of equivalent grain diameter: {part_stats_dict["eqd_sig"]:.4f}')
-        print('--------------------------------------------------------')
-    if show_plot:
-        if part[0].inner is None:
-            title = 'Particle statistics'
-        else:
-            title = 'Statistics of inner particle structures'
-        if iphase is not None:
-            title += f' (phase {iphase})'
-        plot_stats_dict(part_stats_dict, title=title, save_files=save_files)
-
-    return part_stats_dict

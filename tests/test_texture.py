@@ -25,15 +25,15 @@ def test_mex():
 @pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
 def test_readEBSD():
     from kanapy.textures import EBSDmap
-    fname = MAIN_DIR + '/tests/ebsd_316L_1000x1000.ang'  # name of ang file to be imported
+    fname = MAIN_DIR + '/tests/ebsd_316L_500x500.ang'  # name of ang file to be imported
     # read EBSD map and evaluate statistics of microstructural features
     ebsd = EBSDmap(os.path.normpath(fname), plot=False)
-    assert(len(ebsd.ms_data) == 1)
+    assert len(ebsd.ms_data) == 1
     gs_param = ebsd.ms_data[0]['gs_param']
-    assert(np.abs(gs_param[0] - 0.99765477) < 1.e-5)
+    assert np.abs(gs_param[0] - 0.7177939893510182) < 1.e-5
     # get list of orientations for grains in RVE matching the ODF of the EBSD map
     ori_rve = ebsd.calcORI(20)
-    assert(np.abs(ori_rve[0, 1] - 0.26179939) < 1.e-5)
+    assert np.abs(ori_rve[0, 1] - 0.5817764173314431) < 1.e-5
 
 @pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
 def test_createORI():

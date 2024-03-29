@@ -87,8 +87,7 @@ def rot_surf():
 
 
 def test_particle_generator(par_sim):
-    periodic = False
-    ell_list = particle_generator([par_sim[0]], par_sim[1], periodic, None)
+    ell_list = particle_generator([par_sim[0]], par_sim[1], None)
 
     for ell in ell_list:
         assert isinstance(ell, Ellipsoid)

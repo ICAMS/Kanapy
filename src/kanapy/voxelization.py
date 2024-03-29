@@ -356,8 +356,7 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
                         vox.append(iv)
                         pa.inside_voxels.append(iv)
             if gid in mesh.grain_dict.keys():
-                for iv in vox:
-                    mesh.grain_dict[gid].append(iv)
+                mesh.grain_dict[gid].extend(iv)
             else:
                 mesh.grain_dict[gid] = vox
 

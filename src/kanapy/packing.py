@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import random
-from tqdm import tqdm
 import numpy as np
-
+from tqdm import tqdm
 from kanapy.input_output import write_dump
 from kanapy.entities import Ellipsoid, Cuboid, Octree
-from kanapy.collisions import collision_routine, collide_detect
+from kanapy.collisions import collision_routine
 
 
-def particle_generator(particle_data, sim_box, periodic, poly):
+def particle_generator(particle_data, sim_box, poly):
     """
     Initializes ellipsoids by assigning them random positions and speeds within
     the simulation box.
@@ -18,10 +17,8 @@ def particle_generator(particle_data, sim_box, periodic, poly):
     :type particle_data: Python dictionary 
     :param sim_box: Simulation box representing RVE.
     :type sim_box: :class:`entities.Simulation_Box`
-    :param periodic: Indicates periodicity of RVE.
-    :type periodic: :class: bool
     :param poly: Points defining primitive polygon inside ellipsoid (optional).
-    :type periodic: :class: ndarry(N, 3)
+    :type poly: :class: ndarry(N, 3)
     
     :returns: Ellipsoids for the packing routine
     :rtype: list       
@@ -29,8 +26,8 @@ def particle_generator(particle_data, sim_box, periodic, poly):
     Ellipsoids = []
     id_ctr = 0
     vell = 0.
-    # introduce scaling factor to reduce particle overlap for non-periodic box
-    sf = 0.5  # if periodic else 0.45
+    # introduce scaling factor to reduce particle overlap
+    sf = 0.5
     for particle in particle_data:
         num_particles = particle['Number']  # Total number of ellipsoids
         for n in range(num_particles):
@@ -47,24 +44,28 @@ def particle_generator(particle_data, sim_box, periodic, poly):
             y = random.uniform(b, sim_box.h - b)
             z = random.uniform(c, sim_box.d - c)
 
-            # Angle represents inclination of Major axis w.r.t positive x-axis
-            if particle['Type'] == 'Equiaxed':
-                angle = 0.5 * np.pi
+            if particle['Type'] == 'Free':
+                # For free particle definition, quaternion for rotation is given
+                quat = particle['Quaternion'][n]
             else:
-                # Extract the angle
-                angle = particle['Tilt angle'][n]
-            # Tilt vector wrt (+ve) x-axis
-            vec_a = np.array([a * np.cos(angle), a * np.sin(angle), 0.0])
-            # Do the cross product to find the quaternion axis
-            cross_a = np.cross(np.array([1, 0, 0]), vec_a)
-            # norm of the vector (Magnitude)
-            norm_cross_a = np.linalg.norm(cross_a, 2)
-            quat_axis = cross_a / norm_cross_a  # normalize the quaternion axis
+                # Angle represents inclination of Major axis w.r.t positive x-axis in xy-plane
+                if particle['Type'] == 'Equiaxed':
+                    angle = 0.5 * np.pi
+                else:
+                    # Extract the angle
+                    angle = particle['Tilt angle'][n]
+                # Tilt vector wrt (+ve) x-axis
+                vec_a = np.array([a * np.cos(angle), a * np.sin(angle), 0.0])
+                # Do the cross product to find the quaternion axis
+                cross_a = np.cross(np.array([1, 0, 0]), vec_a)
+                # norm of the vector (Magnitude)
+                norm_cross_a = np.linalg.norm(cross_a, 2)
+                quat_axis = cross_a / norm_cross_a  # normalize the quaternion axis
 
-            # Find the quaternion components
-            qx, qy, qz = quat_axis * np.sin(angle / 2)
-            qw = np.cos(angle / 2)
-            quat = np.array([qw, qx, qy, qz])
+                # Find the quaternion components
+                qx, qy, qz = quat_axis * np.sin(angle / 2)
+                qw = np.cos(angle / 2)
+                quat = np.array([qw, qx, qy, qz])
 
             # instance of Ellipsoid class
             ellipsoid = Ellipsoid(iden, x, y, z, a, b, c, quat,
@@ -322,7 +323,7 @@ def packingRoutine(particle_data, periodic, nsteps, sim_box,
 
     print('    Creating particles from distribution statistics')
     # Create instances for particles
-    Particles = particle_generator(particle_data, sim_box, periodic, poly)
+    Particles = particle_generator(particle_data, sim_box, poly)
 
     # Growth of particle at each time step
     print('    Particle packing by growth simulation')

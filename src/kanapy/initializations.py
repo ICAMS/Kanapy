@@ -1,3 +1,11 @@
+"""
+Classes for RVE and mesh initialization
+
+Authors: Mahesh Prassad, Abhishek Biswas, Alexander Hartmaier
+Ruhr University Bochum, Germany
+
+March 2024
+"""
 import json
 import os
 import numpy as np
@@ -80,12 +88,12 @@ class RVE_creator(object):
 
         Attributes
         ----------
-        self.packing_steps = nsteps  # max number of steps for packing simulation
-        self.size = None  #  tuple of lengths along Cartesian axes
-        self.dim = None  # tuple of number of voxels along Cartesian axes
-        self.periodic = None  # Boolean for periodicity of RVE
-        self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
-        self.nparticles = []  # list of particle numbers for each phase
+        packing_steps = nsteps  # max number of steps for packing simulation
+        size = None  #  tuple of lengths along Cartesian axes
+        dim = None  # tuple of number of voxels along Cartesian axes
+        periodic = None  # Boolean for periodicity of RVE
+        units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
+        nparticles = []  # list of particle numbers for each phase
         particle_data = []  # list of cits for statistical particle data for each grains
         phase_names = []  # list of names of phases
         phase_vf = []  # list of volume fractions of phases
@@ -93,18 +101,20 @@ class RVE_creator(object):
             Number of alloy in ICAMS CP-UMAT
         """
 
-        def init_particles(particle_data):
+        def init_particles():
             """
             Extract statistical microstructure information from data dictionary
             and initalize particles for packing accordingly
             """
 
             def gen_data_basic(pdict):
-                # Compute the Log-normal PDF & CDF.
-                frozen_lognorm = lognorm(s=sig_ED, loc=loc_ED, scale=scale_ED)
-
+                """Computes number of particles according to equivalent diameter distribution
+                   and initializes particle ensemble with individual diameters approximating
+                   this lognormal distribution.
+                """
+                # Compute the Log-normal CDF according to parameters for equiv. diameter distrib.
                 xaxis = np.linspace(0.1, 200, 1000)
-                ycdf = frozen_lognorm.cdf(xaxis)
+                ycdf = lognorm.cdf(xaxis, s=sig_ED, loc=loc_ED, scale=scale_ED)
 
                 # Get the mean value for each pair of neighboring points as centers of bins
                 xaxis = np.vstack([xaxis[1:], xaxis[:-1]]).mean(axis=0)
@@ -145,7 +155,7 @@ class RVE_creator(object):
                 totalEllipsoids = int(np.sum(num))
 
                 # Duplicate the diameter values
-                eq_Dia = np.repeat(eq_Dia, num)  # better calculate num first
+                eq_Dia = np.repeat(eq_Dia, num)
 
                 # Raise value error in case the RVE side length is too small to fit grains inside.
                 if len(eq_Dia) == 0:
@@ -189,24 +199,34 @@ class RVE_creator(object):
                 # Sample from Normal distribution: It takes mean and std of normal distribution
                 tilt_angle = []
                 num = pdict['Number']
+                iter = 0
                 while num > 0:
                     tilt = vonmises.rvs(kappa, loc=loc_ori, size=num)
                     index_array = np.where((tilt >= ori_cutoff_min) & (tilt <= ori_cutoff_max))
                     TA = tilt[index_array].tolist()
                     tilt_angle.extend(TA)
                     num = pdict['Number'] - len(tilt_angle)
+                    iter += 1
+                    if iter > 10000:
+                        raise StopIteration('Iteration for tilt angles did not converge in 10000 iterations.'
+                                            'Increase cutoff range to assure proper generation of particles.')
 
                 # Aspect ratio statistics
                 # Sample from lognormal or gamma distribution:
                 # it takes mean, std and scale of the underlying normal distribution
                 finalAR = []
                 num = pdict['Number']
+                iter = 0
                 while num > 0:
                     ar = lognorm.rvs(sig_AR, loc=loc_AR, scale=scale_AR, size=num)
                     index_array = np.where((ar >= ar_cutoff_min) & (ar <= ar_cutoff_max))
                     AR = ar[index_array].tolist()
                     finalAR.extend(AR)
                     num = pdict['Number'] - len(finalAR)
+                    iter += 1
+                    if iter > 10000:
+                        raise StopIteration('Iteration for aspect ratios did not converge in 10000 iterations.'
+                                            'Increase cutoff range to assure proper generation of particles.')
                 finalAR = np.array(finalAR)
 
                 # Calculate the major, minor axes lengths for particles using:
@@ -222,10 +242,9 @@ class RVE_creator(object):
                 pdict['Tilt angle'] = list(tilt_angle)
                 return pdict
 
-            if stats["Grain type"] not in ["Elongated", "Equiaxed"]:
-                raise ValueError('The value for "Grain type" must be either "Equiaxed" or "Elongated".')
-
-            # Attributes for equivalent diameter
+            # start of particle initialization
+            # analyze information on grains in "stats" dictionary from outer scope
+            # 1. Attributes for equivalent diameter
             if 'mean' in stats['Equivalent diameter'].keys():
                 # load legacy names to ensure compatibility with previous versions
                 sig, loc, scale, kappa = stat_names(legacy=True)
@@ -235,22 +254,28 @@ class RVE_creator(object):
                 sig, loc, scale, kappa = stat_names(legacy=False)
             sig_ED = stats["Equivalent diameter"][sig]
             scale_ED = stats["Equivalent diameter"][scale]
-            loc_ED = stats["Equivalent diameter"][loc]
+            if loc in stats["Equivalent diameter"].keys():
+                loc_ED = stats["Equivalent diameter"][loc]
+            else:
+                loc_ED = 0.0
 
             dia_cutoff_min = stats["Equivalent diameter"]["cutoff_min"]
             dia_cutoff_max = stats["Equivalent diameter"]["cutoff_max"]
             if dia_cutoff_min / dia_cutoff_max > 0.75:
                 raise ValueError('Min/Max values for cutoffs of equiavalent diameter are too close: ' +
                                  f'Max: {dia_cutoff_max}, Min: {dia_cutoff_min}')
-            # generate dict for particle data
+            # generate dict for basic particle data: number of particles and equiv. diameters
             pdict = gen_data_basic(dict({'Type': stats["Grain type"], 'Phase': ip}))
 
-            # Additional attributes for elongated grains
+            # 2. Additional attributes for elongated or freely-defined grains
             if stats["Grain type"] == "Elongated":
                 # Extract descriptors for aspect ratio distrib. from dict
                 sig_AR = stats["Aspect ratio"][sig]
                 scale_AR = stats["Aspect ratio"][scale]
-                loc_AR = stats["Aspect ratio"][loc]
+                if loc in stats["Aspect ratio"].keys():
+                    loc_AR = stats["Aspect ratio"][loc]
+                else:
+                    loc_AR = 0.0
                 ar_cutoff_min = stats["Aspect ratio"]["cutoff_min"]
                 ar_cutoff_max = stats["Aspect ratio"]["cutoff_max"]
                 if ar_cutoff_min / ar_cutoff_max > 0.75:
@@ -265,29 +290,40 @@ class RVE_creator(object):
                 if ori_cutoff_min / ori_cutoff_max > 0.75:
                     raise ValueError('Min/Max values for cutoffs of orientation of tilt axis are too close: ' +
                                      f'Max: {ori_cutoff_max}, Min: {ori_cutoff_min}')
-
                 # Add attributes for elongated particle to dictionary
                 pdict = gen_data_elong(pdict)
-            particle_data.append(pdict)
-            self.nparticles.append(pdict['Number'])
-            return particle_data
+            elif stats["Grain type"] == "Free":
+                try:
+                    from kanapy.triple_surface import gen_data_free
+                except:
+                    raise ModuleNotFoundError('Free grain definitions are not available '
+                                              'in the public version of Kanapy.')
+                # Add attributes for elongated particle to dictionary
+                pdict = gen_data_free(pdict, stats)
+                return pdict
+            return pdict
 
+        # Start RVE generation
         if from_voxels:
             print('Creating an RVE from voxel input')
         else:
             print('Creating an RVE based on user defined statistics')
-        # Extract grain diameter statistics info
+        # declare attributes of RVE object
         self.packing_steps = nsteps  # max number of steps for packing simulation
         self.size = None  # tuple of lengths along Cartesian axes
         self.dim = None  # tuple of number of voxels along Cartesian axes
         self.periodic = None  # Boolean for periodicity of RVE
         self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
         self.ialloy = None  # Number of alloy in ICAMS CP-UMAT
-        self.nparticles = []  # List of article numbers for each phase
-        particle_data = []  # list of cits for statistical particle data for each grains
         phase_names = []  # list of names of phases
         phase_vf = []  # list of volume fractions of phases
         ialloy = []
+        if from_voxels:
+            self.particle_data = None
+            self.nparticles = None
+        else:
+            self.particle_data = []  # list of cits for statistical particle data for each grains
+            self.nparticles = []  # List of article numbers for each phase
 
         # extract data from descriptors of individual phases
         for ip, stats in enumerate(stats_dicts):
@@ -351,10 +387,11 @@ class RVE_creator(object):
 
             # Extract grains shape attributes to initialize particles
             if not from_voxels:
-                particle_data = init_particles(particle_data)
-            else:
-                particle_data = None
-                self.nparticles = None
+                if stats["Grain type"] not in ["Elongated", "Equiaxed", "Free"]:
+                    raise ValueError('The value for "Grain type" must be either "Equiaxed" or "Elongated".')
+                part_dict = init_particles()
+                self.particle_data.append(part_dict)
+                self.nparticles.append(part_dict['Number'])
         print('  RVE characteristics:')
         print(f'    RVE side lengths (X, Y, Z) = {self.size} ({self.units})')
         print(f'    Number of voxels (X, Y, Z) = {self.dim}')
@@ -367,7 +404,6 @@ class RVE_creator(object):
         print('\n')
         self.phase_names = phase_names
         self.phase_vf = phase_vf
-        self.particle_data = particle_data
         nall = len(ialloy)
         if nall > 0:
             if nall != len(phase_vf):

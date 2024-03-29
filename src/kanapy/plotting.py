@@ -451,7 +451,10 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
     # Extract grain diameter statistics info from input file
     sd = stats_dict["Equivalent diameter"]["sig"]
     scale = stats_dict["Equivalent diameter"]["scale"]
-    loc = stats_dict["Equivalent diameter"]["loc"]
+    if 'loc' in stats_dict["Equivalent diameter"].keys():
+        loc = stats_dict["Equivalent diameter"]["loc"]
+    else:
+        loc = 0.
 
     dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
     dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
@@ -492,11 +495,14 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
         plt.title("Grain equivalent diameter distribution", fontsize=20)
         plt.legend(fontsize=16)
         plt.show()
-    elif stats_dict["Grain type"] == "Elongated":
+    elif stats_dict["Grain type"] in ["Elongated"]:
         # Extract grain aspect ratio descriptors from input file
         sd_AR = stats_dict["Aspect ratio"]["sig"]
         scale_AR = stats_dict["Aspect ratio"]["scale"]
-        loc_AR = stats_dict["Aspect ratio"]["loc"]
+        if 'loc' in stats_dict["Aspect ratio"].keys():
+            loc_AR = stats_dict["Aspect ratio"]["loc"]
+        else:
+            loc_AR = 0.0
 
         ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]
@@ -524,6 +530,66 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
         # Compute the Log-normal PDF & CDF.
         xaxis = np.linspace(0.5 * ar_cutoff_min, 2 * ar_cutoff_max, 500)
         ypdf = lognorm.pdf(xaxis, sd_AR, loc=loc_AR, scale=scale_AR)
+        ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
+        ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)
+        ax[1].set_xlabel('Aspect ratio', fontsize=18)
+        ax[1].set_ylabel('Density', fontsize=18)
+        ax[1].tick_params(labelsize=14)
+        ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0,
+                      label='Minimum cut-off: {:.2f}'.format(ar_cutoff_min))
+        ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0,
+                      label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
+        if ar_data is not None:
+            ax[1].hist(ar_data, bins=15, density=True, label='experimental data')
+        ax[1].legend(fontsize=14)
+        plt.show()
+    elif stats_dict["Grain type"] in ["Free"]:
+        # Compute reference grain aspect ratio descriptors from stats dict
+        # Identify most likely rotation axis of ellepsoid with free semi-axes
+        from kanapy.rve_stats import find_rot_axis
+        semi_axs = stats_dict["Semi axes"]["scale"]
+        cut_min = stats_dict["Semi axes"]["cutoff_min"]
+        cut_max = stats_dict["Semi axes"]["cutoff_max"]
+        irot = find_rot_axis(semi_axs[0], semi_axs[1], semi_axs[2])
+        if irot == 0:
+            ar_scale = 2.0 * semi_axs[0] / (semi_axs[1] + semi_axs[2])
+            ar_cutoff_min = 2.0 * cut_min[0] / (cut_min[1] + cut_min[2])
+            ar_cutoff_max = 2.0 * cut_max[0] / (cut_max[1] + cut_max[2])
+        elif irot == 1:
+            ar_scale = 2.0 * semi_axs[1] / (semi_axs[0] + semi_axs[2])
+            ar_cutoff_min = 2.0 * cut_min[1] / (cut_min[0] + cut_min[2])
+            ar_cutoff_max = 2.0 * cut_max[1] / (cut_max[0] + cut_max[2])
+        elif irot == 2:
+            ar_scale = 2.0 * semi_axs[2] / (semi_axs[1] + semi_axs[0])
+            ar_cutoff_min = 2.0 * cut_min[2] / (cut_min[1] + cut_min[0])
+            ar_cutoff_max = 2.0 * cut_max[2] / (cut_max[1] + cut_max[0])
+        else:
+            raise ValueError('Rotation axis not identified properly')
+        ar_sig = stats_dict["Semi axes"]["sig"][irot]
+
+        sns.set(color_codes=True)
+        fig, ax = plt.subplots(2, 1, figsize=(9, 9))
+        plt.ion()
+
+        # Plot grain size distribution
+        ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
+        ax[0].fill_between(xaxis, 0, ypdf, alpha=0.3)
+        ax[0].set_xlim(left=0.0, right=x_lim)
+        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
+        ax[0].set_ylabel('Density', fontsize=18)
+        ax[0].tick_params(labelsize=14)
+        ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
+                      label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
+        ax[0].axvline(dia_cutoff_max, linestyle='-', linewidth=3.0,
+                      label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
+        if gs_data is not None:
+            ax[0].hist(gs_data, bins=80, density=True, label='experimental data')
+        ax[0].legend(fontsize=14)
+
+        # Plot aspect ratio statistics
+        # Compute the Log-normal PDF & CDF.
+        xaxis = np.linspace(0.5 * ar_cutoff_min, 2 * ar_cutoff_max, 500)
+        ypdf = lognorm.pdf(xaxis, ar_sig, scale=ar_scale)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
         ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)
         ax[1].set_xlabel('Aspect ratio', fontsize=18)
