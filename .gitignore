@@ -33,6 +33,7 @@ share/python-wheels/
 .idea/
 *.egg
 archives/
+triple_surface.py
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
