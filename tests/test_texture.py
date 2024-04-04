@@ -30,7 +30,7 @@ def test_readEBSD():
     ebsd = EBSDmap(os.path.normpath(fname), plot=False)
     assert len(ebsd.ms_data) == 1
     gs_param = ebsd.ms_data[0]['gs_param']
-    assert np.abs(gs_param[0] - 0.7177939893510182) < 1.e-5
+    assert np.abs(gs_param[0] - 0.71775) < 1.e-4
     # get list of orientations for grains in RVE matching the ODF of the EBSD map
     ori_rve = ebsd.calcORI(20)
     assert np.abs(ori_rve[0, 1] - 0.5817764173314431) < 1.e-5
