@@ -51,7 +51,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
     test_points = np.array(list(cooDict.values()))
 
     # array defining ellipsoid growth for each stage of while loop
-    growth = iter(list(np.arange(1.0, 15.0, 0.1)))
+    growth = iter(list(np.arange(1.0, 100.0, 0.1)))
     remaining_voxels = set(list(cooDict.keys()))
     assigned_voxels = set()
     vf_cur = 0.
