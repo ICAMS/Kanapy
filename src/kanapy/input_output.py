@@ -424,7 +424,7 @@ def import_voxels(file, path='./'):
     phases = np.zeros(nvox, dtype=int)
     grain_dict = dict()
     grain_phase_dict = dict()
-    gr_arr = grains.flatten(order='F')
+    gr_arr = grains.flatten(order='C')
     if 'Grains' in data.keys():
         if 'Orientation' in data['Grains'][grain_keys[-1]].keys():
             grain_ori_dict = dict()
@@ -489,7 +489,7 @@ def import_voxels(file, path='./'):
     ms.mesh.grains = grains
     ms.mesh.grain_dict = grain_dict
     ms.mesh.grain_ori_dict = grain_ori_dict
-    ms.mesh.phases = phases.reshape(sh, order='F')
+    ms.mesh.phases = phases.reshape(sh, order='C')
     ms.mesh.grain_phase_dict = grain_phase_dict
     ms.mesh.ngrains_phase = ngrain
     if 0 in ms.mesh.grain_dict.keys():

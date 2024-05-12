@@ -503,7 +503,7 @@ class mesh_creator(object):
         node_count = 0
         elmt_count = 0
         # loop over the duplicate pairs
-        for (mk, nk), (mj, nj), (mi, ni) in itertools.product(pointsX_dup, pointsY_dup, pointsZ_dup):
+        for (mi, ni), (mj, nj), (mk, nk) in itertools.product(pointsX_dup, pointsY_dup, pointsZ_dup):
 
             # Find the center of each voxel and update the center dictionary
             elmt_count += 1
