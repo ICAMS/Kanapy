@@ -152,14 +152,14 @@ class EBSDmap:
                     eng.hold('on', nargout=0)
                     eng.mtexColorbar
                 except:
-                    logging.warning('ODF too large for plotting')'''
+                    logging.warning('ODF too large for plotting')
                 # workaround:
                 eng.workspace["ori"] = data['ori']
                 eng.workspace["cs"] = data['cs']
                 try:
                     eng.eval(f"plotPDF(ori,Miller(0,0,1,cs),'points','all')", nargout=0)
                 except:
-                    logging.warning('Plotting of orientations failed.')
+                    logging.warning('Plotting of orientations failed.')'''
             # Evaluate grain shape statistics
             # generate dict for statistical input for geometry module
 
