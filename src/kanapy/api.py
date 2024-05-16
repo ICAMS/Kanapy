@@ -382,9 +382,8 @@ class Microstructure(object):
         plot_particles_3D(self.particles, cmap=cmap,
                           dual_phase=dual_phase, plot_hull=plot_hull)
 
-    def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism',
-                    ori=None):
-        """ Generate 3D plot of grains in voxelized microstructure. """
+
+    def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism', ori=None, show=True):
         if self.mesh.grains is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
         elif dual_phase:
@@ -394,9 +393,8 @@ class Microstructure(object):
         if ori is not None:
             try:
                 from kanapy.textures import get_ipf_colors
-                if type(ori) is bool and ori:
+                if isinstance(ori, bool) and ori:
                     ori = np.array([val for val in self.mesh.grain_ori_dict.values()])
-                """Create possibility to pass actual CS to MTEX"""
                 clist = get_ipf_colors(ori)
             except Exception as e:
                 logging.error(f'An unexpected exception occurred: {e}')
@@ -405,8 +403,8 @@ class Microstructure(object):
         else:
             clist = None
 
-        plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced,
-                       dual_phase=dual_phase, cmap=cmap, clist=clist)
+        return plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced,
+                              dual_phase=dual_phase, cmap=cmap, clist=clist, show=show)
 
     def plot_grains(self, geometry=None, cmap='prism', alpha=0.4,
                     ec=[0.5, 0.5, 0.5, 0.1], dual_phase=False):
@@ -423,7 +421,7 @@ class Microstructure(object):
                    ar_data=None, ar_param=None,
                    dual_phase=False,
                    save_files=False,
-                   show_plot=True, verbose=False):
+                   show_plot=True, verbose=False,enhanced_plot =False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
         ax_max = np.prod(self.rve.size) ** (1 / 3)
@@ -510,13 +508,14 @@ class Microstructure(object):
                       f'{sd["eqd_scale"]:.3f} \t|  {sd["eqd_sig"]:.4f}')
             self.rve_stats = stats_list
             self.rve_stats_labels = labels
-            plot_output_stats(stats_list, labels, iphase=iphase,
+            fig = plot_output_stats(stats_list, labels, iphase=iphase,
                               gs_data=gs_data[ip], gs_param=gs_param[ip],
                               ar_data=ar_data[ip], ar_param=ar_param[ip],
-                              save_files=save_files)
+                              save_files=save_files,show_plot=show_plot, enhanced_plot=enhanced_plot)
+            return fig
 
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
-                        porous=False, save_files=False):
+                        porous=False, save_files=False, show_plot=False):
         """ Plots initial statistical microstructure descriptors ."""
         if descriptor is None:
             descriptor = self.descriptor
@@ -530,8 +529,9 @@ class Microstructure(object):
             ar_data = [ar_data] * len(descriptor)
 
         for i, des in enumerate(descriptor):
-            plot_init_stats(des, gs_data=gs_data[i], ar_data=ar_data[i],
-                            save_files=save_files)
+            fig = plot_init_stats(des, gs_data=gs_data[i], ar_data=ar_data[i],
+                            save_files=save_files, show_plot=False)
+        return fig
 
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):

@@ -83,7 +83,8 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
         iz = int(Nz / 2)
         vox_b[ix:Nx, iy:Ny, iz:Nz] = False
 
-    ax = plt.figure().add_subplot(projection='3d')
+    fig = plt.figure(figsize=(6, 6))
+    ax = fig.add_subplot(111, projection='3d')
     colors[:, :, :, -1] = alpha  # add semi-transparency
     ax.voxels(vox_b, facecolors=colors, edgecolors=colors, shade=True)
     ax.set(xlabel='x', ylabel='y', zlabel='z')
@@ -93,14 +94,12 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
     ax.set_ylim(top=Ny)
     ax.set_zlim(top=Nz)
     if show:
-        plt.show()
-        return
-    else:
-        return ax
+        plt.show(block=True)
+    return fig
 
 
 def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
-                     dual_phase=False):
+                     dual_phase=False, show=True):
     """
     Plot triangularized convex hulls of grains, based on vertices, i.e.
     connection points of 4 up to 8 grains or the end points of triple or quadruple
@@ -147,13 +146,15 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.set_title('Polygonized microstructure')
     ax.view_init(30, 30)
-    plt.show()
+    if show:
+        plt.show(block=True)
+    return fig
 
 
-def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
+
+def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, show=True):
     """
     Display ellipsoids after packing procedure
-
     Parameters
     ----------
     particles : Class particles
@@ -162,39 +163,31 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False):
         Color map for ellipsoids. The default is 'prism'.
     dual_phase : bool, optional
         Whether to display the ellipsoids in red/green contrast or in colors
-
-    Returns
-    -------
-    None.
-
     """
-    fig = plt.figure(figsize=plt.figaspect(1), dpi=1200)
+
+    fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111, projection='3d')
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.view_init(30, 30)
-
     Npa = len(particles)
-    cm = plt.cm.get_cmap(cmap, Npa)
+    cm = plt.cm.get_cmap(cmap, Npa+1) if not dual_phase else None
 
     for i, pa in enumerate(particles):
-        if pa.duplicate is not None:
+        if pa.duplicate:
             continue
         if dual_phase:
-            if pa.phasenum == 0:
-                col = 'red'
-            else:
-                col = 'green'
-            # col = cm(pa.phasenum)
+            color = 'red' if pa.phasenum == 0 else 'green'
         else:
-            col = cm(i + 1)  # set to 'b' for only blue ellipsoids
-
+            color = cm(i + 1)
         pts = pa.surfacePointsGen(nang=100)
         ctr = pa.get_pos()
-        x = (pts[:, 0] + ctr[None, 0]).reshape((100, 100))
-        y = (pts[:, 1] + ctr[None, 1]).reshape((100, 100))
-        z = (pts[:, 2] + ctr[None, 2]).reshape((100, 100))
-        ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
-    plt.show()
+        x = (pts[:, 0] + ctr[0]).reshape((100, 100))
+        y = (pts[:, 1] + ctr[1]).reshape((100, 100))
+        z = (pts[:, 2] + ctr[2]).reshape((100, 100))
+        ax.plot_surface(x, y, z, rstride=4, cstride=4, color=color, linewidth=0, antialiased=False)
+    if show:
+        plt.show(block=True)
+    return fig
 
 
 def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True):
@@ -257,7 +250,7 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True)
 def plot_output_stats(data_list, labels, iphase=None,
                       gs_data=None, gs_param=None,
                       ar_data=None, ar_param=None,
-                      save_files=False):
+                      save_files=False,show_plot=True, enhanced_plot=False):
     r"""
     Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots
     the distributions.
@@ -293,6 +286,7 @@ def plot_output_stats(data_list, labels, iphase=None,
         mu_par = data_list[ind]['eqd_scale']
         std_par = data_list[ind]['eqd_sig']
         par_lognorm = lognorm(s=std_par, scale=mu_par)
+        par_AR = data_list[ind]['ar']
         particles = True
     else:
         par_eqDia = None
@@ -302,148 +296,255 @@ def plot_output_stats(data_list, labels, iphase=None,
         data.append(gs_data)
         label.append('Experiment')
         total_eqDia = np.concatenate([total_eqDia, gs_data])
-    # NOTE: 'doane' produces better estimates for non-normal datasets
-    shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
-    binNum = len(shared_bins)
+    if enhanced_plot:
+        # Determine x-axis limits for equivalent diameter
+        dia_cutoff_min = np.min(total_eqDia)
+        dia_cutoff_max = np.max(total_eqDia)
+        x_lim_dia = dia_cutoff_max * 1.5
 
-    # Plot the histogram & PDF for equivalent diameter
-    sns.set(color_codes=True)
-    fig, ax = plt.subplots(1, 2, figsize=(15, 9))
+        # Plot the equivalent diameter PDF
+        sns.set(color_codes=True)
+        fig, ax = plt.subplots(2, 1, figsize=(8, 8))
 
-    # Plot histogram
-    ax[0].hist(data, density=True, bins=binNum, label=label)
-    ax[0].legend(loc="upper right", fontsize=16)
-    ax[0].set_xlabel('equivalent diameter (μm)', fontsize=18)
-    ax[0].set_ylabel('frequency', fontsize=18)
-    ax[0].tick_params(labelsize=14)
-    if iphase is not None:
-        ax[0].set_title(f'Phase {iphase}')
-
-    # Plot PDF
-    ypdf2 = grain_lognorm.pdf(grain_eqDia)
-    area = np.trapz(ypdf2, grain_eqDia)
-    if np.isclose(area, 0.):
-        logging.debug(f'Grain AREA interval: {area}')
-        logging.debug(np.amin(grain_eqDia))
-        logging.debug(np.amax(grain_eqDia))
-        area = 1.
-    ypdf2 /= area
-    ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
-    ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3)
-    if particles:
-        ypdf1 = par_lognorm.pdf(par_eqDia)
-        area = np.trapz(ypdf1, par_eqDia)
+        # Plot PDF for equivalent diameter
+        xaxis_dia = np.linspace(0, x_lim_dia, 1000)
+        ypdf2 = grain_lognorm.pdf(xaxis_dia)
+        area = np.trapz(ypdf2, xaxis_dia)
         if np.isclose(area, 0.):
-            logging.debug(f'Particle AREA interval: {area}')
-            logging.debug(np.amin(par_eqDia))
-            logging.debug(np.amax(par_eqDia))
+            logging.debug(f'Grain AREA interval: {area}')
+            logging.debug(np.amin(xaxis_dia))
+            logging.debug(np.amax(xaxis_dia))
             area = 1.
-        ypdf1 /= area
-        ax[1].plot(par_eqDia, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
-        ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
-    if gs_param is not None:
-        x0 = np.min(grain_eqDia)
-        x1 = np.max(grain_eqDia)
+        ypdf2 /= area
+        ax[0].plot(xaxis_dia, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
+        ax[0].fill_between(xaxis_dia, 0, ypdf2, alpha=0.3)
         if particles:
-            x0 = min(np.min(par_eqDia), x0)
-            x1 = max(np.max(par_eqDia), x1)
-        x = np.linspace(x0, x1, num=50)
-        y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
-        area = np.trapz(y, x)
+            ypdf1 = par_lognorm.pdf(xaxis_dia)
+            area = np.trapz(ypdf1, xaxis_dia)
+            if np.isclose(area, 0.):
+                logging.debug(f'Particle AREA interval: {area}')
+                logging.debug(np.amin(xaxis_dia))
+                logging.debug(np.amax(xaxis_dia))
+                area = 1.
+            ypdf1 /= area
+            ax[0].plot(xaxis_dia, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
+            ax[0].fill_between(xaxis_dia, 0, ypdf1, alpha=0.3)
+        if gs_param is not None:
+            x = np.linspace(0, x_lim_dia, 1000)
+            y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
+            area = np.trapz(y, x)
+            if np.isclose(area, 0.):
+                logging.debug(f'Expt. AREA interval: {np.min(x)}, {np.max(x)}')
+                logging.debug(np.amin(grain_eqDia))
+                logging.debug(np.amax(grain_eqDia))
+                area = 1.
+            y /= area
+            ax[0].plot(x, y, '--k', label='Experiment')
+
+        ax[0].legend(loc="upper right", fontsize=12)
+        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=16)
+        ax[0].set_ylabel('Density', fontsize=16)
+        ax[0].tick_params(labelsize=12)
+        ax[0].set_xlim(left=0, right=x_lim_dia)
+        if iphase is not None:
+            ax[0].set_title(f'Equivalent Diameter Distribution - Phase {iphase}', fontsize=20)
+
+        # Determine x-axis limits for aspect ratio
+        ar_cutoff_min = np.min(grain_AR)
+        ar_cutoff_max = np.max(grain_AR)
+        if particles:
+            ar_cutoff_min = min(ar_cutoff_min, np.min(par_AR))
+            ar_cutoff_max = max(ar_cutoff_max, np.max(par_AR))
+        if ar_data is not None:
+            ar_cutoff_min = min(ar_cutoff_min, np.min(ar_data))
+            ar_cutoff_max = max(ar_cutoff_max, np.max(ar_data))
+        x_lim_ar = ar_cutoff_max * 1.5
+
+        # Plot the PDF for aspect ratio
+        xaxis_ar = np.linspace(0, x_lim_ar, 1000)
+        ypdf2 = ar_lognorm.pdf(xaxis_ar)
+        area = np.trapz(ypdf2, xaxis_ar)
+        if np.isclose(area, 0.0):
+            logging.debug('Small area for aspect ratio of grains.')
+            logging.debug(ypdf2, xaxis_ar)
+            area = 1.0
+        ypdf2 /= area
+        ax[1].plot(xaxis_ar, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
+        ax[1].fill_between(xaxis_ar, 0, ypdf2, alpha=0.3)
+        if particles:
+            ypdf1 = par_lognorm.pdf(xaxis_ar)
+            area = np.trapz(ypdf1, xaxis_ar)
+            ypdf1 /= area
+            ax[1].plot(xaxis_ar, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
+            ax[1].fill_between(xaxis_ar, 0, ypdf1, alpha=0.3)
+        if ar_param is not None:
+            x = np.linspace(0, x_lim_ar, 1000)
+            y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
+            area = np.trapz(y, x)
+            y /= area
+            ax[1].plot(x, y, '--k', label='Experiment')
+
+        ax[1].legend(loc="upper right", fontsize=12)
+        ax[1].set_xlabel('Aspect ratio', fontsize=16)
+        ax[1].set_ylabel('Density', fontsize=16)
+        ax[1].tick_params(labelsize=12)
+        ax[1].set_xlim(left=0, right=x_lim_ar)
+        if iphase is not None:
+            ax[1].set_title(f'Aspect Ratio Distribution - Phase {iphase}', fontsize=20)
+
+        if save_files:
+            fname = 'equiv_diameter_and_aspect_ratio_comp.png'
+            plt.savefig(fname, bbox_inches="tight")
+            print(f"'{fname}' is placed in the current working directory\n")
+
+        if show_plot:
+            plt.show()
+
+        return fig
+    else:
+
+        # NOTE: 'doane' produces better estimates for non-normal datasets
+        shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
+        binNum = len(shared_bins)
+
+        # Plot the histogram & PDF for equivalent diameter
+        sns.set(color_codes=True)
+        fig, ax = plt.subplots(1, 2, figsize=(15, 9))
+
+        # Plot histogram
+        ax[0].hist(data, density=True, bins=binNum, label=label)
+        ax[0].legend(loc="upper right", fontsize=16)
+        ax[0].set_xlabel('equivalent diameter (μm)', fontsize=18)
+        ax[0].set_ylabel('frequency', fontsize=18)
+        ax[0].tick_params(labelsize=14)
+        if iphase is not None:
+            ax[0].set_title(f'Phase {iphase}')
+
+        # Plot PDF
+        ypdf2 = grain_lognorm.pdf(grain_eqDia)
+        area = np.trapz(ypdf2, grain_eqDia)
         if np.isclose(area, 0.):
-            logging.debug(f'Expt. AREA interval: {x0}, {x1}')
+            logging.debug(f'Grain AREA interval: {area}')
             logging.debug(np.amin(grain_eqDia))
             logging.debug(np.amax(grain_eqDia))
             area = 1.
-        y /= area
-        ax[1].plot(x, y, '--k', label='Experiment')
-
-    ax[1].legend(loc="upper right", fontsize=16)
-    ax[1].set_xlabel('equivalent diameter (μm)', fontsize=18)
-    ax[1].set_ylabel('density', fontsize=18)
-    ax[1].tick_params(labelsize=14)
-    if iphase is not None:
-        ax[1].set_title(f'Phase {iphase}')
-    if save_files:
-        fname = 'equiv_diameter_comp.png'
-        plt.savefig(fname, bbox_inches="tight")
-        print(f"    '{fname}' is placed in the current working directory\n")
-    plt.show()
-
-    # Plot the aspect ratio comparison
-    if particles:
-        ind = labels.index('Partcls')
-        par_AR = data_list[ind]['ar']
-        # Concatenate corresponding arrays to compute shared bins
-        total_AR = np.concatenate([grain_AR, par_AR])
-        sig_par = data_list[ind]['ar_sig']
-        sc_par = data_list[ind]['ar_scale']
-        par_lognorm = lognorm(sig_par, scale=sc_par)
-        data = [grain_AR, par_AR]
-    else:
-        total_AR = grain_AR
-        data = [grain_AR]
-    if ar_data is not None:
-        data.append(ar_data)
-        label.append('Experiment')
-    # Find the corresponding shared bin edges
-    shared_AR = np.histogram_bin_edges(total_AR, bins='doane')
-
-    # Plot the histogram & PDF
-    sns.set(color_codes=True)
-    fig, ax = plt.subplots(1, 2, figsize=(15, 9))
-    # Plot histogram
-    ax[0].hist(data, density=True, bins=len(shared_AR), label=label)
-    ax[0].legend(loc="upper right", fontsize=16)
-    ax[0].set_xlabel('aspect ratio', fontsize=18)
-    ax[0].set_ylabel('frequency', fontsize=18)
-    ax[0].tick_params(labelsize=14)
-    if iphase is not None:
-        ax[0].set_title(f'Phase {iphase}')
-
-    # Plot PDF
-    ypdf2 = ar_lognorm.pdf(grain_AR)
-    area = np.trapz(ypdf2, grain_AR)
-    if np.isclose(area, 0.0):
-        logging.debug('Small area for aspect ratio of grains.')
-        logging.debug(ypdf2, grain_AR)
-        area = 1.0
-    ypdf2 /= area
-    ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
-    ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3)
-    if particles:
-        ypdf1 = par_lognorm.pdf(par_AR)
-        area = np.trapz(ypdf1, par_AR)
-        ypdf1 /= area
-        ax[1].plot(par_AR, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
-        ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
-    if ar_param is not None:
-        x0 = np.min(grain_AR)
-        x1 = np.max(grain_AR)
+        ypdf2 /= area
+        ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
+        ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3)
         if particles:
-            x0 = min(x0, np.min(par_AR))
-            x1 = max(x1, np.max(par_AR))
-        x = np.linspace(x0, x1, num=100)
-        y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
-        area = np.trapz(y, x)
-        y /= area
-        ax[1].plot(x, y, '--k', label='Experiment')
+            ypdf1 = par_lognorm.pdf(par_eqDia)
+            area = np.trapz(ypdf1, par_eqDia)
+            if np.isclose(area, 0.):
+                logging.debug(f'Particle AREA interval: {area}')
+                logging.debug(np.amin(par_eqDia))
+                logging.debug(np.amax(par_eqDia))
+                area = 1.
+            ypdf1 /= area
+            ax[1].plot(par_eqDia, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
+            ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
+        if gs_param is not None:
+            x0 = np.min(grain_eqDia)
+            x1 = np.max(grain_eqDia)
+            if particles:
+                x0 = min(np.min(par_eqDia), x0)
+                x1 = max(np.max(par_eqDia), x1)
+            x = np.linspace(x0, x1, num=50)
+            y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
+            area = np.trapz(y, x)
+            if np.isclose(area, 0.):
+                logging.debug(f'Expt. AREA interval: {x0}, {x1}')
+                logging.debug(np.amin(grain_eqDia))
+                logging.debug(np.amax(grain_eqDia))
+                area = 1.
+            y /= area
+            ax[1].plot(x, y, '--k', label='Experiment')
 
-    ax[1].legend(loc="upper right", fontsize=16)
-    ax[1].set_xlabel('aspect ratio', fontsize=18)
-    ax[1].set_ylabel('density', fontsize=18)
-    ax[1].tick_params(labelsize=14)
-    if iphase is not None:
-        ax[1].set_title(f'Phase {iphase}')
-    if save_files:
-        fname = "aspect_ratio_comp.png"
-        plt.savefig(fname, bbox_inches="tight")
-        print(f"    '{fname}' is placed in the current working directory\n")
-    plt.show()
-    return
+        ax[1].legend(loc="upper right", fontsize=16)
+        ax[1].set_xlabel('equivalent diameter (μm)', fontsize=18)
+        ax[1].set_ylabel('density', fontsize=18)
+        ax[1].tick_params(labelsize=14)
+        if iphase is not None:
+            ax[1].set_title(f'Phase {iphase}')
+        if save_files:
+            fname = 'equiv_diameter_comp.png'
+            plt.savefig(fname, bbox_inches="tight")
+            print(f"    '{fname}' is placed in the current working directory\n")
+        plt.show()
+
+        # Plot the aspect ratio comparison
+        if particles:
+            ind = labels.index('Partcls')
+            par_AR = data_list[ind]['ar']
+            # Concatenate corresponding arrays to compute shared bins
+            total_AR = np.concatenate([grain_AR, par_AR])
+            sig_par = data_list[ind]['ar_sig']
+            sc_par = data_list[ind]['ar_scale']
+            par_lognorm = lognorm(sig_par, scale=sc_par)
+            data = [grain_AR, par_AR]
+        else:
+            total_AR = grain_AR
+            data = [grain_AR]
+        if ar_data is not None:
+            data.append(ar_data)
+            label.append('Experiment')
+        # Find the corresponding shared bin edges
+        shared_AR = np.histogram_bin_edges(total_AR, bins='doane')
+
+        # Plot the histogram & PDF
+        sns.set(color_codes=True)
+        fig, ax = plt.subplots(1, 2, figsize=(15, 9))
+        # Plot histogram
+        ax[0].hist(data, density=True, bins=len(shared_AR), label=label)
+        ax[0].legend(loc="upper right", fontsize=16)
+        ax[0].set_xlabel('aspect ratio', fontsize=18)
+        ax[0].set_ylabel('frequency', fontsize=18)
+        ax[0].tick_params(labelsize=14)
+        if iphase is not None:
+            ax[0].set_title(f'Phase {iphase}')
+
+        # Plot PDF
+        ypdf2 = ar_lognorm.pdf(grain_AR)
+        area = np.trapz(ypdf2, grain_AR)
+        if np.isclose(area, 0.0):
+            logging.debug('Small area for aspect ratio of grains.')
+            logging.debug(ypdf2, grain_AR)
+            area = 1.0
+        ypdf2 /= area
+        ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
+        ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3)
+        if particles:
+            ypdf1 = par_lognorm.pdf(par_AR)
+            area = np.trapz(ypdf1, par_AR)
+            ypdf1 /= area
+            ax[1].plot(par_AR, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
+            ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
+        if ar_param is not None:
+            x0 = np.min(grain_AR)
+            x1 = np.max(grain_AR)
+            if particles:
+                x0 = min(x0, np.min(par_AR))
+                x1 = max(x1, np.max(par_AR))
+            x = np.linspace(x0, x1, num=100)
+            y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
+            area = np.trapz(y, x)
+            y /= area
+            ax[1].plot(x, y, '--k', label='Experiment')
+
+        ax[1].legend(loc="upper right", fontsize=16)
+        ax[1].set_xlabel('aspect ratio', fontsize=18)
+        ax[1].set_ylabel('density', fontsize=18)
+        ax[1].tick_params(labelsize=14)
+        if iphase is not None:
+            ax[1].set_title(f'Phase {iphase}')
+        if save_files:
+            fname = "aspect_ratio_comp.png"
+            plt.savefig(fname, bbox_inches="tight")
+            print(f"    '{fname}' is placed in the current working directory\n")
+        plt.show()
+        return
 
 
-def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
+def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False, show_plot=True):
     r"""
     Plot initial microstructure descriptors, including cut-offs, based on user defined statistics
     """
@@ -476,7 +577,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
         sns.set(color_codes=True)
         plt.figure(figsize=(12, 9))
         ax = plt.subplot(111)
-        plt.ion()
+        # plt.ion()
 
         # Plot grain size distribution
         plt.plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
@@ -494,7 +595,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
             ax.hist(gs_data[ind], bins=80, density=True, label='experimental data')
         plt.title("Grain equivalent diameter distribution", fontsize=20)
         plt.legend(fontsize=16)
-        plt.show()
+        plt.show(block=True)
     elif stats_dict["Grain type"] in ["Elongated"]:
         # Extract grain aspect ratio descriptors from input file
         sd_AR = stats_dict["Aspect ratio"]["sig"]
@@ -508,23 +609,23 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]
 
         sns.set(color_codes=True)
-        fig, ax = plt.subplots(2, 1, figsize=(9, 9))
-        plt.ion()
+        fig, ax = plt.subplots(2, 1, figsize=(8, 8))
+        # plt.ion()
 
         # Plot grain size distribution
         ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
         ax[0].fill_between(xaxis, 0, ypdf, alpha=0.3)
         ax[0].set_xlim(left=0.0, right=x_lim)
-        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
-        ax[0].set_ylabel('Density', fontsize=18)
-        ax[0].tick_params(labelsize=14)
+        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=16)
+        ax[0].set_ylabel('Density', fontsize=16)
+        ax[0].tick_params(labelsize=12)
         ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
                       label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
         ax[0].axvline(dia_cutoff_max, linestyle='-', linewidth=3.0,
                       label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         if gs_data is not None:
             ax[0].hist(gs_data, bins=80, density=True, label='experimental data')
-        ax[0].legend(fontsize=14)
+        ax[0].legend(fontsize=12)
 
         # Plot aspect ratio statistics
         # Compute the Log-normal PDF & CDF.
@@ -532,17 +633,17 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
         ypdf = lognorm.pdf(xaxis, sd_AR, loc=loc_AR, scale=scale_AR)
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
         ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)
-        ax[1].set_xlabel('Aspect ratio', fontsize=18)
-        ax[1].set_ylabel('Density', fontsize=18)
-        ax[1].tick_params(labelsize=14)
+        ax[1].set_xlabel('Aspect ratio', fontsize=16)
+        ax[1].set_ylabel('Density', fontsize=16)
+        ax[1].tick_params(labelsize=12)
         ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0,
                       label='Minimum cut-off: {:.2f}'.format(ar_cutoff_min))
         ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0,
                       label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
         if ar_data is not None:
             ax[1].hist(ar_data, bins=15, density=True, label='experimental data')
-        ax[1].legend(fontsize=14)
-        plt.show()
+        ax[1].legend(fontsize=12)
+        # plt.show(block=True)
     elif stats_dict["Grain type"] in ["Free"]:
         # Compute reference grain aspect ratio descriptors from stats dict
         # Identify most likely rotation axis of ellepsoid with free semi-axes
@@ -569,7 +670,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
 
         sns.set(color_codes=True)
         fig, ax = plt.subplots(2, 1, figsize=(9, 9))
-        plt.ion()
+        # plt.ion()
 
         # Plot grain size distribution
         ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
@@ -602,18 +703,29 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False):
         if ar_data is not None:
             ax[1].hist(ar_data, bins=15, density=True, label='experimental data')
         ax[1].legend(fontsize=14)
-        plt.show()
+        # plt.show(block=True)
     else:
         raise ValueError('Value for "Grain_type" must be either "Equiaxed" or "Elongated".')
 
+    # if save_files:
+    #     plt.savefig("Input_distribution.png", bbox_inches="tight")
+    #     plt.draw()
+    #     plt.pause(0.001)
+    #     print(' ')
+    #     input("    Press [enter] to continue")
+    #     print("    'Input_distribution.png' is placed in the current working directory\n")
+    # return fig
+    if show_plot:
+        plt.show(block=True)
+
     if save_files:
-        plt.savefig("Input_distribution.png", bbox_inches="tight")
+        fig.savefig("Input_distribution.png", bbox_inches="tight")
         plt.draw()
         plt.pause(0.001)
-        print(' ')
-        input("    Press [enter] to continue")
-        print("    'Input_distribution.png' is placed in the current working directory\n")
-    return
+        input("Press [enter] to continue")
+        print("Input_distribution.png saved in the current working directory\n")
+
+    return fig
 
 
 def plot_stats_dict(sdict, title=None, save_files=False):
