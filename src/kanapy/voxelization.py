@@ -50,8 +50,8 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
     Nvox = len(test_ids)
     test_points = np.array(list(cooDict.values()))
 
-    # array defining ellipsoid growth for each stage of while loop
-    growth = iter(list(np.arange(1.0, 15.0, 0.1)))
+    # scale factor for defining ellipsoid growth for each stage of while loop
+    scale = 1.0
     remaining_voxels = set(list(cooDict.keys()))
     assigned_voxels = set()
     vf_cur = 0.
@@ -63,7 +63,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
 
     while vf_cur < vf_target:
         # call the growth value for the ellipsoids
-        scale = next(growth)
+        scale += 0.1
         for ellipsoid in Ellipsoids:
             # scale ellipsoid dimensions by the growth factor and generate surface points
             ellipsoid.a, ellipsoid.b, ellipsoid.c = scale * ellipsoid.a, scale * ellipsoid.b, scale * ellipsoid.c
@@ -379,7 +379,7 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
     for igr, vlist in mesh.grain_dict.items():
         vlist = np.array(vlist) - 1
         gr_arr[vlist] = igr
-    mesh.grains = np.reshape(gr_arr, mesh.dim, order='F')
+    mesh.grains = np.reshape(gr_arr, mesh.dim, order='C')
 
     # generate array of voxelized structure with phase numbers
     # and dict of phase numbers for each grain
@@ -395,7 +395,7 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
         mesh.ngrains_phase[ip] += 1
     ind = np.nonzero(ph_arr < 0.0)[0]
     ph_arr[ind] = 1  # assign phase 1 to empty voxels
-    mesh.phases = np.reshape(ph_arr, mesh.dim, order='F')
+    mesh.phases = np.reshape(ph_arr, mesh.dim, order='C')
     vf_cur = 1.0 - len(ind) / mesh.nvox
 
     print('Completed RVE voxelization')

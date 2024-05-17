@@ -61,6 +61,8 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
         vox_b = mask
     if dual_phase:
         Ngr = 2
+    else:
+        Ngr = np.max(data)
     if clist is None:
         cm = plt.cm.get_cmap(cmap, Ngr)
         colors = cm(data.astype(int))

@@ -213,7 +213,7 @@ def test_voxelizationRoutine():
     mesh.create_voxels(sim_box)
     Particles = particle_generator([parDict], sim_box, None)
     mesh = voxelizationRoutine(Particles, mesh, nphases)
-    assert mesh.vox_center_dict[5][0] == 0.9
-    assert mesh.voxel_dict[7] == [29, 30, 26, 25, 31, 32, 28, 27]
+    assert mesh.vox_center_dict[5][2] == 0.9
+    assert np.all(np.sort(mesh.voxel_dict[7]) == [25, 26, 27, 28, 29, 30, 31, 32])
     assert mesh.grains.shape == (15, 15, 15)
 
