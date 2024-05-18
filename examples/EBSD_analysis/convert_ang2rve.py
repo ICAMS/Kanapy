@@ -61,7 +61,7 @@ ms.voxelize()  # assign voxels to grains according to particle configuration
 ms.plot_voxels(sliced=False)  # plot voxels colored according to grain number
 ms.generate_grains()  # generate a polyhedral hull around each voxelized grain
 ms.plot_grains()  # plot polyhedral grains
-ms.plot_stats('g', gs_param=gs_param, ar_param=ar_param,
+ms.plot_stats('gv', gs_param=gs_param, ar_param=ar_param,
               show_plot=False)  # compare final grain statistics with initial parameters
 
 # generate and assign grains orientations

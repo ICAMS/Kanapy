@@ -16,8 +16,8 @@ size = 40  # size of RVE in micron
 periodic = True  # create periodic (True) or non-periodic (False) RVE
 # define statistical information on microstructure
 ms_elong = {'Grain type': 'Elongated',
-            'Equivalent diameter': {'sig': 1.0, 'scale': 12.0, 'loc': 4.0, 'cutoff_min': 8.0, 'cutoff_max': 18.0},
-            'Aspect ratio': {'sig': 1.5, 'scale': 2.0, 'loc': 0.5, 'cutoff_min': 0.9, 'cutoff_max': 4.0},
+            'Equivalent diameter': {'sig': 0.8, 'scale': 14.0, 'loc': 0.0, 'cutoff_min': 8.0, 'cutoff_max': 18.0},
+            'Aspect ratio': {'sig': 0.8, 'scale': 2.5, 'loc': 0.0, 'cutoff_min': 0.9, 'cutoff_max': 4.5},
             "Tilt angle": {"kappa": 1.0, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
             'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': nvox, 'Ny': nvox, 'Nz': nvox},
             'Simulation': {'periodicity': str(periodic), 'output_units': 'um'}}
