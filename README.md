@@ -3,7 +3,6 @@
 ![image](https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical)
 [![image](https://img.shields.io/badge/License-GNU%20AGPLv3-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
 
-### NOTE: From Kanapy version 6.1 the keywords of the statistical microstructure descriptors have changed to ensure compatibility with the parameters for the scipy functions that are fitted to data (lognorm and vonmises). For "Equivalent diameter" and "Aspect ratio" the keywords "sig, "loc" and "scale" for lognorm must be provided, instead of "std", "offs" and "mean". For "Tilt angle" the keywords "kappa" and "loc" for vonmises must be provided, instead of "std" and "mean". Please modify your scripts accordingly. The numerical values of the respective parameters remain the same, only the keywords are changed in the given sequence.
 
 Kanapy is a python package for generating complex three-dimensional (3D) synthetic
 polycrystalline microstructures. The microstructures are built based on statistical information about grain geometry, given as grain size distribution and aspect ratio of grains, and crystallographic texture, in form of orientation distribution functions (ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze EBSD maps with respect to the geometry and texture of microstructures. Based on this experimental data, it generates 3D synthetic microstructures mimicking real ones in a statistical sense. The
@@ -215,7 +214,7 @@ synthetic microstructure generation tool for research and industry use.
 
 # Authors
 
-Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Napat Vajragupta, Alexander Hartmaier  
+Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Alexander Hartmaier  
 [ICAMS](http://www.icams.de/content/) / [Ruhr-Universität Bochum](https://www.ruhr-uni-bochum.de/en), Germany 
 
 
