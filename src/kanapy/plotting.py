@@ -252,7 +252,7 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True)
 def plot_output_stats(data_list, labels, iphase=None,
                       gs_data=None, gs_param=None,
                       ar_data=None, ar_param=None,
-                      save_files=False,show_plot=True, enhanced_plot=False):
+                      save_files=False, show_plot=True, enhanced_plot=False):
     r"""
     Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots
     the distributions.
@@ -302,14 +302,27 @@ def plot_output_stats(data_list, labels, iphase=None,
         # Determine x-axis limits for equivalent diameter
         dia_cutoff_min = np.min(total_eqDia)
         dia_cutoff_max = np.max(total_eqDia)
-        x_lim_dia = dia_cutoff_max * 1.5
+        x_lim_dia = dia_cutoff_max # * 1.5
 
         # Plot the equivalent diameter PDF
         sns.set(color_codes=True)
         fig, ax = plt.subplots(2, 1, figsize=(8, 8))
+        xaxis_dia = np.linspace(dia_cutoff_min, x_lim_dia, 1000)
+
+        # plot lognormal distribution of stats parameters
+        if gs_param is not None:
+            y = lognorm.pdf(xaxis_dia, gs_param[0], loc=gs_param[1], scale=gs_param[2])
+            area = np.trapz(y, xaxis_dia)
+            if np.isclose(area, 0.):
+                logging.debug(f'Expt. AREA interval: {np.min(xaxis_dia)}, {np.max(xaxis_dia)}')
+                logging.debug(np.amin(grain_eqDia))
+                logging.debug(np.amax(grain_eqDia))
+                area = 1.
+            y /= area
+            ax[0].plot(xaxis_dia, y, linestyle='-', linewidth=3.0, label='Input')
+            ax[0].fill_between(xaxis_dia, 0, y, alpha=0.3)
 
         # Plot PDF for equivalent diameter
-        xaxis_dia = np.linspace(0, x_lim_dia, 1000)
         ypdf2 = grain_lognorm.pdf(xaxis_dia)
         area = np.trapz(ypdf2, xaxis_dia)
         if np.isclose(area, 0.):
@@ -318,36 +331,14 @@ def plot_output_stats(data_list, labels, iphase=None,
             logging.debug(np.amax(xaxis_dia))
             area = 1.
         ypdf2 /= area
-        ax[0].plot(xaxis_dia, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
+        ax[0].plot(xaxis_dia, ypdf2, linestyle='-', linewidth=3.0, label='Output')
         ax[0].fill_between(xaxis_dia, 0, ypdf2, alpha=0.3)
-        if particles:
-            ypdf1 = par_lognorm.pdf(xaxis_dia)
-            area = np.trapz(ypdf1, xaxis_dia)
-            if np.isclose(area, 0.):
-                logging.debug(f'Particle AREA interval: {area}')
-                logging.debug(np.amin(xaxis_dia))
-                logging.debug(np.amax(xaxis_dia))
-                area = 1.
-            ypdf1 /= area
-            ax[0].plot(xaxis_dia, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
-            ax[0].fill_between(xaxis_dia, 0, ypdf1, alpha=0.3)
-        if gs_param is not None:
-            x = np.linspace(0, x_lim_dia, 1000)
-            y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
-            area = np.trapz(y, x)
-            if np.isclose(area, 0.):
-                logging.debug(f'Expt. AREA interval: {np.min(x)}, {np.max(x)}')
-                logging.debug(np.amin(grain_eqDia))
-                logging.debug(np.amax(grain_eqDia))
-                area = 1.
-            y /= area
-            ax[0].plot(x, y, '--k', label='Experiment')
 
         ax[0].legend(loc="upper right", fontsize=12)
         ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=16)
         ax[0].set_ylabel('Density', fontsize=16)
         ax[0].tick_params(labelsize=12)
-        ax[0].set_xlim(left=0, right=x_lim_dia)
+        ax[0].set_xlim(left=dia_cutoff_min*0.9, right=x_lim_dia*1.1)
         if iphase is not None:
             ax[0].set_title(f'Equivalent Diameter Distribution - Phase {iphase}', fontsize=20)
 
@@ -357,13 +348,17 @@ def plot_output_stats(data_list, labels, iphase=None,
         if particles:
             ar_cutoff_min = min(ar_cutoff_min, np.min(par_AR))
             ar_cutoff_max = max(ar_cutoff_max, np.max(par_AR))
-        if ar_data is not None:
-            ar_cutoff_min = min(ar_cutoff_min, np.min(ar_data))
-            ar_cutoff_max = max(ar_cutoff_max, np.max(ar_data))
-        x_lim_ar = ar_cutoff_max * 1.5
+        x_lim_ar = ar_cutoff_max  # * 1.5
+        xaxis_ar = np.linspace(ar_cutoff_min, x_lim_ar, 1000)
 
+        # plot lognormal distribution for aspect ratio parameters
+        if ar_param is not None:
+            y = lognorm.pdf(xaxis_ar, ar_param[0], loc=ar_param[1], scale=ar_param[2])
+            area = np.trapz(y, xaxis_ar)
+            y /= area
+            ax[1].plot(xaxis_ar, y, linestyle='-', linewidth=3.0, label='Input')
+            ax[1].fill_between(xaxis_ar, 0, y, alpha=0.3)
         # Plot the PDF for aspect ratio
-        xaxis_ar = np.linspace(0, x_lim_ar, 1000)
         ypdf2 = ar_lognorm.pdf(xaxis_ar)
         area = np.trapz(ypdf2, xaxis_ar)
         if np.isclose(area, 0.0):
@@ -371,26 +366,14 @@ def plot_output_stats(data_list, labels, iphase=None,
             logging.debug(ypdf2, xaxis_ar)
             area = 1.0
         ypdf2 /= area
-        ax[1].plot(xaxis_ar, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
+        ax[1].plot(xaxis_ar, ypdf2, linestyle='-', linewidth=3.0, label='Output')
         ax[1].fill_between(xaxis_ar, 0, ypdf2, alpha=0.3)
-        if particles:
-            ypdf1 = par_lognorm.pdf(xaxis_ar)
-            area = np.trapz(ypdf1, xaxis_ar)
-            ypdf1 /= area
-            ax[1].plot(xaxis_ar, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
-            ax[1].fill_between(xaxis_ar, 0, ypdf1, alpha=0.3)
-        if ar_param is not None:
-            x = np.linspace(0, x_lim_ar, 1000)
-            y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
-            area = np.trapz(y, x)
-            y /= area
-            ax[1].plot(x, y, '--k', label='Experiment')
 
         ax[1].legend(loc="upper right", fontsize=12)
         ax[1].set_xlabel('Aspect ratio', fontsize=16)
         ax[1].set_ylabel('Density', fontsize=16)
         ax[1].tick_params(labelsize=12)
-        ax[1].set_xlim(left=0, right=x_lim_ar)
+        ax[1].set_xlim(left=ar_cutoff_min*0.9, right=x_lim_ar*1.1)
         if iphase is not None:
             ax[1].set_title(f'Aspect Ratio Distribution - Phase {iphase}', fontsize=20)
 
@@ -434,6 +417,7 @@ def plot_output_stats(data_list, labels, iphase=None,
         ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
         ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3)
         if particles:
+            #par_lognorm = lognorm(std_par, scale=mu_par)
             ypdf1 = par_lognorm.pdf(par_eqDia)
             area = np.trapz(ypdf1, par_eqDia)
             if np.isclose(area, 0.):
@@ -546,10 +530,23 @@ def plot_output_stats(data_list, labels, iphase=None,
         return
 
 
-def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False, show_plot=True):
+def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
+                    gs_param=None, ar_param=None,
+                    save_files=False, show_plot=True):
     r"""
     Plot initial microstructure descriptors, including cut-offs, based on user defined statistics
     """
+    def plot_lognorm(x, sig, loc, scale, axis):
+        y = lognorm.pdf(x, sig, loc=loc, scale=scale)
+        area = np.trapz(y, x)
+        if np.isclose(area, 0.):
+            logging.debug(f'Expt. AREA interval: {np.min(x)}, {np.max(x)}')
+            logging.debug(np.amin(x))
+            logging.debug(np.amax(x))
+            area = 1.
+        y /= area
+        axis.plot(x, y, linestyle='-', linewidth=3.0, label='Output')
+        axis.fill_between(x, 0, y, alpha=0.3)
 
     # Extract grain diameter statistics info from input file
     sd = stats_dict["Equivalent diameter"]["sig"]
@@ -566,14 +563,15 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False, sh
     # NOTE: SCIPY's lognorm takes in sigma & mu of Normal distribution
     # https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335
 
-    # Compute the Log-normal PDF & CDF.
-    xaxis = np.linspace(0.1, 200, 1000)
-    ypdf = lognorm.pdf(xaxis, sd, loc=loc, scale=scale)
-
     # Find the location at which CDF > 0.99
     # cdf_idx = np.where(ycdf > 0.99)[0][0]
     # x_lim = xaxis[cdf_idx]
     x_lim = dia_cutoff_max * 1.5
+    if gs_param is not None:
+        x_lim = max(x_lim, gs_param[4]*1.1)
+    # Compute the Log-normal PDF & CDF.
+    xaxis = np.linspace(0.1, x_lim, 1000)
+    ypdf = lognorm.pdf(xaxis, sd, loc=loc, scale=scale)
 
     if stats_dict["Grain type"] == "Equiaxed":
         sns.set(color_codes=True)
@@ -597,7 +595,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False, sh
             ax.hist(gs_data[ind], bins=80, density=True, label='experimental data')
         plt.title("Grain equivalent diameter distribution", fontsize=20)
         plt.legend(fontsize=16)
-        plt.show(block=True)
+        #plt.show(block=True)
     elif stats_dict["Grain type"] in ["Elongated"]:
         # Extract grain aspect ratio descriptors from input file
         sd_AR = stats_dict["Aspect ratio"]["sig"]
@@ -627,6 +625,9 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False, sh
                       label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         if gs_data is not None:
             ax[0].hist(gs_data, bins=80, density=True, label='experimental data')
+        if gs_param is not None:
+            xv = np.linspace(gs_param[3], gs_param[4], 200)
+            plot_lognorm(xv, gs_param[0], gs_param[1], gs_param[2], ax[0])
         ax[0].legend(fontsize=12)
 
         # Plot aspect ratio statistics
@@ -644,6 +645,9 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False, sh
                       label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
         if ar_data is not None:
             ax[1].hist(ar_data, bins=15, density=True, label='experimental data')
+        if ar_param is not None:
+            xv = np.linspace(ar_param[3], ar_param[4], 200)
+            plot_lognorm(xv, ar_param[0], ar_param[1], ar_param[2], ax[1])
         ax[1].legend(fontsize=12)
         # plt.show(block=True)
     elif stats_dict["Grain type"] in ["Free"]:
@@ -705,7 +709,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None, save_files=False, sh
         if ar_data is not None:
             ax[1].hist(ar_data, bins=15, density=True, label='experimental data')
         ax[1].legend(fontsize=14)
-        # plt.show(block=True)
+        #plt.show(block=True)
     else:
         raise ValueError('Value for "Grain_type" must be either "Equiaxed" or "Elongated".')
 

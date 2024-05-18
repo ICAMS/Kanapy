@@ -185,8 +185,8 @@ class RVE_creator(object):
                 # raise warning if large grain occur in periodic box
                 if np.amax(eq_Dia) >= self.size[0] * 0.5 and self.periodic:
                     logging.warning("\n")
-                    logging.warning("    Periodic box with grains larger the half of box width.")
-                    logging.warning("    Check grain polygons carefully.")
+                    logging.warning("    Periodic box with grains larger than half of box width.")
+                    logging.warning("    Check grain RVE carefully.")
 
                 print(f'    Analyzed statistical data for phase {phase_names[-1]} ({ip})')
                 print(f'    Total number of particles  = {totalEllipsoids}')

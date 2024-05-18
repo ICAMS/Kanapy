@@ -382,7 +382,6 @@ class Microstructure(object):
         plot_particles_3D(self.particles, cmap=cmap,
                           dual_phase=dual_phase, plot_hull=plot_hull)
 
-
     def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism', ori=None, show=True):
         if self.mesh.grains is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
@@ -421,7 +420,7 @@ class Microstructure(object):
                    ar_data=None, ar_param=None,
                    dual_phase=False,
                    save_files=False,
-                   show_plot=True, verbose=False,enhanced_plot =False):
+                   show_plot=True, verbose=False, enhanced_plot=False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
         ax_max = np.prod(self.rve.size) ** (1 / 3)
@@ -432,13 +431,13 @@ class Microstructure(object):
                 nphases -= 1
         else:
             nphases = 1
-        if gs_data is None or type(gs_data) is not list:
+        if not isinstance(gs_data, list):
             gs_data = [gs_data] * nphases
-        if gs_param is None or type(gs_param) is not list:
+        if not isinstance(gs_param, list):
             gs_param = [gs_param] * nphases
-        if ar_data is None or type(ar_data) is not list:
+        if not isinstance(ar_data, list):
             ar_data = [ar_data] * nphases
-        if ar_param is None or type(ar_param) is not list:
+        if not isinstance(ar_param, list):
             ar_param = [ar_param] * nphases
         """
         gs_data = [ebsd.ms_data[i]['gs_data'] for i in range(nphases)]
@@ -456,7 +455,7 @@ class Microstructure(object):
 
             # Analyze and plot particles statistics
             if (data is None and self.particles is not None) or \
-               (type(data) is str and 'p' in data.lower()):
+                    (type(data) is str and 'p' in data.lower()):
                 if self.particles is None:
                     logging.error('Particle statistics requested, but no particles defined. '
                                   'Run "pack()" first.')
@@ -469,7 +468,7 @@ class Microstructure(object):
 
             # Analyze and plot statistics of voxel structure in RVE
             if (data is None and self.mesh is not None) or \
-               (type(data) is str and 'v' in data.lower()):
+                    (type(data) is str and 'v' in data.lower()):
                 if self.mesh is None:
                     logging.error('Voxel statistics requested, but no voxel mesh defined. '
                                   'Run "voxelize()" first.')
@@ -482,7 +481,7 @@ class Microstructure(object):
 
             # Analyze and plot statistics of polyhedral grains in RVE
             if (data is None and self.geometry is not None) or \
-               (type(data) is str and 'g' in data.lower()):
+                    (type(data) is str and 'g' in data.lower()):
                 if self.geometry is None:
                     logging.error('Geometry statistics requested, but no polyhedral grains defined. '
                                   'Run "generate_grains()" first.')
@@ -509,13 +508,15 @@ class Microstructure(object):
             self.rve_stats = stats_list
             self.rve_stats_labels = labels
             fig = plot_output_stats(stats_list, labels, iphase=iphase,
-                              gs_data=gs_data[ip], gs_param=gs_param[ip],
-                              ar_data=ar_data[ip], ar_param=ar_param[ip],
-                              save_files=save_files,show_plot=show_plot, enhanced_plot=enhanced_plot)
+                                    gs_data=gs_data[ip], gs_param=gs_param[ip],
+                                    ar_data=ar_data[ip], ar_param=ar_param[ip],
+                                    save_files=save_files, show_plot=show_plot,
+                                    enhanced_plot=enhanced_plot)
             return fig
 
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
-                        porous=False, save_files=False, show_plot=False):
+                        gs_param=None, ar_param=None,
+                        porous=False, save_files=False, show_plot=True):
         """ Plots initial statistical microstructure descriptors ."""
         if descriptor is None:
             descriptor = self.descriptor
@@ -523,14 +524,19 @@ class Microstructure(object):
             descriptor = [descriptor]
         if porous:
             descriptor = descriptor[0:1]
-        if type(gs_data) is not list:
+        if not isinstance(gs_data, list):
             gs_data = [gs_data] * len(descriptor)
-        if type(ar_data) is not list:
+        if not isinstance(ar_data, list):
             ar_data = [ar_data] * len(descriptor)
+        if not isinstance(gs_param, list):
+            gs_param = [gs_param] * len(descriptor)
+        if not isinstance(ar_param, list):
+            ar_param = [ar_param] * len(descriptor)
 
         for i, des in enumerate(descriptor):
             fig = plot_init_stats(des, gs_data=gs_data[i], ar_data=ar_data[i],
-                            save_files=save_files, show_plot=False)
+                                  gs_param=gs_param[i], ar_param=ar_param[i],
+                                  save_files=save_files, show_plot=show_plot)
         return fig
 
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
