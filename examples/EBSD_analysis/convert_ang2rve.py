@@ -43,7 +43,7 @@ print(f'mean value: {(om_param[1] * 180 / np.pi).round(3)}, ' +
 
 # create dictionary with statistical information obtained from EBSD map
 ms_stats = knpy.set_stats(gs_param, ar_param, om_param,
-                          deq_min=8.0, deq_max=17.0, asp_min=3.5, asp_max=5.0,
+                          deq_min=8.0, deq_max=19.0, asp_min=0.95, asp_max=3.5,
                           omega_min=0.0, omega_max=np.pi,
                           voxels=nvox, size=box_length,
                           periodicity=periodic,
@@ -59,14 +59,13 @@ ms.pack()   # perform particle simulation to distribute grain nuclei in RVE volu
 ms.plot_ellipsoids()  # plot final configuration of particles
 ms.voxelize()  # assign voxels to grains according to particle configuration
 ms.plot_voxels(sliced=False)  # plot voxels colored according to grain number
-ms.generate_grains()  # generate a polyhedral hull around each voxelized grain
-ms.plot_grains()  # plot polyhedral grains
-ms.plot_stats('gv', gs_param=gs_param, ar_param=ar_param,
-              show_plot=False)  # compare final grain statistics with initial parameters
+
+# compare final grain statistics with initial parameters
+ms.plot_stats_init(show_res=True, gs_data=ms_data['gs_data'], ar_data=ms_data['ar_data'])
 
 # generate and assign grains orientations
 ms.generate_orientations(ebsd)
 ms.plot_voxels(ori=True)
 
 # output rve in voxel format
-ms.write_voxels(script_name=__file__, mesh=False, system=False)
+ms.write_voxels(file=f'{matname}_voxels.json', script_name=__file__, mesh=False, system=False)

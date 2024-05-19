@@ -17,10 +17,10 @@ periodic = True  # create periodic (True) or non-periodic (False) RVE
 # define statistical information on microstructure
 ms_elong = {'Grain type': 'Elongated',
             'Equivalent diameter': {'sig': 0.8, 'scale': 14.0, 'loc': 0.0, 'cutoff_min': 8.0, 'cutoff_max': 18.0},
-            'Aspect ratio': {'sig': 0.8, 'scale': 2.5, 'loc': 0.0, 'cutoff_min': 0.9, 'cutoff_max': 4.5},
-            "Tilt angle": {"kappa": 1.0, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
+            'Aspect ratio': {'sig': 0.8, 'scale': 2.5, 'loc': 0.0, 'cutoff_min': 0.9, 'cutoff_max': 3.5},
+            "Tilt angle": {"kappa": 1.0, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": pi},
             'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': nvox, 'Ny': nvox, 'Nz': nvox},
-            'Simulation': {'periodicity': str(periodic), 'output_units': 'um'}}
+            'Simulation': {'periodicity': periodic, 'output_units': 'um'}}
 
 # create and visualize synthetic RVE
 # create kanapy microstructure object
@@ -31,9 +31,9 @@ ms.pack()  # perform particle simulation to distribute grain nuclei in RVE volum
 ms.plot_ellipsoids()  # plot final configuration of particles
 ms.voxelize()  # create structured mesh and assign voxels to grains according to particles
 ms.plot_voxels(sliced=True)  # plot voxels colored according to grain number
+ms.plot_stats_init(show_res=True)  # compared final grain statistics with initial parameters
 ms.generate_grains()  # generate a polyhedral hull around each voxelized grain
 ms.plot_grains()  # plot polyhedral grains
-ms.plot_stats()  # compared final grain statistics with initial parameters
 
 # create grain orientations for Goss or random texture
 # Note: Angles are given in degrees
@@ -43,4 +43,4 @@ if knpy.MTEX_AVAIL:
     ms.plot_voxels(ori=True, sliced=False)
 
 # output rve in voxel format
-ms.write_voxels(script_name=__file__, mesh=False, system=False)
+ms.write_voxels(file=f'{matname}_voxels.json', script_name=__file__, mesh=False, system=False)

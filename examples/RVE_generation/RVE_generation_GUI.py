@@ -14,7 +14,6 @@ import numpy as np
 import itertools
 from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.entities import Simulation_Box
-from kanapy.rve_stats import get_stats_vox
 
 
 def parse_entry(entry):
@@ -94,8 +93,9 @@ def create_and_plot_stats():
 
     ms = knpy.Microstructure(descriptor=ms_stats, name=f"{matname}_{texture}_texture")
     ms.init_RVE()
-    fig = ms.plot_stats_init(show_plot=False)
-    display_plot(fig, plot_type="stats")
+    flist = ms.plot_stats_init(silent=True)
+    for fig in flist:
+        display_plot(fig, plot_type="stats")
 
 
 def create_rve_and_plot():
@@ -133,13 +133,11 @@ def create_rve_and_plot():
     ms.init_RVE()
     ms.pack()
     ms.voxelize()
-    fig = ms.plot_voxels(show=False, sliced=False)
+    fig = ms.plot_voxels(silent=True, sliced=False)
     display_plot(fig, plot_type="rve")
-    vox_stats = get_stats_vox(ms.mesh, show_plot=False)
-    gs_param = [vox_stats['eqd_sig'], 0.0, vox_stats['eqd_scale'], min(vox_stats['eqd']), max(vox_stats['eqd'])]
-    ar_param = [vox_stats['ar_sig'], 0.0, vox_stats['ar_scale'], min(vox_stats['ar']), max(vox_stats['ar'])]
-    fig = ms.plot_stats_init(show_plot=False, gs_param=[gs_param], ar_param=[ar_param])
-    display_plot(fig, plot_type="stats")
+    flist = ms.plot_stats_init(silent=True, get_res=True)
+    for fig in flist:
+        display_plot(fig, plot_type="stats")
 
 
 def compare_statistics():
@@ -155,8 +153,9 @@ def compare_statistics():
     ar_param = [ms_stats['Aspect ratio']['sig'],
                 ms_stats['Aspect ratio']['loc'],
                 ms_stats['Aspect ratio']['scale']]
-    fig = ms.plot_stats(show_plot=False, gs_param=[gs_param], ar_param=[ar_param], enhanced_plot=True)
-    display_plot(fig, plot_type="stats")
+    flist = ms.plot_stats(silent=True, gs_param=[gs_param], ar_param=[ar_param], enhanced_plot=True)
+    for fig in flist:
+        display_plot(fig, plot_type="stats")
 
 
 """ Functions for RVEs with cuboid grains """
@@ -210,7 +209,7 @@ def run_simulation(texture, matname, ngr, nv_gr, size, nphases, periodic):
     ms.mesh.ngrains_phase = ms.ngrains
 
     print("Simulation completed with parameters:", texture, matname, ngr, nv_gr, size, nphases, periodic)
-    fig = ms.plot_voxels(show=False)
+    fig = ms.plot_voxels(show=False, sliced=False)
     ptag = 'pbc' if periodic else 'no_pbc'
     fname = ms.write_abq(nodes='v', file=f'abq{nv_gr[0]}_gr{ngr[0]}_{ptag}_geom.inp')
     return fig
