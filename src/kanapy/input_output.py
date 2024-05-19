@@ -441,8 +441,10 @@ def import_voxels(file, path='./'):
             grain_phase_dict[int(igr)] = ip
             ngrain[ip] += 1
             phases[ind] = ip
-            if grain_ori_dict is not None:
+            if 'Orientation' in data['Grains'][str(igr)].keys():
                 grain_ori_dict[igr] = data['Grains'][str(igr)]['Orientation']
+            else:
+                grain_ori_dict[igr] = None
         phase_vf /= nvox
         if not np.isclose(np.sum(phase_vf), 1.):
             logging.warning(f'Volume fractions do not add up to 1: {phase_vf}')

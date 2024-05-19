@@ -10,12 +10,11 @@ import logging
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
-from scipy.spatial.transform import Rotation
 from scipy.stats import lognorm
 
 
 def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
-                   mask=None, cmap='prism', alpha=1.0, show=True,
+                   mask=None, cmap='prism', alpha=1.0, silent=False,
                    clist=None):
     """
     Plot voxels in microstructure, each grain with a different color. Sliced
@@ -95,13 +94,14 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
     ax.set_xlim(right=Nx)
     ax.set_ylim(top=Ny)
     ax.set_zlim(top=Nz)
-    if show:
+    if silent:
+        return fig
+    else:
         plt.show(block=True)
-    return fig
 
 
 def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
-                     dual_phase=False, show=True):
+                     dual_phase=False, silent=False):
     """
     Plot triangularized convex hulls of grains, based on vertices, i.e.
     connection points of 4 up to 8 grains or the end points of triple or quadruple
@@ -109,6 +109,7 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
 
     Parameters
     ----------
+    silent
     geometry : dict
         Dictionary with 'vertices' (node numbers) and 'simplices' (triangles)
     cmap : color map, optional
@@ -148,13 +149,14 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.set_title('Polygonized microstructure')
     ax.view_init(30, 30)
-    if show:
+    if silent:
+        return fig
+    else:
         plt.show(block=True)
-    return fig
 
 
 
-def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, show=True):
+def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, silent=False):
     """
     Display ellipsoids after packing procedure
     Parameters
@@ -187,12 +189,14 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, show=True):
         y = (pts[:, 1] + ctr[1]).reshape((100, 100))
         z = (pts[:, 2] + ctr[2]).reshape((100, 100))
         ax.plot_surface(x, y, z, rstride=4, cstride=4, color=color, linewidth=0, antialiased=False)
-    if show:
+    if silent:
+        return fig
+    else:
         plt.show(block=True)
-    return fig
 
 
-def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True):
+
+def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True, silent=False):
     """
     Display inner polyhedra of ellipsoids after packing procedure
 
@@ -246,13 +250,16 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True)
             y = (pts[:, 1] + ctr[None, 1]).reshape((100, 100))
             z = (pts[:, 2] + ctr[None, 2]).reshape((100, 100))
             ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
-    plt.show()
+    if silent:
+        return fig
+    else:
+        plt.show(block=True)
 
 
 def plot_output_stats(data_list, labels, iphase=None,
                       gs_data=None, gs_param=None,
                       ar_data=None, ar_param=None,
-                      save_files=False, show_plot=True, enhanced_plot=False):
+                      save_files=False, silent=False, enhanced_plot=False):
     r"""
     Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots
     the distributions.
@@ -382,10 +389,10 @@ def plot_output_stats(data_list, labels, iphase=None,
             plt.savefig(fname, bbox_inches="tight")
             print(f"'{fname}' is placed in the current working directory\n")
 
-        if show_plot:
-            plt.show()
-
-        return fig
+        if silent:
+            return fig
+        else:
+            plt.show(block=True)
     else:
 
         # NOTE: 'doane' produces better estimates for non-normal datasets
@@ -532,20 +539,13 @@ def plot_output_stats(data_list, labels, iphase=None,
 
 def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
                     gs_param=None, ar_param=None,
-                    save_files=False, show_plot=True):
+                    save_files=False, silent=False):
     r"""
     Plot initial microstructure descriptors, including cut-offs, based on user defined statistics
     """
     def plot_lognorm(x, sig, loc, scale, axis):
         y = lognorm.pdf(x, sig, loc=loc, scale=scale)
-        area = np.trapz(y, x)
-        if np.isclose(area, 0.):
-            logging.debug(f'Expt. AREA interval: {np.min(x)}, {np.max(x)}')
-            logging.debug(np.amin(x))
-            logging.debug(np.amax(x))
-            area = 1.
-        y /= area
-        axis.plot(x, y, linestyle='-', linewidth=3.0, label='Output')
+        axis.plot(x, y, linestyle='-', linewidth=3.0, label='Output stats')
         axis.fill_between(x, 0, y, alpha=0.3)
 
     # Extract grain diameter statistics info from input file
@@ -559,43 +559,48 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
     dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
     dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
 
-    # Equivalent diameter statistics
-    # NOTE: SCIPY's lognorm takes in sigma & mu of Normal distribution
-    # https://stackoverflow.com/questions/8870982/how-do-i-get-a-lognormal-distribution-in-python-with-mu-and-sigma/13837335#13837335
-
-    # Find the location at which CDF > 0.99
-    # cdf_idx = np.where(ycdf > 0.99)[0][0]
-    # x_lim = xaxis[cdf_idx]
     x_lim = dia_cutoff_max * 1.5
     if gs_param is not None:
         x_lim = max(x_lim, gs_param[4]*1.1)
-    # Compute the Log-normal PDF & CDF.
+    # Compute the Log-normal PDF
     xaxis = np.linspace(0.1, x_lim, 1000)
     ypdf = lognorm.pdf(xaxis, sd, loc=loc, scale=scale)
-
+    # normalize density to region between min and max cutoff
+    ind = np.nonzero(np.logical_and(xaxis >= dia_cutoff_min, xaxis <= dia_cutoff_max))[0]
+    if gs_data is None:
+        area = np.trapz(ypdf[ind], xaxis[ind])
+        if np.isclose(area, 0.0):
+            area = 1.
+        ypdf /= area
+    # set colorcodes
+    sns.set(color_codes=True)
     if stats_dict["Grain type"] == "Equiaxed":
-        sns.set(color_codes=True)
         plt.figure(figsize=(12, 9))
         ax = plt.subplot(111)
         # plt.ion()
 
         # Plot grain size distribution
-        plt.plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
-        ax.fill_between(xaxis, 0, ypdf, alpha=0.3)
+        ax.axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
+                   label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
+        ax.axvline(dia_cutoff_max, linestyle='--', linewidth=3.0,
+                   label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
+        plt.plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
+        ax.fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
         ax.set_xlim(left=0.0, right=x_lim)
         ax.set_xlabel('Equivalent diameter (μm)', fontsize=18)
         ax.set_ylabel('Density', fontsize=18)
         ax.tick_params(labelsize=14)
-        ax.axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
-                   label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
-        ax.axvline(dia_cutoff_max, linestyle='-', linewidth=3.0,
-                   label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         if gs_data is not None:
-            ind = np.nonzero(gs_data < x_lim)[0]
-            ax.hist(gs_data[ind], bins=80, density=True, label='experimental data')
+            idata = np.nonzero(gs_data < x_lim)[0]
+            ax.hist(gs_data[idata], bins=80, density=True, label='Experimental data')
+        if gs_param is not None:
+            if len(gs_param) < 5:
+                xv = xaxis
+            else:
+                xv = np.linspace(gs_param[3], gs_param[4], 200)
+            plot_lognorm(xv, gs_param[0], gs_param[1], gs_param[2], ax[0])
         plt.title("Grain equivalent diameter distribution", fontsize=20)
         plt.legend(fontsize=16)
-        #plt.show(block=True)
     elif stats_dict["Grain type"] in ["Elongated"]:
         # Extract grain aspect ratio descriptors from input file
         sd_AR = stats_dict["Aspect ratio"]["sig"]
@@ -604,29 +609,28 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
             loc_AR = stats_dict["Aspect ratio"]["loc"]
         else:
             loc_AR = 0.0
-
         ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]
 
-        sns.set(color_codes=True)
-        fig, ax = plt.subplots(2, 1, figsize=(8, 8))
-        # plt.ion()
-
         # Plot grain size distribution
-        ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
-        ax[0].fill_between(xaxis, 0, ypdf, alpha=0.3)
+        fig, ax = plt.subplots(2, 1, figsize=(8, 8))
+        ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
+                      label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
+        ax[0].axvline(dia_cutoff_max, linestyle='--', linewidth=3.0,
+                      label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
+        ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
+        ax[0].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
         ax[0].set_xlim(left=0.0, right=x_lim)
         ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=16)
         ax[0].set_ylabel('Density', fontsize=16)
         ax[0].tick_params(labelsize=12)
-        ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
-                      label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
-        ax[0].axvline(dia_cutoff_max, linestyle='-', linewidth=3.0,
-                      label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         if gs_data is not None:
             ax[0].hist(gs_data, bins=80, density=True, label='experimental data')
         if gs_param is not None:
-            xv = np.linspace(gs_param[3], gs_param[4], 200)
+            if len(gs_param) < 5:
+                xv = xaxis
+            else:
+                xv = np.linspace(gs_param[3], gs_param[4], 200)
             plot_lognorm(xv, gs_param[0], gs_param[1], gs_param[2], ax[0])
         ax[0].legend(fontsize=12)
 
@@ -634,22 +638,31 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
         # Compute the Log-normal PDF & CDF.
         xaxis = np.linspace(0.5 * ar_cutoff_min, 2 * ar_cutoff_max, 500)
         ypdf = lognorm.pdf(xaxis, sd_AR, loc=loc_AR, scale=scale_AR)
-        ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
-        ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)
+        # normalize density to region between min and max cutoff
+        ind = np.nonzero(np.logical_and(xaxis >= ar_cutoff_min, xaxis <= ar_cutoff_max))[0]
+        if ar_data is None:
+            area = np.trapz(ypdf[ind], xaxis[ind])
+            if np.isclose(area, 0.0):
+                area = 1.
+            ypdf /= area
+        ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0,
+                      label='Minimum cut-off: {:.2f}'.format(ar_cutoff_min))
+        ax[1].axvline(ar_cutoff_max, linestyle='--', linewidth=3.0,
+                      label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
+        ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
+        ax[1].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
         ax[1].set_xlabel('Aspect ratio', fontsize=16)
         ax[1].set_ylabel('Density', fontsize=16)
         ax[1].tick_params(labelsize=12)
-        ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0,
-                      label='Minimum cut-off: {:.2f}'.format(ar_cutoff_min))
-        ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0,
-                      label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
         if ar_data is not None:
-            ax[1].hist(ar_data, bins=15, density=True, label='experimental data')
+            ax[1].hist(ar_data, bins=15, density=True, label='Experimental data')
         if ar_param is not None:
-            xv = np.linspace(ar_param[3], ar_param[4], 200)
+            if len(gs_param) < 5:
+                xv = xaxis
+            else:
+                xv = np.linspace(ar_param[3], ar_param[4], 200)
             plot_lognorm(xv, ar_param[0], ar_param[1], ar_param[2], ax[1])
         ax[1].legend(fontsize=12)
-        # plt.show(block=True)
     elif stats_dict["Grain type"] in ["Free"]:
         # Compute reference grain aspect ratio descriptors from stats dict
         # Identify most likely rotation axis of ellepsoid with free semi-axes
@@ -674,64 +687,70 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
             raise ValueError('Rotation axis not identified properly')
         ar_sig = stats_dict["Semi axes"]["sig"][irot]
 
-        sns.set(color_codes=True)
         fig, ax = plt.subplots(2, 1, figsize=(9, 9))
-        # plt.ion()
 
         # Plot grain size distribution
-        ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
-        ax[0].fill_between(xaxis, 0, ypdf, alpha=0.3)
+        ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
+                      label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
+        ax[0].axvline(dia_cutoff_max, linestyle='--', linewidth=3.0,
+                      label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
+        ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
+        ax[0].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
         ax[0].set_xlim(left=0.0, right=x_lim)
         ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
         ax[0].set_ylabel('Density', fontsize=18)
         ax[0].tick_params(labelsize=14)
-        ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
-                      label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
-        ax[0].axvline(dia_cutoff_max, linestyle='-', linewidth=3.0,
-                      label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         if gs_data is not None:
-            ax[0].hist(gs_data, bins=80, density=True, label='experimental data')
+            ax[0].hist(gs_data, bins=80, density=True, label='Experimental data')
+        if gs_param is not None:
+            if len(gs_param) < 5:
+                xv = xaxis
+            else:
+                xv = np.linspace(gs_param[3], gs_param[4], 200)
+            plot_lognorm(xv, gs_param[0], gs_param[1], gs_param[2], ax[0])
         ax[0].legend(fontsize=14)
 
         # Plot aspect ratio statistics
-        # Compute the Log-normal PDF & CDF.
+        # Compute the Log-normal PDF
         xaxis = np.linspace(0.5 * ar_cutoff_min, 2 * ar_cutoff_max, 500)
         ypdf = lognorm.pdf(xaxis, ar_sig, scale=ar_scale)
-        ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0)
-        ax[1].fill_between(xaxis, 0, ypdf, alpha=0.3)
+        # normalize density to region between min and max cutoff
+        ind = np.nonzero(np.logical_and(xaxis >= ar_cutoff_min, xaxis <= ar_cutoff_max))[0]
+        area = np.trapz(ypdf[ind], xaxis[ind])
+        if np.isclose(area, 0.0):
+            area = 1.
+        ypdf /= area
+        ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0,
+                      label='Minimum cut-off: {:.2f}'.format(ar_cutoff_min))
+        ax[1].axvline(ar_cutoff_max, linestyle='--', linewidth=3.0,
+                      label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
+        ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
+        ax[1].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
         ax[1].set_xlabel('Aspect ratio', fontsize=18)
         ax[1].set_ylabel('Density', fontsize=18)
         ax[1].tick_params(labelsize=14)
-        ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0,
-                      label='Minimum cut-off: {:.2f}'.format(ar_cutoff_min))
-        ax[1].axvline(ar_cutoff_max, linestyle='-', linewidth=3.0,
-                      label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
         if ar_data is not None:
-            ax[1].hist(ar_data, bins=15, density=True, label='experimental data')
+            ax[1].hist(ar_data, bins=15, density=True, label='Experimental data')
+        if ar_param is not None:
+            if len(gs_param) < 5:
+                xv = xaxis
+            else:
+                xv = np.linspace(ar_param[3], ar_param[4], 200)
+            plot_lognorm(xv, ar_param[0], ar_param[1], ar_param[2], ax[1])
         ax[1].legend(fontsize=14)
-        #plt.show(block=True)
     else:
         raise ValueError('Value for "Grain_type" must be either "Equiaxed" or "Elongated".')
 
-    # if save_files:
-    #     plt.savefig("Input_distribution.png", bbox_inches="tight")
-    #     plt.draw()
-    #     plt.pause(0.001)
-    #     print(' ')
-    #     input("    Press [enter] to continue")
-    #     print("    'Input_distribution.png' is placed in the current working directory\n")
-    # return fig
-    if show_plot:
+    if silent:
+        return fig
+    else:
         plt.show(block=True)
-
-    if save_files:
-        fig.savefig("Input_distribution.png", bbox_inches="tight")
-        plt.draw()
-        plt.pause(0.001)
-        input("Press [enter] to continue")
-        print("Input_distribution.png saved in the current working directory\n")
-
-    return fig
+        if save_files:
+            fig.savefig("Input_distribution.png", bbox_inches="tight")
+            plt.draw()
+            plt.pause(0.001)
+            input("Press [enter] to continue")
+            print("Input_distribution.png saved in the current working directory\n")
 
 
 def plot_stats_dict(sdict, title=None, save_files=False):
@@ -741,6 +760,7 @@ def plot_stats_dict(sdict, title=None, save_files=False):
 
     Parameters
     ----------
+    save_files
     sdict
     title
 
@@ -753,7 +773,9 @@ def plot_stats_dict(sdict, title=None, save_files=False):
     # Plot the histogram & PDF for equivalent diameter
     sns.set(color_codes=True)
     # Plot PDF
+
     loc = 0.0
+    """
     sig = sdict['eqd_sig']
     sc = sdict['eqd_scale']
     xval = np.linspace(np.min(sdict['eqd']), np.max(sdict['eqd']), 50, endpoint=True)
@@ -777,6 +799,7 @@ def plot_stats_dict(sdict, title=None, save_files=False):
         plt.savefig(fname, bbox_inches="tight")
         print(f"    '{fname}' is placed in the current working directory\n")
     plt.show()
+    """
 
     # plot statistics of semi-axes
     cts = []

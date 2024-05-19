@@ -131,6 +131,7 @@ class Microstructure(object):
     --------        Routines for user interface        --------
     """
 
+
     def init_RVE(self, descriptor=None, nsteps=1000):
         """
         Creates particle distribution inside simulation box (RVE) based on
@@ -382,7 +383,8 @@ class Microstructure(object):
         plot_particles_3D(self.particles, cmap=cmap,
                           dual_phase=dual_phase, plot_hull=plot_hull)
 
-    def plot_voxels(self, sliced=True, dual_phase=False, cmap='prism', ori=None, show=True):
+    def plot_voxels(self, sliced=False, dual_phase=False, cmap='prism', ori=None,
+                    silent=False):
         if self.mesh.grains is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
         elif dual_phase:
@@ -402,8 +404,10 @@ class Microstructure(object):
         else:
             clist = None
 
-        return plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced,
-                              dual_phase=dual_phase, cmap=cmap, clist=clist, show=show)
+        fig = plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced,
+                             dual_phase=dual_phase, cmap=cmap, clist=clist, silent=silent)
+        if silent:
+            return fig
 
     def plot_grains(self, geometry=None, cmap='prism', alpha=0.4,
                     ec=[0.5, 0.5, 0.5, 0.1], dual_phase=False):
@@ -420,9 +424,14 @@ class Microstructure(object):
                    ar_data=None, ar_param=None,
                    dual_phase=False,
                    save_files=False,
-                   show_plot=True, verbose=False, enhanced_plot=False):
+                   show_all=False, verbose=False,
+                   silent=False, enhanced_plot=False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
+        if silent:
+            verbose = False
+            show_all = False
+            enhanced_plot = True
         ax_max = np.prod(self.rve.size) ** (1 / 3)
         if dual_phase:
             nphases = self.nphases
@@ -431,13 +440,13 @@ class Microstructure(object):
                 nphases -= 1
         else:
             nphases = 1
-        if not isinstance(gs_data, list):
+        if not (isinstance(gs_data, list) and len(gs_data) == nphases):
             gs_data = [gs_data] * nphases
-        if not isinstance(gs_param, list):
+        if not (isinstance(gs_param, list) and len(gs_param) == nphases):
             gs_param = [gs_param] * nphases
-        if not isinstance(ar_data, list):
+        if not (isinstance(ar_data, list) and len(ar_data) == nphases):
             ar_data = [ar_data] * nphases
-        if not isinstance(ar_param, list):
+        if not (isinstance(ar_param, list) and len(ar_param) == len(gs_param)):
             ar_param = [ar_param] * nphases
         """
         gs_data = [ebsd.ms_data[i]['gs_data'] for i in range(nphases)]
@@ -446,6 +455,7 @@ class Microstructure(object):
         ar_param = [ebsd.ms_data[i]['ar_param'] for i in range(nphases)]
         """
         iphase = None
+        flist = []
         for ip in range(nphases):
             stats_list = []
             labels = []
@@ -461,7 +471,7 @@ class Microstructure(object):
                                   'Run "pack()" first.')
                     return
                 part_stats = get_stats_part(self.particles, iphase=iphase, ax_max=ax_max,
-                                            show_plot=show_plot,
+                                            show_plot=show_all,
                                             verbose=verbose, save_files=save_files)
                 stats_list.append(part_stats)
                 labels.append("Partcls")
@@ -474,7 +484,7 @@ class Microstructure(object):
                                   'Run "voxelize()" first.')
                     return
                 vox_stats = get_stats_vox(self.mesh, iphase=iphase, ax_max=ax_max,
-                                          show_plot=show_plot,
+                                          show_plot=show_all,
                                           verbose=verbose, save_files=save_files)
                 stats_list.append(vox_stats)
                 labels.append('Voxels')
@@ -487,7 +497,7 @@ class Microstructure(object):
                                   'Run "generate_grains()" first.')
                     return
                 grain_stats = get_stats_poly(self.geometry['Grains'], iphase=iphase, ax_max=ax_max,
-                                             show_plot=show_plot, phase_dict=self.mesh.grain_phase_dict,
+                                             show_plot=show_all, phase_dict=self.mesh.grain_phase_dict,
                                              verbose=verbose, save_files=save_files)
                 stats_list.append(grain_stats)
                 labels.append('Grains')
@@ -510,34 +520,55 @@ class Microstructure(object):
             fig = plot_output_stats(stats_list, labels, iphase=iphase,
                                     gs_data=gs_data[ip], gs_param=gs_param[ip],
                                     ar_data=ar_data[ip], ar_param=ar_param[ip],
-                                    save_files=save_files, show_plot=show_plot,
+                                    save_files=save_files, silent=silent,
                                     enhanced_plot=enhanced_plot)
-            return fig
+            flist.append(fig)
+        if silent:
+            return flist
 
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
                         gs_param=None, ar_param=None,
-                        porous=False, save_files=False, show_plot=True):
+                        porous=False, save_files=False,
+                        get_res=False, show_res=False,
+                        silent=False):
         """ Plots initial statistical microstructure descriptors ."""
+        if show_res:
+            get_res = True
+        if silent:
+            show_res = False
         if descriptor is None:
             descriptor = self.descriptor
-        if type(descriptor) is not list:
+        if not isinstance(descriptor, list):
             descriptor = [descriptor]
         if porous:
             descriptor = descriptor[0:1]
-        if not isinstance(gs_data, list):
-            gs_data = [gs_data] * len(descriptor)
-        if not isinstance(ar_data, list):
-            ar_data = [ar_data] * len(descriptor)
-        if not isinstance(gs_param, list):
-            gs_param = [gs_param] * len(descriptor)
-        if not isinstance(ar_param, list):
-            ar_param = [ar_param] * len(descriptor)
+        nel = len(descriptor)
+        if get_res:
+            if gs_param is None or ar_param is None:
+                if self.mesh is None:
+                    raise ValueError('show_res is True, but no voxels have been defined. Run voxelize first.')
+                vox_stats = get_stats_vox(self.mesh, show_plot=show_res)
+                gs_param = [vox_stats['eqd_sig'], 0.0, vox_stats['eqd_scale'],
+                            min(vox_stats['eqd']), max(vox_stats['eqd'])]
+                ar_param = [vox_stats['ar_sig'], 0.0, vox_stats['ar_scale'],
+                            min(vox_stats['ar']), max(vox_stats['ar'])]
+        if not (isinstance(gs_data, list) and len(gs_data) == nel):
+            gs_data = [gs_data] * nel
+        if not (isinstance(ar_data, list) and len(ar_data) == nel):
+            ar_data = [ar_data] * nel
+        if not (isinstance(gs_param, list) and len(gs_param) == nel):
+            gs_param = [gs_param] * nel
+        if not (isinstance(ar_param, list) and len(ar_param) == nel):
+            ar_param = [ar_param] * nel
 
+        flist = []
         for i, des in enumerate(descriptor):
             fig = plot_init_stats(des, gs_data=gs_data[i], ar_data=ar_data[i],
                                   gs_param=gs_param[i], ar_param=ar_param[i],
-                                  save_files=save_files, show_plot=show_plot)
-        return fig
+                                  save_files=save_files, silent=silent)
+            flist.append(fig)
+        if silent:
+            return flist
 
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):
