@@ -539,7 +539,7 @@ class Microstructure(object):
                    min(vox_stats['eqd']), max(vox_stats['eqd'])]
             arp = [vox_stats['ar_sig'], 0.0, vox_stats['ar_scale'],
                    min(vox_stats['ar']), max(vox_stats['ar'])]
-            if des['Grain type'] == 'Elongated':
+            if 'Grain type' in des.keys() and des['Grain type'] == 'Elongated':
                 if nel > 1:
                     print(f'\nStatistical microstructure parameters of phase {ip} in RVE')
                     print('-------------------------------------------------------')
