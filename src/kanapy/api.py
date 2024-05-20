@@ -527,11 +527,38 @@ class Microstructure(object):
             return flist
 
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
-                        gs_param=None, ar_param=None,
-                        porous=False, save_files=False,
+                        porous=False,
                         get_res=False, show_res=False,
-                        silent=False):
+                        save_files=False, silent=False):
         """ Plots initial statistical microstructure descriptors ."""
+        def analyze_voxels(ip, des):
+            if self.mesh is None:
+                raise ValueError('show_res is True, but no voxels have been defined. Run voxelize first.')
+            vox_stats = get_stats_vox(self.mesh, iphase=ip, show_plot=show_res)
+            gsp = [vox_stats['eqd_sig'], 0.0, vox_stats['eqd_scale'],
+                   min(vox_stats['eqd']), max(vox_stats['eqd'])]
+            arp = [vox_stats['ar_sig'], 0.0, vox_stats['ar_scale'],
+                   min(vox_stats['ar']), max(vox_stats['ar'])]
+            if des['Grain type'] == 'Elongated':
+                if nel > 1:
+                    print(f'\nStatistical microstructure parameters of phase {ip} in RVE')
+                    print('-------------------------------------------------------')
+                else:
+                    print('\nStatistical microstructure parameters of RVE')
+                    print('--------------------------------------------')
+                print(f'Type\t| a (µm) \t| b (µm) \t| c (µm) \t| std.dev\t| rot.axis\t| asp.ratio\t| std.dev\t|'
+                      f' equ.dia. (µm)\t| std.dev')
+
+                av_std = np.mean([vox_stats['a_sig'], vox_stats['b_sig'], vox_stats['c_sig']])
+                print(f'Input\t|  -      \t|  -      \t|  -      \t|   -      \t|     -   \t|  '
+                      f'{des["Aspect ratio"]["scale"]:.3f}\t|  {des["Aspect ratio"]["sig"]:.4f}\t|     '
+                      f'{des["Equivalent diameter"]["scale"]:.3f} \t|  {des["Equivalent diameter"]["sig"]:.4f}')
+                print(f'Output\t|  {vox_stats["a_scale"]:.3f}\t|  {vox_stats["b_scale"]:.3f}\t|  '
+                      f'{vox_stats["c_scale"]:.3f}\t|  {av_std:.4f}\t|     {vox_stats["ind_rot"]}   \t|  '
+                      f'{vox_stats["ar_scale"]:.3f}\t|  {vox_stats["ar_sig"]:.4f}\t|     '
+                      f'{vox_stats["eqd_scale"]:.3f} \t|  {vox_stats["eqd_sig"]:.4f}')
+            return gsp, arp
+
         if show_res:
             get_res = True
         if silent:
@@ -543,28 +570,21 @@ class Microstructure(object):
         if porous:
             descriptor = descriptor[0:1]
         nel = len(descriptor)
-        if get_res:
-            if gs_param is None or ar_param is None:
-                if self.mesh is None:
-                    raise ValueError('show_res is True, but no voxels have been defined. Run voxelize first.')
-                vox_stats = get_stats_vox(self.mesh, show_plot=show_res)
-                gs_param = [vox_stats['eqd_sig'], 0.0, vox_stats['eqd_scale'],
-                            min(vox_stats['eqd']), max(vox_stats['eqd'])]
-                ar_param = [vox_stats['ar_sig'], 0.0, vox_stats['ar_scale'],
-                            min(vox_stats['ar']), max(vox_stats['ar'])]
+
         if not (isinstance(gs_data, list) and len(gs_data) == nel):
             gs_data = [gs_data] * nel
         if not (isinstance(ar_data, list) and len(ar_data) == nel):
             ar_data = [ar_data] * nel
-        if not (isinstance(gs_param, list) and len(gs_param) == nel):
-            gs_param = [gs_param] * nel
-        if not (isinstance(ar_param, list) and len(ar_param) == nel):
-            ar_param = [ar_param] * nel
 
         flist = []
-        for i, des in enumerate(descriptor):
-            fig = plot_init_stats(des, gs_data=gs_data[i], ar_data=ar_data[i],
-                                  gs_param=gs_param[i], ar_param=ar_param[i],
+        for ip, des in enumerate(descriptor):
+            if get_res:
+                gsp, arp = analyze_voxels(ip, des)
+            else:
+                gsp = None
+                arp = None
+            fig = plot_init_stats(des, gs_data=gs_data[ip], ar_data=ar_data[ip],
+                                  gs_param=gsp, ar_param=arp,
                                   save_files=save_files, silent=silent)
             flist.append(fig)
         if silent:

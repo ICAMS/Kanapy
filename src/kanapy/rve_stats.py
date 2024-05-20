@@ -335,11 +335,6 @@ def get_stats_vox(mesh, iphase=None, ax_max=None,
     -------
 
     """
-    if ax_max is not None:
-        minval = max(minval, 1. / ax_max ** 2)
-    cons = ({'type': 'ineq', 'fun': con_fun})  # constraints for minimization
-    opt = {'maxiter': 200}  # options for minimization
-    mc = np.array([1., 1., 1., 0., 0., 0.])  # start value of matrix for minimization
     gfac = 3.0 / (4.0 * np.pi)
     arr_a = []
     arr_b = []
@@ -360,6 +355,11 @@ def get_stats_vox(mesh, iphase=None, ax_max=None,
         # find bounding box to hull points
         ea, eb, ec = bbox(pts)
         """
+        if ax_max is not None:
+            minval = max(minval, 1. / ax_max ** 2)
+        cons = ({'type': 'ineq', 'fun': con_fun})  # constraints for minimization
+        opt = {'maxiter': 200}  # options for minimization
+        mc = np.array([1., 1., 1., 0., 0., 0.])  # start value of matrix for minimization
         # find best fitting ellipsoid to points
         rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method='SLSQP',
                          constraints=cons, options=opt)

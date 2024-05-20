@@ -319,25 +319,25 @@ def plot_output_stats(data_list, labels, iphase=None,
         # plot lognormal distribution of stats parameters
         if gs_param is not None:
             y = lognorm.pdf(xaxis_dia, gs_param[0], loc=gs_param[1], scale=gs_param[2])
-            area = np.trapz(y, xaxis_dia)
+            """area = np.trapz(y, xaxis_dia)
             if np.isclose(area, 0.):
                 logging.debug(f'Expt. AREA interval: {np.min(xaxis_dia)}, {np.max(xaxis_dia)}')
                 logging.debug(np.amin(grain_eqDia))
                 logging.debug(np.amax(grain_eqDia))
                 area = 1.
-            y /= area
+            y /= area"""
             ax[0].plot(xaxis_dia, y, linestyle='-', linewidth=3.0, label='Input')
             ax[0].fill_between(xaxis_dia, 0, y, alpha=0.3)
 
         # Plot PDF for equivalent diameter
         ypdf2 = grain_lognorm.pdf(xaxis_dia)
-        area = np.trapz(ypdf2, xaxis_dia)
+        """area = np.trapz(ypdf2, xaxis_dia)
         if np.isclose(area, 0.):
             logging.debug(f'Grain AREA interval: {area}')
             logging.debug(np.amin(xaxis_dia))
             logging.debug(np.amax(xaxis_dia))
             area = 1.
-        ypdf2 /= area
+        ypdf2 /= area"""
         ax[0].plot(xaxis_dia, ypdf2, linestyle='-', linewidth=3.0, label='Output')
         ax[0].fill_between(xaxis_dia, 0, ypdf2, alpha=0.3)
 
@@ -361,18 +361,18 @@ def plot_output_stats(data_list, labels, iphase=None,
         # plot lognormal distribution for aspect ratio parameters
         if ar_param is not None:
             y = lognorm.pdf(xaxis_ar, ar_param[0], loc=ar_param[1], scale=ar_param[2])
-            area = np.trapz(y, xaxis_ar)
-            y /= area
+            """area = np.trapz(y, xaxis_ar)
+            y /= area"""
             ax[1].plot(xaxis_ar, y, linestyle='-', linewidth=3.0, label='Input')
             ax[1].fill_between(xaxis_ar, 0, y, alpha=0.3)
         # Plot the PDF for aspect ratio
         ypdf2 = ar_lognorm.pdf(xaxis_ar)
-        area = np.trapz(ypdf2, xaxis_ar)
+        """area = np.trapz(ypdf2, xaxis_ar)
         if np.isclose(area, 0.0):
             logging.debug('Small area for aspect ratio of grains.')
             logging.debug(ypdf2, xaxis_ar)
             area = 1.0
-        ypdf2 /= area
+        ypdf2 /= area"""
         ax[1].plot(xaxis_ar, ypdf2, linestyle='-', linewidth=3.0, label='Output')
         ax[1].fill_between(xaxis_ar, 0, ypdf2, alpha=0.3)
 
@@ -414,25 +414,25 @@ def plot_output_stats(data_list, labels, iphase=None,
 
         # Plot PDF
         ypdf2 = grain_lognorm.pdf(grain_eqDia)
-        area = np.trapz(ypdf2, grain_eqDia)
+        """area = np.trapz(ypdf2, grain_eqDia)
         if np.isclose(area, 0.):
             logging.debug(f'Grain AREA interval: {area}')
             logging.debug(np.amin(grain_eqDia))
             logging.debug(np.amax(grain_eqDia))
             area = 1.
-        ypdf2 /= area
+        ypdf2 /= area"""
         ax[1].plot(grain_eqDia, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
         ax[1].fill_between(grain_eqDia, 0, ypdf2, alpha=0.3)
         if particles:
             #par_lognorm = lognorm(std_par, scale=mu_par)
             ypdf1 = par_lognorm.pdf(par_eqDia)
-            area = np.trapz(ypdf1, par_eqDia)
+            """area = np.trapz(ypdf1, par_eqDia)
             if np.isclose(area, 0.):
                 logging.debug(f'Particle AREA interval: {area}')
                 logging.debug(np.amin(par_eqDia))
                 logging.debug(np.amax(par_eqDia))
                 area = 1.
-            ypdf1 /= area
+            ypdf1 /= area"""
             ax[1].plot(par_eqDia, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
             ax[1].fill_between(par_eqDia, 0, ypdf1, alpha=0.3)
         if gs_param is not None:
@@ -443,13 +443,13 @@ def plot_output_stats(data_list, labels, iphase=None,
                 x1 = max(np.max(par_eqDia), x1)
             x = np.linspace(x0, x1, num=50)
             y = lognorm.pdf(x, gs_param[0], loc=gs_param[1], scale=gs_param[2])
-            area = np.trapz(y, x)
+            """area = np.trapz(y, x)
             if np.isclose(area, 0.):
                 logging.debug(f'Expt. AREA interval: {x0}, {x1}')
                 logging.debug(np.amin(grain_eqDia))
                 logging.debug(np.amax(grain_eqDia))
                 area = 1.
-            y /= area
+            y /= area"""
             ax[1].plot(x, y, '--k', label='Experiment')
 
         ax[1].legend(loc="upper right", fontsize=16)
@@ -497,18 +497,18 @@ def plot_output_stats(data_list, labels, iphase=None,
 
         # Plot PDF
         ypdf2 = ar_lognorm.pdf(grain_AR)
-        area = np.trapz(ypdf2, grain_AR)
+        """area = np.trapz(ypdf2, grain_AR)
         if np.isclose(area, 0.0):
             logging.debug('Small area for aspect ratio of grains.')
             logging.debug(ypdf2, grain_AR)
             area = 1.0
-        ypdf2 /= area
+        ypdf2 /= area"""
         ax[1].plot(grain_AR, ypdf2, linestyle='-', linewidth=3.0, label=label[0])
         ax[1].fill_between(grain_AR, 0, ypdf2, alpha=0.3)
         if particles:
             ypdf1 = par_lognorm.pdf(par_AR)
-            area = np.trapz(ypdf1, par_AR)
-            ypdf1 /= area
+            """area = np.trapz(ypdf1, par_AR)
+            ypdf1 /= area"""
             ax[1].plot(par_AR, ypdf1, linestyle='-', linewidth=3.0, label='Particles')
             ax[1].fill_between(par_AR, 0, ypdf1, alpha=0.3)
         if ar_param is not None:
@@ -519,8 +519,8 @@ def plot_output_stats(data_list, labels, iphase=None,
                 x1 = max(x1, np.max(par_AR))
             x = np.linspace(x0, x1, num=100)
             y = lognorm.pdf(x, ar_param[0], loc=ar_param[1], scale=ar_param[2])
-            area = np.trapz(y, x)
-            y /= area
+            """area = np.trapz(y, x)
+            y /= area"""
             ax[1].plot(x, y, '--k', label='Experiment')
 
         ax[1].legend(loc="upper right", fontsize=16)
@@ -545,6 +545,10 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
     """
     def plot_lognorm(x, sig, loc, scale, axis):
         y = lognorm.pdf(x, sig, loc=loc, scale=scale)
+        """area = np.trapz(y, xv)
+        if np.isclose(area, 0.0):
+            area = 1.
+        y /= area"""
         axis.plot(x, y, linestyle='-', linewidth=3.0, label='Output stats')
         axis.fill_between(x, 0, y, alpha=0.3)
 
@@ -567,11 +571,11 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
     ypdf = lognorm.pdf(xaxis, sd, loc=loc, scale=scale)
     # normalize density to region between min and max cutoff
     ind = np.nonzero(np.logical_and(xaxis >= dia_cutoff_min, xaxis <= dia_cutoff_max))[0]
-    if gs_data is None:
+    """if gs_data is None:
         area = np.trapz(ypdf[ind], xaxis[ind])
         if np.isclose(area, 0.0):
             area = 1.
-        ypdf /= area
+        ypdf /= area"""
     # set colorcodes
     sns.set(color_codes=True)
     if stats_dict["Grain type"] == "Equiaxed":
@@ -635,16 +639,16 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
         ax[0].legend(fontsize=12)
 
         # Plot aspect ratio statistics
-        # Compute the Log-normal PDF & CDF.
+        # Compute the Log-normal PDF
         xaxis = np.linspace(0.5 * ar_cutoff_min, 2 * ar_cutoff_max, 500)
         ypdf = lognorm.pdf(xaxis, sd_AR, loc=loc_AR, scale=scale_AR)
         # normalize density to region between min and max cutoff
         ind = np.nonzero(np.logical_and(xaxis >= ar_cutoff_min, xaxis <= ar_cutoff_max))[0]
-        if ar_data is None:
+        """if ar_data is None:
             area = np.trapz(ypdf[ind], xaxis[ind])
             if np.isclose(area, 0.0):
                 area = 1.
-            ypdf /= area
+            ypdf /= area"""
         ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0,
                       label='Minimum cut-off: {:.2f}'.format(ar_cutoff_min))
         ax[1].axvline(ar_cutoff_max, linestyle='--', linewidth=3.0,
@@ -716,10 +720,10 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
         ypdf = lognorm.pdf(xaxis, ar_sig, scale=ar_scale)
         # normalize density to region between min and max cutoff
         ind = np.nonzero(np.logical_and(xaxis >= ar_cutoff_min, xaxis <= ar_cutoff_max))[0]
-        area = np.trapz(ypdf[ind], xaxis[ind])
+        """area = np.trapz(ypdf[ind], xaxis[ind])
         if np.isclose(area, 0.0):
             area = 1.
-        ypdf /= area
+        ypdf /= area"""
         ax[1].axvline(ar_cutoff_min, linestyle='--', linewidth=3.0,
                       label='Minimum cut-off: {:.2f}'.format(ar_cutoff_min))
         ax[1].axvline(ar_cutoff_max, linestyle='--', linewidth=3.0,
