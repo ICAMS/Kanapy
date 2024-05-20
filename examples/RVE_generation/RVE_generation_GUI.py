@@ -1,12 +1,11 @@
 """
 A Graphical User Interface for create_rve.py and cuboid_grains.py
 Created on May 2024
-@author: Ronak Shoghi
+@author: Ronak Shoghi, Alexander Hartmaier
 """
-import sys
+
 import tkinter as tk
 from tkinter import ttk, Toplevel
-from tkinter import messagebox
 from math import pi
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import kanapy as knpy
@@ -59,7 +58,6 @@ def display_plot(fig, plot_type):
 
 
 """ Functions for RVEs based on particle simulations """
-
 
 def create_and_plot_stats():
     """Plot statistics of current microstructure descriptors
@@ -131,7 +129,7 @@ def create_rve_and_plot():
     Will overwrite existing ms_stats and ms objects"""
     global ms, ms_stats
 
-    popup = self_closing_message("The process is starting, please wait...", duration=2000)
+    popup = self_closing_message("The process has been started, please wait...", duration=2000)
     start_time = time.time()
     texture = texture_var1.get()
     matname = matname_var1.get()
