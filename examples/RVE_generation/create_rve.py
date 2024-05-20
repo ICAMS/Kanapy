@@ -16,8 +16,8 @@ size = 40  # size of RVE in micron
 periodic = True  # create periodic (True) or non-periodic (False) RVE
 # define statistical information on microstructure
 ms_elong = {'Grain type': 'Elongated',
-            'Equivalent diameter': {'sig': 0.8, 'scale': 14.0, 'loc': 0.0, 'cutoff_min': 8.0, 'cutoff_max': 18.0},
-            'Aspect ratio': {'sig': 0.8, 'scale': 2.5, 'loc': 0.0, 'cutoff_min': 0.9, 'cutoff_max': 3.5},
+            'Equivalent diameter': {'sig': 0.8, 'scale': 14.0, 'loc': 0.0, 'cutoff_min': 6.0, 'cutoff_max': 16.0},
+            'Aspect ratio': {'sig': 0.8, 'scale': 2.5, 'loc': 0.0, 'cutoff_min': 0.85, 'cutoff_max': 3.2},
             "Tilt angle": {"kappa": 1.0, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": pi},
             'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': nvox, 'Ny': nvox, 'Nz': nvox},
             'Simulation': {'periodicity': periodic, 'output_units': 'um'}}
@@ -31,7 +31,7 @@ ms.pack()  # perform particle simulation to distribute grain nuclei in RVE volum
 ms.plot_ellipsoids()  # plot final configuration of particles
 ms.voxelize()  # create structured mesh and assign voxels to grains according to particles
 ms.plot_voxels(sliced=True)  # plot voxels colored according to grain number
-ms.plot_stats_init(show_res=True)  # compared final grain statistics with initial parameters
+ms.plot_stats_init(show_res=True)  # compare final grain statistics with initial parameters
 ms.generate_grains()  # generate a polyhedral hull around each voxelized grain
 ms.plot_grains()  # plot polyhedral grains
 

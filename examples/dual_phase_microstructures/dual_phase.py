@@ -22,16 +22,16 @@ lside = 40  # side length in micron in each Cartesian direction
 ms_stats_0 = {  # statistical data for dense phase
     "Grain type": "Elongated",
     "Equivalent diameter": {
-        "sig": 1.0, "scale": 12.0, "loc": 5.0, "cutoff_min": 8.0, "cutoff_max": 14.0},
+        "sig": 1.0, "scale": 15.0, "cutoff_min": 6.0, "cutoff_max": 17.0},
     "Aspect ratio": {
-        "sig": 0.5, "scale": 1.0, "loc": 0.6, "cutoff_min": 1.0, "cutoff_max": 2.2},
+        "sig": 0.7, "scale": 1.0, "cutoff_min": 0.6, "cutoff_max": 1.8},
     "Tilt angle": {
-        "kappa": 1.0, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
+        "kappa": 1.0, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": pi},
     "RVE": {
         "sideX": lside, "sideY": lside, "sideZ": lside,
         "Nx": nvox, "Ny": nvox, "Nz": nvox},
     "Simulation": {
-        "periodicity": str(periodic), "output_units": "um"},
+        "periodicity": periodic, "output_units": "mm"},
     "Phase": {
         "Name": name0, "Number": 0, "Volume fraction": vf0}
 }
@@ -39,16 +39,16 @@ ms_stats_0 = {  # statistical data for dense phase
 ms_stats_1 = {  # statistical data for porosity (will not be considered explicitly)
     "Grain type": "Elongated",
     "Equivalent diameter": {
-        "sig": 1.5, "scale": 9.0, "loc": 5.0, "cutoff_min": 7.0, "cutoff_max": 10.0},
+        "sig": 0.8, "scale": 9.0, "cutoff_min": 5.0, "cutoff_max": 11.0},
     "Aspect ratio": {
-        "sig": 0.5, "scale": 3.5, "loc": 1.0, "cutoff_min": 2.6, "cutoff_max": 5.0},
+        "sig": 0.8, "scale": 3.5, "cutoff_min": 1.5, "cutoff_max": 4.5},
     "Tilt angle": {
-        "kappa": 1.5, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": 2*pi},
+        "kappa": 1.5, "loc": 0.5*pi, "cutoff_min": 0.0, "cutoff_max": pi},
     "RVE": {
         "sideX": lside, "sideY": lside, "sideZ": lside,
         "Nx": nvox, "Ny": nvox, "Nz": nvox},
     "Simulation": {
-        "periodicity": str(periodic), "output_units": "um"},
+        "periodicity": periodic, "output_units": "mm"},
     "Phase": {
         "Name": name1, "Number": 1, "Volume fraction": vf1}
 }
@@ -63,9 +63,9 @@ ms.pack(k_rep=0.01, k_att=0.01)  # packing will be stopped when desired volume f
 ms.plot_ellipsoids(dual_phase=True)  # plot particles at the end of growth phase (dual_phase=False plots colored ellips)
 ms.voxelize()  # assigning particles to voxels, empty voxels will be considered as phase 1 (porosity)
 ms.plot_voxels(sliced=True, dual_phase=True)  # plot voxels, dual_phase=False will plot colored voxels for phase 0
+# plot phase-specific statistical information of RVE (for dual_phase=False: entire RVE) and compare to initial stats
+ms.plot_stats_init(show_res=True)
 ms.generate_grains()  # construct polyhedral hull for each grain
 ms.plot_grains(dual_phase=True)  # plot grain structure (dual_phase=True will plot colored grains for phase 0)
-ms.plot_stats(dual_phase=True)  # plot phase-specific statistical information of RVE (for dual_phase=False: entire RVE)
-
 # Write voxel structure to JSON file
 ms.write_voxels(script_name=__file__, mesh=False, system=False)

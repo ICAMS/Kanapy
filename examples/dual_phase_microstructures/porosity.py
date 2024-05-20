@@ -30,7 +30,7 @@ ms_stats = {  # statistical data for dense phase
         "sideX": lside, "sideY": lside, "sideZ": lside,
         "Nx": nvox, "Ny": nvox, "Nz": nvox},
     "Simulation": {
-        "periodicity": str(periodic), "output_units": "um"},
+        "periodicity": periodic, "output_units": "mm"},
     "Phase": {
         "Name": name, "Number": 0, "Volume fraction": vf_pores}
 }
