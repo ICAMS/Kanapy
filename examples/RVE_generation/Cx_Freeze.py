@@ -17,7 +17,7 @@ def generate_version():
 
 setup(
     name="GUI",
-    version="0.1",
+    version=generate_version(),
     description="Kanapy",
     executables=[Executable("RVE_generation_GUI.py")]
 )

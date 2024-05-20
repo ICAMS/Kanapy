@@ -3,9 +3,10 @@ A Graphical User Interface for create_rve.py and cuboid_grains.py
 Created on May 2024
 @author: Ronak Shoghi
 """
-
+import sys
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, Toplevel
+from tkinter import messagebox
 from math import pi
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import kanapy as knpy
@@ -14,7 +15,7 @@ import numpy as np
 import itertools
 from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.entities import Simulation_Box
-
+import time
 
 def parse_entry(entry):
     return list(map(int, entry.strip().split(',')))
@@ -98,11 +99,40 @@ def create_and_plot_stats():
         display_plot(fig, plot_type="stats")
 
 
+def self_closing_message(message, duration=2000):
+    """
+    Display a self-closing message box.
+
+    :param message: The message to be displayed.
+    :param duration: The time in milliseconds before the message box closes automatically.
+    :return: A reference to the popup window.
+    """
+    popup = Toplevel()
+    popup.title("Information")
+    popup.geometry("300x100")
+
+    screen_width = popup.winfo_screenwidth()
+    screen_height = popup.winfo_screenheight()
+    window_width = 300
+    window_height = 100
+    x_coordinate = int((screen_width / 2) - (window_width / 2))
+    y_coordinate = int((screen_height / 2) - (window_height / 2))
+    popup.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
+
+    label = ttk.Label(popup, text=message, font=("Helvetica", 12), wraplength=250)
+    label.pack(expand=True)
+    popup.after(duration, popup.destroy)
+    popup.update_idletasks()
+
+    return popup
+
 def create_rve_and_plot():
     """Create and plot the RVE
     Will overwrite existing ms_stats and ms objects"""
     global ms, ms_stats
 
+    popup = self_closing_message("The process is starting, please wait...", duration=2000)
+    start_time = time.time()
     texture = texture_var1.get()
     matname = matname_var1.get()
     nvox = int(nvox_var1.get())
@@ -136,6 +166,9 @@ def create_rve_and_plot():
     fig = ms.plot_voxels(silent=True, sliced=False)
     display_plot(fig, plot_type="rve")
     flist = ms.plot_stats_init(silent=True, get_res=True)
+    end_time = time.time()
+    duration = end_time - start_time
+    self_closing_message(f"Process completed in {duration:.2f} seconds", duration=2000)
     for fig in flist:
         display_plot(fig, plot_type="stats")
 
@@ -356,6 +389,10 @@ def create_orientation(texture, matname, ngr, nv_gr, size, nphases, periodic):
     if knpy.MTEX_AVAIL:
         ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
 
+def close():
+    app.quit()
+    app.destroy()
+
 
 """ Main code section """
 # define global variables
@@ -366,8 +403,15 @@ ms_stats = None
 
 # initialize app and notebook
 app = tk.Tk()
-app.geometry("1200x800")
 app.title("RVE_Generation")
+# app.geometry("1200x800")
+screen_width = app.winfo_screenwidth()
+screen_height =app.winfo_screenheight()
+window_width = int(screen_width * 0.51)
+window_height = int(screen_height * 0.60)
+x_coordinate = int((screen_width / 2) - (window_width / 2))
+y_coordinate = int((screen_height / 2) - (window_height / 2))
+app.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
 
 notebook = ttk.Notebook(app)
 notebook.pack(fill='both', expand=True)
@@ -462,7 +506,8 @@ button_statistics.grid(row=0, column=0, padx=10)
 button_compare_statistics = ttk.Button(button_frame1, text="Compare Statistics", style='TButton',
                                        command=compare_statistics)
 button_compare_statistics.grid(row=0, column=2, padx=10)
-
+button_exit1 = ttk.Button(button_frame1, text="Exit", style='TButton', command=close)
+button_exit1.grid(row=0, column=3, padx=10)
 """ Second tab: Cuboid grains """
 # define standard parameters
 texture_var2 = tk.StringVar(value="random")
@@ -488,18 +533,23 @@ rve_plot_frame2 = ttk.Frame(plot_frame2)
 rve_plot_frame2.grid(row=0, column=0, sticky='nsew')
 
 labels2 = ["Texture", "Material Name", "Number of Grains",
-           "Number of Voxels", "Size of RVE (in micron)", "Number of Phases"]
+           "Number of Voxels", "Size of RVE (in micron)", "Number of Phases","Periodic"]
 entries2 = [ttk.Combobox(main_frame2, textvariable=texture_var2, values=['random', 'unimodal'], font=("Helvetica", 12),
                          width=20),
-            tk.Entry(main_frame2, textvariable=matname_var2, font=("Helvetica", 12), width=20),
-            tk.Entry(main_frame2, textvariable=ngr_var, font=("Helvetica", 12), width=20),
-            tk.Entry(main_frame2, textvariable=nv_gr_var, font=("Helvetica", 12), width=20),
-            tk.Entry(main_frame2, textvariable=size_var2, font=("Helvetica", 12), width=20),
-            tk.Entry(main_frame2, textvariable=nphases_var, font=("Helvetica", 12), width=20)]
+            ttk.Entry(main_frame2, textvariable=matname_var2, font=("Helvetica", 12), width=20),
+            ttk.Entry(main_frame2, textvariable=ngr_var, font=("Helvetica", 12), width=20),
+            ttk.Entry(main_frame2, textvariable=nv_gr_var, font=("Helvetica", 12), width=20),
+            ttk.Entry(main_frame2, textvariable=size_var2, font=("Helvetica", 12), width=20),
+            ttk.Entry(main_frame2, textvariable=nphases_var, font=("Helvetica", 12), width=20),
+            ttk.Checkbutton(main_frame2, variable=periodic_var2, style='TCheckbutton')]
 
 for i, (label, entry) in enumerate(zip(labels2, entries2)):
     tk.Label(main_frame2, text=label, font=("Helvetica", 12, "bold")).grid(row=i, column=0, sticky="w")
-    entry.grid(row=i, column=1, sticky="ew")
+    if isinstance(entry, ttk.Checkbutton):
+        entry.grid(row=i, column=1, columnspan=2, sticky="e")
+    else:
+        entry.grid(row=i, column=1, sticky="ew")
+
 
 button_frame2 = ttk.Frame(main_frame2)
 button_frame2.grid(row=len(labels2), column=0, columnspan=2, pady=10, sticky='ew')
@@ -508,9 +558,11 @@ run_simulation_button.grid(row=0, column=0, padx=10)
 create_orientation_button = ttk.Button(button_frame2, text="Create Orientation", style='TButton',
                                        command=create_orientation_from_gui)
 create_orientation_button.grid(row=0, column=1, padx=10)
-write_files_button = ttk.Button(button_frame2, text="Write Abaqus Input Files", style='TButton',
+write_files_button = ttk.Button(button_frame2, text="Write Abaqus Input File", style='TButton',
                                 command=write_abaqus_input_file_from_gui)
 write_files_button.grid(row=0, column=2, padx=10)
+button_exit2 = ttk.Button(button_frame2, text="Exit", style='TButton', command=close)
+button_exit2.grid(row=0, column=3, padx=10)
 
 """ Start main loop """
 app.mainloop()
