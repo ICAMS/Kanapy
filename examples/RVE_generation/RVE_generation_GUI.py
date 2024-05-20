@@ -209,7 +209,7 @@ def run_simulation(texture, matname, ngr, nv_gr, size, nphases, periodic):
     ms.mesh.ngrains_phase = ms.ngrains
 
     print("Simulation completed with parameters:", texture, matname, ngr, nv_gr, size, nphases, periodic)
-    fig = ms.plot_voxels(show=False, sliced=False)
+    fig = ms.plot_voxels(sliced= True, silent=True)
     ptag = 'pbc' if periodic else 'no_pbc'
     fname = ms.write_abq(nodes='v', file=f'abq{nv_gr[0]}_gr{ngr[0]}_{ptag}_geom.inp')
     return fig
