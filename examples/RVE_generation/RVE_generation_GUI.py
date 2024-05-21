@@ -171,26 +171,43 @@ def create_rve_and_plot():
         display_plot(fig, plot_type="stats")
 
 
-def compare_statistics():
-    """Create plot of initial statistics together with final microstructure
-    descriptors for particles and voxels"""
+# def compare_statistics():
+#     """Create plot of initial statistics together with final microstructure
+#     descriptors for particles and voxels"""
+#     global ms, ms_stats
+#     if ms_stats is None or ms is None or ms.mesh is None:
+#         print("No microstructure. Create RVE first.")
+#         return
+#     gs_param = [ms_stats['Equivalent diameter']['sig'],
+#                 ms_stats['Equivalent diameter']['loc'],
+#                 ms_stats['Equivalent diameter']['scale']]
+#     ar_param = [ms_stats['Aspect ratio']['sig'],
+#                 ms_stats['Aspect ratio']['loc'],
+#                 ms_stats['Aspect ratio']['scale']]
+#     flist = ms.plot_stats(silent=True, gs_param=[gs_param], ar_param=[ar_param], enhanced_plot=True)
+#     for fig in flist:
+#         display_plot(fig, plot_type="stats")
+
+def create_orientation_first_tab():
+    """A function to create the orientation """
     global ms, ms_stats
+    popup = self_closing_message("The process has been started, please wait...", duration=2000)
+    texture = texture_var1.get()
+    matname = matname_var1.get()
     if ms_stats is None or ms is None or ms.mesh is None:
-        print("No microstructure. Create RVE first.")
-        return
-    gs_param = [ms_stats['Equivalent diameter']['sig'],
-                ms_stats['Equivalent diameter']['loc'],
-                ms_stats['Equivalent diameter']['scale']]
-    ar_param = [ms_stats['Aspect ratio']['sig'],
-                ms_stats['Aspect ratio']['loc'],
-                ms_stats['Aspect ratio']['scale']]
-    flist = ms.plot_stats(silent=True, gs_param=[gs_param], ar_param=[ar_param], enhanced_plot=True)
-    for fig in flist:
-        display_plot(fig, plot_type="stats")
+        popup = self_closing_message("Please generate the RVE first...", duration=2000)
+    if knpy.MTEX_AVAIL:
+        start_time = time.time()
+        # Based on the notebook should the ang be different based on the selected texture?
+        # After finishing can we have a popup message to ask if files should be exported?
+        ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
+        ms.write_voxels(file=f'{matname}_voxels.json', script_name='generate_rve.ipynb', mesh=False, system=False)
+        end_time = time.time()
+        duration = end_time - start_time
+        self_closing_message(f"Process completed in {duration:.2f} seconds, the Voxel file has been saved. ", duration=2000)
 
 
 """ Functions for RVEs with cuboid grains """
-
 
 def run_simulation(texture, matname, ngr, nv_gr, size, nphases, periodic):
     """Create and plot microstructure object with cuboid grains
@@ -501,8 +518,8 @@ button_statistics = ttk.Button(button_frame1, text="Statistics", style='TButton'
                                command=create_and_plot_stats)
 button_statistics.grid(row=0, column=0, padx=10)
 
-button_compare_statistics = ttk.Button(button_frame1, text="Compare Statistics", style='TButton',
-                                       command=compare_statistics)
+button_compare_statistics = ttk.Button(button_frame1, text="Create Orientations", style='TButton',
+                                       command=create_orientation_first_tab)
 button_compare_statistics.grid(row=0, column=2, padx=10)
 button_exit1 = ttk.Button(button_frame1, text="Exit", style='TButton', command=close)
 button_exit1.grid(row=0, column=3, padx=10)
