@@ -171,36 +171,20 @@ def create_rve_and_plot():
         display_plot(fig, plot_type="stats")
 
 
-# def compare_statistics():
-#     """Create plot of initial statistics together with final microstructure
-#     descriptors for particles and voxels"""
-#     global ms, ms_stats
-#     if ms_stats is None or ms is None or ms.mesh is None:
-#         print("No microstructure. Create RVE first.")
-#         return
-#     gs_param = [ms_stats['Equivalent diameter']['sig'],
-#                 ms_stats['Equivalent diameter']['loc'],
-#                 ms_stats['Equivalent diameter']['scale']]
-#     ar_param = [ms_stats['Aspect ratio']['sig'],
-#                 ms_stats['Aspect ratio']['loc'],
-#                 ms_stats['Aspect ratio']['scale']]
-#     flist = ms.plot_stats(silent=True, gs_param=[gs_param], ar_param=[ar_param], enhanced_plot=True)
-#     for fig in flist:
-#         display_plot(fig, plot_type="stats")
-
 def create_orientation_first_tab():
     """A function to create the orientation """
     global ms, ms_stats
     popup = self_closing_message("The process has been started, please wait...", duration=2000)
     texture = texture_var1.get()
     matname = matname_var1.get()
+    omega = kernel_var1.get()
+    ang_string = euler_var1.get()
+    ang = [int(angle.strip()) for angle in ang_string.split(',')]
     if ms_stats is None or ms is None or ms.mesh is None:
         popup = self_closing_message("Please generate the RVE first...", duration=2000)
     if knpy.MTEX_AVAIL:
         start_time = time.time()
-        # Based on the notebook should the ang be different based on the selected texture?
-        # After finishing can we have a popup message to ask if files should be exported?
-        ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
+        ms.generate_orientations(texture, ang=ang, omega=omega)
         ms.write_voxels(file=f'{matname}_voxels.json', script_name='generate_rve.ipynb', mesh=False, system=False)
         end_time = time.time()
         duration = end_time - start_time
@@ -258,8 +242,6 @@ def run_simulation(texture, matname, ngr, nv_gr, size, nphases, periodic):
 
     print("Simulation completed with parameters:", texture, matname, ngr, nv_gr, size, nphases, periodic)
     fig = ms.plot_voxels(sliced= True, silent=True)
-    ptag = 'pbc' if periodic else 'no_pbc'
-    fname = ms.write_abq(nodes='v', file=f'abq{nv_gr[0]}_gr{ngr[0]}_{ptag}_geom.inp')
     return fig
 
 
@@ -285,7 +267,6 @@ def write_abaqus_input_file_from_gui():
     nphases = int(nphases_var.get())
     periodic = periodic_var2.get()
     write_abaqus_input_file(texture, matname, ngr, nv_gr, size, nphases, periodic)
-    print("Sucess!")
 
 
 def create_orientation_from_gui():
@@ -296,8 +277,13 @@ def create_orientation_from_gui():
     size = parse_entry(size_var2.get())
     nphases = int(nphases_var.get())
     periodic = periodic_var2.get()
+    popup = self_closing_message("The process has been started, please wait...", duration=2000)
+    start_time = time.time()
     create_orientation(texture, matname, ngr, nv_gr, size, nphases, periodic)
-    print("Sucess!")
+    ms.write_voxels(file=f'{matname}_voxels.json', script_name='generate_rve.ipynb', mesh=False, system=False)
+    end_time = time.time()
+    duration = end_time - start_time
+    self_closing_message(f"Process completed in {duration:.2f} seconds, the Voxel file has been saved. ", duration=2000)
 
 
 def display_plot_cuboid(fig):
@@ -408,6 +394,11 @@ def close():
     app.quit()
     app.destroy()
 
+def update_kernel_var(*args):
+    kernel_var1.set(0 if texture_var1.get() == 'random' else 7.5)
+
+def update_euler_var(*args):
+    euler_var1.set(0 if texture_var1.get() == 'random' else "0,45,0")
 
 """ Main code section """
 # define global variables
@@ -459,11 +450,14 @@ tilt_angle_kappa = tk.DoubleVar(value=1.0)
 tilt_angle_loc = tk.DoubleVar(value=0.5 * pi)
 tilt_angle_min = tk.DoubleVar(value=0.0)
 tilt_angle_max = tk.DoubleVar(value=2 * pi)
+kernel_var1 = tk.IntVar(value=7.5)
+euler_var1 = tk.StringVar(value="0,45,0")
+texture_var1.trace('w', update_kernel_var)
+texture_var1.trace('w', update_euler_var)
 
 # plot frames
 tab1 = ttk.Frame(notebook)
 notebook.add(tab1, text="Create RVE")
-
 main_frame1 = ttk.Frame(tab1)
 main_frame1.grid(row=0, column=0, sticky='nsew', padx=20, pady=20)
 
@@ -507,9 +501,12 @@ add_label_and_entry(18, "Kappa", tilt_angle_kappa, bold=False)
 add_label_and_entry(19, "Location", tilt_angle_loc, bold=False)
 add_label_and_entry(20, "Min", tilt_angle_min, bold=False)
 add_label_and_entry(21, "Max", tilt_angle_max, bold=False)
-
+ttk.Label(main_frame1, text="Orientation Parameters", font=("Helvetica", 12, "bold")) \
+    .grid(row=22, column=0, columnspan=2, pady=(10, 0), sticky='w')
+add_label_and_entry(23, "Kernel Half Width", kernel_var1, bold=False)
+add_label_and_entry(24, "Euler Angles", euler_var1, bold=False)
 button_frame1 = ttk.Frame(main_frame1)
-button_frame1.grid(row=22, column=0, columnspan=2, pady=10, sticky='ew')
+button_frame1.grid(row=25, column=0, columnspan=2, pady=10, sticky='ew')
 
 button_create_rve = ttk.Button(button_frame1, text="Create RVE", style='TButton', command=create_rve_and_plot)
 button_create_rve.grid(row=0, column=1, padx=10)
