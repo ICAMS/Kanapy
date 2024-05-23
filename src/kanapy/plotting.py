@@ -6,12 +6,12 @@ Created on Mon Oct  4 07:52:55 2021
 
 @author: Alexander Hartmaier, Golsa Tolooei Eshlaghi
 """
+import sys
 import logging
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 from scipy.stats import lognorm
-import sys
 from PyQt5.QtWidgets import QApplication
 
 def dpi_system():
