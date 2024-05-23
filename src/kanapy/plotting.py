@@ -11,7 +11,29 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 from scipy.stats import lognorm
+import sys
+from PyQt5.QtWidgets import QApplication
 
+def dpi_system():
+    """
+    A function to get the working system's DPI
+    """
+    app = QApplication(sys.argv)
+    screen = app.screens()[0]
+    dpi = screen.physicalDotsPerInch()
+    app.quit()
+    return dpi
+
+def plot_dpi():
+    """
+    Calculates the scaled DPI value for matplotlib
+    """
+    system_dpi = dpi_system()
+    dpi_scale = 100/system_dpi
+    matplotlib_dpi = 100 * dpi_scale
+    return matplotlib_dpi
+
+plt.rcParams['figure.dpi'] = plot_dpi()
 
 def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
                    mask=None, cmap='prism', alpha=1.0, silent=False,
@@ -216,7 +238,7 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
     None.
 
     """
-    fig = plt.figure(figsize=plt.figaspect(1), dpi=1200)
+    fig = plt.figure(figsize=plt.figaspect(1))
     ax = fig.add_subplot(111, projection='3d')
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.view_init(30, 30)
@@ -540,6 +562,7 @@ def plot_output_stats(data_list, labels, iphase=None,
 def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
                     gs_param=None, ar_param=None,
                     save_files=False, silent=False):
+
     r"""
     Plot initial microstructure descriptors, including cut-offs, based on user defined statistics
     """
