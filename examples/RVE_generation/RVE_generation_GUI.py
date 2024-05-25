@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 A Graphical User Interface for create_rve.py and cuboid_grains.py
 Created on May 2024
@@ -15,6 +17,7 @@ import itertools
 from kanapy.initializations import RVE_creator, mesh_creator
 from kanapy.entities import Simulation_Box
 import time
+
 
 def parse_entry(entry):
     return list(map(int, entry.strip().split(',')))
@@ -58,6 +61,7 @@ def display_plot(fig, plot_type):
 
 
 """ Functions for RVEs based on particle simulations """
+
 
 def create_and_plot_stats():
     """Plot statistics of current microstructure descriptors
@@ -124,6 +128,7 @@ def self_closing_message(message, duration=2000):
 
     return popup
 
+
 def create_rve_and_plot():
     """Create and plot the RVE
     Will overwrite existing ms_stats and ms objects"""
@@ -179,7 +184,7 @@ def create_orientation_first_tab():
     matname = matname_var1.get()
     omega = kernel_var1.get()
     ang_string = euler_var1.get()
-    ang = [int(angle.strip()) for angle in ang_string.split(',')]
+    ang = [float(angle.strip()) for angle in ang_string.split(',')]
     if ms_stats is None or ms is None or ms.mesh is None:
         popup = self_closing_message("Please generate the RVE first...", duration=2000)
     if knpy.MTEX_AVAIL:
@@ -188,10 +193,12 @@ def create_orientation_first_tab():
         ms.write_voxels(file=f'{matname}_voxels.json', script_name='generate_rve.ipynb', mesh=False, system=False)
         end_time = time.time()
         duration = end_time - start_time
-        self_closing_message(f"Process completed in {duration:.2f} seconds, the Voxel file has been saved. ", duration=2000)
+        self_closing_message(f"Process completed in {duration:.2f} seconds, the Voxel file has been saved. ",
+                             duration=2000)
 
 
 """ Functions for RVEs with cuboid grains """
+
 
 def run_simulation(texture, matname, ngr, nv_gr, size, nphases, periodic):
     """Create and plot microstructure object with cuboid grains
@@ -241,7 +248,7 @@ def run_simulation(texture, matname, ngr, nv_gr, size, nphases, periodic):
     ms.mesh.ngrains_phase = ms.ngrains
 
     print("Simulation completed with parameters:", texture, matname, ngr, nv_gr, size, nphases, periodic)
-    fig = ms.plot_voxels(sliced= True, silent=True)
+    fig = ms.plot_voxels(sliced=False, silent=True)
     return fig
 
 
@@ -390,15 +397,19 @@ def create_orientation(texture, matname, ngr, nv_gr, size, nphases, periodic):
     if knpy.MTEX_AVAIL:
         ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
 
+
 def close():
     app.quit()
     app.destroy()
 
+
 def update_kernel_var(*args):
-    kernel_var1.set(0 if texture_var1.get() == 'random' else 7.5)
+    kernel_var1.set("-" if texture_var1.get() == 'random' else 7.5)
+
 
 def update_euler_var(*args):
-    euler_var1.set(0 if texture_var1.get() == 'random' else "0,45,0")
+    euler_var1.set("-" if texture_var1.get() == 'random' else "0.0, 45.0, 0.0")
+
 
 """ Main code section """
 # define global variables
@@ -412,7 +423,7 @@ app = tk.Tk()
 app.title("RVE_Generation")
 # app.geometry("1200x800")
 screen_width = app.winfo_screenwidth()
-screen_height =app.winfo_screenheight()
+screen_height = app.winfo_screenheight()
 window_width = int(screen_width * 0.51)
 window_height = int(screen_height * 0.60)
 x_coordinate = int((screen_width / 2) - (window_width / 2))
@@ -449,9 +460,9 @@ aspect_ratio_max = tk.DoubleVar(value=4.0)
 tilt_angle_kappa = tk.DoubleVar(value=1.0)
 tilt_angle_loc = tk.DoubleVar(value=0.5 * pi)
 tilt_angle_min = tk.DoubleVar(value=0.0)
-tilt_angle_max = tk.DoubleVar(value=2 * pi)
-kernel_var1 = tk.IntVar(value=7.5)
-euler_var1 = tk.StringVar(value="0,45,0")
+tilt_angle_max = tk.DoubleVar(value=pi)
+kernel_var1 = tk.DoubleVar(value=7.5)
+euler_var1 = tk.StringVar(value="0.0, 45.0, 0.0")
 texture_var1.trace('w', update_kernel_var)
 texture_var1.trace('w', update_euler_var)
 
@@ -503,8 +514,8 @@ add_label_and_entry(20, "Min", tilt_angle_min, bold=False)
 add_label_and_entry(21, "Max", tilt_angle_max, bold=False)
 ttk.Label(main_frame1, text="Orientation Parameters", font=("Helvetica", 12, "bold")) \
     .grid(row=22, column=0, columnspan=2, pady=(10, 0), sticky='w')
-add_label_and_entry(23, "Kernel Half Width", kernel_var1, bold=False)
-add_label_and_entry(24, "Euler Angles", euler_var1, bold=False)
+add_label_and_entry(23, "Kernel Half Width (degree)", kernel_var1, bold=False)
+add_label_and_entry(24, "Euler Angles (degree)", euler_var1, bold=False)
 button_frame1 = ttk.Frame(main_frame1)
 button_frame1.grid(row=25, column=0, columnspan=2, pady=10, sticky='ew')
 
@@ -522,6 +533,7 @@ button_exit1 = ttk.Button(button_frame1, text="Exit", style='TButton', command=c
 button_exit1.grid(row=0, column=3, padx=10)
 """ Second tab: Cuboid grains """
 # define standard parameters
+
 texture_var2 = tk.StringVar(value="random")
 matname_var2 = tk.StringVar(value="Simulanium")
 ngr_var = tk.StringVar(value="5,5,5")
@@ -545,7 +557,7 @@ rve_plot_frame2 = ttk.Frame(plot_frame2)
 rve_plot_frame2.grid(row=0, column=0, sticky='nsew')
 
 labels2 = ["Texture", "Material Name", "Number of Grains",
-           "Number of Voxels", "Size of RVE (in micron)", "Number of Phases","Periodic"]
+           "Number of Voxels", "Size of RVE (in micron)", "Number of Phases", "Periodic"]
 entries2 = [ttk.Combobox(main_frame2, textvariable=texture_var2, values=['random', 'unimodal'], font=("Helvetica", 12),
                          width=20),
             ttk.Entry(main_frame2, textvariable=matname_var2, font=("Helvetica", 12), width=20),
@@ -561,7 +573,6 @@ for i, (label, entry) in enumerate(zip(labels2, entries2)):
         entry.grid(row=i, column=1, columnspan=2, sticky="e")
     else:
         entry.grid(row=i, column=1, sticky="ew")
-
 
 button_frame2 = ttk.Frame(main_frame2)
 button_frame2.grid(row=len(labels2), column=0, columnspan=2, pady=10, sticky='ew')

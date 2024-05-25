@@ -12,23 +12,23 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 from scipy.stats import lognorm
-from PyQt5.QtWidgets import QApplication
+#from PyQt5.QtWidgets import QApplication
 
-def dpi_system():
-    """
-    A function to get the working system's DPI
-    """
-    app = QApplication(sys.argv)
-    screen = app.screens()[0]
-    dpi = screen.physicalDotsPerInch()
-    app.quit()
-    return dpi
+#def dpi_system():
+#    """
+#    A function to get the working system's DPI
+#    """
+#    app = QApplication(sys.argv)
+#    screen = app.screens()[0]
+#    dpi = screen.physicalDotsPerInch()
+#    app.quit()
+#    return dpi
 
 def plot_dpi():
     """
     Calculates the scaled DPI value for matplotlib
     """
-    system_dpi = dpi_system()
+    system_dpi = 200 #dpi_system()
     dpi_scale = 100/system_dpi
     matplotlib_dpi = 100 * dpi_scale
     return matplotlib_dpi
