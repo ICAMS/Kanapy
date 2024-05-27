@@ -7,6 +7,7 @@ Created on May 2024
 """
 
 import tkinter as tk
+import matplotlib.pyplot as plt
 from tkinter import ttk, Toplevel
 from math import pi
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -424,6 +425,7 @@ app.title("RVE_Generation")
 # app.geometry("1200x800")
 screen_width = app.winfo_screenwidth()
 screen_height = app.winfo_screenheight()
+plt.rcParams['figure.dpi'] = screen_height / 19  # height stats_plot: 9, height voxel_plot: 6, margin: 4
 window_width = int(screen_width * 0.51)
 window_height = int(screen_height * 0.60)
 x_coordinate = int((screen_width / 2) - (window_width / 2))

@@ -4,7 +4,7 @@ Subroutines for plotting of microstructures
 
 Created on Mon Oct  4 07:52:55 2021
 
-@author: Alexander Hartmaier, Golsa Tolooei Eshlaghi
+@author: Alexander Hartmaier, Golsa Tolooei Eshlaghi, Ronak Shoghi
 """
 import sys
 import logging
@@ -12,6 +12,7 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 from scipy.stats import lognorm
+
 #from PyQt5.QtWidgets import QApplication
 
 #def dpi_system():
@@ -24,16 +25,15 @@ from scipy.stats import lognorm
 #    app.quit()
 #    return dpi
 
-def plot_dpi():
-    """
-    Calculates the scaled DPI value for matplotlib
-    """
-    system_dpi = 200 #dpi_system()
-    dpi_scale = 100/system_dpi
-    matplotlib_dpi = 100 * dpi_scale
-    return matplotlib_dpi
+#def plot_dpi():
+#    """
+#    Calculates the scaled DPI value for matplotlib
+#    """
+#    system_dpi = 200 #dpi_system()
+#    dpi_scale = 100/system_dpi
+#    matplotlib_dpi = 100 * dpi_scale
+#    return matplotlib_dpi
 
-plt.rcParams['figure.dpi'] = plot_dpi()
 
 def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
                    mask=None, cmap='prism', alpha=1.0, silent=False,
@@ -423,14 +423,14 @@ def plot_output_stats(data_list, labels, iphase=None,
 
         # Plot the histogram & PDF for equivalent diameter
         sns.set(color_codes=True)
-        fig, ax = plt.subplots(1, 2, figsize=(15, 9))
+        fig, ax = plt.subplots(1, 2, figsize=(15, 6))
 
         # Plot histogram
         ax[0].hist(data, density=True, bins=binNum, label=label)
-        ax[0].legend(loc="upper right", fontsize=16)
-        ax[0].set_xlabel('equivalent diameter (μm)', fontsize=18)
-        ax[0].set_ylabel('frequency', fontsize=18)
-        ax[0].tick_params(labelsize=14)
+        ax[0].legend(loc="upper right", fontsize=12)
+        ax[0].set_xlabel('equivalent diameter (μm)', fontsize=14)
+        ax[0].set_ylabel('frequency', fontsize=12)
+        ax[0].tick_params(labelsize=12)
         if iphase is not None:
             ax[0].set_title(f'Phase {iphase}')
 
@@ -559,7 +559,8 @@ def plot_output_stats(data_list, labels, iphase=None,
         return
 
 
-def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
+def plot_init_stats(stats_dict,
+                    gs_data=None, ar_data=None,
                     gs_param=None, ar_param=None,
                     save_files=False, silent=False):
 
@@ -586,6 +587,12 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
     dia_cutoff_min = stats_dict["Equivalent diameter"]["cutoff_min"]
     dia_cutoff_max = stats_dict["Equivalent diameter"]["cutoff_max"]
 
+    if "Phase" in stats_dict.keys():
+        title = (f'Microstructure statistics of phase {stats_dict["Phase"]["Number"]} '
+                 f'({stats_dict["Phase"]["Name"]})')
+    else:
+        title = ('Microstructure statistics')
+
     x_lim = dia_cutoff_max * 1.5
     if gs_param is not None:
         x_lim = max(x_lim, gs_param[4]*1.1)
@@ -602,7 +609,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
     # set colorcodes
     sns.set(color_codes=True)
     if stats_dict["Grain type"] == "Equiaxed":
-        plt.figure(figsize=(12, 9))
+        plt.figure(figsize=(8, 6))
         ax = plt.subplot(111)
         # plt.ion()
 
@@ -614,9 +621,9 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
         plt.plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
         ax.fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
         ax.set_xlim(left=0.0, right=x_lim)
-        ax.set_xlabel('Equivalent diameter (μm)', fontsize=18)
-        ax.set_ylabel('Density', fontsize=18)
-        ax.tick_params(labelsize=14)
+        ax.set_xlabel('Equivalent diameter (μm)', fontsize=14)
+        ax.set_ylabel('Density', fontsize=14)
+        ax.tick_params(labelsize=12)
         if gs_data is not None:
             idata = np.nonzero(gs_data < x_lim)[0]
             ax.hist(gs_data[idata], bins=80, density=True, label='Experimental data')
@@ -626,8 +633,8 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
             else:
                 xv = np.linspace(gs_param[3], gs_param[4], 200)
             plot_lognorm(xv, gs_param[0], gs_param[1], gs_param[2], ax[0])
-        plt.title("Grain equivalent diameter distribution", fontsize=20)
-        plt.legend(fontsize=16)
+        plt.title(title, fontsize=18)
+        plt.legend(fontsize=12)
     elif stats_dict["Grain type"] in ["Elongated"]:
         # Extract grain aspect ratio descriptors from input file
         sd_AR = stats_dict["Aspect ratio"]["sig"]
@@ -640,7 +647,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]
 
         # Plot grain size distribution
-        fig, ax = plt.subplots(2, 1, figsize=(8, 8))
+        fig, ax = plt.subplots(2, 1, figsize=(8, 9))
         ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
                       label='Minimum cut-off: {:.2f}'.format(dia_cutoff_min))
         ax[0].axvline(dia_cutoff_max, linestyle='--', linewidth=3.0,
@@ -648,8 +655,8 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
         ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
         ax[0].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
         ax[0].set_xlim(left=0.0, right=x_lim)
-        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=16)
-        ax[0].set_ylabel('Density', fontsize=16)
+        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=14)
+        ax[0].set_ylabel('Density', fontsize=14)
         ax[0].tick_params(labelsize=12)
         if gs_data is not None:
             ax[0].hist(gs_data, bins=80, density=True, label='experimental data')
@@ -660,6 +667,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
                 xv = np.linspace(gs_param[3], gs_param[4], 200)
             plot_lognorm(xv, gs_param[0], gs_param[1], gs_param[2], ax[0])
         ax[0].legend(fontsize=12)
+        ax[0].set_title(title, fontsize=18)
 
         # Plot aspect ratio statistics
         # Compute the Log-normal PDF
@@ -678,8 +686,8 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
                       label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
         ax[1].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
-        ax[1].set_xlabel('Aspect ratio', fontsize=16)
-        ax[1].set_ylabel('Density', fontsize=16)
+        ax[1].set_xlabel('Aspect ratio', fontsize=14)
+        ax[1].set_ylabel('Density', fontsize=14)
         ax[1].tick_params(labelsize=12)
         if ar_data is not None:
             ax[1].hist(ar_data, bins=15, density=True, label='Experimental data')
@@ -714,7 +722,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
             raise ValueError('Rotation axis not identified properly')
         ar_sig = stats_dict["Semi axes"]["sig"][irot]
 
-        fig, ax = plt.subplots(2, 1, figsize=(9, 9))
+        fig, ax = plt.subplots(2, 1, figsize=(8, 10))
 
         # Plot grain size distribution
         ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
@@ -724,9 +732,9 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
         ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
         ax[0].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
         ax[0].set_xlim(left=0.0, right=x_lim)
-        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=18)
-        ax[0].set_ylabel('Density', fontsize=18)
-        ax[0].tick_params(labelsize=14)
+        ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=14)
+        ax[0].set_ylabel('Density', fontsize=14)
+        ax[0].tick_params(labelsize=12)
         if gs_data is not None:
             ax[0].hist(gs_data, bins=80, density=True, label='Experimental data')
         if gs_param is not None:
@@ -735,7 +743,8 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
             else:
                 xv = np.linspace(gs_param[3], gs_param[4], 200)
             plot_lognorm(xv, gs_param[0], gs_param[1], gs_param[2], ax[0])
-        ax[0].legend(fontsize=14)
+        ax[0].legend(fontsize=12)
+        ax[0].set_title(title, fontsize=18)
 
         # Plot aspect ratio statistics
         # Compute the Log-normal PDF
@@ -753,9 +762,9 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
                       label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
         ax[1].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
-        ax[1].set_xlabel('Aspect ratio', fontsize=18)
-        ax[1].set_ylabel('Density', fontsize=18)
-        ax[1].tick_params(labelsize=14)
+        ax[1].set_xlabel('Aspect ratio', fontsize=14)
+        ax[1].set_ylabel('Density', fontsize=14)
+        ax[1].tick_params(labelsize=12)
         if ar_data is not None:
             ax[1].hist(ar_data, bins=15, density=True, label='Experimental data')
         if ar_param is not None:
@@ -764,7 +773,7 @@ def plot_init_stats(stats_dict, gs_data=None, ar_data=None,
             else:
                 xv = np.linspace(ar_param[3], ar_param[4], 200)
             plot_lognorm(xv, ar_param[0], ar_param[1], ar_param[2], ax[1])
-        ax[1].legend(fontsize=14)
+        ax[1].legend(fontsize=12)
     else:
         raise ValueError('Value for "Grain_type" must be either "Equiaxed" or "Elongated".')
 
@@ -846,26 +855,26 @@ def plot_stats_dict(sdict, title=None, save_files=False):
 
     # Plot the histogram & PDF
     sns.set(color_codes=True)
-    fig, ax = plt.subplots(1, 2, figsize=(16, 7))
+    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
     # Plot histogram
-    ax[0].hist(val, weights=cts, density=False, bins=nb, label=label)
-    ax[0].legend(loc="upper right", fontsize=16)
-    ax[0].set_xlabel('length of semi-axis (μm)', fontsize=18)
-    ax[0].set_ylabel('frequency', fontsize=18)
-    ax[0].tick_params(labelsize=14)
+    """ax[0].hist(val, weights=cts, density=False, bins=nb, label=label)
+    ax[0].legend(loc="upper right", fontsize=12)
+    ax[0].set_xlabel('length of semi-axis (μm)', fontsize=14)
+    ax[0].set_ylabel('frequency', fontsize=14)
+    ax[0].tick_params(labelsize=12)"""
     # Plot PDF
     xval = np.linspace(xmin_gl, xmax_gl, 50, endpoint=True)
     for i, key in enumerate(['a', 'b', 'c']):
         ypdf = lognorm.pdf(xval, sdict[f'{key}_sig'], loc=loc, scale=sdict[f'{key}_scale'])
-        ax[1].plot(xval, ypdf, linestyle='-', linewidth=3.0, label=label[i])
-        ax[1].fill_between(xval, ypdf, alpha=0.3)
-    ax[1].legend(loc="upper right", fontsize=16)
-    ax[1].set_xlabel('length of semi-axis (μm)', fontsize=18)
-    ax[1].set_ylabel('density', fontsize=18)
-    ax[1].tick_params(labelsize=14)
+        ax.plot(xval, ypdf, linestyle='-', linewidth=3.0, label=label[i])
+        ax.fill_between(xval, ypdf, alpha=0.3)
+    ax.legend(loc="upper right", fontsize=12)
+    ax.set_xlabel('Length of semi-axis (μm)', fontsize=14)
+    ax.set_ylabel('Density', fontsize=14)
+    ax.tick_params(labelsize=12)
     if title is not None:
-        ax[0].set_title(title, fontsize=20)
-        ax[1].set_title(title, fontsize=20)
+        ax.set_title(title, fontsize=16)
+        #ax[1].set_title(title, fontsize=16)
     if save_files:
         if title is None:
             fname = 'semi_axes.png'
