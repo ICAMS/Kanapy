@@ -290,10 +290,10 @@ class EBSDmap:
             self.eng.plot(ipfKey, nargout=0)
             
             
-def get_ipf_colors(ori_list):
+def get_ipf_colors(ori_list, color_key=0):
     """
     Get colors of list of orientations (in radians).
-    Assumes cubic crystal symmtry and cubic specimen symmetry.
+    Assumes cubic crystal symmetry and cubic specimen symmetry.
 
     Parameters
     ----------
@@ -316,7 +316,7 @@ def get_ipf_colors(ori_list):
     
     # get colors
     """Create possibility to pass CS to MTEX"""
-    colors = eng.get_ipf_col(ori_list, nargout=1)
+    colors = eng.get_ipf_col(ori_list, color_key, nargout=1)
     return np.array(colors)
         
 

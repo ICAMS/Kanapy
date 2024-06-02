@@ -384,7 +384,24 @@ class Microstructure(object):
                           dual_phase=dual_phase, plot_hull=plot_hull)
 
     def plot_voxels(self, sliced=False, dual_phase=False, cmap='prism', ori=None,
-                    silent=False):
+                    color_key=0, silent=False):
+        """
+        Generates plot of voxel structure
+
+        Parameters
+        ----------
+        sliced
+        dual_phase
+        cmap
+        ori
+        color_key: int
+            selects the color key: 0: iphHSVKey, 1: BungeColorKey, 2: ipfHKLKey (optional, default: 0)
+        silent
+
+        Returns
+        -------
+
+        """
         if self.mesh.grains is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
         elif dual_phase:
@@ -396,7 +413,7 @@ class Microstructure(object):
                 from kanapy.textures import get_ipf_colors
                 if isinstance(ori, bool) and ori:
                     ori = np.array([val for val in self.mesh.grain_ori_dict.values()])
-                clist = get_ipf_colors(ori)
+                clist = get_ipf_colors(ori, color_key)
             except Exception as e:
                 logging.error(f'An unexpected exception occurred: {e}')
                 logging.error('Orientations can only be plotted if MTEX is available.')
