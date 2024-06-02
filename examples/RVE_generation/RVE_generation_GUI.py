@@ -63,7 +63,6 @@ def add_label_and_entry(frame, row, label_text, entry_var, entry_type="entry", b
         combobox.current(0)
     return
 
-
 def close():
     global app
     app.quit()
@@ -180,22 +179,20 @@ class particle_rve(object):
         # create buttons
         button_frame1 = ttk.Frame(main_frame1)
         button_frame1.grid(row=next(line), column=0, columnspan=2, pady=10, sticky='ew')
-
         button_statistics = ttk.Button(button_frame1, text="Statistics", style='TButton',
                                        command=self.create_and_plot_stats)
-        button_statistics.grid(row=0, column=0, padx=10)
+        button_statistics.grid(row=0, column=0, padx=(10, 5), pady=5, sticky='ew')
         button_create_rve = ttk.Button(button_frame1, text="Create RVE", style='TButton',
                                        command=self.create_and_plot_rve)
-        button_create_rve.grid(row=0, column=1, padx=10)
-
+        button_create_rve.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
         button_create_ori = ttk.Button(button_frame1, text="Create Orientations", style='TButton',
                                        command=self.create_orientation)
-        button_create_ori.grid(row=0, column=2, padx=10)
+        button_create_ori.grid(row=1, column=0, padx=(10, 5), pady=5, sticky='ew')
         write_files_button = ttk.Button(button_frame1, text="Write Abaqus Input", style='TButton',
                                         command=self.export_abq)
-        write_files_button.grid(row=1, column=0, padx=10)
+        write_files_button.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
         button_exit1 = ttk.Button(button_frame1, text="Exit", style='TButton', command=close)
-        button_exit1.grid(row=1, column=2, padx=10)
+        button_exit1.grid(row=2, column=0, padx=(10, 5), pady=5, sticky='ew')
 
     def update_kernel_var(self, *args):
         self.kernel_var1.set("-" if self.texture_var1.get() == 'random' else "7.5")
@@ -389,8 +386,8 @@ class cuboid_rve(object):
             .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
         add_label_and_entry(main_frame2, next(line), "Material Name", self.matname_var2, bold=False)
         add_label_and_entry(main_frame2, next(line), "Material Number", self.ialloy, bold=False)
-        add_label_and_entry(main_frame2, next(line), "Number of Grains", self.ngr_var, bold=False)
         add_label_and_entry(main_frame2, next(line), "Number of Voxels", self.nv_gr_var, bold=False)
+        add_label_and_entry(main_frame2, next(line), "Number of Grains", self.ngr_var, bold=False)
         add_label_and_entry(main_frame2, next(line), "Size of RVE (in micron)", self.size_var2, bold=False)
 
         ttk.Label(main_frame2, text="Orientation Parameters", font=("Helvetica", 12, "bold")) \
@@ -406,15 +403,15 @@ class cuboid_rve(object):
         button_frame2.grid(row=next(line), column=0, columnspan=2, pady=10, sticky='ew')
         run_simulation_button = ttk.Button(button_frame2, text="Create RVE", style='TButton',
                                            command=self.create_cubes_and_plot)
-        run_simulation_button.grid(row=0, column=0, padx=10)
+        run_simulation_button.grid(row=0, column=0, padx=10, pady=5, sticky='ew')
         create_orientation_button = ttk.Button(button_frame2, text="Create Orientations", style='TButton',
                                                command=self.create_orientation)
-        create_orientation_button.grid(row=0, column=1, padx=10)
+        create_orientation_button.grid(row=0, column=1, padx=10, pady=5, sticky='ew')
         write_files_button = ttk.Button(button_frame2, text="Write Abaqus Input", style='TButton',
                                         command=self.export_abq)
-        write_files_button.grid(row=1, column=0, padx=10)
+        write_files_button.grid(row=1, column=0, padx=10, pady=5, sticky='ew')
         button_exit2 = ttk.Button(button_frame2, text="Exit", style='TButton', command=close)
-        button_exit2.grid(row=1, column=1, padx=10)
+        button_exit2.grid(row=1, column=1, padx=10, pady=5, sticky='ew')
 
     def update_kernel_var(self, *args):
         self.kernel_var2.set("-" if self.texture_var2.get() == 'random' else "7.5")
