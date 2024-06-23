@@ -101,7 +101,7 @@ class RVE_creator(object):
             Number of alloy in ICAMS CP-UMAT
         """
 
-        def init_particles():
+        def init_particles(ip):
             """
             Extract statistical microstructure information from data dictionary
             and initalize particles for packing accordingly
@@ -135,7 +135,8 @@ class RVE_creator(object):
                 K = individualK / np.sum(individualK)
 
                 # Total number of ellipsoids for packing density given by volume fraction
-                num_f = np.divide(K * phase_vf[-1] * np.prod(self.size), volume_array)
+                ip = pdict['Phase']
+                num_f = np.divide(K * phase_vf[ip] * np.prod(self.size), volume_array)
                 """print(f'Particle numbers: {num_f}')
                 print(f'Total volume of particles: {np.sum(np.multiply(num_f, volume_array))}')"""
                 # Rounding particle numbers to integer values keeping total volume constant
@@ -151,7 +152,7 @@ class RVE_creator(object):
                     num[i] = v1
                 """print(f'Volume after rounding: {np.sum(np.multiply(num, volume_array))}')
                 print(f'Particle numbers: {num}')
-                print(f'Phase volume fraction: {phase_vf[-1]}')"""
+                print(f'Phase volume fraction: {phase_vf[ip]}')"""
                 totalEllipsoids = int(np.sum(num))
 
                 # Duplicate the diameter values
@@ -389,7 +390,7 @@ class RVE_creator(object):
             if not from_voxels:
                 if stats["Grain type"] not in ["Elongated", "Equiaxed", "Free"]:
                     raise ValueError('The value for "Grain type" must be either "Equiaxed" or "Elongated".')
-                part_dict = init_particles()
+                part_dict = init_particles(ip)
                 self.particle_data.append(part_dict)
                 self.nparticles.append(part_dict['Number'])
         print('  RVE characteristics:')

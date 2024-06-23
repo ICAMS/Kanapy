@@ -372,7 +372,11 @@ class Microstructure(object):
         """ Generates plot of particles"""
         if self.particles is None:
             raise ValueError('No particle to plot. Run pack first.')
-        plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase)
+        hmin = min(self.rve.size)
+        asp_arr = [int(self.rve.size[0] / hmin),
+                   int(self.rve.size[1] / hmin),
+                   int(self.rve.size[2] / hmin)]
+        plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase, asp_arr=asp_arr)
 
     def plot_particles(self, cmap='prism', dual_phase=False, plot_hull=True):
         """ Generates plot of particles"""
@@ -380,8 +384,12 @@ class Microstructure(object):
             raise ValueError('No particle to plot. Run pack first.')
         if self.particles[0].inner is None:
             raise ValueError('Ellipsoids without inner polygon cannot be plotted.')
+        hmin = min(self.rve.size)
+        asp_arr = [int(self.rve.size[0] / hmin),
+                   int(self.rve.size[1] / hmin),
+                   int(self.rve.size[2] / hmin)]
         plot_particles_3D(self.particles, cmap=cmap,
-                          dual_phase=dual_phase, plot_hull=plot_hull)
+                          dual_phase=dual_phase, plot_hull=plot_hull, asp_arr=asp_arr)
 
     def plot_voxels(self, sliced=False, dual_phase=False, cmap='prism', ori=None,
                     color_key=0, silent=False):
@@ -420,9 +428,13 @@ class Microstructure(object):
                 clist = None
         else:
             clist = None
-
+        hmin = min(self.rve.size)
+        asp_arr = [int(self.rve.size[0] / hmin),
+                   int(self.rve.size[1] / hmin),
+                   int(self.rve.size[2] / hmin)]
         fig = plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced,
-                             dual_phase=dual_phase, cmap=cmap, clist=clist, silent=silent)
+                             dual_phase=dual_phase, cmap=cmap, clist=clist,
+                             silent=silent, asp_arr=asp_arr)
         if silent:
             return fig
 
@@ -433,8 +445,12 @@ class Microstructure(object):
             geometry = self.geometry
         if geometry is None:
             raise ValueError('No polygons for grains defined. Run generate_grains() first')
+        hmin = min(self.rve.size)
+        asp_arr = [int(self.rve.size[0] / hmin),
+                   int(self.rve.size[1] / hmin),
+                   int(self.rve.size[2] / hmin)]
         plot_polygons_3D(geometry, cmap=cmap, alpha=alpha, ec=ec,
-                         dual_phase=dual_phase)
+                         dual_phase=dual_phase, asp_arr=asp_arr)
 
     def plot_stats(self, data=None,
                    gs_data=None, gs_param=None,

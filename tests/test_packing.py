@@ -16,7 +16,7 @@ def par_sim(mocker):
                'Minor_diameter1': np.array([2.15, 3.6, 1.15]),
                'Minor_diameter2': np.array([2.15, 3.6, 1.15]),
                'Tilt angle': np.array([92, 89.3, 85]),
-               'Phase': [0, 0, 0]}
+               'Phase': 0}
 
     sb = mocker.MagicMock()
     # Define attributes to mocker object
@@ -119,7 +119,7 @@ def test_packingRoutine():
           'Minor_diameter1': [1.5, 1.5],
           'Minor_diameter2': [1.5, 1.5],
           'Tilt angle': [86, 92],
-          'Phase': [0, 0]}
+          'Phase': 0}
     sb = Simulation_Box((3, 3, 3))
 
     # Test if the 'particle_generator' function is called once

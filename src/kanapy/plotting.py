@@ -37,7 +37,7 @@ from scipy.stats import lognorm
 
 def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
                    mask=None, cmap='prism', alpha=1.0, silent=False,
-                   clist=None):
+                   clist=None, asp_arr=None):
     """
     Plot voxels in microstructure, each grain with a different color. Sliced
     indicates whether one eighth of the box should be removed to see internal
@@ -75,7 +75,8 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
     Nx = data.shape[0]
     Ny = data.shape[1]
     Nz = data.shape[2]
-
+    if asp_arr is None:
+        asp_arr = [1, 1, 1]
     if mask is None:
         vox_b = np.full(data.shape, True, dtype=bool)
     else:
@@ -116,6 +117,7 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
     ax.set_xlim(right=Nx)
     ax.set_ylim(top=Ny)
     ax.set_zlim(top=Nz)
+    ax.set_box_aspect(asp_arr)
     if silent:
         return fig
     else:
@@ -123,7 +125,7 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
 
 
 def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
-                     dual_phase=False, silent=False):
+                     dual_phase=False, silent=False, asp_arr=None):
     """
     Plot triangularized convex hulls of grains, based on vertices, i.e.
     connection points of 4 up to 8 grains or the end points of triple or quadruple
@@ -148,6 +150,8 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
     None.
 
     """
+    if asp_arr is None:
+        asp_arr = [1, 1, 1]
     grains = geometry['Grains']
     pts = geometry['Points']
     Ng = np.amax(list(grains.keys()))
@@ -171,6 +175,7 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.set_title('Polygonized microstructure')
     ax.view_init(30, 30)
+    ax.set_box_aspect(asp_arr)
     if silent:
         return fig
     else:
@@ -178,7 +183,7 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
 
 
 
-def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, silent=False):
+def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, silent=False, asp_arr=None):
     """
     Display ellipsoids after packing procedure
     Parameters
@@ -190,7 +195,8 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, silent=False):
     dual_phase : bool, optional
         Whether to display the ellipsoids in red/green contrast or in colors
     """
-
+    if asp_arr is None:
+        asp_arr = [1, 1, 1]
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111, projection='3d')
     ax.set(xlabel='x', ylabel='y', zlabel='z')
@@ -211,6 +217,7 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, silent=False):
         y = (pts[:, 1] + ctr[1]).reshape((100, 100))
         z = (pts[:, 2] + ctr[2]).reshape((100, 100))
         ax.plot_surface(x, y, z, rstride=4, cstride=4, color=color, linewidth=0, antialiased=False)
+    ax.set_box_aspect(asp_arr)
     if silent:
         return fig
     else:
@@ -218,7 +225,8 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, silent=False):
 
 
 
-def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True, silent=False):
+def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
+                      silent=False, asp_arr=None):
     """
     Display inner polyhedra of ellipsoids after packing procedure
 
@@ -238,6 +246,8 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
     None.
 
     """
+    if asp_arr is None:
+        asp_arr = [1, 1, 1]
     fig = plt.figure(figsize=plt.figaspect(1))
     ax = fig.add_subplot(111, projection='3d')
     ax.set(xlabel='x', ylabel='y', zlabel='z')
@@ -272,6 +282,7 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
             y = (pts[:, 1] + ctr[None, 1]).reshape((100, 100))
             z = (pts[:, 2] + ctr[None, 2]).reshape((100, 100))
             ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)
+    ax.set_box_aspect(asp_arr)
     if silent:
         return fig
     else:
