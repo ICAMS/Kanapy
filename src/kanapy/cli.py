@@ -79,22 +79,25 @@ def chkVersion(matlab):
     
         
 def setPaths():
-    """ Requests user input for MATLAB & MTEX installation paths,
-    starts matlab engine and initializes MTEX.
+    """ Starts matlab engine, after installation if required, and initializes MTEX.
     """
-        
+
+    """
+    Legacy version   
     # For MATLAB executable
     click.echo('')
     status1 = input('Is MATLAB installed in this system (yes/no): ')
+    str_yes = ['yes', 'y', 'Y', 'Yes', 'YES']
+    str_no = ['no', 'n', 'N', 'No', 'NO']
     
-    if status1 == 'yes' or status1 == 'y' or status1 == 'Y' or status1 == 'YES':
+    if status1 in str_yes:
         click.echo('Searching your system for MATLAB ...')
         MATLAB = shutil.which("matlab")        
 
         if MATLAB:
             decision1 = input('Found MATLAB in {0}, continue (yes/no): '.format(MATLAB))
             
-            if decision1 == 'yes' or decision1 == 'y' or decision1 == 'Y' or decision1 == 'YES':                
+            if decision1 in str_yes:                
 
                 version = chkVersion(MATLAB)        # Get the MATLAB version
                 if version is None:
@@ -106,16 +109,16 @@ def setPaths():
                     raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above')
                 userpath1 = MATLAB
 
-            elif decision1 == 'no' or decision1 == 'n' or decision1 == 'N' or decision1 == 'NO':
+            elif decision1 in str_no:
                 userinput = input('Please provide the path to MATLAB executable: ')
                 
                 version = chkVersion(userinput)
                 if version is None:
                     click.echo('')
                     click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
-                elif version < 2015:
+                elif version < 2024:
                     click.echo('')
-                    raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above')
+                    raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2024a and above')
                 userpath1 = userinput
                                     
             else:
@@ -130,10 +133,10 @@ def setPaths():
                 click.echo('')
                 click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
             elif version < 2015:
-                raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above.')
+                raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2024a and above.')
             userpath1 = userinput
                      
-    elif status1 == 'no' or status1 == 'n' or status1 == 'N' or status1 == 'NO':
+    elif status1 in str_no:
         click.echo("Kanapy's texture module requires MATLAB. Please install it.")
         click.echo('')
         userpath1 = False
@@ -141,30 +144,30 @@ def setPaths():
         raise ValueError('Invalid entry!, Run: kanapy setupTexture again')
         
     # Create a file that stores the paths
-    if userpath1:
-        # check if Matlab Engine library is already installed
-        try:
-            import matlab.engine
-            click.echo('Using existing matlab.engine. Please update if required.')
-        except:
-            # if not, install matlab engine
-            click.echo('Installing matlab.engine...')
-            ind = userpath1.find('bin')  # remove bin/matlab from matlab path
-            path = os.path.join(userpath1[0:ind], 'extern', 'engines', 'python')  # complete path to matlab engine
-            os.chdir(path)
-            res = os.system('python -m pip install .')
-            if res != 0:
-                click.echo('\n Error in installing matlab.engine')
-                click.echo('Please contact system administrator to run "> python -m pip install ."')
-                click.echo(f'in directory {path}')
-                raise ModuleNotFoundError()
+    if userpath1:"""
+    # check if Matlab Engine library is already installed
+    try:
+        import matlab.engine
+        click.echo('Using existing matlab.engine. Please update if required.')
+    except:
+        # if not, install matlab engine
+        click.echo('Installing matlab.engine...')
+        # ind = userpath1.find('bin')  # remove bin/matlab from matlab path
+        # path = os.path.join(userpath1[0:ind], 'extern', 'engines', 'python')  # complete path to matlab engine
+        # os.chdir(path)
+        res = os.system('python -m pip install matlabengine==24.1.2')
+        if res != 0:
+            click.echo('\n Error in installing matlab.engine. This feature requires Matlab 2024a or above.')
+            # click.echo('Please contact system administrator to run "> python -m pip install ."')
+            # click.echo(f'in directory {path}')
+            raise ModuleNotFoundError()
         
-        # initalize matlab engine and MTEX for kanapy
-        path = os.path.abspath(__file__)[0:-7]  # remove /cli.py from kanapy path
-        os.chdir(path)
-        os.system('python init_engine.py')
-        click.echo('')
-        click.echo('Kanapy is now configured for texture analysis!\n')
+    # initalize matlab engine and MTEX for kanapy
+    path = os.path.abspath(__file__)[0:-7]  # remove /cli.py from kanapy path
+    os.chdir(path)
+    os.system('python init_engine.py')
+    click.echo('')
+    click.echo('Kanapy is now configured for texture analysis!\n')
 
     
 def start():
