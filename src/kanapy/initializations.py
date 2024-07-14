@@ -611,3 +611,132 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
             json.dump(ms_stats, outfile, indent=2)
 
     return ms_stats
+
+
+class NodeSets(object):
+    def __init__(self, nodes):
+        self.F0yz = []  # left nodes
+        self.F1yz = []  # right nodes
+        self.Fx0z = []  # bottom nodes
+        self.Fx1z = []  # top nodes
+        self.Fxy0 = []  # rear nodes
+        self.Fxy1 = []  # front nodes
+        self.surfSet = []  # nodes on any surface
+        maxX = max(nodes[:, 0])
+        minX = min(nodes[:, 0])
+        maxY = max(nodes[:, 1])
+        minY = min(nodes[:, 1])
+        maxZ = max(nodes[:, 2])
+        minZ = min(nodes[:, 2])
+        # select all nodes on a surface and assign to face
+        for i, coord in enumerate(nodes):
+            surface = False
+            if np.isclose(coord[0], maxX):
+                surface = True
+                self.F1yz.append(i)
+            if np.isclose(coord[0], minX):
+                surface = True
+                self.F0yz.append(i)
+            if np.isclose(coord[1], maxY):
+                surface = True
+                self.Fx1z.append(i)
+            if np.isclose(coord[1], minY):
+                surface = True
+                self.Fx0z.append(i)
+            if np.isclose(coord[2], maxZ):
+                surface = True
+                self.Fxy1.append(i)
+            if np.isclose(coord[2], minZ):
+                surface = True
+                self.Fxy0.append(i)
+            if surface:
+                self.surfSet.append(i)
+                
+        # Find edges
+        # top front edge
+        E_T1 = np.intersect1d(self.Fxy1, self.Fx1z)
+        self.Ex11 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 0], E_T1)
+        # top back edge
+        E_T3 = np.intersect1d(self.Fxy0, self.Fx1z)
+        self.Ex10 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 0], E_T3)
+        # top left edge
+        E_T4 = np.intersect1d(self.F0yz, self.Fx1z)
+        self.E01z = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 2], E_T4)
+        # top right edge
+        E_T2 = np.intersect1d(self.F1yz, self.Fx1z)
+        self.E11z = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 2], E_T2)
+        # bottom front edge
+        E_B1 = np.intersect1d(self.Fxy1, self.Fx0z)
+        self.Ex01 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 0], E_B1)
+        # bottom back edge
+        E_B3 = np.intersect1d(self.Fxy0, self.Fx0z)
+        self.Ex00 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 0], E_B3)
+        # bottom left edge
+        E_B4 = np.intersect1d(self.F0yz, self.Fx0z)
+        self.E00z = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 2], E_B4)
+        # bottom right edge
+        E_B2 = np.intersect1d(self.F1yz, self.Fx0z)
+        self.E10z = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 2], E_B2)
+        # left front edge
+        E_M1 = np.intersect1d(self.F0yz, self.Fxy1)
+        self.E0y1 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 1], E_M1)
+        # right front edge
+        E_M2 = np.intersect1d(self.Fxy1, self.F1yz)
+        self.E1y1 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 1], E_M2)
+        # left rear edge
+        E_M4 = np.intersect1d(self.Fxy0, self.F0yz)
+        self.E0y0 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 1], E_M4)
+        # right rear edge
+        E_M3 = np.intersect1d(self.Fxy0, self.F1yz)
+        self.E1y0 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 1], E_M3)
+
+        # find VERTICES
+        self.V001 = np.intersect1d(self.Ex01, self.E00z)[0]  # V1
+        self.V101 = np.intersect1d(self.Ex01, self.E10z)[0]  # V2
+        self.V000 = np.intersect1d(self.Ex00, self.E00z)[0]  # H1
+        self.V100 = np.intersect1d(self.E10z, self.Ex00)[0]  # H2
+        self.V111 = np.intersect1d(self.Ex11, self.E11z)[0]  # V3
+        self.V110 = np.intersect1d(self.E11z, self.Ex10)[0]  # H3
+        self.V011 = np.intersect1d(self.Ex11, self.E01z)[0]  # V4
+        self.V010 = np.intersect1d(self.Ex10, self.E01z)[0]  # H4
+
+        # CORNERNODES = [self.V000, self.V100, self.V010, self.V001, self.V011, self.V101, self.V110, self.V111]
+
+    def CreatePeriodicNodeSets(self, Nodes, sortCoord1, sortCoord2, NodeSet):
+        # Creates a List of Sorted Nodes with respect to sortCoord1 and sortCoord2 for faces
+        # Input: Nodeset of surface nodes
+        import operator
+        startList = []
+        sortedList = []
+        for number in NodeSet:
+            startList.append([number, sortCoord1[Nodes.index(number)], sortCoord2[Nodes.index(number)]])
+        startList.sort(key=operator.itemgetter(1, 2))
+        for item in range(len(startList)):
+            sortedList.append(startList[item][0])
+
+        return sortedList
+
+
+    def CreatePeriodicEdgeSets(self, Nodes, sortCoord, NodeSet):
+        # Creates a List of Sorted Nodes with respect to sortCoord for edges
+        import operator
+        startList = []
+        sortedList = []
+        for number in NodeSet:
+            startList.append([number, sortCoord[Nodes.index(number)]])
+        startList.sort(key=operator.itemgetter(1))
+        for item in range(len(startList)):
+            sortedList.append(startList[item][0])
+
+        return sortedList
+
+    def RemoveItemInList(self, NodeList, ReplaceNodeList):
+        # remove set of nodes from list
+        for item in ReplaceNodeList:
+            try:
+                NodeList.remove(item)
+            except ValueError:
+                pass
+
+        return NodeList
+
