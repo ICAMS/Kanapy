@@ -85,6 +85,8 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
         Ngr = 2
     else:
         Ngr = np.max(data)
+        if np.min(data) == 0:
+            Ngr += 1
     if clist is None:
         cm = plt.cm.get_cmap(cmap, Ngr)
         colors = cm(data.astype(int))
@@ -100,6 +102,8 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
                     if igr > 0:
                         ind = np.where(grl == igr)[0]
                         colors[i, j, k, 0:3] = clist[ind[0]]
+                    else:
+                        colors[i, j, k, 0:3] = [0.3, 0.3, 0.3]
 
     if sliced:
         ix = int(Nx / 2)
