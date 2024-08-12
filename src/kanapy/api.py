@@ -299,7 +299,7 @@ class Microstructure(object):
             self.mesh.grain_phase_dict[0] = grain_store
 
     def generate_orientations(self, data, ang=None, omega=None, Nbase=5000,
-                              hist=None, shared_area=None):
+                              hist=None, shared_area=None, iphase=None):
         """
         Calculates the orientations of grains to give a desired crystallographic texture.
 
@@ -345,7 +345,8 @@ class Microstructure(object):
         ori_dict = dict()
         for ip, ngr in enumerate(self.ngrains):
             if type(data) is EBSDmap:
-                ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba)
+                if iphase is None or iphase == ip:
+                    ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba)
             elif type(data) is str:
                 if data.lower() in ['random', 'rnd']:
                     ori_rve = createOrisetRandom(ngr, Nbase=Nbase, hist=hist, shared_area=gba)
@@ -781,7 +782,7 @@ class Microstructure(object):
         if ori is None:
             ori = self.mesh.grain_ori_dict
             if ori is None:
-                raise ValueError('No orientations present. Run "generate_oriantations" first.')
+                raise ValueError('No orientations present. Run "generate_orientations" first.')
         if file is None:
             if self.name == 'Microstructure':
                 file = f'abq_px_{self.Ngr}_mat.inp'
