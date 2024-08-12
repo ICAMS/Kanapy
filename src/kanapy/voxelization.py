@@ -379,7 +379,15 @@ def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
     for igr, vlist in mesh.grain_dict.items():
         vlist = np.array(vlist) - 1
         gr_arr[vlist] = igr
+    ind = np.nonzero(gr_arr == 0)[0]
+    if len(ind) > 0:
+        # some voxels have not been assigned to grains, check is assignment is required
+        if prec_vf is None:
+            for iv in ind:
+                gr_arr[iv] = gr_arr[iv-1]  # assign voxel to neighbor grain
+                print(f'Warning: Assigned voxel {iv} to grain {gr_arr[iv-1]}.')
     mesh.grains = np.reshape(gr_arr, mesh.dim, order='C')
+
 
     # generate array of voxelized structure with phase numbers
     # and dict of phase numbers for each grain
