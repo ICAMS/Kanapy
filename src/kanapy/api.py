@@ -360,8 +360,9 @@ class Microstructure(object):
                                  '"random" or "unimodal"')
             for i, igr in enumerate(self.mesh.grain_dict.keys()):
                 if self.mesh.grain_phase_dict[igr] == ip:
-                    ind = i - ip * self.ngrains[0]
-                    ori_dict[igr] = ori_rve[ind, :]
+                    if iphase is None or iphase == ip:
+                        ind = i - ip * self.ngrains[0]
+                        ori_dict[igr] = ori_rve[ind, :]
         self.mesh.grain_ori_dict = ori_dict
         return
 
@@ -767,7 +768,7 @@ class Microstructure(object):
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
                       thermal=thermal, periodic=self.rve.periodic)
-        # if orientation exists and ialloy is defined also write material file with Euler angles
+        # if orientations exist and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
             writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
                            file=file[0:-8] + 'mat.inp',
