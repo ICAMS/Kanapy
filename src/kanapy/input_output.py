@@ -149,7 +149,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         # Create element sets for grains
         for k, v in grain_dict.items():
             f.write('*ELSET, ELSET=GRAIN{0}_SET\n'.format(k))
-            for enum, el in enumerate(v[:-2], start=1):
+            for enum, el in enumerate(v[:-1], start=1):
                 if enum % 16 != 0:
                     f.write('%d, ' % el)
                 else:
