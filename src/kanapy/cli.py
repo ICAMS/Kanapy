@@ -2,13 +2,48 @@
 import os
 import shutil
 import click
-from kanapy.util import MAIN_DIR, ROOT_DIR
+from kanapy.util import MAIN_DIR
 
 
 @click.group()
 @click.pass_context
 def main(ctx):    
     pass
+
+
+@main.command(name='gui')
+@click.pass_context
+def gui(ctx):
+    """ Start Kanapy's GUI """
+    import matplotlib.pyplot as plt
+    import tkinter as tk
+    import tkinter.font as tkFont
+    from tkinter import ttk
+    from kanapy.gui import particle_rve, cuboid_rve
+
+    app = tk.Tk()
+    app.title("RVE_Generation")
+    screen_width = app.winfo_screenwidth()
+    screen_height = app.winfo_screenheight()
+    plt.rcParams['figure.dpi'] = screen_height / 19  # height stats_plot: 9, height voxel_plot: 6, margin: 4
+    window_width = int(screen_width * 0.6)
+    window_height = int(screen_height * 0.8)
+    x_coordinate = int((screen_width / 2) - (window_width / 2))
+    y_coordinate = 0  # int((screen_height / 2) - (window_height / 2))
+    app.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
+
+    notebook = ttk.Notebook(app)
+    notebook.pack(fill='both', expand=True)
+    style = ttk.Style(app)
+    default_font = tkFont.Font(family="Helvetica", size=12, weight="bold")
+    style.configure('TNotebook.Tab', font=('Helvetica', '12', "bold"))
+    style.configure('TButton', font=default_font)
+
+    """ Start main loop """
+    prve = particle_rve(app, notebook)  # First tab: Particle-based grains
+    crve = cuboid_rve(app, notebook)  # Second tab: Cuboid grains
+    #erve = ebsd_rve()  # Third tab: EBSDbased RVE
+    app.mainloop()
 
 
 @main.command(name='runTests')

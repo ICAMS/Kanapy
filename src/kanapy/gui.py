@@ -3,23 +3,21 @@
 """
 A Graphical User Interface for create_rve.py, cuboid_grains.py and cpnvert_ang2rve.py
 Created on May 2024
-last Upaate Sep 2024
+last Update Oct 2024
 @author: Ronak Shoghi, Alexander Hartmaier
 """
 import time
 import itertools
 import numpy as np
-import matplotlib.pyplot as plt
-import kanapy as knpy
 import tkinter as tk
-import tkinter.font as tkFont
-from tkinter import ttk, Toplevel
+from tkinter import ttk, Toplevel, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from kanapy import MTEX_AVAIL
+from kanapy.api import Microstructure
+from kanapy.textures import EBSDmap
 from kanapy.initializations import RVE_creator, mesh_creator
+from kanapy.input_output import import_stats
 from kanapy.entities import Simulation_Box
-from tkinter import filedialog
-
-"""   ===== Global Subroutines =====   """
 
 
 def self_closing_message(message, duration=4000):
@@ -65,11 +63,6 @@ def add_label_and_entry(frame, row, label_text, entry_var, entry_type="entry", b
         combobox.current(0)
     return
 
-def close():
-    global app
-    app.quit()
-    app.destroy()
-
 
 def parse_entry(entry):
     return list(map(int, entry.strip().split(',')))
@@ -80,10 +73,12 @@ class particle_rve(object):
     first tab
     """
 
-    def __init__(self):
+    def __init__(self, app, notebook):
         # define standard parameters
+        self.app = app
         self.ms = None
         self.ms_stats = None
+        self.ebsd = None
         self.stats_canvas1 = None
         self.rve_canvas1 = None
         self.texture_var1 = tk.StringVar(value="random")
@@ -106,7 +101,7 @@ class particle_rve(object):
         self.aspect_ratio_max = tk.DoubleVar(value=4.0)
 
         self.tilt_angle_kappa = tk.DoubleVar(value=1.0)
-        self.tilt_angle_loc = tk.DoubleVar(value=round(0.5*np.pi, 4))
+        self.tilt_angle_loc = tk.DoubleVar(value=round(0.5 * np.pi, 4))
         self.tilt_angle_min = tk.DoubleVar(value=0.0)
         self.tilt_angle_max = tk.DoubleVar(value=round(np.pi, 4))
         if self.texture_var1.get() == 'random':
@@ -173,7 +168,7 @@ class particle_rve(object):
         ttk.Label(main_frame1, text="Orientation Parameters", font=("Helvetica", 12, "bold")) \
             .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
         add_label_and_entry(main_frame1, next(line), "Texture", self.texture_var1, entry_type="combobox",
-                            options=["random", "unimodal"], bold=False)
+                            options=["random", "unimodal", "EBSD-ODF"], bold=False)
         add_label_and_entry(main_frame1, next(line), "Kernel Half Width (degree)", self.kernel_var1,
                             bold=False)
         add_label_and_entry(main_frame1, next(line), "Euler Angles (degree)", self.euler_var1, bold=False)
@@ -181,35 +176,45 @@ class particle_rve(object):
         # create buttons
         button_frame1 = ttk.Frame(main_frame1)
         button_frame1.grid(row=next(line), column=0, columnspan=2, pady=10, sticky='ew')
-        button_statistics = ttk.Button(button_frame1, text="Statistics", style='TButton',
+
+        button_import_ebsd = ttk.Button(button_frame1, text="Import EBSD", style='TButton',
+                                        command=self.import_ebsd)
+        button_import_ebsd.grid(row=0, column=0, padx=(10, 5), pady=5, sticky='ew')
+        button_import_stats = ttk.Button(button_frame1, text="Import Statistics", style='TButton',
+                                         command=self.import_stats)
+        button_import_stats.grid(row=0, column=1, padx=(10, 5), pady=5, sticky='ew')
+        button_statistics = ttk.Button(button_frame1, text="Plot Statistics", style='TButton',
                                        command=self.create_and_plot_stats)
-        button_statistics.grid(row=0, column=0, padx=(10, 5), pady=5, sticky='ew')
+        button_statistics.grid(row=1, column=0, padx=(10, 5), pady=5, sticky='ew')
+        write_stats_button = ttk.Button(button_frame1, text="Export Statistics", style='TButton')
+        write_stats_button.grid(row=1, column=1, padx=(10, 5), pady=5, sticky='ew')
         button_create_rve = ttk.Button(button_frame1, text="Create RVE", style='TButton',
                                        command=self.create_and_plot_rve)
-        button_create_rve.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+        button_create_rve.grid(row=2, column=0, padx=(10, 5), pady=5, sticky='ew')
         button_create_ori = ttk.Button(button_frame1, text="Create Orientations", style='TButton',
                                        command=self.create_orientation)
-        button_create_ori.grid(row=1, column=0, padx=(10, 5), pady=5, sticky='ew')
+        button_create_ori.grid(row=2, column=1, padx=(10, 5), pady=5, sticky='ew')
         write_files_button = ttk.Button(button_frame1, text="Write Abaqus Input", style='TButton',
                                         command=self.export_abq)
-        write_files_button.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
-        button_exit1 = ttk.Button(button_frame1, text="Exit", style='TButton', command=close)
-        button_exit1.grid(row=2, column=0, padx=(10, 5), pady=5, sticky='ew')
+        write_files_button.grid(row=3, column=0, padx=(10, 5), pady=5, sticky='ew')
+        button_exit1 = ttk.Button(button_frame1, text="Exit", style='TButton', command=self.close)
+        button_exit1.grid(row=3, column=1, padx=(10, 5), pady=5, sticky='ew')
+
+    def close(self):
+        self.app.quit()
+        self.app.destroy()
 
     def update_kernel_var(self, *args):
-        self.kernel_var1.set("-" if self.texture_var1.get() == 'random' else "7.5")
-
+        self.kernel_var1.set("7.5" if self.texture_var1.get() == 'unimodal' else "-")
 
     def update_euler_var(self, *args):
-        self.euler_var1.set("-" if self.texture_var1.get() == 'random' else "0.0, 45.0, 0.0")
-
+        self.euler_var1.set("0.0, 45.0, 0.0" if self.texture_var1.get() == 'unimodal' else "-")
 
     def display_plot(self, fig, plot_type):
         """ Show either stats graph or RVE on canvas. """
-        global app
-        app.update_idletasks()
-        width, height = app.winfo_reqwidth(), app.winfo_reqheight()
-        app.geometry(f"{width}x{height}")
+        self.app.update_idletasks()
+        width, height = self.app.winfo_reqwidth(), self.app.winfo_reqheight()
+        self.app.geometry(f"{width}x{height}")
         if plot_type == "stats":
             if self.stats_canvas1 is not None:
                 self.stats_canvas1.get_tk_widget().destroy()
@@ -224,9 +229,79 @@ class particle_rve(object):
             self.rve_canvas1.draw()
             self.rve_canvas1.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        app.update_idletasks()
-        width, height = app.winfo_reqwidth(), app.winfo_reqheight()
-        app.geometry(f"{width}x{height}")
+        self.app.update_idletasks()
+        width, height = self.app.winfo_reqwidth(), self.app.winfo_reqheight()
+        self.app.geometry(f"{width}x{height}")
+
+    def import_ebsd(self):
+        """Import EBSD map."""
+        file_path = filedialog.askopenfilename(title="Select EBSD map", filetypes=[("*.ctf", "*.ang")])
+        if file_path:
+            self_closing_message("Reading EBSD map, please wait..")
+            self.ebsd = EBSDmap(file_path, plot=True, hist=False)
+            self.extract_microstructure_params()
+        self_closing_message("Data from EBSD map imported successfully.")
+
+    def import_stats(self):
+        """Import statistical data ."""
+        file_path = filedialog.askopenfilename(title="Select statistics file", filetypes=[("Stats files", "*.json")])
+        if file_path:
+            ms_stats = import_stats(file_path)
+            self.matname_var1.set(ms_stats['Phase']['Name'])
+            self.nvox_var1.set(ms_stats['RVE']['Nx'])
+            self.size_var1.set(ms_stats['RVE']['sideX'])
+            self.periodic_var1.set(ms_stats['Simulation']['periodicity'])
+
+            self.eq_diameter_sig.set(ms_stats['Equivalent diameter']['sig'])
+            self.eq_diameter_scale.set(ms_stats['Equivalent diameter']['scale'])
+            self.eq_diameter_loc.set(ms_stats['Equivalent diameter']['loc'])
+            self.eq_diameter_min.set(ms_stats['Equivalent diameter']['cutoff_min'])
+            self.eq_diameter_max.set(ms_stats['Equivalent diameter']['cutoff_max'])
+
+            self.aspect_ratio_sig.set(ms_stats['Aspect ratio']['sig'])
+            self.aspect_ratio_scale.set(ms_stats['Aspect ratio']['scale'])
+            self.aspect_ratio_loc.set(ms_stats['Aspect ratio']['loc'])
+            self.aspect_ratio_min.set(ms_stats['Aspect ratio']['cutoff_min'])
+            self.aspect_ratio_max.set(ms_stats['Aspect ratio']['cutoff_max'])
+
+            self.tilt_angle_kappa.set(ms_stats['Tilt angle']['kappa'])
+            self.tilt_angle_loc.set(ms_stats['Tilt angle']['loc'])
+            self.tilt_angle_min.set(ms_stats['Tilt angle']['cutoff_min'])
+            self.tilt_angle_max.set(ms_stats['Tilt angle']['cutoff_max'])
+
+        self_closing_message("Statistical data imported successfully.")
+
+    def extract_microstructure_params(self):
+        """Extracts microstructure parameters from the EBSD data."""
+        if self.ebsd is None:
+            return
+
+        ms_data = self.ebsd.ms_data[0]
+        gs_param = ms_data['gs_param']
+        ar_param = ms_data['ar_param']
+        om_param = ms_data['om_param']
+        self.matname_var1.set(ms_data['name'])
+        self.eq_diameter_sig.set(gs_param[0].round(3))
+        self.eq_diameter_scale.set(gs_param[2].round(3))
+        self.eq_diameter_loc.set(gs_param[1].round(3))
+        co_min = gs_param[2] * 0.5 + gs_param[1]
+        co_max = gs_param[2] * 1.1 + gs_param[1]
+        self.eq_diameter_min.set(co_min.round(3))
+        self.eq_diameter_max.set(co_max.round(3))
+
+        self.aspect_ratio_sig.set(ar_param[0].round(3))
+        self.aspect_ratio_scale.set(ar_param[2].round(3))
+        self.aspect_ratio_loc.set(ar_param[1].round(3))
+        ar_max = ar_param[2] * 1.4 + ar_param[1]
+        self.aspect_ratio_min.set(0.95)
+        self.aspect_ratio_max.set(ar_max.round(3))
+
+        self.tilt_angle_kappa.set(om_param[0].round(3))
+        self.tilt_angle_loc.set(om_param[1].round(3))
+        self.tilt_angle_min.set(0.0)
+        self.tilt_angle_max.set(3.1416)
+
+        self.texture_var1.set('EBSD-ODF')
 
     def create_and_plot_stats(self):
         """Plot statistics of current microstructure descriptors
@@ -258,9 +333,15 @@ class particle_rve(object):
             'Simulation': {'periodicity': periodic, 'output_units': 'mm'}
         }
 
-        self.ms = knpy.Microstructure(descriptor=ms_stats, name=f"{matname}_{texture}_texture")
+        self.ms = Microstructure(descriptor=ms_stats, name=f"{matname}_{texture}_texture")
         self.ms.init_RVE()
-        flist = self.ms.plot_stats_init(silent=True)
+        if self.ebsd is None:
+            gs_data = None
+            ar_data = None
+        else:
+            gs_data = self.ebsd.ms_data[0]['gs_data']
+            ar_data = self.ebsd.ms_data[0]['ar_data']
+        flist = self.ms.plot_stats_init(gs_data=gs_data, ar_data=ar_data, silent=True)
         for fig in flist:
             self.display_plot(fig, plot_type="stats")
 
@@ -296,7 +377,7 @@ class particle_rve(object):
             'Simulation': {'periodicity': str(periodic), 'output_units': 'mm'}
         }
 
-        self.ms = knpy.Microstructure(descriptor=self.ms_stats, name=f"{matname}")
+        self.ms = Microstructure(descriptor=self.ms_stats, name=f"{matname}")
         self.ms.init_RVE()
         self.ms.pack()
         self.ms.voxelize()
@@ -311,7 +392,7 @@ class particle_rve(object):
 
     def create_orientation(self):
         """A function to create the orientation """
-        if not knpy.MTEX_AVAIL:
+        if not MTEX_AVAIL:
             self_closing_message("Generation of grain orientation requires MTEX module.")
         self_closing_message("The process has been started, please wait...")
         texture = self.texture_var1.get()
@@ -323,6 +404,8 @@ class particle_rve(object):
         else:
             omega = None
             ang = None
+        if texture == 'EBSD-ODF':
+            texture = self.ebsd
         if self.ms_stats is None or self.ms is None or self.ms.mesh is None:
             self_closing_message("Generating RVE and assigning orientations to grains.")
             self.create_and_plot_rve()
@@ -348,8 +431,9 @@ class cuboid_rve(object):
     """ Functions for RVEs with cuboid grains
     second tab"""
 
-    def __init__(self):
+    def __init__(self, app, notebook):
         # define standard parameters
+        self.app = app
         self.ms = None
         self.canvas = None
         self.texture_var2 = tk.StringVar(value="random")
@@ -412,28 +496,31 @@ class cuboid_rve(object):
         write_files_button = ttk.Button(button_frame2, text="Write Abaqus Input", style='TButton',
                                         command=self.export_abq)
         write_files_button.grid(row=1, column=0, padx=10, pady=5, sticky='ew')
-        button_exit2 = ttk.Button(button_frame2, text="Exit", style='TButton', command=close)
+        button_exit2 = ttk.Button(button_frame2, text="Exit", style='TButton', command=self.close)
         button_exit2.grid(row=1, column=1, padx=10, pady=5, sticky='ew')
 
+    def close(self):
+        self.app.quit()
+        self.app.destroy()
+
     def update_kernel_var(self, *args):
-        self.kernel_var2.set("-" if self.texture_var2.get() == 'random' else "7.5")
+        self.kernel_var2.set("7.5" if self.texture_var2.get() == 'unimodal' else "-")
 
     def update_euler_var(self, *args):
-        self.euler_var2.set("-" if self.texture_var2.get() == 'random' else "0.0, 45.0, 0.0")
+        self.euler_var2.set("0.0, 45.0, 0.0" if self.texture_var2.get() == 'unimodal' else "-")
 
     def display_cuboid(self, fig):
-        global app
-        app.update_idletasks()
-        width, height = app.winfo_reqwidth(), app.winfo_reqheight()
-        app.geometry(f"{width}x{height}")
+        self.app.update_idletasks()
+        width, height = self.app.winfo_reqwidth(), self.app.winfo_reqheight()
+        self.app.geometry(f"{width}x{height}")
         if self.canvas is not None:
             self.canvas.get_tk_widget().destroy()
         self.canvas = FigureCanvasTkAgg(fig, master=self.rve_plot_frame2)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-        app.update_idletasks()
-        width, height = app.winfo_reqwidth(), app.winfo_reqheight()
-        app.geometry(f"{width}x{height}")
+        self.app.update_idletasks()
+        width, height = self.app.winfo_reqwidth(), self.app.winfo_reqheight()
+        self.app.geometry(f"{width}x{height}")
 
     def create_cubes_and_plot(self):
         """Create and plot microstructure object with cuboid grains
@@ -451,7 +538,7 @@ class cuboid_rve(object):
             'Simulation': {'periodicity': False, 'output_units': 'um'},
             'Phase': {'Name': matname, 'Volume fraction': 1.0}
         }
-        self.ms = knpy.Microstructure('from_voxels')
+        self.ms = Microstructure('from_voxels')
         self.ms.name = matname
         self.ms.Ngr = np.prod(ngr)
         self.ms.nphases = 1
@@ -489,10 +576,9 @@ class cuboid_rve(object):
         self.display_cuboid(fig)
         return
 
-
     def create_orientation(self):
         """Create grain orientations according to texture descriptors"""
-        if not knpy.MTEX_AVAIL:
+        if not MTEX_AVAIL:
             self_closing_message("Generation of grain orientation requires MTEX module.")
             return
         self_closing_message("The process has been started, please wait...")
@@ -517,224 +603,8 @@ class cuboid_rve(object):
         duration = end_time - start_time
         self_closing_message(f"Process completed in {duration:.2f} seconds, the Voxel file has been saved.")
 
-
     def export_abq(self):
         if self.ms is None:
             self_closing_message("Generating and exporting RVE with cuboidal grains w/o orientations.")
             self.create_cubes_and_plot()
         self.ms.write_abq('v')
-
-class ebsd_rve(object):
-    """Functions for creating RVE from EBSD data"""
-
-    def __init__(self):
-        # define standard parameters
-        self.ebsd = None
-        self.ms = None
-        self.ms_stats = None
-        self.stats_canvas = None
-        self.rve_canvas = None
-        self.texture_var = tk.StringVar(value="unimodal")
-        self.matname_var = tk.StringVar(value="Simulanium")
-        self.nvox_var = tk.IntVar(value=40)
-        self.size_var = tk.IntVar(value=30)
-        self.periodic_var = tk.BooleanVar(value=True)
-
-        if self.texture_var.get() == 'random':
-            self.kernel_var = tk.StringVar(value="-")
-            self.euler_var = tk.StringVar(value="-")
-        else:
-            self.kernel_var = tk.StringVar(value="7.5")
-            self.euler_var = tk.StringVar(value="0.0, 45.0, 0.0")
-
-        self.texture_var.trace('w', self.update_kernel_var)
-        self.texture_var.trace('w', self.update_euler_var)
-
-        # plot frames
-        tab3 = ttk.Frame(notebook)
-        notebook.add(tab3, text="EBSD Import")
-        main_frame = ttk.Frame(tab3)
-        main_frame.grid(row=0, column=0, sticky='nsew', padx=20, pady=20)
-
-        plot_frame = ttk.Frame(tab3)
-        plot_frame.grid(row=0, column=1, sticky='nsew', padx=20, pady=20)
-        plot_frame.rowconfigure(0, weight=1)
-        plot_frame.columnconfigure(0, weight=1)
-
-        self.stats_plot_frame = ttk.Frame(plot_frame)
-        self.stats_plot_frame.grid(row=0, column=0, sticky='nsew')
-
-        self.rve_plot_frame = ttk.Frame(plot_frame)
-        self.rve_plot_frame.grid(row=1, column=0, sticky='nsew')
-
-        # define labels and entries
-        line_seq = np.linspace(0, 50, dtype=int)
-        line = iter(line_seq)
-        ttk.Label(main_frame, text="General Parameters", font=("Helvetica", 12, "bold")) \
-            .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
-        add_label_and_entry(main_frame, next(line), "Material Name", self.matname_var, bold=False)
-        add_label_and_entry(main_frame, next(line), "Number of Voxels", self.nvox_var, bold=False)
-        add_label_and_entry(main_frame, next(line), "Size of RVE (in micron)", self.size_var, bold=False)
-        add_label_and_entry(main_frame, next(line), "Periodic", self.periodic_var, entry_type="checkbox", bold=False)
-
-        # Orientation Parameters
-        ttk.Label(main_frame, text="Orientation Parameters", font=("Helvetica", 12, "bold")) \
-            .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
-        add_label_and_entry(main_frame, next(line), "Texture", self.texture_var, entry_type="combobox",
-                            options=["random", "unimodal"], bold=False)
-        add_label_and_entry(main_frame, next(line), "Kernel Half Width (degree)", self.kernel_var, bold=False)
-        add_label_and_entry(main_frame, next(line), "Euler Angles (degree)", self.euler_var, bold=False)
-
-        # create buttons
-        button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=next(line), column=0, columnspan=2, pady=10, sticky='ew')
-
-        button_upload_ebsd = ttk.Button(button_frame, text="Upload EBSD File", style='TButton',
-                                        command=self.upload_ebsd)
-        button_upload_ebsd.grid(row=0, column=0, padx=(10, 5), pady=5, sticky='ew')
-
-        button_show_ebsd = ttk.Button(button_frame, text="Show EBSD", style='TButton')
-        button_show_ebsd.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
-
-        button_create_rve = ttk.Button(button_frame, text="Create RVE", style='TButton',
-                                       command=self.create_rve_and_plot)
-        button_create_rve.grid(row=1, column=0, padx=(10, 5), pady=5, sticky='ew')
-
-        button_create_ori = ttk.Button(button_frame, text="Create Orientations", style='TButton',
-                                       command=self.create_orientation)
-        button_create_ori.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
-
-        write_files_button = ttk.Button(button_frame, text="Write Abaqus Input", style='TButton',
-                                        command=self.export_abq)
-        write_files_button.grid(row=2, column=0, padx=(10, 5), pady=5, sticky='ew')
-
-        button_exit = ttk.Button(button_frame, text="Exit", style='TButton', command=close)
-        button_exit.grid(row=2, column=1, padx=(10, 5), pady=5, sticky='ew')
-
-    def update_kernel_var(self, *args):
-        self.kernel_var.set("-" if self.texture_var.get() == 'random' else "7.5")
-
-    def update_euler_var(self, *args):
-        self.euler_var.set("-" if self.texture_var.get() == 'random' else "0.0, 45.0, 0.0")
-
-    def upload_ebsd(self):
-        """Upload EBSD file."""
-        file_path = filedialog.askopenfilename(title="Select EBSD File", filetypes=[("EBSD Files", "*.ang")])
-        if file_path:
-            self_closing_message("Uploading EBSD file, please wait..")
-            self.ebsd = knpy.EBSDmap(file_path, plot=False)
-            self.extract_microstructure_params()
-        self_closing_message("EBSD file uploaded successfully.")
-    def extract_microstructure_params(self):
-        """Extracts microstructure parameters from the EBSD data."""
-        if self.ebsd is None:
-            return
-
-        ms_data = self.ebsd.ms_data[0]
-        gs_param = ms_data['gs_param']
-        ar_param = ms_data['ar_param']
-        om_param = ms_data['om_param']
-        self.matname_var.set(ms_data['name'])
-
-    def create_rve_and_plot(self):
-        """Creates the RVE and plots it."""
-        if self.ebsd is None:
-            print("No EBSD file uploaded.")
-            return
-        self_closing_message("Creating RVE, please wait...")
-        texture = self.texture_var.get()
-        matname = self.matname_var.get()
-        nvox = int(self.nvox_var.get())
-        size = int(self.size_var.get())
-        periodic = self.periodic_var.get()
-
-        ms_data = self.ebsd.ms_data[0]
-        gs_param = ms_data['gs_param']
-        ar_param = ms_data['ar_param']
-        om_param = ms_data['om_param']
-
-        ms_stats = knpy.set_stats(gs_param, ar_param, om_param, deq_min=8.0, deq_max=19.0, asp_min=0.95, asp_max=3.5,
-                                  omega_min=0.0, omega_max=np.pi, voxels=nvox, size=size, periodicity=periodic, VF=1.0,
-                                  phasename=matname, phasenum=0)
-
-        self.ms = knpy.Microstructure(descriptor=ms_stats, name=f"{matname}_{texture}_texture")
-        self.ms.init_RVE()
-        self.ms.pack()
-        self.ms.voxelize()
-        fig = self.ms.plot_voxels(silent=True, sliced=False)
-        self.display_plot(fig)
-        self_closing_message("RVE created successfully.")
-
-    def display_plot(self, fig):
-        """Displays the RVE plot."""
-        if self.rve_canvas is not None:
-            self.rve_canvas.get_tk_widget().destroy()
-
-        self.rve_canvas = FigureCanvasTkAgg(fig, master=self.rve_plot_frame)
-        self.rve_canvas.draw()
-        self.rve_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
-    def create_orientation(self):
-        """Creates orientations for the grains."""
-        if not knpy.MTEX_AVAIL:
-            self_closing_message("Generation of grain orientation requires MTEX module.")
-            return
-        self_closing_message("The process has been started, please wait...")
-
-        texture = self.texture_var.get()
-        matname = self.matname_var.get()
-
-        if texture == 'unimodal':
-            omega = float(self.kernel_var.get())
-            ang_string = self.euler_var.get()
-            ang = [float(angle.strip()) for angle in ang_string.split(',')]
-        else:
-            omega = None
-            ang = None
-
-        if self.ms is None:
-            self_closing_message("No RVE generated, creating RVE now.")
-            self.create_rve_and_plot()
-
-        start_time = time.time()
-        self.ms.generate_orientations(texture, ang=ang, omega=omega)
-        fig = self.ms.plot_voxels(silent=True, sliced=False, ori=True)
-        self.display_plot(fig)
-        end_time = time.time()
-        duration = end_time - start_time
-        self_closing_message(f"Orientation created in {duration:.2f} seconds.")
-
-    def export_abq(self):
-        """Exports the RVE and orientations to an Abaqus input file."""
-        if self.ms is None:
-            self_closing_message("No RVE to export. Generating RVE without orientations.")
-            self.create_rve_and_plot()
-
-        self.ms.write_abq('v')
-        self_closing_message("Abaqus input file written successfully.")
-
-
-""" Main code section """
-app = tk.Tk()
-app.title("RVE_Generation")
-screen_width = app.winfo_screenwidth()
-screen_height = app.winfo_screenheight()
-plt.rcParams['figure.dpi'] = screen_height / 19  # height stats_plot: 9, height voxel_plot: 6, margin: 4
-window_width = int(screen_width * 0.6)
-window_height = int(screen_height * 0.8)
-x_coordinate = int((screen_width / 2) - (window_width / 2))
-y_coordinate = 0  # int((screen_height / 2) - (window_height / 2))
-app.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
-
-notebook = ttk.Notebook(app)
-notebook.pack(fill='both', expand=True)
-style = ttk.Style(app)
-default_font = tkFont.Font(family="Helvetica", size=12, weight="bold")
-style.configure('TNotebook.Tab', font=('Helvetica', '12', "bold"))
-style.configure('TButton', font=default_font)
-
-""" Start main loop """
-prve = particle_rve()  # First tab: Particle-based grains
-crve = cuboid_rve()  # Second tab: Cuboid grains
-erve = ebsd_rve()  # Third tab: EBSDbased RVE
-app.mainloop()

@@ -18,7 +18,7 @@ class EBSDmap:
     synthetic RVEs
     """
 
-    def __init__(self, fname, matname=None, gs_min=3, vf_min=0.03, plot=True):
+    def __init__(self, fname, matname=None, gs_min=3, vf_min=0.03, plot=True, hist=None):
         """
         Generate microstructural data from EBSD maps
 
@@ -67,6 +67,8 @@ class EBSDmap:
         """
         if matname is not None:
             logging.warning('Use of parameter "matname" is depracted.')
+        if hist is None:
+            hist = plot
         # start MATLAB Engine to use MTEX commands
         eng = matlab.engine.start_matlab()
         eng.addpath(MTEX_DIR, nargout=0)
@@ -173,7 +175,7 @@ class EBSDmap:
             data['gs_param'] = np.array([dsig, doffs, dscale])
             data['gs_data'] = deq
             data['gs_moments'] = [med_eq, std_eq]
-            if plot:
+            if hist:
                 # plot distribution of grain sizes
                 fig, ax = plt.subplots()
                 x = np.linspace(np.amin(deq), np.amax(deq), 150)
@@ -196,7 +198,7 @@ class EBSDmap:
             data['ar_param'] = np.array([asig, aoffs, ascale])
             data['ar_data'] = asp
             data['ar_moments'] = [med_ar, std_ar]
-            if plot:
+            if hist:
                 # plot distribution of aspect ratios
                 fig, ax = plt.subplots()
                 x = np.linspace(np.amin(asp), np.amax(asp), 150)
@@ -218,7 +220,7 @@ class EBSDmap:
             data['om_param'] = np.array([kappa, oloc])
             data['om_data'] = omega_p
             data['om_moments'] = [med_om, std_om]
-            if plot:
+            if hist:
                 fig, ax = plt.subplots()
                 x = np.linspace(-np.pi, np.pi, 200)  # np.amin(omega), np.amax(omega), 150)
                 y = vonmises.pdf(x, kappa, loc=oloc)

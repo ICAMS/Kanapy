@@ -206,7 +206,7 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, silent=False, 
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.view_init(30, 30)
     Npa = len(particles)
-    cm = plt.cm.get_cmap(cmap, Npa+1) if not dual_phase else None
+    cm = plt.get_cmap(cmap, Npa+1) if not dual_phase else None
 
     for i, pa in enumerate(particles):
         if pa.duplicate:
