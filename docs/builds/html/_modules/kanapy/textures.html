@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.textures &mdash; kanapy 6.3.0 documentation</title>
+  <title>kanapy.textures &mdash; kanapy 6.3.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,8 +14,8 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=80ea5fc2"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/documentation_options.js?v=a3796ccd"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.3.0
+                6.3.8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -102,7 +102,7 @@
 <span class="sd">    synthetic RVEs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">matname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_min</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">vf_min</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">matname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_min</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">vf_min</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate microstructural data from EBSD maps</span>
 
@@ -151,6 +151,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">matname</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Use of parameter &quot;matname&quot; is depracted.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hist</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hist</span> <span class="o">=</span> <span class="n">plot</span>
         <span class="c1"># start MATLAB Engine to use MTEX commands</span>
         <span class="n">eng</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">start_matlab</span><span class="p">()</span>
         <span class="n">eng</span><span class="o">.</span><span class="n">addpath</span><span class="p">(</span><span class="n">MTEX_DIR</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -198,7 +200,7 @@
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;grains&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;grains_w(grains_w.grainSize &gt; </span><span class="si">{}</span><span class="s2">)&quot;</span>
                                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gs_min</span><span class="p">))</span>
 
-            <span class="c1"># use MTEX function to analye grains and plot ellipses around grain</span>
+            <span class="c1"># use MTEX function to analyze grains and plot ellipses around grain</span>
             <span class="c1"># centres; calculate orientation, long and short axes of ellipses</span>
             <span class="n">omega_r</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">hb</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">principalComponents</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;grains&#39;</span><span class="p">],</span>
                                                       <span class="n">nargout</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
@@ -236,26 +238,28 @@
 <span class="sd">                    eng.hold(&#39;on&#39;, nargout=0)</span>
 <span class="sd">                    eng.mtexColorbar</span>
 <span class="sd">                except:</span>
-<span class="sd">                    logging.warning(&#39;ODF too large for plotting&#39;)&#39;&#39;&#39;</span>
-                <span class="c1"># workaround:</span>
-                <span class="n">eng</span><span class="o">.</span><span class="n">workspace</span><span class="p">[</span><span class="s2">&quot;ori&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ori&#39;</span><span class="p">]</span>
-                <span class="n">eng</span><span class="o">.</span><span class="n">workspace</span><span class="p">[</span><span class="s2">&quot;cs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;cs&#39;</span><span class="p">]</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">eng</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;plotPDF(ori,Miller(0,0,1,cs),&#39;points&#39;,&#39;all&#39;)&quot;</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                <span class="k">except</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Plotting of orientations failed.&#39;</span><span class="p">)</span>
+<span class="sd">                    logging.warning(&#39;ODF too large for plotting&#39;)</span>
+<span class="sd">                # workaround:</span>
+<span class="sd">                eng.workspace[&quot;ori&quot;] = data[&#39;ori&#39;]</span>
+<span class="sd">                eng.workspace[&quot;cs&quot;] = data[&#39;cs&#39;]</span>
+<span class="sd">                try:</span>
+<span class="sd">                    eng.eval(f&quot;plotPDF(ori,Miller(0,0,1,cs),&#39;points&#39;,&#39;all&#39;)&quot;, nargout=0)</span>
+<span class="sd">                except:</span>
+<span class="sd">                    logging.warning(&#39;Plotting of orientations failed.&#39;)&#39;&#39;&#39;</span>
             <span class="c1"># Evaluate grain shape statistics</span>
             <span class="c1"># generate dict for statistical input for geometry module</span>
 
             <span class="c1"># grain equivalent diameter</span>
             <span class="n">deq</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eng</span><span class="o">.</span><span class="n">equivalentRadius</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;grains&#39;</span><span class="p">]))[:,</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="n">dsig</span><span class="p">,</span> <span class="n">doffs</span><span class="p">,</span> <span class="n">dscale</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">deq</span><span class="p">)</span>  <span class="c1"># fit log normal distribution</span>
-            <span class="n">med_eq</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">dsig</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">doffs</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">dscale</span><span class="p">)</span>
-            <span class="n">std_eq</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">dsig</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">doffs</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">dscale</span><span class="p">)</span>
+            <span class="c1"># dsig, doffs, dscale = lognorm.fit(deq)  # fit log normal distribution</span>
+            <span class="n">doffs</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">deq_log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">deq</span><span class="p">)</span>
+            <span class="n">dscale</span> <span class="o">=</span> <span class="n">med_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">deq_log</span><span class="p">))</span>  <span class="c1"># lognorm.median(dsig, loc=doffs, scale=dscale)</span>
+            <span class="n">dsig</span> <span class="o">=</span> <span class="n">std_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">deq_log</span><span class="p">)</span>  <span class="c1"># lognorm.std(dsig, loc=doffs, scale=dscale)</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;gs_param&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dsig</span><span class="p">,</span> <span class="n">doffs</span><span class="p">,</span> <span class="n">dscale</span><span class="p">])</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;gs_data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deq</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;gs_moments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">med_eq</span><span class="p">,</span> <span class="n">std_eq</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hist</span><span class="p">:</span>
                 <span class="c1"># plot distribution of grain sizes</span>
                 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
                 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">deq</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">deq</span><span class="p">),</span> <span class="mi">150</span><span class="p">)</span>
@@ -270,13 +274,15 @@
 
             <span class="c1"># grain aspect ratio</span>
             <span class="n">asp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eng</span><span class="o">.</span><span class="n">aspectRatio</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;grains&#39;</span><span class="p">]))[:,</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="n">asig</span><span class="p">,</span> <span class="n">aoffs</span><span class="p">,</span> <span class="n">ascale</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">asp</span><span class="p">)</span>  <span class="c1"># fit log normal distribution</span>
-            <span class="n">med_ar</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">asig</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">aoffs</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">ascale</span><span class="p">)</span>
-            <span class="n">std_ar</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">asig</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">aoffs</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">ascale</span><span class="p">)</span>
+            <span class="c1"># asig, aoffs, ascale = lognorm.fit(asp)  # fit log normal distribution</span>
+            <span class="n">aoffs</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">asp_log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">asp</span><span class="p">)</span>
+            <span class="n">ascale</span> <span class="o">=</span> <span class="n">med_ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">asp_log</span><span class="p">))</span>  <span class="c1"># lognorm.median(asig, loc=aoffs, scale=ascale)</span>
+            <span class="n">asig</span> <span class="o">=</span> <span class="n">std_ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">asp_log</span><span class="p">)</span>  <span class="c1"># lognorm.std(asig, loc=aoffs, scale=ascale)</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ar_param&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">asig</span><span class="p">,</span> <span class="n">aoffs</span><span class="p">,</span> <span class="n">ascale</span><span class="p">])</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ar_data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">asp</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ar_moments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">med_ar</span><span class="p">,</span> <span class="n">std_ar</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hist</span><span class="p">:</span>
                 <span class="c1"># plot distribution of aspect ratios</span>
                 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
                 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">asp</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">asp</span><span class="p">),</span> <span class="mi">150</span><span class="p">)</span>
@@ -291,17 +297,18 @@
 
             <span class="c1"># angles of main axis</span>
             <span class="c1"># fit von Mises distribution (circular normal distribution) to data</span>
-            <span class="n">kappa</span><span class="p">,</span> <span class="n">oloc</span><span class="p">,</span> <span class="n">oscale</span> <span class="o">=</span> <span class="n">vonmises</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
-            <span class="n">med_om</span> <span class="o">=</span> <span class="n">vonmises</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">oloc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">oscale</span><span class="p">)</span>
-            <span class="n">std_om</span> <span class="o">=</span> <span class="n">vonmises</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">oloc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">oscale</span><span class="p">)</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;om_param&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">kappa</span><span class="p">,</span> <span class="n">oloc</span><span class="p">,</span> <span class="n">oscale</span><span class="p">])</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;om_data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">omega</span>
+            <span class="n">omega_p</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">omega</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># rescale angles from [0, pi] to [-pi,pi] for von Mises distr. fit</span>
+            <span class="n">kappa</span><span class="p">,</span> <span class="n">oloc</span><span class="p">,</span> <span class="n">oscale</span> <span class="o">=</span> <span class="n">vonmises</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">omega_p</span><span class="p">)</span>
+            <span class="n">med_om</span> <span class="o">=</span> <span class="n">vonmises</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">oloc</span><span class="p">)</span>  <span class="c1"># scale parameter has no effect on vonmises distribution</span>
+            <span class="n">std_om</span> <span class="o">=</span> <span class="n">vonmises</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">oloc</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;om_param&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">kappa</span><span class="p">,</span> <span class="n">oloc</span><span class="p">])</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;om_data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">omega_p</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;om_moments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">med_om</span><span class="p">,</span> <span class="n">std_om</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hist</span><span class="p">:</span>
                 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-                <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span> <span class="c1"># np.amin(omega), np.amax(omega), 150)</span>
-                <span class="n">y</span> <span class="o">=</span> <span class="n">vonmises</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">oloc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">oscale</span><span class="p">)</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;fit&#39;</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>  <span class="c1"># np.amin(omega), np.amax(omega), 150)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">vonmises</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">kappa</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">oloc</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;fit&#39;</span><span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Histogram of tilt angles of major axes&#39;</span><span class="p">)</span>
@@ -378,10 +385,10 @@
             
 <div class="viewcode-block" id="get_ipf_colors">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.textures.get_ipf_colors">[docs]</a>
-<span class="k">def</span> <span class="nf">get_ipf_colors</span><span class="p">(</span><span class="n">ori_list</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_ipf_colors</span><span class="p">(</span><span class="n">ori_list</span><span class="p">,</span> <span class="n">color_key</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get colors of list of orientations (in radians).</span>
-<span class="sd">    Assumes cubic crystal symmtry and cubic specimen symmetry.</span>
+<span class="sd">    Assumes cubic crystal symmetry and cubic specimen symmetry.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -404,7 +411,7 @@
     
     <span class="c1"># get colors</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create possibility to pass CS to MTEX&quot;&quot;&quot;</span>
-    <span class="n">colors</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">get_ipf_col</span><span class="p">(</span><span class="n">ori_list</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">get_ipf_col</span><span class="p">(</span><span class="n">ori_list</span><span class="p">,</span> <span class="n">color_key</span><span class="p">,</span> <span class="n">nargout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span></div>
 
         

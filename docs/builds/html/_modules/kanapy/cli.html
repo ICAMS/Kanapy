@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.cli &mdash; kanapy 6.3.0 documentation</title>
+  <title>kanapy.cli &mdash; kanapy 6.3.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,8 +14,8 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=80ea5fc2"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/documentation_options.js?v=a3796ccd"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.3.0
+                6.3.8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -84,13 +84,48 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">click</span>
-<span class="kn">from</span> <span class="nn">kanapy.util</span> <span class="kn">import</span> <span class="n">MAIN_DIR</span><span class="p">,</span> <span class="n">ROOT_DIR</span>
+<span class="kn">from</span> <span class="nn">kanapy.util</span> <span class="kn">import</span> <span class="n">MAIN_DIR</span>
 
 
 <span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
 <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>    
     <span class="k">pass</span>
+
+
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;gui&#39;</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
+<span class="k">def</span> <span class="nf">gui</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Start Kanapy&#39;s GUI &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">import</span> <span class="nn">tkinter</span> <span class="k">as</span> <span class="nn">tk</span>
+    <span class="kn">import</span> <span class="nn">tkinter.font</span> <span class="k">as</span> <span class="nn">tkFont</span>
+    <span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">ttk</span>
+    <span class="kn">from</span> <span class="nn">kanapy.gui</span> <span class="kn">import</span> <span class="n">particle_rve</span><span class="p">,</span> <span class="n">cuboid_rve</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;RVE_Generation&quot;</span><span class="p">)</span>
+    <span class="n">screen_width</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">winfo_screenwidth</span><span class="p">()</span>
+    <span class="n">screen_height</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">winfo_screenheight</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">screen_height</span> <span class="o">/</span> <span class="mi">19</span>  <span class="c1"># height stats_plot: 9, height voxel_plot: 6, margin: 4</span>
+    <span class="n">window_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">screen_width</span> <span class="o">*</span> <span class="mf">0.6</span><span class="p">)</span>
+    <span class="n">window_height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">screen_height</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">)</span>
+    <span class="n">x_coordinate</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">screen_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">window_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">y_coordinate</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># int((screen_height / 2) - (window_height / 2))</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">window_width</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">window_height</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="n">x_coordinate</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="n">y_coordinate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">notebook</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Notebook</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">notebook</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">fill</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">style</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Style</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">default_font</span> <span class="o">=</span> <span class="n">tkFont</span><span class="o">.</span><span class="n">Font</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+    <span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;TNotebook.Tab&#39;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;12&#39;</span><span class="p">,</span> <span class="s2">&quot;bold&quot;</span><span class="p">))</span>
+    <span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;TButton&#39;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">default_font</span><span class="p">)</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Start main loop &quot;&quot;&quot;</span>
+    <span class="n">prve</span> <span class="o">=</span> <span class="n">particle_rve</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">notebook</span><span class="p">)</span>  <span class="c1"># First tab: Particle-based grains</span>
+    <span class="n">crve</span> <span class="o">=</span> <span class="n">cuboid_rve</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">notebook</span><span class="p">)</span>  <span class="c1"># Second tab: Cuboid grains</span>
+    <span class="c1">#erve = ebsd_rve()  # Third tab: EBSDbased RVE</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
 
 
 <span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;runTests&#39;</span><span class="p">)</span>
@@ -166,92 +201,95 @@
 <div class="viewcode-block" id="setPaths">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.cli.setPaths">[docs]</a>
 <span class="k">def</span> <span class="nf">setPaths</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Requests user input for MATLAB &amp; MTEX installation paths,</span>
-<span class="sd">    starts matlab engine and initializes MTEX.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Starts matlab engine, after installation if required, and initializes MTEX.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Legacy version   </span>
+<span class="sd">    # For MATLAB executable</span>
+<span class="sd">    click.echo(&#39;&#39;)</span>
+<span class="sd">    status1 = input(&#39;Is MATLAB installed in this system (yes/no): &#39;)</span>
+<span class="sd">    str_yes = [&#39;yes&#39;, &#39;y&#39;, &#39;Y&#39;, &#39;Yes&#39;, &#39;YES&#39;]</span>
+<span class="sd">    str_no = [&#39;no&#39;, &#39;n&#39;, &#39;N&#39;, &#39;No&#39;, &#39;NO&#39;]</span>
+<span class="sd">    </span>
+<span class="sd">    if status1 in str_yes:</span>
+<span class="sd">        click.echo(&#39;Searching your system for MATLAB ...&#39;)</span>
+<span class="sd">        MATLAB = shutil.which(&quot;matlab&quot;)        </span>
+
+<span class="sd">        if MATLAB:</span>
+<span class="sd">            decision1 = input(&#39;Found MATLAB in {0}, continue (yes/no): &#39;.format(MATLAB))</span>
+<span class="sd">            </span>
+<span class="sd">            if decision1 in str_yes:                </span>
+
+<span class="sd">                version = chkVersion(MATLAB)        # Get the MATLAB version</span>
+<span class="sd">                if version is None:</span>
+<span class="sd">                    click.echo(&#39;&#39;)</span>
+<span class="sd">                    click.echo(&#39;MATLAB version is unknown, compatibility could not be verified.\n&#39;)</span>
+<span class="sd">                    </span>
+<span class="sd">                elif version &lt; 2015:</span>
+<span class="sd">                    click.echo(&#39;&#39;)</span>
+<span class="sd">                    raise ModuleNotFoundError(&#39;Sorry!, Kanapy is compatible with MATLAB versions 2015a and above&#39;)</span>
+<span class="sd">                userpath1 = MATLAB</span>
+
+<span class="sd">            elif decision1 in str_no:</span>
+<span class="sd">                userinput = input(&#39;Please provide the path to MATLAB executable: &#39;)</span>
+<span class="sd">                </span>
+<span class="sd">                version = chkVersion(userinput)</span>
+<span class="sd">                if version is None:</span>
+<span class="sd">                    click.echo(&#39;&#39;)</span>
+<span class="sd">                    click.echo(&#39;MATLAB version is unknown, compatibility could not be verified.\n&#39;)</span>
+<span class="sd">                elif version &lt; 2024:</span>
+<span class="sd">                    click.echo(&#39;&#39;)</span>
+<span class="sd">                    raise ModuleNotFoundError(&#39;Sorry!, Kanapy is compatible with MATLAB versions 2024a and above&#39;)</span>
+<span class="sd">                userpath1 = userinput</span>
+<span class="sd">                                    </span>
+<span class="sd">            else:</span>
+<span class="sd">                raise ValueError(&#39;Invalid entry!, Run: kanapy setuptexture again.&#39;)</span>
+<span class="sd">                            </span>
+<span class="sd">        else:</span>
+<span class="sd">            print(&#39;No MATLAB executable found!&#39;)            </span>
+<span class="sd">            userinput = input(&#39;Please provide the path to MATLAB executable: &#39;)</span>
+<span class="sd">            </span>
+<span class="sd">            version = chkVersion(userinput)</span>
+<span class="sd">            if version is None:</span>
+<span class="sd">                click.echo(&#39;&#39;)</span>
+<span class="sd">                click.echo(&#39;MATLAB version is unknown, compatibility could not be verified.\n&#39;)</span>
+<span class="sd">            elif version &lt; 2015:</span>
+<span class="sd">                raise ModuleNotFoundError(&#39;Sorry!, Kanapy is compatible with MATLAB versions 2024a and above.&#39;)</span>
+<span class="sd">            userpath1 = userinput</span>
+<span class="sd">                     </span>
+<span class="sd">    elif status1 in str_no:</span>
+<span class="sd">        click.echo(&quot;Kanapy&#39;s texture module requires MATLAB. Please install it.&quot;)</span>
+<span class="sd">        click.echo(&#39;&#39;)</span>
+<span class="sd">        userpath1 = False</span>
+<span class="sd">    else:</span>
+<span class="sd">        raise ValueError(&#39;Invalid entry!, Run: kanapy setupTexture again&#39;)</span>
+<span class="sd">        </span>
+<span class="sd">    # Create a file that stores the paths</span>
+<span class="sd">    if userpath1:&quot;&quot;&quot;</span>
+    <span class="c1"># check if Matlab Engine library is already installed</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matlab.engine</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Using existing matlab.engine. Please update if required.&#39;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="c1"># if not, install matlab engine</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Installing matlab.engine...&#39;</span><span class="p">)</span>
+        <span class="c1"># ind = userpath1.find(&#39;bin&#39;)  # remove bin/matlab from matlab path</span>
+        <span class="c1"># path = os.path.join(userpath1[0:ind], &#39;extern&#39;, &#39;engines&#39;, &#39;python&#39;)  # complete path to matlab engine</span>
+        <span class="c1"># os.chdir(path)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python -m pip install matlabengine==24.1.2&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> Error in installing matlab.engine. This feature requires Matlab 2024a or above.&#39;</span><span class="p">)</span>
+            <span class="c1"># click.echo(&#39;Please contact system administrator to run &quot;&gt; python -m pip install .&quot;&#39;)</span>
+            <span class="c1"># click.echo(f&#39;in directory {path}&#39;)</span>
+            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">()</span>
         
-    <span class="c1"># For MATLAB executable</span>
+    <span class="c1"># initalize matlab engine and MTEX for kanapy</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">7</span><span class="p">]</span>  <span class="c1"># remove /cli.py from kanapy path</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python init_engine.py&#39;</span><span class="p">)</span>
     <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="n">status1</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Is MATLAB installed in this system (yes/no): &#39;</span><span class="p">)</span>
-    
-    <span class="k">if</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;yes&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;YES&#39;</span><span class="p">:</span>
-        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Searching your system for MATLAB ...&#39;</span><span class="p">)</span>
-        <span class="n">MATLAB</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;matlab&quot;</span><span class="p">)</span>        
-
-        <span class="k">if</span> <span class="n">MATLAB</span><span class="p">:</span>
-            <span class="n">decision1</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Found MATLAB in </span><span class="si">{0}</span><span class="s1">, continue (yes/no): &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">MATLAB</span><span class="p">))</span>
-            
-            <span class="k">if</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;yes&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;YES&#39;</span><span class="p">:</span>                
-
-                <span class="n">version</span> <span class="o">=</span> <span class="n">chkVersion</span><span class="p">(</span><span class="n">MATLAB</span><span class="p">)</span>        <span class="c1"># Get the MATLAB version</span>
-                <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;MATLAB version is unknown, compatibility could not be verified.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-                    
-                <span class="k">elif</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">2015</span><span class="p">:</span>
-                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-                    <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Sorry!, Kanapy is compatible with MATLAB versions 2015a and above&#39;</span><span class="p">)</span>
-                <span class="n">userpath1</span> <span class="o">=</span> <span class="n">MATLAB</span>
-
-            <span class="k">elif</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;no&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;n&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span> <span class="ow">or</span> <span class="n">decision1</span> <span class="o">==</span> <span class="s1">&#39;NO&#39;</span><span class="p">:</span>
-                <span class="n">userinput</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Please provide the path to MATLAB executable: &#39;</span><span class="p">)</span>
-                
-                <span class="n">version</span> <span class="o">=</span> <span class="n">chkVersion</span><span class="p">(</span><span class="n">userinput</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;MATLAB version is unknown, compatibility could not be verified.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">2015</span><span class="p">:</span>
-                    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-                    <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Sorry!, Kanapy is compatible with MATLAB versions 2015a and above&#39;</span><span class="p">)</span>
-                <span class="n">userpath1</span> <span class="o">=</span> <span class="n">userinput</span>
-                                    
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, Run: kanapy setuptexture again.&#39;</span><span class="p">)</span>
-                            
-        <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No MATLAB executable found!&#39;</span><span class="p">)</span>            
-            <span class="n">userinput</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Please provide the path to MATLAB executable: &#39;</span><span class="p">)</span>
-            
-            <span class="n">version</span> <span class="o">=</span> <span class="n">chkVersion</span><span class="p">(</span><span class="n">userinput</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;MATLAB version is unknown, compatibility could not be verified.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">version</span> <span class="o">&lt;</span> <span class="mi">2015</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Sorry!, Kanapy is compatible with MATLAB versions 2015a and above.&#39;</span><span class="p">)</span>
-            <span class="n">userpath1</span> <span class="o">=</span> <span class="n">userinput</span>
-                     
-    <span class="k">elif</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;no&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;n&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span> <span class="ow">or</span> <span class="n">status1</span> <span class="o">==</span> <span class="s1">&#39;NO&#39;</span><span class="p">:</span>
-        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Kanapy&#39;s texture module requires MATLAB. Please install it.&quot;</span><span class="p">)</span>
-        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-        <span class="n">userpath1</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid entry!, Run: kanapy setupTexture again&#39;</span><span class="p">)</span>
-        
-    <span class="c1"># Create a file that stores the paths</span>
-    <span class="k">if</span> <span class="n">userpath1</span><span class="p">:</span>
-        <span class="c1"># check if Matlab Engine library is already installed</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">matlab.engine</span>
-            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Using existing matlab.engine. Please update if required.&#39;</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="c1"># if not, install matlab engine</span>
-            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Installing matlab.engine...&#39;</span><span class="p">)</span>
-            <span class="n">ind</span> <span class="o">=</span> <span class="n">userpath1</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;bin&#39;</span><span class="p">)</span>  <span class="c1"># remove bin/matlab from matlab path</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">userpath1</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">ind</span><span class="p">],</span> <span class="s1">&#39;extern&#39;</span><span class="p">,</span> <span class="s1">&#39;engines&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">)</span>  <span class="c1"># complete path to matlab engine</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-            <span class="n">res</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python -m pip install .&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> Error in installing matlab.engine&#39;</span><span class="p">)</span>
-                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Please contact system administrator to run &quot;&gt; python -m pip install .&quot;&#39;</span><span class="p">)</span>
-                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;in directory </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">()</span>
-        
-        <span class="c1"># initalize matlab engine and MTEX for kanapy</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">7</span><span class="p">]</span>  <span class="c1"># remove /cli.py from kanapy path</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python init_engine.py&#39;</span><span class="p">)</span>
-        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Kanapy is now configured for texture analysis!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Kanapy is now configured for texture analysis!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
 
     

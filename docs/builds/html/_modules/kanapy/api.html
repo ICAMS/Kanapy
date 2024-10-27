@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.api &mdash; kanapy 6.3.0 documentation</title>
+  <title>kanapy.api &mdash; kanapy 6.3.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -14,8 +14,8 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=80ea5fc2"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/documentation_options.js?v=a3796ccd"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -34,7 +34,7 @@
             kanapy
           </a>
               <div class="version">
-                6.3.0
+                6.3.8
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -99,13 +99,14 @@
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">scipy.spatial</span> <span class="kn">import</span> <span class="n">Delaunay</span>
 
-<span class="kn">from</span> <span class="nn">kanapy.grains</span> <span class="kn">import</span> <span class="n">calc_polygons</span><span class="p">,</span> <span class="n">get_stats</span>
+<span class="kn">from</span> <span class="nn">kanapy.grains</span> <span class="kn">import</span> <span class="n">calc_polygons</span>
 <span class="kn">from</span> <span class="nn">kanapy.entities</span> <span class="kn">import</span> <span class="n">Simulation_Box</span>
 <span class="kn">from</span> <span class="nn">kanapy.input_output</span> <span class="kn">import</span> <span class="n">export2abaqus</span><span class="p">,</span> <span class="n">writeAbaqusMat</span><span class="p">,</span> <span class="n">read_dump</span>
 <span class="kn">from</span> <span class="nn">kanapy.initializations</span> <span class="kn">import</span> <span class="n">RVE_creator</span><span class="p">,</span> <span class="n">mesh_creator</span>
 <span class="kn">from</span> <span class="nn">kanapy.packing</span> <span class="kn">import</span> <span class="n">packingRoutine</span>
 <span class="kn">from</span> <span class="nn">kanapy.voxelization</span> <span class="kn">import</span> <span class="n">voxelizationRoutine</span>
 <span class="kn">from</span> <span class="nn">kanapy.smoothingGB</span> <span class="kn">import</span> <span class="n">smoothingRoutine</span>
+<span class="kn">from</span> <span class="nn">kanapy.rve_stats</span> <span class="kn">import</span> <span class="n">get_stats_vox</span><span class="p">,</span> <span class="n">get_stats_part</span><span class="p">,</span> <span class="n">get_stats_poly</span>
 <span class="kn">from</span> <span class="nn">kanapy.plotting</span> <span class="kn">import</span> <span class="n">plot_init_stats</span><span class="p">,</span> <span class="n">plot_voxels_3D</span><span class="p">,</span> <span class="n">plot_ellipsoids_3D</span><span class="p">,</span> \
     <span class="n">plot_polygons_3D</span><span class="p">,</span> <span class="n">plot_output_stats</span><span class="p">,</span> <span class="n">plot_particles_3D</span>
 
@@ -150,12 +151,11 @@
 <span class="sd">            Dict keys: &quot;Vertices&quot;, &quot;Points&quot;, &quot;Simplices&quot;, &quot;Facets&quot;, &quot;Grains&quot;, &quot;GBnodes&quot;, GBarea&quot; &quot;GBfaces&quot;</span>
 <span class="sd">            &quot;Grains&quot; : dictionary with key grain_number  </span>
 <span class="sd">            Keys:&quot;Vertices&quot;, &quot;Points&quot;, &quot;Center&quot;, &quot;Simplices&quot;, &quot;Volume&quot;, &quot;Area&quot;, &quot;Phase&quot;, &quot;eqDia&quot;, &quot;majDia&quot;, &quot;minDia&quot;</span>
-<span class="sd">        res_data : list</span>
-<span class="sd">            List of dictionaries containing effective microstructure descriptors for each phase in RVE</span>
-<span class="sd">            Dict keys: &quot;Number&quot;, &quot;Unit scale&quot;, &quot;Grain_type&quot;,</span>
-<span class="sd">            &quot;Grain_Equivalent_diameter&quot;, &quot;Grain_Major_diameter&quot;, &quot;Grain_Minor_diameter&quot;,</span>
-<span class="sd">            &quot;Particle_Equivalent_diameter&quot;, &quot;Particle_Major_diameter&quot;, &quot;Particle_Minor_diameter&quot;,</span>
-<span class="sd">            &quot;L1-error&quot;</span>
+<span class="sd">        rve_stats : list</span>
+<span class="sd">            List of dictionaries containing statistical information on different RVE types: particles, voxels,</span>
+<span class="sd">            polyhedral grains</span>
+<span class="sd">        rve_stats_labels : list</span>
+<span class="sd">            List of strings containing the labels for the RVE types, i.e. Partcls, Voxels, Grains</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Microstructure&#39;</span><span class="p">):</span>
@@ -169,7 +169,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simbox</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">res_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rve_stats</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rve_stats_labels</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">from_voxels</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ialloy</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -214,6 +215,7 @@
 <span class="sd">    --------        Routines for user interface        --------</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+
 <div class="viewcode-block" id="Microstructure.init_RVE">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.init_RVE">[docs]</a>
     <span class="k">def</span> <span class="nf">init_RVE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
@@ -249,7 +251,7 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.pack">[docs]</a>
     <span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fill_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-             <span class="n">poly</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+             <span class="n">poly</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Packs the particles into a simulation box.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">particle_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -259,14 +261,14 @@
         <span class="k">if</span> <span class="n">fill_factor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fill_factor</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># pack to full volume fraction defined in particles</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Sparse particles (precipitates/pores): &#39;</span>
-                  <span class="sa">f</span><span class="s1">&#39;Packing up to particle volume fraction of </span><span class="si">{</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">precipit</span><span class="p">)</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">%.&#39;</span><span class="p">)</span>
+                  <span class="sa">f</span><span class="s1">&#39;Packing up to particle volume fraction of </span><span class="si">{</span><span class="p">(</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">precipit</span><span class="p">)</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">%.&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="o">&gt;</span> <span class="mf">0.65</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Overlap of particles will occur since volume fraction &gt; 65%&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simbox</span> <span class="o">=</span> \
             <span class="n">packingRoutine</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">periodic</span><span class="p">,</span>
                            <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">packing_steps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">simbox</span><span class="p">,</span>
                            <span class="n">k_rep</span><span class="o">=</span><span class="n">k_rep</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="n">k_att</span><span class="p">,</span> <span class="n">fill_factor</span><span class="o">=</span><span class="n">fill_factor</span><span class="p">,</span>
-                           <span class="n">poly</span><span class="o">=</span><span class="n">poly</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
+                           <span class="n">poly</span><span class="o">=</span><span class="n">poly</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.voxelize">
@@ -304,17 +306,16 @@
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Volume fractions of phases in voxel structure:&#39;</span><span class="p">)</span>
             <span class="n">vt</span> <span class="o">=</span> <span class="mf">0.</span>
             <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="p">):</span>
-                <span class="n">vf</span> <span class="o">=</span> <span class="n">vox_count</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nvox</span>
+                <span class="n">vf</span> <span class="o">=</span> <span class="n">vox_count</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nvox</span>
                 <span class="n">vt</span> <span class="o">+=</span> <span class="n">vf</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="p">(</span><span class="n">vf</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">%)&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="p">(</span><span class="n">vf</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">%)&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">vt</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">):</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Volume fractions of phases in voxels do not add up to 1. Value: </span><span class="si">{</span><span class="n">vt</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="c1"># remove grain information if it already exists to avoid inconsistencies</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing polyhedral grain geometries and statistical data after re-meshing.&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">res_data</span> <span class="o">=</span> <span class="kc">None</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.smoothen">
@@ -347,11 +348,9 @@
             <span class="c1"># in case of precipit, remove irregular grain 0 from analysis</span>
             <span class="n">empty_vox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">grain_store</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">nphases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">empty_vox</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">grain_store</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">nphases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> \
             <span class="n">calc_polygons</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>  <span class="c1"># updates RVE_data</span>
@@ -375,7 +374,7 @@
                 <span class="n">igr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gblist</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span><span class="si">}</span><span class="s1"> grains are not represented in polyhedral geometry.&#39;</span><span class="p">)</span>
-            <span class="c1">#logging.warning(&#39;Consider increasing the number of voxels, as grains appear to be very irregular.&#39;)</span>
+            <span class="c1"># logging.warning(&#39;Consider increasing the number of voxels, as grains appear to be very irregular.&#39;)</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;ind.reverse()</span>
 <span class="sd">            igr.reverse()</span>
 <span class="sd">            for j, i in enumerate(ind):</span>
@@ -390,12 +389,8 @@
                 <span class="n">ph_vol</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">+=</span> <span class="n">grd</span><span class="p">[</span><span class="s1">&#39;Volume&#39;</span><span class="p">]</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Volume fractions of phases in polyhedral geometry:&#39;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="p">):</span>
-                <span class="n">vf</span> <span class="o">=</span> <span class="mf">100.0</span><span class="o">*</span><span class="n">ph_vol</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+                <span class="n">vf</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">ph_vol</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">vf</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s1">%)&#39;</span><span class="p">)</span>
-        <span class="c1"># analyse grains w.r.t. statistical descriptors</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">res_data</span> <span class="o">=</span> \
-            <span class="n">get_stats</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">particle_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">units</span><span class="p">,</span>
-                      <span class="n">nphases</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">ngrains_phase</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">empty_vox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># add removed grain again</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">empty_vox</span>
@@ -405,7 +400,7 @@
 <div class="viewcode-block" id="Microstructure.generate_orientations">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.generate_orientations">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_orientations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ang</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Nbase</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-                              <span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                              <span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the orientations of grains to give a desired crystallographic texture.</span>
 
@@ -451,7 +446,8 @@
         <span class="n">ori_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">ngr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="n">EBSDmap</span><span class="p">:</span>
-                <span class="n">ori_rve</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">calcORI</span><span class="p">(</span><span class="n">ngr</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">ip</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="n">gba</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">iphase</span> <span class="o">==</span> <span class="n">ip</span><span class="p">:</span>
+                    <span class="n">ori_rve</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">calcORI</span><span class="p">(</span><span class="n">ngr</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">ip</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="n">gba</span><span class="p">)</span>
             <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="s1">&#39;rnd&#39;</span><span class="p">]:</span>
                     <span class="n">ori_rve</span> <span class="o">=</span> <span class="n">createOrisetRandom</span><span class="p">(</span><span class="n">ngr</span><span class="p">,</span> <span class="n">Nbase</span><span class="o">=</span><span class="n">Nbase</span><span class="p">,</span> <span class="n">hist</span><span class="o">=</span><span class="n">hist</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="n">gba</span><span class="p">)</span>
@@ -465,8 +461,9 @@
                                  <span class="s1">&#39;&quot;random&quot; or &quot;unimodal&quot;&#39;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">igr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">==</span> <span class="n">ip</span><span class="p">:</span>
-                    <span class="n">ind</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="n">ip</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">ori_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ori_rve</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">:]</span>
+                    <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">iphase</span> <span class="o">==</span> <span class="n">ip</span><span class="p">:</span>
+                        <span class="n">ind</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="n">ip</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">ori_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ori_rve</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">:]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="o">=</span> <span class="n">ori_dict</span>
         <span class="k">return</span></div>
 
@@ -481,7 +478,11 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates plot of particles&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No particle to plot. Run pack first.&#39;</span><span class="p">)</span>
-        <span class="n">plot_ellipsoids_3D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">)</span></div>
+        <span class="n">hmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">asp_arr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">),</span>
+                   <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">),</span>
+                   <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">)]</span>
+        <span class="n">plot_ellipsoids_3D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">asp_arr</span><span class="o">=</span><span class="n">asp_arr</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.plot_particles">
@@ -492,15 +493,35 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No particle to plot. Run pack first.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Ellipsoids without inner polygon cannot be plotted.&#39;</span><span class="p">)</span>
+        <span class="n">hmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">asp_arr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">),</span>
+                   <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">),</span>
+                   <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">)]</span>
         <span class="n">plot_particles_3D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
-                          <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">plot_hull</span><span class="o">=</span><span class="n">plot_hull</span><span class="p">)</span></div>
+                          <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">plot_hull</span><span class="o">=</span><span class="n">plot_hull</span><span class="p">,</span> <span class="n">asp_arr</span><span class="o">=</span><span class="n">asp_arr</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.plot_voxels">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.plot_voxels">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_voxels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sliced</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span>
-                    <span class="n">ori</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generate 3D plot of grains in voxelized microstructure. &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">plot_voxels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sliced</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">ori</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">color_key</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates plot of voxel structure</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sliced</span>
+<span class="sd">        dual_phase</span>
+<span class="sd">        cmap</span>
+<span class="sd">        ori</span>
+<span class="sd">        color_key: int</span>
+<span class="sd">            selects the color key: 0: iphHSVKey, 1: BungeColorKey, 2: ipfHKLKey (optional, default: 0)</span>
+<span class="sd">        silent</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grains</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No voxels or elements to plot. Run voxelize first.&#39;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">dual_phase</span><span class="p">:</span>
@@ -510,19 +531,24 @@
         <span class="k">if</span> <span class="n">ori</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="kn">from</span> <span class="nn">kanapy.textures</span> <span class="kn">import</span> <span class="n">get_ipf_colors</span>
-                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">ori</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">bool</span> <span class="ow">and</span> <span class="n">ori</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ori</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ori</span><span class="p">:</span>
                     <span class="n">ori</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
-<span class="w">                </span><span class="sd">&quot;&quot;&quot;Create possibility to pass actual CS to MTEX&quot;&quot;&quot;</span>
-                <span class="n">clist</span> <span class="o">=</span> <span class="n">get_ipf_colors</span><span class="p">(</span><span class="n">ori</span><span class="p">)</span>
+                <span class="n">clist</span> <span class="o">=</span> <span class="n">get_ipf_colors</span><span class="p">(</span><span class="n">ori</span><span class="p">,</span> <span class="n">color_key</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;An unexpected exception occurred: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Orientations can only be plotted if MTEX is available.&#39;</span><span class="p">)</span>
                 <span class="n">clist</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">clist</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="n">plot_voxels_3D</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Ngr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">),</span> <span class="n">sliced</span><span class="o">=</span><span class="n">sliced</span><span class="p">,</span>
-                       <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">clist</span><span class="o">=</span><span class="n">clist</span><span class="p">)</span></div>
+        <span class="n">hmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">asp_arr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">),</span>
+                   <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">),</span>
+                   <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">)]</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_voxels_3D</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Ngr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">),</span> <span class="n">sliced</span><span class="o">=</span><span class="n">sliced</span><span class="p">,</span>
+                             <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">clist</span><span class="o">=</span><span class="n">clist</span><span class="p">,</span>
+                             <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span> <span class="n">asp_arr</span><span class="o">=</span><span class="n">asp_arr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">silent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fig</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.plot_grains">
@@ -534,8 +560,12 @@
             <span class="n">geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span>
         <span class="k">if</span> <span class="n">geometry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No polygons for grains defined. Run generate_grains() first&#39;</span><span class="p">)</span>
+        <span class="n">hmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">asp_arr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">),</span>
+                   <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">),</span>
+                   <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">hmin</span><span class="p">)]</span>
         <span class="n">plot_polygons_3D</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">ec</span><span class="o">=</span><span class="n">ec</span><span class="p">,</span>
-                         <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">)</span></div>
+                         <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span> <span class="n">asp_arr</span><span class="o">=</span><span class="n">asp_arr</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.plot_stats">
@@ -543,58 +573,176 @@
     <span class="k">def</span> <span class="nf">plot_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">gs_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">ar_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                   <span class="n">particles</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                   <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                   <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                   <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                   <span class="n">show_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                   <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">enhanced_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Plots the particle- and grain diameter attributes for statistical </span>
 <span class="sd">        comparison.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">res_data</span>
-            <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No microstructure data created yet. Run generate_grains() first.&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">gs_data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">gs_data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="n">gs_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">gs_data</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">gs_param</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">gs_param</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="n">gs_param</span> <span class="o">=</span> <span class="p">[</span><span class="n">gs_param</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ar_data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">ar_data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="n">ar_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">ar_data</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ar_param</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">ar_param</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="n">ar_param</span> <span class="o">=</span> <span class="p">[</span><span class="n">ar_param</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">silent</span><span class="p">:</span>
+            <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">show_all</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">enhanced_plot</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">ax_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
+            <span class="n">nphases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="ow">and</span> <span class="mi">0</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="c1"># in case of precipit, remove irregular grain 0 from analysis</span>
+                <span class="n">nphases</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nphases</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">gs_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">gs_data</span><span class="p">)</span> <span class="o">==</span> <span class="n">nphases</span><span class="p">):</span>
+            <span class="n">gs_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">gs_data</span><span class="p">]</span> <span class="o">*</span> <span class="n">nphases</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">gs_param</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">gs_param</span><span class="p">)</span> <span class="o">==</span> <span class="n">nphases</span><span class="p">):</span>
+            <span class="n">gs_param</span> <span class="o">=</span> <span class="p">[</span><span class="n">gs_param</span><span class="p">]</span> <span class="o">*</span> <span class="n">nphases</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">ar_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ar_data</span><span class="p">)</span> <span class="o">==</span> <span class="n">nphases</span><span class="p">):</span>
+            <span class="n">ar_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">ar_data</span><span class="p">]</span> <span class="o">*</span> <span class="n">nphases</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">ar_param</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ar_param</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">gs_param</span><span class="p">)):</span>
+            <span class="n">ar_param</span> <span class="o">=</span> <span class="p">[</span><span class="n">ar_param</span><span class="p">]</span> <span class="o">*</span> <span class="n">nphases</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        gs_data = [ebsd.ms_data[i][&#39;gs_data&#39;] for i in range(Nphases)]</span>
-<span class="sd">        gs_param = [ebsd.ms_data[i][&#39;gs_param&#39;] for i in range(Nphases)]</span>
-<span class="sd">        ar_data = [ebsd.ms_data[i][&#39;ar_data&#39;] for i in range(Nphases)]</span>
-<span class="sd">        ar_param = [ebsd.ms_data[i][&#39;ar_param&#39;] for i in range(Nphases)]</span>
+<span class="sd">        gs_data = [ebsd.ms_data[i][&#39;gs_data&#39;] for i in range(nphases)]</span>
+<span class="sd">        gs_param = [ebsd.ms_data[i][&#39;gs_param&#39;] for i in range(nphases)]</span>
+<span class="sd">        ar_data = [ebsd.ms_data[i][&#39;ar_data&#39;] for i in range(nphases)]</span>
+<span class="sd">        ar_param = [ebsd.ms_data[i][&#39;ar_param&#39;] for i in range(nphases)]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">iphase</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">flist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nphases</span><span class="p">):</span>
+            <span class="n">stats_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
+                <span class="n">iphase</span> <span class="o">=</span> <span class="n">ip</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Plotting statistical information for phase </span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Plotting input &amp; output statistics for phase </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">plot_output_stats</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="n">gs_data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">gs_param</span><span class="o">=</span><span class="n">gs_param</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                              <span class="n">ar_data</span><span class="o">=</span><span class="n">ar_data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ar_param</span><span class="o">=</span><span class="n">ar_param</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                              <span class="n">plot_particles</span><span class="o">=</span><span class="n">particles</span><span class="p">,</span>
-                              <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
+            <span class="c1"># Analyze and plot particles statistics</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> \
+                    <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span> <span class="ow">and</span> <span class="s1">&#39;p&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Particle statistics requested, but no particles defined. &#39;</span>
+                                  <span class="s1">&#39;Run &quot;pack()&quot; first.&#39;</span><span class="p">)</span>
+                    <span class="k">return</span>
+                <span class="n">part_stats</span> <span class="o">=</span> <span class="n">get_stats_part</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">iphase</span><span class="p">,</span> <span class="n">ax_max</span><span class="o">=</span><span class="n">ax_max</span><span class="p">,</span>
+                                            <span class="n">show_plot</span><span class="o">=</span><span class="n">show_all</span><span class="p">,</span>
+                                            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
+                <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part_stats</span><span class="p">)</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Partcls&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Analyze and plot statistics of voxel structure in RVE</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> \
+                    <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span> <span class="ow">and</span> <span class="s1">&#39;v&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Voxel statistics requested, but no voxel mesh defined. &#39;</span>
+                                  <span class="s1">&#39;Run &quot;voxelize()&quot; first.&#39;</span><span class="p">)</span>
+                    <span class="k">return</span>
+                <span class="n">vox_stats</span> <span class="o">=</span> <span class="n">get_stats_vox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">iphase</span><span class="p">,</span> <span class="n">ax_max</span><span class="o">=</span><span class="n">ax_max</span><span class="p">,</span>
+                                          <span class="n">show_plot</span><span class="o">=</span><span class="n">show_all</span><span class="p">,</span>
+                                          <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
+                <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vox_stats</span><span class="p">)</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Voxels&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Analyze and plot statistics of polyhedral grains in RVE</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> \
+                    <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span> <span class="ow">and</span> <span class="s1">&#39;g&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Geometry statistics requested, but no polyhedral grains defined. &#39;</span>
+                                  <span class="s1">&#39;Run &quot;generate_grains()&quot; first.&#39;</span><span class="p">)</span>
+                    <span class="k">return</span>
+                <span class="n">grain_stats</span> <span class="o">=</span> <span class="n">get_stats_poly</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">],</span> <span class="n">iphase</span><span class="o">=</span><span class="n">iphase</span><span class="p">,</span> <span class="n">ax_max</span><span class="o">=</span><span class="n">ax_max</span><span class="p">,</span>
+                                             <span class="n">show_plot</span><span class="o">=</span><span class="n">show_all</span><span class="p">,</span> <span class="n">phase_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">,</span>
+                                             <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
+                <span class="n">stats_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grain_stats</span><span class="p">)</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Grains&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Statistical microstructure parameters of phase </span><span class="si">{</span><span class="n">iphase</span><span class="si">}</span><span class="s1"> in RVE&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------------------------------------------------------&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Statistical microstructure parameters of RVE&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------------&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Type</span><span class="se">\t</span><span class="s1">| a (µm) </span><span class="se">\t</span><span class="s1">| b (µm) </span><span class="se">\t</span><span class="s1">| c (µm) </span><span class="se">\t</span><span class="s1">| std.dev</span><span class="se">\t</span><span class="s1">| rot.axis</span><span class="se">\t</span><span class="s1">| asp.ratio</span><span class="se">\t</span><span class="s1">| std.dev</span><span class="se">\t</span><span class="s1">|&#39;</span>
+                  <span class="sa">f</span><span class="s1">&#39; equ.dia. (µm)</span><span class="se">\t</span><span class="s1">| std.dev&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sd</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stats_list</span><span class="p">):</span>
+                <span class="n">av_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">sd</span><span class="p">[</span><span class="s1">&#39;a_sig&#39;</span><span class="p">],</span> <span class="n">sd</span><span class="p">[</span><span class="s1">&#39;b_sig&#39;</span><span class="p">],</span> <span class="n">sd</span><span class="p">[</span><span class="s1">&#39;c_sig&#39;</span><span class="p">]])</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">sd</span><span class="p">[</span><span class="s2">&quot;a_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">sd</span><span class="p">[</span><span class="s2">&quot;b_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">sd</span><span class="p">[</span><span class="s2">&quot;c_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  &#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">av_std</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|     </span><span class="si">{</span><span class="n">sd</span><span class="p">[</span><span class="s2">&quot;ind_rot&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">   </span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">sd</span><span class="p">[</span><span class="s2">&quot;ar_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">sd</span><span class="p">[</span><span class="s2">&quot;ar_sig&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|     &#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">sd</span><span class="p">[</span><span class="s2">&quot;eqd_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> </span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">sd</span><span class="p">[</span><span class="s2">&quot;eqd_sig&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rve_stats</span> <span class="o">=</span> <span class="n">stats_list</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rve_stats_labels</span> <span class="o">=</span> <span class="n">labels</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_output_stats</span><span class="p">(</span><span class="n">stats_list</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">iphase</span><span class="p">,</span>
+                                    <span class="n">gs_data</span><span class="o">=</span><span class="n">gs_data</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span> <span class="n">gs_param</span><span class="o">=</span><span class="n">gs_param</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span>
+                                    <span class="n">ar_data</span><span class="o">=</span><span class="n">ar_data</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span> <span class="n">ar_param</span><span class="o">=</span><span class="n">ar_param</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span>
+                                    <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span>
+                                    <span class="n">enhanced_plot</span><span class="o">=</span><span class="n">enhanced_plot</span><span class="p">)</span>
+            <span class="n">flist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">silent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">flist</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.plot_stats_init">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.api.Microstructure.plot_stats_init">[docs]</a>
     <span class="k">def</span> <span class="nf">plot_stats_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                        <span class="n">porous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                        <span class="n">porous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">get_res</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_res</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Plots initial statistical microstructure descriptors .&quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">analyze_voxels</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">des</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;show_res is True, but no voxels have been defined. Run voxelize first.&#39;</span><span class="p">)</span>
+            <span class="n">vox_stats</span> <span class="o">=</span> <span class="n">get_stats_vox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">ip</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="n">show_res</span><span class="p">)</span>
+            <span class="n">gsp</span> <span class="o">=</span> <span class="p">[</span><span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;eqd_sig&#39;</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;eqd_scale&#39;</span><span class="p">],</span>
+                   <span class="nb">min</span><span class="p">(</span><span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;eqd&#39;</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;eqd&#39;</span><span class="p">])]</span>
+            <span class="n">arp</span> <span class="o">=</span> <span class="p">[</span><span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;ar_sig&#39;</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;ar_scale&#39;</span><span class="p">],</span>
+                   <span class="nb">min</span><span class="p">(</span><span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;ar&#39;</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;ar&#39;</span><span class="p">])]</span>
+            <span class="k">if</span> <span class="s1">&#39;Grain type&#39;</span> <span class="ow">in</span> <span class="n">des</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">des</span><span class="p">[</span><span class="s1">&#39;Grain type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">nel</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Statistical microstructure parameters of phase </span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1"> in RVE&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------------------------------------------------------&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Statistical microstructure parameters of RVE&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------------&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Type</span><span class="se">\t</span><span class="s1">| a (µm) </span><span class="se">\t</span><span class="s1">| b (µm) </span><span class="se">\t</span><span class="s1">| c (µm) </span><span class="se">\t</span><span class="s1">| std.dev</span><span class="se">\t</span><span class="s1">| rot.axis</span><span class="se">\t</span><span class="s1">| asp.ratio</span><span class="se">\t</span><span class="s1">| std.dev</span><span class="se">\t</span><span class="s1">|&#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39; equ.dia. (µm)</span><span class="se">\t</span><span class="s1">| std.dev&#39;</span><span class="p">)</span>
+
+                <span class="n">av_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;a_sig&#39;</span><span class="p">],</span> <span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;b_sig&#39;</span><span class="p">],</span> <span class="n">vox_stats</span><span class="p">[</span><span class="s1">&#39;c_sig&#39;</span><span class="p">]])</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Input</span><span class="se">\t</span><span class="s1">|  -      </span><span class="se">\t</span><span class="s1">|  -      </span><span class="se">\t</span><span class="s1">|  -      </span><span class="se">\t</span><span class="s1">|   -      </span><span class="se">\t</span><span class="s1">|     -   </span><span class="se">\t</span><span class="s1">|  &#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">des</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">][</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">des</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">][</span><span class="s2">&quot;sig&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|     &#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">des</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> </span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">des</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;sig&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Output</span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">vox_stats</span><span class="p">[</span><span class="s2">&quot;a_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">vox_stats</span><span class="p">[</span><span class="s2">&quot;b_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  &#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">vox_stats</span><span class="p">[</span><span class="s2">&quot;c_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">av_std</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|     </span><span class="si">{</span><span class="n">vox_stats</span><span class="p">[</span><span class="s2">&quot;ind_rot&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">   </span><span class="se">\t</span><span class="s1">|  &#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">vox_stats</span><span class="p">[</span><span class="s2">&quot;ar_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">vox_stats</span><span class="p">[</span><span class="s2">&quot;ar_sig&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="se">\t</span><span class="s1">|     &#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">vox_stats</span><span class="p">[</span><span class="s2">&quot;eqd_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> </span><span class="se">\t</span><span class="s1">|  </span><span class="si">{</span><span class="n">vox_stats</span><span class="p">[</span><span class="s2">&quot;eqd_sig&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">gsp</span><span class="p">,</span> <span class="n">arp</span>
+
+        <span class="k">if</span> <span class="n">show_res</span><span class="p">:</span>
+            <span class="n">get_res</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">silent</span><span class="p">:</span>
+            <span class="n">show_res</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">descriptor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">descriptor</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">porous</span><span class="p">:</span>
             <span class="n">descriptor</span> <span class="o">=</span> <span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">gs_data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="n">gs_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">gs_data</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">ar_data</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="n">ar_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">ar_data</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
+        <span class="n">nel</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">des</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">descriptor</span><span class="p">):</span>
-            <span class="n">plot_init_stats</span><span class="p">(</span><span class="n">des</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="n">gs_data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ar_data</span><span class="o">=</span><span class="n">ar_data</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                            <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">gs_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">gs_data</span><span class="p">)</span> <span class="o">==</span> <span class="n">nel</span><span class="p">):</span>
+            <span class="n">gs_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">gs_data</span><span class="p">]</span> <span class="o">*</span> <span class="n">nel</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">ar_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ar_data</span><span class="p">)</span> <span class="o">==</span> <span class="n">nel</span><span class="p">):</span>
+            <span class="n">ar_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">ar_data</span><span class="p">]</span> <span class="o">*</span> <span class="n">nel</span>
+
+        <span class="n">flist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">des</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">descriptor</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">get_res</span><span class="p">:</span>
+                <span class="n">gsp</span><span class="p">,</span> <span class="n">arp</span> <span class="o">=</span> <span class="n">analyze_voxels</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">des</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">gsp</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">arp</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_init_stats</span><span class="p">(</span><span class="n">des</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="n">gs_data</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span> <span class="n">ar_data</span><span class="o">=</span><span class="n">ar_data</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span>
+                                  <span class="n">gs_param</span><span class="o">=</span><span class="n">gsp</span><span class="p">,</span> <span class="n">ar_param</span><span class="o">=</span><span class="n">arp</span><span class="p">,</span>
+                                  <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">)</span>
+            <span class="n">flist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">silent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">flist</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.plot_slice">
@@ -744,8 +892,8 @@
                       <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="n">gb_area</span><span class="o">=</span><span class="n">faces</span><span class="p">,</span>
                       <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span>
                       <span class="n">ialloy</span><span class="o">=</span><span class="n">ialloy</span><span class="p">,</span> <span class="n">grain_phase_dict</span><span class="o">=</span><span class="n">grpd</span><span class="p">,</span>
-                      <span class="n">thermal</span><span class="o">=</span><span class="n">thermal</span><span class="p">)</span>
-        <span class="c1"># if orientation exists and ialloy is defined also write material file with Euler angles</span>
+                      <span class="n">thermal</span><span class="o">=</span><span class="n">thermal</span><span class="p">,</span> <span class="n">periodic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">periodic</span><span class="p">)</span>
+        <span class="c1"># if orientations exist and ialloy is defined also write material file with Euler angles</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ialloy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
             <span class="n">writeAbaqusMat</span><span class="p">(</span><span class="n">ialloy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span><span class="p">,</span>
                            <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;mat.inp&#39;</span><span class="p">,</span>
@@ -763,7 +911,7 @@
         <span class="k">if</span> <span class="n">ori</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ori</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span>
             <span class="k">if</span> <span class="n">ori</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No orientations present. Run &quot;generate_oriantations&quot; first.&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No orientations present. Run &quot;generate_orientations&quot; first.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Microstructure&#39;</span><span class="p">:</span>
                 <span class="n">file</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;abq_px_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="si">}</span><span class="s1">_mat.inp&#39;</span>
@@ -1078,6 +1226,7 @@
 <span class="sd">        None.</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">def</span> <span class="nf">write_facet</span><span class="p">(</span><span class="n">nv</span><span class="p">,</span> <span class="n">pts</span><span class="p">,</span> <span class="n">ft</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Acute facet detected. Facet: </span><span class="si">{</span><span class="n">ft</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -1096,6 +1245,7 @@
                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;  endloop</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; endfacet</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="k">def</span> <span class="nf">write_grains</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">ft</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Facets&#39;</span><span class="p">]:</span>
                 <span class="n">pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Points&#39;</span><span class="p">][</span><span class="n">ft</span><span class="p">]</span>
@@ -1332,7 +1482,6 @@
         <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simbox</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span> <span class="o">=</span> <span class="n">read_dump</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
-
 
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>

@@ -28,6 +28,7 @@ details this as shown:
             Commands:
               copyExamples  Creates local copy of Kanapy's example directory.
               genDocs       Generates a HTML-based reference documentation.
+              gui           Start Kanapy's GUI
               runTests      Runs unittests built-in to Kanapy.
               setupTexture  Stores the user provided MATLAB & MTEX paths for texture.
   
