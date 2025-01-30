@@ -443,7 +443,7 @@ class Microstructure(object):
         asp_arr = [int(self.rve.size[0] / hmin),
                    int(self.rve.size[1] / hmin),
                    int(self.rve.size[2] / hmin)]
-        fig = plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced,
+        fig = plot_voxels_3D(data, sliced=sliced,
                              phases=phases, cmap=cmap, clist=clist,
                              silent=silent, asp_arr=asp_arr)
         if silent:
@@ -1086,7 +1086,8 @@ class Microstructure(object):
                 plt.show()
         return fname
 
-    def write_stl(self, data='grains', file=None, path='./'):
+    def write_stl(self, data='grains', file=None, path='./',
+                  phases=False, phase_num=None):
         """ Write triangles of convex polyhedra forming grains in form of STL
         files in the format
         '
@@ -1132,6 +1133,14 @@ class Microstructure(object):
                 nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
                 write_facet(nv, pts, ft)
 
+        def write_phases(ip):
+            for grain in self.geometry['Grains'].values():
+                if grain['Phase'] == ip:
+                    for ft in grain['Simplices']:
+                        pts = self.geometry['Points'][ft]
+                        nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
+                        write_facet(nv, pts, ft)
+
         def write_particles():
             for pa in self.particles:
                 for ft in pa.inner.convex_hull:
@@ -1156,7 +1165,12 @@ class Microstructure(object):
                         pa.sync_poly()
                     write_particles()
             else:
-                write_grains()
+                if phases:
+                    if phase_num is None:
+                        raise ValueError('Phase-specific output requested, but no phase number specified.')
+                    write_phases(phase_num)
+                else:
+                    write_grains()
             f.write("endsolid\n")
         return
 
