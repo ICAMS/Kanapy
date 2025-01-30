@@ -35,9 +35,10 @@ from scipy.stats import lognorm
 #    return matplotlib_dpi
 
 
-def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
+def plot_voxels_3D(data, Ngr=None, sliced=False, dual_phase=None,
                    mask=None, cmap='prism', alpha=1.0, silent=False,
-                   clist=None, asp_arr=None):
+                   clist=None, asp_arr=None,
+                   phases=False, cols=None):
     """
     Plot voxels in microstructure, each grain with a different color. Sliced
     indicates whether one eighth of the box should be removed to see internal
@@ -72,6 +73,13 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
         Axes handle for 3D subplot
 
     """
+    if dual_phase is not None:
+        print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
+        phases = dual_phase
+    if Ngr is not None:
+        print('Use of "Ngr" is depracted. Value will be determined automatically.')
+    if cols is None:
+        cols = ['red', 'green', 'lightblue', 'orange', 'gray']
     Nx = data.shape[0]
     Ny = data.shape[1]
     Nz = data.shape[2]
@@ -81,8 +89,8 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
         vox_b = np.full(data.shape, True, dtype=bool)
     else:
         vox_b = mask
-    if dual_phase:
-        Ngr = 2
+    if phases:
+        Ngr = len(np.unique(data))
     else:
         Ngr = np.max(data)
         if np.min(data) == 0:
@@ -128,8 +136,9 @@ def plot_voxels_3D(data, Ngr=1, sliced=False, dual_phase=False,
         plt.show(block=True)
 
 
-def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
-                     dual_phase=False, silent=False, asp_arr=None):
+def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
+                     dual_phase=None, silent=False, asp_arr=None,
+                     phases=False, cols=None):
     """
     Plot triangularized convex hulls of grains, based on vertices, i.e.
     connection points of 4 up to 8 grains or the end points of triple or quadruple
@@ -154,6 +163,13 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
     None.
 
     """
+    if dual_phase is not None:
+        print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
+        phases = dual_phase
+    if cols is None:
+        cols = ['red', 'green', 'lightblue', 'orange', 'gray']
+    if ec is None:
+        ec = [0.5, 0.5, 0.5, 0.1]
     if asp_arr is None:
         asp_arr = [1, 1, 1]
     grains = geometry['Grains']
@@ -165,11 +181,12 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
     for igr in grains.keys():
         if not grains[igr]['Simplices']:
             continue
-        if dual_phase:
-            if grains[igr]['Phase'] == 0:
-                col = 'red'
+        if phases:
+            icol = grains[igr]['Phase']
+            if icol < len(cols):
+                col = cols[icol]
             else:
-                col = 'green'
+                col = 'gray'
         else:
             col = list(cm(igr))
             col[-1] = alpha  # change alpha channel to create semi-transparency
@@ -187,7 +204,8 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=[0.5, 0.5, 0.5, 0.1],
 
 
 
-def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, silent=False, asp_arr=None):
+def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=None, silent=False, asp_arr=None,
+                       phases=False, cols=None):
     """
     Display ellipsoids after packing procedure
     Parameters
@@ -201,18 +219,27 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=False, silent=False, 
     """
     if asp_arr is None:
         asp_arr = [1, 1, 1]
+    if dual_phase is not None:
+        print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
+        phases = dual_phase
+    if cols is None:
+        cols = ['red', 'green', 'lightblue', 'orange', 'gray']
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111, projection='3d')
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.view_init(30, 30)
     Npa = len(particles)
-    cm = plt.get_cmap(cmap, Npa+1) if not dual_phase else None
+    cm = plt.get_cmap(cmap, Npa+1) if not phases else None
 
     for i, pa in enumerate(particles):
         if pa.duplicate:
             continue
-        if dual_phase:
-            color = 'red' if pa.phasenum == 0 else 'green'
+        if phases:
+            icol = pa.phasenum
+            if icol < len(cols):
+                color = cols[icol]
+            else:
+                color = 'gray'
         else:
             color = cm(i + 1)
         pts = pa.surfacePointsGen(nang=100)
@@ -269,8 +296,10 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
         if dual_phase:
             if pa.phasenum == 0:
                 col = 'red'
-            else:
+            elif pa.phasenum == 1:
                 col = 'green'
+            else:
+                col = 'lightblue'
         else:
             col = cm(i + 1)  # set to 'b' for only blue ellipsoids
         pa.sync_poly()

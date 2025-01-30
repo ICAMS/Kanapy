@@ -370,18 +370,24 @@ class Microstructure(object):
     --------     Plotting methods          --------
     """
 
-    def plot_ellipsoids(self, cmap='prism', dual_phase=False):
+    def plot_ellipsoids(self, cmap='prism', dual_phase=None, phases=False):
         """ Generates plot of particles"""
+        if dual_phase is not None:
+            print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
+            phases = dual_phase
         if self.particles is None:
             raise ValueError('No particle to plot. Run pack first.')
         hmin = min(self.rve.size)
         asp_arr = [int(self.rve.size[0] / hmin),
                    int(self.rve.size[1] / hmin),
                    int(self.rve.size[2] / hmin)]
-        plot_ellipsoids_3D(self.particles, cmap=cmap, dual_phase=dual_phase, asp_arr=asp_arr)
+        plot_ellipsoids_3D(self.particles, cmap=cmap, phases=phases, asp_arr=asp_arr)
 
-    def plot_particles(self, cmap='prism', dual_phase=False, plot_hull=True):
+    def plot_particles(self, cmap='prism', dual_phase=None, phases=False, plot_hull=True):
         """ Generates plot of particles"""
+        if dual_phase is not None:
+            print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
+            phases = dual_phase
         if self.particles is None:
             raise ValueError('No particle to plot. Run pack first.')
         if self.particles[0].inner is None:
@@ -391,9 +397,9 @@ class Microstructure(object):
                    int(self.rve.size[1] / hmin),
                    int(self.rve.size[2] / hmin)]
         plot_particles_3D(self.particles, cmap=cmap,
-                          dual_phase=dual_phase, plot_hull=plot_hull, asp_arr=asp_arr)
+                          phases=phases, plot_hull=plot_hull, asp_arr=asp_arr)
 
-    def plot_voxels(self, sliced=False, dual_phase=False, cmap='prism', ori=None,
+    def plot_voxels(self, sliced=False, dual_phase=None, phases=False, cmap='prism', ori=None,
                     color_key=0, silent=False):
         """
         Generates plot of voxel structure
@@ -412,9 +418,12 @@ class Microstructure(object):
         -------
 
         """
+        if dual_phase is not None:
+            print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
+            phases = dual_phase
         if self.mesh.grains is None:
             raise ValueError('No voxels or elements to plot. Run voxelize first.')
-        elif dual_phase:
+        elif phases:
             data = self.mesh.phases
         else:
             data = self.mesh.grains
@@ -435,14 +444,19 @@ class Microstructure(object):
                    int(self.rve.size[1] / hmin),
                    int(self.rve.size[2] / hmin)]
         fig = plot_voxels_3D(data, Ngr=np.sum(self.ngrains), sliced=sliced,
-                             dual_phase=dual_phase, cmap=cmap, clist=clist,
+                             phases=phases, cmap=cmap, clist=clist,
                              silent=silent, asp_arr=asp_arr)
         if silent:
             return fig
 
     def plot_grains(self, geometry=None, cmap='prism', alpha=0.4,
-                    ec=[0.5, 0.5, 0.5, 0.1], dual_phase=False):
+                    ec=None, dual_phase=None, phases=False):
         """ Plot polygonalized microstructure"""
+        if ec is None:
+            ec = [0.5, 0.5, 0.5, 0.1]
+        if dual_phase is not None:
+            print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
+            phases = dual_phase
         if geometry is None:
             geometry = self.geometry
         if geometry is None:
@@ -452,23 +466,26 @@ class Microstructure(object):
                    int(self.rve.size[1] / hmin),
                    int(self.rve.size[2] / hmin)]
         plot_polygons_3D(geometry, cmap=cmap, alpha=alpha, ec=ec,
-                         dual_phase=dual_phase, asp_arr=asp_arr)
+                         phases=phases, asp_arr=asp_arr)
 
     def plot_stats(self, data=None,
                    gs_data=None, gs_param=None,
                    ar_data=None, ar_param=None,
-                   dual_phase=False,
+                   dual_phase=None, phases=False,
                    save_files=False,
                    show_all=False, verbose=False,
                    silent=False, enhanced_plot=False):
         """ Plots the particle- and grain diameter attributes for statistical 
         comparison."""
+        if dual_phase is not None:
+            print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
+            phases = dual_phase
         if silent:
             verbose = False
             show_all = False
             enhanced_plot = True
         ax_max = np.prod(self.rve.size) ** (1 / 3)
-        if dual_phase:
+        if phases:
             nphases = self.nphases
             if self.precipit and 0 in self.mesh.grain_dict.keys():
                 # in case of precipit, remove irregular grain 0 from analysis
@@ -494,7 +511,7 @@ class Microstructure(object):
         for ip in range(nphases):
             stats_list = []
             labels = []
-            if dual_phase:
+            if phases:
                 iphase = ip
                 print(f'Plotting statistical information for phase {ip}')
 
@@ -537,7 +554,7 @@ class Microstructure(object):
                 stats_list.append(grain_stats)
                 labels.append('Grains')
 
-            if dual_phase:
+            if phases:
                 print(f'\nStatistical microstructure parameters of phase {iphase} in RVE')
                 print('-------------------------------------------------------')
             else:
