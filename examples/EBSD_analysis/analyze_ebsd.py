@@ -19,7 +19,6 @@ eng.addpath(MTEX_DIR, nargout=0)
 eng.startup(nargout=0)
 
 fname = 'ebsd_316L_500x500.ang'
-fname = '/Users/alexander/Documents/Projekte/HybridWelding-GhazalMoeini/EBSD/AlSi10Mg_SLM_cast_SLM_100X.ctf'
 vf_min = 0.03  # minimum volume fraction of phases to be considered
 gs_min = 3  # minimum grains size to be considered
 

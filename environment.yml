@@ -12,7 +12,9 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - tqdm
-  - matplotlib
+  - matplotlib=3.9.4
   - seaborn
   - click
   - jupyter
+  - orix
+
