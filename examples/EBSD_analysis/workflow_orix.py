@@ -53,11 +53,7 @@ def find_similar_regions(array, tolerance=0.087, connectivity=1):
     return labeled_array, current_label - 1
 
 
-# fname = "/Users/alexander/Codes/kanapy/examples/EBSD_analysis/ebsd_316L_500x500.ang"
-# fname = "/Users/alexander/Documents/Projekte/Li_Shengli/Data_Shengli/S1-Sample/S1-CMT-Region-A.ang"
-# fname = "/Users/alexander/Documents/Projekte/SFB-TR-103/EBSD-AM-316Lbatch2/316L_C15_XY/316L_C15_XY.ctf"
-# dual-phase EBSD map
-# fname = "/Users/alexander/Documents/Projekte/CSU-Cooperation/EBSD/2-1.ctf"
+fname = "ebsd_316L_500x500.ang"
 
 show_plot = True
 vf_min = 0.03
