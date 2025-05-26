@@ -3,6 +3,16 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import label
 from orix import io, plot, quaternion
 from orix.vector import Miller
+from copy import deepcopy
+
+
+def neighbors(r, c, connectivity):
+    nlist = []
+    if connectivity == 1:
+        return [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
+    else:
+        return [(r + i, c + j) for i in [-1, 0, 1] for j in [-1, 0, 1]
+                if not (i == 0 and j == 0)]
 
 
 def find_similar_regions(array, tolerance=0.087, connectivity=1):
@@ -18,13 +28,6 @@ def find_similar_regions(array, tolerance=0.087, connectivity=1):
         labeled_array (ndarray): 2D array of region labels.
         num_features (int): Total number of connected regions found.
     """
-
-    def neighbors(r, c):
-        if connectivity == 1:
-            return [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
-        else:
-            return [(r + i, c + j) for i in [-1, 0, 1] for j in [-1, 0, 1]
-                    if not (i == 0 and j == 0)]
 
     array = np.asarray(array)
 
@@ -46,7 +49,7 @@ def find_similar_regions(array, tolerance=0.087, connectivity=1):
                         if abs(array[i, j] - ref_val) <= tolerance:
                             visited[i, j] = True
                             labeled_array[i, j] = current_label
-                            stack.extend(neighbors(i, j))
+                            stack.extend(neighbors(i, j, connectivity))
 
                 current_label += 1
 
@@ -55,8 +58,13 @@ def find_similar_regions(array, tolerance=0.087, connectivity=1):
 
 fname = "ebsd_316L_500x500.ang"
 
-show_plot = True
-vf_min = 0.03
+show_plot = True  # show plots
+vf_min = 0.03  # minimum volume fraction of phases to be considered
+max_angle = 5 * np.pi / 180  # maximum misoriantation angle within one grain
+min_size = 5  # minim grain size in pixels
+connectivity = 2  # take into account diagonal neighbors
+
+
 emap = io.load(fname)
 h, w = emap.shape
 
@@ -106,10 +114,35 @@ for i, ind in enumerate(emap.phases.ids):
         array = np.zeros(npx)
         array[emap.phase_id == data['index']] = val
     labels, n_regions = find_similar_regions(array.reshape((h, w)),
-                                             tolerance=0.087, connectivity=2)
+                                             tolerance=max_angle, connectivity=connectivity)
+    grains, counts = np.unique(labels, return_counts=True)
     print(f"Phase #{data['index']} ({data['name']}): Identified Grains: {n_regions}")
 
-    """Filter out small grains and extract statistics"""
+    # merge small grains into neighbor grains with most neighbor pixels
+    nlab = deepcopy(labels)
+    for ng, ct in enumerate(counts):
+        if ct >= min_size:
+            continue
+        ix, iy = np.nonzero(labels == grains[ng])
+        assert len(ix) == ct
+        nlist = []
+        for i in range(ct):
+            neigh = neighbors(ix[i], iy[i], connectivity)
+            for pos in neigh:
+                if 0 <= pos[0] < h and 0 <= pos[1] < w:
+                    nlist.append(labels[pos])
+        nn, num = np.unique(nlist, return_counts=True)
+        new_grain = nn[np.argmax(num)]
+        nlab[ix, iy] = new_grain
+    grains, counts = np.unique(nlab, return_counts=True)
+    ngrains = len(grains)
+    print(f'After elimination of small grains, {ngrains} grains left.')
+    # redistribute grain numbers in proper sequence
+    for i, ng in enumerate(grains):
+        ix, iy = np.nonzero(nlab == ng)
+        labels[ix, iy] = i + 1
+
+    """Extract grain statistics"""
 
     if show_plot:
         # plot misorientation field
@@ -126,7 +159,7 @@ for i, ind in enumerate(emap.phases.ids):
 
         # plot identified grains
         plt.imshow(labels, cmap='flag')
-        plt.title(f"Phase #{data['index']} ({data['name']}): Identified Grains: {n_regions}")
+        plt.title(f"Phase #{data['index']} ({data['name']}): Identified Grains: {ngrains}")
         plt.colorbar(label='Grain Number')
         plt.show()
 
