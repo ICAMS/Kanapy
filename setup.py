@@ -46,7 +46,7 @@ with open(path_path, 'w') as outfile:
 # execute setup procedure
 setup(
     name='kanapy',
-    version='6.3.8',
+    version='6.3.9',
     author='Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, '
            'Napat Vajragupta, Alexander Hartmaier',
     author_email='alexander.hartmaier@rub.de',
