@@ -155,24 +155,34 @@ def project_pts(pts, ctr, axis):
     return ppt
 
 
-def bbox(pts):
+def bbox(pts, return_vector=False, two_dim=False):
     # Approximate smallest rectangular cuboid around points of grains
     # to analyse prolate (aspect ratio > 1) and oblate (a.r. < 1) particles correctly
     dia = get_diameter(pts)  # approx. of largest diameter of grain
     ctr = np.mean(pts, axis=0)  # approx. center of grain
     len_a = np.linalg.norm(dia)  # length of largest side
-    if len_a < 1.e-5:
+    if len_a < 1.e-3:
         logging.warning(f'Very small grain at {ctr} with max. diameter = {len_a}')
+        if len_a < 1.e-8:
+            raise ValueError(f'Grain of almost zero dimension at {ctr} with max. diameter = {len_a}')
     ax_a = dia / len_a  # unit vector along longest side
     ppt = project_pts(pts, ctr, ax_a)  # project points onto central plane normal to diameter
     trans1 = get_diameter(ppt)  # largest side transversal to long axis
     len_b = np.linalg.norm(trans1)  # length of second-largest side
     ax_b = trans1 / len_b  # unit vector of second axis (normal to diameter)
+    if two_dim:
+        if return_vector:
+            return 0.5 * len_a, 0.5 * len_b, ax_a, ax_b
+        else:
+            return 0.5 * len_a, 0.5 * len_b
     ax_c = np.cross(ax_a, ax_b)  # calculate third orthogonal axes of rectangular cuboid
     lpt = project_pts(ppt, np.zeros(3), ax_b)  # project points on third axis
     pdist = np.array([np.dot(ax_c, v) for v in lpt])  # calculate distance of points on third axis
     len_c = np.max(pdist) - np.min(pdist)  # get length of shortest side
-    return 0.5*len_a, 0.5*len_b, 0.5*len_c
+    if return_vector:
+        return 0.5*len_a, 0.5*len_b, 0.5*len_c, ax_a, ax_b, ax_c
+    else:
+        return 0.5*len_a, 0.5*len_b, 0.5*len_c
 
 
 def calc_stats_dict(a, b, c, eqd):
@@ -320,8 +330,8 @@ def get_stats_vox(mesh, iphase=None, ax_max=None,
                   minval=1.e-5, show_plot=True,
                   verbose=False, save_files=False):
     """
-    Get statistics about the microstructure from voxels, by fitting a 3D ellipsoid to
-    each grain.
+    Get statistics about the microstructure from voxels by analysing nodes at grain boundaries
+    and constructing a rectangular bounding box.
 
     Parameters
     ----------
@@ -419,7 +429,7 @@ def get_stats_vox(mesh, iphase=None, ax_max=None,
         print('\n--------------------------------------------------------')
         print('Statistical microstructure parameters in voxel structure')
         print('--------------------------------------------------------')
-        print('Median lengths of semi-axes of fitted ellipsoids in micron')
+        print('Median lengths of semi-axes in micron')
         print(f'a: {vox_stats_dict["a_scale"]:.3f}, b: {vox_stats_dict["b_scale"]:.3f}, '
               f'c: {vox_stats_dict["c_scale"]:.3f}')
         av_std = np.mean([vox_stats_dict['a_sig'], vox_stats_dict['b_sig'], vox_stats_dict['c_sig']])
