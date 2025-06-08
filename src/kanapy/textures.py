@@ -18,7 +18,9 @@ class EBSDmap:
     synthetic RVEs
     """
 
-    def __init__(self, fname, matname=None, gs_min=3, vf_min=0.03, plot=True, hist=None):
+    def __init__(self, fname, gs_min=10.0, vf_min=0.03, max_angle=5.0, connectivity=8,
+                 show_plot=True, hist=None, felzenszwalb=False, show_grains=False,
+                 plot=None):
         """
         Generate microstructural data from EBSD maps
 
@@ -65,10 +67,12 @@ class EBSDmap:
         eng : handle for Matlab engine with MTEX data
 
         """
-        if matname is not None:
-            logging.warning('Use of parameter "matname" is depracted.')
+        if plot is not None:
+            if isinstance(plot, bool):
+                show_plot = plot
+                logging.warning('Use of "plot" is depracted, use argument "show_plot".')
         if hist is None:
-            hist = plot
+            hist = show_plot
         # start MATLAB Engine to use MTEX commands
         eng = matlab.engine.start_matlab()
         eng.addpath(MTEX_DIR, nargout=0)
@@ -82,7 +86,7 @@ class EBSDmap:
         ebsd_full = eng.EBSD.load(fname, 'convertSpatial2EulerReferenceFrame', 'setting 2')
         # remove not indexed pixels
         eng.workspace["ebsd_w"] = ebsd_full
-        if plot:
+        if show_plot:
             eng.plot(ebsd_full)
         ebsd = eng.eval("ebsd_w('indexed')")  # select only indexed pixels in EBSD
         eng.workspace["ebsd"] = ebsd
@@ -123,7 +127,7 @@ class EBSDmap:
             omega = np.array(omega_r)[:, 0]
             data['omega'] = omega
             data['ngrain'] = len(omega)
-            if plot:
+            if show_plot:
                 # plot EBSD map
                 eng.plot(ebsd_h, data['ori'])
                 eng.hold('on', nargout=0)
