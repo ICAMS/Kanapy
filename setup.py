@@ -46,7 +46,7 @@ with open(path_path, 'w') as outfile:
 # execute setup procedure
 setup(
     name='kanapy',
-    version='6.3.9',
+    version='6.4.0',
     author='Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, '
            'Napat Vajragupta, Alexander Hartmaier',
     author_email='alexander.hartmaier@rub.de',
@@ -59,7 +59,7 @@ setup(
     ],     
     description="Python package for generating complex synthetic polycrystalline microstructures",
     install_requires=['numpy', 'matplotlib', 'scipy', 'seaborn', 'click', 'tqdm',
-                      'pytest-cov', 'pytest-mock', 'pytest'],
+                      'pytest-cov', 'pytest-mock', 'pytest', 'networkx', 'orix'],
     packages=find_packages('src'),
     package_dir={'': 'src'},
     license="GNU AGPL v3 license",    

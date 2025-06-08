@@ -94,3 +94,10 @@ History
 
  * Trajectories integrated by Verlet algorithm during packing
  * Extract statistical microstructure data from voxels, particles and polyhedra 
+ 
+6.4.0 (2025-06-07)
+------------------
+
+ * Pure Python version for reading and analyzing EBSD maps based on Orix
+ * Definition of microstructures as graphs based on networkx
+ 

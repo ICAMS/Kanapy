@@ -17,4 +17,6 @@ dependencies:
   - click
   - jupyter
   - orix
+  - scikit-image
+  - networkx
 
