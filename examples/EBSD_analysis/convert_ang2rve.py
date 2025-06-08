@@ -19,8 +19,14 @@ nvox = 30         # number of voxels per side
 box_length = 50   # side length of generated RVE in micron
 periodic = False  # create RVE with periodic structure
 
+vf_min = 0.03  # minimum volume fraction of phases to be considered
+max_angle = 5.0  # maximum misorientation angle within one grain in degrees
+min_size = 10.0  # minim grain size in pixels
+connectivity = 8  # take into account diagonal neighbors
+
 # read EBSD map and evaluate statistics of microstructural features
-ebsd = knpy.EBSDmap(fname)
+ebsd = knpy.EBSDmap(fname, vf_min=vf_min, gs_min=min_size, show_plot=True)
+
 # ebsd.showIPF()
 ms_data = ebsd.ms_data[0]  # analyse only data for majority phase with order parameter "0"
 gs_param = ms_data['gs_param']  # lognorm distr of grain size: [std dev., location, scale]
