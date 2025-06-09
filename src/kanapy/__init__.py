@@ -10,14 +10,15 @@ from kanapy.input_output import writeAbaqusMat, pickle2microstructure, import_vo
     import_stats, write_stats
 from kanapy.rve_stats import find_rot_axis, bbox
 from kanapy.util import ROOT_DIR, MAIN_DIR, MTEX_DIR, poly_scale
-#from kanapy.textures_pp import EBSDmap
 
 log_level = 20  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR
 logging.basicConfig(level=log_level)  # set log level
 try:
+    #raise ValueError('MTEX deactivated.')
     from kanapy.textures import EBSDmap, createOriset, createOrisetRandom, get_ipf_colors
     MTEX_AVAIL = True
 except:
+    from kanapy.textures_pp import EBSDmap
     MTEX_AVAIL = False
 if MTEX_DIR is None and MTEX_AVAIL:
     logging.error('Inconsistent installation of Kanapy package. MTEX tools will not be available.')

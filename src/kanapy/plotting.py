@@ -461,8 +461,8 @@ def plot_output_stats(data_list, labels, iphase=None,
             plt.show(block=True)
     else:
 
-        # NOTE: 'doane' produces better estimates for non-normal datasets
-        shared_bins = np.histogram_bin_edges(total_eqDia, bins='doane')
+        # NOTE: 'fd' produces better estimates for non-normal datasets
+        shared_bins = np.histogram_bin_edges(total_eqDia, bins='fd')
         binNum = len(shared_bins)
 
         # Plot the histogram & PDF for equivalent diameter
@@ -547,7 +547,7 @@ def plot_output_stats(data_list, labels, iphase=None,
             data.append(ar_data)
             label.append('Experiment')
         # Find the corresponding shared bin edges
-        shared_AR = np.histogram_bin_edges(total_AR, bins='doane')
+        shared_AR = np.histogram_bin_edges(total_AR, bins='fd')
 
         # Plot the histogram & PDF
         sns.set(color_codes=True)
@@ -637,11 +637,12 @@ def plot_init_stats(stats_dict,
     else:
         title = ('Microstructure statistics')
 
-    x_lim = dia_cutoff_max * 1.5
+    x_lim_eqd = dia_cutoff_max * 1.5
     if gs_param is not None:
-        x_lim = max(x_lim, gs_param[4]*1.1)
+        x_lim_eqd = max(x_lim_eqd, gs_param[4]*1.1)
+
     # Compute the Log-normal PDF
-    xaxis = np.linspace(0.1, x_lim, 1000)
+    xaxis = np.linspace(0.1, x_lim_eqd, 1000)
     ypdf = lognorm.pdf(xaxis, sd, loc=loc, scale=scale)
     # normalize density to region between min and max cutoff
     ind = np.nonzero(np.logical_and(xaxis >= dia_cutoff_min, xaxis <= dia_cutoff_max))[0]
@@ -664,12 +665,12 @@ def plot_init_stats(stats_dict,
                    label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         plt.plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
         ax.fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
-        ax.set_xlim(left=0.0, right=x_lim)
+        ax.set_xlim(left=0.0, right=x_lim_eqd)
         ax.set_xlabel('Equivalent diameter (μm)', fontsize=14)
         ax.set_ylabel('Density', fontsize=14)
         ax.tick_params(labelsize=12)
         if gs_data is not None:
-            idata = np.nonzero(gs_data < x_lim)[0]
+            idata = np.nonzero(gs_data < x_lim_eqd)[0]
             ax.hist(gs_data[idata], bins=80, density=True, label='Experimental data')
         if gs_param is not None:
             if len(gs_param) < 5:
@@ -690,6 +691,10 @@ def plot_init_stats(stats_dict,
         ar_cutoff_min = stats_dict["Aspect ratio"]["cutoff_min"]
         ar_cutoff_max = stats_dict["Aspect ratio"]["cutoff_max"]
 
+        x_lim_ar = ar_cutoff_max * 3
+        if ar_param is not None:
+            x_lim_ar = max(x_lim_ar, ar_param[4] * 1.1)
+
         # Plot grain size distribution
         fig, ax = plt.subplots(2, 1, figsize=(8, 9))
         ax[0].axvline(dia_cutoff_min, linestyle='--', linewidth=3.0,
@@ -698,7 +703,7 @@ def plot_init_stats(stats_dict,
                       label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
         ax[0].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
-        ax[0].set_xlim(left=0.0, right=x_lim)
+        ax[0].set_xlim(left=0.0, right=x_lim_eqd)
         ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=14)
         ax[0].set_ylabel('Density', fontsize=14)
         ax[0].tick_params(labelsize=12)
@@ -730,6 +735,7 @@ def plot_init_stats(stats_dict,
                       label='Maximum cut-off: {:.2f}'.format(ar_cutoff_max))
         ax[1].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
         ax[1].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
+        ax[1].set_xlim(left=0.0, right=x_lim_ar)
         ax[1].set_xlabel('Aspect ratio', fontsize=14)
         ax[1].set_ylabel('Density', fontsize=14)
         ax[1].tick_params(labelsize=12)
@@ -775,7 +781,7 @@ def plot_init_stats(stats_dict,
                       label='Maximum cut-off: {:.2f}'.format(dia_cutoff_max))
         ax[0].plot(xaxis, ypdf, linestyle='-', linewidth=3.0, label='Input stats')
         ax[0].fill_between(xaxis[ind], 0, ypdf[ind], alpha=0.3)
-        ax[0].set_xlim(left=0.0, right=x_lim)
+        ax[0].set_xlim(left=0.0, right=x_lim_eqd)
         ax[0].set_xlabel('Equivalent diameter (μm)', fontsize=14)
         ax[0].set_ylabel('Density', fontsize=14)
         ax[0].tick_params(labelsize=12)
@@ -848,7 +854,7 @@ def plot_stats_dict(sdict, title=None, save_files=False):
     -------
 
     """
-    shared_bins = np.histogram_bin_edges(sdict['eqd'], bins='doane')
+    shared_bins = np.histogram_bin_edges(sdict['eqd'], bins='fd')
     binNum = len(shared_bins)
     # Plot the histogram & PDF for equivalent diameter
     sns.set(color_codes=True)

@@ -19,8 +19,8 @@ class EBSDmap:
     """
 
     def __init__(self, fname, gs_min=10.0, vf_min=0.03, max_angle=5.0, connectivity=8,
-                 show_plot=True, hist=None, felzenszwalb=False, show_grains=False,
-                 plot=None):
+                 show_plot=True, show_hist=None, felzenszwalb=False, show_grains=False,
+                 plot=None, hist=None):
         """
         Generate microstructural data from EBSD maps
 
@@ -68,11 +68,13 @@ class EBSDmap:
 
         """
         if plot is not None:
-            if isinstance(plot, bool):
-                show_plot = plot
-                logging.warning('Use of "plot" is depracted, use argument "show_plot".')
-        if hist is None:
-            hist = show_plot
+            show_plot = plot
+            logging.warning('Use of "plot" is depracted, use argument "show_plot".')
+        if hist is not None:
+            show_hist = hist
+            logging.warning('Use of "hist" is depracted, use argument "show_hist".')
+        if show_hist is None:
+            show_hist = show_plot
         # start MATLAB Engine to use MTEX commands
         eng = matlab.engine.start_matlab()
         eng.addpath(MTEX_DIR, nargout=0)
@@ -179,7 +181,7 @@ class EBSDmap:
             data['gs_param'] = np.array([dsig, doffs, dscale])
             data['gs_data'] = deq
             data['gs_moments'] = [med_eq, std_eq]
-            if hist:
+            if show_hist:
                 # plot distribution of grain sizes
                 fig, ax = plt.subplots()
                 x = np.linspace(np.amin(deq), np.amax(deq), 150)
@@ -202,7 +204,7 @@ class EBSDmap:
             data['ar_param'] = np.array([asig, aoffs, ascale])
             data['ar_data'] = asp
             data['ar_moments'] = [med_ar, std_ar]
-            if hist:
+            if show_hist:
                 # plot distribution of aspect ratios
                 fig, ax = plt.subplots()
                 x = np.linspace(np.amin(asp), np.amax(asp), 150)
@@ -224,7 +226,7 @@ class EBSDmap:
             data['om_param'] = np.array([kappa, oloc])
             data['om_data'] = omega_p
             data['om_moments'] = [med_om, std_om]
-            if hist:
+            if show_hist:
                 fig, ax = plt.subplots()
                 x = np.linspace(-np.pi, np.pi, 200)  # np.amin(omega), np.amax(omega), 150)
                 y = vonmises.pdf(x, kappa, loc=oloc)
