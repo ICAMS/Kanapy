@@ -13,9 +13,13 @@ Institution: ICAMS, Ruhr University Bochum
 import os
 import json
 import logging
+import platform
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
+from typing import Dict, Any, List, Optional
+from importlib.metadata import version as pkg_version
+from jsonschema import validate, ValidationError
 
 from kanapy.grains import calc_polygons
 from kanapy.entities import Simulation_Box
@@ -341,28 +345,40 @@ class Microstructure(object):
                 gba = None
             else:
                 gba = shared_area
-
+        texture_types = []
         ori_dict = dict()
         for ip, ngr in enumerate(self.ngrains):
             if type(data) is EBSDmap:
                 if iphase is None or iphase == ip:
+                    ttype = 'ODF'
                     ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba)
             elif type(data) is str:
                 if data.lower() in ['random', 'rnd']:
+                    ttype = 'random'
                     ori_rve = createOrisetRandom(ngr, Nbase=Nbase, hist=hist, shared_area=gba)
                 elif data.lower() in ['unimodal', 'uni_mod', 'uni_modal']:
+                    ttype = 'uni-modal'
                     if ang is None or omega is None:
                         raise ValueError('To generate orientation sets of type "unimodal" angle "ang" and kernel' +
                                          'halfwidth "omega" are required.')
+                    texture_type = 'uni-modal'
                     ori_rve = createOriset(ngr, ang, omega, hist=hist, shared_area=gba)
             else:
                 raise ValueError('Argument to generate grain orientation must be either of type EBSDmap or ' +
                                  '"random" or "unimodal"')
+            # Record this phase's texture type
+            texture_types.append(ttype)
+
+
+
             for i, igr in enumerate(self.mesh.grain_dict.keys()):
                 if self.mesh.grain_phase_dict[igr] == ip:
                     if iphase is None or iphase == ip:
                         ind = i - ip * self.ngrains[0]
                         ori_dict[igr] = ori_rve[ind, :]
+
+        # Prepend the list of texture types under a dedicated key
+        ori_dict['texture_type'] = texture_types
         self.mesh.grain_ori_dict = ori_dict
         return
 
@@ -683,7 +699,8 @@ class Microstructure(object):
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
                   dual_phase=False, thermal=False, units=None,
-                  ialloy=None, nsdv=200):
+                  ialloy=None, nsdv=200,
+                  bc_type='Uni-axial', load_type='dis', loading_direction = 'x', value = 0.20000):
         """
         Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
         a string indicating if voxel ("v") or smoothened ("s") mesh should be written. It can also
@@ -784,7 +801,9 @@ class Microstructure(object):
                       units=units, gb_area=faces,
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
-                      thermal=thermal, periodic=self.rve.periodic)
+                      thermal=thermal, periodic=self.rve.periodic,
+                      bc_type=bc_type, load_type=load_type,
+                      loading_direction = loading_direction, value = value)
         # if orientations exist and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
             writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
@@ -1326,6 +1345,383 @@ class Microstructure(object):
         with open(file, 'w') as fp:
             json.dump(structure, fp)
         return
+
+    def write_dataSchema(self,
+                         user_metadata: Optional[Dict[str, Any]] = None,
+                         boundary_condition: Optional[Dict[str, Any]] = None,
+                         interactive: bool = True,
+                         structured: bool = True,
+                         ialloy: int = 1,
+                         output_filename: str = 'metadata.json') -> None:
+
+        """
+        Generate a JSON file containing User-, System-, and Job-Specific Elements.
+
+        - `user_metadata`: prefilled metadata fields (if interactive=False).
+        - `boundary_condition`: separate BC dict (mechanical_BC or thermal_BC).
+        - `interactive`: if True and inputs missing, prompt user.
+        - `structured`: whether mesh is structured.
+        - `output_filename`: path to write JSON.
+        """
+        import hashlib
+        from datetime import datetime
+
+        # Material library definitions (pulled from mod_alloys.f)
+        material_library = {
+            1: {  # Aluminum
+                'ialloy': 1,
+                'material_identifier': 'Aluminum',
+                'elastic_model_name': 'Anisotropic Elasticity',
+                'elastic_parameters': {
+                    'C11': 247000.0, 'C12': 147000.0, 'C44': 125000.0
+                },
+                'plastic_model_name': 'Crystal Plasticity',
+                'plastic_parameters': {
+                    'reference_shear_rate': 1e-6,  # shrt0
+                    'initial_critical_resolved_shear_stress': 20.0,  # crss0
+                    'saturated_slip_resistance': 1500.0,  # crsss
+                    'strain_rate_sensitivity_exponent': 20.0,  # pwfl
+                    'reference_hardening_rate': 60.0,  # hdrt0
+                    'hardening_exponent': 2.25  # pwhd
+                }
+            },
+            2: {  # Copper
+                'ialloy': 2,
+                'material_identifier': 'Copper',
+                'elastic_model_name': 'Anisotropic Elasticity',
+                'elastic_parameters': {
+                    'C11': 170000.0, 'C12': 124000.0, 'C44': 75000.0
+                },
+                'plastic_model_name': 'Crystal Plasticity',
+                'plastic_parameters': {
+                    'reference_shear_rate': 0.001,  # shrt0
+                    'initial_critical_resolved_shear_stress': 16.0,  # crss0
+                    'saturated_slip_resistance': 148.0,  # crsss
+                    'strain_rate_sensitivity_exponent': 83.0,  # pwfl
+                    'reference_hardening_rate': 250.0,  # hdrt0
+                    'hardening_exponent': 2.25  # pwhd
+                }
+            },
+            3: {  # Ferrite
+                'ialloy': 3,
+                'material_identifier': 'Ferrite',
+                'elastic_model_name': 'Anisotropic Elasticity',
+                'elastic_parameters': {
+                    'C11': 230000.0, 'C12': 135000.0, 'C44': 116000.0
+                },
+                'plastic_model_name': 'Crystal Plasticity',
+                'plastic_parameters': {
+                    'reference_shear_rate': 1e-6,
+                    'initial_critical_resolved_shear_stress': 25.0,
+                    'saturated_slip_resistance': 1600.0,
+                    'strain_rate_sensitivity_exponent': 18.0,
+                    'reference_hardening_rate': 70.0,
+                    'hardening_exponent': 2.0
+                }
+            },
+            4: {  # Austenite
+                'ialloy': 4,
+                'material_identifier': 'Austenite',
+                'elastic_model_name': 'Anisotropic Elasticity',
+                'elastic_parameters': {
+                    'C11': 190000.0, 'C12': 130000.0, 'C44': 115000.0
+                },
+                'plastic_model_name': 'Crystal Plasticity',
+                'plastic_parameters': {
+                    'reference_shear_rate': 1e-6,
+                    'initial_critical_resolved_shear_stress': 15.0,
+                    'saturated_slip_resistance': 1400.0,
+                    'strain_rate_sensitivity_exponent': 22.0,
+                    'reference_hardening_rate': 65.0,
+                    'hardening_exponent': 2.2
+                }
+            },
+            5: {  # Superalloy
+                'ialloy': 5,
+                'material_identifier': 'Superalloy',
+                'elastic_model_name': 'Anisotropic Elasticity',
+                'elastic_parameters': {
+                    'C11': 260000.0, 'C12': 150000.0, 'C44': 120000.0
+                },
+                'plastic_model_name': 'Crystal Plasticity',
+                'plastic_parameters': {
+                    'reference_shear_rate': 1e-6,
+                    'initial_critical_resolved_shear_stress': 30.0,
+                    'saturated_slip_resistance': 1700.0,
+                    'strain_rate_sensitivity_exponent': 25.0,
+                    'reference_hardening_rate': 80.0,
+                    'hardening_exponent': 2.8
+                }
+            },
+            6: {  # Nickel
+                'ialloy': 6,
+                'material_identifier': 'Nickel',
+                'elastic_model_name': 'Anisotropic Elasticity',
+                'elastic_parameters': {
+                    'C11': 246000.0, 'C12': 147000.0, 'C44': 124000.0
+                },
+                'plastic_model_name': 'Crystal Plasticity',
+                'plastic_parameters': {
+                    'reference_shear_rate': 1e-6,
+                    'initial_critical_resolved_shear_stress': 18.0,
+                    'saturated_slip_resistance': 1450.0,
+                    'strain_rate_sensitivity_exponent': 20.0,
+                    'reference_hardening_rate': 75.0,
+                    'hardening_exponent': 2.4
+                }
+            }
+        }
+
+        # Define required fields
+        required_fields = [
+            'identifier', 'title', 'date', 'description', 'rights', 'rights_holder',
+            'creator', 'creator_ORCID', 'creator_affiliation', 'creator_institute', 'creator_group',
+            'contributor', 'contributor_ORCID', 'contributor_affiliation', 'contributor_institute', 'contributor_group',
+            'shared_with', 'funder_name', 'fund_identifier', 'publisher', 'relation', 'keywords'
+        ]
+
+
+        def prompt_list(field_name: str) -> List[str]:
+            vals = input(f"Enter comma-separated {field_name}: ").strip()
+            return [v.strip() for v in vals.split(',')] if vals else []
+
+        # Gather metadata
+        if user_metadata is None:
+            if interactive:
+                use: Dict[str, Any] = {}
+                # identifier
+                ident = input("Identifier (leave blank to auto-generate): ").strip()
+                if not ident:
+                    now = datetime.utcnow().isoformat()
+                    ident = hashlib.sha256(now.encode()).hexdigest()[:8]
+                use['identifier'] = ident
+                use['title'] = input("Title: ").strip()
+                # creator fields
+                use['creator'] = prompt_list('creator names (e.g. Last, First)')
+                use['creator_ORCID'] = prompt_list('creator ORCID(s)')
+                use['creator_affiliation'] = prompt_list('creator affiliations')
+                use['creator_institute'] = prompt_list('creator institutes')
+                use['creator_group'] = prompt_list('creator groups')
+                # contributor fields
+                use['contributor'] = prompt_list('contributor names')
+                use['contributor_ORCID'] = prompt_list('contributor ORCID(s)')
+                use['contributor_affiliation'] = prompt_list('contributor affiliations')
+                use['contributor_institute'] = prompt_list('contributor institutes')
+                use['contributor_group'] = prompt_list('contributor groups')
+                use['date'] = input("Date (YYYY-MM-DD): ").strip() or datetime.utcnow().strftime('%Y-%m-%d')
+                shared: List[Dict[str, str]] = []
+                print("Enter shared_with access entries. Valid types: c, u, g, all. Blank to stop.")
+                while True:
+                    atype = input("  access_type: ").strip()
+                    if not atype:
+                        break
+                    shared.append({'access_type': atype})
+                use['shared_with'] = shared
+                use['description'] = input("Description: ").strip()
+                use['rights'] = input("Rights (e.g. Creative Commons Attribution 4.0 International): ").strip()
+                use['rights_holder'] = prompt_list('rights_holder')
+                use['funder_name'] = input("Funder name: ").strip()
+                use['fund_identifier'] = input("Fund identifier: ").strip()
+                use['publisher'] = input("Publisher: ").strip()
+                use['relation'] = prompt_list('relation (DOI or URL)')
+                use['keywords'] = prompt_list('keywords')
+            else:
+                raise ValueError("user_metadata dictionary required when interactive=False.")
+        else:
+            if not user_metadata:
+                raise ValueError("user_metadata must be provided when interactive is False.")
+            use = user_metadata.copy()
+            # Validate presence of required fields
+            missing = [f for f in required_fields if f not in use]
+            if missing:
+                raise ValueError(f"Missing required metadata fields: {', '.join(missing)}")
+
+        ig = {
+            'RVE_size': [int(v) for v in self.rve.size],
+            'RVE_continuity': self.rve.periodic,
+            'discretization_type': 'Structured' if structured else 'Unstructured',
+            'discretization_unit_size': [float(s)/float(d) for s, d in zip(self.rve.size, self.rve.dim)],
+            'discretization_count': int(self.mesh.nvox),
+            'global_rotation_convention': str(),
+            'Origin': {
+                'software': 'kanapy',
+                'software_version': pkg_version('kanapy'),
+                'system': platform.system(),
+                'system_version': platform.version()
+            }
+        }
+
+
+        # ─── Show vertex‐diagram for BC reference ────────────────────────────────
+        try:
+            # locate the package root, two levels up from this file
+            script_dir = os.path.dirname(__file__)
+            project_root = os.path.abspath(os.path.join(script_dir, os.pardir, os.pardir))
+            img_path = os.path.join(project_root, 'docs', 'figs', 'RVE', 'Vertices.png')
+            if os.path.exists(img_path):
+                # first try with Pillow
+                try:
+                    from PIL import Image
+                    Image.open(img_path).show()
+                except ImportError:
+                    # fallback to the system browser/viewer
+                    import webbrowser
+                    webbrowser.open(f'file://{img_path}')
+        except (FileNotFoundError, OSError) as e:
+            logging.warning(f"[Warning] Unable to open Vertices.png: {e}")
+
+        # Boundary conditions
+        if boundary_condition:
+            # Ensure 'type' is present
+            if 'mechanical_BC' in boundary_condition:
+                # Determine mechanical vs thermal by key presence
+                mech_list = boundary_condition['mechanical_BC']
+                # Normalize to list
+                if not isinstance(mech_list, list):
+                    mech_list = [mech_list]
+                job_bc = {'mechanical_BC': mech_list}
+            elif 'thermal_BC' in boundary_condition:
+                th_list = boundary_condition['thermal_BC']
+                if not isinstance(th_list, list):
+                    th_list = [th_list]
+                job_bc = {'thermal_BC': th_list}
+            else:
+                # fallback if wrong keys provided
+                if interactive:
+                    # ask user which type to populate
+                    bc_choice = input("Boundary condition key not found. Enter 'mechanical' or 'thermal': ").strip()
+                    if bc_choice == 'mechanical':
+                        job_bc = {'mechanical_BC': []}
+                    else:
+                        job_bc = {'thermal_BC': {}}
+                else:
+                    raise ValueError(
+                        "boundary_condition dict must include 'mechanical_BC' or 'thermal_BC' key when interactive=False.")
+
+        elif interactive: # Interactive entry of multiple mechanical BCs
+            mech_entries: List[Dict[str, Any]] = []
+            bc_type = input("Boundary condition type ('mechanical' or 'thermal'): ").strip()
+            if bc_type == 'mechanical':
+                while True:
+                    print("Define a mechanical BC (leave vertex_list blank to stop):")
+                    vertex_list = prompt_list('vertex_list')
+                    if not vertex_list:
+                        break
+                    constraints = input("Constraints xyz (e.g. 'free,fixed,loaded'): ").split(',')
+                    loading_type = input("Loading type (force/displacement/stress/strain/none): ").strip()
+                    loading_mode = input("Loading mode (static/cyclic/monotonic/intermittent): ").strip()
+                    # count how many of those constraints are “loaded”:
+                    num = sum(1 for c in constraints if c.strip().lower() == 'loaded')
+                    loads = []
+                    for i in range(num):
+                        print(f"Load entry #{i + 1}:")
+                        mag = float(input("  magnitude: "))
+                        freq = float(input("  frequency: "))
+                        dur = float(input("  duration: "))
+                        R = float(input("  R: "))
+                        loads.append({'magnitude': mag, 'frequency': freq, 'duration': dur, 'R': R})
+                    mech_entries.append({
+                        'vertex_list': vertex_list,
+                        'constraints': constraints,
+                        'loading_type': loading_type,
+                        'loading_mode': loading_mode,
+                        'applied_load': loads
+                    })
+                job_bc = {'mechanical_BC': mech_entries}
+            else:
+                job_bc = {'thermal_BC': {}}
+        else:
+            job_bc = {}
+
+
+        # Phase data
+        phase_list = []
+        # Use ialloy parameter to select material
+        for idx in range(self.nphases):
+            phase_name = self.rve.phase_names[idx]
+            vf = self.rve.phase_vf[idx]
+            mat = material_library[ialloy]
+            pe = mat['elastic_parameters']; pp = mat['plastic_parameters']
+
+            phase_entry = {
+                    "id": idx,
+                    "phase_name": phase_name,
+                    "Microstructural_information": {
+                        "phase_volume_fraction": float(vf),
+                        "grain_count_per_phase": int(self.ngrains[idx]),
+                        "crystal_structure":  None,
+                        "texture_type": self.mesh.grain_ori_dict["texture_type"][idx],
+                    },
+                    "Properties": {
+                        "MechanicalProperties": {
+                            "ElasticProperties": {"elastic_model_name": mat['elastic_model_name'],
+                                                  "elastic_parameters": pe},
+                            "PlasticProperties": {"plastic_model_name": mat['plastic_model_name'],
+                                                  "plastic_parameters": pp}
+                        }}
+            }
+            phase_list.append(phase_entry)
+
+        # ─── grain→phase lookup (already provided) ────────────────────────────────
+        grain_phase = self.mesh.grain_phase_dict
+        # e.g. {1: 0, 2: 0, 3: 0, …}
+
+        # ─── Build time‐0 voxel dictionary ────────────────────────────────────────
+        voxel_ids = list(self.mesh.voxel_dict.keys())
+        t0 = {}
+        for vid in voxel_ids:
+            # find the grain this voxel belongs to
+            gid = next(g for g, voxels in self.mesh.grain_dict.items() if vid in voxels)
+
+            t0[vid] = {
+                "grain_id": gid,
+                "phase_id": grain_phase[gid],  # reuse existing mapping
+                "orientation": list(self.mesh.grain_ori_dict[gid]),  # Euler angles per grain
+                "center_coordinates": [float(c) for c in self.mesh.vox_center_dict[vid]],
+                "stress": [],  # to be filled per step
+                "strain": []  # to be filled per step
+            }
+        # ─── Wrap into multi‐time dictionary ──────────────────────────────────────
+        voxel_time_series = {
+            0: t0
+        }
+        # ─── Assemble into your final JSON dict ──────────────────────────────────
+        voxels = {
+            # … your existing User/System/Job elements …
+            "grain_phase": grain_phase,  # {1:0,2:0,…}
+            "Voxel_time_series": voxel_time_series
+        }
+
+
+        # Assemble final structure with placeholders
+        data = {
+            'User_Specific_Elements': use,
+            'System_Elements': {
+                'software': '',
+                'software_version': '',
+                'system': '',
+                'system_version': '',
+                'processor_specifications': '',
+                'input_path': '',
+                'results_path': ''
+            },
+            'Job_Specific_Elements': {'initial_geometry':ig,'boundary_condition':job_bc,'phases':phase_list},
+            # Voxel-level storage: per-voxel grain, phase, and time-frame data
+            'Voxel_level_data_storage':  voxels
+        }
+
+        # Write to file
+        os.makedirs(os.path.dirname(output_filename) or '.', exist_ok=True)
+        with open(output_filename, 'w', encoding='utf-8') as fp:
+            json.dump(data, fp, indent=2)
+
+        print(f"Data schema written to {output_filename}")
+
+        return
+
+
+
+
 
     def pckl(self, file=None, path='./'):
         """Write microstructure into pickle file. Usefull for to store complex structures.
