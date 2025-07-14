@@ -16,7 +16,6 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
-from typing import Dict, Any, List, Optional
 
 from kanapy.grains import calc_polygons
 from kanapy.entities import Simulation_Box
@@ -684,8 +683,7 @@ class Microstructure(object):
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
                   dual_phase=False, thermal=False, units=None,
-                  ialloy=None, nsdv=200,
-                  bc_type='Uni-axial', load_type='dis', loading_direction='x', value=0.20000, apply_bc=False):
+                  ialloy=None, nsdv=200):
         """
         Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
         a string indicating if voxel ("v") or smoothened ("s") mesh should be written. It can also
@@ -693,7 +691,7 @@ class Microstructure(object):
         generated deck contains plain material definitions for each phase. Material parameters must
         be specified by the user. If ialloy is provided, the generated deck material definitions
         for each grain. For dual phase structures to be used with crystal plasticity, ialloy
-        can be a list with all required material definitions. If the list ialloy is shorter than the
+        can be a list with all required material definitions. If the list ialloy is shorted than the
         number of phases in the RVE, plain material definitions for the remaining phases will
         be included in the input deck.
 
@@ -709,17 +707,10 @@ class Microstructure(object):
         units
         ialloy
         nsdv
-        bc_type
-        load_type
-        loading_direction
-        value
-        apply_bc : bool, optional
-            If True, boundary conditions are written to the Abaqus input file. Default is False.
 
         Returns
         -------
-        file : str
-            Path to the generated Abaqus input file.
+
         """
         if nodes is None:
             if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
@@ -793,9 +784,7 @@ class Microstructure(object):
                       units=units, gb_area=faces,
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
-                      thermal=thermal, periodic=self.rve.periodic,
-                      bc_type=bc_type, load_type=load_type,
-                      loading_direction=loading_direction, value=value, apply_bc=apply_bc)
+                      thermal=thermal, periodic=self.rve.periodic)
         # if orientations exist and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
             writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
@@ -1337,143 +1326,6 @@ class Microstructure(object):
         with open(file, 'w') as fp:
             json.dump(structure, fp)
         return
-
-    def write_dataSchema(self,
-                         user_metadata: Optional[Dict[str, Any]] = None,
-                         interactive: bool = True,
-                         output_filename: str = 'metadata.json') -> None:
-
-        """
-        Generate a JSON file containing User-Specific Elements per Ronak data schema.
-
-        Either collects data interactively (if interactive=True and user_metadata is None)
-        or uses the provided user_metadata dict (if interactive=False and user_metadata is given).
-
-        The final JSON structure will be:
-        {
-        "User_Specific_Elements": { ... }
-        }
-
-        Args:
-        user_metadata: Pre-filled dict of metadata fields. If provided, interactive is ignored.
-        interactive: If True, prompt the user for input; else use user_metadata.
-        output_filename: Name of the JSON file to write.
-
-        Raises:
-        ValueError: If required fields are missing in user_metadata when interactive=False.
-        """
-        import hashlib
-        from datetime import datetime
-        # Define required fields
-        required_fields = [
-            'identifier', 'title', 'date', 'description', 'rights', 'rights_holder',
-            'creator', 'creator_ORCID', 'creator_affiliation', 'creator_institute', 'creator_group',
-            'contributor', 'contributor_ORCID', 'contributor_affiliation', 'contributor_institute', 'contributor_group',
-            'shared_with', 'funder_name', 'fund_identifier', 'publisher', 'relation', 'keywords'
-        ]
-
-        def prompt_list(field_name: str) -> List[str]:
-            vals = input(f"Enter comma-separated {field_name}: ").strip()
-            return [v.strip() for v in vals.split(',')] if vals else []
-
-        # Gather metadata
-        if interactive and user_metadata is None:
-            use: Dict[str, Any] = {}
-            # identifier
-            ident = input("Identifier (leave blank to auto-generate): ").strip()
-            if not ident:
-                now = datetime.utcnow().isoformat()
-                ident = hashlib.sha256(now.encode()).hexdigest()[:8]
-            use['identifier'] = ident
-            # simple fields
-            use['title'] = input("Title: ").strip()
-            use['date'] = input("Date (YYYY-MM-DD): ").strip() or datetime.utcnow().strftime('%Y-%m-%d')
-            use['description'] = input("Description: ").strip()
-            use['rights'] = input("Rights (e.g. Creative Commons Attribution 4.0 International): ").strip()
-            use['rights_holder'] = prompt_list('rights_holder')
-            # creator fields
-            use['creator'] = prompt_list('creator names (e.g. Last, First)')
-            use['creator_ORCID'] = prompt_list('creator ORCID(s)')
-            use['creator_affiliation'] = prompt_list('creator affiliations')
-            use['creator_institute'] = prompt_list('creator institutes')
-            use['creator_group'] = prompt_list('creator groups')
-            # contributor fields
-            use['contributor'] = prompt_list('contributor names')
-            use['contributor_ORCID'] = prompt_list('contributor ORCID(s)')
-            use['contributor_affiliation'] = prompt_list('contributor affiliations')
-            use['contributor_institute'] = prompt_list('contributor institutes')
-            use['contributor_group'] = prompt_list('contributor groups')
-            # shared_with
-            shared: List[Dict[str, str]] = []
-            print("Enter shared_with access entries. Valid types: c, u, g, all. Blank to stop.")
-            while True:
-                atype = input("  access_type: ").strip()
-                if not atype:
-                    break
-                shared.append({'access_type': atype})
-            use['shared_with'] = shared
-            # other fields
-            use['funder_name'] = input("Funder name: ").strip()
-            use['fund_identifier'] = input("Fund identifier: ").strip()
-            use['publisher'] = input("Publisher: ").strip()
-            use['relation'] = prompt_list('relation (DOI or URL)')
-            use['keywords'] = prompt_list('keywords')
-        else:
-            if not user_metadata:
-                raise ValueError("user_metadata must be provided when interactive is False.")
-            use = user_metadata.copy()
-            # Validate presence of required fields
-            missing = [f for f in required_fields if f not in use]
-            if missing:
-                raise ValueError(f"Missing required metadata fields: {', '.join(missing)}")
-
-
-
-
-
-        # Assemble final structure with placeholders
-        data = {
-            'User_Specific_Elements': use,
-            'System_Elements': {
-                'software': '',
-                'software_version': '',
-                'system': '',
-                'system_version': '',
-                'processor_specifications': '',
-                'input_path': '',
-                'results_path': ''
-            },
-            'Job_Specific_Elements': {
-                'initial_geometry': {
-                    'RVE_size': '',
-                    'RVE_continuity': '',
-                    'discretization_type': '',
-                    'discretization_unit_size': '',
-                    'discretization_count': '',
-                    'Origin': {
-                        'software': '',
-                        'software_version': '',
-                        'system': '',
-                        'system_version': ''
-                    }
-                },
-                'boundary_conditions': '',
-                'phase': ''
-            }
-        }
-
-        # Write to file
-        os.makedirs(os.path.dirname(output_filename) or '.', exist_ok=True)
-        with open(output_filename, 'w', encoding='utf-8') as fp:
-            json.dump(data, fp, indent=2)
-
-        print(f"Data schema written to {output_filename}")
-
-        return
-
-
-
-
 
     def pckl(self, file=None, path='./'):
         """Write microstructure into pickle file. Usefull for to store complex structures.
