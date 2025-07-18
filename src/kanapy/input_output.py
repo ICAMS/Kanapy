@@ -120,10 +120,7 @@ def read_dump(file):
 
 from kanapy.initializations import NodeSets
 from collections import defaultdict
-
-
-from kanapy.initializations import NodeSets
-from collections import defaultdict
+import math
 
 def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                   gb_area=None, dual_phase=False, thermal=False,
@@ -499,8 +496,10 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                 direction = loading_direction.lower()
                 if direction in displacement_bc_map:
                     set_name, dof, bc_name = displacement_bc_map[direction]
-                    strain = value / 100.0
-                    displacement = strain * edge_lengths[direction]
+                    strain = value / 100.0  # Convert percentage to decimal
+                    displacement = edge_lengths[direction] * (math.exp(strain) - 1)  # Logarithmic strain
+                    print(f"Direction: {direction}, Strain: {strain:.6f}, Edge length: {edge_lengths[direction]:.6f} mm, "
+                          f"Displacement: {displacement:.6f} mm")
                     f.write(f'** Name: {bc_name} Type: Displacement/Rotation\n')
                     f.write('*Boundary\n')
                     f.write(f'{set_name}, {dof}, {dof}, {displacement:.6f}\n')
