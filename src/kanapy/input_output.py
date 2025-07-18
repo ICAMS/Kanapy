@@ -118,6 +118,13 @@ def read_dump(file):
     return sim_box, Ellipsoids
 
 
+from kanapy.initializations import NodeSets
+from collections import defaultdict
+
+
+from kanapy.initializations import NodeSets
+from collections import defaultdict
+
 def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                   gb_area=None, dual_phase=False, thermal=False,
                   ialloy=None, grain_phase_dict=None, periodic=False,
@@ -152,9 +159,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
     apply_bc : bool, optional
         If True, boundary conditions are written to the Abaqus input file. Default is False.
     """
-    from kanapy.initializations import NodeSets
-    from collections import defaultdict
-
     def write_node_set(name, nset):
         f.write(name)
         for i, val in enumerate(nset[:-1], start=1):
@@ -228,6 +232,80 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                 f.write('*Surface, type=ELEMENT, name=Surf-{0}\n'.format(i))
                 f.write('_Surf-{0}_{1}, {1}\n'.format(i, face_label))
 
+    def get_node_weights(face_nodes, direction):
+        weights = {}
+        interior_count = 0
+        edge_count = 0
+        corner_count = 0
+        # Calculate min/max coordinates for the entire mesh
+        if direction == 'x':
+            y_min, y_max = min(nodes[:, 1]), max(nodes[:, 1])
+            z_min, z_max = min(nodes[:, 2]), max(nodes[:, 2])
+            for node in face_nodes:
+                y = nodes[node, 1]
+                z = nodes[node, 2]
+                if (abs(y - y_min) < 1e-10 and abs(z - z_min) < 1e-10) or \
+                   (abs(y - y_min) < 1e-10 and abs(z - z_max) < 1e-10) or \
+                   (abs(y - y_max) < 1e-10 and abs(z - z_min) < 1e-10) or \
+                   (abs(y - y_max) < 1e-10 and abs(z - z_max) < 1e-10):
+                    weights[node] = 0.25
+                    corner_count += 1
+                elif abs(y - y_min) < 1e-10 or abs(y - y_max) < 1e-10 or \
+                     abs(z - z_min) < 1e-10 or abs(z - z_max) < 1e-10:
+                    weights[node] = 0.5
+                    edge_count += 1
+                else:
+                    weights[node] = 1.0
+                    interior_count += 1
+        elif direction == 'y':
+            x_min, x_max = min(nodes[:, 0]), max(nodes[:, 0])
+            z_min, z_max = min(nodes[:, 2]), max(nodes[:, 2])
+            for node in face_nodes:
+                x = nodes[node, 0]
+                z = nodes[node, 2]
+                if (abs(x - x_min) < 1e-10 and abs(z - z_min) < 1e-10) or \
+                   (abs(x - x_min) < 1e-10 and abs(z - z_max) < 1e-10) or \
+                   (abs(x - x_max) < 1e-10 and abs(z - z_min) < 1e-10) or \
+                   (abs(x - x_max) < 1e-10 and abs(z - z_max) < 1e-10):
+                    weights[node] = 0.25
+                    corner_count += 1
+                elif abs(x - x_min) < 1e-10 or abs(x - x_max) < 1e-10 or \
+                     abs(z - z_min) < 1e-10 or abs(z - z_max) < 1e-10:
+                    weights[node] = 0.5
+                    edge_count += 1
+                else:
+                    weights[node] = 1.0
+                    interior_count += 1
+        elif direction == 'z':
+            x_min, x_max = min(nodes[:, 0]), max(nodes[:, 0])
+            y_min, y_max = min(nodes[:, 1]), max(nodes[:, 1])
+            for node in face_nodes:
+                x = nodes[node, 0]
+                y = nodes[node, 1]
+                if (abs(x - x_min) < 1e-10 and abs(y - y_min) < 1e-10) or \
+                   (abs(x - x_min) < 1e-10 and abs(y - y_max) < 1e-10) or \
+                   (abs(x - x_max) < 1e-10 and abs(y - y_min) < 1e-10) or \
+                   (abs(x - x_max) < 1e-10 and abs(y - y_max) < 1e-10):
+                    weights[node] = 0.25
+                    corner_count += 1
+                elif abs(x - x_min) < 1e-10 or abs(x - x_max) < 1e-10 or \
+                     abs(y - y_min) < 1e-10 or abs(y - y_max) < 1e-10:
+                    weights[node] = 0.5
+                    edge_count += 1
+                else:
+                    weights[node] = 1.0
+                    interior_count += 1
+        total_weight = sum(weights.values())
+        if total_weight == 0:
+            raise ValueError(f"No valid weights assigned for nodes in direction {direction}")
+        print(f"Direction: {direction}, Nodes: Interior={interior_count}, Edges={edge_count}, "
+              f"Corners={corner_count}, Total={len(weights)}, Total Weight={total_weight:.6f}")
+        # Debug: Print weights and coordinates for first few nodes
+        for i, node in enumerate(face_nodes[:5]):  # Print first 5 nodes
+            print(f"Node {node}: Weight={weights.get(node, 0.0):.2f}, "
+                  f"Coords=({nodes[node, 0]:.6f}, {nodes[node, 1]:.6f}, {nodes[node, 2]:.6f})")
+        return weights
+
     print('')
     print(f'Writing RVE as ABAQUS file "{file}"')
     if gb_area is None:
@@ -246,7 +324,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
     nall = len(ialloy)
     ph_set = set()
     # Convert input units from µm to mm for Abaqus output
-    scale_fact = 0.001  # Fixed conversion from µm to mm for size=20 µm to 0.02 mm
+    scale_fact = 0.001  # conversion from µm to mm
     nsets = NodeSets(nodes)
 
     # Calculate RVE edge lengths and face areas in mm
@@ -260,67 +338,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         'y': edge_lengths['x'] * edge_lengths['z'],  # xz face
         'z': edge_lengths['x'] * edge_lengths['y']   # xy face
     }
-
-    # For stress BC: Assign weights to nodes based on element connectivity
-    def get_node_weights(face_nodes, direction):
-        weights = {}
-        interior_count = 0
-        edge_count = 0
-        corner_count = 0
-        node_to_elements = defaultdict(int)
-        # Count elements per node on the face
-        for el_id, el_nodes in voxel_dict.items():
-            for node in el_nodes:
-                if node in face_nodes:
-                    node_to_elements[node] += 1
-        # Assign weights based on number of connected elements
-        if direction == 'x':
-            y_min, y_max = min(nodes[:, 1]), max(nodes[:, 1])
-            z_min, z_max = min(nodes[:, 2]), max(nodes[:, 2])
-            for node in face_nodes:
-                y = nodes[node, 1]
-                z = nodes[node, 2]
-                if abs(y - y_max) < 1e-10 and abs(z - z_max) < 1e-10:  # Precise corner check
-                    weights[node] = 0.25
-                    corner_count += 1
-                elif abs(y - y_max) < 1e-10 or abs(z - z_max) < 1e-10:
-                    weights[node] = 0.5
-                    edge_count += 1
-                else:
-                    weights[node] = 1.0
-                    interior_count += 1
-        elif direction == 'y':
-            x_min, x_max = min(nodes[:, 0]), max(nodes[:, 0])
-            z_min, z_max = min(nodes[:, 2]), max(nodes[:, 2])
-            for node in face_nodes:
-                x = nodes[node, 0]
-                z = nodes[node, 2]
-                if abs(x - x_max) < 1e-10 and abs(z - z_max) < 1e-10:  # Precise corner check
-                    weights[node] = 0.25
-                    corner_count += 1
-                elif abs(x - x_max) < 1e-10 or abs(z - z_max) < 1e-10:
-                    weights[node] = 0.5
-                    edge_count += 1
-                else:
-                    weights[node] = 1.0
-                    interior_count += 1
-        elif direction == 'z':
-            x_min, x_max = min(nodes[:, 0]), max(nodes[:, 0])
-            y_min, y_max = min(nodes[:, 1]), max(nodes[:, 1])
-            for node in face_nodes:
-                x = nodes[node, 0]
-                y = nodes[node, 1]
-                if abs(x - x_max) < 1e-10 and abs(y - y_max) < 1e-10:  # Precise corner check
-                    weights[node] = 0.25
-                    corner_count += 1
-                elif abs(x - x_max) < 1e-10 or abs(y - y_max) < 1e-10:
-                    weights[node] = 0.5
-                    edge_count += 1
-                else:
-                    weights[node] = 1.0
-                    interior_count += 1
-        print(f"Direction: {direction}, Nodes: Interior={interior_count}, Edges={edge_count}, Corners={corner_count}, Total={len(weights)}")  # Debug
-        return weights
 
     with open(file, 'w') as f:
         f.write('** Input file generated by kanapy\n')
@@ -498,33 +515,30 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                 direction = loading_direction.lower()
                 if direction in load_bc_map:
                     set_name, dof, bc_name, face_nodes = load_bc_map[direction]
-                    # Fixed face area for size=20 µm scaled to 0.02 mm
-                    face_area = 0.02 * 0.02  # mm²
+                    face_area = face_areas[direction]  # Use dynamic face area
                     total_force = value * face_area  # MPa * mm² = N
-                    # Get node weights based on element connectivity
                     weights = get_node_weights(face_nodes, direction)
-                    # Sum of weights for effective number of nodes
                     total_weight = sum(weights.values())
                     if total_weight == 0:
                         raise ValueError(f'No effective nodes for stress application on {set_name}.')
-                    # Base force per unit weight with high precision
                     base_force = total_force / total_weight
-                    print(f"Direction: {direction}, Total nodes: {len(face_nodes)}, Total weight: {total_weight:.6f}, Base force: {base_force:.10f} N")  # Enhanced debug
+                    print(f"Direction: {direction}, Total nodes: {len(face_nodes)}, "
+                          f"Total weight: {total_weight:.6f}, Face area: {face_area:.6f} mm², "
+                          f"Base force: {base_force:.10f} N, Total force: {total_force:.10f} N")
                     f.write(f'** Name: {bc_name} Type: Concentrated Force\n')
                     f.write('*Cload\n')
                     for node in face_nodes:
                         if node in weights:
                             force_per_node = base_force * weights[node]
-                            f.write(f'PART-1-1.{node+1}, {dof}, {force_per_node:.10f}\n')  # High precision output
+                            f.write(f'PART-1-1.{node+1}, {dof}, {force_per_node:.10f}\n')
                         else:
-                            print(f"Node {node} missing weight, skipping")  # Debug
+                            print(f"Warning: Node {node} missing weight, skipping")
         elif apply_bc and bc_type.lower() == 'periodic':
             if not periodic:
                 raise ValueError("Periodic boundary conditions cannot be applied to a non-periodic RVE.")
             pass
     print('---->DONE!\n')
     return
-
 
 def writeAbaqusMat(ialloy, angles,
                    file=None, path='./',
