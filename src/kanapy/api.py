@@ -699,8 +699,7 @@ class Microstructure(object):
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
                   dual_phase=False, thermal=False, units=None,
-                  ialloy=None, nsdv=200,
-                  bc_type='Uni-axial', load_type='dis', loading_direction = 'x', value = 0.20000):
+                  ialloy=None, nsdv=200):
         """
         Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
         a string indicating if voxel ("v") or smoothened ("s") mesh should be written. It can also
@@ -801,9 +800,7 @@ class Microstructure(object):
                       units=units, gb_area=faces,
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
-                      thermal=thermal, periodic=self.rve.periodic,
-                      bc_type=bc_type, load_type=load_type,
-                      loading_direction = loading_direction, value = value)
+                      thermal=thermal, periodic=self.rve.periodic)
         # if orientations exist and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
             writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
@@ -1662,34 +1659,56 @@ class Microstructure(object):
             }
             phase_list.append(phase_entry)
 
-        # ─── grain→phase lookup (already provided) ────────────────────────────────
-        grain_phase = self.mesh.grain_phase_dict
-        # e.g. {1: 0, 2: 0, 3: 0, …}
+        # ─── pull Mesh + RVE into locals ─────────────────────────────────────────
+        grain_phase_dict = self.mesh.grain_phase_dict  # {gid: phase_id}
+        grain_ori_dict = self.mesh.grain_ori_dict  # {gid: [euler…]}
+        vox_center_dict = self.mesh.vox_center_dict  # {vid: (x,y,z)}
+        grain_to_voxels = self.mesh.grain_dict  # {gid: [vid,…]}
+        rve_size = self.rve.size  # e.g. [20.0,20.0,20.0]
+        rve_dim = self.rve.dim  # e.g. [10,10,10]
+
+        # ─── compute one‐voxel volume ─────────────────────────────────────────────
+        unit_sizes = [float(s) / float(d) for s, d in zip(rve_size, rve_dim)]
+        voxel_volume = unit_sizes[0] * unit_sizes[1] * unit_sizes[2]
+
+        # ─── precompute voxel→grain lookup ───────────────────────────────────────
+        voxel_to_grain = {
+            vid: gid
+            for gid, vids in grain_to_voxels.items()
+            for vid in vids
+        }
+
+        # ─── build time‐0 grain dict ────────────────────────────────────────────
+        grains_t0 = {
+            gid: {
+                "phase_id": grain_phase_dict[gid],
+                "orientation": list(self.mesh.grain_ori_dict[gid]),
+                "grain_volume": len(grain_to_voxels[gid]) * voxel_volume
+            }
+            for gid in grain_phase_dict
+        }
 
         # ─── Build time‐0 voxel dictionary ────────────────────────────────────────
-        voxel_ids = list(self.mesh.voxel_dict.keys())
-        t0 = {}
-        for vid in voxel_ids:
-            # find the grain this voxel belongs to
-            gid = next(g for g, voxels in self.mesh.grain_dict.items() if vid in voxels)
-
-            t0[vid] = {
-                "grain_id": gid,
-                "phase_id": grain_phase[gid],  # reuse existing mapping
-                "orientation": list(self.mesh.grain_ori_dict[gid]),  # Euler angles per grain
-                "center_coordinates": [float(c) for c in self.mesh.vox_center_dict[vid]],
-                "stress": [],  # to be filled per step
-                "strain": []  # to be filled per step
+        voxels_t0 = {
+            vid: {
+                "grain_id": gid                                               ,
+                "phase_id": grain_phase_dict[gid]                             ,
+                "orientation": list(grain_ori_dict[gid])                      ,
+                "center_coordinates": [float(c) for c in vox_center_dict[vid]],
+                "voxel_volume":        voxel_volume                           ,
+                "stress": [],
+                "strain": []
             }
-        # ─── Wrap into multi‐time dictionary ──────────────────────────────────────
-        voxel_time_series = {
-            0: t0
+            for vid, gid in voxel_to_grain.items()
         }
-        # ─── Assemble into your final JSON dict ──────────────────────────────────
-        voxels = {
-            # … your existing User/System/Job elements …
-            "grain_phase": grain_phase,  # {1:0,2:0,…}
-            "Voxel_time_series": voxel_time_series
+
+        # ─── wrap under the time‐step keys ────────────────────────────────────────
+        time_steps = {
+            "0": {
+                "grains": grains_t0,
+                "voxels": voxels_t0
+            },
+            # …etc…
         }
 
 
@@ -1706,8 +1725,8 @@ class Microstructure(object):
                 'results_path': ''
             },
             'Job_Specific_Elements': {'initial_geometry':ig,'boundary_condition':job_bc,'phases':phase_list},
-            # Voxel-level storage: per-voxel grain, phase, and time-frame data
-            'Voxel_level_data_storage':  voxels
+            # Time-level storage: time-frame data of voxels and grains
+            'Iterations':  time_steps
         }
 
         # Write to file
