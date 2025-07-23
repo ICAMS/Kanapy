@@ -13,7 +13,6 @@ Institution: ICAMS, Ruhr University Bochum
 import os
 import json
 import logging
-import platform
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
@@ -345,40 +344,28 @@ class Microstructure(object):
                 gba = None
             else:
                 gba = shared_area
-        texture_types = []
+
         ori_dict = dict()
         for ip, ngr in enumerate(self.ngrains):
             if type(data) is EBSDmap:
                 if iphase is None or iphase == ip:
-                    ttype = 'ODF'
                     ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba)
             elif type(data) is str:
                 if data.lower() in ['random', 'rnd']:
-                    ttype = 'random'
                     ori_rve = createOrisetRandom(ngr, Nbase=Nbase, hist=hist, shared_area=gba)
                 elif data.lower() in ['unimodal', 'uni_mod', 'uni_modal']:
-                    ttype = 'uni-modal'
                     if ang is None or omega is None:
                         raise ValueError('To generate orientation sets of type "unimodal" angle "ang" and kernel' +
                                          'halfwidth "omega" are required.')
-                    texture_type = 'uni-modal'
                     ori_rve = createOriset(ngr, ang, omega, hist=hist, shared_area=gba)
             else:
                 raise ValueError('Argument to generate grain orientation must be either of type EBSDmap or ' +
                                  '"random" or "unimodal"')
-            # Record this phase's texture type
-            texture_types.append(ttype)
-
-
-
             for i, igr in enumerate(self.mesh.grain_dict.keys()):
                 if self.mesh.grain_phase_dict[igr] == ip:
                     if iphase is None or iphase == ip:
                         ind = i - ip * self.ngrains[0]
                         ori_dict[igr] = ori_rve[ind, :]
-
-        # Prepend the list of texture types under a dedicated key
-        ori_dict['texture_type'] = texture_types
         self.mesh.grain_ori_dict = ori_dict
         return
 
@@ -698,8 +685,8 @@ class Microstructure(object):
     """
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
-                  dual_phase=False, thermal=False, units=None,
-                  ialloy=None, nsdv=200):
+                  dual_phase=False, thermal=False, units=None,ialloy=None, nsdv=200,
+                  bc_type='Uni-axial', load_type='dis', loading_direction='x', value=0.20000, apply_bc=False):
         """
         Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
         a string indicating if voxel ("v") or smoothened ("s") mesh should be written. It can also
@@ -707,7 +694,7 @@ class Microstructure(object):
         generated deck contains plain material definitions for each phase. Material parameters must
         be specified by the user. If ialloy is provided, the generated deck material definitions
         for each grain. For dual phase structures to be used with crystal plasticity, ialloy
-        can be a list with all required material definitions. If the list ialloy is shorted than the
+        can be a list with all required material definitions. If the list ialloy is shorter than the
         number of phases in the RVE, plain material definitions for the remaining phases will
         be included in the input deck.
 
@@ -723,10 +710,17 @@ class Microstructure(object):
         units
         ialloy
         nsdv
+        bc_type
+        load_type
+        loading_direction
+        value
+        apply_bc : bool, optional
+            If True, boundary conditions are written to the Abaqus input file. Default is False.
 
         Returns
         -------
-
+        file : str
+            Path to the generated Abaqus input file.
         """
         if nodes is None:
             if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
@@ -800,7 +794,10 @@ class Microstructure(object):
                       units=units, gb_area=faces,
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
-                      thermal=thermal, periodic=self.rve.periodic)
+                      thermal=thermal, periodic=self.rve.periodic,
+                      bc_type=bc_type, load_type=load_type,
+                      loading_direction=loading_direction, value=value, apply_bc=apply_bc)
+
         # if orientations exist and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
             writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
@@ -1362,7 +1359,6 @@ class Microstructure(object):
         """
         import hashlib
         from datetime import datetime
-
         # Material library definitions (pulled from mod_alloys.f)
         material_library = {
             1: {  # Aluminum
@@ -1477,53 +1473,52 @@ class Microstructure(object):
             'shared_with', 'funder_name', 'fund_identifier', 'publisher', 'relation', 'keywords'
         ]
 
-
         def prompt_list(field_name: str) -> List[str]:
             vals = input(f"Enter comma-separated {field_name}: ").strip()
             return [v.strip() for v in vals.split(',')] if vals else []
 
         # Gather metadata
-        if user_metadata is None:
-            if interactive:
-                use: Dict[str, Any] = {}
-                # identifier
-                ident = input("Identifier (leave blank to auto-generate): ").strip()
-                if not ident:
-                    now = datetime.utcnow().isoformat()
-                    ident = hashlib.sha256(now.encode()).hexdigest()[:8]
-                use['identifier'] = ident
-                use['title'] = input("Title: ").strip()
-                # creator fields
-                use['creator'] = prompt_list('creator names (e.g. Last, First)')
-                use['creator_ORCID'] = prompt_list('creator ORCID(s)')
-                use['creator_affiliation'] = prompt_list('creator affiliations')
-                use['creator_institute'] = prompt_list('creator institutes')
-                use['creator_group'] = prompt_list('creator groups')
-                # contributor fields
-                use['contributor'] = prompt_list('contributor names')
-                use['contributor_ORCID'] = prompt_list('contributor ORCID(s)')
-                use['contributor_affiliation'] = prompt_list('contributor affiliations')
-                use['contributor_institute'] = prompt_list('contributor institutes')
-                use['contributor_group'] = prompt_list('contributor groups')
-                use['date'] = input("Date (YYYY-MM-DD): ").strip() or datetime.utcnow().strftime('%Y-%m-%d')
-                shared: List[Dict[str, str]] = []
-                print("Enter shared_with access entries. Valid types: c, u, g, all. Blank to stop.")
-                while True:
-                    atype = input("  access_type: ").strip()
-                    if not atype:
-                        break
-                    shared.append({'access_type': atype})
-                use['shared_with'] = shared
-                use['description'] = input("Description: ").strip()
-                use['rights'] = input("Rights (e.g. Creative Commons Attribution 4.0 International): ").strip()
-                use['rights_holder'] = prompt_list('rights_holder')
-                use['funder_name'] = input("Funder name: ").strip()
-                use['fund_identifier'] = input("Fund identifier: ").strip()
-                use['publisher'] = input("Publisher: ").strip()
-                use['relation'] = prompt_list('relation (DOI or URL)')
-                use['keywords'] = prompt_list('keywords')
-            else:
-                raise ValueError("user_metadata dictionary required when interactive=False.")
+        if interactive and user_metadata is None:
+            use: Dict[str, Any] = {}
+            # identifier
+            ident = input("Identifier (leave blank to auto-generate): ").strip()
+            if not ident:
+                now = datetime.utcnow().isoformat()
+                ident = hashlib.sha256(now.encode()).hexdigest()[:8]
+            use['identifier'] = ident
+            # simple fields
+            use['title'] = input("Title: ").strip()
+            use['date'] = input("Date (YYYY-MM-DD): ").strip() or datetime.utcnow().strftime('%Y-%m-%d')
+            use['description'] = input("Description: ").strip()
+            use['rights'] = input("Rights (e.g. Creative Commons Attribution 4.0 International): ").strip()
+            use['rights_holder'] = prompt_list('rights_holder')
+            # creator fields
+            use['creator'] = prompt_list('creator names (e.g. Last, First)')
+            use['creator_ORCID'] = prompt_list('creator ORCID(s)')
+            use['creator_affiliation'] = prompt_list('creator affiliations')
+            use['creator_institute'] = prompt_list('creator institutes')
+            use['creator_group'] = prompt_list('creator groups')
+            # contributor fields
+            use['contributor'] = prompt_list('contributor names')
+            use['contributor_ORCID'] = prompt_list('contributor ORCID(s)')
+            use['contributor_affiliation'] = prompt_list('contributor affiliations')
+            use['contributor_institute'] = prompt_list('contributor institutes')
+            use['contributor_group'] = prompt_list('contributor groups')
+            # shared_with
+            shared: List[Dict[str, str]] = []
+            print("Enter shared_with access entries. Valid types: c, u, g, all. Blank to stop.")
+            while True:
+                atype = input("  access_type: ").strip()
+                if not atype:
+                    break
+                shared.append({'access_type': atype})
+            use['shared_with'] = shared
+            # other fields
+            use['funder_name'] = input("Funder name: ").strip()
+            use['fund_identifier'] = input("Fund identifier: ").strip()
+            use['publisher'] = input("Publisher: ").strip()
+            use['relation'] = prompt_list('relation (DOI or URL)')
+            use['keywords'] = prompt_list('keywords')
         else:
             if not user_metadata:
                 raise ValueError("user_metadata must be provided when interactive is False.")
@@ -1537,7 +1532,7 @@ class Microstructure(object):
             'RVE_size': [int(v) for v in self.rve.size],
             'RVE_continuity': self.rve.periodic,
             'discretization_type': 'Structured' if structured else 'Unstructured',
-            'discretization_unit_size': [float(s)/float(d) for s, d in zip(self.rve.size, self.rve.dim)],
+            'discretization_unit_size': [float(s) / float(d) for s, d in zip(self.rve.size, self.rve.dim)],
             'discretization_count': int(self.mesh.nvox),
             'global_rotation_convention': str(),
             'Origin': {
@@ -1547,7 +1542,6 @@ class Microstructure(object):
                 'system_version': platform.version()
             }
         }
-
 
         # ─── Show vertex‐diagram for BC reference ────────────────────────────────
         try:
@@ -1710,6 +1704,7 @@ class Microstructure(object):
             },
             # …etc…
         }
+
 
 
         # Assemble final structure with placeholders

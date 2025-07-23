@@ -118,24 +118,44 @@ def read_dump(file):
     return sim_box, Ellipsoids
 
 
-def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
+from kanapy.initializations import NodeSets
+from collections import defaultdict
+import math
+
+def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                   gb_area=None, dual_phase=False, thermal=False,
-                  ialloy=None, grain_phase_dict=None, periodic=False):
+                  ialloy=None, grain_phase_dict=None, periodic=False,
+                  bc_type='Uni-axial', load_type='strain', loading_direction='x', value=0.20000, apply_bc=False):
     r"""
     Creates an ABAQUS input file with microstructure morphology information
     in the form of nodes, elements and element sets. If "dual_phase" is true,
     element sets with phase numbers will be defined and assigned to materials
     "PHASE_{phase_id}MAT" plain material definitions for phases will be included.
     Otherwise, it will be assumed that each grain refers to a material
-    "GRAIN_{}grain_id}MAT. In this case, a "_mat.inp" file with the same name
+    "GRAIN_{grain_id}MAT. In this case, a "_mat.inp" file with the same name
     trunc will be included, in which the alloy number and Euler angles for each
     grain must be defined.
 
-    .. note:: The nodal coordinates are written out in units of 1 mm or 1 :math:`\mu` m scale, as requested by the
-                 user in the input file.
+    Parameters
+    ----------
+    nodes
+    file
+    grain_dict
+    voxel_dict
+    units
+    gb_area
+    dual_phase
+    thermal
+    ialloy
+    grain_phase_dict
+    periodic
+    bc_type
+    load_type
+    loading_direction
+    value
+    apply_bc : bool, optional
+        If True, boundary conditions are written to the Abaqus input file. Default is False.
     """
-    from kanapy.initializations import NodeSets
-
     def write_node_set(name, nset):
         f.write(name)
         for i, val in enumerate(nset[:-1], start=1):
@@ -146,7 +166,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         f.write(f'{nset[-1]+1}\n')
 
     def write_grain_sets():
-        # Create element sets for grains
         for k, v in grain_dict.items():
             f.write('*ELSET, ELSET=GRAIN{0}_SET\n'.format(k))
             for enum, el in enumerate(v[:-1], start=1):
@@ -155,7 +174,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
                 else:
                     f.write('%d\n' % el)
             f.write('%d\n' % v[-1])
-        # Create sections
         for k in grain_dict.keys():
             if grain_phase_dict is None or grain_phase_dict[k] < nall:
                 f.write(
@@ -169,7 +187,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         return
 
     def write_phase_sets():
-        # Create element sets for phases
         for k, v in grain_dict.items():
             f.write('*ELSET, ELSET=PHASE{0}_SET\n'.format(k))
             for enum, el in enumerate(v, start=1):
@@ -180,7 +197,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
                         f.write('%d, ' % el)
                 else:
                     f.write('%d\n' % el)
-        # Create sections
         for k in grain_dict.keys():
             f.write(
                 '*Solid Section, elset=PHASE{0}_SET, material=PHASE{1}_MAT\n'
@@ -188,9 +204,107 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
             ph_set.add(k)
         return
 
+    def write_surface_sets():
+        face_sets = {
+            1: ['S3', nsets.F1yz],  # X = max
+            2: ['S2', nsets.Fx1z],  # Y = max
+            3: ['S6', nsets.Fxy1]   # Z = max
+        }
+        for i in range(1, 4):
+            face_label, face_nodes = face_sets[i]
+            face_nodes_set = set(face_nodes)
+            f.write('*ELSET, ELSET=_Surf-{0}_{1}, internal, instance=PART-1-1\n'.format(i, face_label))
+            line_count = 0
+            for enum, item in enumerate(voxel_dict.items()):
+                k, v = item
+                count = sum((nid in face_nodes_set) for nid in v)
+                if count == 4:
+                    f.write('%d, ' % k)
+                    line_count += 1
+                    if line_count == 16:
+                        f.write('\n')
+                        line_count = 0
+            if line_count > 0:
+                f.write('\n')
+                f.write('*Surface, type=ELEMENT, name=Surf-{0}\n'.format(i))
+                f.write('_Surf-{0}_{1}, {1}\n'.format(i, face_label))
+
+    def get_node_weights(face_nodes, direction):
+        weights = {}
+        interior_count = 0
+        edge_count = 0
+        corner_count = 0
+        # Calculate min/max coordinates for the entire mesh
+        if direction == 'x':
+            y_min, y_max = min(nodes[:, 1]), max(nodes[:, 1])
+            z_min, z_max = min(nodes[:, 2]), max(nodes[:, 2])
+            for node in face_nodes:
+                y = nodes[node, 1]
+                z = nodes[node, 2]
+                if (abs(y - y_min) < 1e-10 and abs(z - z_min) < 1e-10) or \
+                   (abs(y - y_min) < 1e-10 and abs(z - z_max) < 1e-10) or \
+                   (abs(y - y_max) < 1e-10 and abs(z - z_min) < 1e-10) or \
+                   (abs(y - y_max) < 1e-10 and abs(z - z_max) < 1e-10):
+                    weights[node] = 0.25
+                    corner_count += 1
+                elif abs(y - y_min) < 1e-10 or abs(y - y_max) < 1e-10 or \
+                     abs(z - z_min) < 1e-10 or abs(z - z_max) < 1e-10:
+                    weights[node] = 0.5
+                    edge_count += 1
+                else:
+                    weights[node] = 1.0
+                    interior_count += 1
+        elif direction == 'y':
+            x_min, x_max = min(nodes[:, 0]), max(nodes[:, 0])
+            z_min, z_max = min(nodes[:, 2]), max(nodes[:, 2])
+            for node in face_nodes:
+                x = nodes[node, 0]
+                z = nodes[node, 2]
+                if (abs(x - x_min) < 1e-10 and abs(z - z_min) < 1e-10) or \
+                   (abs(x - x_min) < 1e-10 and abs(z - z_max) < 1e-10) or \
+                   (abs(x - x_max) < 1e-10 and abs(z - z_min) < 1e-10) or \
+                   (abs(x - x_max) < 1e-10 and abs(z - z_max) < 1e-10):
+                    weights[node] = 0.25
+                    corner_count += 1
+                elif abs(x - x_min) < 1e-10 or abs(x - x_max) < 1e-10 or \
+                     abs(z - z_min) < 1e-10 or abs(z - z_max) < 1e-10:
+                    weights[node] = 0.5
+                    edge_count += 1
+                else:
+                    weights[node] = 1.0
+                    interior_count += 1
+        elif direction == 'z':
+            x_min, x_max = min(nodes[:, 0]), max(nodes[:, 0])
+            y_min, y_max = min(nodes[:, 1]), max(nodes[:, 1])
+            for node in face_nodes:
+                x = nodes[node, 0]
+                y = nodes[node, 1]
+                if (abs(x - x_min) < 1e-10 and abs(y - y_min) < 1e-10) or \
+                   (abs(x - x_min) < 1e-10 and abs(y - y_max) < 1e-10) or \
+                   (abs(x - x_max) < 1e-10 and abs(y - y_min) < 1e-10) or \
+                   (abs(x - x_max) < 1e-10 and abs(y - y_max) < 1e-10):
+                    weights[node] = 0.25
+                    corner_count += 1
+                elif abs(x - x_min) < 1e-10 or abs(x - x_max) < 1e-10 or \
+                     abs(y - y_min) < 1e-10 or abs(y - y_max) < 1e-10:
+                    weights[node] = 0.5
+                    edge_count += 1
+                else:
+                    weights[node] = 1.0
+                    interior_count += 1
+        total_weight = sum(weights.values())
+        if total_weight == 0:
+            raise ValueError(f"No valid weights assigned for nodes in direction {direction}")
+        print(f"Direction: {direction}, Nodes: Interior={interior_count}, Edges={edge_count}, "
+              f"Corners={corner_count}, Total={len(weights)}, Total Weight={total_weight:.6f}")
+        # Debug: Print weights and coordinates for first few nodes
+        for i, node in enumerate(face_nodes[:5]):  # Print first 5 nodes
+            print(f"Node {node}: Weight={weights.get(node, 0.0):.2f}, "
+                  f"Coords=({nodes[node, 0]:.6f}, {nodes[node, 1]:.6f}, {nodes[node, 2]:.6f})")
+        return weights
+
     print('')
     print(f'Writing RVE as ABAQUS file "{file}"')
-    # select element type
     if gb_area is None:
         if thermal:
             print('Using brick element type C3D8T for coupled structural-thermal analysis.')
@@ -202,24 +316,28 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         print('Using tet element type SFM3D4.')
         eltype = 'SFM3D4'
 
-    # select material definition
     if type(ialloy) is not list:
         ialloy = [ialloy]
     nall = len(ialloy)
     ph_set = set()
-    # Factor used to generate nodal coordinates in 'mm' or 'um' scale
-    if units == 'mm':
-        scale_fact = 1.e-3
-    elif units == 'um':
-        scale_fact = 1.
-    else:
-        raise ValueError(f'Units must be either "mm" or "um", not "{0}"'
-                         .format(units))
+    # Convert input units from µm to mm for Abaqus output
+    scale_fact = 0.001  # conversion from µm to mm
     nsets = NodeSets(nodes)
+    # Calculate RVE edge lengths and face areas in mm
+    edge_lengths = {
+        'x': (max(nodes[:, 0]) - min(nodes[:, 0])) * scale_fact,
+        'y': (max(nodes[:, 1]) - min(nodes[:, 1])) * scale_fact,
+        'z': (max(nodes[:, 2]) - min(nodes[:, 2])) * scale_fact
+    }
+    face_areas = {
+        'x': edge_lengths['y'] * edge_lengths['z'],  # yz face
+        'y': edge_lengths['x'] * edge_lengths['z'],  # xz face
+        'z': edge_lengths['x'] * edge_lengths['y']   # xy face
+    }
 
     with open(file, 'w') as f:
         f.write('** Input file generated by kanapy\n')
-        f.write('** Nodal coordinates scale in {0}\n'.format(units))
+        f.write('** Nodal coordinates scale in mm\n')
         f.write('*HEADING\n')
         f.write('*PREPRINT,ECHO=NO,HISTORY=NO,MODEL=NO,CONTACT=NO\n')
         f.write('**\n')
@@ -227,15 +345,11 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         f.write('**\n')
         f.write('*Part, name=PART-1\n')
         f.write('*Node\n')
-        # Create nodes
         for k, v in enumerate(nodes):
-            # Write out coordinates in 'mm' or 'um'
             f.write('{0}, {1}, {2}, {3}\n'.format(k + 1, v[0] * scale_fact,
                                                   v[1] * scale_fact, v[2] * scale_fact))
         f.write('*ELEMENT, TYPE={0}\n'.format(eltype))
         if gb_area is None:
-            # export voxelized structure with regular hex mesh
-            # Create Elements
             for k, v in voxel_dict.items():
                 f.write('{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}\n'.format(
                     k, v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]))
@@ -244,7 +358,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
             else:
                 write_grain_sets()
         else:
-            # export smoothened structure with tetrahedral mesh
             fcList = {}
             fcNum = 0
             gr_fcs = defaultdict(list)
@@ -257,8 +370,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
                         gr_fcs[gid].append(fcNum)
                     elif fc in fcList.keys():
                         f.write('%d,%d,%d,%d,%d\n' % (fcList[fc], conn[0], conn[1], conn[2], conn[3]))
-                        gr_fcs[gid].append(fcList[fc])
-
+                        gr_fcs[gid].append(fcNum)
             for gid, fcs in gr_fcs.items():
                 f.write('*ELSET, ELSET=GRAIN{}_SET\n'.format(gid))
                 for enum, el in enumerate(fcs, start=1):
@@ -272,7 +384,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
                             f.write('%d\n' % el)
                         else:
                             f.write('%d\n' % el)
-
             for gid, fcs in gr_fcs.items():
                 f.write('*SURFACE SECTION, ELSET=GRAIN{}_SET\n'.format(gid))
 
@@ -722,7 +833,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
 
         f.write('*End Part\n')
         f.write('**\n')
-        f.write('**\n')
         f.write('** ASSEMBLY\n')
         f.write('**\n')
         f.write('*Assembly, name=Assembly\n')
@@ -775,35 +885,110 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='mm',
         write_node_set(f'*Nset, nset=Fx1z, instance=PART-1-1\n', nsets.Fx1z)
         write_node_set(f'*Nset, nset=F0yz, instance=PART-1-1\n', nsets.F0yz)
         write_node_set(f'*Nset, nset=F1yz, instance=PART-1-1\n', nsets.F1yz)
+        f.write('** 4. FACES_SETS\n')
+        write_surface_sets()
         f.write('**\n')
 
 
         f.write('*End Assembly\n')
         f.write('**\n')
-        f.write('**\n')
         f.write('** MATERIALS\n')
         f.write('**\n')
         if dual_phase:
-            # declare plane materials for Abaqus standard materials for each phase
             for i in ph_set:
                 f.write('**\n')
                 f.write('*Material, name=PHASE{}_MAT\n'.format(i))
                 f.write('**Include, input=Material{}.inp\n'.format(i))
                 f.write('**\n')
         else:
-            # declare plane materials for Abaqus standard materials
             for i in ph_set:
                 f.write('**\n')
                 f.write('*Material, name=PHASE{}_MAT\n'.format(i))
-            # include file with definition for CP parameters for each grain
             f.write('**\n')
             f.write('*Include, input={}mat.inp\n'.format(file[0:-8]))
             f.write('**\n')
+            f.write('**__________________________________________________________________')
+            f.write('**\n')
+            f.write('** STEP: Loading\n')
+            f.write('**\n')
+            f.write('*Step, name=Loading, nlgeom=YES, inc=500000, unsymm=YES, solver=ITERATIVE\n')
+            f.write('*Static\n')
+            f.write('1, 250, 1e-6, 1\n')
+            f.write('**\n')
+            f.write('**\n')
+            f.write('*CONTROLS, PARAMETER=TIME INCREMENTATION\n')
+            f.write('35, 50, 9, 50, 28, 5, 12, 45\n')
+            f.write('**\n')
+            f.write('*CONTROLS, PARAMETERS=LINE SEARCH\n')
+            f.write('10\n')
+            f.write('** Originally that was SOLVER CONTROL\n')
+            f.write('*SOLVER CONTROL\n')
+            f.write('1e-5,200,\n')
+            f.write('**\n')
+        if apply_bc and bc_type.lower() == 'uni-axial':
+            f.write('** BOUNDARY CONDITIONS\n')
+            f.write('**\n')
+            f.write('** Name: F0yzFix Type: Displacement/Rotation\n')
+            f.write('*Boundary\n')
+            f.write('F0YZ, 1, 1\n')
+            f.write('** Name: Fx0zFix Type: Displacement/Rotation\n')
+            f.write('*Boundary\n')
+            f.write('FX0Z, 2, 2\n')
+            f.write('** Name: Fxy0Fix Type: Displacement/Rotation\n')
+            f.write('*Boundary\n')
+            f.write('FXY0, 3, 3\n')
+            if load_type == 'strain':
+                displacement_bc_map = {
+                    'x': ('F1YZ', 1, 'disX'),
+                    'y': ('FX1Z', 2, 'disY'),
+                    'z': ('FXY1', 3, 'disZ'),
+                }
+                direction = loading_direction.lower()
+                if direction in displacement_bc_map:
+                    set_name, dof, bc_name = displacement_bc_map[direction]
+                    strain = value / 100.0  # Convert percentage to decimal
+                    displacement = edge_lengths[direction] * (math.exp(strain) - 1)  # Logarithmic strain
+                    print(f"Direction: {direction}, Strain: {strain:.6f}, Edge length: {edge_lengths[direction]:.6f} mm, "
+                          f"Displacement: {displacement:.6f} mm")
+                    f.write(f'** Name: {bc_name} Type: Displacement/Rotation\n')
+                    f.write('*Boundary\n')
+                    f.write(f'{set_name}, {dof}, {dof}, {displacement:.6f}\n')
+            if load_type == 'stress':
+                f.write('** LOADS\n')
+                f.write('**\n')
+                load_bc_map = {
+                    'x': ('F1YZ', 1, 'loadX', nsets.F1yz),
+                    'y': ('FX1Z', 2, 'loadY', nsets.Fx1z),
+                    'z': ('FXY1', 3, 'loadZ', nsets.Fxy1),
+                }
+                direction = loading_direction.lower()
+                if direction in load_bc_map:
+                    set_name, dof, bc_name, face_nodes = load_bc_map[direction]
+                    face_area = face_areas[direction]  # Use dynamic face area
+                    total_force = value * face_area  # MPa * mm² = N
+                    weights = get_node_weights(face_nodes, direction)
+                    total_weight = sum(weights.values())
+                    if total_weight == 0:
+                        raise ValueError(f'No effective nodes for stress application on {set_name}.')
+                    base_force = total_force / total_weight
+                    print(f"Direction: {direction}, Total nodes: {len(face_nodes)}, "
+                          f"Total weight: {total_weight:.6f}, Face area: {face_area:.6f} mm², "
+                          f"Base force: {base_force:.10f} N, Total force: {total_force:.10f} N")
+                    f.write(f'** Name: {bc_name} Type: Concentrated Force\n')
+                    f.write('*Cload\n')
+                    for node in face_nodes:
+                        if node in weights:
+                            force_per_node = base_force * weights[node]
+                            f.write(f'PART-1-1.{node+1}, {dof}, {force_per_node:.10f}\n')
+                        else:
+                            print(f"Warning: Node {node} missing weight, skipping")
+        elif apply_bc and bc_type.lower() == 'periodic':
+            if not periodic:
+                raise ValueError("Periodic boundary conditions cannot be applied to a non-periodic RVE.")
+            pass
 
-        f.write('**Include, input=REM_PART.inp\n')  # prepare include for BC and step definitions
     print('---->DONE!\n')
     return
-
 
 def writeAbaqusMat(ialloy, angles,
                    file=None, path='./',
@@ -1075,3 +1260,6 @@ def import_stats(file, path='./'):
     with open(file, 'r') as inp:
         desc = json.load(inp)
     return desc
+
+
+
