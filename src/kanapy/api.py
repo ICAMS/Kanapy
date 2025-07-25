@@ -13,12 +13,16 @@ Institution: ICAMS, Ruhr University Bochum
 import os
 import json
 import logging
+import platform
+import hashlib
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 from typing import Dict, Any, List, Optional
 from importlib.metadata import version as pkg_version
 from jsonschema import validate, ValidationError
+from datetime import datetime
 
 from kanapy.grains import calc_polygons
 from kanapy.entities import Simulation_Box
@@ -350,17 +354,22 @@ class Microstructure(object):
             if type(data) is EBSDmap:
                 if iphase is None or iphase == ip:
                     ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba)
+                    self.mesh.texture = "ODF"
             elif type(data) is str:
                 if data.lower() in ['random', 'rnd']:
                     ori_rve = createOrisetRandom(ngr, Nbase=Nbase, hist=hist, shared_area=gba)
+                    self.mesh.texture = "Random"
                 elif data.lower() in ['unimodal', 'uni_mod', 'uni_modal']:
                     if ang is None or omega is None:
                         raise ValueError('To generate orientation sets of type "unimodal" angle "ang" and kernel' +
                                          'halfwidth "omega" are required.')
                     ori_rve = createOriset(ngr, ang, omega, hist=hist, shared_area=gba)
+                    self.mesh.texture = "Uni_model"
             else:
+                self.mesh.texture = None
                 raise ValueError('Argument to generate grain orientation must be either of type EBSDmap or ' +
                                  '"random" or "unimodal"')
+
             for i, igr in enumerate(self.mesh.grain_dict.keys()):
                 if self.mesh.grain_phase_dict[igr] == ip:
                     if iphase is None or iphase == ip:
@@ -685,8 +694,9 @@ class Microstructure(object):
     """
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
-                  dual_phase=False, thermal=False, units=None,ialloy=None, nsdv=200,
-                  bc_type='Uni-axial', load_type='dis', loading_direction='x', value=0.20000, apply_bc=False):
+                  dual_phase=False, thermal=False, units=None, ialloy=None, nsdv=200, periodicBC=False,
+                  crystal_plasticity=False, phase_props=None, bc_type=None, load_type=None,
+                  loading_direction=None, value=None, apply_bc=False):
         """
         Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
         a string indicating if voxel ("v") or smoothened ("s") mesh should be written. It can also
@@ -790,13 +800,18 @@ class Microstructure(object):
                 file = self.name + ntag + '_geom.inp'
         path = os.path.normpath(path)
         file = os.path.join(path, file)
+        periodic = self.rve.periodic
+
+        if not periodic and periodicBC:
+            raise ValueError("Periodic boundary conditions cannot be applied to a non-periodic RVE.")
+
         export2abaqus(nodes, file, grain_dict, voxel_dict,
                       units=units, gb_area=faces,
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
-                      thermal=thermal, periodic=self.rve.periodic,
-                      bc_type=bc_type, load_type=load_type,
-                      loading_direction=loading_direction, value=value, apply_bc=apply_bc)
+                      thermal=thermal,  periodicBC = periodicBC,
+                      bc_type=bc_type, load_type=load_type, crystal_plasticity = crystal_plasticity,
+                      phase_props = phase_props, loading_direction=loading_direction, value=value, apply_bc=apply_bc)
 
         # if orientations exist and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
@@ -1346,6 +1361,7 @@ class Microstructure(object):
                          interactive: bool = True,
                          structured: bool = True,
                          ialloy: int = 1,
+                         length_unit: str = 'µm',
                          output_filename: str = 'metadata.json') -> None:
 
         """
@@ -1357,8 +1373,16 @@ class Microstructure(object):
         - `structured`: whether mesh is structured.
         - `output_filename`: path to write JSON.
         """
-        import hashlib
-        from datetime import datetime
+
+
+        # interpret length_unit argument
+        if length_unit == 'µm':
+            length_scale = 1.0
+        elif length_unit == 'mm':
+            length_scale = 1e-3
+        else:
+            raise ValueError("length_unit must be 'µm' or 'mm'")
+
         # Material library definitions (pulled from mod_alloys.f)
         material_library = {
             1: {  # Aluminum
@@ -1529,10 +1553,10 @@ class Microstructure(object):
                 raise ValueError(f"Missing required metadata fields: {', '.join(missing)}")
 
         ig = {
-            'RVE_size': [int(v) for v in self.rve.size],
+            'RVE_size': [int(v)* length_scale for v in self.rve.size],
             'RVE_continuity': self.rve.periodic,
             'discretization_type': 'Structured' if structured else 'Unstructured',
-            'discretization_unit_size': [float(s) / float(d) for s, d in zip(self.rve.size, self.rve.dim)],
+            'discretization_unit_size': [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
             'discretization_count': int(self.mesh.nvox),
             'global_rotation_convention': str(),
             'Origin': {
@@ -1641,7 +1665,7 @@ class Microstructure(object):
                         "phase_volume_fraction": float(vf),
                         "grain_count_per_phase": int(self.ngrains[idx]),
                         "crystal_structure":  None,
-                        "texture_type": self.mesh.grain_ori_dict["texture_type"][idx],
+                        "texture_type": self.mesh.texture,
                     },
                     "Properties": {
                         "MechanicalProperties": {
@@ -1662,7 +1686,7 @@ class Microstructure(object):
         rve_dim = self.rve.dim  # e.g. [10,10,10]
 
         # ─── compute one‐voxel volume ─────────────────────────────────────────────
-        unit_sizes = [float(s) / float(d) for s, d in zip(rve_size, rve_dim)]
+        unit_sizes = [(float(s) / float(d)) * length_scale for s, d in zip(rve_size, rve_dim)]
         voxel_volume = unit_sizes[0] * unit_sizes[1] * unit_sizes[2]
 
         # ─── precompute voxel→grain lookup ───────────────────────────────────────
@@ -1671,7 +1695,13 @@ class Microstructure(object):
             for gid, vids in grain_to_voxels.items()
             for vid in vids
         }
-
+        # ─── build time‐0 RVE dict ────────────────────────────────────────────
+        rve_t0 = {
+                'rve_size': [int(v) * length_scale for v in self.rve.size],
+                'discretization_per_length': [int(d) for d in self.rve.dim],
+                'discretization_unit_size': [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
+                'discretization_count': int(self.mesh.nvox),
+        }
         # ─── build time‐0 grain dict ────────────────────────────────────────────
         grains_t0 = {
             gid: {
@@ -1686,9 +1716,8 @@ class Microstructure(object):
         voxels_t0 = {
             vid: {
                 "grain_id": gid                                               ,
-                "phase_id": grain_phase_dict[gid]                             ,
                 "orientation": list(grain_ori_dict[gid])                      ,
-                "center_coordinates": [float(c) for c in vox_center_dict[vid]],
+                "center_coordinates": [float(c) * length_scale for c in vox_center_dict[vid]],
                 "voxel_volume":        voxel_volume                           ,
                 "stress": [],
                 "strain": []
@@ -1699,6 +1728,7 @@ class Microstructure(object):
         # ─── wrap under the time‐step keys ────────────────────────────────────────
         time_steps = {
             "0": {
+                "rve"   : rve_t0,
                 "grains": grains_t0,
                 "voxels": voxels_t0
             },
@@ -1719,7 +1749,11 @@ class Microstructure(object):
                 'input_path': '',
                 'results_path': ''
             },
-            'Job_Specific_Elements': {'initial_geometry':ig,'boundary_condition':job_bc,'phases':phase_list},
+            'Job_Specific_Elements': {'initial_geometry':ig,'boundary_condition':job_bc,'phases':phase_list,
+                                      "units": {
+                    "Stress": "MPa", "Strain": 1, "Length": length_unit, "Angle": "rad",
+                    "Temperature": "kelvin", "Force": "N","Stiffness": "MPa"}
+                                      },
             # Time-level storage: time-frame data of voxels and grains
             'Iterations':  time_steps
         }
