@@ -125,7 +125,7 @@ import math
 def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                   gb_area=None, dual_phase=False, thermal=False,
                   ialloy=None, grain_phase_dict=None, periodicBC=False, crystal_plasticity=False, phase_props=None,
-                  bc_type='Uni-axial', load_type='strain', loading_direction='x', value=[0.20000, 0, 0, 0, 0, 0], apply_bc=False):
+                  bc_type='uni-axial', load_type='strain', loading_direction='x', value=[0.2, 0, 0, 0, 0, 0], apply_bc=False):
     """
     Creates an ABAQUS input file with microstructure morphology information
     in the form of nodes, elements and element sets. If "dual_phase" is true,
@@ -393,25 +393,26 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
 
         if periodicBC and apply_bc:
 
-            f.write('**** LeftToRight \n')
+            # LeftToRight
+            f.write('**** \n')
             f.write('**** X-DIR \n')
             for i in range(len(nsets.F0yzP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.F1yzP[i]) + ',1, 1 \n')
-                f.write(str(nsets.F0yzP[i]) + ',1,-1 \n')
-                f.write(str(nsets.V101) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.F1yzP[i])+',1, 1 \n')
+                f.write(str(nsets.F0yzP[i])+',1,-1 \n')
+                f.write(str(nsets.V101)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** \n')
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.F0yzP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.F1yzP[i]) + ',2, 1 \n')
-                f.write(str(nsets.F0yzP[i]) + ',2,-1 \n')
-                f.write(str(nsets.V101) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.F1yzP[i])+',2, 1 \n')
+                f.write(str(nsets.F0yzP[i])+',2,-1 \n')
+                f.write(str(nsets.V101)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** \n')
             f.write('**** Z-DIR \n')
@@ -423,151 +424,152 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                 f.write(str(nsets.V101) + ',3,-1 \n')
                 f.write(str(nsets.V001) + ',3, 1 \n')
 
-            f.write('**** BottomToTop \n')
-            f.write('**** X-DIR \n')
-            for i in range(len(nsets.Fxy0P)):
-                f.write('*Equation \n')
-                f.write('4 \n')
-                f.write(str(nsets.Fxy0P[i]) + ',1, 1 \n')
-                f.write(str(nsets.Fxy1P[i]) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1,-1 \n')
-                f.write(str(nsets.V011) + ',1, 1 \n')
-
-            f.write('**** \n')
-            f.write('**** Y-DIR \n')
-            for i in range(len(nsets.Fxy0P)):
-                f.write('*Equation \n')
-                f.write('4 \n')
-                f.write(str(nsets.Fxy0P[i]) + ',2, 1 \n')
-                f.write(str(nsets.Fxy1P[i]) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2,-1 \n')
-                f.write(str(nsets.V011) + ',2, 1 \n')
-
-            f.write('**** \n')
-            f.write('**** Z-DIR \n')
-            for i in range(len(nsets.Fxy0P)):
-                f.write('*Equation \n')
-                f.write('4 \n')
-                f.write(str(nsets.Fxy0P[i]) + ',3, 1 \n')
-                f.write(str(nsets.Fxy1P[i]) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3,-1 \n')
-                f.write(str(nsets.V011) + ',3, 1 \n')
-
-            f.write('**** FrontToRear \n')
+            # BottomToTop
             f.write('**** X-DIR \n')
             for i in range(len(nsets.Fx0zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Fx0zP[i]) + ',1, 1 \n')
-                f.write(str(nsets.Fx1zP[i]) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1,-1 \n')
-                f.write(str(nsets.V000) + ',1, 1 \n')
+                f.write(str(nsets.Fx0zP[i])+',1, 1 \n')
+                f.write(str(nsets.Fx1zP[i])+',1,-1 \n')
+                f.write(str(nsets.V001)+',1,-1 \n')
+                f.write(str(nsets.V011)+',1, 1 \n')
 
             f.write('**** \n')
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.Fx0zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Fx0zP[i]) + ',2, 1 \n')
-                f.write(str(nsets.Fx1zP[i]) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2,-1 \n')
-                f.write(str(nsets.V000) + ',2, 1 \n')
+                f.write(str(nsets.Fx0zP[i])+',2, 1 \n')
+                f.write(str(nsets.Fx1zP[i])+',2,-1 \n')
+                f.write(str(nsets.V001)+',2,-1 \n')
+                f.write(str(nsets.V011)+',2, 1 \n')
 
             f.write('**** \n')
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.Fx0zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Fx0zP[i]) + ',3, 1 \n')
-                f.write(str(nsets.Fx1zP[i]) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3,-1 \n')
-                f.write(str(nsets.V000) + ',3, 1 \n')
+                f.write(str(nsets.Fx0zP[i])+',3, 1 \n')
+                f.write(str(nsets.Fx1zP[i])+',3,-1 \n')
+                f.write(str(nsets.V001)+',3,-1 \n')
+                f.write(str(nsets.V011)+',3, 1 \n')
 
-            f.write('**** Edges \n')
+            # FrontToRear
+            f.write('**** \n')
+            f.write('**** X-DIR \n')
+            for i in range(len(nsets.Fxy0P)):
+                f.write('*Equation \n')
+                f.write('4 \n')
+                f.write(str(nsets.Fxy0P[i])+',1,-1 \n')
+                f.write(str(nsets.Fxy1P[i])+',1, 1 \n')
+                f.write(str(nsets.V001)+',1,-1 \n')
+                f.write(str(nsets.V000)+',1, 1 \n')
+
+            f.write('**** \n')
+            f.write('**** Y-DIR \n')
+            for i in range(len(nsets.Fxy0P)):
+                f.write('*Equation \n')
+                f.write('4 \n')
+                f.write(str(nsets.Fxy0P[i])+',2,-1 \n')
+                f.write(str(nsets.Fxy1P[i])+',2, 1 \n')
+                f.write(str(nsets.V001)+',2,-1 \n')
+                f.write(str(nsets.V000)+',2, 1 \n')
+
+            f.write('**** \n')
+            f.write('**** Z-DIR \n')
+            for i in range(len(nsets.Fxy0P)):
+                f.write('*Equation \n')
+                f.write('4 \n')
+                f.write(str(nsets.Fxy0P[i])+',3,-1 \n')
+                f.write(str(nsets.Fxy1P[i])+',3, 1 \n')
+                f.write(str(nsets.V001)+',3,-1 \n')
+                f.write(str(nsets.V000)+',3, 1 \n')
+
+            f.write('**** \n')
             # Edges in x-y Plane
             # Right top edge to left top edge
             f.write('**** X-DIR \n')
             for i in range(len(nsets.E11zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E11zP[i]) + ',1, 1 \n')
-                f.write(str(nsets.E01zP[i]) + ',1,-1 \n')
-                f.write(str(nsets.V101) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.E11zP[i])+',1, 1 \n')
+                f.write(str(nsets.E01zP[i])+',1,-1 \n')
+                f.write(str(nsets.V101)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.E11zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E11zP[i]) + ',2, 1 \n')
-                f.write(str(nsets.E01zP[i]) + ',2,-1 \n')
-                f.write(str(nsets.V101) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.E11zP[i])+',2, 1 \n')
+                f.write(str(nsets.E01zP[i])+',2,-1 \n')
+                f.write(str(nsets.V101)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.E11zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E11zP[i]) + ',3, 1 \n')
-                f.write(str(nsets.E01zP[i]) + ',3,-1 \n')
-                f.write(str(nsets.V101) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3, 1 \n')
+                f.write(str(nsets.E11zP[i])+',3, 1 \n')
+                f.write(str(nsets.E01zP[i])+',3,-1 \n')
+                f.write(str(nsets.V101)+',3,-1 \n')
+                f.write(str(nsets.V001)+',3, 1 \n')
 
             # Right bottom edge to left bottom edge
             f.write('**** X-DIR \n')
             for i in range(len(nsets.E10zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E10zP[i]) + ',1, 1 \n')
-                f.write(str(nsets.E00zP[i]) + ',1,-1 \n')
-                f.write(str(nsets.V101) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.E10zP[i])+',1, 1 \n')
+                f.write(str(nsets.E00zP[i])+',1,-1 \n')
+                f.write(str(nsets.V101)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.E10zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E10zP[i]) + ',2, 1 \n')
-                f.write(str(nsets.E00zP[i]) + ',2,-1 \n')
-                f.write(str(nsets.V101) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.E10zP[i])+',2, 1 \n')
+                f.write(str(nsets.E00zP[i])+',2,-1 \n')
+                f.write(str(nsets.V101)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.E10zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E10zP[i]) + ',3, 1 \n')
-                f.write(str(nsets.E00zP[i]) + ',3,-1 \n')
-                f.write(str(nsets.V101) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3, 1 \n')
+                f.write(str(nsets.E10zP[i])+',3, 1 \n')
+                f.write(str(nsets.E00zP[i])+',3,-1 \n')
+                f.write(str(nsets.V101)+',3,-1 \n')
+                f.write(str(nsets.V001)+',3, 1 \n')
 
             # Left top edge to left bottom edge
             f.write('**** X-DIR \n')
             for i in range(len(nsets.E01zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E01zP[i]) + ',1, 1 \n')
-                f.write(str(nsets.E00zP[i]) + ',1,-1 \n')
-                f.write(str(nsets.V011) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.E01zP[i])+',1, 1 \n')
+                f.write(str(nsets.E00zP[i])+',1,-1 \n')
+                f.write(str(nsets.V011)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.E01zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E01zP[i]) + ',2, 1 \n')
-                f.write(str(nsets.E00zP[i]) + ',2,-1 \n')
-                f.write(str(nsets.V011) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.E01zP[i])+',2, 1 \n')
+                f.write(str(nsets.E00zP[i])+',2,-1 \n')
+                f.write(str(nsets.V011)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.E01zP)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E01zP[i]) + ',3, 1 \n')
-                f.write(str(nsets.E00zP[i]) + ',3,-1 \n')
-                f.write(str(nsets.V011) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3, 1 \n')
+                f.write(str(nsets.E01zP[i])+',3, 1 \n')
+                f.write(str(nsets.E00zP[i])+',3,-1 \n')
+                f.write(str(nsets.V011)+',3,-1 \n')
+                f.write(str(nsets.V001)+',3, 1 \n')
 
             # Edges in y-z Plane
             # Top back edge to top front edge
@@ -575,84 +577,84 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             for i in range(len(nsets.Ex10P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Ex10P[i]) + ',1, 1 \n')
-                f.write(str(nsets.Ex11P[i]) + ',1,-1 \n')
-                f.write(str(nsets.V000) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.Ex10P[i])+',1, 1 \n')
+                f.write(str(nsets.Ex11P[i])+',1,-1 \n')
+                f.write(str(nsets.V000)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.Ex10P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Ex10P[i]) + ',2, 1 \n')
-                f.write(str(nsets.Ex11P[i]) + ',2,-1 \n')
-                f.write(str(nsets.V000) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.Ex10P[i])+',2, 1 \n')
+                f.write(str(nsets.Ex11P[i])+',2,-1 \n')
+                f.write(str(nsets.V000)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.Ex10P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Ex10P[i]) + ',3, 1 \n')
-                f.write(str(nsets.Ex11P[i]) + ',3,-1 \n')
-                f.write(str(nsets.V000) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3, 1 \n')
+                f.write(str(nsets.Ex10P[i])+',3, 1 \n')
+                f.write(str(nsets.Ex11P[i])+',3,-1 \n')
+                f.write(str(nsets.V000)+',3,-1 \n')
+                f.write(str(nsets.V001)+',3, 1 \n')
 
             # Bottom back edge to bottom front edge
             f.write('**** X-DIR \n')
             for i in range(len(nsets.Ex00P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Ex00P[i]) + ',1, 1 \n')
-                f.write(str(nsets.Ex01P[i]) + ',1,-1 \n')
-                f.write(str(nsets.V000) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.Ex00P[i])+',1, 1 \n')
+                f.write(str(nsets.Ex01P[i])+',1,-1 \n')
+                f.write(str(nsets.V000)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.Ex00P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Ex00P[i]) + ',2, 1 \n')
-                f.write(str(nsets.Ex01P[i]) + ',2,-1 \n')
-                f.write(str(nsets.V000) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.Ex00P[i])+',2, 1 \n')
+                f.write(str(nsets.Ex01P[i])+',2,-1 \n')
+                f.write(str(nsets.V000)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.Ex00P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Ex00P[i]) + ',3, 1 \n')
-                f.write(str(nsets.Ex01P[i]) + ',3,-1 \n')
-                f.write(str(nsets.V000) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3, 1 \n')
+                f.write(str(nsets.Ex00P[i])+',3, 1 \n')
+                f.write(str(nsets.Ex01P[i])+',3,-1 \n')
+                f.write(str(nsets.V000)+',3,-1 \n')
+                f.write(str(nsets.V001)+',3, 1 \n')
 
             # top front edge to bottom front edge
             f.write('**** X-DIR \n')
             for i in range(len(nsets.Ex11P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Ex11P[i]) + ',1, 1 \n')
-                f.write(str(nsets.Ex01P[i]) + ',1,-1 \n')
-                f.write(str(nsets.V011) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.Ex11P[i])+',1, 1 \n')
+                f.write(str(nsets.Ex01P[i])+',1,-1 \n')
+                f.write(str(nsets.V011)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.Ex11P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Ex11P[i]) + ',2, 1 \n')
-                f.write(str(nsets.Ex01P[i]) + ',2,-1 \n')
-                f.write(str(nsets.V011) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.Ex11P[i])+',2, 1 \n')
+                f.write(str(nsets.Ex01P[i])+',2,-1 \n')
+                f.write(str(nsets.V011)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.Ex11P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.Ex11P[i]) + ',3, 1 \n')
-                f.write(str(nsets.Ex01P[i]) + ',3,-1 \n')
-                f.write(str(nsets.V011) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3, 1 \n')
+                f.write(str(nsets.Ex11P[i])+',3, 1 \n')
+                f.write(str(nsets.Ex01P[i])+',3,-1 \n')
+                f.write(str(nsets.V011)+',3,-1 \n')
+                f.write(str(nsets.V001)+',3, 1 \n')
 
             # Edges in x-z Plane
             # Rear right edge to rear left edge
@@ -660,86 +662,84 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             for i in range(len(nsets.E1y0P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E1y0P[i]) + ',1, 1 \n')
-                f.write(str(nsets.E0y0P[i]) + ',1,-1 \n')
-                f.write(str(nsets.V101) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.E1y0P[i])+',1, 1 \n')
+                f.write(str(nsets.E0y0P[i])+',1,-1 \n')
+                f.write(str(nsets.V101)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.E1y0P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E1y0P[i]) + ',2, 1 \n')
-                f.write(str(nsets.E0y0P[i]) + ',2,-1 \n')
-                f.write(str(nsets.V101) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.E1y0P[i])+',2, 1 \n')
+                f.write(str(nsets.E0y0P[i])+',2,-1 \n')
+                f.write(str(nsets.V101)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.E1y0P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E1y0P[i]) + ',3, 1 \n')
-                f.write(str(nsets.E0y0P[i]) + ',3,-1 \n')
-                f.write(str(nsets.V101) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3, 1 \n')
+                f.write(str(nsets.E1y0P[i])+',3, 1 \n')
+                f.write(str(nsets.E0y0P[i])+',3,-1 \n')
+                f.write(str(nsets.V101)+',3,-1 \n')
+                f.write(str(nsets.V001)+',3, 1 \n')
 
             # Front right edge to front left edge
             f.write('**** X-DIR \n')
             for i in range(len(nsets.E1y1P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E1y1P[i]) + ',1, 1 \n')
-                f.write(str(nsets.E0y1P[i]) + ',1,-1 \n')
-                f.write(str(nsets.V101) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.E1y1P[i])+',1, 1 \n')
+                f.write(str(nsets.E0y1P[i])+',1,-1 \n')
+                f.write(str(nsets.V101)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.E1y1P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E1y1P[i]) + ',2, 1 \n')
-                f.write(str(nsets.E0y1P[i]) + ',2,-1 \n')
-                f.write(str(nsets.V101) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.E1y1P[i])+',2, 1 \n')
+                f.write(str(nsets.E0y1P[i])+',2,-1 \n')
+                f.write(str(nsets.V101)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.E1y1P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E1y1P[i]) + ',3, 1 \n')
-                f.write(str(nsets.E0y1P[i]) + ',3,-1 \n')
-                f.write(str(nsets.V101) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3, 1 \n')
+                f.write(str(nsets.E1y1P[i])+',3, 1 \n')
+                f.write(str(nsets.E0y1P[i])+',3,-1 \n')
+                f.write(str(nsets.V101)+',3,-1 \n')
+                f.write(str(nsets.V001)+',3, 1 \n')
 
             # Top front edge to bottom front edge
             f.write('**** X-DIR \n')
             for i in range(len(nsets.E0y0P)):
-                # print item
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E0y0P[i]) + ',1, 1 \n')
-                f.write(str(nsets.E0y1P[i]) + ',1,-1 \n')
-                f.write(str(nsets.V000) + ',1,-1 \n')
-                f.write(str(nsets.V001) + ',1, 1 \n')
+                f.write(str(nsets.E0y0P[i])+',1, 1 \n')
+                f.write(str(nsets.E0y1P[i])+',1,-1 \n')
+                f.write(str(nsets.V000)+',1,-1 \n')
+                f.write(str(nsets.V001)+',1, 1 \n')
 
             f.write('**** Y-DIR \n')
             for i in range(len(nsets.E0y0P)):
-                # print item
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E0y0P[i]) + ',2, 1 \n')
-                f.write(str(nsets.E0y1P[i]) + ',2,-1 \n')
-                f.write(str(nsets.V000) + ',2,-1 \n')
-                f.write(str(nsets.V001) + ',2, 1 \n')
+                f.write(str(nsets.E0y0P[i])+',2, 1 \n')
+                f.write(str(nsets.E0y1P[i])+',2,-1 \n')
+                f.write(str(nsets.V000)+',2,-1 \n')
+                f.write(str(nsets.V001)+',2, 1 \n')
 
             f.write('**** Z-DIR \n')
             for i in range(len(nsets.E0y0P)):
                 f.write('*Equation \n')
                 f.write('4 \n')
-                f.write(str(nsets.E0y0P[i]) + ',3, 1 \n')
-                f.write(str(nsets.E0y1P[i]) + ',3,-1 \n')
-                f.write(str(nsets.V000) + ',3,-1 \n')
-                f.write(str(nsets.V001) + ',3, 1 \n')
+                f.write(str(nsets.E0y0P[i])+',3, 1 \n')
+                f.write(str(nsets.E0y1P[i])+',3,-1 \n')
+                f.write(str(nsets.V000)+',3,-1 \n')
+                f.write(str(nsets.V001)+',3, 1 \n')
 
             f.write('**** Corners \n')
 
@@ -747,93 +747,93 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             f.write('**** X-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V111) + ',1, 1 \n')
-            f.write(str(nsets.V011) + ',1,-1 \n')
-            f.write(str(nsets.V101) + ',1,-1 \n')
-            f.write(str(nsets.V001) + ',1, 1 \n')
+            f.write(str(nsets.V111)+',1, 1 \n')
+            f.write(str(nsets.V011)+',1,-1 \n')
+            f.write(str(nsets.V101)+',1,-1 \n')
+            f.write(str(nsets.V001)+',1, 1 \n')
             f.write('**** y-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V111) + ',2, 1 \n')
-            f.write(str(nsets.V011) + ',2,-1 \n')
-            f.write(str(nsets.V101) + ',2,-1 \n')
-            f.write(str(nsets.V001) + ',2, 1 \n')
+            f.write(str(nsets.V111)+',2, 1 \n')
+            f.write(str(nsets.V011)+',2,-1 \n')
+            f.write(str(nsets.V101)+',2,-1 \n')
+            f.write(str(nsets.V001)+',2, 1 \n')
             f.write('**** z-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V111) + ',3, 1 \n')
-            f.write(str(nsets.V011) + ',3,-1 \n')
-            f.write(str(nsets.V101) + ',3,-1 \n')
-            f.write(str(nsets.V001) + ',3, 1 \n')
+            f.write(str(nsets.V111)+',3, 1 \n')
+            f.write(str(nsets.V011)+',3,-1 \n')
+            f.write(str(nsets.V101)+',3,-1 \n')
+            f.write(str(nsets.V001)+',3, 1 \n')
 
             # H4 (V010) to V4 (V011)
             f.write('**** X-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V010) + ',1, 1 \n')
-            f.write(str(nsets.V011) + ',1,-1 \n')
-            f.write(str(nsets.V000) + ',1,-1 \n')
-            f.write(str(nsets.V001) + ',1, 1 \n')
+            f.write(str(nsets.V010)+',1, 1 \n')
+            f.write(str(nsets.V011)+',1,-1 \n')
+            f.write(str(nsets.V000)+',1,-1 \n')
+            f.write(str(nsets.V001)+',1, 1 \n')
             f.write('**** y-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V010) + ',2, 1 \n')
-            f.write(str(nsets.V011) + ',2,-1 \n')
-            f.write(str(nsets.V000) + ',2,-1 \n')
-            f.write(str(nsets.V001) + ',2, 1 \n')
+            f.write(str(nsets.V010)+',2, 1 \n')
+            f.write(str(nsets.V011)+',2,-1 \n')
+            f.write(str(nsets.V000)+',2,-1 \n')
+            f.write(str(nsets.V001)+',2, 1 \n')
             f.write('**** z-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V010) + ',3, 1 \n')
-            f.write(str(nsets.V011) + ',3,-1 \n')
-            f.write(str(nsets.V000) + ',3,-1 \n')
-            f.write(str(nsets.V001) + ',3, 1 \n')
+            f.write(str(nsets.V010)+',3, 1 \n')
+            f.write(str(nsets.V011)+',3,-1 \n')
+            f.write(str(nsets.V000)+',3,-1 \n')
+            f.write(str(nsets.V001)+',3, 1 \n')
 
             # H3 (V110) to V3 (V111)
             f.write('**** X-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V110) + ',1, 1 \n')
-            f.write(str(nsets.V111) + ',1,-1 \n')
-            f.write(str(nsets.V000) + ',1,-1 \n')
-            f.write(str(nsets.V001) + ',1, 1 \n')
+            f.write(str(nsets.V110)+',1, 1 \n')
+            f.write(str(nsets.V111)+',1,-1 \n')
+            f.write(str(nsets.V000)+',1,-1 \n')
+            f.write(str(nsets.V001)+',1, 1 \n')
             f.write('**** y-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V110) + ',2, 1 \n')
-            f.write(str(nsets.V111) + ',2,-1 \n')
-            f.write(str(nsets.V000) + ',2,-1 \n')
-            f.write(str(nsets.V001) + ',2, 1 \n')
+            f.write(str(nsets.V110)+',2, 1 \n')
+            f.write(str(nsets.V111)+',2,-1 \n')
+            f.write(str(nsets.V000)+',2,-1 \n')
+            f.write(str(nsets.V001)+',2, 1 \n')
             f.write('**** z-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V110) + ',3, 1 \n')
-            f.write(str(nsets.V111) + ',3,-1 \n')
-            f.write(str(nsets.V000) + ',3,-1 \n')
-            f.write(str(nsets.V001) + ',3, 1 \n')
+            f.write(str(nsets.V110)+',3, 1 \n')
+            f.write(str(nsets.V111)+',3,-1 \n')
+            f.write(str(nsets.V000)+',3,-1 \n')
+            f.write(str(nsets.V001)+',3, 1 \n')
 
             # H2 (V100) to V2 (V101)
             f.write('**** X-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V100) + ',1, 1 \n')
-            f.write(str(nsets.V101) + ',1,-1 \n')
-            f.write(str(nsets.V000) + ',1,-1 \n')
-            f.write(str(nsets.V001) + ',1, 1 \n')
+            f.write(str(nsets.V100)+',1, 1 \n')
+            f.write(str(nsets.V101)+',1,-1 \n')
+            f.write(str(nsets.V000)+',1,-1 \n')
+            f.write(str(nsets.V001)+',1, 1 \n')
             f.write('**** y-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V100) + ',2, 1 \n')
-            f.write(str(nsets.V101) + ',2,-1 \n')
-            f.write(str(nsets.V000) + ',2,-1 \n')
-            f.write(str(nsets.V001) + ',2, 1 \n')
+            f.write(str(nsets.V100)+',2, 1 \n')
+            f.write(str(nsets.V101)+',2,-1 \n')
+            f.write(str(nsets.V000)+',2,-1 \n')
+            f.write(str(nsets.V001)+',2, 1 \n')
             f.write('**** z-DIR \n')
             f.write('*Equation \n')
             f.write('4 \n')
-            f.write(str(nsets.V100) + ',3, 1 \n')
-            f.write(str(nsets.V101) + ',3,-1 \n')
-            f.write(str(nsets.V000) + ',3,-1 \n')
-            f.write(str(nsets.V001) + ',3, 1 \n')
+            f.write(str(nsets.V100)+',3, 1 \n')
+            f.write(str(nsets.V101)+',3,-1 \n')
+            f.write(str(nsets.V000)+',3,-1 \n')
+            f.write(str(nsets.V001)+',3, 1 \n')
 
         f.write('*End Part\n')
         f.write('**\n')
@@ -960,7 +960,24 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             f.write('*Include, input={}mat.inp\n'.format(file[0:-8]))
             f.write('**\n')
             f.write('**__________________________________________________________________')
-            """
+        """
+    ##########################################
+    ### Creating Periodic Boundary Conditions
+    ##########################################
+        if apply_bc:
+            if periodicBC:
+                f.write('** BOUNDARY CONDITIONS\n')
+                f.write('** \n')
+                f.write('*Boundary \n')
+                f.write('V001,1 \n')
+                f.write('V001,2 \n')
+                f.write('V001,3 \n')
+                f.write('V101,2 \n')
+                f.write('V000,1 \n')
+                f.write('V011,3 \n')
+                f.write('** \n')
+                f.write('** \n')
+
     ############################
     ### Creating Step
     ############################
@@ -989,7 +1006,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             f.write('*Static \n')
             f.write('0.001, 1., 1e-6, 0.02 \n')
             f.write('** \n')
-        f.write('** ----------------------------------------------------------------\n')
+        f.write('** \n')
 
     #################################
     ### Creating Boundary Conditions
@@ -1065,19 +1082,70 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                                     f.write(f'PART-1-1.{node+1}, {dof}, {force_per_node:.10f}\n')
                                 else:
                                     print(f"Warning: Node {node} missing weight, skipping")
+                f.write('** \n')
             elif periodicBC:
-                f.write('** BOUNDARY CONDITIONS\n')
-                f.write('** \n')
-                f.write('*Boundary \n')
-                f.write('V001,1 \n')
-                f.write('V001,2 \n')
-                f.write('V001,3 \n')
-                f.write('V101,2 \n')
-                f.write('V000,1 \n')
-                f.write('V011,3 \n')
-                f.write('** \n')
-                f.write('** ----------------------------------------------------------------\n')
+                if load_type == 'stress':
+                    f.write('** BOUNDARY CONDITIONS\n')
+                    f.write('** \n')
+                    f.write('** LOADS \n')
+                    f.write('** \n')
+                    f.write('** Name: Load Type: Stress BC\n')
+                    f.write('*Cload \n')
 
+                    # map each index to its Abaqus CLOAD pattern
+                    stress_map = {
+                        0: "V101,1",  # X-direction
+                        1: "V011,2",
+                        2: "V000,3",
+                        3: "V000,2",
+                        4: "V101,3",
+                        5: "V011,1",
+                    }
+
+                    # find all non-zero entries
+                    nz = [(i, v) for i, v in enumerate(value) if v != 0]
+                    if len(nz) == 1:
+                        # only one non-zero → emit just that line
+                        idx, val = nz[0]
+                        f.write(f'{stress_map[idx]},{val}\n')
+                    else:
+                        # fallback: emit all, same as before
+                        for idx, val in nz:
+                            f.write(f'{stress_map[idx]},{val}\n')
+
+                    f.write('** \n')
+
+                elif load_type == 'strain':
+                    f.write('** BOUNDARY CONDITIONS\n')
+                    f.write('** \n')
+                    f.write('** Displacements \n')
+                    f.write('** \n')
+                    f.write('** Name: Dis Type: Displacement BC\n')
+                    f.write('*Boundary \n')
+
+                    # map each index to (node, direction) for the *Boundary card
+                    strain_map = {
+                        0: ("V101", 1),  # X-direction
+                        1: ("V011", 2),
+                        2: ("V000", 3),
+                        3: ("V000", 2),
+                        4: ("V101", 3),
+                        5: ("V011", 1),
+                    }
+
+                    nz = [(i, v) for i, v in enumerate(value) if v != 0]
+                    if len(nz) == 1:
+                        idx, val = nz[0]
+                        node, direction = strain_map[idx]
+                        # node, start DOF, end DOF, value
+                        f.write(f'{node}, {direction}, {direction}, {val}\n')
+                    else:
+                        # fallback: emit all non-zero entries
+                        for idx, val in nz:
+                            node, direction = strain_map[idx]
+                            f.write(f'{node}, {direction}, {direction}, {val}\n')
+
+                """
                 if load_type == 'stress':
                     f.write('** BOUNDARY CONDITIONS\n')
                     f.write('** \n')
@@ -1110,7 +1178,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             #if not periodic:
             #    raise ValueError("Periodic boundary conditions cannot be applied to a non-periodic RVE.")
             #pass
-
+            """
     #################################
     ### Creating Fild Output
     #################################
