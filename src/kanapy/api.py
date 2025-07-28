@@ -695,8 +695,7 @@ class Microstructure(object):
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
                   dual_phase=False, thermal=False, units=None, ialloy=None, nsdv=200, periodicBC=False,
-                  crystal_plasticity=False, phase_props=None, bc_type=None, load_type=None,
-                  loading_direction=None, value=None, apply_bc=False):
+                  crystal_plasticity=False, phase_props=None, value=None, apply_bc=False):
         """
         Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
         a string indicating if voxel ("v") or smoothened ("s") mesh should be written. It can also
@@ -810,8 +809,8 @@ class Microstructure(object):
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
                       thermal=thermal,  periodicBC = periodicBC,
-                      bc_type=bc_type, load_type=load_type, crystal_plasticity = crystal_plasticity,
-                      phase_props = phase_props, loading_direction=loading_direction, value=value, apply_bc=apply_bc)
+                      crystal_plasticity = crystal_plasticity,
+                      phase_props = phase_props, value=value, apply_bc=apply_bc)
 
         # if orientations exist and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
