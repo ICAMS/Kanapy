@@ -120,7 +120,6 @@ def read_dump(file):
 
 from kanapy.initializations import NodeSets
 from collections import defaultdict
-import math
 
 def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                   gb_area=None, dual_phase=False, thermal=False,
@@ -205,113 +204,49 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         return
 
     def write_surface_sets():
-        # 1) Precompute the three “face” node‐sets
-        s1 = set(nsets.F1yz)  # X = max → label ‘S3’
-        s2 = set(nsets.Fx1z)  # Y = max → label ‘S2’
-        s3 = set(nsets.Fxy1)  # Z = max → label ‘S6’
-        # 2) Single loop over all voxels, classify into three lists
-        face1_ids = []
-        face2_ids = []
-        face3_ids = []
 
-        for enum_id, nodes in voxel_dict.items():
-            nodeset = set(nodes)
-            if nodeset.issuperset(s1):
-                face1_ids.append(enum_id)
-            if nodeset.issuperset(s2):
-                face2_ids.append(enum_id)
-            if nodeset.issuperset(s3):
-                face3_ids.append(enum_id)
+        # 1) Find grid dimensions
+        xs = np.unique(nodes[:, 0])
+        ys = np.unique(nodes[:, 1])
+        zs = np.unique(nodes[:, 2])
+        nx, ny, nz = len(xs) - 1, len(ys) - 1, len(zs) - 1
 
-        # 3) Helper to write one ELSET/SURFACE block, chunking 16 IDs per line
-        def _emit(elem_ids, idx, label):
+        # 2) Precompute face‐ID sets in C‐order flattening (Z fastest)
+        B = ny * nz
+        # Xmax: last block of size B
+        x_max = set(range((nx - 1) * B + 1, nx * B + 1))
+
+        # Ymax: in each x‐block, offset by (ny-1)*nz, vary z=0…nz-1
+        y_offset = (ny - 1) * nz
+        y_max = {
+            x * B + y_offset + (z + 1)
+            for x in range(nx)
+            for z in range(nz)
+        }
+
+        # Zmax: in each xy‐slice, ID = x*B + y*nz + nz
+        z_max = {
+            x * B + y * nz + nz
+            for x in range(nx)
+            for y in range(ny)
+        }
+
+        # 3) Helper to write one ELSET/SURFACE block
+        def _emit(face_ids, idx, label):
             f.write(f'*ELSET, ELSET=_Surf-{idx}_{label}, internal, instance=PART-1-1\n')
-            for i in range(0, len(elem_ids), 16):
-                line = ', '.join(str(e) for e in elem_ids[i:i + 16])
-                # append comma and newline
-                f.write(line + ',\n')
-            f.write('\n')
+            # chunk 16 IDs per line
+            ids = sorted(face_ids)
+            for i in range(0, len(ids), 16):
+                chunk = ids[i:i + 16]
+                f.write(', '.join(str(e) for e in chunk) + ',\n')
             f.write(f'*Surface, type=ELEMENT, name=Surf-{idx}\n')
-            f.write(f'_Surf-{idx}_{label}, {label}\n')
+            f.write(f'_Surf-{idx}_{label}, {label}\n\n')
+            f.write('\n')
 
-        # 4) Emit all three, no loop over a dict
-        _emit(face1_ids, 1, 'S3')
-        _emit(face2_ids, 2, 'S2')
-        _emit(face3_ids, 3, 'S6')
-
-    def get_node_weights(face_nodes, direction):
-        weights = {}
-        interior_count = 0
-        edge_count = 0
-        corner_count = 0
-        # Calculate min/max coordinates for the entire mesh
-        if direction == 'x':
-            y_min, y_max = min(nodes[:, 1]), max(nodes[:, 1])
-            z_min, z_max = min(nodes[:, 2]), max(nodes[:, 2])
-            for node in face_nodes:
-                y = nodes[node, 1]
-                z = nodes[node, 2]
-                if (abs(y - y_min) < 1e-10 and abs(z - z_min) < 1e-10) or \
-                   (abs(y - y_min) < 1e-10 and abs(z - z_max) < 1e-10) or \
-                   (abs(y - y_max) < 1e-10 and abs(z - z_min) < 1e-10) or \
-                   (abs(y - y_max) < 1e-10 and abs(z - z_max) < 1e-10):
-                    weights[node] = 0.25
-                    corner_count += 1
-                elif abs(y - y_min) < 1e-10 or abs(y - y_max) < 1e-10 or \
-                     abs(z - z_min) < 1e-10 or abs(z - z_max) < 1e-10:
-                    weights[node] = 0.5
-                    edge_count += 1
-                else:
-                    weights[node] = 1.0
-                    interior_count += 1
-        elif direction == 'y':
-            x_min, x_max = min(nodes[:, 0]), max(nodes[:, 0])
-            z_min, z_max = min(nodes[:, 2]), max(nodes[:, 2])
-            for node in face_nodes:
-                x = nodes[node, 0]
-                z = nodes[node, 2]
-                if (abs(x - x_min) < 1e-10 and abs(z - z_min) < 1e-10) or \
-                   (abs(x - x_min) < 1e-10 and abs(z - z_max) < 1e-10) or \
-                   (abs(x - x_max) < 1e-10 and abs(z - z_min) < 1e-10) or \
-                   (abs(x - x_max) < 1e-10 and abs(z - z_max) < 1e-10):
-                    weights[node] = 0.25
-                    corner_count += 1
-                elif abs(x - x_min) < 1e-10 or abs(x - x_max) < 1e-10 or \
-                     abs(z - z_min) < 1e-10 or abs(z - z_max) < 1e-10:
-                    weights[node] = 0.5
-                    edge_count += 1
-                else:
-                    weights[node] = 1.0
-                    interior_count += 1
-        elif direction == 'z':
-            x_min, x_max = min(nodes[:, 0]), max(nodes[:, 0])
-            y_min, y_max = min(nodes[:, 1]), max(nodes[:, 1])
-            for node in face_nodes:
-                x = nodes[node, 0]
-                y = nodes[node, 1]
-                if (abs(x - x_min) < 1e-10 and abs(y - y_min) < 1e-10) or \
-                   (abs(x - x_min) < 1e-10 and abs(y - y_max) < 1e-10) or \
-                   (abs(x - x_max) < 1e-10 and abs(y - y_min) < 1e-10) or \
-                   (abs(x - x_max) < 1e-10 and abs(y - y_max) < 1e-10):
-                    weights[node] = 0.25
-                    corner_count += 1
-                elif abs(x - x_min) < 1e-10 or abs(x - x_max) < 1e-10 or \
-                     abs(y - y_min) < 1e-10 or abs(y - y_max) < 1e-10:
-                    weights[node] = 0.5
-                    edge_count += 1
-                else:
-                    weights[node] = 1.0
-                    interior_count += 1
-        total_weight = sum(weights.values())
-        if total_weight == 0:
-            raise ValueError(f"No valid weights assigned for nodes in direction {direction}")
-        print(f"Direction: {direction}, Nodes: Interior={interior_count}, Edges={edge_count}, "
-              f"Corners={corner_count}, Total={len(weights)}, Total Weight={total_weight:.6f}")
-        # Debug: Print weights and coordinates for first few nodes
-        for i, node in enumerate(face_nodes[:5]):  # Print first 5 nodes
-            print(f"Node {node}: Weight={weights.get(node, 0.0):.2f}, "
-                  f"Coords=({nodes[node, 0]:.6f}, {nodes[node, 1]:.6f}, {nodes[node, 2]:.6f})")
-        return weights
+        # 4) Emit all three faces
+        _emit(x_max, 1, 'S3')  # X = max
+        _emit(y_max, 2, 'S2')  # Y = max
+        _emit(z_max, 3, 'S6')  # Z = max
 
     def write_boundary_conditions():
         f.write('** BOUNDARY CONDITIONS\n')
@@ -332,14 +267,11 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         direction = loading_direction.lower()
         if direction in displacement_bc_map:
             set_name, dof, bc_name = displacement_bc_map[direction]
-            if direction == 'x':
-                value = value[0]
-            elif direction == 'y':
-                value = value[1]
-            elif direction == 'z':
-                value = value[2]
-            strain = value / 100.0  # Convert percentage to decimal
-            displacement = edge_lengths[direction] * (math.exp(strain) - 1)  # Logarithmic strain
+
+            # 'value' is a length-6 list; dof=1→X, 2→Y, 3→Z
+            vstrain = value[dof - 1]
+            strain = vstrain / 100.0  # Convert percentage to decimal
+            displacement = edge_lengths[direction] * (np.exp(strain) - 1)  # Logarithmic strain
             print(f"Direction: {direction}, Strain: {strain:.6f}, Edge length: {edge_lengths[direction]:.6f} mm, "
                   f"Displacement: {displacement:.6f} mm")
             f.write(f'** Name: {bc_name} Type: Displacement/Rotation\n')
@@ -350,37 +282,20 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         f.write('** LOADS\n')
         f.write('**\n')
         load_bc_map = {
-            'x': ('F1YZ', 1, 'loadX', nsets.F1yz),
-            'y': ('FX1Z', 2, 'loadY', nsets.Fx1z),
-            'z': ('FXY1', 3, 'loadZ', nsets.Fxy1),
+            'x': ('SURF-1', 1, 'loadX'),
+            'y': ('SURF-2', 2, 'loadY'),
+            'z': ('SURF-3', 3, 'loadZ'),
         }
         direction = loading_direction.lower()
         if direction in load_bc_map:
-            set_name, dof, bc_name, face_nodes = load_bc_map[direction]
-            face_area = face_areas[direction]  # Use dynamic face area
-            if direction == 'x':
-                value = value[0]
-            elif direction == 'y':
-                value = value[1]
-            elif direction == 'z':
-                value = value[2]
-            total_force = value * face_area  # MPa * mm² = N
-            weights = get_node_weights(face_nodes, direction)
-            total_weight = sum(weights.values())
-            if total_weight == 0:
-                raise ValueError(f'No effective nodes for stress application on {set_name}.')
-            base_force = total_force / total_weight
-            print(f"Direction: {direction}, Total nodes: {len(face_nodes)}, "
-                  f"Total weight: {total_weight:.6f}, Face area: {face_area:.6f} mm², "
-                  f"Base force: {base_force:.10f} N, Total force: {total_force:.10f} N")
-            f.write(f'** Name: {bc_name} Type: Concentrated Force\n')
-            f.write('*Cload\n')
-            for node in face_nodes:
-                if node in weights:
-                    force_per_node = base_force * weights[node]
-                    f.write(f'PART-1-1.{node + 1}, {dof}, {force_per_node:.10f}\n')
-                else:
-                    print(f"Warning: Node {node} missing weight, skipping")
+            set_name, dof, bc_name = load_bc_map[direction]
+
+            # 'value' is a length-6 list; dof=1→X, 2→Y, 3→Z
+            vstress = value[dof - 1]
+
+            f.write(f'** Name: {bc_name} Type: Pressure\n')
+            f.write('*Dload\n')
+            f.write(f'{set_name}, P, {-vstress:.6f}\n')
 
     def write_periodic_load():
         if load_type == 'stress':
