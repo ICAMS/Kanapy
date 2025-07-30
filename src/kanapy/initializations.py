@@ -639,16 +639,16 @@ class NodeSets(object):
                 self.F0yz.append(i)    # leftSet, nodes belong to the left face
             if np.isclose(coord[1], maxY):
                 surface = True
-                self.Fx1z.append(i)    # frontSet, nodes belong to the front face
+                self.Fx1z.append(i)    # topSet, nodes belong to the top face
             if np.isclose(coord[1], minY):
                 surface = True
-                self.Fx0z.append(i)    # rearSet, nodes belong to the rear face
+                self.Fx0z.append(i)    # bottomSet, nodes belong to the bottom face
             if np.isclose(coord[2], maxZ):
                 surface = True
-                self.Fxy1.append(i)    # topSet, nodes belong to the top face
+                self.Fxy1.append(i)    # frontSet, nodes belong to the front face
             if np.isclose(coord[2], minZ):
                 surface = True
-                self.Fxy0.append(i)    # bottomSet, nodes belong to the bottom face
+                self.Fxy0.append(i)    # rearSet, nodes belong to the rear face
             if surface:
                 self.surfSet.append(i) # set for all nodes that belong to the faces (includes all previous face sets)
 
@@ -668,7 +668,6 @@ class NodeSets(object):
         E_T2 = np.intersect1d(self.F1yz, self.Fx1z)
         self.E11z = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 2], E_T2)
 
-        ##
         # bottom front edge
         E_B1 = np.intersect1d(self.Fxy1, self.Fx0z)
         self.Ex01 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 0], E_B1)
@@ -682,7 +681,6 @@ class NodeSets(object):
         E_B2 = np.intersect1d(self.F1yz, self.Fx0z)
         self.E10z = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 2], E_B2)
 
-        ##
         # left front edge
         E_M1 = np.intersect1d(self.F0yz, self.Fxy1)
         self.E0y1 = self.CreatePeriodicEdgeSets(self.surfSet, nodes[self.surfSet, 1], E_M1)
@@ -742,56 +740,56 @@ class NodeSets(object):
         self.E0y1P = self.RemoveItemInList(self.E0y1, CORNERNODES) # left front edge
 
         ######### Sorts the Nodesets with respect to their coordinates
-        print('Pure surface nodes after deleting edge and corner nodes')
+        # print('Pure surface nodes after deleting edge and corner nodes')
 
         # Pure BottomSet nodes without vertices and edges.
         self.Fx0zP = self.RemoveItemInList(self.Fx0z, CORNERNODES)
-        self.Fx0zP = self.RemoveItemInList(self.Fx0z, EdgeNodes)
+        self.Fx0zP = self.RemoveItemInList(self.Fx0zP, EdgeNodes)
         # print("Bottom Face: ", len(self.Fx0zP))
 
         # Pure TopSet nodes without vertices and edges.
         self.Fx1zP = self.RemoveItemInList(self.Fx1z, CORNERNODES)
-        self.Fx1zP = self.RemoveItemInList(self.Fx1z, EdgeNodes)
+        self.Fx1zP = self.RemoveItemInList(self.Fx1zP, EdgeNodes)
         # print("Top Face: ", len(self.Fx1zP))
 
         # Pure LeftSet nodes without vertices and edges.
         self.F0yzP = self.RemoveItemInList(self.F0yz, CORNERNODES)
-        self.F0yzP = self.RemoveItemInList(self.F0yz, EdgeNodes)
-        self.F0yzP = self.RemoveItemInList(self.F0yz, self.Fx1zP)
-        self.F0yzP = self.RemoveItemInList(self.F0yz, self.Fx0zP)
+        self.F0yzP = self.RemoveItemInList(self.F0yzP, self.Fx1zP)
+        self.F0yzP = self.RemoveItemInList(self.F0yzP, self.Fx0zP)
+        self.F0yzP = self.RemoveItemInList(self.F0yzP, EdgeNodes)
         # print("Left Face: ", len(self.F0yzP))
 
         # Pure RightSet nodes without vertices and edges.
         self.F1yzP = self.RemoveItemInList(self.F1yz, CORNERNODES)
-        self.F1yzP = self.RemoveItemInList(self.F1yz, EdgeNodes)
-        self.F1yzP = self.RemoveItemInList(self.F1yz, self.Fx1zP)
-        self.F1yzP = self.RemoveItemInList(self.F1yz, self.Fx0zP)
+        self.F1yzP = self.RemoveItemInList(self.F1yzP, self.Fx1zP)
+        self.F1yzP = self.RemoveItemInList(self.F1yzP, self.Fx0zP)
+        self.F1yzP = self.RemoveItemInList(self.F1yzP, EdgeNodes)
         # print("Right Face: ", len(self.F1yzP))
 
         # Pure FrontSet nodes without vertices and edges.
         self.Fxy1P = self.RemoveItemInList(self.Fxy1, CORNERNODES)
-        self.Fxy1P = self.RemoveItemInList(self.Fxy1, EdgeNodes)
-        self.Fxy1P = self.RemoveItemInList(self.Fxy1, self.Fx1zP)
-        self.Fxy1P = self.RemoveItemInList(self.Fxy1, self.Fx0zP)
-        self.Fxy1P = self.RemoveItemInList(self.Fxy1, self.F0yzP)
-        self.Fxy1P = self.RemoveItemInList(self.Fxy1, self.F1yzP)
+        self.Fxy1P = self.RemoveItemInList(self.Fxy1P, self.Fx1zP)
+        self.Fxy1P = self.RemoveItemInList(self.Fxy1P, self.Fx0zP)
+        self.Fxy1P = self.RemoveItemInList(self.Fxy1P, self.F0yzP)
+        self.Fxy1P = self.RemoveItemInList(self.Fxy1P, self.F1yzP)
+        self.Fxy1P = self.RemoveItemInList(self.Fxy1P, EdgeNodes)
         # print("Front Face: ", len(self.Fxy1P))
 
         # Pure RearSet nodes without vertices and edges.
         self.Fxy0P = self.RemoveItemInList(self.Fxy0, CORNERNODES)
-        self.Fxy0P = self.RemoveItemInList(self.Fxy0, EdgeNodes)
-        self.Fxy0P = self.RemoveItemInList(self.Fxy0, self.Fx1zP)
-        self.Fxy0P = self.RemoveItemInList(self.Fxy0, self.Fx0zP)
-        self.Fxy0P = self.RemoveItemInList(self.Fxy0, self.F0yzP)
-        self.Fxy0P = self.RemoveItemInList(self.Fxy0, self.F1yzP)
+        self.Fxy0P = self.RemoveItemInList(self.Fxy0P, self.Fx1zP)
+        self.Fxy0P = self.RemoveItemInList(self.Fxy0P, self.Fx0zP)
+        self.Fxy0P = self.RemoveItemInList(self.Fxy0P, self.F0yzP)
+        self.Fxy0P = self.RemoveItemInList(self.Fxy0P, self.F1yzP)
+        self.Fxy0P = self.RemoveItemInList(self.Fxy0P, EdgeNodes)
         # print("Rear Face: ", len(self.Fxy0P))
 
         # Order opposite surfaces in the same way so that corresponding nodes are directly at same position in nodeSet
-        self.Fxy0P = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 0],
-                                                               nodes[self.surfSet, 2], self.Fxy0P) # BottomSet
+        self.Fx0zP = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 0],
+                                                               nodes[self.surfSet, 2], self.Fx0zP) # BottomSet
 
-        self.Fxy1P = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 0],
-                                                               nodes[self.surfSet, 2], self.Fxy1P) # TopSet
+        self.Fx1zP = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 0],
+                                                               nodes[self.surfSet, 2], self.Fx1zP) # TopSet
 
         self.F0yzP = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 1],
                                                                nodes[self.surfSet, 2], self.F0yzP) # LeftSet
@@ -799,11 +797,11 @@ class NodeSets(object):
         self.F1yzP = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 1],
                                                                nodes[self.surfSet, 2], self.F1yzP)  # RightSet
 
-        self.Fx1zP = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 0],
-                                                               nodes[self.surfSet, 1], self.Fx1zP)  # FrontSet
+        self.Fxy1P = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 0],
+                                                               nodes[self.surfSet, 1], self.Fxy1P)  # FrontSet
 
-        self.Fx0zP = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 0],
-                                                               nodes[self.surfSet, 1], self.Fx0zP)  # RearSet
+        self.Fxy0P = self.CreatePeriodicNodeSets(self.surfSet, nodes[self.surfSet, 0],
+                                                               nodes[self.surfSet, 1], self.Fxy0P)  # RearSet
 
 
     def CreatePeriodicNodeSets(self, Nodes, sortCoord1, sortCoord2, NodeSet):
