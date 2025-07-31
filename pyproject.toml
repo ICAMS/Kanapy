@@ -7,8 +7,7 @@ name = "kanapy"
 version = "6.4.2"
 description = "Python package for generating complex synthetic polycrystalline microstructures"
 authors = [
-    { name = "Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Alexander Hartmaier", 
-    email = "alexander.hartmaier@rub.de" },
+    { name = "Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Alexander Hartmaier", email = "alexander.hartmaier@rub.de" },
 ]
 license = { text = "GNU AGPL v3 license" }
 readme = "README.md"
