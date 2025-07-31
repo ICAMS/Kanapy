@@ -1,4 +1,4 @@
 include README.md
-include CONTRIBUTING.md
 include LICENSE
-include CMakeLists.txt
+# includes MTEX library
+recursive-include src/kanapy/libs *

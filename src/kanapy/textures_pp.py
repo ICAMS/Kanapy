@@ -9,7 +9,6 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from kanapy.util import MTEX_DIR, ROOT_DIR, MAIN_DIR
 from kanapy.rve_stats import bbox
 from orix import io, quaternion
 from orix import plot as ox_plot

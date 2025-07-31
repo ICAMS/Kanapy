@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kanapy"
+version = "6.4.2"
+description = "Python package for generating complex synthetic polycrystalline microstructures"
+authors = [
+    { name = "Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Alexander Hartmaier", email = "alexander.hartmaier@rub.de" },
+]
+license = { text = "GNU AGPL v3 license" }
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "scipy",
+    "seaborn",
+    "click",
+    "tqdm",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest",
+    "networkx",
+    "orix",
+    "scikit-image",
+    "jsonschema"
+]
+
+[project.urls]
+Homepage = "https://github.com/ICAMS/Kanapy.git"
+
+[project.optional-dependencies]
+dev = ["pytest-runner", "black", "build", "twine"]
+
+[project.scripts]
+kanapy = "kanapy.cli:start"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+packages = ["kanapy"]
+
+[tool.setuptools.package-data]
+# Alle Dateien im Unterordner libs/ einbinden
+"kanapy" = ["libs/*"]

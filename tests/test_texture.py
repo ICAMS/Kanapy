@@ -9,7 +9,7 @@ December 2023
 import os
 import numpy as np
 import pytest
-from kanapy import MAIN_DIR, MTEX_AVAIL, MTEX_DIR
+from kanapy import MTEX_AVAIL, MTEX_DIR
 
 @pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
 def test_mex():
@@ -25,7 +25,8 @@ def test_mex():
 @pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
 def test_readEBSD():
     from kanapy.textures import EBSDmap
-    fname = MAIN_DIR + '/tests/ebsd_316L_500x500.ang'  # name of ang file to be imported
+    # name of ang file to be imported
+    fname = os.path.normpath(os.path.join(os.getcwd(), 'tests', 'ebsd_316L_500x500.ang'))
     # read EBSD map and evaluate statistics of microstructural features
     ebsd = EBSDmap(os.path.normpath(fname), plot=False)
     assert len(ebsd.ms_data) == 1
