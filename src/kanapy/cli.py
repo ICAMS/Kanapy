@@ -6,13 +6,14 @@ import zipfile
 import requests
 import webbrowser
 from io import BytesIO
+from kanapy import __version__
 
-
+    
 @click.group()
+@click.version_option(version=__version__)
 @click.pass_context
 def main(ctx):    
     pass
-
 
 @main.command(name='gui')
 @click.pass_context
