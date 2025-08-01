@@ -2,6 +2,10 @@
 import os
 import shutil
 import click
+import zipfile
+import requests
+import webbrowser
+from io import BytesIO
 
 
 @click.group()
@@ -13,7 +17,7 @@ def main(ctx):
 @main.command(name='gui')
 @click.pass_context
 def gui(ctx):
-    """ Start Kanapy's GUI """
+    """ Start Kanapy's GUI. """
     import matplotlib.pyplot as plt
     import tkinter as tk
     import tkinter.font as tkFont
@@ -46,7 +50,7 @@ def gui(ctx):
 
 
 @main.command(name='runTests')
-@click.option('-no_texture', default=False)
+@click.option('--no_texture', default=False)
 @click.pass_context
 def tests(ctx, no_texture: bool):
     """ Runs unittests built within kanapy."""
@@ -65,33 +69,50 @@ def tests(ctx, no_texture: bool):
     click.echo('')
         
     
-@main.command(name='genDocs')
+@main.command(name='readDocs')
 @click.pass_context
 def docs(ctx):
-    click.echo('Please access the Kanapy documentation under "https://icams.github.io/Kanapy/"')
+    """Open webpage with  Kanapy documentation."""
+    webbrowser.open("https://icams.github.io/Kanapy/")
 
 
 @main.command(name='copyExamples')
 @click.pass_context
-def examples(ctx):
-    """ Copies examples to local filesystem."""
+def download_subdir(ctx):
+    """
+    Download examples from Kanapy's GitHub repository.
 
-    click.echo('Downloading examples from GitHub repository. Requires "git".')
-    dst = os.path.join(os.getcwd(), 'examples')
-    if os.path.exists(dst):
-        raise IsADirectoryError('{0} already exists'.format(dst))
-    os.system("git clone --filter=blob:none --no-checkout https://github.com/ICAMS/Kanapy.git")
-    os.system(f"cd {dst}")
-    os.system("git sparse-checkout init --cone")
-    os.system("git sparse-checkout set src/kanapy/examples")
+    """
+    zip_url = f"https://github.com/ICAMS/kanapy/archive/refs/heads/master.zip"
+    output_dir = os.path.join(os.getcwd(), 'kanapy_examples')
+    subdir_prefix = "Kanapy-master/examples/"
 
-    click.echo(f'Copied examples to "{dst}".')
+    click.echo(f"Downloading ZIP from: {zip_url}")
+    r = requests.get(zip_url)
+    r.raise_for_status()
 
+    with zipfile.ZipFile(BytesIO(r.content)) as zf:
+        members = [f for f in zf.namelist() if f.startswith(subdir_prefix)]
+        if not members:
+            click.echo(f"Error: Subdirectory 'examples' not found in branch 'master'.", err=True)
+            return
+
+        for member in members:
+            rel_path = os.path.relpath(member, subdir_prefix)
+            if not rel_path or member.endswith("/"):
+                continue
+            target_path = os.path.join(output_dir, rel_path)
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+            with open(target_path, "wb") as out_file:
+                out_file.write(zf.read(member))
+
+    click.echo(f"Extracted 'examples' from ICAMS/kanapy to '{output_dir}/'")
+    
 
 @main.command(name='setupTexture')
 @click.pass_context
 def setupTexture(ctx):
-    """ Stores the user provided MATLAB & MTEX paths for texture analysis."""
+    """ Starts Matlab engine and initializes MTEX."""
     setPaths()
 
 
@@ -124,7 +145,7 @@ def setPaths():
         # os.chdir(path)
         res = os.system('python -m pip install matlabengine==25.1.2')
         if res != 0:
-            click.echo('\n Error in installing matlab.engine. This feature requires Matlab 2024a or above.')
+            click.echo('\n Error in installing matlab.engine. This feature requires Matlab 2025a or above.')
             # click.echo('Please contact system administrator to run "> python -m pip install ."')
             # click.echo(f'in directory {path}')
             raise ModuleNotFoundError()

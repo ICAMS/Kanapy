@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kanapy"
 version = "6.4.2"
-description = "Python package for generating complex synthetic polycrystalline microstructures"
+description = "Python package for microstructure analyse and generation of microstructure models"
 authors = [
-    { name = "Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Alexander Hartmaier", email = "alexander.hartmaier@rub.de" },
+    { name = "Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Yousef Rezek, Hrushikesh Uday Bhimavarapu, Alexander Hartmaier", email = "alexander.hartmaier@rub.de" },
 ]
 license = { text = "GNU AGPL v3 license" }
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.13"
 dependencies = [
     "numpy",
     "matplotlib",
