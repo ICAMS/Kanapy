@@ -45,8 +45,19 @@ The preferred method to install Kanapy is through Anaconda or Miniconda
 Python distributions. If you do not have any, we suggest installing
 [miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
-Once done, clone the repository to a desired location, create a conda
-environment for the Kanapy installation and install.
+It can be installed from [conda-forge](https://conda-forge.org) by
+
+```
+$ conda install kanapy
+```
+
+or from [PyPi](https://pypi.org/project/kanapy/) via pip
+
+```
+$ pip install kanapy
+```
+
+Alternatively, the most recent version of the complete repository, including the source code, documentation and examples, can be cloned and installed locally. It is recommended to create a conda environment before installation. This can be done by the following the command line instructions
 
 ```
 $ git clone https://github.com/ICAMS/Kanapy.git ./kanapy
@@ -56,50 +67,32 @@ $ conda activate knpy
 (knpy) $ python -m pip install .
 ```
 
-Kanapy is now installed along with all its dependencies. If you intend
+Kanapy is now installed along with all its dependencies. The correct installation with this method can be tested with
+
+```
+(knpy) $ pytest tests -v
+```
+
+After this, the package can be used as API within python, e.g. by importing the entire package with
+
+```python
+import kanapy as knpy
+```
+
+### Kanapy texture module
+
+If you intend
 to use Kanapy's texture module, a
-[MATLAB](https://www.mathworks.com/products/matlab.html) installation is required because the texture module is based on [MTEX](https://mtex-toolbox.github.io/) functions. Kanapy uses a local version of MTEX stored in libs/mtex, if you want to use another version, please set the paths accordingly. If MATLAB is available on your system, the texture module is initialized by the command
+[MATLAB](https://www.mathworks.com/products/matlab.html) installation is required because the texture module is based on [MTEX](https://mtex-toolbox.github.io/) functions. Kanapy uses a local version of MTEX stored in `src/kanapy/libs/mtex`, if you want to use another MTEX version, please set the paths accordingly. If MATLAB is available on your system, the texture module is initialized by the command
 
 ``` 
 (knpy) $ kanapy setupTexture
 ```
-**Note:** The absolute paths to {user\_dependent\_path}/kanapy/src/kanapy and {user\_dependent\_path}/kanapy/libs/mtex should to be added to the MATLABPATH environment variable, see [Mathworks&reg; documentation](https://de.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html#). 
+**Note:** The absolute paths to {user\_dependent\_path}/site-packages/kanapy and {user\_dependent\_path}/site-packages/kanapy/libs/mtex should to be added to the MATLABPATH environment variable, see [Mathworks&reg; documentation](https://de.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html#). If the texture module is installed as described above, this is done automatically within Kanapy.
 
 
-**Note:** The installation scripts have been tested for Matlab R2023a with Python 3.9 and 3.10 on current Linux, MacOS and Windows systems. If you are using other Matlab versions or if you do not have write permission in the Matlab-extern/engines/python directory, the script "setupTexture" might fail. In that case, you or a system administrator can setup the Matlab Engine API for Python manually. To do so, please follow the instructions given on [Mathworks&reg;](https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html), to (i) verify your configuration, (ii) install Engine API, and (iii) start MATLAB Engine. The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the "environment.yml" file and re-creating the conda environment *knpy*.
+**Note:** The installation scripts have been tested for Matlab R2024a and R2025a with Python 3.9 and 3.10 on current Linux, MacOS and Windows systems. If you are using other Matlab versions or if you do not have write permission in the Matlab-extern/engines/python directory, the script "setupTexture" might fail. In that case, you or a system administrator can setup the Matlab Engine API for Python manually. To do so, please follow the instructions given on [Mathworks&reg;](https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html), to (i) verify your configuration, (ii) install Engine API, and (iii) start MATLAB Engine. The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the "environment.yml" file and re-creating the conda environment *knpy*.
 
-## Installation as system administrator
-
-If system administrators with write access to the root directory of the knpy-environment want to install Kanapy for all users, they need to run
-
-``` 
-(knpy) $ python admin_setup.py
-```
-
-after activating the *knpy*-environment. This will automatically execute the Kanapy installation and texture setup in administrator mode. After that step, users can directly access Kanapy in the conda environment.
-
-# Running tests
-
-Kanapy uses pytest to perform all its unit testing. Run
-
-```
-(knpy) $ kanapy runTests          
-```
-
-to verify the correct installation of Kanapy.   
-
-
-# Updates
-Kanapy is constantly under development and there will be frequent updates with bugfixes and new features. To update Kanapy, follow these steps:
-
-```
-$ cd kanapy
-$ git pull
-$ conda activate knpy
-(knpy) $ python -m pip install .
-```
-
-This will make the new version available in your *knpy*-environment. If your Kanapy installation has been setup for textures (MTEX module), this feature will not be affected by such updates. This update routine is also valid for global installations as system administrator.
 
 # Examples
 Kanapy comes with several examples in form of Python scripts and Juypter notebooks. If you want to create a local copy of the kanapy/examples directory within the current working directory (cwd), please run the command
@@ -110,25 +103,16 @@ Kanapy comes with several examples in form of Python scripts and Juypter noteboo
 
 # Documentation
 
-Open "kanapy/docs/index.html" in a browser to access the complete documentation for Kanapy.
+The Kanapy documentation is available online on GitHub Pages: [https://icams.github.io/Kanapy/](https://icams.github.io/Kanapy/)
 
-The documentation is also available online on GitHub Pages: [https://icams.github.io/Kanapy/](https://icams.github.io/Kanapy/)
-
-The documentation for Kanapy is generated using [Sphinx](http://www.sphinx-doc.org/en/master/). You can create or update your local documentation with the command
-
-```
-(knpy) $ kanapy genDocs                    
-```
-
-The updated HTML documentation can then be found under
-"kanapy/docs/builds/html".
-
-**Note:** Documentation requires Read the Docs Sphinx Theme which can be installed via "$ pip install sphinx-rtd-theme".
+The documentation for Kanapy is generated using [Sphinx](http://www.sphinx-doc.org/en/master/). 
 
 # Dependencies
+### Third-party components
+
 
 Kanapy's texture module requires
-[MATLAB](https://www.mathworks.com/products/matlab.html) to be installed on your machine. Make sure to use MATLAB v2023a and above. The module uses a local version of [MTEX](https://mtex-toolbox.github.io/) contained in *kanapy/libs* and does not interfere with other installations of MTEX.
+[MATLAB](https://www.mathworks.com/products/matlab.html) to be installed on your machine. Make sure to use MATLAB v2024a or above. This package includes code from the project [MTEX](https://mtex-toolbox.github.io/) contained in `src/kanapy/libs/mtex`, which is licensed under the GNU GPL v2 license. See the LICENSE file in that directory for details.
 
 ### Core dependencies
 
@@ -137,9 +121,6 @@ Below are the listed dependencies for running Kanapy:
 > -   [NumPy](http://numpy.scipy.org) for array manipulation.
 > -   [Scipy](https://www.scipy.org/) for functionalities like
 >     Convexhull.
-> -   [pytest](https://www.pytest.org) for running Kanapy unit tests.
-> -   [sphinx](http://www.sphinx-doc.org/en/master/) for generating
->     documentation.
 > -   [Matplotlib](https://matplotlib.org/) for plotting and
 >     visualizing.
 
@@ -193,6 +174,17 @@ The preferred way to cite Kanapy is:
     Powder Bed Fusion--Manufactured Metal by Micromechanical Modeling.
     Adv. Eng. Mater., <https://doi.org/10.1002/adem.202000641>
 
+## Version history
+
+ - v3: Introduction of API
+ - v4: Import and export of microstructures in form of voxels
+ - v5: Pure Python version, support of CLI suspended
+ - v6: Major revision of internal data structure and statistical microstructure parameters
+ - v6.1: Full support of dual-phase and porous microstructures
+ - v6.2: Possibility of other geometries than ellipsoids as basic microstructure shapes
+ - v6.3: Implementation of velocity-Verlet algorithm to integrate particle trajectories during packing
+ - v6.4: Implmenentation of universal data structure for import and export of microstructures 
+
 # Licenses
 
 <a rel="license" href="https://www.gnu.org/licenses/agpl-3.0.html"><img alt="AGPLv3" style="border-width:0;max-height:30px;height:50%;" src="https://www.gnu.org/graphics/agplv3-155x51.png" /></a>
@@ -200,7 +192,8 @@ The preferred way to cite Kanapy is:
    <img alt="Creative Commons License" style="border-width:0;max-height:30px;height:100%;" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a>
 
 Kanapy is made available under the GNU Affero General Public License (AGPL) v3
-[license](https://www.gnu.org/licenses/agpl-3.0.html).  
+[license](https://www.gnu.org/licenses/agpl-3.0.html).   
+MTEX is licensed under the GNU GPL v2 [license](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).  
 The additional materials under examples and in the documentation are published under the Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) [license](https://creativecommons.org/licenses/by-nc-sa/4.0/). 
 
 # About
@@ -214,7 +207,7 @@ synthetic microstructure generation tool for research and industry use.
 
 # Authors
 
-Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Alexander Hartmaier  
+Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Yousef Rezek, Hrushikesh Uday Bhimavarapu, Alexander Hartmaier  
 [ICAMS](http://www.icams.de/content/) / [Ruhr-Universität Bochum](https://www.ruhr-uni-bochum.de/en), Germany 
 
 
