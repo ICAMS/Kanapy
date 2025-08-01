@@ -1,5 +1,0 @@
-MisorientationTheory Theory
-Twinning
-MisorientationDistributionFunction
-AxisDistributionFunction
-AngleDistributionFunction

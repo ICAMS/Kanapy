@@ -1,3 +1,0 @@
-%% Angle Distribution Function
-%
-%%

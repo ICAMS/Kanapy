@@ -1,3 +1,0 @@
-%% Sachs Model
-%
-%%

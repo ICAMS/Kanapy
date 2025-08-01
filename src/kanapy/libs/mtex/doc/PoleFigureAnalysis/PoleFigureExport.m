@@ -1,4 +1,0 @@
-%% Export Pole Figure Data
-%
-%%
-%

@@ -1,4 +1,0 @@
-%% The Spherical Radon Transform
-%
-%%
-%

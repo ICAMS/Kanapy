@@ -1,3 +1,0 @@
-%% Axis Distribution Function
-%
-%%

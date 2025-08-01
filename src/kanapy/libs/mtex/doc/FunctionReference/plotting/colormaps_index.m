@@ -1,4 +1,0 @@
-%% MTEX Color Maps
-%
-%%
-%
