@@ -236,16 +236,16 @@ class particle_rve(object):
 
     def import_ebsd(self):
         """Import EBSD map."""
-        file_path = filedialog.askopenfilename(title="Select EBSD map", filetypes=[("*.ctf", "*.ang")])
-        try:
-            if file_path:
-                self_closing_message("Reading EBSD map, please wait..")
+        file_path = filedialog.askopenfilename(title="Select EBSD map", filetypes=[("EBSD maps", ".ctf .ang")])
+        if file_path:
+            self_closing_message("Reading EBSD map, please wait..")
+            try:
                 self.ebsd = EBSDmap(file_path, plot=True, hist=False)
                 self.extract_microstructure_params()
-            self_closing_message("Data from EBSD map imported successfully.")
-        except:
-            self_closing_message("ERROR: EBSD map could not be imported!")
-        
+                self_closing_message("Data from EBSD map imported successfully.")
+            except:
+                self_closing_message("ERROR: Could not read EBSD map!")
+
     def write_stat_param(self):
         if self.ms_stats is None:
             self_closing_message("No stats created yet.")
@@ -257,9 +257,9 @@ class particle_rve(object):
 
     def import_stats(self):
         """Import statistical data ."""
-        try:
-            file_path = filedialog.askopenfilename(title="Select statistics file", filetypes=[("Stats files", "*.json")])
-            if file_path:
+        file_path = filedialog.askopenfilename(title="Select statistics file", filetypes=[("Stats files", ".json")])
+        if file_path:
+            try:
                 ms_stats = import_stats(file_path)
                 self.matname_var1.set(ms_stats['Phase']['Name'])
                 self.nvox_var1.set(ms_stats['RVE']['Nx'])
@@ -284,8 +284,8 @@ class particle_rve(object):
                 self.tilt_angle_max.set(ms_stats['Tilt angle']['cutoff_max'])
                 self.ms_stats = ms_stats
                 self_closing_message("Statistical data imported successfully.")
-        except:
-            self_closing_message("ERROR: Statistocs paramaters could not be imported!")
+            except:
+                self_closing_message("ERROR: Statistical parameters could not be imported!")
 
     def extract_microstructure_params(self):
         """Extracts microstructure parameters from the EBSD data."""
@@ -346,7 +346,8 @@ class particle_rve(object):
             },
             'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': nvox, 'Ny': nvox, 'Nz': nvox,
                     'ialloy': int(self.ialloy.get())},
-            'Simulation': {'periodicity': periodic, 'output_units': 'mm'}
+            'Simulation': {'periodicity': periodic, 'output_units': 'mm'},
+            'Phase': {'Name': matname, 'Number': 0, 'Volume fraction': 1.0}
         }
 
         self.ms = Microstructure(descriptor=self.ms_stats, name=f"{matname}_{texture}_texture")
@@ -390,7 +391,8 @@ class particle_rve(object):
             },
             'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': nvox, 'Ny': nvox, 'Nz': nvox,
                     'ialloy': int(self.ialloy.get())},
-            'Simulation': {'periodicity': str(periodic), 'output_units': 'mm'}
+            'Simulation': {'periodicity': str(periodic), 'output_units': 'mm'},
+            'Phase': {'Name': matname, 'Number': 0, 'Volume fraction': 1.0}
         }
 
         self.ms = Microstructure(descriptor=self.ms_stats, name=f"{matname}")
@@ -609,7 +611,7 @@ class cuboid_rve(object):
             ang = None
         start_time = time.time()
         if self.ms is None or self.ms.mesh is None:
-            self_closing_message("Generating RVE with cuboidal grains to assign orientation to")
+            self_closing_message("Generating RVE with cuboid grains to assign orientation to.")
             self.create_cubes_and_plot()
         self.ms.generate_orientations(texture, ang=ang, omega=omega)
         self.ms.write_voxels(file=f'{matname}_voxels.json', script_name=__file__, mesh=False, system=False)
@@ -621,6 +623,6 @@ class cuboid_rve(object):
 
     def export_abq(self):
         if self.ms is None:
-            self_closing_message("Generating and exporting RVE with cuboidal grains w/o orientations.")
+            self_closing_message("Generating and exporting RVE with cuboid grains w/o orientations.")
             self.create_cubes_and_plot()
         self.ms.write_abq('v')
