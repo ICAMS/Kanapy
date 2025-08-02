@@ -11,6 +11,17 @@ authors = [
 ]
 license = { text = "GNU AGPL v3 license" }
 readme = "README.md"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License-Expression :: GPL-3.0-or-later",
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Materials Science",
+]
 requires-python = ">=3.9,<3.13"
 dependencies = [
     "numpy",
