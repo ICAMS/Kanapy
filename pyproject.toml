@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kanapy"
-version = "6.4.2"
+version = "6.4.3"
 description = "Python package for microstructure analyse and generation of microstructure models"
 authors = [
     { name = "Mahesh R.G. Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Yousef Rezek, Hrushikesh Uday Bhimavarapu, Alexander Hartmaier", email = "alexander.hartmaier@rub.de" },
