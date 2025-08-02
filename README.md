@@ -48,7 +48,7 @@ Python distributions. If you do not have any, we suggest installing
 It can be installed from [conda-forge](https://conda-forge.org) by
 
 ```
-$ conda install kanapy
+$ conda install kanapy -c conda-forge
 ```
 
 or from [PyPi](https://pypi.org/project/kanapy/) via pip
