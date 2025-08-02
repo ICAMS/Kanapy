@@ -16,7 +16,7 @@ from kanapy import MTEX_AVAIL
 from kanapy.api import Microstructure
 from kanapy.textures import EBSDmap
 from kanapy.initializations import RVE_creator, mesh_creator
-from kanapy.input_output import import_stats
+from kanapy.input_output import import_stats, write_stats
 from kanapy.entities import Simulation_Box
 
 
@@ -186,7 +186,8 @@ class particle_rve(object):
         button_statistics = ttk.Button(button_frame1, text="Plot Statistics", style='TButton',
                                        command=self.create_and_plot_stats)
         button_statistics.grid(row=1, column=0, padx=(10, 5), pady=5, sticky='ew')
-        write_stats_button = ttk.Button(button_frame1, text="Export Statistics", style='TButton')
+        write_stats_button = ttk.Button(button_frame1, text="Export Statistics", style='TButton',
+                                        command=self.write_stat_param)
         write_stats_button.grid(row=1, column=1, padx=(10, 5), pady=5, sticky='ew')
         button_create_rve = ttk.Button(button_frame1, text="Create RVE", style='TButton',
                                        command=self.create_and_plot_rve)
@@ -236,40 +237,55 @@ class particle_rve(object):
     def import_ebsd(self):
         """Import EBSD map."""
         file_path = filedialog.askopenfilename(title="Select EBSD map", filetypes=[("*.ctf", "*.ang")])
-        if file_path:
-            self_closing_message("Reading EBSD map, please wait..")
-            self.ebsd = EBSDmap(file_path, plot=True, hist=False)
-            self.extract_microstructure_params()
-        self_closing_message("Data from EBSD map imported successfully.")
+        try:
+            if file_path:
+                self_closing_message("Reading EBSD map, please wait..")
+                self.ebsd = EBSDmap(file_path, plot=True, hist=False)
+                self.extract_microstructure_params()
+            self_closing_message("Data from EBSD map imported successfully.")
+        except:
+            self_closing_message("ERROR: EBSD map could not be imported!")
+        
+    def write_stat_param(self):
+        if self.ms_stats is None:
+            self_closing_message("No stats created yet.")
+        else:
+            file_path = filedialog.asksaveasfilename()
+            if file_path:
+                self_closing_message(f"Saving stats file as {file_path}.")
+                write_stats(self.ms_stats, file_path)
 
     def import_stats(self):
         """Import statistical data ."""
-        file_path = filedialog.askopenfilename(title="Select statistics file", filetypes=[("Stats files", "*.json")])
-        if file_path:
-            ms_stats = import_stats(file_path)
-            self.matname_var1.set(ms_stats['Phase']['Name'])
-            self.nvox_var1.set(ms_stats['RVE']['Nx'])
-            self.size_var1.set(ms_stats['RVE']['sideX'])
-            self.periodic_var1.set(ms_stats['Simulation']['periodicity'])
-
-            self.eq_diameter_sig.set(ms_stats['Equivalent diameter']['sig'])
-            self.eq_diameter_scale.set(ms_stats['Equivalent diameter']['scale'])
-            self.eq_diameter_loc.set(ms_stats['Equivalent diameter']['loc'])
-            self.eq_diameter_min.set(ms_stats['Equivalent diameter']['cutoff_min'])
-            self.eq_diameter_max.set(ms_stats['Equivalent diameter']['cutoff_max'])
-
-            self.aspect_ratio_sig.set(ms_stats['Aspect ratio']['sig'])
-            self.aspect_ratio_scale.set(ms_stats['Aspect ratio']['scale'])
-            self.aspect_ratio_loc.set(ms_stats['Aspect ratio']['loc'])
-            self.aspect_ratio_min.set(ms_stats['Aspect ratio']['cutoff_min'])
-            self.aspect_ratio_max.set(ms_stats['Aspect ratio']['cutoff_max'])
-
-            self.tilt_angle_kappa.set(ms_stats['Tilt angle']['kappa'])
-            self.tilt_angle_loc.set(ms_stats['Tilt angle']['loc'])
-            self.tilt_angle_min.set(ms_stats['Tilt angle']['cutoff_min'])
-            self.tilt_angle_max.set(ms_stats['Tilt angle']['cutoff_max'])
-
-        self_closing_message("Statistical data imported successfully.")
+        try:
+            file_path = filedialog.askopenfilename(title="Select statistics file", filetypes=[("Stats files", "*.json")])
+            if file_path:
+                ms_stats = import_stats(file_path)
+                self.matname_var1.set(ms_stats['Phase']['Name'])
+                self.nvox_var1.set(ms_stats['RVE']['Nx'])
+                self.size_var1.set(ms_stats['RVE']['sideX'])
+                self.periodic_var1.set(ms_stats['Simulation']['periodicity'])
+    
+                self.eq_diameter_sig.set(ms_stats['Equivalent diameter']['sig'])
+                self.eq_diameter_scale.set(ms_stats['Equivalent diameter']['scale'])
+                self.eq_diameter_loc.set(ms_stats['Equivalent diameter']['loc'])
+                self.eq_diameter_min.set(ms_stats['Equivalent diameter']['cutoff_min'])
+                self.eq_diameter_max.set(ms_stats['Equivalent diameter']['cutoff_max'])
+    
+                self.aspect_ratio_sig.set(ms_stats['Aspect ratio']['sig'])
+                self.aspect_ratio_scale.set(ms_stats['Aspect ratio']['scale'])
+                self.aspect_ratio_loc.set(ms_stats['Aspect ratio']['loc'])
+                self.aspect_ratio_min.set(ms_stats['Aspect ratio']['cutoff_min'])
+                self.aspect_ratio_max.set(ms_stats['Aspect ratio']['cutoff_max'])
+    
+                self.tilt_angle_kappa.set(ms_stats['Tilt angle']['kappa'])
+                self.tilt_angle_loc.set(ms_stats['Tilt angle']['loc'])
+                self.tilt_angle_min.set(ms_stats['Tilt angle']['cutoff_min'])
+                self.tilt_angle_max.set(ms_stats['Tilt angle']['cutoff_max'])
+                self.ms_stats = ms_stats
+                self_closing_message("Statistical data imported successfully.")
+        except:
+            self_closing_message("ERROR: Statistocs paramaters could not be imported!")
 
     def extract_microstructure_params(self):
         """Extracts microstructure parameters from the EBSD data."""
@@ -312,7 +328,7 @@ class particle_rve(object):
         size = int(self.size_var1.get())
         periodic = self.periodic_var1.get()
 
-        ms_stats = {
+        self.ms_stats = {
             'Grain type': 'Elongated',
             'Equivalent diameter': {
                 'sig': self.eq_diameter_sig.get(), 'scale': self.eq_diameter_scale.get(),
@@ -333,7 +349,7 @@ class particle_rve(object):
             'Simulation': {'periodicity': periodic, 'output_units': 'mm'}
         }
 
-        self.ms = Microstructure(descriptor=ms_stats, name=f"{matname}_{texture}_texture")
+        self.ms = Microstructure(descriptor=self.ms_stats, name=f"{matname}_{texture}_texture")
         self.ms.init_RVE()
         if self.ebsd is None:
             gs_data = None
