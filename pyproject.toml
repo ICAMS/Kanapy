@@ -56,9 +56,11 @@ dev = ["pytest-runner", "black", "build", "twine"]
 [project.scripts]
 kanapy = "kanapy.cli:start"
 
-[tool.setuptools]
-package-dir = { "" = "src" }
-packages = ["kanapy"]
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-data]
 # include MTEX library
