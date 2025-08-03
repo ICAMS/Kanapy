@@ -45,13 +45,7 @@ The preferred method to install Kanapy is through Anaconda or Miniconda
 Python distributions. If you do not have any, we suggest installing
 [miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
-It can be installed from [conda-forge](https://conda-forge.org) by
-
-```
-$ conda install kanapy -c conda-forge
-```
-
-or from [PyPi](https://pypi.org/project/kanapy/) via pip
+It can be installed from [PyPi](https://pypi.org/project/kanapy/) via pip
 
 ```
 $ pip install kanapy
