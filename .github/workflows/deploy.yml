@@ -28,12 +28,6 @@ jobs:
         
       - name: Check distribution metadata
         run: twine check dist/*
-
-      - name: List built distributions
-        run: ls -lh dist/
-
-      - name: Inspect wheel metadata
-        run: unzip -p $(ls dist/*.whl) '**/METADATA'
   
       - name: Upload to PyPI
         env:
