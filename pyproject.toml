@@ -38,6 +38,9 @@ dependencies = [
     "seaborn",
     "click",
     "tqdm",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest",
     "networkx",
     "orix",
     "scikit-image",
@@ -48,7 +51,7 @@ dependencies = [
 Homepage = "https://github.com/ICAMS/Kanapy"
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "pytest-mock", "pytest-runner", "black", "build", "twine"]
+dev = ["pytest-runner", "black", "build", "twine"]
 
 [project.scripts]
 kanapy = "kanapy.cli:start"
