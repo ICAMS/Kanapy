@@ -17,9 +17,13 @@ jobs:
 
       - name: Install build backend
         run: python -m pip install --upgrade build
+        run: python -m pip install --upgrade twine
 
       - name: Build sdist/wheel
         run: python -m build
+        
+      - name: Check distribution metadata
+        run: twine check dist/*
           
       - name: Publish to PyPI (with token)
         uses: pypa/gh-action-pypi-publish@v1.8.8
