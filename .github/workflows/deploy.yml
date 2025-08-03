@@ -28,4 +28,5 @@ jobs:
       - name: Publish to PyPI (with token)
         uses: pypa/gh-action-pypi-publish@v1.8.8
         with:
+          user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
