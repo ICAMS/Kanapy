@@ -24,8 +24,8 @@ jobs:
 
       - name: Build sdist/wheel
         run: python -m build
-
-      - name: Publish to PyPI (classic token)
-        uses: pypa/gh-action-pypi-publish@release/v1
+          
+      - name: Publish to PyPI (with token)
+        uses: pypa/gh-action-pypi-publish@v1.8.8
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
