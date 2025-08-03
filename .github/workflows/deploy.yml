@@ -35,8 +35,8 @@ jobs:
       - name: Inspect wheel metadata
         run: unzip -p $(ls dist/*.whl) '**/METADATA'
   
-      - name: Publish to PyPI (with token)
-        uses: pypa/gh-action-pypi-publish@v1.8.8
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Upload to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*
