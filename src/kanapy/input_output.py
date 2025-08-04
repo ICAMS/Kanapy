@@ -1148,6 +1148,10 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         f.write('*Element Output, directions=YES \n')
         f.write('LE, MISES, PE, PEEQ, S, SDEG \n')
         f.write('*Output, history, frequency=0 \n')
+        f.write('** \n')
+        f.write('** HISTORY OUTPUT: H-Output-1 \n')
+        f.write('** \n')
+        f.write('*Output, history, variable=PRESELECT \n')
         f.write('*End Step \n')
 
     print('---->DONE! \n')
