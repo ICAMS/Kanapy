@@ -349,7 +349,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                 5: ("V011", 1),
             }
 
-            nz = [(i, v) for i, v in enumerate(value) if v != 0]
+            nz = [(i, v) for i, v in enumerate(value) if v != '*']
             if len(nz) == 1:
                 idx, val = nz[0]
                 node, direction = strain_map[idx]
