@@ -1,4 +1,0 @@
-%% Geometry Related Classes
-%
-%%
-%

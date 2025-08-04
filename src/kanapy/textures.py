@@ -7,7 +7,7 @@ import os
 import matlab.engine
 import numpy as np
 import matplotlib.pyplot as plt
-from kanapy.util import MTEX_DIR, ROOT_DIR, MAIN_DIR
+from kanapy import MTEX_DIR, ROOT_DIR
 from scipy.stats import lognorm, vonmises
 import logging
 
@@ -79,8 +79,6 @@ class EBSDmap:
         eng = matlab.engine.start_matlab()
         eng.addpath(MTEX_DIR, nargout=0)
         eng.addpath(ROOT_DIR, nargout=0)
-        mat_path = os.path.join(MAIN_DIR, 'src', 'kanapy')
-        eng.addpath(mat_path, nargout=0)
         eng.startup(nargout=0)
         self.eng = eng
 
@@ -318,8 +316,6 @@ def get_ipf_colors(ori_list, color_key=0):
     eng = matlab.engine.start_matlab()
     eng.addpath(MTEX_DIR, nargout=0)
     eng.addpath(ROOT_DIR, nargout=0)
-    mat_path = os.path.join(MAIN_DIR, 'src', 'kanapy')
-    eng.addpath(mat_path, nargout=0)
     eng.startup(nargout=0)
     
     # get colors
@@ -363,8 +359,6 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     eng = matlab.engine.start_matlab()
     eng.addpath(MTEX_DIR, nargout=0)
     eng.addpath(ROOT_DIR, nargout=0)
-    mat_path = os.path.join(MAIN_DIR, 'src', 'kanapy')
-    eng.addpath(mat_path, nargout=0)
     eng.startup(nargout=0)
 
     # prepare parameters
@@ -425,8 +419,6 @@ def createOrisetRandom(num, omega=7.5, hist=None, shared_area=None,
     eng = matlab.engine.start_matlab()
     eng.addpath(MTEX_DIR, nargout=0)
     eng.addpath(ROOT_DIR, nargout=0)
-    mat_path = os.path.join(MAIN_DIR + 'src' + 'kanapy')
-    eng.addpath(mat_path, nargout=0)
     eng.startup(nargout=0)
 
     omega = omega * np.pi / 180.

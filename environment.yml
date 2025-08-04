@@ -1,10 +1,16 @@
 name: knpy
 channels:
   - conda-forge
+  - defaults
 dependencies:
   - python=3.10
   - numpy
   - scipy
+  - ipython
+  - ipykernel
+  - jupyterlab
+  - notebook
+  - nb_conda_kernels
   - pytest
   - pytest-mock
   - pytest-cov
@@ -12,10 +18,9 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - tqdm
-  - matplotlib=3.9.4
+  - matplotlib
   - seaborn
   - click
-  - jupyter
   - orix
   - scikit-image
   - networkx

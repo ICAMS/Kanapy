@@ -1,4 +1,0 @@
-IsotropicTheory
-AnisotropicTheory
-WaveVelocities
-CPOSeismicProperties

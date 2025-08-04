@@ -2,19 +2,23 @@
 import os
 import shutil
 import click
-from kanapy.util import MAIN_DIR
+import zipfile
+import requests
+import webbrowser
+from io import BytesIO
+from kanapy import __version__
 
-
+    
 @click.group()
+@click.version_option(version=__version__)
 @click.pass_context
 def main(ctx):    
     pass
 
-
 @main.command(name='gui')
 @click.pass_context
 def gui(ctx):
-    """ Start Kanapy's GUI """
+    """ Start Kanapy's GUI. """
     import matplotlib.pyplot as plt
     import tkinter as tk
     import tkinter.font as tkFont
@@ -47,55 +51,69 @@ def gui(ctx):
 
 
 @main.command(name='runTests')
-@click.option('-no_texture', default=False)
+@click.option('--no_texture', default=False)
 @click.pass_context
 def tests(ctx, no_texture: bool):
     """ Runs unittests built within kanapy."""
-    click.echo('')
+    click.echo('Will only work in root directory of kanapy installation.')
+    cwd = os.getcwd()
     if no_texture:
-        t1 = "{0}/tests/test_collide_detect_react.py".format(MAIN_DIR)
-        t2 = "{0}/tests/test_entities.py".format(MAIN_DIR)
-        t3 = "{0}/tests/test_input_output.py".format(MAIN_DIR)
-        t4 = "{0}/tests/test_packing.py".format(MAIN_DIR)
-        t5 = "{0}/tests/test_voxelization.py".format(MAIN_DIR)
+        t1 = "{0}/tests/test_collide_detect_react.py".format(cwd)
+        t2 = "{0}/tests/test_entities.py".format(cwd)
+        t3 = "{0}/tests/test_input_output.py".format(cwd)
+        t4 = "{0}/tests/test_packing.py".format(cwd)
+        t5 = "{0}/tests/test_voxelization.py".format(cwd)
         os.system(f"pytest {t1} {t2} {t3} {t4} {t5} -v")
     else:
-        os.system("pytest {0}/tests/ -v".format(MAIN_DIR))
-    cwd = os.getcwd()
+        os.system("pytest {0}/tests/ -v".format(cwd))
     shutil.rmtree(os.path.join(cwd, "dump_files"))
-    click.echo('')    
+    click.echo('')
         
     
-@main.command(name='genDocs')
+@main.command(name='readDocs')
 @click.pass_context
-def docs(ctx):    
-    """ Generates an HTML-based reference documentation."""
-    
-    click.echo('')
-    os.system("make -C {0}/docs/ clean && make -C {0}/docs/ html".format(MAIN_DIR))      
-    click.echo('')
-    click.echo("The HTML documentation can be found at '/path/to/your/kanapy/docs/index.html'")
-    click.echo('')
+def docs(ctx):
+    """Open webpage with  Kanapy documentation."""
+    webbrowser.open("https://icams.github.io/Kanapy/")
 
 
 @main.command(name='copyExamples')
 @click.pass_context
-def docs(ctx):
-    """ Copies examples to local filesystem."""
+def download_subdir(ctx):
+    """
+    Download examples from Kanapy's GitHub repository.
 
-    click.echo('')
-    dst = os.path.join(os.getcwd(), 'examples')
-    epath = os.path.join(MAIN_DIR, 'examples')
-    if os.path.exists(dst):
-        raise IsADirectoryError('{0} already exists'.format(dst))
-    shutil.copytree(epath, dst)
-    click.echo(f'Copied examples to "{dst}".')
+    """
+    zip_url = f"https://github.com/ICAMS/kanapy/archive/refs/heads/master.zip"
+    output_dir = os.path.join(os.getcwd(), 'kanapy_examples')
+    subdir_prefix = "Kanapy-master/examples/"
 
+    click.echo(f"Downloading ZIP from: {zip_url}")
+    r = requests.get(zip_url)
+    r.raise_for_status()
+
+    with zipfile.ZipFile(BytesIO(r.content)) as zf:
+        members = [f for f in zf.namelist() if f.startswith(subdir_prefix)]
+        if not members:
+            click.echo(f"Error: Subdirectory 'examples' not found in branch 'master'.", err=True)
+            return
+
+        for member in members:
+            rel_path = os.path.relpath(member, subdir_prefix)
+            if not rel_path or member.endswith("/"):
+                continue
+            target_path = os.path.join(output_dir, rel_path)
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+            with open(target_path, "wb") as out_file:
+                out_file.write(zf.read(member))
+
+    click.echo(f"Extracted 'examples' from ICAMS/kanapy to '{output_dir}/'")
+    
 
 @main.command(name='setupTexture')
 @click.pass_context
 def setupTexture(ctx):
-    """ Stores the user provided MATLAB & MTEX paths for texture analysis."""
+    """ Starts Matlab engine and initializes MTEX."""
     setPaths()
 
 
@@ -116,70 +134,6 @@ def chkVersion(matlab):
 def setPaths():
     """ Starts matlab engine, after installation if required, and initializes MTEX.
     """
-
-    """
-    Legacy version   
-    # For MATLAB executable
-    click.echo('')
-    status1 = input('Is MATLAB installed in this system (yes/no): ')
-    str_yes = ['yes', 'y', 'Y', 'Yes', 'YES']
-    str_no = ['no', 'n', 'N', 'No', 'NO']
-    
-    if status1 in str_yes:
-        click.echo('Searching your system for MATLAB ...')
-        MATLAB = shutil.which("matlab")        
-
-        if MATLAB:
-            decision1 = input('Found MATLAB in {0}, continue (yes/no): '.format(MATLAB))
-            
-            if decision1 in str_yes:                
-
-                version = chkVersion(MATLAB)        # Get the MATLAB version
-                if version is None:
-                    click.echo('')
-                    click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
-                    
-                elif version < 2015:
-                    click.echo('')
-                    raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2015a and above')
-                userpath1 = MATLAB
-
-            elif decision1 in str_no:
-                userinput = input('Please provide the path to MATLAB executable: ')
-                
-                version = chkVersion(userinput)
-                if version is None:
-                    click.echo('')
-                    click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
-                elif version < 2024:
-                    click.echo('')
-                    raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2024a and above')
-                userpath1 = userinput
-                                    
-            else:
-                raise ValueError('Invalid entry!, Run: kanapy setuptexture again.')
-                            
-        else:
-            print('No MATLAB executable found!')            
-            userinput = input('Please provide the path to MATLAB executable: ')
-            
-            version = chkVersion(userinput)
-            if version is None:
-                click.echo('')
-                click.echo('MATLAB version is unknown, compatibility could not be verified.\n')
-            elif version < 2015:
-                raise ModuleNotFoundError('Sorry!, Kanapy is compatible with MATLAB versions 2024a and above.')
-            userpath1 = userinput
-                     
-    elif status1 in str_no:
-        click.echo("Kanapy's texture module requires MATLAB. Please install it.")
-        click.echo('')
-        userpath1 = False
-    else:
-        raise ValueError('Invalid entry!, Run: kanapy setupTexture again')
-        
-    # Create a file that stores the paths
-    if userpath1:"""
     # check if Matlab Engine library is already installed
     try:
         import matlab.engine
@@ -190,9 +144,9 @@ def setPaths():
         # ind = userpath1.find('bin')  # remove bin/matlab from matlab path
         # path = os.path.join(userpath1[0:ind], 'extern', 'engines', 'python')  # complete path to matlab engine
         # os.chdir(path)
-        res = os.system('python -m pip install matlabengine==24.1.2')
+        res = os.system('python -m pip install matlabengine==25.1.2')
         if res != 0:
-            click.echo('\n Error in installing matlab.engine. This feature requires Matlab 2024a or above.')
+            click.echo('\n Error in installing matlab.engine. This feature requires Matlab 2025a or above.')
             # click.echo('Please contact system administrator to run "> python -m pip install ."')
             # click.echo(f'in directory {path}')
             raise ModuleNotFoundError()
