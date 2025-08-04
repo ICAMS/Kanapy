@@ -94,3 +94,5 @@ venv.bak/
 PATHS.json
 # Log files
 *.log
+dump_files/ 
+libs/ 
