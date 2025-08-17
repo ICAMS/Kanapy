@@ -3,13 +3,14 @@ Tools for analysis of EBSD maps in form of .ang files
 
 @author: Alexander Hartmaier, Abhishek Biswas, ICAMS, Ruhr-Universität Bochum
 """
-import os
+# import os
+# import time
 import logging
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from kanapy.rve_stats import bbox
+from kanapy.rve_stats import get_grain_geom
 from orix import io, quaternion
 from orix import plot as ox_plot
 from orix.vector import Miller
@@ -94,25 +95,76 @@ def find_sim_neighbor(G, nn):
     return ng[nn], on[nn]
 
 
-def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
-    labels, counts = np.unique(label_array, return_counts=True)
-    nodes = []
-    for i, lbl in enumerate(labels):
-        info_dict = dict()
-        info_dict['npix'] = counts[i]
-        ix, iy = np.nonzero(label_array == lbl)
-        ind = np.ravel_multi_index((ix, iy), label_array.shape)
-        info_dict['pixels'] = ind
-        info_dict['ori_av'] = np.mean(emap.rotations.data[ind, :], axis=0)
-        info_dict['ori_std'] = np.std(emap.rotations.data[ind, :], axis=0)
-        nodes.append((lbl, info_dict))
+def summarize_labels(label_array, rotations, wanted_labels=None):
+    """
+    label_array: (H,W) int
+    rotations:   (H*W, D) float  (emap.rotations.data)
+    wanted_labels: Sequenz von Label-IDs; None => alle im Array
 
-    print(f'Building microstructure graph with {len(nodes)} nodes (grains).')
+    returns: list[(lbl, info_dict)]
+             info_dict: {'npix', 'pixels', 'ori_av', 'ori_std'}
+    """
+    lab = label_array.ravel()
+    N = lab.size
+    rot = rotations  # shape (N, D)
+
+    # Gruppierung: alle Pixel nach Label sortieren
+    order = np.argsort(lab, kind="stable")
+    lab_sorted = lab[order]
+
+    # Eindeutige Labels + Segmentstarts + Counts
+    uniq, starts, counts = np.unique(lab_sorted, return_index=True, return_counts=True)
+    ends = starts + counts
+
+    # Rotations in derselben Reihenfolge sortieren
+    rot_sorted = rot[order]
+
+    # Mittelwerte und Standardabweichungen pro Segment (reduceat ist sehr schnell)
+    sums = np.add.reduceat(rot_sorted, starts, axis=0)
+    means = sums / counts[:, None]
+
+    sq = rot_sorted * rot_sorted
+    sums_sq = np.add.reduceat(sq, starts, axis=0)
+    vars_ = sums_sq / counts[:, None] - means**2
+    stds = np.sqrt(np.maximum(vars_, 0.0))
+
+    # Pixelindizes pro Label (als Listen von 1D-Indizes)
+    pixels_list = np.split(order, starts[1:])  # Liste der Segmente in uniq-Reihenfolge
+
+    # Auswahl / Re-Ordering auf gewünschte Labels
+    if wanted_labels is None:
+        labels_out = uniq
+        idx = np.arange(len(uniq))
+    else:
+        labels_out = np.asarray(wanted_labels)
+        pos = {int(l): i for i, l in enumerate(uniq)}
+        idx = np.array([pos[int(l)] for l in labels_out], dtype=int)
+
+    nodes = []
+    for lbl, i in zip(labels_out, idx):
+        info = {
+            "npix": int(counts[i]),
+            "pixels": pixels_list[i],              # 1D-Indices in label_array.ravel()
+            "ori_av": means[i],                   # shape (D,)
+            "ori_std": stds[i],                   # shape (D,)
+        }
+        nodes.append((int(lbl), info))
+    return nodes
+
+
+def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
+    # t1 = time.time()
+    nodes = summarize_labels(label_array, emap.rotations.data)
+    # t2 = time.time()
+    # print(f'Time for extracting nodes: {t2 - t1}')
+    # print(f'Building microstructure graph with {len(nodes)} nodes (grains).')
     G = nx.Graph(label_map=label_array, symmetry=emap.phases.point_groups[phase],
                  dx=emap.dx, dy=emap.dy)
     G.add_nodes_from(nodes)
+    # t3 = time.time()
+    # print(f'Time for building graph: {t3 - t2}')
 
-    print('Adding edges (grain boundaries) to microstructure graph.')
+    # print('Adding edges (grain boundaries) to microstructure graph.')
     rows, cols = label_array.shape
     for x in range(rows):
         for y in range(cols):
@@ -122,6 +174,8 @@ def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
                     neighbor_label = label_array[px, py]
                     if neighbor_label != label_here:
                         G.add_edge(label_here, neighbor_label)
+    # t4 = time.time()
+    # print(f'Time for adding edges: {t4 - t3}')
     return G
 
 
@@ -219,9 +273,9 @@ class EBSDmap:
             ori : matlab object with grain orientations
             cs : matlab object with crystal structure
             grains : matlab object with grains in each phase
-            omega : orintations of major grain axis
+            omega : orientations of major grain axis
             gs_param : statistical grain size parameters
-            gs_data : grain sizesvonmises
+            gs_data : grain sizes
             ar_param
             ar_data
             om_param
@@ -393,26 +447,34 @@ class EBSDmap:
             for num, node in ms_graph.nodes.items():
                 hull = node['hull']
                 eqd = 2.0 * (hull.volume / np.pi) ** 0.5  # area of convex hull approximates grain better than pixels
-                # area = node['npix'] * self.dx * self.dy
-                # eqd = 2.0 * (area / np.pi)**0.5
                 pts = hull.points[hull.vertices]  # outer nodes of grain
-                # find bounding box to hull points
-                ea, eb, va, vb = bbox(pts, two_dim=True, return_vector=True)
+                # analyze geometry of point cloud
+                ea, eb, va, vb = get_grain_geom(pts, method='ellipsis', two_dim=True)  # std: 'ellipsis'
+                # assert ea >= eb
+                if eb < 0.01 * ea:
+                    logging.warning(f'Grain {num} has too high aspect ratio: main axes: {ea}, {eb}')
+                    eb = 0.01 * ea
+                sc_fct = eqd / np.sqrt(ea**2 + eb**2)  # rescale axes of ellipsis to ensure consistency with eqd
+                ea *= sc_fct
+                eb *= sc_fct
                 # assert np.dot(va, vb) < 1.e-9
                 # assert np.isclose(np.linalg.norm(va), 1.0)
-                omega = np.acos(va[0])  # angle of major axis against y-axis of map [0, pi]
+                omega = np.arccos(va[0])  # angle of major axis against y-axis of map in range [0, pi]
                 node['max_dia'] = ea
                 node['min_dia'] = eb
                 node['equ_dia'] = eqd
                 node['maj_ax'] = va
                 node['min_ax'] = vb
                 node['omega'] = omega
-                node['center'] = np.mean(hull.points, axis=0)
+                node['center'] = hull.points.mean(axis=0)
                 arr_a.append(ea)
                 arr_b.append(eb)
                 arr_eqd.append(eqd)
                 arr_om.append(omega)
             arr_om = np.array(arr_om)
+            arr_a = np.array(arr_a)
+            arr_b = np.array(arr_b)
+            arr_eqd = np.array(arr_eqd)
             print('\n--------------------------------------------------------')
             print('Statistical microstructure parameters in pixel map ')
             print('--------------------------------------------------------')
@@ -430,10 +492,17 @@ class EBSDmap:
             data['gs_moments'] = [dscale, dsig]
             if show_hist:
                 fig, ax = plt.subplots()
-                x = np.linspace(min(arr_eqd), max(arr_eqd), 150)
+                hc, hb = np.histogram(arr_eqd, bins=20)
+                x0 = hb[0]
+                ind = np.nonzero(hc == 1)[0]  # find first bin with count == 1
+                if len(ind) > 0:
+                    x1 = hb[ind[0]]
+                else:
+                    x1 = max(arr_eqd)
+                x = np.linspace(x0, x1, 150)
                 y = lognorm.pdf(x, dsig, loc=doffs, scale=dscale)
-                ax.plot(x, y, '-r', label='fit')
-                ax.hist(arr_eqd, bins=20, density=True, label='data')
+                ax.plot(x, y, '-r', label='lognorm fit')
+                ax.hist(arr_eqd, bins=20, range=(x0, x1), density=True, label='data')
                 plt.legend()
                 plt.title('Histogram of grain equivalent diameters')
                 plt.xlabel('Equivalent diameter (micron)')
@@ -441,25 +510,30 @@ class EBSDmap:
                 plt.show()
 
             # grain aspect ratio
-            asp = np.zeros_like(arr_a)
-            for i, va in enumerate(arr_a):
-                xu = max(va, arr_b[i])
-                xl = min(va, arr_b[i])
-                asp[i] = xu / xl
+            asp = arr_a / arr_b
             aoffs = 0.
             asp_log = np.log(asp)
             ascale = np.exp(np.median(asp_log))  # lognorm.median(asig, loc=aoffs, scale=ascale)
             asig = np.std(asp_log)  # lognorm.std(asig, loc=aoffs, scale=ascale)
             data['ar_param'] = np.array([asig, aoffs, ascale])
             data['ar_data'] = asp
+            if np.amax(asp) > 50:
+                print(f'*** Max ASP: {np.amax(asp)}')
             data['ar_moments'] = [ascale, asig]
             if show_hist:
                 # plot distribution of aspect ratios
                 fig, ax = plt.subplots()
-                x = np.linspace(np.amin(asp), np.amax(asp), 150)
+                hc, hb = np.histogram(asp, bins=20)
+                x0 = hb[0]
+                ind = np.nonzero(hc == 1)[0]  # find first bin with count == 1
+                if len(ind) > 0:
+                    x1 = hb[ind[0]]
+                else:
+                    x1 = max(asp)
+                x = np.linspace(x0, x1, 150)
                 y = lognorm.pdf(x, asig, loc=aoffs, scale=ascale)
-                ax.plot(x, y, '-r', label='fit lognorm')
-                ax.hist(asp, bins=20, density=True, label='density')
+                ax.plot(x, y, '-r', label='lognorm fit')
+                ax.hist(asp, bins=20, range = (x0, x1), density=True, label='data')
                 plt.legend()
                 plt.title('Histogram of grain aspect ratio')
                 plt.xlabel('aspect ratio')
@@ -468,18 +542,17 @@ class EBSDmap:
 
             # angles of main axis
             # fit von Mises distribution (circular normal distribution) to data
-            omega_p = 2.0 * arr_om - np.pi  # rescale angles from [0, pi] to [-pi,pi] for von Mises distr. fit
-            kappa, oloc, oscale = vonmises.fit(omega_p)
+            kappa, oloc, oscale = vonmises.fit(2*arr_om - np.pi)
             med_om = vonmises.median(kappa, loc=oloc)  # scale parameter has no effect on vonmises distribution
             std_om = vonmises.std(kappa, loc=oloc)
             data['om_param'] = np.array([kappa, oloc])
-            data['om_data'] = arr_om  # omega_p
+            data['om_data'] = arr_om
             data['om_moments'] = [med_om, std_om]
             if show_hist:
                 fig, ax = plt.subplots()
                 x = np.linspace(-np.pi, np.pi, 200)  # np.amin(omega), np.amax(omega), 150)
                 y = vonmises.pdf(x, kappa, loc=oloc)
-                ax.plot(0.5 * (x + np.pi), 2 * y, '-r', label='fit')
+                ax.plot(0.5*(x+np.pi), 2 * y, '-r', label='von Mises fit')
                 ax.hist(arr_om, bins=40, density=True, label='data')
                 plt.legend()
                 plt.title('Histogram of tilt angles of major axes')
@@ -501,7 +574,7 @@ class EBSDmap:
             self.plot_mo_map()
             self.plot_ipf_map()
             self.plot_segmentation()
-            self.plot_inverse_pole_figure()
+            #self.plot_inverse_pole_figure()
 
         if show_grains:
             self.plot_grains()

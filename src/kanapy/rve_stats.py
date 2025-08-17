@@ -154,6 +154,156 @@ def project_pts(pts, ctr, axis):
         ppt[i, :] = p - pdist[i] * axis
     return ppt
 
+def _fit_ellipse_direct(x, y):
+    """
+    Direct ellipse fit (Fitzgibbon 1999) in normalised coords
+    Fit conic: A x^2 + B x y + C y^2 + D x + E y + F = 0, mit 4AC - B^2 > 0 (Ellipsis).
+    Return: Parameter (A,B,C,D,E,F) in normalised coords
+    """
+    x = x[:, None]
+    y = y[:, None]
+    Dm = np.hstack([x*x, x*y, y*y, x, y, np.ones_like(x)])
+    S = Dm.T @ Dm
+    Cc = np.zeros((6,6))
+    Cc[0,2] = Cc[2,0] = 2
+    Cc[1,1] = -1
+    try:
+        Sinv = np.linalg.inv(S)
+    except np.linalg.LinAlgError:
+        Sinv = np.linalg.pinv(S)
+    M = Sinv @ Cc
+    eigvals, eigvecs = np.linalg.eig(M)
+    # take  EV with 4AC - B^2 > 0
+    cand = None
+    for k in range(eigvecs.shape[1]):
+        a = np.real(eigvecs[:, k])
+        A,B,C,D,E,F = a
+        if 4*A*C - B*B > 0:
+            cand = a
+            break
+    if cand is None:
+        raise RuntimeError("No elliptical fit was found.")
+    # scale to meaningful value
+    return cand / cand[-1]
+
+def _params_to_conic3(A,B,C,D,E,F):
+    # 3x3 conic matrix in homogeneous coords
+    return np.array([
+        [A,  B/2, D/2],
+        [B/2, C,  E/2],
+        [D/2, E/2, F ]
+    ], dtype=float)
+
+def _conic3_to_params(K):
+    A = K[0,0]; B = 2*K[0,1]; C = K[1,1]
+    D = 2*K[0,2]; E = 2*K[1,2]; F = K[2,2]
+    return A,B,C,D,E,F
+
+def _transform_conic3(K_prime, mu, scale):
+    """
+    K' in normalized coords (x'=(x-mu)/scale). Original x = S x' + mu.
+    Homogeneous Affine-Transform: K = T^{-T} K' T^{-1},
+    with T = [[sx,0,mu_x],[0,sy,mu_y],[0,0,1]].
+    """
+    sx, sy = float(scale[0]), float(scale[1])
+    mx, my = float(mu[0]),   float(mu[1])
+    T = np.array([[sx, 0.0, mx],
+                  [0.0, sy, my],
+                  [0.0, 0.0, 1.0]])
+    Ti = np.linalg.inv(T)
+    return Ti.T @ K_prime @ Ti
+
+def _conic3_to_geometric(K):
+    """
+    K (3x3) -> Centre, principal directions, semi axes.
+    Ellipsis condition: Q (2x2) pos. definite, and F_c < 0.
+    """
+    Q = K[:2,:2]
+    q = K[:2,2]
+    F = K[2,2]
+
+    # Numerical stability: if Q neg. definite, invert everything
+    w, V = np.linalg.eigh(Q)
+    if w[0] < 0 and w[1] < 0:
+        K = -K
+        Q = -Q; q = -q; F = -F
+        w, V = np.linalg.eigh(Q)
+    # Centre from Q c = -q
+    try:
+        c = -np.linalg.solve(Q, q)
+    except np.linalg.LinAlgError:
+        raise RuntimeError("Ellipsis centre not determined (Q is singular).")
+    # value at centre: F_c = c^T Q c + 2 q^T c + F  (= f(c))
+    F_c = float(c.T @ Q @ c + 2.0 * q.T @ c + F)
+
+    # check ellipticality
+    if not (w[0] > 0 and w[1] > 0 and F_c < 0):
+        raise RuntimeError("No valid ellipsis parameters found.")
+    # semi-axes (a >= b): a = sqrt(-F_c / λ_min), b = sqrt(-F_c / λ_max)
+    order = np.argsort(w)          # increasing
+    lam = w[order]
+    V = V[:, order]                # cols = unit vect. to lam
+    a = np.sqrt(-F_c / lam[0])
+    b = np.sqrt(-F_c / lam[1])
+    # assert a >= b
+    if b < 0.01*a:
+        raise RuntimeError(f'Aspect ratio too high: axes {a}, {b}')
+    # Principal directions as unit vectors (columns)
+    u_major = V[:, 0] / np.linalg.norm(V[:, 0])  # Richtung zu λ_min -> große Halbachse
+    u_minor = V[:, 1] / np.linalg.norm(V[:, 1])
+    return a, b, u_major, u_minor
+
+
+def get_grain_geom(points, method='raw', two_dim=False):
+    """
+    Fit of an ellipsis to the 2D convex hull of grain pixels.
+
+    Returns:
+      a, b: semi-axes with a >= b
+      u_major, u_minor: unit vector of principal directions
+    """
+    if not two_dim:
+        raise ModuleNotFoundError('Method "get_grain_geom" not implemented in 3D yet.')
+    if len(points) < 5:
+        if not method.lower() in ['r', 'raw']:
+            logging.info('Too few points on grain hull, fallback to method "raw".')
+        method = 'raw'
+    if method.lower() in ['e', 'ell', 'ellipsis']:
+        try:
+            # get grain geometry by fitting an ellipsis to points on hull
+            mu = points.mean(axis=0)
+            sc = points.std(axis=0)
+            sc[sc == 0] = 1.0
+            Qn = (points - mu) / sc
+            A,B,C,D,E,F = _fit_ellipse_direct(Qn[:,0], Qn[:,1])
+            Kp = _params_to_conic3(A,B,C,D,E,F)
+            K = _transform_conic3(Kp, mu, sc)
+            ea, eb, va, vb = _conic3_to_geometric(K)
+        except Exception as e:
+            logging.info(f'Fallback to method "raw" due to exception {e}.')
+            ea, eb, va, vb = bbox(points, return_vector=True, two_dim=two_dim)
+
+    elif method.lower() == 'pca':
+        # perform principal component analysis to points on hull
+        Y = points - points.mean(axis=0)
+        C = (Y.T @ Y) / (len(points) - 1)
+        vals, vecs = np.linalg.eigh(C)  # for symmetric matrices
+        order = np.argsort(vals)[::-1]
+        vals = vals[order]
+        vecs = vecs[:, order]
+        scales = np.sqrt(np.maximum(vals, 0.0))
+        ea = scales[0]
+        eb = scales[1]
+        va = vecs[0, :]
+        vb = vecs[1, :]
+
+    elif method.lower() in ['r', 'raw']:
+        # get rectangular bounding box of points on hull
+        ea, eb, va, vb = bbox(points, return_vector=True, two_dim=two_dim)
+    else:
+        raise ValueError(f'Method "{method}" not implemented in "get_grain_geom" yet.')
+    return ea, eb, va, vb
+
 
 def bbox(pts, return_vector=False, two_dim=False):
     # Approximate smallest rectangular cuboid around points of grains
