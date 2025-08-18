@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,8 +8,6 @@ version = "6.4.4"
 description = "Python package for microstructure analyse and generation of microstructure models"
 authors = [
     { name = "Alexander Hartmaier", email = "alexander.hartmaier@rub.de" },
-]
-maintainers = [
     { name = "Mahesh R.G. Prasad" },
     { name = "Abhishek Biswas" },
     { name = "Golsa Tolooei Eshlaghi" },
@@ -18,8 +16,10 @@ maintainers = [
     { name = "Yousef Rezek" },
     { name = "Hrushikesh Uday Bhimavarapu" }
 ]
-license = { file = "LICENSE" }
 readme = "README.md"
+license = "AGPL-3.0-or-later"
+license-files = [ "LICENSE" ]
+requires-python = ">=3.9,<3.12"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
@@ -30,7 +30,6 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.9,<3.12"
 dependencies = [
     "numpy",
     "matplotlib",
@@ -47,9 +46,6 @@ dependencies = [
     "jsonschema"
 ]
 
-[project.urls]
-Homepage = "https://github.com/ICAMS/Kanapy"
-
 [project.optional-dependencies]
 dev = ["pytest-runner", "black", "build", "twine"]
 
@@ -65,3 +61,7 @@ where = ["src"]
 [tool.setuptools.package-data]
 # include MTEX library
 "kanapy" = ["libs/*"]
+
+[project.urls]
+Homepage = "https://github.com/ICAMS/Kanapy"
+
