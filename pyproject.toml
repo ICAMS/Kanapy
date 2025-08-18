@@ -18,7 +18,7 @@ authors = [
 ]
 readme = "README.md"
 license = "AGPL-3.0-or-later"
-license-files = [ "LICENSE" ]
+license-files = [ "LICENSE", "src/kanapy/libs/mtex/COPYING.txt" ]
 requires-python = ">=3.9,<3.13"
 classifiers = [
   "Development Status :: 4 - Beta",
