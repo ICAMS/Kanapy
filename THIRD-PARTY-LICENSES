@@ -1,0 +1,94 @@
+Kanapy – Third-Party Licenses
+=============================
+
+This project includes and/or depends on third-party components.
+Their licenses are listed below.
+
+----------------------------------------------------------------------
+Embedded / Redistributed Components (included in the source tree)
+----------------------------------------------------------------------
+
+MTEX Toolbox
+------------
+Project:   https://mtex-toolbox.github.io/
+Copyright: © 2000–2025 Ralf Hielscher and contributors
+License:   GNU General Public License, version 2 or later (GPL-2.0-or-later)
+
+A copy of the MTEX license is provided at:
+  src/kanapy/libs/mtex/COPYING.txt
+
+Notes:
+- Kanapy itself is licensed as stated in the top-level LICENSE file.
+- The MTEX-specific license applies only to the MTEX code/files included
+  in this distribution.
+
+----------------------------------------------------------------------
+Runtime / Build Dependencies (not bundled with Kanapy)
+----------------------------------------------------------------------
+
+The following libraries are installed separately via PyPI/conda and
+carry their own licenses in their respective distributions. They are
+listed here for the convenience of users and for compliance reviews.
+
+NumPy
+-----
+License:  BSD 3-Clause
+Project:  https://numpy.org
+License:  https://numpy.org/doc/stable/license.html
+
+SciPy
+-----
+License:  BSD
+Project:  https://scipy.org
+License:  https://scipy.org/scipylib/license.html
+
+Matplotlib
+----------
+License:  Matplotlib License (PSF-based)
+Project:  https://matplotlib.org
+License:  https://matplotlib.org/stable/users/project/license.html
+
+scikit-image
+----------------------
+License:  BSD 3-Clause
+Project:  https://scikit-image.org
+License:  https://scikit-image.org/docs/stable/license.html
+
+orix
+----
+License:  GPL v3
+Project:  https://github.com/EMsoft-org/orix
+License:  https://github.com/EMsoft-org/orix/blob/main/LICENSE
+
+networkx
+---------------------------
+License:  BSD 3-Clause
+Project:  https://networkx.org
+License:  https://networkx.org/documentation/stable/#license
+
+----------------------------------------------------------------------
+Test / dev (not bundled with Kanapy)
+----------------------------------------------------------------------
+- pytest
+  License: MIT License
+  Project: https://pytest.org
+  License text: https://docs.pytest.org/en/stable/license.html
+
+- black
+  License: MIT License
+  Project: https://github.com/psf/black
+
+- build
+  License: MIT License
+  Project: https://pypi.org/project/build/
+
+- twine
+  License: Apache License 2.0
+  Project: https://pypi.org/project/twine/
+
+----------------------------------------------------------------------
+Notes
+----------------------------------------------------------------------
+- Only MTEX is redistributed within this repository; all other
+  dependencies are fetched from package managers and include their own
+  license information.
