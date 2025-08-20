@@ -206,6 +206,8 @@ Kanapy is made available under the GNU Affero General Public License (AGPL) v3
 MTEX is licensed under the GNU GPL v2 [license](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).  
 The additional materials under examples and in the documentation are published under the Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) [license](https://creativecommons.org/licenses/by-nc-sa/4.0/). 
 
+&copy; 2025 by Authors, ICAMS/Ruhr University Bochum, Germany
+
 ## About
 
 The name Kanapy is derived from the sanskrit word
