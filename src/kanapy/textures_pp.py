@@ -15,7 +15,7 @@ from scipy.special import legendre, beta
 from scipy.optimize import fminbound
 from scipy.integrate import quad
 from skimage.segmentation import mark_boundaries
-from orix import io, quaternion
+from orix import io
 from orix import plot as ox_plot
 from orix.quaternion import Orientation
 from orix.quaternion.symmetry import Symmetry
@@ -558,8 +558,8 @@ def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
                     raise RuntimeError(f'no: {no}, but increment is only #{octr-ho}')
         # create Orientations from quaternion array
         ori_f = Orientation(ori_red, symmetry=cs)
-        assert ~np.isnan(ori_f.data).any()
-        assert ~np.isinf(ori_f.data).any()
+        assert not np.isnan(ori_f.data).any()
+        assert not np.isinf(ori_f.data).any()
 
         # Step 6: Compute reduced ODF
         odfred = odf_est(ori_f, odf, halfwidth=hw_stored, verbose=verbose)
@@ -1201,8 +1201,8 @@ class EBSDmap:
         None.
 
         """
-        for i in self.ebsd.emap.phases.ids:
-            pg = self.ebsd.emap.phases[i].point_group.laue
+        for i in self.emap.phases.ids:
+            pg = self.emap.phases[i].point_group.laue
             fig = plt.figure(figsize=(8, 8))
             ax0 = fig.add_subplot(111, projection="ipf", symmetry=pg, zorder=2)
             ax0.plot_ipf_color_key(show_title=False)
@@ -1375,7 +1375,7 @@ def get_ipf_colors(ori_list, color_key=0):
     """
 
     # get colors
-    if ~isinstance(ori_list, Orientation):
+    if not isinstance(ori_list, Orientation):
         raise TypeError('Parameter "ori_list" must be an Orientation object.')
     ckey = ox_plot.IPFColorKeyTSL(ori_list.symmetry)
     ocol = ckey.orientation2color(ori_list)
@@ -1415,7 +1415,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     # prepare parameters
     if hist is not None or shared_area is not None:
         raise ModuleNotFoundError('The grain-boundary-texture module is currently only available in kanapy-mtex.')
-    if cs is None or ~isinstance(cs, quaternion.symmetry.Symmetry):
+    if cs is None or not isinstance(cs, Symmetry):
         logging.warning('Crystal Symmetry "cs" must be provided as Symmetry object.')
         print(type(cs))
     if degree:
@@ -1423,7 +1423,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     #    ang = np.deg2rad(ang)
     #else:
     #    ang = np.asarray(ang)
-    #assert ~np.isnan(ang).any()
+    #assert not np.isnan(ang).any()
     #ori = Orientation.from_euler(ang, cs)
     # psi = DeLaValleePoussinKernel(halfwidth=omega)
     if ang.size < Nbase/100:
@@ -1431,6 +1431,8 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         odf = ODF(ang, halfwidth=omega)
         ori = calc_orientations(odf, Nbase)
         assert ori.size == Nbase
+    else:
+        ori = ang
     ori, odfred, ero, res = texture_reconstruction(num, orientations=ori,
                                                    kernel_halfwidth=omega, verbose=verbose)
     if hist is None:
@@ -1448,8 +1450,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         #return np.array(eng.Euler(orilist))
 
 
-def createOrisetRandom(num, omega=7.5, hist=None, shared_area=None,
-                       cs='m-3m', Nbase=5000):
+def createOrisetRandom(num, hist=None, shared_area=None, cs=None):
     """
     Create a set of num Euler angles for Random texture.
     Other than knpy.createOriset() this method does not create an artificial
@@ -1477,22 +1478,21 @@ def createOrisetRandom(num, omega=7.5, hist=None, shared_area=None,
         Set of Euler angles
 
     """
-    # Simulate 10,000 orientations
-    # ori1 = Orientation.random(shape=10000)
-    omega = omega * np.pi / 180.
-    cs_ = orix.crystalSymmetry(cs)
-    ot = eng.orientation.rand(Nbase, cs_)
-    psi = eng.deLaValleePoussinKernel('halfwidth', omega)
-    ori, odfred, ero = \
-        eng.textureReconstruction(num, 'orientation', ot, 'kernel', psi,
-                                  nargout=3)
-    # ori = eng.project2FundamentalRegion(ori)
+    if hist is not None or shared_area is not None:
+        raise ModuleNotFoundError('The grain-boundary-texture module is currently only available in kanapy-mtex.')
+    if cs is None or not isinstance(cs, Symmetry):
+        logging.warning('Crystal Symmetry "cs" must be provided as Symmetry object.')
+        print(type(cs))
+
+    ori = Orientation.random(num, cs)
     if hist is None:
-        return np.array(eng.Euler(ori))
+        return ori
     else:
-        if shared_area is None:
-            raise ValueError('Shared grain boundary area (geometry["GBarea"]) must be provided if hist is given.')
-        orilist, ein, eout, mbin = \
-            eng.gb_textureReconstruction(matlab.double(hist), ori,
-                                         matlab.double(shared_area), len(hist), nargout=4)
-        return np.array(eng.Euler(orilist))
+        pass
+    # ori = eng.project2FundamentalRegion(ori)
+    #    if shared_area is None:
+    #        raise ValueError('Shared grain boundary area (geometry["GBarea"]) must be provided if hist is given.')
+    #    orilist, ein, eout, mbin = \
+    #        eng.gb_textureReconstruction(matlab.double(hist), ori,
+    #                                     matlab.double(shared_area), len(hist), nargout=4)
+    #    return np.array(eng.Euler(orilist))
