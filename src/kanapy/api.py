@@ -306,7 +306,7 @@ class Microstructure(object):
             self.mesh.grain_phase_dict[0] = grain_store
 
     def generate_orientations(self, data, ang=None, omega=None, Nbase=5000,
-                              hist=None, shared_area=None, iphase=None):
+                              hist=None, shared_area=None, iphase=None, verbose=False):
         """
         Calculates the orientations of grains to give a desired crystallographic texture.
 
@@ -323,16 +323,12 @@ class Microstructure(object):
         -------
 
         """
-        from kanapy import MTEX_AVAIL
-        try:
-            from kanapy.textures import EBSDmap, createOrisetRandom, createOriset
-        except Exception as e:
-            logging.error(f'An unexpected exception occurred: {e}')
-            raise ImportError('Matlab or MTEX might not be installed properly. ' +
-                              'Run "kanapy setupTexture" first to use this function.')
+        from kanapy import MTEX_AVAIL, EBSDmap, createOrisetRandom, createOriset
+        if MTEX_AVAIL:
+            logging.info('Using MTEX library to generate orientations.')
+        else:
+            logging.info('Using ORIX library to generate orientations.')
 
-        if not MTEX_AVAIL:
-            raise ModuleNotFoundError('MTEX not installed. Run "kanapy setupTexture" first to use this function.')
         if self.mesh.grains is None:
             raise ValueError('Grain geometry is not defined. Run voxelize first.')
         if shared_area is None:
@@ -351,11 +347,15 @@ class Microstructure(object):
 
         ori_dict = dict()
         for ip, ngr in enumerate(self.ngrains):
-            if type(data) is EBSDmap:
+            if isinstance(data, EBSDmap):
                 if iphase is None or iphase == ip:
+                    if gba is not None and not MTEX_AVAIL:
+                        logging.warning('Shared are is currently only available in kanapy-mtex.\n'
+                                        'This option will be ignored.')
+                        gba = None
                     ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba)
                     self.mesh.texture = "ODF"
-            elif type(data) is str:
+            elif isinstance(data, str):
                 if data.lower() in ['random', 'rnd']:
                     ori_rve = createOrisetRandom(ngr, Nbase=Nbase, hist=hist, shared_area=gba)
                     self.mesh.texture = "Random"
@@ -364,7 +364,7 @@ class Microstructure(object):
                         raise ValueError('To generate orientation sets of type "unimodal" angle "ang" and kernel' +
                                          'halfwidth "omega" are required.')
                     ori_rve = createOriset(ngr, ang, omega, hist=hist, shared_area=gba)
-                    self.mesh.texture = "Uni_model"
+                    self.mesh.texture = "Uni-modal"
             else:
                 self.mesh.texture = None
                 raise ValueError('Argument to generate grain orientation must be either of type EBSDmap or ' +

@@ -41,8 +41,8 @@ try:
     from .textures import EBSDmap, createOriset, createOrisetRandom, get_ipf_colors
     MTEX_AVAIL = True
 except:
-    from .textures_pp import EBSDmap, createOriset, get_ipf_colors, \
-        plot_inverse_pole_figure, plot_inverse_pole_figure_density
+    from .textures_pp import EBSDmap, ODF, createOriset, createOrisetRandom, \
+        get_ipf_colors, plot_inverse_pole_figure, plot_inverse_pole_figure_density
     MTEX_AVAIL = False
 
 try:

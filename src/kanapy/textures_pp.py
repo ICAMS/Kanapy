@@ -17,7 +17,8 @@ from scipy.integrate import quad
 from skimage.segmentation import mark_boundaries
 from orix import io, quaternion
 from orix import plot as ox_plot
-from orix.quaternion import Orientation, Symmetry
+from orix.quaternion import Orientation
+from orix.quaternion.symmetry import Symmetry
 from orix.sampling import get_sample_fundamental
 from orix.vector import Miller
 from abc import ABC
@@ -88,11 +89,11 @@ def find_largest_neighbor(G, node):
 
 def find_sim_neighbor(G, nn):
     sym = G.graph['symmetry']
-    ori0 = quaternion.Orientation(G.nodes[nn]['ori_av'], sym)
+    ori0 = Orientation(G.nodes[nn]['ori_av'], sym)
     on = []
     ng = []
     for neigh in G.adj[nn]:
-        ang = ori0.angle_with(quaternion.Orientation(G.nodes[neigh]['ori_av'], sym))[0]
+        ang = ori0.angle_with(Orientation(G.nodes[neigh]['ori_av'], sym))[0]
         on.append(ang)
         ng.append(neigh)
     nn = np.argmin(on)
@@ -243,15 +244,54 @@ def calc_error(odf_ref, odf_test, res=10.):
     so3g = Orientation(so3g.data, symmetry=cs)
     p1 = odf_ref.evaluate(so3g)
     p2 = odf_test.evaluate(so3g)
-    err = np.sum(np.abs(p1 - p2))/np.sum(p1)
+    err = np.sum(np.abs(p1/np.sum(p1) - p2/np.sum(p2)))
     return err
 
 
-def odf_est(ori, odf, nstep=50, step=0.5, verbose=False):
-    e0 = 10.0
+def calc_orientations(odf, nori, res=None):
+    oq = np.zeros((nori, 4))
+    indstart = 0
+    rem = nori
+    cs = odf.orientations.symmetry
+    hw = odf.halfwidth
+    if res is None:
+        res = np.clip(np.rad2deg(hw), 2, 5)
+    so3g = get_sample_fundamental(resolution=res, point_group=cs)  # generate fine mesh in fund. region; res in degree!
+    so3g = Orientation(so3g.data, symmetry=cs)
+    if so3g.size < 5*nori:
+        logging.warning(f'Resolution of SO3 grid in "calc_orientations" is too coarse: {res}°.\n'
+                        f'Only {so3g.size} grid points available for {nori} desired orientations.')
+    val = odf.evaluate(so3g)  # value of ODF at each gridpoint
+    # do MC sampling of ODF to generate nori orientations
+    ctr = 0
+    while rem > 0 and ctr < 200:
+        rn = np.random.rand(so3g.size)
+        vn = val * np.linalg.norm(rn) * nori / np.linalg.norm(val)
+        ori = so3g[vn >= rn]
+        no = min(ori.size, rem)
+        oq[indstart:indstart+no, :] = ori.data[0:no, :]
+        indstart += no
+        rem -= no
+        ctr += 1
+    if ctr >= 200:
+        raise RuntimeError(f'Monte Carlo algorithm in "calc_orientations" did not converge for resolution {res}.\n'
+                           f'Orientations found {indstart} orientations. Target was {nori}.')
+    return Orientation(oq, symmetry=cs)
+
+
+def odf_est(ori, odf, nstep=50, step=0.5, halfwidth=None, verbose=False):
+    e0 = 1e8
     st_rad = np.radians(step)
-    hw = max(odf.halfwidth - 0.5 * nstep * st_rad, np.radians(2))
-    hw = min(hw, np.radians(45) - 0.5 * nstep * st_rad)
+    hwmin = np.radians(2)
+    hwmax = np.radians(30) - 0.5 * nstep * st_rad
+    if halfwidth is None:
+        hw = np.clip(odf.halfwidth - 0.5 * nstep * st_rad, hwmin, hwmax)
+        if verbose:
+            print(f'Initial halfwidth set to {np.degrees(hw)}')
+    else:
+        hw = np.clip(halfwidth - 2 * st_rad, hwmin, hwmax)
+        if verbose:
+            print(f'Initial halfwidth is {np.degrees(hw)}')
     for c in range(nstep):
         todf = ODF(ori, halfwidth=hw)
         e = calc_error(odf, todf)
@@ -455,11 +495,12 @@ def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
 
     ero = 10.
     e_mod = []
+    hw_stored = None
     for hw in np.arange(res_low, res_high + res_step, res_step):
         # Step 2: create equispaced grid of orientations
         S3G = get_sample_fundamental(resolution=hw, point_group=cs)  # resolution in degrees! ori.SS not considered
         S3G = Orientation(S3G.data, symmetry=cs)
-        # Step 3: calculate number of orientations close to each grid point (-1 if no orientation close to GP)
+        # Step 3: calculate number of orientations close to each grid point (0 if no orientation close to GP)
         # count close orientations from EBSD map for each grid point, and get list of neighbor indices
         M, neighs = find_orientations_fast(ori, S3G, tol=np.radians(0.5))
         ictr = np.nonzero(M > 0)[0]  # indices of gridpoints with non-zero counts
@@ -521,7 +562,8 @@ def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
         assert ~np.isinf(ori_f.data).any()
 
         # Step 6: Compute reduced ODF
-        odfred = odf_est(ori_f, odf, verbose=verbose)
+        odfred = odf_est(ori_f, odf, halfwidth=hw_stored, verbose=verbose)
+        hw_stored = odfred.halfwidth
 
         # Step 7: Compute error for kernel optimization
         er = calc_error(odf, odfred)
@@ -876,7 +918,7 @@ class EBSDmap:
 
             # generate phase-specific orientations
             ori_e = self.emap[self.emap.phase_id == ind].orientations.in_euler_fundamental_region()
-            data['ori'] = quaternion.Orientation.from_euler(ori_e)
+            data['ori'] = Orientation.from_euler(ori_e)
             data['cs'] = self.emap.phases[ind].point_group.laue
             # assign bad pixels to one neighbor
             # identify non-indexed pixels and pixels with low confidence index (CI)
@@ -1111,7 +1153,8 @@ class EBSDmap:
             self.plot_felsenszwalb()
         return
 
-    def calcORI(self, Ng, iphase=0, shared_area=None, nbins=12, verbose=False):
+    def calcORI(self, Ng, iphase=0, shared_area=None, nbins=12, verbose=False,
+                full_output=False):
         """
         Estimate optimum kernel half-width and produce reduced set of
         orientations for given number of grains.
@@ -1137,9 +1180,13 @@ class EBSDmap:
         orired, odfred, ero, res = texture_reconstruction(Ng, orientations=ms['ori'], verbose=verbose)
 
         if shared_area is None:
-            return orired, odfred, ero, res
+            if full_output:
+                return orired, odfred, ero, res
+            else:
+                return orired
         else:
-            raise ModuleNotFoundError('Shared area is not implemented yet in pure Python version.')
+            raise ModuleNotFoundError('Shared area is not implemented yet in pure Python version.\n'
+                                      'Use kanapy-mtex for this option.')
             #orilist, ein, eout, mbin = \
             #    self.eng.gb_textureReconstruction(ms['grains'], orired,
             #                                      matlab.double(shared_area), nbins, nargout=4)
@@ -1336,7 +1383,7 @@ def get_ipf_colors(ori_list, color_key=0):
 
 
 def createOriset(num, ang, omega, hist=None, shared_area=None,
-                 cs=None, degree=True, Nbase=10000, verbose=False):
+                 cs=None, degree=True, Nbase=10000, verbose=False, full_output=False):
     """
     Create a set of num Euler angles according to the ODF defined by the
     set of Euler angles ang and the kernel half-width omega.
@@ -1366,25 +1413,33 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
 
     """
     # prepare parameters
-    if cs is None or ~isinstance(cs, Symmetry):
-        raise ValueError('Crystal Symmetry "cs" must be provided as Symmetry object.')
+    if hist is not None or shared_area is not None:
+        raise ModuleNotFoundError('The grain-boundary-texture module is currently only available in kanapy-mtex.')
+    if cs is None or ~isinstance(cs, quaternion.symmetry.Symmetry):
+        logging.warning('Crystal Symmetry "cs" must be provided as Symmetry object.')
+        print(type(cs))
     if degree:
         omega = np.deg2rad(omega)
-        ang = np.deg2rad(ang)
-    else:
-        ang = np.asarray(ang)
-    assert ~np.isnan(ang).any()
-    ori = Orientation.from_euler(ang, cs)
-    psi = DeLaValleePoussinKernel(halfwidth=omega)
-    #odf = ODF(ori, halfwidth=omega)
-
-    # create artificial EBSD
-    #o = eng.calcOrientations(odf, Nbase)
-    ori, odfred, ero, res = texture_reconstruction(num, orientations=ori, kernel=psi, verbose=verbose)
+    #    ang = np.deg2rad(ang)
+    #else:
+    #    ang = np.asarray(ang)
+    #assert ~np.isnan(ang).any()
+    #ori = Orientation.from_euler(ang, cs)
+    # psi = DeLaValleePoussinKernel(halfwidth=omega)
+    if ang.size < Nbase/100:
+        # create artificial ODF for monomodal texture or small orientation set
+        odf = ODF(ang, halfwidth=omega)
+        ori = calc_orientations(odf, Nbase)
+        assert ori.size == Nbase
+    ori, odfred, ero, res = texture_reconstruction(num, orientations=ori,
+                                                   kernel_halfwidth=omega, verbose=verbose)
     if hist is None:
-        return ori
+        if full_output:
+            return ori, odfred, ero, res
+        else:
+            return ori
     else:
-        raise ModuleNotFoundError('The grain-boundary-texture module is currently only available in kanapy-mtex.')
+        pass
         #if shared_area is None:
         #    raise ValueError('Microstructure.shared_area must be provided if hist is given.')
         #orilist, ein, eout, mbin = \
