@@ -6,6 +6,7 @@ dependencies:
   - python=3.10
   - numpy
   - scipy
+  - matplotlib
   - ipython
   - ipykernel
   - jupyterlab
@@ -18,11 +19,9 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - tqdm
-  - matplotlib
   - seaborn
   - click
   - orix
   - scikit-image
   - networkx
   - jsonschema
-

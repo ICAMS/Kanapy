@@ -18,7 +18,7 @@ def main(ctx):
 @main.command(name='gui')
 @click.pass_context
 def gui(ctx):
-    """ Start Kanapy's GUI. """
+    """ Start Kanapy's GUI (experimental alpha-version). """
     import matplotlib.pyplot as plt
     import tkinter as tk
     import tkinter.font as tkFont

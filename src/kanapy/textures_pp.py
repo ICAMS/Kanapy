@@ -3,19 +3,25 @@ Tools for analysis of EBSD maps in form of .ang files
 
 @author: Alexander Hartmaier, Abhishek Biswas, ICAMS, Ruhr-Universität Bochum
 """
-import os
 import logging
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from kanapy.rve_stats import bbox
-from orix import io, quaternion
-from orix import plot as ox_plot
-from orix.vector import Miller
+from .rve_stats import get_grain_geom
 from scipy.stats import lognorm, vonmises
-from scipy.spatial import ConvexHull
+from scipy.spatial import ConvexHull, cKDTree
+from scipy.special import legendre, beta
+from scipy.optimize import fminbound
+from scipy.integrate import quad
 from skimage.segmentation import mark_boundaries
+from orix import io
+from orix import plot as ox_plot
+from orix.quaternion import Orientation
+from orix.quaternion.symmetry import Symmetry
+from orix.sampling import get_sample_fundamental
+from orix.vector import Miller
+from abc import ABC
 
 
 def get_distinct_colormap(N, cmap='prism'):
@@ -83,36 +89,87 @@ def find_largest_neighbor(G, node):
 
 def find_sim_neighbor(G, nn):
     sym = G.graph['symmetry']
-    ori0 = quaternion.Orientation(G.nodes[nn]['ori_av'], sym)
+    ori0 = Orientation(G.nodes[nn]['ori_av'], sym)
     on = []
     ng = []
     for neigh in G.adj[nn]:
-        ang = ori0.angle_with(quaternion.Orientation(G.nodes[neigh]['ori_av'], sym))[0]
+        ang = ori0.angle_with(Orientation(G.nodes[neigh]['ori_av'], sym))[0]
         on.append(ang)
         ng.append(neigh)
     nn = np.argmin(on)
     return ng[nn], on[nn]
 
 
-def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
-    labels, counts = np.unique(label_array, return_counts=True)
-    nodes = []
-    for i, lbl in enumerate(labels):
-        info_dict = dict()
-        info_dict['npix'] = counts[i]
-        ix, iy = np.nonzero(label_array == lbl)
-        ind = np.ravel_multi_index((ix, iy), label_array.shape)
-        info_dict['pixels'] = ind
-        info_dict['ori_av'] = np.mean(emap.rotations.data[ind, :], axis=0)
-        info_dict['ori_std'] = np.std(emap.rotations.data[ind, :], axis=0)
-        nodes.append((lbl, info_dict))
+def summarize_labels(label_array, rotations, wanted_labels=None):
+    """
+    label_array: (H,W) int
+    rotations:   (H*W, D) float  (emap.rotations.data)
+    wanted_labels: Sequenz von Label-IDs; None => alle im Array
 
-    print(f'Building microstructure graph with {len(nodes)} nodes (grains).')
+    returns: list[(lbl, info_dict)]
+             info_dict: {'npix', 'pixels', 'ori_av', 'ori_std'}
+    """
+    lab = label_array.ravel()
+    N = lab.size
+    rot = rotations  # shape (N, D)
+
+    # Gruppierung: alle Pixel nach Label sortieren
+    order = np.argsort(lab, kind="stable")
+    lab_sorted = lab[order]
+
+    # Eindeutige Labels + Segmentstarts + Counts
+    uniq, starts, counts = np.unique(lab_sorted, return_index=True, return_counts=True)
+    ends = starts + counts
+
+    # Rotations in derselben Reihenfolge sortieren
+    rot_sorted = rot[order]
+
+    # Mittelwerte und Standardabweichungen pro Segment (reduceat ist sehr schnell)
+    sums = np.add.reduceat(rot_sorted, starts, axis=0)
+    means = sums / counts[:, None]
+
+    sq = rot_sorted * rot_sorted
+    sums_sq = np.add.reduceat(sq, starts, axis=0)
+    vars_ = sums_sq / counts[:, None] - means**2
+    stds = np.sqrt(np.maximum(vars_, 0.0))
+
+    # Pixelindizes pro Label (als Listen von 1D-Indizes)
+    pixels_list = np.split(order, starts[1:])  # Liste der Segmente in uniq-Reihenfolge
+
+    # Auswahl / Re-Ordering auf gewünschte Labels
+    if wanted_labels is None:
+        labels_out = uniq
+        idx = np.arange(len(uniq))
+    else:
+        labels_out = np.asarray(wanted_labels)
+        pos = {int(l): i for i, l in enumerate(uniq)}
+        idx = np.array([pos[int(l)] for l in labels_out], dtype=int)
+
+    nodes = []
+    for lbl, i in zip(labels_out, idx):
+        info = {
+            "npix": int(counts[i]),
+            "pixels": pixels_list[i],              # 1D-Indices in label_array.ravel()
+            "ori_av": means[i],                   # shape (D,)
+            "ori_std": stds[i],                   # shape (D,)
+        }
+        nodes.append((int(lbl), info))
+    return nodes
+
+
+def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
+    # t1 = time.time()
+    nodes = summarize_labels(label_array, emap.rotations.data)
+    # t2 = time.time()
+    # print(f'Time for extracting nodes: {t2 - t1}')
+    # print(f'Building microstructure graph with {len(nodes)} nodes (grains).')
     G = nx.Graph(label_map=label_array, symmetry=emap.phases.point_groups[phase],
                  dx=emap.dx, dy=emap.dy)
     G.add_nodes_from(nodes)
+    # t3 = time.time()
+    # print(f'Time for building graph: {t3 - t2}')
 
-    print('Adding edges (grain boundaries) to microstructure graph.')
+    # print('Adding edges (grain boundaries) to microstructure graph.')
     rows, cols = label_array.shape
     for x in range(rows):
         for y in range(cols):
@@ -122,6 +179,8 @@ def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
                     neighbor_label = label_array[px, py]
                     if neighbor_label != label_here:
                         G.add_edge(label_here, neighbor_label)
+    # t4 = time.time()
+    # print(f'Time for adding edges: {t4 - t3}')
     return G
 
 
@@ -177,6 +236,573 @@ def find_similar_regions(array, tolerance=0.087, connectivity=1):
     return labeled_array, current_label - 1
 
 
+def calc_error(odf_ref, odf_test, res=10.):
+    cs = odf_ref.orientations.symmetry
+    if cs != odf_test.orientations.symmetry:
+        raise RuntimeError("Symmetries of ODF's do not match.")
+    so3g = get_sample_fundamental(resolution=res, point_group=cs)
+    so3g = Orientation(so3g.data, symmetry=cs)
+    p1 = odf_ref.evaluate(so3g)
+    p2 = odf_test.evaluate(so3g)
+    err = np.sum(np.abs(p1/np.sum(p1) - p2/np.sum(p2)))
+    return err
+
+
+def calc_orientations(odf, nori, res=None):
+    oq = np.zeros((nori, 4))
+    indstart = 0
+    rem = nori
+    cs = odf.orientations.symmetry
+    hw = odf.halfwidth
+    if res is None:
+        res = np.clip(np.rad2deg(hw), 2, 5)
+    so3g = get_sample_fundamental(resolution=res, point_group=cs)  # generate fine mesh in fund. region; res in degree!
+    so3g = Orientation(so3g.data, symmetry=cs)
+    if so3g.size < 5*nori:
+        logging.warning(f'Resolution of SO3 grid in "calc_orientations" is too coarse: {res}°.\n'
+                        f'Only {so3g.size} grid points available for {nori} desired orientations.')
+    val = odf.evaluate(so3g)  # value of ODF at each gridpoint
+    # do MC sampling of ODF to generate nori orientations
+    ctr = 0
+    while rem > 0 and ctr < 200:
+        rn = np.random.rand(so3g.size)
+        vn = val * np.linalg.norm(rn) * nori / np.linalg.norm(val)
+        ori = so3g[vn >= rn]
+        no = min(ori.size, rem)
+        oq[indstart:indstart+no, :] = ori.data[0:no, :]
+        indstart += no
+        rem -= no
+        ctr += 1
+    if ctr >= 200:
+        raise RuntimeError(f'Monte Carlo algorithm in "calc_orientations" did not converge for resolution {res}.\n'
+                           f'Orientations found {indstart} orientations. Target was {nori}.')
+    return Orientation(oq, symmetry=cs)
+
+
+def odf_est(ori, odf, nstep=50, step=0.5, halfwidth=None, verbose=False):
+    e0 = 1e8
+    st_rad = np.radians(step)
+    hwmin = np.radians(2)
+    hwmax = np.radians(30) - 0.5 * nstep * st_rad
+    if halfwidth is None:
+        hw = np.clip(odf.halfwidth - 0.5 * nstep * st_rad, hwmin, hwmax)
+        if verbose:
+            print(f'Initial halfwidth set to {np.degrees(hw)}')
+    else:
+        hw = np.clip(halfwidth - 2 * st_rad, hwmin, hwmax)
+        if verbose:
+            print(f'Initial halfwidth is {np.degrees(hw)}')
+    for c in range(nstep):
+        todf = ODF(ori, halfwidth=hw)
+        e = calc_error(odf, todf)
+        if verbose:
+            print(f'Iteration {c}: error={e}, halfwidth={np.degrees(hw)}°')
+        if e > e0:
+            break
+        else:
+            e0 = e
+        hw += st_rad
+    # return last value before error increased
+    hw -= st_rad
+    todf = ODF(ori, halfwidth=hw)
+    return todf
+
+
+def plot_inverse_pole_figure(orientations, phase, vector=None):
+    # plot inverse pole figure
+    # <111> poles in the sample reference frame
+    if vector is None:
+        vector = [0, 0, 1]
+    assert isinstance(orientations, Orientation)
+    t_ = Miller(uvw=vector, phase=phase).symmetrise(unique=True)
+    t_all = orientations.inv().outer(t_)
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(111, projection="stereographic")
+    ax.scatter(t_all)
+    ax.set_labels("X", "Y", None)
+    ax.set_title(phase.name + r" $\left<001\right>$ PF")
+    plt.show()
+
+
+def plot_inverse_pole_figure_density(orientations, phase, vector=None, title=None):
+    # Some sample direction, v
+    if vector is None:
+        vector = [0, 0, 1]
+    v = Miller(vector)
+    if title is None:
+        v_title = ["X", "Y", "Z"][np.argmax(vector)]
+    else:
+        v_title = title
+    assert isinstance(orientations, Orientation)
+    # Rotate sample direction v into every crystal orientation O
+    t_ = orientations * v
+
+    # Set IPDF range
+    vmin, vmax = (0, 3)
+
+    subplot_kw = {"projection": "ipf", "symmetry": phase.point_group.laue, "direction": v}
+    fig = plt.figure(figsize=(9, 8))
+
+    ax0 = fig.add_subplot(211, **subplot_kw)
+    ax0.scatter(t_, alpha=0.2)
+    _ = ax0.set_title(f"EBSD data, {phase.name}, {v_title}")
+
+    ax2 = fig.add_subplot(212, **subplot_kw)
+    ax2.pole_density_function(t_, vmin=vmin, vmax=vmax)
+    _ = ax2.set_title(f"EBSD data, {phase.name}, {v_title}")
+
+    plt.show()
+
+def find_orientations_fast(ori1: Orientation, ori2: Orientation, tol: float = 1e-3) -> np.ndarray:
+    """
+    Find closest matches in ori1 for each orientation in ori2 using KDTree.
+
+    Parameters
+    ----------
+    ori1 : Orientation
+        Orientation database (e.g., EBSD orientations).
+    ori2 : Orientation
+        Orientations to match (e.g., grain mean orientations).
+    tol : float
+        Angular tolerance in radians.
+
+    Returns
+    -------
+    matches : np.ndarray
+        Array of indices in ori1 matching each entry in ori2; -1 if no match found.
+    """
+    # Get quaternions
+    q1 = ori1.data
+    q2 = ori2.data
+
+    tree = cKDTree(q2)  # KDTree in 4D quaternion space for ori2 (typically, regular SO3 grid)
+    dists, indices = tree.query(q1)  # For every orientation in ori1, look for nearest neighbor in ori2 (grid)
+
+    # create list of length or ori2, and store counts and indices of nearest neighbors in ori1
+    matches = np.zeros(ori2.size, dtype=int)
+    neigh_dict = dict()
+    for i, idx in enumerate(indices):
+        matches[idx] += 1
+        if idx in neigh_dict.keys():
+            neigh_dict[idx].append(i)
+        else:
+            neigh_dict[idx] = [i]
+
+    return matches, neigh_dict
+
+
+def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
+                          grainsfile=None, grains=None, kernel=None, kernel_halfwidth=5,
+                          res_low=5, res_high=25, res_step=2, lim=5, verbose=False):
+    """
+    This function systematically reconstructs an ODF by a given number of
+    orientations (refer .....)
+    also the misorientation distribution is reproduced
+
+
+    Inputs:
+    1) ns: number of reduced orientations/grains in RVE
+    2) Either path+filename of ebsd data saved as *.mat file (it should
+      contain only one phase/mineral) or ebsd(single phase)/orientations
+    3) Either path+filename of the estiamted grains from above
+      EBSD saved as *.mat file (it should contain only one phase/mineral)
+      or kernel(only deLaValeePoussinKernel)/kernelshape, if nothing
+      mentioned then default value kappa = 5 (degree) is assumed.
+
+    Output: reduced orientation set, ODF and L1 error
+
+    Following steps described in Biswas et al (https://doi.org/10.1107/S1600576719017138)
+
+   input fields and checks
+    Parameters
+    ----------
+    ebsd
+    ebsdfile
+    orientations
+    grainsfile
+    grains
+    kernel
+    kernel_halfwidth
+    res_low
+    res_high
+    res_step
+    lim
+    verbose
+    ns
+
+    Returns
+    -------
+    orired_f
+    odfred_f
+    ero
+    res
+
+    """
+    ori = None
+    psi = None
+    if ebsdfile is not None:
+        raise ModuleNotFoundError('Option "ebsdMatFile" is not yet supported.')
+        # ind = args.index('ebsdMatFile') + 1
+        # ebsd = loadmat(args[ind])
+        # ebsd_var = list(ebsd.keys())[0]
+        # ebsd = ebsd[ebsd_var]
+        # assert len(np.unique(ebsd.phaseId)) == 1, 'EBSD has multiple phases'
+        # ori = ebsd.orientations
+    if ebsd is not None:
+        if not isinstance(ebsd, EBSDmap):
+            raise TypeError('Argument "ebsd" must be of type EBSDmap.')
+        assert len(ebsd.emap.phases.ids) == 1, 'EBSD has multiple phases'
+        if ori is not None:
+            logging.warning('Both EBSDfile and ebsd are given, using file.')
+        else:
+            ori = ebsd.emap.orientations
+    if orientations is not None:
+        if not isinstance(orientations, Orientation):
+            raise TypeError('Argument "orientations" must be of type Orientation,')
+        if ori is not None:
+            logging.warning('Both EBSD map and orientations are given, using EBSD.')
+        else:
+            ori = orientations
+
+    if grainsfile is not None:
+        logging.warning('Estimation of optimal kernel from grain files not supported. '
+                        'DeLaValleePoussinKernel with halfwidth 5° will be used.\n'
+                        'Please use kanapy-mtex for support of optimal kernels.')
+        # ind = args.index('grainsMatFile') + 1
+        # grains = loadmat(args[ind])
+        # grains_var = list(grains.keys())[0]
+        # grains = grains[grains_var]
+        # assert len(np.unique(grains.phaseId)) == 1, 'Grains has multiple phases'
+        # print('Optimum kernel estimated from mean orientations of grains')
+        # psi = calcKernel(grains.meanOrientation)
+    if grains is not None:
+        logging.warning('Estimation of optimal kernel from grains not supported. '
+                        'DeLaValleePoussinKernel with halfwidth 5° will be used.\n'
+                        'Please use kanapy-mtex for support of optimal kernels.')
+        #assert len(np.unique(grains.phaseId)) == 1, 'Grains has multiple phases'
+        #print('Optimum kernel estimated from mean orientations of grains')
+        #psi = calcKernel(grains.meanOrientation)
+    if kernel is not None:
+        if not isinstance(kernel, DeLaValleePoussinKernel):
+            raise TypeError('Only kernels of type "DeLaValeePoussinKernel" are supported.')
+        psi = kernel
+    if psi is None:
+        psi = DeLaValleePoussinKernel(halfwidth=np.radians(kernel_halfwidth))
+
+    # Step 1: Create reference odf from given orientations with proper kernel
+    odf = ODF(ori, kernel=psi)
+    cs = ori.symmetry
+
+    ero = 10.
+    e_mod = []
+    hw_stored = None
+    for hw in np.arange(res_low, res_high + res_step, res_step):
+        # Step 2: create equispaced grid of orientations
+        S3G = get_sample_fundamental(resolution=hw, point_group=cs)  # resolution in degrees! ori.SS not considered
+        S3G = Orientation(S3G.data, symmetry=cs)
+        # Step 3: calculate number of orientations close to each grid point (0 if no orientation close to GP)
+        # count close orientations from EBSD map for each grid point, and get list of neighbor indices
+        M, neighs = find_orientations_fast(ori, S3G, tol=np.radians(0.5))
+        ictr = np.nonzero(M > 0)[0]  # indices of gridpoints with non-zero counts
+        weights = M[ictr]  # create weights from non-zero counts of EBSD orientations at gridpoints
+        weights = weights / np.sum(weights)  # calculate weights
+        # Step 4: Calculate scaling factor hval such that sum of all int(weights*hval) = ns
+        lval = 0
+        hval = float(ns)
+        ifc = 1.0
+        ihval = np.sum(np.round(hval * weights))
+        while (hval - lval > hval * 1e-15 or ihval < ns) and ihval != ns:
+            if ihval < ns:
+                hval_old = hval
+                hval = hval + ifc * (hval - lval) / 2.0
+                lval = hval_old
+                ifc = ifc * 2.0
+            else:
+                hval = (lval + hval) / 2.0
+                ifc = 1.0
+            ihval = np.sum(np.round(hval * weights))
+        screen = np.round(weights * hval)  # number of orientations associated to each grid point
+        diff = np.sum(screen) - ns  # difference to desired number of orientations
+        weights_loc = np.argsort(weights)
+        co = 1
+        while diff > 0:
+            if screen[weights_loc[co]] > 0:
+                screen[weights_loc[co]] = screen[weights_loc[co]] - 1
+                diff = np.sum(screen) - ns
+            co = co + 1
+
+        # Step 5: Subdivide orientations around grid points into screen orientations
+        #         and estimate mean orientation for each group or take orientation of grid point
+        #         if only one orientation needs to be generated
+        ori_red = np.zeros((ns, 4))
+        octr = 0
+        for i, no in enumerate(screen):
+            nl = neighs[ictr[i]]
+            if len(nl) < no:
+                raise RuntimeError(f'{len(nl)} < {no} @ {i}, ictr: {ictr[i]}, weight: {weights[i]}')
+            if 0.5 < no < 1.5:
+                ori_red[octr, :] = S3G[ictr[i]].data
+                octr += 1
+                assert np.isclose(no, 1), f'no: {no}, should be 1'
+            elif no >= 1.5:
+                # split orientations in EBSD map matching to one grid point according to required number of
+                # orientations at this point
+                ind = np.linspace(0, len(nl), int(no)+1, dtype=int)
+                idx = np.split(np.array(nl), ind[1:-1])
+                ho = octr
+                for j in idx:
+                    ori_red[octr, :] = np.mean(ori[j].data, axis=0)
+                    octr += 1
+                if not np.isclose(no, octr-ho):
+                    print(f'len_nl: {len(nl)}, len_idx: {len(idx)}')
+                    raise RuntimeError(f'no: {no}, but increment is only #{octr-ho}')
+        # create Orientations from quaternion array
+        ori_f = Orientation(ori_red, symmetry=cs)
+        assert not np.isnan(ori_f.data).any()
+        assert not np.isinf(ori_f.data).any()
+
+        # Step 6: Compute reduced ODF
+        odfred = odf_est(ori_f, odf, halfwidth=hw_stored, verbose=verbose)
+        hw_stored = odfred.halfwidth
+
+        # Step 7: Compute error for kernel optimization
+        er = calc_error(odf, odfred)
+        if verbose:
+            print(f'Resolution: {hw}, Error: {er}, Reduced HW: {np.degrees(odfred.halfwidth)}°')
+        # store best results and evaluate stopping criterion
+        if er < ero:
+            orired_f = ori_f
+            odfred_f = odfred
+            ero = er
+            res = hw
+        e_mod.append(er)
+        if len(e_mod) - np.argmin(e_mod) > lim:
+            break
+    orired_f = orired_f.in_euler_fundamental_region()
+    return orired_f, odfred_f, ero, res
+
+
+class Kernel(ABC):
+    def __init__(self, A=None):
+        self.A = np.array(A).flatten() if A is not None else np.array([])
+
+    @property
+    def bandwidth(self):
+        return len(self.A) - 1
+
+    @bandwidth.setter
+    def bandwidth(self, L):
+        self.A = self.A[:min(L + 1, len(self.A))]
+
+    def __str__(self):
+        return f"custom, halfwidth {np.degrees(self.halfwidth()):.2f}°"
+
+    def __eq__(self, other):
+        L = min(self.bandwidth, other.bandwidth)
+        return np.linalg.norm(self.A[:L + 1] - other.A[:L + 1]) / np.linalg.norm(self.A) < 1e-6
+
+    def __mul__(self, other):
+        L = min(self.bandwidth, other.bandwidth)
+        l = np.arange(L + 1)
+        return Kernel(self.A[:L + 1] * other.A[:L + 1] / (2 * l + 1))
+
+    def __pow__(self, p):
+        l = np.arange(self.bandwidth + 1)
+        return Kernel(((self.A / (2 * l + 1)) ** p) * (2 * l + 1))
+
+    def norm(self):
+        return np.linalg.norm(self.A ** 2)
+
+    def cutA(self, fft_accuracy=1e-2):
+        epsilon = fft_accuracy / 150
+        A_mod = self.A / (np.arange(1, len(self.A) + 1) ** 2)
+        idx = np.where(A_mod[1:] <= max(min([np.min(A_mod[1:]), 10 * epsilon]), epsilon))[0]
+        if idx.size > 0:
+            self.A = self.A[:idx[0] + 2]
+
+    def halfwidth(self):
+        def error_fn(omega):
+            return (self.K(1) - 2 * self.K(np.cos(omega / 2))) ** 2
+
+        return fminbound(error_fn, 0, 3 * np.pi / 4)
+
+    def K(self, co2):
+        co2 = np.clip(co2, -1, 1)
+        omega = 2 * np.arccos(co2)
+        return self._clenshawU(self.A, omega)
+
+    def K_orientations(self, orientations_ref, orientations):
+        misangles = orientations.angle_with(orientations_ref)
+        co2 = np.cos(misangles / 2)
+        return self.K(co2)
+
+    def RK(self, d):
+        d = np.clip(d, -1, 1)
+        return self._clenshawL(self.A, d)
+
+    def RRK(self, dh, dr):
+        dh = np.clip(dh, -1, 1)
+        dr = np.clip(dr, -1, 1)
+        L = self.bandwidth
+        result = np.zeros((len(dh), len(dr)))
+
+        if len(dh) < len(dr):
+            for i, dh_i in enumerate(dh):
+                Plh = [legendre(l)(dh_i) for l in range(L + 1)]
+                result[i, :] = self._clenshawL(np.array(Plh) * self.A, dr)
+        else:
+            for j, dr_j in enumerate(dr):
+                Plr = [legendre(l)(dr_j) for l in range(L + 1)]
+                result[:, j] = self._clenshawL(np.array(Plr) * self.A, dh)
+        result[result < 0] = 0
+        return result
+
+    def _clenshawU(self, A, omega):
+        omega = omega / 2
+        res = np.ones_like(omega) * A[0]
+        for l in range(1, len(A)):
+            term = np.cos(2 * l * omega) + np.cos(omega) * np.cos((2 * l - 1) * omega) + \
+                   (np.cos(omega) ** 2)
+            res += A[l] * term
+        return res
+
+    def _clenshawL(self, A, x):
+        b_next, b_curr = 0.0, 0.0
+        x2 = 2 * x
+        for a in reversed(A[1:]):
+            b_next, b_curr = b_curr, a + x2 * b_curr - b_next
+        return A[0] + x * b_curr - b_next
+
+    def calc_fourier(self, L, max_angle=np.pi, fft_accuracy=1e-2):
+        A = []
+        small = 0
+        for l in range(L + 1):
+            def integrand(omega):
+                return self.K(np.cos(omega / 2)) * np.sin((2 * l + 1) * omega / 2) * np.sin(omega / 2)
+
+            coeff, _ = quad(integrand, 0, max_angle, limit=2000)
+            coeff *= 2 / np.pi
+            A.append(coeff)
+            if abs(coeff) < fft_accuracy:
+                small += 1
+            else:
+                small = 0
+            if small == 10:
+                break
+        return np.array(A)
+
+    def plot_K(self, n_points=200):
+        omega = np.linspace(0, np.pi, n_points)
+        co2 = np.cos(omega / 2)
+        values = self.K(co2)
+        plt.figure()
+        plt.plot(np.degrees(omega), values)
+        plt.xlabel("Misorientation angle (degrees)")
+        plt.ylabel("K(cos(omega/2))")
+        plt.title("Kernel Function")
+        plt.grid(True)
+        plt.show()
+
+
+class DeLaValleePoussinKernel(Kernel):
+    def __init__(self, kappa=None, halfwidth=None, bandwidth=None):
+        if halfwidth is not None:
+            kappa = 0.5 * np.log(0.5) / np.log(np.cos(0.5*halfwidth))
+        elif kappa is None:
+            kappa = 90
+
+        self.kappa = kappa
+        L = bandwidth if bandwidth is not None else round(kappa)
+        C = beta(1.5, 0.5) / beta(1.5, kappa + 0.5)
+        self.C = C
+
+        A = np.ones(L + 1)
+        A[1] = kappa / (kappa + 2)
+
+        for l in range(1, L - 1):
+            A[l + 1] = ((kappa - l + 1) * A[l - 1] - (2 * l + 1) * A[l]) / (kappa + l + 2)
+
+        for l in range(0, L + 1):
+            A[l] *= (2 * l + 1)
+
+        super().__init__(A)
+        self.cutA()
+
+    def K(self, co2):
+        co2 = np.clip(co2, -1, 1)
+        return self.C * co2 ** (2 * self.kappa)
+
+    def DK(self, co2):
+        return -self.C * self.kappa * np.sqrt(1 - co2 ** 2) * co2 ** (2 * self.kappa - 1)
+
+    def RK(self, t):
+        return (1 + self.kappa) * ((1 + t) / 2) ** self.kappa
+
+    def DRK(self, t):
+        return self.kappa * (1 + self.kappa) * ((1 + t) / 2) ** (self.kappa - 1) / 2
+
+    def halfwidth(self):
+        return 2 * np.arccos(0.5 ** (1 / (2 * self.kappa)))
+
+
+class ODF(object):
+    def __init__(self, orientations, halfwidth=np.radians(10), weights=None, kernel=None, exact=False):
+        """
+            Estimate an Orientation Distribution Function (ODF) from individual orientations
+            using kernel density estimation.
+
+            Parameters
+            ----------
+            orientations : orix.quaternion.Orientation
+                Input orientation set.
+            halfwidth : float, optional
+                Halfwidth of the kernel in radians (default: 10 degrees).
+            weights : array-like, optional
+                Weights for each orientation. If None, weights are uniform.
+            kernel : Kernel instance, optional
+                Kernel function to use. If None, DeLaValleePoussinKernel is used.
+            exact : bool, optional
+                If False and orientation count > 1000, approximate using grid.
+
+            Attributes
+            ----------
+            orientations
+            weights
+            kernel
+            halfwidth
+            """
+        if orientations.size == 0:
+            raise ValueError("Orientation set is empty.")
+
+        if weights is None:
+            weights = np.ones(orientations.size) / orientations.size
+
+        # Set up kernel
+        if kernel is None:
+            kernel = DeLaValleePoussinKernel(halfwidth=halfwidth)
+        hw = kernel.halfwidth()
+
+        # Gridify if too many orientations and not exact
+        if orientations.size > 1000 and not exact:
+            # Placeholder: replace with proper gridify function if needed
+            # Currently using simple thinning and weighting
+            step = max(1, orientations.size // 1000)
+            orientations = orientations[::step]
+            weights = weights[::step]
+            weights = weights / np.sum(weights)
+
+        self.orientations = orientations
+        self.weights = weights
+        self.kernel = kernel
+        self.halfwidth = hw
+
+    def evaluate(self, ori):
+        values = np.zeros(ori.size)
+        for o in self.orientations:
+            values += self.kernel.K_orientations(o, ori)
+        return values
+
+
 class EBSDmap:
     """Class to store attributes and methods to import EBSD maps
     and filter out their statistical data needed to generate
@@ -219,9 +845,9 @@ class EBSDmap:
             ori : matlab object with grain orientations
             cs : matlab object with crystal structure
             grains : matlab object with grains in each phase
-            omega : orintations of major grain axis
+            omega : orientations of major grain axis
             gs_param : statistical grain size parameters
-            gs_data : grain sizesvonmises
+            gs_data : grain sizes
             ar_param
             ar_data
             om_param
@@ -292,7 +918,7 @@ class EBSDmap:
 
             # generate phase-specific orientations
             ori_e = self.emap[self.emap.phase_id == ind].orientations.in_euler_fundamental_region()
-            data['ori'] = quaternion.Orientation.from_euler(ori_e)
+            data['ori'] = Orientation.from_euler(ori_e)
             data['cs'] = self.emap.phases[ind].point_group.laue
             # assign bad pixels to one neighbor
             # identify non-indexed pixels and pixels with low confidence index (CI)
@@ -393,26 +1019,34 @@ class EBSDmap:
             for num, node in ms_graph.nodes.items():
                 hull = node['hull']
                 eqd = 2.0 * (hull.volume / np.pi) ** 0.5  # area of convex hull approximates grain better than pixels
-                # area = node['npix'] * self.dx * self.dy
-                # eqd = 2.0 * (area / np.pi)**0.5
                 pts = hull.points[hull.vertices]  # outer nodes of grain
-                # find bounding box to hull points
-                ea, eb, va, vb = bbox(pts, two_dim=True, return_vector=True)
+                # analyze geometry of point cloud
+                ea, eb, va, vb = get_grain_geom(pts, method='ellipsis', two_dim=True)  # std: 'ellipsis', failsafe: 'raw'
+                # assert ea >= eb
+                if eb < 0.01 * ea:
+                    logging.warning(f'Grain {num} has too high aspect ratio: main axes: {ea}, {eb}')
+                    eb = 0.01 * ea
+                sc_fct = eqd / np.sqrt(ea**2 + eb**2)  # rescale axes of ellipsis to ensure consistency with eqd
+                ea *= sc_fct
+                eb *= sc_fct
                 # assert np.dot(va, vb) < 1.e-9
                 # assert np.isclose(np.linalg.norm(va), 1.0)
-                omega = np.acos(va[0])  # angle of major axis against y-axis of map [0, pi]
+                omega = np.arccos(va[0])  # angle of major axis against y-axis of map in range [0, pi]
                 node['max_dia'] = ea
                 node['min_dia'] = eb
                 node['equ_dia'] = eqd
                 node['maj_ax'] = va
                 node['min_ax'] = vb
                 node['omega'] = omega
-                node['center'] = np.mean(hull.points, axis=0)
+                node['center'] = hull.points.mean(axis=0)
                 arr_a.append(ea)
                 arr_b.append(eb)
                 arr_eqd.append(eqd)
                 arr_om.append(omega)
             arr_om = np.array(arr_om)
+            arr_a = np.array(arr_a)
+            arr_b = np.array(arr_b)
+            arr_eqd = np.array(arr_eqd)
             print('\n--------------------------------------------------------')
             print('Statistical microstructure parameters in pixel map ')
             print('--------------------------------------------------------')
@@ -430,10 +1064,17 @@ class EBSDmap:
             data['gs_moments'] = [dscale, dsig]
             if show_hist:
                 fig, ax = plt.subplots()
-                x = np.linspace(min(arr_eqd), max(arr_eqd), 150)
+                hc, hb = np.histogram(arr_eqd, bins=20)
+                x0 = hb[0]
+                ind = np.nonzero(hc == 1)[0]  # find first bin with count == 1
+                if len(ind) > 0:
+                    x1 = hb[ind[0]]
+                else:
+                    x1 = max(arr_eqd)
+                x = np.linspace(x0, x1, 150)
                 y = lognorm.pdf(x, dsig, loc=doffs, scale=dscale)
-                ax.plot(x, y, '-r', label='fit')
-                ax.hist(arr_eqd, bins=20, density=True, label='data')
+                ax.plot(x, y, '-r', label='lognorm fit')
+                ax.hist(arr_eqd, bins=20, range=(x0, x1), density=True, label='data')
                 plt.legend()
                 plt.title('Histogram of grain equivalent diameters')
                 plt.xlabel('Equivalent diameter (micron)')
@@ -441,11 +1082,7 @@ class EBSDmap:
                 plt.show()
 
             # grain aspect ratio
-            asp = np.zeros_like(arr_a)
-            for i, va in enumerate(arr_a):
-                xu = max(va, arr_b[i])
-                xl = min(va, arr_b[i])
-                asp[i] = xu / xl
+            asp = arr_a / arr_b
             aoffs = 0.
             asp_log = np.log(asp)
             ascale = np.exp(np.median(asp_log))  # lognorm.median(asig, loc=aoffs, scale=ascale)
@@ -456,10 +1093,17 @@ class EBSDmap:
             if show_hist:
                 # plot distribution of aspect ratios
                 fig, ax = plt.subplots()
-                x = np.linspace(np.amin(asp), np.amax(asp), 150)
+                hc, hb = np.histogram(asp, bins=20)
+                x0 = hb[0]
+                ind = np.nonzero(hc == 1)[0]  # find first bin with count == 1
+                if len(ind) > 0:
+                    x1 = hb[ind[0]]
+                else:
+                    x1 = max(asp)
+                x = np.linspace(x0, x1, 150)
                 y = lognorm.pdf(x, asig, loc=aoffs, scale=ascale)
-                ax.plot(x, y, '-r', label='fit lognorm')
-                ax.hist(asp, bins=20, density=True, label='density')
+                ax.plot(x, y, '-r', label='lognorm fit')
+                ax.hist(asp, bins=20, range = (x0, x1), density=True, label='data')
                 plt.legend()
                 plt.title('Histogram of grain aspect ratio')
                 plt.xlabel('aspect ratio')
@@ -468,18 +1112,17 @@ class EBSDmap:
 
             # angles of main axis
             # fit von Mises distribution (circular normal distribution) to data
-            omega_p = 2.0 * arr_om - np.pi  # rescale angles from [0, pi] to [-pi,pi] for von Mises distr. fit
-            kappa, oloc, oscale = vonmises.fit(omega_p)
+            kappa, oloc, oscale = vonmises.fit(2*arr_om - np.pi)
             med_om = vonmises.median(kappa, loc=oloc)  # scale parameter has no effect on vonmises distribution
             std_om = vonmises.std(kappa, loc=oloc)
             data['om_param'] = np.array([kappa, oloc])
-            data['om_data'] = arr_om  # omega_p
+            data['om_data'] = arr_om
             data['om_moments'] = [med_om, std_om]
             if show_hist:
                 fig, ax = plt.subplots()
                 x = np.linspace(-np.pi, np.pi, 200)  # np.amin(omega), np.amax(omega), 150)
                 y = vonmises.pdf(x, kappa, loc=oloc)
-                ax.plot(0.5 * (x + np.pi), 2 * y, '-r', label='fit')
+                ax.plot(0.5*(x+np.pi), 2 * y, '-r', label='von Mises fit')
                 ax.hist(arr_om, bins=40, density=True, label='data')
                 plt.legend()
                 plt.title('Histogram of tilt angles of major axes')
@@ -510,6 +1153,62 @@ class EBSDmap:
             self.plot_felsenszwalb()
         return
 
+    def calcORI(self, Ng, iphase=0, shared_area=None, nbins=12, verbose=False,
+                full_output=False):
+        """
+        Estimate optimum kernel half-width and produce reduced set of
+        orientations for given number of grains.
+
+        Parameters
+        ----------
+        Ng : int
+            Numbr of grains for which orientation is requested.
+        iphase : int, optional
+            Phase for which data is requested. The default is 0.
+        shared_area : array, optional
+            Grain boundary data. The default is None.
+        nbins : int, optional
+            number of bins for GB texture. The default is 12.
+
+        Returns
+        -------
+        ori : (Ng, 3)-array
+            Array with Ng Euler angles.
+
+        """
+        ms = self.ms_data[iphase]
+        orired, odfred, ero, res = texture_reconstruction(Ng, orientations=ms['ori'], verbose=verbose)
+
+        if shared_area is None:
+            if full_output:
+                return orired, odfred, ero, res
+            else:
+                return orired
+        else:
+            raise ModuleNotFoundError('Shared area is not implemented yet in pure Python version.\n'
+                                      'Use kanapy-mtex for this option.')
+            #orilist, ein, eout, mbin = \
+            #    self.eng.gb_textureReconstruction(ms['grains'], orired,
+            #                                      matlab.double(shared_area), nbins, nargout=4)
+            #return np.array(self.eng.Euler(orilist))
+
+    def showIPF(self):
+        """
+        Plot IPF key.
+
+        Returns
+        -------
+        None.
+
+        """
+        for i in self.emap.phases.ids:
+            pg = self.emap.phases[i].point_group.laue
+            fig = plt.figure(figsize=(8, 8))
+            ax0 = fig.add_subplot(111, projection="ipf", symmetry=pg, zorder=2)
+            ax0.plot_ipf_color_key(show_title=False)
+            ax0.patch.set_facecolor("None")
+            plt.show()
+
     def plot_ci_map(self):
         if 'ci' in self.emap.prop.keys():
             plt.imshow(self.ci_map.reshape((self.sh_x, self.sh_y)))
@@ -517,19 +1216,33 @@ class EBSDmap:
             plt.colorbar(label="CI")
             plt.show()
 
-    def plot_inverse_pole_figure(self):
+    def plot_inverse_pole_figure(self, vector=None):
         # plot inverse pole figure
         # <111> poles in the sample reference frame
+        if vector is None:
+            vector = [0, 0, 1]
         for n_ph, ind in enumerate(self.emap.phases.ids):
             data = self.ms_data[n_ph]
-            t_fe = Miller(uvw=[0, 0, 1], phase=self.emap.phases[ind]).symmetrise(unique=True)
-            t_fe_all = data['ori'].inv().outer(t_fe)
-            fig = plt.figure(figsize=(8, 8))
-            ax = fig.add_subplot(111, projection="stereographic")
-            ax.scatter(t_fe_all)
-            ax.set_labels("X", "Y", None)
-            ax.set_title(data['name'] + r" $\left<001\right>$ PF")
-            plt.show()
+            orientations = data['ori']
+            plot_inverse_pole_figure(orientations, self.emap.phases[ind], vector=vector)
+            #t_ = Miller(uvw=vector, phase=self.emap.phases[ind]).symmetrise(unique=True)
+            #t_all = orientations.inv().outer(t_)
+            #fig = plt.figure(figsize=(8, 8))
+            #ax = fig.add_subplot(111, projection="stereographic")
+            #ax.scatter(t_all)
+            #ax.set_labels("X", "Y", None)
+            #ax.set_title(data['name'] + r" $\left<001\right>$ PF")
+            #plt.show()
+
+    def plot_inverse_pole_figure_density(self, vector=None):
+        # plot inverse pole figure
+        # <111> poles in the sample reference frame
+        if vector is None:
+            vector = [0, 0, 1]
+        for n_ph, ind in enumerate(self.emap.phases.ids):
+            data = self.ms_data[n_ph]
+            orientations = data['ori']
+            plot_inverse_pole_figure_density(orientations, self.emap.phases[ind], vector=vector)
 
     def plot_grains_marked(self):
         # plot grain with numbers and axes
@@ -642,3 +1355,144 @@ class EBSDmap:
                 plt.plot(pts[2:4, 1], pts[2:4, 0], color='green')
                 plt.title(f"Phase #{data['index']} ({data['name']}): Grain #{num}")
                 plt.show()
+
+
+def get_ipf_colors(ori_list, color_key=0):
+    """
+    Get colors of list of orientations (in radians).
+    Assumes cubic crystal symmetry and cubic specimen symmetry.
+
+    Parameters
+    ----------
+    ori_list: (N, 3) ndarray
+        List of N Euler angles in radians
+
+    Returns
+    -------
+    colors: (N, 3) ndarray
+        List of RGB values
+
+    """
+
+    # get colors
+    if not isinstance(ori_list, Orientation):
+        raise TypeError('Parameter "ori_list" must be an Orientation object.')
+    ckey = ox_plot.IPFColorKeyTSL(ori_list.symmetry)
+    ocol = ckey.orientation2color(ori_list)
+    return ocol
+
+
+def createOriset(num, ang, omega, hist=None, shared_area=None,
+                 cs=None, degree=True, Nbase=10000, verbose=False, full_output=False):
+    """
+    Create a set of num Euler angles according to the ODF defined by the
+    set of Euler angles ang and the kernel half-width omega.
+    Example: Goss texture: ang = [0, 45, 0], omega = 5
+
+    Parameters
+    ----------
+    num : int
+        Number of Euler angles in set to be created.
+    ang : (3, ) or (M, 3) array
+        Set of Euler angles (in degrees or radians) defining the ODF.
+    omega : float
+        Half-width of kernel in degrees or radians.
+    hist : array, optional
+        Histogram of MDF. The default is None.
+    shared_area: array, optional
+        The shared area between pairs of grains. The default in None.
+    cs : str, optional
+        Crystal symmetry group. The default is 'm3m'.
+    Nbase : int, optional
+        Base number of orientations for random texture. The default is 10000
+
+    Returns
+    -------
+    ori : (num, 3) array
+        Set of Euler angles
+
+    """
+    # prepare parameters
+    if hist is not None or shared_area is not None:
+        raise ModuleNotFoundError('The grain-boundary-texture module is currently only available in kanapy-mtex.')
+    if cs is None or not isinstance(cs, Symmetry):
+        logging.warning('Crystal Symmetry "cs" must be provided as Symmetry object.')
+        print(type(cs))
+    if degree:
+        omega = np.deg2rad(omega)
+    #    ang = np.deg2rad(ang)
+    #else:
+    #    ang = np.asarray(ang)
+    #assert not np.isnan(ang).any()
+    #ori = Orientation.from_euler(ang, cs)
+    # psi = DeLaValleePoussinKernel(halfwidth=omega)
+    if ang.size < Nbase/100:
+        # create artificial ODF for monomodal texture or small orientation set
+        odf = ODF(ang, halfwidth=omega)
+        ori = calc_orientations(odf, Nbase)
+        assert ori.size == Nbase
+    else:
+        ori = ang
+    ori, odfred, ero, res = texture_reconstruction(num, orientations=ori,
+                                                   kernel_halfwidth=omega, verbose=verbose)
+    if hist is None:
+        if full_output:
+            return ori, odfred, ero, res
+        else:
+            return ori
+    else:
+        pass
+        #if shared_area is None:
+        #    raise ValueError('Microstructure.shared_area must be provided if hist is given.')
+        #orilist, ein, eout, mbin = \
+        #    eng.gb_textureReconstruction(matlab.double(hist), ori,
+        #                                 matlab.double(shared_area), len(hist), nargout=4)
+        #return np.array(eng.Euler(orilist))
+
+
+def createOrisetRandom(num, hist=None, shared_area=None, cs=None):
+    """
+    Create a set of num Euler angles for Random texture.
+    Other than knpy.createOriset() this method does not create an artificial
+    EBSD which is reduced in a second step to num discrete orientations but
+    directly samples num randomly distributed orientations.s
+
+    Parameters
+    ----------
+    num : int
+        Number of Euler angles in set to be created.
+    omega : float
+        Halfwidth of kernel in degrees (optional, default: 7.5)
+    hist : array, optional
+        Histogram of MDF. The default is None.
+    shared_area: array, optional
+        The shared area between pairs of grains. The default in None.
+    cs : str, optional
+        Crystal symmetry group. The default is 'm3m'.
+    Nbase : int, optional
+        Base number of orientations for random texture. The default is 5000
+
+    Returns
+    -------
+    ori : (num, 3) array
+        Set of Euler angles
+
+    """
+    if hist is not None or shared_area is not None:
+        raise ModuleNotFoundError('The grain-boundary-texture module is currently only available in kanapy-mtex.')
+    if cs is None or not isinstance(cs, Symmetry):
+        logging.warning('Crystal Symmetry "cs" must be provided as Symmetry object.')
+        print(type(cs))
+
+    ori = Orientation.random(num, cs)
+    if hist is None:
+        return ori
+    else:
+        pass
+    # ori = eng.project2FundamentalRegion(ori)
+    #    if shared_area is None:
+    #        raise ValueError('Shared grain boundary area (geometry["GBarea"]) must be provided if hist is given.')
+    #    orilist, ein, eout, mbin = \
+    #        eng.gb_textureReconstruction(matlab.double(hist), ori,
+    #                                     matlab.double(shared_area), len(hist), nargout=4)
+    #    return np.array(eng.Euler(orilist))

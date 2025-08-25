@@ -13,21 +13,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.10", "3.12"]
     name: Test kanapy
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         conda --version
         which python
-        python -m pip install . --user
+        python -m pip install . 
+        python -m pip install pytest pytest-mock pytest-cov
         
     - name: run tests
       run: |
-        pytest tests/test_entities.py tests/test_input_output.py tests/test_packing.py tests/test_voxelization.py
+        pytest tests/test_entities.py tests/test_input_output.py tests/test_packing.py tests/test_voxelization.py -v
  
