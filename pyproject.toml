@@ -37,9 +37,6 @@ dependencies = [
     "seaborn",
     "click",
     "tqdm",
-    "pytest-cov",
-    "pytest-mock",
-    "pytest",
     "networkx",
     "orix",
     "scikit-image",
@@ -47,7 +44,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest-runner", "black", "build", "twine"]
+dev = ["pytest", "pytest-mock", "pytest-cov", "black", "build", "twine"]
 
 [project.scripts]
 kanapy = "kanapy.cli:start"
