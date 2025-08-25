@@ -248,7 +248,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         _emit(y_max, 2, 'S2')  # Y = max
         _emit(z_max, 3, 'S6')  # Z = max
 
-
     def write_boundary_conditions():
         f.write('** BOUNDARY CONDITIONS\n')
         f.write('**\n')
@@ -311,11 +310,11 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             # map each index to its Abaqus CLOAD pattern
             stress_map = {
                 0: "V101,1",  # X-direction
-                1: "V011,2",
-                2: "V000,3",
-                3: "V000,2",
-                4: "V101,3",
-                5: "V011,1",
+                1: "V011,2",  # Y-direction
+                2: "V000,3",  # Z-direction
+                3: "V011,1",  # XY-direction
+                4: "V101,3",  # XZ-direction
+                5: "V000,2",  # YZ-direction
             }
 
             # find all non-zero entries
@@ -342,11 +341,11 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             # map each index to (node, direction) for the *Boundary card
             strain_map = {
                 0: ("V101", 1),  # X-direction
-                1: ("V011", 2),
-                2: ("V000", 3),
-                3: ("V000", 2),
-                4: ("V101", 3),
-                5: ("V011", 1),
+                1: ("V011", 2),  # Y-direction
+                2: ("V000", 3),  # Z-direction
+                3: ("V011", 1),  # XY-direction
+                4: ("V101", 3),  # XZ-direction
+                5: ("V000", 2),  # YZ-direction
             }
 
             nz = [(i, v) for i, v in enumerate(value) if v != '*']
@@ -1084,6 +1083,19 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                 f.write('V101,2 \n')
                 f.write('V000,1 \n')
                 f.write('V011,3 \n')
+                if bc_type.lower() == 'shear':
+                    f.write('V000,3 \n')
+                    f.write('V101,1 \n')
+                    f.write('V011,2 \n')
+                    if loading_direction.lower() == 'xy' :
+                        f.write('V101,3 \n')
+                        f.write('V000,2 \n')
+                    elif loading_direction.lower() == 'xz' :
+                        f.write('V011,1 \n')
+                        f.write('V000,2 \n')
+                    elif loading_direction.lower() == 'yz' :
+                        f.write('V011,1 \n')
+                        f.write('V101,3 \n')
                 f.write('** \n')
                 f.write('** \n')
 
