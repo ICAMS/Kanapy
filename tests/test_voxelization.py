@@ -9,11 +9,11 @@ import pytest
 import numpy as np
 from scipy.spatial import ConvexHull
 
-import kanapy
-from kanapy.voxelization import *
-from kanapy.entities import Ellipsoid, Simulation_Box
-from kanapy.initializations import RVE_creator, mesh_creator
-from kanapy.packing import particle_generator
+import kanapy_core as kanapy
+from kanapy_core.voxelization import *
+from kanapy_core.entities import Ellipsoid, Simulation_Box
+from kanapy_core.initializations import RVE_creator, mesh_creator
+from kanapy_core.packing import particle_generator
 
 def test_points_in_convexHull():
     outer_points = np.array([[0.3215426810286406, 0.1678336189760208, -0.2203710966001927],

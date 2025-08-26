@@ -9,7 +9,7 @@ December 2023
 import os
 import numpy as np
 import pytest
-from kanapy import MTEX_AVAIL, MTEX_DIR
+from kanapy_mtex import MTEX_AVAIL, MTEX_DIR
 
 @pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
 def test_mex():
@@ -24,7 +24,7 @@ def test_mex():
 
 @pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
 def test_readEBSD():
-    from kanapy.textures import EBSDmap
+    from kanapy_mtex.textures_mtex import EBSDmap
     # name of ang file to be imported
     fname = os.path.normpath(os.path.join(os.getcwd(), 'tests', 'ebsd_316L_500x500.ang'))
     # read EBSD map and evaluate statistics of microstructural features
@@ -38,7 +38,7 @@ def test_readEBSD():
 
 @pytest.mark.skipif(not MTEX_AVAIL, reason="Kanapy is not configured for texture analysis yet!")
 def test_createORI():
-    from kanapy.textures import createOriset
+    from kanapy_mtex.textures_mtex import createOriset
     Ngr = 10
     ang = [0., 45., 0.]    # Euler angles for Goss texture
     omega = 7.5         # kernel half-width

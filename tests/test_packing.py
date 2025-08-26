@@ -3,9 +3,9 @@
 
 from unittest import mock
 import pytest
-import kanapy
-from kanapy.packing import *
-from kanapy.entities import Ellipsoid, Simulation_Box
+import kanapy_core as kanapy
+from kanapy_core.packing import *
+from kanapy_core.entities import Ellipsoid, Simulation_Box
 
 
 @pytest.fixture
@@ -123,11 +123,11 @@ def test_packingRoutine():
     sb = Simulation_Box((3, 3, 3))
 
     # Test if the 'particle_generator' function is called once
-    with mock.patch('kanapy.packing.particle_generator') as mocked_method:
+    with mock.patch('kanapy_core.packing.particle_generator') as mocked_method:
         packingRoutine([pd], True, 2, sb, save_files=False)
         assert mocked_method.call_count == 1
 
     # Test if the 'particle_grow' function is called once
-    with mock.patch('kanapy.packing.particle_grow', return_value=(None, None)) as mocked_method:
+    with mock.patch('kanapy_core.packing.particle_grow', return_value=(None, None)) as mocked_method:
         packingRoutine([pd], True, 2, sb, save_files=False)
         assert mocked_method.call_count == 1

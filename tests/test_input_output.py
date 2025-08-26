@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import pytest
-from kanapy.initializations import RVE_creator, mesh_creator
-from kanapy.input_output import *
-from kanapy.entities import Ellipsoid, Simulation_Box, Cuboid
+from kanapy_core.initializations import RVE_creator, mesh_creator
+from kanapy_core.input_output import *
+from kanapy_core.entities import Ellipsoid, Simulation_Box, Cuboid
 
 
 def test_particleStatGenerator():
