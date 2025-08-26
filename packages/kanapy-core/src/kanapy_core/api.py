@@ -24,15 +24,15 @@ from importlib.metadata import version as pkg_version
 from jsonschema import validate, ValidationError
 from datetime import datetime
 
-from kanapy.grains import calc_polygons
-from kanapy.entities import Simulation_Box
-from kanapy.input_output import export2abaqus, writeAbaqusMat, read_dump
-from kanapy.initializations import RVE_creator, mesh_creator
-from kanapy.packing import packingRoutine
-from kanapy.voxelization import voxelizationRoutine
-from kanapy.smoothingGB import smoothingRoutine
-from kanapy.rve_stats import get_stats_vox, get_stats_part, get_stats_poly
-from kanapy.plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
+from .grains import calc_polygons
+from .entities import Simulation_Box
+from .input_output import export2abaqus, writeAbaqusMat, read_dump
+from .initializations import RVE_creator, mesh_creator
+from .packing import packingRoutine
+from .voxelization import voxelizationRoutine
+from .smoothingGB import smoothingRoutine
+from .rve_stats import get_stats_vox, get_stats_part, get_stats_poly
+from .plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
     plot_polygons_3D, plot_output_stats, plot_particles_3D
 
 

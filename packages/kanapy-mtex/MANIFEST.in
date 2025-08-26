@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+include THIRD-PARTY-LICENSES
+# includes MTEX library
+recursive-include src/kanapy_mtex/libs *

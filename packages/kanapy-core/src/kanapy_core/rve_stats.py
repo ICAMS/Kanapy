@@ -13,7 +13,7 @@ import logging
 import numpy as np
 from scipy.optimize import minimize
 from scipy.spatial import ConvexHull
-from kanapy.plotting import plot_stats_dict
+from .plotting import plot_stats_dict
 
 
 def arr2mat(mc):

@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-
 """
-Top-level package for Kanapy (Core utilities).
-defines API, CLI and GUI, 
-imported as core into kanapy-orix or kanapy-mtex
+Top-level package for kanapy with default ORIX backend
 
  Copyright (C) 2025  by {__author__} ICAMS / Ruhr University Bochum, Germany
 
@@ -24,29 +20,25 @@ imported as core into kanapy-orix or kanapy-mtex
 import os
 import logging
 from importlib.metadata import version
-from .api import Microstructure
-from .initializations import set_stats
-from .plotting import plot_voxels_3D, plot_polygons_3D
-from .input_output import export2abaqus,writeAbaqusMat, pickle2microstructure, import_voxels, \
-    import_stats, write_stats
-from .rve_stats import find_rot_axis, bbox
+from importlib.resources import files
 
-log_level = 20  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR
-logging.basicConfig(level=log_level)  # set log level
-poly_scale = 1.6
+from .textures_orix import EBSDmap, ODF, createOriset, createOrisetRandom, \
+    get_ipf_colors, plot_inverse_pole_figure, plot_inverse_pole_figure_density
 
+# Re-export shared core modules for convenience
 try:
-    from .triple_surface import create_ref_ell
-    triple_surf = True
-except:
-    triple_surf = False
+    from kanapy_core import Microstructure, set_stats, pickle2microstructure, import_voxels,\
+         import_stats, write_stats, poly_scale, log_level, triple_surf
+except ImportError:
+    raise ModuleNotFoundError('Failed to import kanapy-core routines. Please install kanapy-core.')
 
+logging.basicConfig(level=log_level)  # set log level
 __author__ = ('Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, '
               'Napat Vajragupta, Yousef Rezek, Hrushikesh Uday Bhimavarapu, Alexander Hartmaier')
 __email__ = 'alexander.hartmaier@rub.de'
-__version__ = version('kanapy-core')
-__all__ = ["Microstructure", "set_stats", "plot_voxels_3D", "plot_polygons_3D", 
-           "export2abaqus", "writeAbaqusMat", "pickle2microstructure", "import_voxels",
-           "import_stats", "write_stats", "find_rot_axis", "bbox"]
-if triple_surf:
-    __all__.append("create_ref_ell")
+__version__ = version('kanapy-orix')
+__all__ = ["Microstructure", "EBSDmap", "ODF", "set_stats", "pickle2microstructure", "import_voxels",
+           "import_stats", "write_stats", "createOriset", "createOrisetRandom",
+           "get_ipf_colors", "plot_inverse_pole_figure", "plot_inverse_pole_figure_density"]
+__backend__ = 'orix'
+MTEX_AVAIL = False  # legacy flag

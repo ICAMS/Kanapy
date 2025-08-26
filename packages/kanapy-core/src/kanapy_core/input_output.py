@@ -3,8 +3,8 @@ import re
 import logging
 import numpy as np
 from collections import defaultdict
-from kanapy.entities import Ellipsoid, Cuboid
-from kanapy.initializations import NodeSets
+from .entities import Ellipsoid, Cuboid
+from .initializations import NodeSets
 
 
 def write_dump(Ellipsoids, sim_box):

@@ -2,9 +2,9 @@
 import random
 import numpy as np
 from tqdm import tqdm
-from kanapy.input_output import write_dump
-from kanapy.entities import Ellipsoid, Cuboid, Octree
-from kanapy.collisions import collision_routine
+from .input_output import write_dump
+from .entities import Ellipsoid, Cuboid, Octree
+from .collisions import collision_routine
 
 
 def particle_generator(particle_data, sim_box, poly):

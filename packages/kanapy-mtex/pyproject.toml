@@ -3,9 +3,9 @@ requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kanapy-core"
+name = "kanapy-mtex"
 version = "6.5.0"
-description = "Kanapy: Python package for microstructure analyse and generation of microstructure models (core utilities)"
+description = "Kanapy MTEX backend (requires Matlab installation)"
 authors = [
     { name = "Alexander Hartmaier", email = "alexander.hartmaier@rub.de" },
     { name = "Mahesh R.G. Prasad" },
@@ -30,28 +30,18 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering :: Physics",
 ]
-
 dependencies = [
-    "numpy",
-    "matplotlib",
-    "scipy",
-    "seaborn",
-    "click",
-    "tqdm",
-    "jsonschema",
-    "requests",
+  "kanapy-core>=6.5.0",
 ]
-
-[project.optional-dependencies]
-dev = ["pytest", "pytest-mock", "pytest-cov", "black", "build", "twine"]
-
-[project.scripts]
-kanapy = "kanapy_core.cli:start"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["kanapy_core"]
 include-package-data = true
 
-[project.urls]
-Homepage = "https://github.com/ICAMS/Kanapy"
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["kanapy_mtex*"]
+
+[tool.setuptools.package-data]
+# include MTEX library
+"kanapy_mtex" = ["*.m", "libs/**"]

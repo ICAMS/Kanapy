@@ -6,7 +6,7 @@ import zipfile
 import requests
 import webbrowser
 from io import BytesIO
-from kanapy import __version__
+from kanapy_core import __version__
 
     
 @click.group()
@@ -23,7 +23,7 @@ def gui(ctx):
     import tkinter as tk
     import tkinter.font as tkFont
     from tkinter import ttk
-    from kanapy.gui import particle_rve, cuboid_rve
+    from kanapy_core.gui import particle_rve, cuboid_rve
 
     app = tk.Tk()
     app.title("RVE_Generation")
@@ -58,12 +58,12 @@ def tests(ctx, no_texture: bool):
     click.echo('Will only work in root directory of kanapy installation.')
     cwd = os.getcwd()
     if no_texture:
-        t1 = "{0}/tests/test_collide_detect_react.py".format(cwd)
+        #t1 = "{0}/tests/test_collide_detect_react.py".format(cwd)
         t2 = "{0}/tests/test_entities.py".format(cwd)
         t3 = "{0}/tests/test_input_output.py".format(cwd)
         t4 = "{0}/tests/test_packing.py".format(cwd)
         t5 = "{0}/tests/test_voxelization.py".format(cwd)
-        os.system(f"pytest {t1} {t2} {t3} {t4} {t5} -v")
+        os.system(f"pytest {t2} {t3} {t4} {t5} -v")
     else:
         os.system("pytest {0}/tests/ -v".format(cwd))
     shutil.rmtree(os.path.join(cwd, "dump_files"))
@@ -110,9 +110,9 @@ def download_subdir(ctx):
     click.echo(f"Extracted 'examples' from ICAMS/kanapy to '{output_dir}/'")
     
 
-@main.command(name='setupTexture')
+@main.command(name='setupMTEX')
 @click.pass_context
-def setupTexture(ctx):
+def setup_mtex(ctx):
     """ Starts Matlab engine and initializes MTEX."""
     setPaths()
 
@@ -134,6 +134,10 @@ def chkVersion(matlab):
 def setPaths():
     """ Starts matlab engine, after installation if required, and initializes MTEX.
     """
+    try:
+        from kanapy_mtex import ROOT_DIR
+    except:
+        raise ModuleNotFoundError('This function in only evailable if kanapy-mtex and Matlab are installed.')
     # check if Matlab Engine library is already installed
     try:
         import matlab.engine
@@ -146,19 +150,14 @@ def setPaths():
         # os.chdir(path)
         res = os.system('python -m pip install matlabengine==25.1.2')
         if res != 0:
-            click.echo('\n Error in installing matlab.engine. This feature requires Matlab 2025a or above.')
-            # click.echo('Please contact system administrator to run "> python -m pip install ."')
-            # click.echo(f'in directory {path}')
-            raise ModuleNotFoundError()
+            raise ModuleNotFoundError('Error in installing matlab.engine. This feature requires Matlab 2025a or above.')
         
     # initalize matlab engine and MTEX for kanapy
-    path = os.path.abspath(__file__)[0:-7]  # remove /cli.py from kanapy path
-    os.chdir(path)
+    os.chdir(ROOT_DIR)
     os.system('python init_engine.py')
     click.echo('')
     click.echo('Kanapy is now configured for texture analysis!\n')
 
-    
 def start():
     main(obj={})
 

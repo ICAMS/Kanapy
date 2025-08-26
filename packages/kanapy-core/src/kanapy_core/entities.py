@@ -1,7 +1,7 @@
 import itertools
 import numpy as np
 import random
-from kanapy.collisions import collision_routine
+from .collisions import collision_routine
 from scipy.spatial import Delaunay
 
 

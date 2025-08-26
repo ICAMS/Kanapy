@@ -12,12 +12,11 @@ import numpy as np
 import tkinter as tk
 from tkinter import ttk, Toplevel, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from kanapy import MTEX_AVAIL
-from kanapy.api import Microstructure
-from kanapy.textures import EBSDmap
-from kanapy.initializations import RVE_creator, mesh_creator
-from kanapy.input_output import import_stats, write_stats
-from kanapy.entities import Simulation_Box
+from .api import Microstructure
+from .textures import EBSDmap
+from .initializations import RVE_creator, mesh_creator
+from .input_output import import_stats, write_stats
+from .entities import Simulation_Box
 
 
 def self_closing_message(message, duration=4000):
@@ -410,8 +409,6 @@ class particle_rve(object):
 
     def create_orientation(self):
         """A function to create the orientation """
-        if not MTEX_AVAIL:
-            self_closing_message("Generation of grain orientation requires MTEX module.")
         self_closing_message("The process has been started, please wait...")
         texture = self.texture_var1.get()
         matname = self.matname_var1.get()
@@ -596,9 +593,6 @@ class cuboid_rve(object):
 
     def create_orientation(self):
         """Create grain orientations according to texture descriptors"""
-        if not MTEX_AVAIL:
-            self_closing_message("Generation of grain orientation requires MTEX module.")
-            return
         self_closing_message("The process has been started, please wait...")
         texture = self.texture_var2.get()
         matname = self.matname_var2.get()
