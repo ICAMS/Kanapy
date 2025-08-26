@@ -194,6 +194,7 @@ The preferred way to cite Kanapy is:
  - v6.2: Possibility of other geometries than ellipsoids as basic microstructure shapes
  - v6.3: Implementation of velocity-Verlet algorithm to integrate particle trajectories during packing
  - v6.4: Support of the [modular materials data schema](https://github.com/Ronakshoghi/MetadataSchema.git) for import and export of microstructures 
+ - v6.5: Switched from MTEX to Python ORIX library for EBSD import and analysis and generation of textures
 
 ## Licenses
 
