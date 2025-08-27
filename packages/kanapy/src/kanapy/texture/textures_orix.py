@@ -8,7 +8,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from kanapy_core.rve_stats import get_grain_geom
+from kanapy.core import get_grain_geom
 from scipy.stats import lognorm, vonmises
 from scipy.spatial import ConvexHull, cKDTree
 from scipy.special import legendre, beta

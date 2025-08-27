@@ -6,11 +6,11 @@ import zipfile
 import requests
 import webbrowser
 from io import BytesIO
-from kanapy_core import __version__
+from importlib.metadata import version
 
     
 @click.group()
-@click.version_option(version=__version__)
+@click.version_option(version=version('kanapy'))
 @click.pass_context
 def main(ctx):    
     pass
@@ -23,7 +23,7 @@ def gui(ctx):
     import tkinter as tk
     import tkinter.font as tkFont
     from tkinter import ttk
-    from kanapy_core.gui import particle_rve, cuboid_rve
+    from .gui import particle_rve, cuboid_rve
 
     app = tk.Tk()
     app.title("RVE_Generation")
@@ -135,7 +135,7 @@ def setPaths():
     """ Starts matlab engine, after installation if required, and initializes MTEX.
     """
     try:
-        from kanapy_mtex import ROOT_DIR
+        from kanapy.mtex import ROOT_DIR
     except:
         raise ModuleNotFoundError('This function in only evailable if kanapy-mtex and Matlab are installed.')
     # check if Matlab Engine library is already installed

@@ -32,14 +32,33 @@ classifiers = [
 ]
 
 dependencies = [
-  "kanapy-orix>=6.5.0",  # default backend
+    "numpy",
+    "matplotlib",
+    "scipy",
+    "seaborn",
+    "click",
+    "tqdm",
+    "jsonschema",
+    "requests",
+    "orix>=0.13",
+    "networkx",
+    "scikit-image",
 ]
 
 [project.optional-dependencies]
 mtex = ["kanapy-mtex>=6.5.0"]
 dev = ["pytest", "pytest-mock", "pytest-cov", "black", "build", "twine"]
 
+[project.scripts]
+kanapy = "kanapy:start"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
-packages = ["kanapy"]
 include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["kanapy", "kanapy.*"]
+
+[project.urls]
+Homepage = "https://github.com/ICAMS/Kanapy"
