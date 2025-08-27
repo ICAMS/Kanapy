@@ -3,8 +3,8 @@
 
 import pytest
 
-import kanapy_core as kanapy
-from kanapy_core.entities import *
+import kanapy as kanapy
+from kanapy.core.entities import *
 
 
 @pytest.fixture
