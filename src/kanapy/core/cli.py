@@ -135,7 +135,7 @@ def setPaths():
     """ Starts matlab engine, after installation if required, and initializes MTEX.
     """
     try:
-        from kanapy.mtex import ROOT_DIR
+        from kanapy_mtex import ROOT_DIR
     except:
         raise ModuleNotFoundError('This function in only evailable if kanapy-mtex and Matlab are installed.')
     # check if Matlab Engine library is already installed

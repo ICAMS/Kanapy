@@ -6,6 +6,7 @@ Created on May 2024
 last Update Oct 2024
 @author: Ronak Shoghi, Alexander Hartmaier
 """
+import sys
 import time
 import itertools
 import numpy as np
@@ -13,10 +14,14 @@ import tkinter as tk
 from tkinter import ttk, Toplevel, filedialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from .api import Microstructure
-from .textures import EBSDmap
 from .initializations import RVE_creator, mesh_creator
 from .input_output import import_stats, write_stats
 from .entities import Simulation_Box
+
+if 'kanapy_mtex' in sys.modules:
+    from kanapy_mtex.texture import EBSDmap
+else:
+    from kanapy.texture import EBSDmap
 
 
 def self_closing_message(message, duration=4000):

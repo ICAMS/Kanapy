@@ -11,9 +11,6 @@ November 2023
 import kanapy as knpy
 import numpy as np
 
-if not knpy.MTEX_AVAIL:
-    raise ModuleNotFoundError('MTEX module not available. Run kanapy setupTexture before using this script.')
-
 fname = 'ebsd_316L_500x500.ang'  # name of ang file to be imported
 nvox = 30         # number of voxels per side
 box_length = 50   # side length of generated RVE in micron

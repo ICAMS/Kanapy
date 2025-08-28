@@ -852,10 +852,6 @@ class EBSDmap:
             ar_data
             om_param
             om_data
-            
-            
-            
-        eng : handle for Matlab engine with MTEX data
 
         """
 
@@ -1376,7 +1372,7 @@ def get_ipf_colors(ori_list, color_key=0):
 
     # get colors
     if not isinstance(ori_list, Orientation):
-        raise TypeError('Parameter "ori_list" must be an Orientation object.')
+        ori_list = Orientation.from_euler(ori_list)
     ckey = ox_plot.IPFColorKeyTSL(ori_list.symmetry)
     ocol = ckey.orientation2color(ori_list)
     return ocol
@@ -1450,7 +1446,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         #return np.array(eng.Euler(orilist))
 
 
-def createOrisetRandom(num, hist=None, shared_area=None, cs=None):
+def createOrisetRandom(num, hist=None, shared_area=None, cs=None, Nbase=None):
     """
     Create a set of num Euler angles for Random texture.
     Other than knpy.createOriset() this method does not create an artificial

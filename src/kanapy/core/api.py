@@ -11,6 +11,7 @@ Authors: Alexander Hartmaier, Golsa Tolooei Eshlghi, Abhishek Biswas
 Institution: ICAMS, Ruhr University Bochum
 """
 import os
+import sys
 import json
 import logging
 import platform
@@ -323,11 +324,14 @@ class Microstructure(object):
         -------
 
         """
-        from kanapy import MTEX_AVAIL, EBSDmap, createOrisetRandom, createOriset
-        if MTEX_AVAIL:
-            logging.info('Using MTEX library to generate orientations.')
+        if 'kanapy_mtex' in sys.modules:
+            from kanapy_mtex.texture import EBSDmap, createOrisetRandom, createOriset
+            logging.info('Using MTEX library to read EBSD maps and generate orientations.')
+            MTEX = True
         else:
-            logging.info('Using ORIX library to generate orientations.')
+            from kanapy.texture import EBSDmap, createOrisetRandom, createOriset
+            logging.info('Using ORIX library to read EBSD maps and generate orientations.')
+            MTEX = False
 
         if self.mesh.grains is None:
             raise ValueError('Grain geometry is not defined. Run voxelize first.')
@@ -349,7 +353,7 @@ class Microstructure(object):
         for ip, ngr in enumerate(self.ngrains):
             if isinstance(data, EBSDmap):
                 if iphase is None or iphase == ip:
-                    if gba is not None and not MTEX_AVAIL:
+                    if gba is not None and not MTEX:
                         logging.warning('Shared are is currently only available in kanapy-mtex.\n'
                                         'This option will be ignored.')
                         gba = None
@@ -440,15 +444,13 @@ class Microstructure(object):
         else:
             data = self.mesh.grains
         if ori is not None:
-            try:
-                from kanapy.textures import get_ipf_colors
-                if isinstance(ori, bool) and ori:
-                    ori = np.array([val for val in self.mesh.grain_ori_dict.values()])
-                clist = get_ipf_colors(ori, color_key)
-            except Exception as e:
-                logging.error(f'An unexpected exception occurred: {e}')
-                logging.error('Orientations can only be plotted if MTEX is available.')
-                clist = None
+            if "kanapy_mtex" in sys.modules:
+                from kanapy_mtex.texture import get_ipf_colors
+            else:
+                from kanapy.texture import get_ipf_colors
+            if isinstance(ori, bool) and ori:
+                ori = np.array([val for val in self.mesh.grain_ori_dict.values()])
+            clist = get_ipf_colors(ori, color_key)
         else:
             clist = None
         hmin = min(self.rve.size)

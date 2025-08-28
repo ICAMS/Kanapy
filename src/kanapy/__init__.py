@@ -44,8 +44,7 @@ __author__ = ('Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak
 __email__ = 'alexander.hartmaier@rub.de'
 __version__ = version('kanapy')
 __backend__ = "orix"
-__all__ = ["Microstructure", "EBSDmap", "ODF", "set_stats", "pickle2microstructure", "import_voxels",
-           "import_stats", "write_stats", "createOriset", "createOrisetRandom",
-           "get_ipf_colors", "plot_inverse_pole_figure", "plot_inverse_pole_figure_density",
-           "start"]
-MTEX_AVAIL = False  # legacy flag
+__all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxels",
+           "import_stats", "write_stats", "start", "EBSDmap", "ODF",  "createOriset",
+           "createOrisetRandom", "get_ipf_colors", "plot_inverse_pole_figure",
+           "plot_inverse_pole_figure_density",]
