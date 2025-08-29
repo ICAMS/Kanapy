@@ -15,17 +15,14 @@ Kanapy is a [python](http://www.python.org) package for generating complex three
 polycrystalline microstructures. The microstructures are built based on statistical information about phase and grain morphologies, given as size distributions and aspect ratio distrubitions of grains and phase regions. Furthermore, crystallographic texture is considered in form of orientation distribution functions (ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze EBSD maps with respect to the morphology and texture of microstructures. Based on this experimental data, it generates 3D synthetic microstructures mimicking real ones in a statistical sense.  
 
 The
-basic implementation of Kanapy is done in form of a Python Appplication Programming Interface (API). 
-The texture module of Kanapy is implemented as
-[MATLAB](https://www.mathworks.com/products/matlab.html) functions using several algorithms implemented in
-[MTEX](https://mtex-toolbox.github.io/) for texture analysis.
+basic implementation of Kanapy is done in form of a Python Appplication Programming Interface (API). There is also a command line interface (CLI) for administrative functions and and Graphical User Interface (GUI), which is still under development.
 
 ![](docs/figs/kanapy_graphical_abstract.png)
 
 ## Features
 
 -   Kanapy offers a Python Application Programming Interface (API).
--   Possibility to analyze experimental microstructures based on [MTEX](https://mtex-toolbox.github.io/) functions.
+-   Possibility to analyze experimental microstructures based on [orix](https://orix.readthedocs.io/en/stable/#) functions.
 -   Support of multiphase microstructures.
 -   Generation of 3D microstructure morphology based on statistical features as size distributions and aspect ratio distributions of grains and phase regions.
 -   Crystallographic texture reconstruction using orientations from
@@ -72,31 +69,25 @@ Kanapy is now installed along with all its dependencies. The correct installatio
 (knpy) $ kanapy runTests
 ```
 
+### Using Kanapy in your Python scripts
 After installation by any of those methods, the package can be used as API within python, e.g. by importing the entire package with
 
 ```python
 import kanapy as knpy
 ```
 
-### Kanapy texture module
-
-If you intend
-to use Kanapy's texture module, a
-[MATLAB](https://www.mathworks.com/products/matlab.html) installation is required because the texture module is based on [MTEX](https://mtex-toolbox.github.io/) functions. Kanapy uses a local version of MTEX stored in `src/kanapy/libs/mtex`, if you want to use another MTEX version, please set the paths accordingly. If MATLAB is available on your system, the texture module is initialized by the command
-
-``` 
-(knpy) $ kanapy setupTexture
-```
-**Note:** The absolute paths to {user\_dependent\_path}/site-packages/kanapy and {user\_dependent\_path}/site-packages/kanapy/libs/mtex should to be added to the MATLABPATH environment variable, see [Mathworks&reg; documentation](https://de.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html#). If the texture module is installed as described above, this is done automatically within Kanapy.
-
-
-**Note:** The installation scripts have been tested for Matlab R2024a and R2025a with Python 3.9 and 3.10 on current Linux, MacOS and Windows systems. If you are using other Matlab versions, the script "setupTexture" might fail. In that case, you or a system administrator can setup the Matlab Engine API for Python manually. To do so, please follow the instructions given on [Mathworks&reg;](https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html). The Python version of the *knpy*-environment can be changed according to the requirements of the Matlab Engine API by editing the `environment.yml` file and re-creating the conda environment *knpy*.
-
-### Coomand line tools
+### Command line tools
 Kanapy supports some command line tools, a list of supported tools can be displayed with
 
 ```
 (knpy) $ kanapy --help          
+```
+
+### Graphical User Interface (GUI)
+The alpha-version of the GUI can be started with the shell command
+
+```
+(knpy) $ kanapy gui
 ```
 
 
@@ -118,27 +109,17 @@ The Kanapy documentation is available online on GitHub Pages: [https://icams.git
 The documentation for Kanapy is generated using [Sphinx](http://www.sphinx-doc.org/en/master/). 
 
 ## Dependencies
-### Third-party components
-
-
-Kanapy's texture module requires
-[MATLAB](https://www.mathworks.com/products/matlab.html) to be installed on your machine. Make sure to use MATLAB v2024a or above. This package includes code from the project [MTEX](https://mtex-toolbox.github.io/) contained in `src/kanapy/libs/mtex`, which is licensed under the GNU GPL v2 license. See the LICENSE file in that directory for details.
-
-### Core dependencies
 
 Below are the listed dependencies for running Kanapy:
 
-> -   [NumPy](http://numpy.scipy.org) for array manipulation.
-> -   [Scipy](https://www.scipy.org/) for functionalities like
->     Convexhull.
-> -   [Matplotlib](https://matplotlib.org/) for plotting and
->     visualizing.
+-   [NumPy](https://numpy.org) for array manipulation.
+-   [SciPy](https://www.scipy.org/) for functionalities like Convexhull.
+-   [Matplotlib](https://matplotlib.org/) for plotting and visualizing.
+-   [orix](https://orix.readthedocs.io/en/stable/#) for reading and analyzing EBSD maps and for generation of crystal orientations
+-   [NetworkX](https://networkx.org) generating graph networks of microstructures
+-   [scikit-image](https://scikit-image.org) processing of microstructure images
 
-### Optional dependencies
-> -   [MATLAB](https://www.mathworks.com/products/matlab.html) for
->     texture module (commercial software).
-> -   [MTEX](https://mtex-toolbox.github.io/) for texture module (Kanapy package contains MTEX version 5.2.2).
-> -   [OVITO](https://ovito.org/) for visualizing simulation data.
+
 
 
 ## Citation
@@ -194,7 +175,7 @@ The preferred way to cite Kanapy is:
  - v6.2: Possibility of other geometries than ellipsoids as basic microstructure shapes
  - v6.3: Implementation of velocity-Verlet algorithm to integrate particle trajectories during packing
  - v6.4: Support of the [modular materials data schema](https://github.com/Ronakshoghi/MetadataSchema.git) for import and export of microstructures 
- - v6.5: Switched from MTEX to Python ORIX library for EBSD import and analysis and generation of textures
+ - v6.5: Switched to orix library for EBSD import and analysis and generation of textures to have a pure Python code. The MTEX backend is still available with [Kanapy-mtex](https://github.com/ICAMS/kanapy-mtex.git).
 
 ## Licenses
 
@@ -203,8 +184,7 @@ The preferred way to cite Kanapy is:
    <img alt="Creative Commons License" style="border-width:0;max-height:30px;height:100%;" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a>
 
 Kanapy is made available under the GNU Affero General Public License (AGPL) v3
-[license](https://www.gnu.org/licenses/agpl-3.0.html).   
-MTEX is licensed under the GNU GPL v2 [license](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).  
+[license](https://www.gnu.org/licenses/agpl-3.0.html).    
 The additional materials under examples and in the documentation are published under the Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) [license](https://creativecommons.org/licenses/by-nc-sa/4.0/). 
 
 &copy; 2025 by Authors, ICAMS/Ruhr University Bochum, Germany
