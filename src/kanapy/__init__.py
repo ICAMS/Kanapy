@@ -44,3 +44,4 @@ __all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxel
            "import_stats", "write_stats", "start", "EBSDmap", "ODF",  "createOriset",
            "createOrisetRandom", "get_ipf_colors", "plot_inverse_pole_figure",
            "plot_inverse_pole_figure_density", "plot_voxels_3D", "plot_polygons_3D"]
+MTEX_AVAIL = __backend__  # legacy flag for downwards compatibility

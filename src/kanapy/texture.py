@@ -1483,7 +1483,7 @@ def createOrisetRandom(num, hist=None, shared_area=None, cs=None, Nbase=None):
         logging.warning('Crystal Symmetry "cs" must be provided as Symmetry object.')
         print(type(cs))
 
-    ori = Orientation.random(num, cs)
+    ori = Orientation.random(num, cs).in_euler_fundamental_region()
     if hist is None:
         return ori
     else:
