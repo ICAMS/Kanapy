@@ -9,7 +9,7 @@ January 2024
 import kanapy as knpy
 import numpy as np
 
-texture = 'unimodal'  # chose texture type 'random' or 'unimodal'
+texture = 'random'  # chose texture type 'random' or 'unimodal'
 matname = 'Simulanium'  # Material name
 nvox = 30  # number of voxels in each Cartesian direction
 size = 40  # size of RVE in micron
@@ -33,11 +33,10 @@ ms.voxelize()  # assign voxels to grains according to particle configuration
 ms.plot_voxels(sliced=True)  # plot voxels colored according to grain number
 ms.generate_grains()  # generate a polyhedral hull around each voxelized grain
 ms.plot_grains()  # plot polyhedral grains
-ms.plot_stats()  # compared final grain statistics with initial parameters
+ms.plot_stats_init(show_res=True)  # compare final grain statistics with initial parameters
 
 # create grain orientations for Goss or random texture
-if knpy.MTEX_AVAIL:
-    ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
+ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
 
 # output rve in voxel format such that it can be re-imported again
 ms.write_voxels(script_name=__file__, mesh=False, system=False)

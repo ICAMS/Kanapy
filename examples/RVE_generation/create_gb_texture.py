@@ -8,11 +8,11 @@ January 2024
 
 """
 
-import kanapy as knpy
+import kanapy_mtex as knpy
 from math import pi
 
-if not knpy.MTEX_AVAIL:
-    raise ModuleNotFoundError("The module MTEX is required for this example, please run 'kanapy setupTexture' first.")
+if not knpy.__backend__ == 'mtex':
+    raise ModuleNotFoundError("This example requires kanapy-mtex.")
 
 texture = 'goss'  # chose texture type 'random', 'goss' or 'copper'
 matname = 'Simulanium'  # Material name

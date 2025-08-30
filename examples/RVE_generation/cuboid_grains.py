@@ -12,8 +12,8 @@ February 2024
 import kanapy as knpy
 import numpy as np
 import itertools
-from kanapy.initializations import RVE_creator, mesh_creator
-from kanapy.entities import Simulation_Box
+from kanapy.core.initializations import RVE_creator, mesh_creator
+from kanapy.core.entities import Simulation_Box
 
 # define basic parameters of RVE
 texture = 'unimodal'  # chose texture type 'random' or 'unimodal'
@@ -81,8 +81,7 @@ ms.plot_voxels()
 
 # create grain orientations for unimodal Goss texture
 # Note: angles are given in degrees
-if knpy.MTEX_AVAIL:
-    ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
+ms.generate_orientations(texture, ang=[0, 45, 0], omega=7.5)
 
 # output rve in voxel format
 ms.write_voxels(script_name=__file__, mesh=False, system=False)
