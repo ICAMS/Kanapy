@@ -1262,7 +1262,7 @@ class Microstructure(object):
         import platform
         import getpass
         from datetime import date
-        from pkg_resources import get_distribution
+        from kanapy import __version__
 
         if script_name is None:
             script_name = __file__
@@ -1289,7 +1289,7 @@ class Microstructure(object):
             },
             "Model": {
                 "Creator": "kanapy",
-                "Version": get_distribution('kanapy').version,
+                "Version": __version__,
                 "Repository": "https://github.com/ICAMS/Kanapy.git",
                 "Input": source,
                 "Script": script_name,

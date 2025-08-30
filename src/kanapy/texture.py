@@ -1416,11 +1416,14 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         print(type(cs))
     if degree:
         omega = np.deg2rad(omega)
-    #    ang = np.deg2rad(ang)
-    #else:
-    #    ang = np.asarray(ang)
-    #assert not np.isnan(ang).any()
-    #ori = Orientation.from_euler(ang, cs)
+    if isinstance(ang, list):
+        if degree:
+            ang = np.deg2rad(ang)
+        else:
+            ang = np.array(ang)
+        ang = Orientation.from_euler(ang, cs)
+    else:
+        assert isinstance(ang, Orientation)    
     # psi = DeLaValleePoussinKernel(halfwidth=omega)
     if ang.size < Nbase/100:
         # create artificial ODF for monomodal texture or small orientation set

@@ -1009,8 +1009,8 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         for pid in ph_set:
             f.write('*Material, name=PHASE{}_MAT\n'.format(pid))
 
-            props = phase_props.get(pid)
-            if props:
+            if phase_props:
+                props = phase_props.get(pid)
                 # inline properties as before
                 if 'damage_init' in props:
                     di = props['damage_init']
@@ -1276,9 +1276,9 @@ def pickle2microstructure(file, path='./'):
 def import_voxels(file, path='./'):
     import json
     import copy
-    from kanapy.api import Microstructure
-    from kanapy.initializations import RVE_creator, mesh_creator
-    from kanapy.entities import Simulation_Box
+    from .api import Microstructure
+    from .initializations import RVE_creator, mesh_creator
+    from .entities import Simulation_Box
 
     if file is None:
         raise ValueError('Name for voxel file must be given.')

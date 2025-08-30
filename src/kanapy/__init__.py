@@ -26,12 +26,8 @@ from importlib.metadata import version
 from importlib.resources import files
 
 # Re-export shared core and texture modules for convenience
-#if os.path.abspath('.core') not in sys.path:
-#    sys.path.insert(0, os.path.abspath('.core'))
-#if os.path.abspath('./texture') not in sys.path:
-#    sys.path.insert(0, os.path.abspath('./texture'))
 from .core import Microstructure, set_stats, pickle2microstructure, import_voxels,\
-     import_stats, write_stats, start, triple_surf
+     import_stats, write_stats, start, triple_surf, plot_voxels_3D, plot_polygons_3D
 
 from .texture import EBSDmap, ODF, createOriset, createOrisetRandom, \
     get_ipf_colors, plot_inverse_pole_figure, plot_inverse_pole_figure_density
@@ -47,4 +43,4 @@ __backend__ = "orix"
 __all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxels",
            "import_stats", "write_stats", "start", "EBSDmap", "ODF",  "createOriset",
            "createOrisetRandom", "get_ipf_colors", "plot_inverse_pole_figure",
-           "plot_inverse_pole_figure_density",]
+           "plot_inverse_pole_figure_density", "plot_voxels_3D", "plot_polygons_3D"]
