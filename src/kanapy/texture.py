@@ -1379,7 +1379,8 @@ def get_ipf_colors(ori_list, color_key=0):
 
 
 def createOriset(num, ang, omega, hist=None, shared_area=None,
-                 cs=None, degree=True, Nbase=10000, verbose=False, full_output=False):
+                 cs=None, degree=True, Nbase=10000, resolution=None,
+                 verbose=False, full_output=False):
     """
     Create a set of num Euler angles according to the ODF defined by the
     set of Euler angles ang and the kernel half-width omega.
@@ -1416,6 +1417,10 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         print(type(cs))
     if degree:
         omega = np.deg2rad(omega)
+    if resolution is None:
+        resolution = omega
+    elif not degree:
+        resolution = np.rad2deg(resolution)
     if isinstance(ang, list):
         if degree:
             ang = np.deg2rad(ang)
@@ -1428,7 +1433,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     if ang.size < Nbase/100:
         # create artificial ODF for monomodal texture or small orientation set
         odf = ODF(ang, halfwidth=omega)
-        ori = calc_orientations(odf, Nbase)
+        ori = calc_orientations(odf, Nbase, res=resolution)
         assert ori.size == Nbase
     else:
         ori = ang
@@ -1449,7 +1454,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         #return np.array(eng.Euler(orilist))
 
 
-def createOrisetRandom(num, hist=None, shared_area=None, cs=None, Nbase=None):
+def createOrisetRandom(num, omega=None, hist=None, shared_area=None, cs=None, Nbase=None):
     """
     Create a set of num Euler angles for Random texture.
     Other than knpy.createOriset() this method does not create an artificial

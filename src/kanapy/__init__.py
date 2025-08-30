@@ -18,12 +18,8 @@ use pip install kanapy-mtex for version based on MTEX library, depending on Matl
  You should have received a copy of the GNU Affero General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
-import os
-import sys
 import logging
 from importlib.metadata import version
-from importlib.resources import files
 
 # Re-export shared core and texture modules for convenience
 from .core import Microstructure, set_stats, pickle2microstructure, import_voxels,\
