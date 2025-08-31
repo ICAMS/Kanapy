@@ -18,23 +18,15 @@ use pip install kanapy-mtex for version based on MTEX library, depending on Matl
  You should have received a copy of the GNU Affero General Public License
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
-import os
-import sys
 import logging
 from importlib.metadata import version
-from importlib.resources import files
 
 # Re-export shared core and texture modules for convenience
-#if os.path.abspath('.core') not in sys.path:
-#    sys.path.insert(0, os.path.abspath('.core'))
-#if os.path.abspath('./texture') not in sys.path:
-#    sys.path.insert(0, os.path.abspath('./texture'))
 from .core import Microstructure, set_stats, pickle2microstructure, import_voxels,\
-     import_stats, write_stats, start, triple_surf
+     import_stats, write_stats, start, triple_surf, plot_voxels_3D, plot_polygons_3D
 
 from .texture import EBSDmap, ODF, createOriset, createOrisetRandom, \
-    get_ipf_colors, plot_inverse_pole_figure, plot_inverse_pole_figure_density
+    get_ipf_colors, plot_pole_figure, plot_pole_figure_proj
 
 log_level = 20  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR
 logging.basicConfig(level=log_level)  # set log level
@@ -46,5 +38,6 @@ __version__ = version('kanapy')
 __backend__ = "orix"
 __all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxels",
            "import_stats", "write_stats", "start", "EBSDmap", "ODF",  "createOriset",
-           "createOrisetRandom", "get_ipf_colors", "plot_inverse_pole_figure",
-           "plot_inverse_pole_figure_density",]
+           "createOrisetRandom", "get_ipf_colors", "plot_pole_figure",
+           "plot_pole_figure_proj", "plot_voxels_3D", "plot_polygons_3D"]
+MTEX_AVAIL = __backend__  # legacy flag for downwards compatibility

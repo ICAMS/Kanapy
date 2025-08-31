@@ -308,23 +308,37 @@ def odf_est(ori, odf, nstep=50, step=0.5, halfwidth=None, verbose=False):
     return todf
 
 
-def plot_inverse_pole_figure(orientations, phase, vector=None):
+def plot_pole_figure(orientations, phase, vector=None,
+                     size=None, alpha=None):
     # plot inverse pole figure
     # <111> poles in the sample reference frame
     if vector is None:
         vector = [0, 0, 1]
     assert isinstance(orientations, Orientation)
+    if size is None:
+        size = np.clip(250/np.sqrt(orientations.size), 0.25, 25)
+    if alpha is None:
+        alpha = np.clip(4/np.sqrt(orientations.size), 0.05, 0.5)
     t_ = Miller(uvw=vector, phase=phase).symmetrise(unique=True)
     t_all = orientations.inv().outer(t_)
-    fig = plt.figure(figsize=(8, 8))
-    ax = fig.add_subplot(111, projection="stereographic")
-    ax.scatter(t_all)
-    ax.set_labels("X", "Y", None)
-    ax.set_title(phase.name + r" $\left<001\right>$ PF")
+    fig = plt.figure(figsize=(9, 12))
+    ax1 = fig.add_subplot(211, projection="stereographic")
+    ax1.scatter(t_all, s=size, alpha=alpha)
+    ax1.set_labels("X", "Y", None)
+    ax1.set_title(phase.name + r" $\left<" +
+                  f"{vector[0]}{vector[1]}{vector[2]}" +
+                  r"\right>$ PF")
+    ax2 = fig.add_subplot(212, projection="stereographic")
+    ax2.pole_density_function(t_all)
+    ax2.set_labels("X", "Y", None)
+    ax2.set_title(phase.name + r" $\left<" +
+                  f"{vector[0]}{vector[1]}{vector[2]}" +
+                  r"\right>$ PDF")
     plt.show()
 
 
-def plot_inverse_pole_figure_density(orientations, phase, vector=None, title=None):
+def plot_pole_figure_proj(orientations, phase, vector=None,
+                          title=None, alpha=None, size=None):
     # Some sample direction, v
     if vector is None:
         vector = [0, 0, 1]
@@ -333,6 +347,10 @@ def plot_inverse_pole_figure_density(orientations, phase, vector=None, title=Non
         v_title = ["X", "Y", "Z"][np.argmax(vector)]
     else:
         v_title = title
+    if size is None:
+        size = np.clip(250/np.sqrt(orientations.size), 0.25, 25)
+    if alpha is None:
+        alpha = np.clip(4/np.sqrt(orientations.size), 0.05, 0.5)
     assert isinstance(orientations, Orientation)
     # Rotate sample direction v into every crystal orientation O
     t_ = orientations * v
@@ -344,7 +362,7 @@ def plot_inverse_pole_figure_density(orientations, phase, vector=None, title=Non
     fig = plt.figure(figsize=(9, 8))
 
     ax0 = fig.add_subplot(211, **subplot_kw)
-    ax0.scatter(t_, alpha=0.2)
+    ax0.scatter(t_, s=size, alpha=alpha)
     _ = ax0.set_title(f"EBSD data, {phase.name}, {v_title}")
 
     ax2 = fig.add_subplot(212, **subplot_kw)
@@ -1140,7 +1158,7 @@ class EBSDmap:
             self.plot_mo_map()
             self.plot_ipf_map()
             self.plot_segmentation()
-            self.plot_inverse_pole_figure()
+            self.plot_pf()
 
         if show_grains:
             self.plot_grains()
@@ -1212,15 +1230,17 @@ class EBSDmap:
             plt.colorbar(label="CI")
             plt.show()
 
-    def plot_inverse_pole_figure(self, vector=None):
+    def plot_pf(self, vector=None):
         # plot inverse pole figure
         # <111> poles in the sample reference frame
         if vector is None:
             vector = [0, 0, 1]
-        for n_ph, ind in enumerate(self.emap.phases.ids):
+        pids = np.array(self.emap.phases.ids)
+        pids = pids[pids >= 0]
+        for n_ph, ind in enumerate(pids):
             data = self.ms_data[n_ph]
             orientations = data['ori']
-            plot_inverse_pole_figure(orientations, self.emap.phases[ind], vector=vector)
+            plot_pole_figure(orientations, self.emap.phases[ind], vector=vector)
             #t_ = Miller(uvw=vector, phase=self.emap.phases[ind]).symmetrise(unique=True)
             #t_all = orientations.inv().outer(t_)
             #fig = plt.figure(figsize=(8, 8))
@@ -1230,15 +1250,17 @@ class EBSDmap:
             #ax.set_title(data['name'] + r" $\left<001\right>$ PF")
             #plt.show()
 
-    def plot_inverse_pole_figure_density(self, vector=None):
+    def plot_pf_proj(self, vector=None):
         # plot inverse pole figure
         # <111> poles in the sample reference frame
         if vector is None:
             vector = [0, 0, 1]
-        for n_ph, ind in enumerate(self.emap.phases.ids):
+        pids = np.array(self.emap.phases.ids)
+        pids = pids[pids >= 0]
+        for n_ph, ind in enumerate(pids):
             data = self.ms_data[n_ph]
             orientations = data['ori']
-            plot_inverse_pole_figure_density(orientations, self.emap.phases[ind], vector=vector)
+            plot_pole_figure_proj(orientations, self.emap.phases[ind], vector=vector)
 
     def plot_grains_marked(self):
         # plot grain with numbers and axes
@@ -1379,7 +1401,8 @@ def get_ipf_colors(ori_list, color_key=0):
 
 
 def createOriset(num, ang, omega, hist=None, shared_area=None,
-                 cs=None, degree=True, Nbase=10000, verbose=False, full_output=False):
+                 cs=None, degree=True, Nbase=10000, resolution=None,
+                 verbose=False, full_output=False):
     """
     Create a set of num Euler angles according to the ODF defined by the
     set of Euler angles ang and the kernel half-width omega.
@@ -1416,16 +1439,23 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         print(type(cs))
     if degree:
         omega = np.deg2rad(omega)
-    #    ang = np.deg2rad(ang)
-    #else:
-    #    ang = np.asarray(ang)
-    #assert not np.isnan(ang).any()
-    #ori = Orientation.from_euler(ang, cs)
+    if resolution is None:
+        resolution = omega
+    elif not degree:
+        resolution = np.rad2deg(resolution)
+    if isinstance(ang, list):
+        if degree:
+            ang = np.deg2rad(ang)
+        else:
+            ang = np.array(ang)
+        ang = Orientation.from_euler(ang, cs)
+    else:
+        assert isinstance(ang, Orientation)    
     # psi = DeLaValleePoussinKernel(halfwidth=omega)
     if ang.size < Nbase/100:
         # create artificial ODF for monomodal texture or small orientation set
         odf = ODF(ang, halfwidth=omega)
-        ori = calc_orientations(odf, Nbase)
+        ori = calc_orientations(odf, Nbase, res=resolution)
         assert ori.size == Nbase
     else:
         ori = ang
@@ -1446,7 +1476,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         #return np.array(eng.Euler(orilist))
 
 
-def createOrisetRandom(num, hist=None, shared_area=None, cs=None, Nbase=None):
+def createOrisetRandom(num, omega=None, hist=None, shared_area=None, cs=None, Nbase=None):
     """
     Create a set of num Euler angles for Random texture.
     Other than knpy.createOriset() this method does not create an artificial
@@ -1480,7 +1510,7 @@ def createOrisetRandom(num, hist=None, shared_area=None, cs=None, Nbase=None):
         logging.warning('Crystal Symmetry "cs" must be provided as Symmetry object.')
         print(type(cs))
 
-    ori = Orientation.random(num, cs)
+    ori = Orientation.random(num, cs).in_euler_fundamental_region()
     if hist is None:
         return ori
     else:

@@ -44,7 +44,7 @@ ms.init_RVE()  # setup RVE geometry
 ms.pack(k_rep=0.01, k_att=0.01)  # packing will be stopped when desired volume fraction is reached
 ms.plot_ellipsoids()  # plot particles at the end of growth phase
 ms.voxelize()  # assigning particles to voxels, empty voxels will be considered as phase 1 (matrix)
-ms.plot_voxels(sliced=True, dual_phase=False)  # plot voxel structure, dual_phase=True will plot green/red contrast
+ms.plot_voxels(sliced=True, phases=False)  # plot voxel structure, phases=True will plot green/red contrast
 
 # plot voxels of porous phase
 mask = np.full(ms.mesh.dim, False, dtype=bool)
@@ -53,7 +53,7 @@ for igr, ip in ms.mesh.grain_phase_dict.items():
         for nv in ms.mesh.grain_dict[igr]:
             i, j, k = np.unravel_index(nv-1, ms.mesh.dim, order='F')
             mask[i, j, k] = True
-knpy.plot_voxels_3D(ms.mesh.grains, Ngr=ms.Ngr, mask=mask)
+knpy.plot_voxels_3D(ms.mesh.grains, mask=mask)
 
 # Write voxel structure to JSON file
 ms.write_voxels(script_name=__file__, mesh=False, system=False)

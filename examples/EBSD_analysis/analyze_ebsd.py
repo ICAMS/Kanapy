@@ -7,12 +7,12 @@ February 2024
 """
 
 import numpy as np
-from kanapy import MTEX_DIR, MTEX_AVAIL
+from kanapy_mtex import MTEX_DIR, __backend__
 
-if MTEX_AVAIL:
+if __backend__ == 'mtex':
     import matlab.engine
 else:
-    raise ModuleNotFoundError('Anaysis of EBSD maps is only possible with an existing MTEX installation in Matlab.')
+    raise ModuleNotFoundError('This example can only be used with kanapy-mtex.')
 
 eng = matlab.engine.start_matlab()
 eng.addpath(MTEX_DIR, nargout=0)

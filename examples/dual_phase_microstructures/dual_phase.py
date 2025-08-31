@@ -60,12 +60,12 @@ ms.plot_stats_init()  # plot initial microstructure statistics and cut-offs for 
 # Create and visualize synthetic RVE
 ms.init_RVE()  # initialize RVE and generate particle distribution according to statistical data
 ms.pack(k_rep=0.01, k_att=0.01)  # packing will be stopped when desired volume fraction is reached
-ms.plot_ellipsoids(dual_phase=True)  # plot particles at the end of growth phase (dual_phase=False plots colored ellips)
+ms.plot_ellipsoids(phases=True)  # plot particles at the end of growth phase (phases=False plots colored ellips)
 ms.voxelize()  # assigning particles to voxels, empty voxels will be considered as phase 1 (porosity)
-ms.plot_voxels(sliced=True, dual_phase=True)  # plot voxels, dual_phase=False will plot colored voxels for phase 0
-# plot phase-specific statistical information of RVE (for dual_phase=False: entire RVE) and compare to initial stats
+ms.plot_voxels(sliced=True, phases=True)  # plot voxels, phases=False will plot colored voxels for phase 0
+# plot phase-specific statistical information of RVE (for phases=False: entire RVE) and compare to initial stats
 ms.plot_stats_init(show_res=True)
 ms.generate_grains()  # construct polyhedral hull for each grain
-ms.plot_grains(dual_phase=True)  # plot grain structure (dual_phase=True will plot colored grains for phase 0)
+ms.plot_grains(phases=True)  # plot grain structure (phases=True will plot colored grains for phase 0)
 # Write voxel structure to JSON file
 ms.write_voxels(script_name=__file__, mesh=False, system=False)

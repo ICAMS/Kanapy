@@ -36,8 +36,7 @@ except:
 
 __all__ = ["Microstructure", "set_stats", "plot_voxels_3D", "plot_polygons_3D", 
            "export2abaqus", "writeAbaqusMat", "pickle2microstructure", "import_voxels",
-           "import_stats", "write_stats", "find_rot_axis", "bbox", "particle_rve", "cuboid_rve",
-           "collision_routine", "get_grain_geom", "start"]
+           "import_stats", "write_stats", "find_rot_axis", "bbox", "get_grain_geom", "start"]
            
 if triple_surf:
     __all__.append("create_ref_ell")

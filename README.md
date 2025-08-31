@@ -2,6 +2,7 @@
 [![image](https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg)](https://doi.org/10.5281/zenodo.3662366)
 ![image](https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical)
 [![image](https://img.shields.io/badge/License-GNU%20AGPLv3-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ICAMS/Kanapy.git/HEAD?urlpath=%2Fdoc%2Ftree%2Findex.ipynb)
 
 # Kanapy
 
@@ -43,11 +44,14 @@ basic implementation of Kanapy is done in form of a Python Appplication Programm
 
 ## Installation
 
-The preferred method to use Kanapy is within [Anaconda](https://www.anaconda.com) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html), but it can by used within any 
-Python environment supporting the package installer for python [pip](https://pypi.org/project/pip/). 
+The preferred method to use Kanapy is within [Anaconda](https://www.anaconda.com) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html), into which it can be easily installed from [conda-forge](https://conda-forge.org) by
 
+```
+$ conda install kanapy -c conda-forge
+```
 
-The latest stable version of Kanapy can be installed from [PyPi](https://pypi.org/project/kanapy/) via pip by executing the command
+Generally, it can be installed within any 
+Python environment supporting the package installer for python ([pip](https://pypi.org/project/pip/)) from its latest [PyPi](https://pypi.org/project/kanapy/) image via the shell command
 
 ```
 $ pip install kanapy
@@ -91,12 +95,15 @@ The alpha-version of the GUI can be started with the shell command
 ```
 
 
-## Examples
+## Examples [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ICAMS/Kanapy.git/HEAD?urlpath=%2Fdoc%2Ftree%2Findex.ipynb)
 Kanapy comes with several examples in form of Python scripts and Juypter notebooks. If you want to create a local copy of the kanapy/examples directory within the current working directory (cwd), please run the command
 
 ```
 (knpy) $ kanapy copyExamples          
 ```
+
+Kanapy notebooks can also be used on [Binder](https://mybinder.org/v2/gh/ICAMS/Kanapy.git/HEAD?urlpath=%2Fdoc%2Ftree%2Findex.ipynb).
+
 
 ## Documentation
 
