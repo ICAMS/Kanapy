@@ -248,7 +248,7 @@ class Microstructure(object):
         self.geometry['GBfaces'] = grain_facesDict
 
     def generate_grains(self):
-        """ Writes out the particle- and grain diameter attributes for 
+        """ Writes out the particle- and grain diameter attributes for
         statistical comparison. Final RVE grain volumes and shared grain
         boundary surface areas info are written out as well."""
 
@@ -309,7 +309,8 @@ class Microstructure(object):
     def generate_orientations(self, data, ang=None, omega=None, Nbase=5000,
                               hist=None, shared_area=None, iphase=None, verbose=False):
         """
-        Calculates the orientations of grains to give a desired crystallographic texture.
+        Calculates the orientations of grains to give a desired crystallographic texture
+        for the number of grains in RVE.
 
         Parameters
         ----------
@@ -367,8 +368,8 @@ class Microstructure(object):
                     if ang is None or omega is None:
                         raise ValueError('To generate orientation sets of type "unimodal" angle "ang" and kernel' +
                                          'halfwidth "omega" are required.')
-                    ori_rve = createOriset(ngr, ang, omega, hist=hist, shared_area=gba)
-                    self.mesh.texture = "Uni-modal"
+                    ori_rve = createOriset(ngr, ang, omega, hist=hist, shared_area=gba, verbose=verbose)
+                    self.mesh.texture = "Unimodal"
             else:
                 self.mesh.texture = None
                 raise ValueError('Argument to generate grain orientation must be either of type EBSDmap or ' +
@@ -1134,7 +1135,7 @@ class Microstructure(object):
         Returns
         -------
         None.
-        
+
         """
 
         def write_facet(nv, pts, ft):
@@ -1295,7 +1296,7 @@ class Microstructure(object):
                 "Script": script_name,
                 "Material": self.name,
                 "Phase_names": self.rve.phase_names,
-                "Size": self.rve.size,
+                "Size": [int(val) for val in self.rve.size],
                 "Periodicity": str(self.rve.periodic),
                 "Units": {
                     'Length': self.rve.units,
@@ -1347,7 +1348,7 @@ class Microstructure(object):
                     "Description": 'Node list per voxel',
                     "Type": 'int',
                     "Shape": (len(self.mesh.voxel_dict.keys()), 8),
-                    "Values": [val for val in self.mesh.voxel_dict.values()],
+                    "Values": [int(val) for val in self.mesh.voxel_dict.values()],
                 }
             }
 
