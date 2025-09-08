@@ -1492,10 +1492,11 @@ class Microstructure(object):
 
         # Define required fields
         required_fields = [
-            'identifier', 'title', 'date', 'description', 'rights', 'rights_holder',
+            'identifier', 'title',
             'creator', 'creator_ORCID', 'creator_affiliation', 'creator_institute', 'creator_group',
             'contributor', 'contributor_ORCID', 'contributor_affiliation', 'contributor_institute', 'contributor_group',
-            'shared_with', 'funder_name', 'fund_identifier', 'publisher', 'relation', 'keywords'
+            'date', 'shared_with', 'description', 'rights', 'rights_holder','funder_name', 'fund_identifier',
+            'publisher', 'relation', 'keywords'
         ]
 
         def prompt_list(field_name: str) -> List[str]:
@@ -1511,12 +1512,7 @@ class Microstructure(object):
                 now = datetime.utcnow().isoformat()
                 ident = hashlib.sha256(now.encode()).hexdigest()[:8]
             use['identifier'] = ident
-            # simple fields
             use['title'] = input("Title: ").strip()
-            use['date'] = input("Date (YYYY-MM-DD): ").strip() or datetime.utcnow().strftime('%Y-%m-%d')
-            use['description'] = input("Description: ").strip()
-            use['rights'] = input("Rights (e.g. Creative Commons Attribution 4.0 International): ").strip()
-            use['rights_holder'] = prompt_list('rights_holder')
             # creator fields
             use['creator'] = prompt_list('creator names (e.g. Last, First)')
             use['creator_ORCID'] = prompt_list('creator ORCID(s)')
@@ -1529,6 +1525,8 @@ class Microstructure(object):
             use['contributor_affiliation'] = prompt_list('contributor affiliations')
             use['contributor_institute'] = prompt_list('contributor institutes')
             use['contributor_group'] = prompt_list('contributor groups')
+
+            use['date'] = input("Date (YYYY-MM-DD): ").strip() or datetime.utcnow().strftime('%Y-%m-%d')
             # shared_with
             shared: List[Dict[str, str]] = []
             print("Enter shared_with access entries. Valid types: c, u, g, all. Blank to stop.")
@@ -1538,6 +1536,9 @@ class Microstructure(object):
                     break
                 shared.append({'access_type': atype})
             use['shared_with'] = shared
+            use['description'] = input("Description: ").strip()
+            use['rights'] = input("Rights (e.g. Creative Commons Attribution 4.0 International): ").strip()
+            use['rights_holder'] = prompt_list('rights_holder')
             # other fields
             use['funder_name'] = input("Funder name: ").strip()
             use['fund_identifier'] = input("Fund identifier: ").strip()
@@ -1661,21 +1662,23 @@ class Microstructure(object):
 
             phase_entry = {
                     "id": idx,
-                    "phase_name": phase_name,
-                    "Microstructural_information": {
+                    "phase_identifier": phase_name,
+                    "constitutive_model": {
+                        "$schema": "http://json-schema.org/draft-04/schema#",
+                        "elastic_model_name": mat['elastic_model_name'],
+                        "elastic_parameters": pe,
+                        "plastic_model_name": mat['plastic_model_name'],
+                        "plastic_parameters": pp
+                        },
+                    "microstructural_information": {
                         "phase_volume_fraction": float(vf),
-                        "grain_count_per_phase": int(self.ngrains[idx]),
-                        "crystal_structure":  None,
+                        "grain_count": int(self.ngrains[idx]),
                         "texture_type": self.mesh.texture,
-                    },
-                    "Properties": {
-                        "MechanicalProperties": {
-                            "ElasticProperties": {"elastic_model_name": mat['elastic_model_name'],
-                                                  "elastic_parameters": pe},
-                            "PlasticProperties": {"plastic_model_name": mat['plastic_model_name'],
-                                                  "plastic_parameters": pp}
-                        }}
+                        "lattice_structure": None,
+
+                }
             }
+
             phase_list.append(phase_entry)
 
         # ─── pull Mesh + RVE into locals ─────────────────────────────────────────
@@ -1704,59 +1707,63 @@ class Microstructure(object):
                 'discretization_count': int(self.mesh.nvox),
         }
         # ─── build time‐0 grain dict ────────────────────────────────────────────
-        grains_t0 = {
-            gid: {
-                "phase_id": grain_phase_dict[gid],
-                "orientation": list(self.mesh.grain_ori_dict[gid]),
+        grains_t0 = [
+            {   "gid": gid                                                   ,
+                "phase_id": grain_phase_dict[gid]                            ,
+                "orientation": list(self.mesh.grain_ori_dict[gid])           ,
                 "grain_volume": len(grain_to_voxels[gid]) * voxel_volume
             }
             for gid in grain_phase_dict
-        }
+        ]
 
         # ─── Build time‐0 voxel dictionary ────────────────────────────────────────
-        voxels_t0 = {
-            vid: {
+        voxels_t0 = [
+            {
+                "vid": vid                                                    ,
                 "grain_id": gid                                               ,
                 "orientation": list(grain_ori_dict[gid])                      ,
-                "center_coordinates": [float(c) * length_scale for c in vox_center_dict[vid]],
+                "centroid_coordinates": [float(c) * length_scale for c in vox_center_dict[vid]],
                 "voxel_volume":        voxel_volume                           ,
                 "stress": [],
                 "strain": []
             }
             for vid, gid in voxel_to_grain.items()
-        }
+        ]
 
         # ─── wrap under the time‐step keys ────────────────────────────────────────
-        time_steps = {
-            "0": {
-                "rve"   : rve_t0,
+        time_steps = [
+            {   "time"  : 0        ,
+                "rve"   : rve_t0   ,
                 "grains": grains_t0,
-                "voxels": voxels_t0
+                "voxels": voxels_t0,
             },
             # …etc…
-        }
+        ]
 
 
 
         # Assemble final structure with placeholders
         data = {
-            'User_Specific_Elements': use,
-            'System_Elements': {
-                'software': '',
-                'software_version': '',
-                'system': '',
-                'system_version': '',
-                'processor_specifications': '',
-                'input_path': '',
-                'results_path': ''
-            },
-            'Job_Specific_Elements': {'initial_geometry':ig,'boundary_condition':job_bc,'phases':phase_list,
-                                      "units": {
+            **use,                   # expand user-specific dict entries directly
+            'software': '',
+            'software_version': '',
+            'system': '',
+            'system_version': '',
+            'processor_specifications': '',
+            'input_path': '',
+            'results_path': '',
+            **ig,                    # expand initial geometry dict entries directly
+            'global_temperature': 298,
+            **job_bc,                 # expand boundary condition dict entries directly
+            'phases':phase_list,
+            'stress': None,
+            'total_strain': None,
+            'plastic_strain': None,
+            'units': {
                     "Stress": "MPa", "Strain": 1, "Length": length_unit, "Angle": "rad",
-                    "Temperature": "kelvin", "Force": "N","Stiffness": "MPa"}
-                                      },
-            # Time-level storage: time-frame data of voxels and grains
-            'Iterations':  time_steps
+                    "Temperature": "kelvin", "Force": "N","Stiffness": "MPa"
+            },
+            'microstructure_evolution':  time_steps  # Time-level storage: time-frame data of voxels and grains
         }
 
         # Write to file
