@@ -1674,7 +1674,7 @@ class Microstructure(object):
                     "microstructural_information": {
                         "phase_volume_fraction": float(vf),
                         "grain_count": int(self.ngrains[idx]),
-                        "texture_type": self.mesh.texture,
+                        "texture_type": None,
                         "lattice_structure": None,
 
                 }
