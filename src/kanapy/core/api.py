@@ -1700,13 +1700,6 @@ class Microstructure(object):
             for gid, vids in grain_to_voxels.items()
             for vid in vids
         }
-        # ─── build time‐0 RVE dict ────────────────────────────────────────────
-        rve_t0 = {
-                'rve_size': [int(v) * length_scale for v in self.rve.size],
-                'discretization_per_length': [int(d) for d in self.rve.dim],
-                'discretization_unit_size': [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
-                'discretization_count': int(self.mesh.nvox),
-        }
         # ─── build time‐0 grain dict ────────────────────────────────────────────
         grains_t0 = [
             {   "gid": gid                                                   ,
@@ -1734,7 +1727,6 @@ class Microstructure(object):
         # ─── wrap under the time‐step keys ────────────────────────────────────────
         time_steps = [
             {   "time"  : 0        ,
-                "rve"   : rve_t0   ,
                 "grains": grains_t0,
                 "voxels": voxels_t0,
             },
