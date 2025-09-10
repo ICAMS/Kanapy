@@ -1782,9 +1782,6 @@ class Microstructure(object):
             'global_temperature': 298,
             **job_bc,                 # expand boundary condition dict entries directly
             'phases':phase_list,
-            'stress': None,
-            'total_strain': None,
-            'plastic_strain': None,
             'microstructure_evolution':  time_steps  # Time-level storage: time-frame data of voxels and grains
         }
 
