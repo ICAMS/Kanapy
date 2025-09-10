@@ -20,7 +20,7 @@ import hashlib
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from importlib.metadata import version as pkg_version
 from jsonschema import validate, ValidationError
 from datetime import datetime
@@ -1360,11 +1360,11 @@ class Microstructure(object):
     def write_dataSchema(self,
                          user_metadata: Optional[Dict[str, Any]] = None,
                          boundary_condition: Optional[Dict[str, Any]] = None,
+                         phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
                          interactive: bool = True,
                          structured: bool = True,
                          ialloy: int = 1,
-                         length_unit: str = 'µm',
-                         output_filename: str = 'metadata.json') -> None:
+                         length_unit: str = 'µm') -> dict:
 
         """
         Generate a JSON file containing User-, System-, and Job-Specific Elements.
@@ -1373,7 +1373,6 @@ class Microstructure(object):
         - `boundary_condition`: separate BC dict (mechanical_BC or thermal_BC).
         - `interactive`: if True and inputs missing, prompt user.
         - `structured`: whether mesh is structured.
-        - `output_filename`: path to write JSON.
         """
 
 
@@ -1654,14 +1653,31 @@ class Microstructure(object):
 
         # Phase data
         phase_list = []
-        # Use ialloy parameter to select material
-        for idx in range(self.nphases):
-            phase_name = self.rve.phase_names[idx]
-            vf = self.rve.phase_vf[idx]
-            mat = material_library[ialloy]
-            pe = mat['elastic_parameters']; pp = mat['plastic_parameters']
+        if phases:  # user provided a dict or list of dicts
+            if isinstance(phases, dict):
+                phase_list = [phases]
+            elif isinstance(phases, list):
+                phase_list = phases
+            else:
+                raise TypeError("`phases` must be a dict or list of dicts.")
+        else:  # fallback: use ialloy + material_library
+            if not ialloy or ialloy not in material_library:
+                if interactive:
+                    ialloy = int(input(f"Choose ialloy from {list(material_library.keys())}: "))
+                else:
+                    raise ValueError(
+                        f"No phases provided and invalid ialloy. "
+                        f"Valid ialloy values: {list(material_library.keys())}"
+                    )
 
-            phase_entry = {
+            for idx in range(self.nphases):
+                phase_name = self.rve.phase_names[idx]
+                vf = self.rve.phase_vf[idx]
+                mat = material_library[ialloy]
+                pe = mat['elastic_parameters']
+                pp = mat['plastic_parameters']
+
+                phase_entry = {
                     "id": idx,
                     "phase_identifier": phase_name,
                     "constitutive_model": {
@@ -1670,30 +1686,37 @@ class Microstructure(object):
                         "elastic_parameters": pe,
                         "plastic_model_name": mat['plastic_model_name'],
                         "plastic_parameters": pp
-                        },
+                    },
                     "microstructural_information": {
                         "phase_volume_fraction": float(vf),
                         "grain_count": int(self.ngrains[idx]),
-                        "texture_type": None,
+                        "texture_type": getattr(self.mesh, "texture", None),
                         "lattice_structure": None,
-
+                    }
                 }
-            }
-
-            phase_list.append(phase_entry)
+                phase_list.append(phase_entry)
 
         # ─── pull Mesh + RVE into locals ─────────────────────────────────────────
-        grain_phase_dict = self.mesh.grain_phase_dict  # {gid: phase_id}
-        grain_ori_dict = self.mesh.grain_ori_dict  # {gid: [euler…]}
-        vox_center_dict = self.mesh.vox_center_dict  # {vid: (x,y,z)}
-        grain_to_voxels = self.mesh.grain_dict  # {gid: [vid,…]}
-        rve_size = self.rve.size  # e.g. [20.0,20.0,20.0]
-        rve_dim = self.rve.dim  # e.g. [10,10,10]
+        grain_phase_dict = getattr(self.mesh, 'grain_phase_dict', {}) or {} # {gid: phase_id}
+        grain_ori_dict = getattr(self.mesh, 'grain_ori_dict', None)  # can be None ({gid: [euler…]})
+        vox_center_dict = getattr(self.mesh, 'vox_center_dict', {}) or {} # {vid: (x,y,z)}
+        grain_to_voxels = getattr(self.mesh, 'grain_dict', {}) or {} # {gid: [vid,…]}
+        rve_size = getattr(self.rve, 'size', [0, 0, 0]) or [0, 0, 0] # e.g. [20.0,20.0,20.0]
+        rve_dim = getattr(self.rve, 'dim', [1, 1, 1]) or [1, 1, 1]  # # e.g. [10,10,10] (avoid /0)
 
+        # Is orientation available?
+        include_orientation = isinstance(grain_ori_dict, dict) and len(grain_ori_dict) > 0
         # ─── compute one‐voxel volume ─────────────────────────────────────────────
-        unit_sizes = [(float(s) / float(d)) * length_scale for s, d in zip(rve_size, rve_dim)]
-        voxel_volume = unit_sizes[0] * unit_sizes[1] * unit_sizes[2]
+        unit_sizes = []
+        for s, d in zip(rve_size, rve_dim):
+            try:
+                unit_sizes.append((float(s) / float(d)) * length_scale if float(d) != 0 else 0.0)
+            except Exception:
+                unit_sizes.append(0.0)
 
+        voxel_volume = (unit_sizes[0] if len(unit_sizes) > 0 else 0.0) \
+                       * (unit_sizes[1] if len(unit_sizes) > 1 else 0.0) \
+                       * (unit_sizes[2] if len(unit_sizes) > 2 else 0.0)
         # ─── precompute voxel→grain lookup ───────────────────────────────────────
         voxel_to_grain = {
             vid: gid
@@ -1701,28 +1724,38 @@ class Microstructure(object):
             for vid in vids
         }
         # ─── build time‐0 grain dict ────────────────────────────────────────────
-        grains_t0 = [
-            {   "gid": gid                                                   ,
-                "phase_id": grain_phase_dict[gid]                            ,
-                "orientation": list(self.mesh.grain_ori_dict[gid])           ,
-                "grain_volume": len(grain_to_voxels[gid]) * voxel_volume
+        grains_t0 = []
+        for gid in grain_phase_dict.keys():
+            entry = {
+                "gid": gid,
+                "phase_id": grain_phase_dict.get(gid),
+                "grain_volume": len(grain_to_voxels.get(gid, [])) * voxel_volume,
             }
-            for gid in grain_phase_dict
-        ]
+            if include_orientation:
+                ori = grain_ori_dict.get(gid)
+                if ori is not None:
+                    entry["orientation"] = list(ori)
+            grains_t0.append(entry)
 
         # ─── Build time‐0 voxel dictionary ────────────────────────────────────────
-        voxels_t0 = [
-            {
-                "vid": vid                                                    ,
-                "grain_id": gid                                               ,
-                "orientation": list(grain_ori_dict[gid])                      ,
-                "centroid_coordinates": [float(c) * length_scale for c in vox_center_dict[vid]],
-                "voxel_volume":        voxel_volume                           ,
+        voxels_t0 = []
+        for vid, gid in voxel_to_grain.items():
+            cx, cy, cz = vox_center_dict.get(vid, (0.0, 0.0, 0.0))
+            entry = {
+                "vid": vid,
+                "grain_id": gid,
+                "centroid_coordinates": [float(cx) * length_scale,
+                                         float(cy) * length_scale,
+                                         float(cz) * length_scale],
+                "voxel_volume": voxel_volume,
                 "stress": [],
-                "strain": []
+                "strain": [],
             }
-            for vid, gid in voxel_to_grain.items()
-        ]
+            if include_orientation:
+                ori = grain_ori_dict.get(gid)
+                if ori is not None:
+                    entry["orientation"] = list(ori)
+            voxels_t0.append(entry)
 
         # ─── wrap under the time‐step keys ────────────────────────────────────────
         time_steps = [
@@ -1752,21 +1785,10 @@ class Microstructure(object):
             'stress': None,
             'total_strain': None,
             'plastic_strain': None,
-            'units': {
-                    "Stress": "MPa", "Strain": 1, "Length": length_unit, "Angle": "rad",
-                    "Temperature": "kelvin", "Force": "N","Stiffness": "MPa"
-            },
             'microstructure_evolution':  time_steps  # Time-level storage: time-frame data of voxels and grains
         }
 
-        # Write to file
-        os.makedirs(os.path.dirname(output_filename) or '.', exist_ok=True)
-        with open(output_filename, 'w', encoding='utf-8') as fp:
-            json.dump(data, fp, indent=2)
-
-        print(f"Data schema written to {output_filename}")
-
-        return
+        return data
 
 
 
