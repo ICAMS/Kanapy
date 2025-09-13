@@ -596,7 +596,7 @@ class Microstructure(object):
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
                         porous=False,
                         get_res=False, show_res=False,
-                        save_files=False, silent=False):
+                        save_files=False, silent=False, return_descriptors=False):
         """ Plots initial statistical microstructure descriptors ."""
         def analyze_voxels(ip, des):
             if self.mesh is None:
@@ -624,38 +624,56 @@ class Microstructure(object):
                       f'{vox_stats["c_scale"]:.3f}\t|  {av_std:.4f}\t|     {vox_stats["ind_rot"]}   \t|  '
                       f'{vox_stats["ar_scale"]:.3f}\t|  {vox_stats["ar_sig"]:.4f}\t|     '
                       f'{vox_stats["eqd_scale"]:.3f} \t|  {vox_stats["eqd_sig"]:.4f}')
-            return gsp, arp
+                statistical_descriptors = {
+                    'eqd': {
+                        'mean': float(vox_stats['eqd_scale']),
+                        'std':  float(vox_stats['eqd_sig']),
+                        'min':  float(min(vox_stats['eqd'])),
+                        'max':  float(max(vox_stats['eqd'])),
+                    },
+                    'ar': {
+                        'mean': float(vox_stats['ar_scale']),
+                        'std':  float(vox_stats['ar_sig']),
+                        'min':  float(min(vox_stats['ar'])),
+                        'max':  float(max(vox_stats['ar'])),
+                    },
+                    'axes': {
+                        'a': float(vox_stats['a_scale']),
+                        'b': float(vox_stats['b_scale']),
+                        'c': float(vox_stats['c_scale']),
+                        'a_std': float(vox_stats.get('a_sig', np.nan)),
+                        'b_std': float(vox_stats.get('b_sig', np.nan)),
+                        'c_std': float(vox_stats.get('c_sig', np.nan)),
+                    },
+                    'rotation_axis': vox_stats.get('ind_rot', None),
+                }
+            return gsp, arp, statistical_descriptors
 
-        if show_res:
-            get_res = True
-        if silent:
-            show_res = False
-        if descriptor is None:
-            descriptor = self.descriptor
-        if not isinstance(descriptor, list):
-            descriptor = [descriptor]
-        if porous:
-            descriptor = descriptor[0:1]
+        if show_res: get_res = True
+        if silent: show_res = False
+        if descriptor is None: descriptor = self.descriptor
+        if not isinstance(descriptor, list): descriptor = [descriptor]
+        if porous: descriptor = descriptor[0:1]
         nel = len(descriptor)
 
-        if not (isinstance(gs_data, list) and len(gs_data) == nel):
-            gs_data = [gs_data] * nel
-        if not (isinstance(ar_data, list) and len(ar_data) == nel):
-            ar_data = [ar_data] * nel
+        if not (isinstance(gs_data, list) and len(gs_data) == nel): gs_data = [gs_data] * nel
+        if not (isinstance(ar_data, list) and len(ar_data) == nel): ar_data = [ar_data] * nel
 
-        flist = []
+        flist, descs = [] , []
         for ip, des in enumerate(descriptor):
+            gsp = arp = None
+            statistical_descriptors = None
             if get_res:
-                gsp, arp = analyze_voxels(ip, des)
-            else:
-                gsp = None
-                arp = None
+                gsp, arp, statistical_descriptors = analyze_voxels(ip, des)
             fig = plot_init_stats(des, gs_data=gs_data[ip], ar_data=ar_data[ip],
                                   gs_param=gsp, ar_param=arp,
                                   save_files=save_files, silent=silent)
             flist.append(fig)
-        if silent:
-            return flist
+            if return_descriptors:
+                descs.append({'phase': ip, **(statistical_descriptors or {})})
+
+        if return_descriptors: return flist, descs
+        if silent: return flist
 
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):
