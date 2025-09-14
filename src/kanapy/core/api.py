@@ -20,7 +20,7 @@ import hashlib
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from importlib.metadata import version as pkg_version
 from jsonschema import validate, ValidationError
 from datetime import datetime
@@ -597,7 +597,7 @@ class Microstructure(object):
     def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
                         porous=False,
                         get_res=False, show_res=False,
-                        save_files=False, silent=False):
+                        save_files=False, silent=False, return_descriptors=False):
         """ Plots initial statistical microstructure descriptors ."""
         def analyze_voxels(ip, des):
             if self.mesh is None:
@@ -625,38 +625,56 @@ class Microstructure(object):
                       f'{vox_stats["c_scale"]:.3f}\t|  {av_std:.4f}\t|     {vox_stats["ind_rot"]}   \t|  '
                       f'{vox_stats["ar_scale"]:.3f}\t|  {vox_stats["ar_sig"]:.4f}\t|     '
                       f'{vox_stats["eqd_scale"]:.3f} \t|  {vox_stats["eqd_sig"]:.4f}')
-            return gsp, arp
+                statistical_descriptors = {
+                    'eqd': {
+                        'mean': float(vox_stats['eqd_scale']),
+                        'std':  float(vox_stats['eqd_sig']),
+                        'min':  float(min(vox_stats['eqd'])),
+                        'max':  float(max(vox_stats['eqd'])),
+                    },
+                    'ar': {
+                        'mean': float(vox_stats['ar_scale']),
+                        'std':  float(vox_stats['ar_sig']),
+                        'min':  float(min(vox_stats['ar'])),
+                        'max':  float(max(vox_stats['ar'])),
+                    },
+                    'axes': {
+                        'a': float(vox_stats['a_scale']),
+                        'b': float(vox_stats['b_scale']),
+                        'c': float(vox_stats['c_scale']),
+                        'a_std': float(vox_stats.get('a_sig', np.nan)),
+                        'b_std': float(vox_stats.get('b_sig', np.nan)),
+                        'c_std': float(vox_stats.get('c_sig', np.nan)),
+                    },
+                    'rotation_axis': vox_stats.get('ind_rot', None),
+                }
+            return gsp, arp, statistical_descriptors
 
-        if show_res:
-            get_res = True
-        if silent:
-            show_res = False
-        if descriptor is None:
-            descriptor = self.descriptor
-        if not isinstance(descriptor, list):
-            descriptor = [descriptor]
-        if porous:
-            descriptor = descriptor[0:1]
+        if show_res: get_res = True
+        if silent: show_res = False
+        if descriptor is None: descriptor = self.descriptor
+        if not isinstance(descriptor, list): descriptor = [descriptor]
+        if porous: descriptor = descriptor[0:1]
         nel = len(descriptor)
 
-        if not (isinstance(gs_data, list) and len(gs_data) == nel):
-            gs_data = [gs_data] * nel
-        if not (isinstance(ar_data, list) and len(ar_data) == nel):
-            ar_data = [ar_data] * nel
+        if not (isinstance(gs_data, list) and len(gs_data) == nel): gs_data = [gs_data] * nel
+        if not (isinstance(ar_data, list) and len(ar_data) == nel): ar_data = [ar_data] * nel
 
-        flist = []
+        flist, descs = [] , []
         for ip, des in enumerate(descriptor):
+            gsp = arp = None
+            statistical_descriptors = None
             if get_res:
-                gsp, arp = analyze_voxels(ip, des)
-            else:
-                gsp = None
-                arp = None
+                gsp, arp, statistical_descriptors = analyze_voxels(ip, des)
             fig = plot_init_stats(des, gs_data=gs_data[ip], ar_data=ar_data[ip],
                                   gs_param=gsp, ar_param=arp,
                                   save_files=save_files, silent=silent)
             flist.append(fig)
-        if silent:
-            return flist
+            if return_descriptors:
+                descs.append({'phase': ip, **(statistical_descriptors or {})})
+
+        if return_descriptors: return flist, descs
+        if silent: return flist
 
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):
@@ -1361,11 +1379,11 @@ class Microstructure(object):
     def write_dataSchema(self,
                          user_metadata: Optional[Dict[str, Any]] = None,
                          boundary_condition: Optional[Dict[str, Any]] = None,
+                         phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
                          interactive: bool = True,
                          structured: bool = True,
                          ialloy: int = 1,
-                         length_unit: str = 'µm',
-                         output_filename: str = 'metadata.json') -> None:
+                         length_unit: str = 'µm') -> dict:
 
         """
         Generate a JSON file containing User-, System-, and Job-Specific Elements.
@@ -1374,7 +1392,6 @@ class Microstructure(object):
         - `boundary_condition`: separate BC dict (mechanical_BC or thermal_BC).
         - `interactive`: if True and inputs missing, prompt user.
         - `structured`: whether mesh is structured.
-        - `output_filename`: path to write JSON.
         """
 
 
@@ -1494,10 +1511,11 @@ class Microstructure(object):
 
         # Define required fields
         required_fields = [
-            'identifier', 'title', 'date', 'description', 'rights', 'rights_holder',
+            'identifier', 'title',
             'creator', 'creator_ORCID', 'creator_affiliation', 'creator_institute', 'creator_group',
             'contributor', 'contributor_ORCID', 'contributor_affiliation', 'contributor_institute', 'contributor_group',
-            'shared_with', 'funder_name', 'fund_identifier', 'publisher', 'relation', 'keywords'
+            'date', 'shared_with', 'description', 'rights', 'rights_holder','funder_name', 'fund_identifier',
+            'publisher', 'relation', 'keywords'
         ]
 
         def prompt_list(field_name: str) -> List[str]:
@@ -1513,12 +1531,7 @@ class Microstructure(object):
                 now = datetime.utcnow().isoformat()
                 ident = hashlib.sha256(now.encode()).hexdigest()[:8]
             use['identifier'] = ident
-            # simple fields
             use['title'] = input("Title: ").strip()
-            use['date'] = input("Date (YYYY-MM-DD): ").strip() or datetime.utcnow().strftime('%Y-%m-%d')
-            use['description'] = input("Description: ").strip()
-            use['rights'] = input("Rights (e.g. Creative Commons Attribution 4.0 International): ").strip()
-            use['rights_holder'] = prompt_list('rights_holder')
             # creator fields
             use['creator'] = prompt_list('creator names (e.g. Last, First)')
             use['creator_ORCID'] = prompt_list('creator ORCID(s)')
@@ -1531,6 +1544,8 @@ class Microstructure(object):
             use['contributor_affiliation'] = prompt_list('contributor affiliations')
             use['contributor_institute'] = prompt_list('contributor institutes')
             use['contributor_group'] = prompt_list('contributor groups')
+
+            use['date'] = input("Date (YYYY-MM-DD): ").strip() or datetime.utcnow().strftime('%Y-%m-%d')
             # shared_with
             shared: List[Dict[str, str]] = []
             print("Enter shared_with access entries. Valid types: c, u, g, all. Blank to stop.")
@@ -1540,6 +1555,9 @@ class Microstructure(object):
                     break
                 shared.append({'access_type': atype})
             use['shared_with'] = shared
+            use['description'] = input("Description: ").strip()
+            use['rights'] = input("Rights (e.g. Creative Commons Attribution 4.0 International): ").strip()
+            use['rights_holder'] = prompt_list('rights_holder')
             # other fields
             use['funder_name'] = input("Funder name: ").strip()
             use['fund_identifier'] = input("Fund identifier: ").strip()
@@ -1654,121 +1672,139 @@ class Microstructure(object):
 
         # Phase data
         phase_list = []
-        # Use ialloy parameter to select material
-        for idx in range(self.nphases):
-            phase_name = self.rve.phase_names[idx]
-            vf = self.rve.phase_vf[idx]
-            mat = material_library[ialloy]
-            pe = mat['elastic_parameters']; pp = mat['plastic_parameters']
+        if phases:  # user provided a dict or list of dicts
+            if isinstance(phases, dict):
+                phase_list = [phases]
+            elif isinstance(phases, list):
+                phase_list = phases
+            else:
+                raise TypeError("`phases` must be a dict or list of dicts.")
+        else:  # fallback: use ialloy + material_library
+            if not ialloy or ialloy not in material_library:
+                if interactive:
+                    ialloy = int(input(f"Choose ialloy from {list(material_library.keys())}: "))
+                else:
+                    raise ValueError(
+                        f"No phases provided and invalid ialloy. "
+                        f"Valid ialloy values: {list(material_library.keys())}"
+                    )
 
-            phase_entry = {
+            for idx in range(self.nphases):
+                phase_name = self.rve.phase_names[idx]
+                vf = self.rve.phase_vf[idx]
+                mat = material_library[ialloy]
+                pe = mat['elastic_parameters']
+                pp = mat['plastic_parameters']
+
+                phase_entry = {
                     "id": idx,
-                    "phase_name": phase_name,
-                    "Microstructural_information": {
-                        "phase_volume_fraction": float(vf),
-                        "grain_count_per_phase": int(self.ngrains[idx]),
-                        "crystal_structure":  None,
-                        "texture_type": self.mesh.texture,
+                    "phase_identifier": phase_name,
+                    "constitutive_model": {
+                        "$schema": "http://json-schema.org/draft-04/schema#",
+                        "elastic_model_name": mat['elastic_model_name'],
+                        "elastic_parameters": pe,
+                        "plastic_model_name": mat['plastic_model_name'],
+                        "plastic_parameters": pp
                     },
-                    "Properties": {
-                        "MechanicalProperties": {
-                            "ElasticProperties": {"elastic_model_name": mat['elastic_model_name'],
-                                                  "elastic_parameters": pe},
-                            "PlasticProperties": {"plastic_model_name": mat['plastic_model_name'],
-                                                  "plastic_parameters": pp}
-                        }}
-            }
-            phase_list.append(phase_entry)
+                    "microstructural_information": {
+                        "phase_volume_fraction": float(vf),
+                        "grain_count": int(self.ngrains[idx]),
+                        "texture_type": getattr(self.mesh, "texture", None),
+                        "lattice_structure": None,
+                    }
+                }
+                phase_list.append(phase_entry)
 
         # ─── pull Mesh + RVE into locals ─────────────────────────────────────────
-        grain_phase_dict = self.mesh.grain_phase_dict  # {gid: phase_id}
-        grain_ori_dict = self.mesh.grain_ori_dict  # {gid: [euler…]}
-        vox_center_dict = self.mesh.vox_center_dict  # {vid: (x,y,z)}
-        grain_to_voxels = self.mesh.grain_dict  # {gid: [vid,…]}
-        rve_size = self.rve.size  # e.g. [20.0,20.0,20.0]
-        rve_dim = self.rve.dim  # e.g. [10,10,10]
+        grain_phase_dict = getattr(self.mesh, 'grain_phase_dict', {}) or {} # {gid: phase_id}
+        grain_ori_dict = getattr(self.mesh, 'grain_ori_dict', None)  # can be None ({gid: [euler…]})
+        vox_center_dict = getattr(self.mesh, 'vox_center_dict', {}) or {} # {vid: (x,y,z)}
+        grain_to_voxels = getattr(self.mesh, 'grain_dict', {}) or {} # {gid: [vid,…]}
+        rve_size = getattr(self.rve, 'size', [0, 0, 0]) or [0, 0, 0] # e.g. [20.0,20.0,20.0]
+        rve_dim = getattr(self.rve, 'dim', [1, 1, 1]) or [1, 1, 1]  # # e.g. [10,10,10] (avoid /0)
 
+        # Is orientation available?
+        include_orientation = isinstance(grain_ori_dict, dict) and len(grain_ori_dict) > 0
         # ─── compute one‐voxel volume ─────────────────────────────────────────────
-        unit_sizes = [(float(s) / float(d)) * length_scale for s, d in zip(rve_size, rve_dim)]
-        voxel_volume = unit_sizes[0] * unit_sizes[1] * unit_sizes[2]
+        unit_sizes = []
+        for s, d in zip(rve_size, rve_dim):
+            try:
+                unit_sizes.append((float(s) / float(d)) * length_scale if float(d) != 0 else 0.0)
+            except Exception:
+                unit_sizes.append(0.0)
 
+        voxel_volume = (unit_sizes[0] if len(unit_sizes) > 0 else 0.0) \
+                       * (unit_sizes[1] if len(unit_sizes) > 1 else 0.0) \
+                       * (unit_sizes[2] if len(unit_sizes) > 2 else 0.0)
         # ─── precompute voxel→grain lookup ───────────────────────────────────────
         voxel_to_grain = {
             vid: gid
             for gid, vids in grain_to_voxels.items()
             for vid in vids
         }
-        # ─── build time‐0 RVE dict ────────────────────────────────────────────
-        rve_t0 = {
-                'rve_size': [int(v) * length_scale for v in self.rve.size],
-                'discretization_per_length': [int(d) for d in self.rve.dim],
-                'discretization_unit_size': [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
-                'discretization_count': int(self.mesh.nvox),
-        }
         # ─── build time‐0 grain dict ────────────────────────────────────────────
-        grains_t0 = {
-            gid: {
-                "phase_id": grain_phase_dict[gid],
-                "orientation": list(self.mesh.grain_ori_dict[gid]),
-                "grain_volume": len(grain_to_voxels[gid]) * voxel_volume
+        grains_t0 = []
+        for gid in grain_phase_dict.keys():
+            entry = {
+                "gid": gid,
+                "phase_id": grain_phase_dict.get(gid),
+                "grain_volume": len(grain_to_voxels.get(gid, [])) * voxel_volume,
             }
-            for gid in grain_phase_dict
-        }
+            if include_orientation:
+                ori = grain_ori_dict.get(gid)
+                if ori is not None:
+                    entry["orientation"] = list(ori)
+            grains_t0.append(entry)
 
         # ─── Build time‐0 voxel dictionary ────────────────────────────────────────
-        voxels_t0 = {
-            vid: {
-                "grain_id": gid                                               ,
-                "orientation": list(grain_ori_dict[gid])                      ,
-                "center_coordinates": [float(c) * length_scale for c in vox_center_dict[vid]],
-                "voxel_volume":        voxel_volume                           ,
+        voxels_t0 = []
+        for vid, gid in voxel_to_grain.items():
+            cx, cy, cz = vox_center_dict.get(vid, (0.0, 0.0, 0.0))
+            entry = {
+                "vid": vid,
+                "grain_id": gid,
+                "centroid_coordinates": [float(cx) * length_scale,
+                                         float(cy) * length_scale,
+                                         float(cz) * length_scale],
+                "voxel_volume": voxel_volume,
                 "stress": [],
-                "strain": []
+                "strain": [],
             }
-            for vid, gid in voxel_to_grain.items()
-        }
+            if include_orientation:
+                ori = grain_ori_dict.get(gid)
+                if ori is not None:
+                    entry["orientation"] = list(ori)
+            voxels_t0.append(entry)
 
         # ─── wrap under the time‐step keys ────────────────────────────────────────
-        time_steps = {
-            "0": {
-                "rve"   : rve_t0,
+        time_steps = [
+            {   "time"  : 0        ,
                 "grains": grains_t0,
-                "voxels": voxels_t0
+                "voxels": voxels_t0,
             },
             # …etc…
-        }
+        ]
 
 
 
         # Assemble final structure with placeholders
         data = {
-            'User_Specific_Elements': use,
-            'System_Elements': {
-                'software': '',
-                'software_version': '',
-                'system': '',
-                'system_version': '',
-                'processor_specifications': '',
-                'input_path': '',
-                'results_path': ''
-            },
-            'Job_Specific_Elements': {'initial_geometry':ig,'boundary_condition':job_bc,'phases':phase_list,
-                                      "units": {
-                    "Stress": "MPa", "Strain": 1, "Length": length_unit, "Angle": "rad",
-                    "Temperature": "kelvin", "Force": "N","Stiffness": "MPa"}
-                                      },
-            # Time-level storage: time-frame data of voxels and grains
-            'Iterations':  time_steps
+            **use,                   # expand user-specific dict entries directly
+            'software': '',
+            'software_version': '',
+            'system': '',
+            'system_version': '',
+            'processor_specifications': '',
+            'input_path': '',
+            'results_path': '',
+            **ig,                    # expand initial geometry dict entries directly
+            'global_temperature': 298,
+            **job_bc,                 # expand boundary condition dict entries directly
+            'phases':phase_list,
+            'microstructure_evolution':  time_steps  # Time-level storage: time-frame data of voxels and grains
         }
 
-        # Write to file
-        os.makedirs(os.path.dirname(output_filename) or '.', exist_ok=True)
-        with open(output_filename, 'w', encoding='utf-8') as fp:
-            json.dump(data, fp, indent=2)
-
-        print(f"Data schema written to {output_filename}")
-
-        return
+        return data
 
 
 
