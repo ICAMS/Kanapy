@@ -2,7 +2,9 @@
 [![image](https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg)](https://doi.org/10.5281/zenodo.3662366)
 ![image](https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical)
 [![image](https://img.shields.io/badge/License-GNU%20AGPLv3-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/kanapy/badges/version.svg)](https://anaconda.org/conda-forge/kanapy)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ICAMS/Kanapy.git/HEAD?urlpath=%2Fdoc%2Ftree%2Findex.ipynb)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/kanapy/badges/downloads.svg)](https://anaconda.org/conda-forge/kanapy)
 
 # Kanapy
 
@@ -45,6 +47,11 @@ basic implementation of Kanapy is done in form of a Python Appplication Programm
 ## Installation
 
 The preferred method to use Kanapy is within [Anaconda](https://www.anaconda.com) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html), into which it can be easily installed from [conda-forge](https://conda-forge.org) by
+
+```
+$ conda install conda-forge::kanapy
+```
+or 
 
 ```
 $ conda install kanapy -c conda-forge
