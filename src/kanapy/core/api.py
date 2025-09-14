@@ -326,7 +326,8 @@ class Microstructure(object):
         -------
 
         """
-        if 'kanapy_mtex' in sys.modules:
+        from kanapy import __backend__
+        if __backend__ == 'mtex':
             from kanapy_mtex.texture import EBSDmap, createOrisetRandom, createOriset
             logging.info('Using MTEX library to read EBSD maps and generate orientations.')
             MTEX = True
@@ -446,7 +447,8 @@ class Microstructure(object):
         else:
             data = self.mesh.grains
         if ori is not None:
-            if "kanapy_mtex" in sys.modules:
+            from  kanapy import __backend__
+            if __backend__ == "mtex":
                 from kanapy_mtex.texture import get_ipf_colors
             else:
                 from kanapy.texture import get_ipf_colors

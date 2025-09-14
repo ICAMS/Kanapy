@@ -331,7 +331,8 @@ def plot_output_stats(data_list, labels, iphase=None,
     the distributions.
     """
     if 'Grains' not in labels and 'Voxels' not in labels:
-        raise ValueError('Either grains or voxels must be provided for statistical analysis.')
+        print(f'Argument "labels": {labels}')
+        raise ValueError('Either grains or voxels must be provided in labaels for statistical analysis.')
     if 'Grains' in labels:
         # if grain information is given plot this for comparison
         ind = labels.index('Grains')
