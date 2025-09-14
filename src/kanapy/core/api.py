@@ -245,7 +245,8 @@ class Microstructure(object):
             grain_dict = self.mesh.grain_dict
         self.mesh.nodes_smooth, grain_facesDict = \
             smoothingRoutine(nodes_v, voxel_dict, grain_dict)
-        self.geometry['GBfaces'] = grain_facesDict
+        if isinstance(self.geometry, dict):
+            self.geometry['GBfaces'] = grain_facesDict
 
     def generate_grains(self):
         """ Writes out the particle- and grain diameter attributes for
