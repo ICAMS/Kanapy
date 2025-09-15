@@ -10,6 +10,7 @@ November 2023
 
 import kanapy as knpy
 import numpy as np
+from orix.quaternion import Orientation
 
 fname = 'ebsd_316L_500x500.ang'  # name of ang file to be imported
 nvox = 30         # number of voxels per side
@@ -69,6 +70,13 @@ ms.plot_stats_init(show_res=True, gs_data=ms_data['gs_data'], ar_data=ms_data['a
 # generate and assign grains orientations
 ms.generate_orientations(ebsd)
 ms.plot_voxels(ori=True)
+
+# plot pole figures from EBSD map and RVE in comparison
+ori_r = Orientation.from_euler([o for o in ms.mesh.grain_ori_dict.values()])
+ebsd.plot_pf()
+knpy.plot_pole_figure(ori_r, ebsd.emap.phases[0])
+ebsd.plot_pf_proj()
+knpy.plot_pole_figure_proj(ori_r, ebsd.emap.phases[0])
 
 # output rve in voxel format
 ms.write_voxels(file=f'{matname}_voxels.json', script_name=__file__, mesh=False, system=False)

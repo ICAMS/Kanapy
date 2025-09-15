@@ -8,6 +8,7 @@ January 2024
 
 import kanapy as knpy
 from math import pi
+from orix.quaternion import Orientation
 
 texture = 'unimodal'  # chose texture type 'random' or 'unimodal'
 matname = 'Simulanium'  # Material name
@@ -26,7 +27,7 @@ ms_elong = {'Grain type': 'Elongated',
 # create kanapy microstructure object
 ms = knpy.Microstructure(descriptor=ms_elong, name=matname + '_' + texture + '_texture')
 ms.init_RVE()  # initialize RVE including particle distribution
-ms.plot_stats(show_all=True)  # plot initial statistics of equivalent grain diameter and aspect ratio
+ms.plot_stats_init()  # plot initial statistics of equivalent grain diameter and aspect ratio
 ms.pack()  # perform particle simulation to distribute grain nuclei in RVE volume
 ms.plot_ellipsoids()  # plot final configuration of particles
 ms.voxelize()  # create structured mesh and assign voxels to grains according to particles

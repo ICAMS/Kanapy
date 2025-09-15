@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from kanapy.core import get_grain_geom
 from scipy.stats import lognorm, vonmises
-from scipy.spatial import ConvexHull, cKDTree
+from scipy.spatial import ConvexHull, KDTree
 from scipy.special import legendre, beta
 from scipy.optimize import fminbound
 from scipy.integrate import quad
@@ -315,10 +315,15 @@ def plot_pole_figure(orientations, phase, vector=None,
     if vector is None:
         vector = [0, 0, 1]
     assert isinstance(orientations, Orientation)
+    if orientations.size < 1:
+        logging.warning(f'No orientations provided: {orientations.size}.')
+        scf = 1.0
+    else:
+        scf = 1.0 / np.sqrt(orientations.size)
     if size is None:
-        size = np.clip(250/np.sqrt(orientations.size), 0.25, 25)
+        size = np.clip(250*scf, 0.25, 25)
     if alpha is None:
-        alpha = np.clip(4/np.sqrt(orientations.size), 0.05, 0.5)
+        alpha = np.clip(4*scf, 0.05, 0.5)
     t_ = Miller(uvw=vector, phase=phase).symmetrise(unique=True)
     t_all = orientations.inv().outer(t_)
     fig = plt.figure(figsize=(9, 12))
@@ -347,10 +352,15 @@ def plot_pole_figure_proj(orientations, phase, vector=None,
         v_title = ["X", "Y", "Z"][np.argmax(vector)]
     else:
         v_title = title
+    if orientations.size < 1:
+        logging.warning(f'No orientations provided: {orientations.size}.')
+        scf = 1.0
+    else:
+        scf = 1.0 / np.sqrt(orientations.size)
     if size is None:
-        size = np.clip(250/np.sqrt(orientations.size), 0.25, 25)
+        size = np.clip(250*scf, 0.25, 25)
     if alpha is None:
-        alpha = np.clip(4/np.sqrt(orientations.size), 0.05, 0.5)
+        alpha = np.clip(4*scf, 0.05, 0.5)
     assert isinstance(orientations, Orientation)
     # Rotate sample direction v into every crystal orientation O
     t_ = orientations * v
@@ -393,7 +403,7 @@ def find_orientations_fast(ori1: Orientation, ori2: Orientation, tol: float = 1e
     q1 = ori1.data
     q2 = ori2.data
 
-    tree = cKDTree(q2)  # KDTree in 4D quaternion space for ori2 (typically, regular SO3 grid)
+    tree = KDTree(q2)  # KDTree in 4D quaternion space for ori2 (typically, regular SO3 grid)
     dists, indices = tree.query(q1)  # For every orientation in ori1, look for nearest neighbor in ori2 (grid)
 
     # create list of length or ori2, and store counts and indices of nearest neighbors in ori1
@@ -471,7 +481,7 @@ def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
             raise TypeError('Argument "ebsd" must be of type EBSDmap.')
         assert len(ebsd.emap.phases.ids) == 1, 'EBSD has multiple phases'
         if ori is not None:
-            logging.warning('Both EBSDfile and ebsd are given, using file.')
+            logging.warning('Both arguments "ebsd" and "ori" are given, using EBSD map orientations.')
         else:
             ori = ebsd.emap.orientations
     if orientations is not None:
@@ -1167,8 +1177,9 @@ class EBSDmap:
             self.plot_felsenszwalb()
         return
 
-    def calcORI(self, Ng, iphase=0, shared_area=None, nbins=12, verbose=False,
-                full_output=False):
+    def calcORI(self, Ng, iphase=0, shared_area=None, nbins=12,
+                res_low=5, res_high=25, res_step=2, lim=5,
+                verbose=False, full_output=False):
         """
         Estimate optimum kernel half-width and produce reduced set of
         orientations for given number of grains.
@@ -1191,7 +1202,10 @@ class EBSDmap:
 
         """
         ms = self.ms_data[iphase]
-        orired, odfred, ero, res = texture_reconstruction(Ng, orientations=ms['ori'], verbose=verbose)
+        orired, odfred, ero, res = texture_reconstruction(Ng, orientations=ms['ori'],
+                                                          res_low=res_low, res_high=res_high,
+                                                          res_step=res_step, lim=lim,
+                                                          verbose=verbose)
 
         if shared_area is None:
             if full_output:
@@ -1402,6 +1416,7 @@ def get_ipf_colors(ori_list, color_key=0):
 
 def createOriset(num, ang, omega, hist=None, shared_area=None,
                  cs=None, degree=True, Nbase=10000, resolution=None,
+                 res_low=5, res_high=25, res_step=2, lim=5,
                  verbose=False, full_output=False):
     """
     Create a set of num Euler angles according to the ODF defined by the
@@ -1437,12 +1452,13 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     if cs is None or not isinstance(cs, Symmetry):
         logging.warning('Crystal Symmetry "cs" must be provided as Symmetry object.')
         print(type(cs))
+    if resolution is None:
+        if degree:
+            resolution = omega
+        else:
+            resolution = np.rad2deg(omega)  # resolution must be given in degrees
     if degree:
         omega = np.deg2rad(omega)
-    if resolution is None:
-        resolution = omega
-    elif not degree:
-        resolution = np.rad2deg(resolution)
     if isinstance(ang, list):
         if degree:
             ang = np.deg2rad(ang)
@@ -1454,18 +1470,28 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     # psi = DeLaValleePoussinKernel(halfwidth=omega)
     if ang.size < Nbase/100:
         # create artificial ODF for monomodal texture or small orientation set
+        if verbose:
+            logging.info(f'Creating artificial ODF centered around orientation {ang} with '
+                         f'kernel halfwidth: {omega}')
         odf = ODF(ang, halfwidth=omega)
+        if verbose:
+            logging.info(f'Creating {Nbase} orientation from artificial ODF.')
         ori = calc_orientations(odf, Nbase, res=resolution)
         assert ori.size == Nbase
     else:
         ori = ang
-    ori, odfred, ero, res = texture_reconstruction(num, orientations=ori,
-                                                   kernel_halfwidth=omega, verbose=verbose)
+    logging.info(f'Texture reconstruction generating {num} orientations from {ori.size} inputs.'
+                 f'Kernel halfwidth: {omega}')
+    ori_red, odfred, ero, res = texture_reconstruction(num, orientations=ori,
+                                                   kernel_halfwidth=omega,
+                                                   res_low=res_low, res_high=res_high,
+                                                   res_step=res_step, lim=lim,
+                                                   verbose=verbose)
     if hist is None:
         if full_output:
-            return ori, odfred, ero, res
+            return ori_red, odfred, ero, res
         else:
-            return ori
+            return ori_red
     else:
         pass
         #if shared_area is None:

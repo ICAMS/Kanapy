@@ -244,7 +244,8 @@ class Microstructure(object):
             grain_dict = self.mesh.grain_dict
         self.mesh.nodes_smooth, grain_facesDict = \
             smoothingRoutine(nodes_v, voxel_dict, grain_dict)
-        self.geometry['GBfaces'] = grain_facesDict
+        if isinstance(self.geometry, dict):
+            self.geometry['GBfaces'] = grain_facesDict
 
     def generate_grains(self):
         """ Writes out the particle- and grain diameter attributes for
@@ -324,7 +325,8 @@ class Microstructure(object):
         -------
 
         """
-        if 'kanapy_mtex' in sys.modules:
+        from kanapy import __backend__
+        if __backend__ == 'mtex':
             from kanapy_mtex.texture import EBSDmap, createOrisetRandom, createOriset
             logging.info('Using MTEX library to read EBSD maps and generate orientations.')
             MTEX = True
@@ -444,7 +446,8 @@ class Microstructure(object):
         else:
             data = self.mesh.grains
         if ori is not None:
-            if "kanapy_mtex" in sys.modules:
+            from  kanapy import __backend__
+            if __backend__ == "mtex":
                 from kanapy_mtex.texture import get_ipf_colors
             else:
                 from kanapy.texture import get_ipf_colors
