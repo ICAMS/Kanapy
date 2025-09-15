@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 from typing import Dict, Any, List, Optional, Union
 from importlib.metadata import version as pkg_version
-from jsonschema import validate, ValidationError
 from datetime import datetime
 
 from .grains import calc_polygons
