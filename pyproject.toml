@@ -32,7 +32,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy",
+    "numpy=2.2",
     "matplotlib",
     "scipy",
     "seaborn",
