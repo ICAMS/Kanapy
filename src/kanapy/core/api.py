@@ -1768,8 +1768,6 @@ class Microstructure(object):
                                          float(cy) * length_scale,
                                          float(cz) * length_scale],
                 "voxel_volume": voxel_volume,
-                "stress": [],
-                "strain": [],
             }
             if include_orientation:
                 ori = grain_ori_dict.get(gid)
