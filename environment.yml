@@ -4,7 +4,7 @@ channels:
   - nodefaults
 dependencies:
   - python=3.12
-  - numpy
+  - numpy<=2.2.6
   - scipy
   - matplotlib
   - jupyter
@@ -19,7 +19,7 @@ dependencies:
   - tqdm
   - seaborn
   - click
-  - orix
+  - orix>=0.13
   - scikit-image
   - networkx
   - jsonschema

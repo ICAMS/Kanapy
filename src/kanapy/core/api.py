@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
 from typing import Dict, Any, List, Optional, Union
 from importlib.metadata import version as pkg_version
-from jsonschema import validate, ValidationError
 from datetime import datetime
 
 from .grains import calc_polygons
@@ -1769,8 +1768,6 @@ class Microstructure(object):
                                          float(cy) * length_scale,
                                          float(cz) * length_scale],
                 "voxel_volume": voxel_volume,
-                "stress": [],
-                "strain": [],
             }
             if include_orientation:
                 ori = grain_ori_dict.get(gid)
