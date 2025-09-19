@@ -91,6 +91,7 @@ class particle_rve(object):
         self.nvox_var1 = tk.IntVar(value=30)
         self.size_var1 = tk.IntVar(value=30)
         self.periodic_var1 = tk.BooleanVar(value=True)
+        self.volume_fraction = tk.DoubleVar(value=1.0)
 
         self.eq_diameter_sig = tk.DoubleVar(value=0.7)
         self.eq_diameter_scale = tk.DoubleVar(value=20.0)
@@ -143,6 +144,7 @@ class particle_rve(object):
         add_label_and_entry(main_frame1, next(line), "Material Number", self.ialloy, bold=False)
         add_label_and_entry(main_frame1, next(line), "Number of Voxels", self.nvox_var1, bold=False)
         add_label_and_entry(main_frame1, next(line), "Size of RVE (in micron)", self.size_var1, bold=False)
+        add_label_and_entry(main_frame1, next(line), "Volume fraction", self.volume_fraction, bold=False)
         add_label_and_entry(main_frame1, next(line), "Periodic", self.periodic_var1, entry_type="checkbox",
                             bold=False)
 
@@ -259,6 +261,34 @@ class particle_rve(object):
                 self_closing_message(f"Saving stats file as {file_path}.")
                 write_stats(self.ms_stats, file_path)
 
+    def readout_stats(self):
+        matname = self.matname_var1.get()
+        nvox = int(self.nvox_var1.get())
+        size = int(self.size_var1.get())
+        periodic = self.periodic_var1.get()
+        sd = {
+            'Grain type': 'Elongated',
+            'Equivalent diameter': {
+                'sig': self.eq_diameter_sig.get(), 'scale': self.eq_diameter_scale.get(),
+                'loc': self.eq_diameter_loc.get(), 'cutoff_min': self.eq_diameter_min.get(),
+                'cutoff_max': self.eq_diameter_max.get()
+            },
+            'Aspect ratio': {
+                'sig': self.aspect_ratio_sig.get(), 'scale': self.aspect_ratio_scale.get(),
+                'loc': self.aspect_ratio_loc.get(), 'cutoff_min': self.aspect_ratio_min.get(),
+                'cutoff_max': self.aspect_ratio_max.get()
+            },
+            "Tilt angle": {
+                "kappa": self.tilt_angle_kappa.get(), "loc": self.tilt_angle_loc.get(),
+                "cutoff_min": self.tilt_angle_min.get(), "cutoff_max": self.tilt_angle_max.get()
+            },
+            'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': nvox, 'Ny': nvox, 'Nz': nvox,
+                    'ialloy': int(self.ialloy.get())},
+            'Simulation': {'periodicity': periodic, 'output_units': 'mm'},
+            'Phase': {'Name': matname, 'Number': 0, 'Volume fraction': self.volume_fraction.get()}
+        }
+        return sd
+
     def import_stats(self):
         """Import statistical data ."""
         file_path = filedialog.askopenfilename(title="Select statistics file", filetypes=[("Stats files", ".json")])
@@ -269,16 +299,23 @@ class particle_rve(object):
                 self.nvox_var1.set(ms_stats['RVE']['Nx'])
                 self.size_var1.set(ms_stats['RVE']['sideX'])
                 self.periodic_var1.set(ms_stats['Simulation']['periodicity'])
+                self.volume_fraction.set(ms_stats['Phase']['Volume fraction'])
     
                 self.eq_diameter_sig.set(ms_stats['Equivalent diameter']['sig'])
                 self.eq_diameter_scale.set(ms_stats['Equivalent diameter']['scale'])
-                self.eq_diameter_loc.set(ms_stats['Equivalent diameter']['loc'])
+                if 'loc' in ms_stats['Equivalent diameter'].keys():
+                    self.eq_diameter_loc.set(ms_stats['Equivalent diameter']['loc'])
+                else:
+                    self.eq_diameter_loc.set(0.0)
                 self.eq_diameter_min.set(ms_stats['Equivalent diameter']['cutoff_min'])
                 self.eq_diameter_max.set(ms_stats['Equivalent diameter']['cutoff_max'])
     
                 self.aspect_ratio_sig.set(ms_stats['Aspect ratio']['sig'])
                 self.aspect_ratio_scale.set(ms_stats['Aspect ratio']['scale'])
-                self.aspect_ratio_loc.set(ms_stats['Aspect ratio']['loc'])
+                if 'loc' in ms_stats['Equivalent diameter'].keys():
+                    self.aspect_ratio_loc.set(ms_stats['Aspect ratio']['loc'])
+                else:
+                    self.aspect_ratio_loc.set(0.0)
                 self.aspect_ratio_min.set(ms_stats['Aspect ratio']['cutoff_min'])
                 self.aspect_ratio_max.set(ms_stats['Aspect ratio']['cutoff_max'])
     
@@ -288,8 +325,8 @@ class particle_rve(object):
                 self.tilt_angle_max.set(ms_stats['Tilt angle']['cutoff_max'])
                 self.ms_stats = ms_stats
                 self_closing_message("Statistical data imported successfully.")
-            except:
-                self_closing_message("ERROR: Statistical parameters could not be imported!")
+            except Exception as e:
+                self_closing_message(f"ERROR: Statistical parameters could not be imported! {e}")
 
     def extract_microstructure_params(self):
         """Extracts microstructure parameters from the EBSD data."""
@@ -326,34 +363,9 @@ class particle_rve(object):
     def create_and_plot_stats(self):
         """Plot statistics of current microstructure descriptors
         Will erase global microstructure object if it exists."""
+        self.ms_stats = self.readout_stats()
         texture = self.texture_var1.get()
         matname = self.matname_var1.get()
-        nvox = int(self.nvox_var1.get())
-        size = int(self.size_var1.get())
-        periodic = self.periodic_var1.get()
-
-        self.ms_stats = {
-            'Grain type': 'Elongated',
-            'Equivalent diameter': {
-                'sig': self.eq_diameter_sig.get(), 'scale': self.eq_diameter_scale.get(),
-                'loc': self.eq_diameter_loc.get(), 'cutoff_min': self.eq_diameter_min.get(),
-                'cutoff_max': self.eq_diameter_max.get()
-            },
-            'Aspect ratio': {
-                'sig': self.aspect_ratio_sig.get(), 'scale': self.aspect_ratio_scale.get(),
-                'loc': self.aspect_ratio_loc.get(), 'cutoff_min': self.aspect_ratio_min.get(),
-                'cutoff_max': self.aspect_ratio_max.get()
-            },
-            "Tilt angle": {
-                "kappa": self.tilt_angle_kappa.get(), "loc": self.tilt_angle_loc.get(),
-                "cutoff_min": self.tilt_angle_min.get(), "cutoff_max": self.tilt_angle_max.get()
-            },
-            'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': nvox, 'Ny': nvox, 'Nz': nvox,
-                    'ialloy': int(self.ialloy.get())},
-            'Simulation': {'periodicity': periodic, 'output_units': 'mm'},
-            'Phase': {'Name': matname, 'Number': 0, 'Volume fraction': 1.0}
-        }
-
         self.ms = Microstructure(descriptor=self.ms_stats, name=f"{matname}_{texture}_texture")
         self.ms.init_RVE()
         if self.ebsd is None:
@@ -373,32 +385,7 @@ class particle_rve(object):
         self_closing_message("The process has been started, please wait...")
         start_time = time.time()
         matname = self.matname_var1.get()
-        nvox = int(self.nvox_var1.get())
-        size = int(self.size_var1.get())
-        periodic = self.periodic_var1.get()
-
-        self.ms_stats = {
-            'Grain type': 'Elongated',
-            'Equivalent diameter': {
-                'sig': self.eq_diameter_sig.get(), 'scale': self.eq_diameter_scale.get(),
-                'loc': self.eq_diameter_loc.get(), 'cutoff_min': self.eq_diameter_min.get(),
-                'cutoff_max': self.eq_diameter_max.get()
-            },
-            'Aspect ratio': {
-                'sig': self.aspect_ratio_sig.get(), 'scale': self.aspect_ratio_scale.get(),
-                'loc': self.aspect_ratio_loc.get(), 'cutoff_min': self.aspect_ratio_min.get(),
-                'cutoff_max': self.aspect_ratio_max.get()
-            },
-            "Tilt angle": {
-                "kappa": self.tilt_angle_kappa.get(), "loc": self.tilt_angle_loc.get(),
-                "cutoff_min": self.tilt_angle_min.get(), "cutoff_max": self.tilt_angle_max.get()
-            },
-            'RVE': {'sideX': size, 'sideY': size, 'sideZ': size, 'Nx': nvox, 'Ny': nvox, 'Nz': nvox,
-                    'ialloy': int(self.ialloy.get())},
-            'Simulation': {'periodicity': str(periodic), 'output_units': 'mm'},
-            'Phase': {'Name': matname, 'Number': 0, 'Volume fraction': 1.0}
-        }
-
+        self.ms_stats = self.readout_stats()
         self.ms = Microstructure(descriptor=self.ms_stats, name=f"{matname}")
         self.ms.init_RVE()
         self.ms.pack()

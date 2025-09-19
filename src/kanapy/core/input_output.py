@@ -1444,15 +1444,13 @@ def write_stats(stats, file, path='./'):
 
     Parameters
     ----------
+    stats : dict
+        Dictionary with statistical descriptors to be stored.
     file : string
-        File name of pickled microstructure to be read.
+        File name fpr microstructure descriptors to be written. Ending '.json' extension will be appended
+        if missing.
     path : string
-        Path under which pickle-files are stored (optional, default: './')
-
-    Returns
-    -------
-    desc : list or dict
-        (List of) dict with statistical microstructure descriptors
+        Path under which microstructure JSON file is stored (optional, default: './')
 
     """
     import json
@@ -1460,6 +1458,8 @@ def write_stats(stats, file, path='./'):
         raise ValueError('List or dict with microstructure descriptors must be given.')
     if file is None:
         raise ValueError('Name for json file with microstructure descriptors must be given.')
+    if file[-5:].lower() != '.json':
+        file += '.json'
     file = os.path.join(path, file)
     with open(file, 'w') as fp:
         json.dump(stats, fp)
@@ -1467,19 +1467,20 @@ def write_stats(stats, file, path='./'):
 
 def import_stats(file, path='./'):
     """
-    Write statistical descriptors of microstructure to JSON file.
+    Read statistical descriptors of microstructure from JSON file.
 
     Parameters
     ----------
     file : string
-        File name of pickled microstructure to be read.
+        File name from which microstructure descriptors to be written. Ending '.json' extension will be appended
+        if missing.
     path : string
-        Path under which pickle-files are stored (optional, default: './')
+        Path under which JSON file is stored (optional, default: './')
 
     Returns
     -------
-    desc : list or dict
-        (List of) dict with statistical microstructure descriptors
+    desc : dict
+        Dictionary with statistical microstructure descriptors
 
     """
     import json
