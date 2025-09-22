@@ -341,7 +341,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             vstress = mag
 
             f.write(f'** Name: {bc_name} Type: Pressure\n')
-            f.write('*Dload\n')
+            f.write('*Dsload\n')
             f.write(f'{set_name}, P, {-vstress:.6f}\n')
 
     def write_periodic_load():
