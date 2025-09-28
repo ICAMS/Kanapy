@@ -96,6 +96,7 @@ class Microstructure(object):
         self.rve_stats_labels = None
         self.from_voxels = False
         self.ialloy = None
+        self.vf_vox = None
 
         if descriptor is None:
             if file is None:
@@ -215,17 +216,21 @@ class Microstructure(object):
         self.Ngr = np.sum(self.mesh.ngrains_phase, dtype=int)
         # extract volume fractions from voxelized grains
         if self.nphases > 1:
+            self.vf_vox = np.zeros(self.nphases)
             vox_count = np.zeros(self.nphases, dtype=int)
             for igr, ip in self.mesh.grain_phase_dict.items():
                 vox_count[ip] += len(self.mesh.grain_dict[igr])
             print('Volume fractions of phases in voxel structure:')
             vt = 0.
             for ip in range(self.nphases):
-                vf = vox_count[ip] / self.mesh.nvox
-                vt += vf
-                print(f'{ip}: {self.rve.phase_names[ip]} ({(vf * 100):.3f}%)')
+                vf_act = vox_count[ip] / self.mesh.nvox
+                self.vf_vox[ip] = vf_act
+                vt += vf_act
+                print(f'{ip}: {self.rve.phase_names[ip]} ({(vf_act * 100):.3f}%)')
             if not np.isclose(vt, 1.0):
                 logging.warning(f'Volume fractions of phases in voxels do not add up to 1. Value: {vt}')
+        else:
+            self.vf_vox = np.ones(1)
 
         # remove grain information if it already exists to avoid inconsistencies
         if self.geometry is not None:
@@ -674,8 +679,7 @@ class Microstructure(object):
             if return_descriptors:
                 descs.append({'phase': ip, **(statistical_descriptors or {})})
 
-        if return_descriptors: return flist, descs
-        if silent: return flist
+        if return_descriptors or silent: return flist, descs
 
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):

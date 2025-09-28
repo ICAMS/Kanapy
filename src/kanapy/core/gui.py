@@ -51,18 +51,23 @@ def self_closing_message(message, duration=4000):
     return
 
 
-def add_label_and_entry(frame, row, label_text, entry_var, entry_type="entry", bold=True, options=None):
-    label_font = ("Helvetica", 12, "bold") if bold else ("Helvetica", 12)
-    ttk.Label(frame, text=label_text, font=label_font).grid(row=row, column=0, sticky='w')
+def add_label_and_entry(frame, row, label_text, entry_var, entry_type="entry", bold=False,
+                        options=None, col=0):
+    if label_text is not None:
+        label_font = ("Helvetica", 12, "bold") if bold else ("Helvetica", 12)
+        ttk.Label(frame, text=label_text, font=label_font).grid(row=row, column=col, sticky='w')
+        col_entry = col + 1
+    else:
+        col_entry = col
     if entry_type == "entry":
         ttk.Entry(frame, textvariable=entry_var, width=20, font=("Helvetica", 12)) \
-            .grid(row=row, column=1, sticky='e')
+            .grid(row=row, column=col_entry, sticky='e')
     elif entry_type == "checkbox":
-        ttk.Checkbutton(frame, variable=entry_var).grid(row=row, column=1, sticky='e')
+        ttk.Checkbutton(frame, variable=entry_var).grid(row=row, column=col_entry, sticky='e')
     elif entry_type == "combobox" and options is not None:
         combobox = ttk.Combobox(frame, textvariable=entry_var, values=options, state='readonly',
                                 width=19)
-        combobox.grid(row=row, column=1, sticky='e')
+        combobox.grid(row=row, column=col_entry, sticky='e')
         combobox.configure(font=("Helvetica", 12))
         combobox.current(0)
     return
@@ -87,23 +92,31 @@ class particle_rve(object):
         self.rve_canvas1 = None
         self.texture_var1 = tk.StringVar(value="random")
         self.matname_var1 = tk.StringVar(value="Simulanium")
+        self.nphases = tk.IntVar(value=1)
         self.ialloy = tk.IntVar(value=2)
         self.nvox_var1 = tk.IntVar(value=30)
         self.size_var1 = tk.IntVar(value=30)
         self.periodic_var1 = tk.BooleanVar(value=True)
         self.volume_fraction = tk.DoubleVar(value=1.0)
+        self.vf_act = tk.DoubleVar(value=0.0)
 
         self.eq_diameter_sig = tk.DoubleVar(value=0.7)
         self.eq_diameter_scale = tk.DoubleVar(value=20.0)
         self.eq_diameter_loc = tk.DoubleVar(value=0.0)
         self.eq_diameter_min = tk.DoubleVar(value=9.0)
         self.eq_diameter_max = tk.DoubleVar(value=18.0)
+        self.eqd_act_sig = tk.DoubleVar(value=0.0)
+        self.eqd_act_scale = tk.DoubleVar(value=0.0)
+        self.eqd_act_loc = tk.DoubleVar(value=0.0)
 
         self.aspect_ratio_sig = tk.DoubleVar(value=0.9)
         self.aspect_ratio_scale = tk.DoubleVar(value=2.5)
         self.aspect_ratio_loc = tk.DoubleVar(value=0.0)
         self.aspect_ratio_min = tk.DoubleVar(value=1.0)
         self.aspect_ratio_max = tk.DoubleVar(value=4.0)
+        self.ar_act_sig = tk.DoubleVar(value=0.0)
+        self.ar_act_scale = tk.DoubleVar(value=0.0)
+        self.ar_act_loc = tk.DoubleVar(value=0.0)
 
         self.tilt_angle_kappa = tk.DoubleVar(value=1.0)
         self.tilt_angle_loc = tk.DoubleVar(value=round(0.5 * np.pi, 4))
@@ -117,6 +130,7 @@ class particle_rve(object):
             self.euler_var1 = tk.StringVar(value="0.0, 45.0, 0.0")
         self.texture_var1.trace('w', self.update_kernel_var)
         self.texture_var1.trace('w', self.update_euler_var)
+
 
         # plot frames
         tab1 = ttk.Frame(notebook)
@@ -138,50 +152,75 @@ class particle_rve(object):
         # define labels and entries
         line_seq = np.linspace(0, 50, dtype=int)
         line = iter(line_seq)
-        ttk.Label(main_frame1, text="General Parameters", font=("Helvetica", 12, "bold")) \
+        ttk.Label(main_frame1, text="Simulation box", font=("Helvetica", 12, "bold")) \
             .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
-        add_label_and_entry(main_frame1, next(line), "Material Name", self.matname_var1, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Material Number", self.ialloy, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Number of Voxels", self.nvox_var1, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Size of RVE (in micron)", self.size_var1, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Volume fraction", self.volume_fraction, bold=False)
+        add_label_and_entry(main_frame1, next(line), "Number of Voxels", self.nvox_var1)
+        add_label_and_entry(main_frame1, next(line), "Size of RVE (in micron)", self.size_var1)
         add_label_and_entry(main_frame1, next(line), "Periodic", self.periodic_var1, entry_type="checkbox",
                             bold=False)
+        ttk.Label(main_frame1, text="Phases", font=("Helvetica", 12, "bold")) \
+            .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
+        #add_label_and_entry(main_frame1, next(line), "Number of phases", self.nphases)
+        add_label_and_entry(main_frame1, next(line), "Phase Name", self.matname_var1)
+        add_label_and_entry(main_frame1, next(line), "Phase Number", self.ialloy)
+        hl = next(line)
+        ttk.Label(main_frame1, text="     target", font=("Helvetica", 12, "italic")) \
+            .grid(row=hl, column=1, pady=(10, 0), sticky='w')
+        ttk.Label(main_frame1, text="   actual", font=("Helvetica", 12, "italic")) \
+            .grid(row=hl, column=2, pady=(10, 0), sticky='w')
+        hl = next(line)
+        add_label_and_entry(main_frame1, hl, "Volume fraction", self.volume_fraction)
+        add_label_and_entry(main_frame1, hl, label_text=None, entry_var=self.vf_act, col=2)
 
         ttk.Label(main_frame1, text="Equivalent Diameter Parameters", font=("Helvetica", 12, "bold")) \
             .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
-        add_label_and_entry(main_frame1, next(line), "Sigma", self.eq_diameter_sig, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Scale", self.eq_diameter_scale, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Location", self.eq_diameter_loc, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Min", self.eq_diameter_min, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Max", self.eq_diameter_max, bold=False)
+        hl = next(line)
+        add_label_and_entry(main_frame1, hl, "Sigma", self.eq_diameter_sig)
+        add_label_and_entry(main_frame1, hl, None, self.eqd_act_sig, col=2)
+        hl = next(line)
+        add_label_and_entry(main_frame1, hl, "Scale", self.eq_diameter_scale)
+        add_label_and_entry(main_frame1, hl, None, self.eqd_act_scale, col=2)
+        hl = next(line)
+        add_label_and_entry(main_frame1, hl, "Location", self.eq_diameter_loc)
+        add_label_and_entry(main_frame1, hl, None, self.eqd_act_loc, col=2)
+        add_label_and_entry(main_frame1, next(line), "Min", self.eq_diameter_min)
+        add_label_and_entry(main_frame1, next(line), "Max", self.eq_diameter_max)
 
         ttk.Label(main_frame1, text="Aspect Ratio Parameters", font=("Helvetica", 12, "bold")) \
             .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
-        add_label_and_entry(main_frame1, next(line), "Sigma", self.aspect_ratio_sig, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Scale", self.aspect_ratio_scale, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Location", self.aspect_ratio_loc, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Min", self.aspect_ratio_min, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Max", self.aspect_ratio_max, bold=False)
+        hl = next(line)
+        add_label_and_entry(main_frame1, hl, "Sigma", self.aspect_ratio_sig)
+        add_label_and_entry(main_frame1, hl, None, self.ar_act_sig, col=2)
+        hl = next(line)
+        add_label_and_entry(main_frame1, hl, "Scale", self.aspect_ratio_scale)
+        add_label_and_entry(main_frame1, hl, None, self.ar_act_scale, col=2)
+        hl = next(line)
+        add_label_and_entry(main_frame1, hl, "Location", self.aspect_ratio_loc)
+        add_label_and_entry(main_frame1, hl, None, self.ar_act_loc, col=2)
+        add_label_and_entry(main_frame1, next(line), "Min", self.aspect_ratio_min)
+        add_label_and_entry(main_frame1, next(line), "Max", self.aspect_ratio_max)
 
         ttk.Label(main_frame1, text="Tilt Angle Parameters", font=("Helvetica", 12, "bold")) \
             .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
-        add_label_and_entry(main_frame1, next(line), "Kappa", self.tilt_angle_kappa, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Location", self.tilt_angle_loc, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Min", self.tilt_angle_min, bold=False)
-        add_label_and_entry(main_frame1, next(line), "Max", self.tilt_angle_max, bold=False)
+        hl = next(line)
+        add_label_and_entry(main_frame1, hl, "Kappa", self.tilt_angle_kappa)
+        #add_label_and_entry(main_frame1, hl, None, self.ta_act_kappa, col=2)
+        hl = next(line)
+        add_label_and_entry(main_frame1, hl, "Location", self.tilt_angle_loc)
+        add_label_and_entry(main_frame1, next(line), "Min", self.tilt_angle_min)
+        add_label_and_entry(main_frame1, next(line), "Max", self.tilt_angle_max)
 
         ttk.Label(main_frame1, text="Orientation Parameters", font=("Helvetica", 12, "bold")) \
             .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
         add_label_and_entry(main_frame1, next(line), "Texture", self.texture_var1, entry_type="combobox",
-                            options=["random", "unimodal", "EBSD-ODF"], bold=False)
+                            options=["random", "unimodal", "EBSD-ODF"])
         add_label_and_entry(main_frame1, next(line), "Kernel Half Width (degree)", self.kernel_var1,
                             bold=False)
-        add_label_and_entry(main_frame1, next(line), "Euler Angles (degree)", self.euler_var1, bold=False)
+        add_label_and_entry(main_frame1, next(line), "Euler Angles (degree)", self.euler_var1)
 
         # create buttons
         button_frame1 = ttk.Frame(main_frame1)
-        button_frame1.grid(row=next(line), column=0, columnspan=2, pady=10, sticky='ew')
+        button_frame1.grid(row=next(line), column=0, columnspan=3, pady=10, sticky='ew')
 
         button_import_ebsd = ttk.Button(button_frame1, text="Import EBSD", style='TButton',
                                         command=self.import_ebsd)
@@ -189,23 +228,23 @@ class particle_rve(object):
         button_import_stats = ttk.Button(button_frame1, text="Import Statistics", style='TButton',
                                          command=self.import_stats)
         button_import_stats.grid(row=0, column=1, padx=(10, 5), pady=5, sticky='ew')
+        write_stats_button = ttk.Button(button_frame1, text="Export Statistics", style='TButton',
+                                        command=self.write_stat_param)
+        write_stats_button.grid(row=0, column=2, padx=(10, 5), pady=5, sticky='ew')
         button_statistics = ttk.Button(button_frame1, text="Plot Statistics", style='TButton',
                                        command=self.create_and_plot_stats)
         button_statistics.grid(row=1, column=0, padx=(10, 5), pady=5, sticky='ew')
-        write_stats_button = ttk.Button(button_frame1, text="Export Statistics", style='TButton',
-                                        command=self.write_stat_param)
-        write_stats_button.grid(row=1, column=1, padx=(10, 5), pady=5, sticky='ew')
         button_create_rve = ttk.Button(button_frame1, text="Create RVE", style='TButton',
                                        command=self.create_and_plot_rve)
-        button_create_rve.grid(row=2, column=0, padx=(10, 5), pady=5, sticky='ew')
+        button_create_rve.grid(row=1, column=1, padx=(10, 5), pady=5, sticky='ew')
         button_create_ori = ttk.Button(button_frame1, text="Create Orientations", style='TButton',
                                        command=self.create_orientation)
-        button_create_ori.grid(row=2, column=1, padx=(10, 5), pady=5, sticky='ew')
+        button_create_ori.grid(row=1, column=2, padx=(10, 5), pady=5, sticky='ew')
         write_files_button = ttk.Button(button_frame1, text="Write Abaqus Input", style='TButton',
                                         command=self.export_abq)
-        write_files_button.grid(row=3, column=0, padx=(10, 5), pady=5, sticky='ew')
+        write_files_button.grid(row=2, column=0, padx=(10, 5), pady=5, sticky='ew')
         button_exit1 = ttk.Button(button_frame1, text="Exit", style='TButton', command=self.close)
-        button_exit1.grid(row=3, column=1, padx=(10, 5), pady=5, sticky='ew')
+        button_exit1.grid(row=2, column=2, padx=(10, 5), pady=5, sticky='ew')
 
     def close(self):
         self.app.quit()
@@ -246,8 +285,9 @@ class particle_rve(object):
         if file_path:
             self_closing_message("Reading EBSD map, please wait..")
             try:
-                self.ebsd = EBSDmap(file_path, plot=True, hist=False)
+                self.ebsd = EBSDmap(file_path, show_plot=True)
                 self.extract_microstructure_params()
+                self.reset_act()
                 self_closing_message("Data from EBSD map imported successfully.")
             except:
                 self_closing_message("ERROR: Could not read EBSD map!")
@@ -260,6 +300,13 @@ class particle_rve(object):
             if file_path:
                 self_closing_message(f"Saving stats file as {file_path}.")
                 write_stats(self.ms_stats, file_path)
+
+    def reset_act(self):
+        self.vf_act.set(0.0)
+        self.eqd_act_sig.set(0.0)
+        self.eqd_act_scale.set(0.0)
+        self.ar_act_sig.set(0.0)
+        self.ar_act_scale.set(0.0)
 
     def readout_stats(self):
         matname = self.matname_var1.get()
@@ -324,6 +371,8 @@ class particle_rve(object):
                 self.tilt_angle_min.set(ms_stats['Tilt angle']['cutoff_min'])
                 self.tilt_angle_max.set(ms_stats['Tilt angle']['cutoff_max'])
                 self.ms_stats = ms_stats
+                self.reset_act()
+                self.ebsd = None
                 self_closing_message("Statistical data imported successfully.")
             except Exception as e:
                 self_closing_message(f"ERROR: Statistical parameters could not be imported! {e}")
@@ -338,6 +387,7 @@ class particle_rve(object):
         ar_param = ms_data['ar_param']
         om_param = ms_data['om_param']
         self.matname_var1.set(ms_data['name'])
+        self.volume_fraction.set(1.0)
         self.eq_diameter_sig.set(gs_param[0].round(3))
         self.eq_diameter_scale.set(gs_param[2].round(3))
         self.eq_diameter_loc.set(gs_param[1].round(3))
@@ -374,9 +424,10 @@ class particle_rve(object):
         else:
             gs_data = self.ebsd.ms_data[0]['gs_data']
             ar_data = self.ebsd.ms_data[0]['ar_data']
-        flist = self.ms.plot_stats_init(gs_data=gs_data, ar_data=ar_data, silent=True)
+        flist, descs = self.ms.plot_stats_init(gs_data=gs_data, ar_data=ar_data, silent=True)
         for fig in flist:
             self.display_plot(fig, plot_type="stats")
+        self.reset_act()
 
     def create_and_plot_rve(self):
         """Create and plot the RVE
@@ -392,7 +443,12 @@ class particle_rve(object):
         self.ms.voxelize()
         fig = self.ms.plot_voxels(silent=True, sliced=False)
         self.display_plot(fig, plot_type="rve")
-        flist = self.ms.plot_stats_init(silent=True, get_res=True)
+        flist, descs = self.ms.plot_stats_init(silent=True, get_res=True, return_descriptors=True)
+        self.vf_act.set(self.ms.vf_vox[0])
+        self.eqd_act_sig.set(descs[0]['eqd']['std'])
+        self.eqd_act_scale.set(descs[0]['eqd']['mean'])
+        self.ar_act_sig.set(descs[0]['ar']['std'])
+        self.ar_act_scale.set(descs[0]['ar']['mean'])
         end_time = time.time()
         duration = end_time - start_time
         self_closing_message(f"Process completed in {duration:.2f} seconds")
@@ -477,19 +533,19 @@ class cuboid_rve(object):
         line = iter(line_seq)
         ttk.Label(main_frame2, text="General Parameters", font=("Helvetica", 12, "bold")) \
             .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
-        add_label_and_entry(main_frame2, next(line), "Material Name", self.matname_var2, bold=False)
-        add_label_and_entry(main_frame2, next(line), "Material Number", self.ialloy, bold=False)
-        add_label_and_entry(main_frame2, next(line), "Number of Voxels", self.nv_gr_var, bold=False)
-        add_label_and_entry(main_frame2, next(line), "Number of Grains", self.ngr_var, bold=False)
-        add_label_and_entry(main_frame2, next(line), "Size of RVE (in micron)", self.size_var2, bold=False)
+        add_label_and_entry(main_frame2, next(line), "Material Name", self.matname_var2)
+        add_label_and_entry(main_frame2, next(line), "Material Number", self.ialloy)
+        add_label_and_entry(main_frame2, next(line), "Number of Voxels", self.nv_gr_var)
+        add_label_and_entry(main_frame2, next(line), "Number of Grains", self.ngr_var)
+        add_label_and_entry(main_frame2, next(line), "Size of RVE (in micron)", self.size_var2)
 
         ttk.Label(main_frame2, text="Orientation Parameters", font=("Helvetica", 12, "bold")) \
             .grid(row=next(line), column=0, columnspan=2, pady=(10, 0), sticky='w')
         add_label_and_entry(main_frame2, next(line), "Texture", self.texture_var2, entry_type="combobox",
-                            options=["random", "unimodal"], bold=False)
+                            options=["random", "unimodal"])
         add_label_and_entry(main_frame2, next(line), "Kernel Half Width (degree)", self.kernel_var2,
                             bold=False)
-        add_label_and_entry(main_frame2, next(line), "Euler Angles (degree)", self.euler_var2, bold=False)
+        add_label_and_entry(main_frame2, next(line), "Euler Angles (degree)", self.euler_var2)
 
         # add buttons
         button_frame2 = ttk.Frame(main_frame2)
