@@ -1251,10 +1251,9 @@ class EBSDmap:
             vector = [0, 0, 1]
         pids = np.array(self.emap.phases.ids)
         pids = pids[pids >= 0]
-        for n_ph, ind in enumerate(pids):
-            data = self.ms_data[n_ph]
+        for n_ph, data in enumerate(self.ms_data):
             orientations = data['ori']
-            plot_pole_figure(orientations, self.emap.phases[ind], vector=vector)
+            plot_pole_figure(orientations, self.emap.phases[pids[n_ph]], vector=vector)
             #t_ = Miller(uvw=vector, phase=self.emap.phases[ind]).symmetrise(unique=True)
             #t_all = orientations.inv().outer(t_)
             #fig = plt.figure(figsize=(8, 8))
@@ -1271,10 +1270,9 @@ class EBSDmap:
             vector = [0, 0, 1]
         pids = np.array(self.emap.phases.ids)
         pids = pids[pids >= 0]
-        for n_ph, ind in enumerate(pids):
-            data = self.ms_data[n_ph]
+        for n_ph, data in enumerate(self.ms_data):
             orientations = data['ori']
-            plot_pole_figure_proj(orientations, self.emap.phases[ind], vector=vector)
+            plot_pole_figure_proj(orientations, self.emap.phases[pids[n_ph]], vector=vector)
 
     def plot_grains_marked(self):
         # plot grain with numbers and axes
