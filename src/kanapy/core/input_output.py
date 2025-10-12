@@ -312,8 +312,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             set_name, dof, bc_name = displacement_bc_map[direction]
 
             # 'value' is a length-6 list; dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,
-            vstrain = float(mag)
-            strain = vstrain / 100.0  # Convert percentage to decimal
+            strain = float(mag)
 
             displacement = edge_lengths[direction] * (np.exp(strain) - 1)  # Logarithmic strain
             print(f"Direction: {direction}, Strain: {strain:.6f}, Edge length: {edge_lengths[direction]:.6f} mm, "
@@ -1206,7 +1205,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         f.write('** FIELD OUTPUT: F-Output-2 \n')
         f.write('** \n')
         f.write('*Element Output, directions=YES \n')
-        f.write('LE, MISES, PE, PEEQ, S, SDEG \n')
+        f.write('LE, MISES, PE, PEEQ, S, SDEG, SDV \n')
         f.write('*Output, history, frequency=0 \n')
         f.write('** \n')
         f.write('** HISTORY OUTPUT: H-Output-1 \n')
