@@ -1083,7 +1083,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                 # no inline props → include from file
                 if dual_phase:
                     # per‐phase file for each pid
-                    f.write('*Include, input=Material{}.inp\n'.format(pid))
+                    f.write('**Include, input=Material{}.inp\n'.format(pid))
                     did_include = True
                 # else: defer the single‐file include until after the loop
 
@@ -1093,7 +1093,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         if not dual_phase and not did_include:
             # strip off last 8 chars (e.g. “_mesh.inp”) and append “mat.inp”
             base = file[:-8]
-            f.write('*Include, input={}mat.inp\n'.format(base))
+            f.write('**Include, input={}mat.inp\n'.format(base))
             f.write('**\n')
         """
         Previous Material Section
@@ -1111,7 +1111,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
                 f.write('**\n')
                 f.write('*Material, name=PHASE{}_MAT\n'.format(i))
             f.write('**\n')
-            f.write('*Include, input={}mat.inp\n'.format(file[0:-8]))
+            f.write('**Include, input={}mat.inp\n'.format(file[0:-8]))
             f.write('**\n')
             f.write('**__________________________________________________________________')
         """
