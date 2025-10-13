@@ -487,7 +487,8 @@ class particle_rve(object):
         if self.ms_stats is None or self.ms is None or self.ms.mesh is None:
             self_closing_message("Generating and exporting RVE without orientations.")
             self.create_and_plot_rve()
-        self.ms.write_abq('v')
+        dp = self.volume_fraction.get() < 1.0
+        self.ms.write_abq('v', dual_phase=dp, units='mm')
 
 
 class cuboid_rve(object):
@@ -667,4 +668,4 @@ class cuboid_rve(object):
         if self.ms is None:
             self_closing_message("Generating and exporting RVE with cuboid grains w/o orientations.")
             self.create_cubes_and_plot()
-        self.ms.write_abq('v')
+        self.ms.write_abq('v', units='mm')
