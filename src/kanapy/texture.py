@@ -41,6 +41,34 @@ def get_distinct_colormap(N, cmap='prism'):
 
 
 def neighbors(r, c, connectivity=8):
+    """
+    Return the neighboring coordinates of a cell in a 2D grid.
+
+    Parameters
+    ----------
+    r : int
+        Row index of the cell.
+    c : int
+        Column index of the cell.
+    connectivity : int, optional
+        Type of connectivity. Options are:
+        - 1 or 4 : 4-connected neighbors (up, down, left, right)
+        - 8      : 8-connected neighbors (includes diagonals)
+        Default is 8.
+
+    Returns
+    -------
+    neighbors : list of tuple
+        List of (row, column) tuples representing neighboring cells.
+
+    Examples
+    --------
+    >>> neighbors(2, 3, connectivity=4)
+    [(3, 3), (1, 3), (2, 4), (2, 2)]
+
+    >>> neighbors(2, 3)
+    [(3, 2), (3, 3), (3, 4), (2, 2), (2, 4), (1, 2), (1, 3), (1, 4)]
+    """
     if connectivity == 1 or connectivity == 4:
         return [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
     else:
