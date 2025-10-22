@@ -349,6 +349,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
                 f.write('*Dload\n')
                 f.write(f'{set_name}, P, {-vstress:.6f}\n')
 
+
     def write_periodic_load():
         if load_type == 'stress':
             f.write('** BOUNDARY CONDITIONS\n')
@@ -1169,7 +1170,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
                 # no inline props → include from file
                 if dual_phase:
                     # per‐phase file for each pid
-                    f.write('*Include, input=Material{}.inp\n'.format(pid))
+                    f.write('**Include, input=Material{}.inp\n'.format(pid))
                     did_include = True
                 # else: defer the single‐file include until after the loop
 
@@ -1179,7 +1180,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
         if not dual_phase and not did_include:
             # strip off last 8 chars (e.g. “_mesh.inp”) and append “mat.inp”
             base = file[:-8]
-            f.write('*Include, input={}mat.inp\n'.format(base))
+            f.write('**Include, input={}mat.inp\n'.format(base))
             f.write('**\n')
         """
         Previous Material Section
@@ -1197,7 +1198,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
                 f.write('**\n')
                 f.write('*Material, name=PHASE{}_MAT\n'.format(i))
             f.write('**\n')
-            f.write('*Include, input={}mat.inp\n'.format(file[0:-8]))
+            f.write('**Include, input={}mat.inp\n'.format(file[0:-8]))
             f.write('**\n')
             f.write('**__________________________________________________________________')
         """
@@ -1288,7 +1289,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
         f.write('** FIELD OUTPUT: F-Output-2 \n')
         f.write('** \n')
         f.write('*Element Output, directions=YES \n')
-        f.write('LE, MISES, PE, PEEQ, S, SDEG \n')
+        f.write('LE, MISES, PE, PEEQ, S, SDEG, SDV \n')
         f.write('*Output, history, frequency=0 \n')
         f.write('** \n')
         f.write('** HISTORY OUTPUT: H-Output-1 \n')
@@ -1526,15 +1527,13 @@ def write_stats(stats, file, path='./'):
 
     Parameters
     ----------
+    stats : dict
+        Dictionary with statistical descriptors to be stored.
     file : string
-        File name of pickled microstructure to be read.
+        File name fpr microstructure descriptors to be written. Ending '.json' extension will be appended
+        if missing.
     path : string
-        Path under which pickle-files are stored (optional, default: './')
-
-    Returns
-    -------
-    desc : list or dict
-        (List of) dict with statistical microstructure descriptors
+        Path under which microstructure JSON file is stored (optional, default: './')
 
     """
     import json
@@ -1542,6 +1541,8 @@ def write_stats(stats, file, path='./'):
         raise ValueError('List or dict with microstructure descriptors must be given.')
     if file is None:
         raise ValueError('Name for json file with microstructure descriptors must be given.')
+    if file[-5:].lower() != '.json':
+        file += '.json'
     file = os.path.join(path, file)
     with open(file, 'w') as fp:
         json.dump(stats, fp)
@@ -1549,19 +1550,20 @@ def write_stats(stats, file, path='./'):
 
 def import_stats(file, path='./'):
     """
-    Write statistical descriptors of microstructure to JSON file.
+    Read statistical descriptors of microstructure from JSON file.
 
     Parameters
     ----------
     file : string
-        File name of pickled microstructure to be read.
+        File name from which microstructure descriptors to be written. Ending '.json' extension will be appended
+        if missing.
     path : string
-        Path under which pickle-files are stored (optional, default: './')
+        Path under which JSON file is stored (optional, default: './')
 
     Returns
     -------
-    desc : list or dict
-        (List of) dict with statistical microstructure descriptors
+    desc : dict
+        Dictionary with statistical microstructure descriptors
 
     """
     import json

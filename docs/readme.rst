@@ -114,7 +114,7 @@ initialized by the command
 .. note:: 1. ``knpy`` can be replaced with any name for your environment.  
 
         2. The absolute paths to {user\_dependent\_path}/kanapy/src/kanapy and 
-        {user\_dependent\_path}/kanapy/libs/mtex should to be added to the MATLABPATH 
+        {user\_dependent\_path}/kanapy/libs/mtex should be added to the MATLABPATH
         environment variable, see `Mathworks documentation`_.  
         
         3. The installation scripts have been tested for Matlab R2023a with Python 3.9 

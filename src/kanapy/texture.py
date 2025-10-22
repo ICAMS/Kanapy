@@ -41,6 +41,34 @@ def get_distinct_colormap(N, cmap='prism'):
 
 
 def neighbors(r, c, connectivity=8):
+    """
+    Return the neighboring coordinates of a cell in a 2D grid.
+
+    Parameters
+    ----------
+    r : int
+        Row index of the cell.
+    c : int
+        Column index of the cell.
+    connectivity : int, optional
+        Type of connectivity. Options are:
+        - 1 or 4 : 4-connected neighbors (up, down, left, right)
+        - 8      : 8-connected neighbors (includes diagonals)
+        Default is 8.
+
+    Returns
+    -------
+    neighbors : list of tuple
+        List of (row, column) tuples representing neighboring cells.
+
+    Examples
+    --------
+    >>> neighbors(2, 3, connectivity=4)
+    [(3, 3), (1, 3), (2, 4), (2, 2)]
+
+    >>> neighbors(2, 3)
+    [(3, 2), (3, 3), (3, 4), (2, 2), (2, 4), (1, 2), (1, 3), (1, 4)]
+    """
     if connectivity == 1 or connectivity == 4:
         return [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
     else:
@@ -1251,10 +1279,9 @@ class EBSDmap:
             vector = [0, 0, 1]
         pids = np.array(self.emap.phases.ids)
         pids = pids[pids >= 0]
-        for n_ph, ind in enumerate(pids):
-            data = self.ms_data[n_ph]
+        for n_ph, data in enumerate(self.ms_data):
             orientations = data['ori']
-            plot_pole_figure(orientations, self.emap.phases[ind], vector=vector)
+            plot_pole_figure(orientations, self.emap.phases[pids[n_ph]], vector=vector)
             #t_ = Miller(uvw=vector, phase=self.emap.phases[ind]).symmetrise(unique=True)
             #t_all = orientations.inv().outer(t_)
             #fig = plt.figure(figsize=(8, 8))
@@ -1271,10 +1298,9 @@ class EBSDmap:
             vector = [0, 0, 1]
         pids = np.array(self.emap.phases.ids)
         pids = pids[pids >= 0]
-        for n_ph, ind in enumerate(pids):
-            data = self.ms_data[n_ph]
+        for n_ph, data in enumerate(self.ms_data):
             orientations = data['ori']
-            plot_pole_figure_proj(orientations, self.emap.phases[ind], vector=vector)
+            plot_pole_figure_proj(orientations, self.emap.phases[pids[n_ph]], vector=vector)
 
     def plot_grains_marked(self):
         # plot grain with numbers and axes
