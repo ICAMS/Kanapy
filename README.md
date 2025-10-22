@@ -1,8 +1,7 @@
-[![image](https://joss.theoj.org/papers/10.21105/joss.01732/status.svg)](https://doi.org/10.21105/joss.01732)
 [![image](https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg)](https://doi.org/10.5281/zenodo.3662366)
-![image](https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical)
-[![image](https://img.shields.io/badge/License-GNU%20AGPLv3-blue)](https://www.gnu.org/licenses/agpl-3.0.html)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/kanapy/badges/version.svg)](https://anaconda.org/conda-forge/kanapy)
+[![image](https://joss.theoj.org/papers/10.21105/joss.01732/status.svg)](https://doi.org/10.21105/joss.01732)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/kanapy/badges/platforms.svg)](https://anaconda.org/conda-forge/kanapy)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/kanapy/badges/license.svg)](https://anaconda.org/conda-forge/kanapy)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ICAMS/Kanapy.git/HEAD?urlpath=%2Fdoc%2Ftree%2Findex.ipynb)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/kanapy/badges/downloads.svg)](https://anaconda.org/conda-forge/kanapy)
 
@@ -10,7 +9,7 @@
 
 ### Python tool for microstructure analysis and generation of 3D microstructure models
 
-  - Authors: Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Yousef Rezek, Hrushikesh Uday Bhimavarapu, Alexander Hartmaier  
+  - Authors: Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, Yousef Rezek, Hrushikesh Uday Bhimavarapu, Jun Xue, Alexander Hartmaier  
   - Organization: [ICAMS](http://www.icams.de/content/) / [Ruhr-Universität Bochum](https://www.ruhr-uni-bochum.de/en), Germany 
   - Contact: <alexander.hartmaier@rub.de>
 
@@ -58,7 +57,7 @@ $ conda install kanapy -c conda-forge
 ```
 
 Generally, it can be installed within any 
-Python environment supporting the package installer for python ([pip](https://pypi.org/project/pip/)) from its latest [PyPi](https://pypi.org/project/kanapy/) image via the shell command
+Python environment supporting the package installer for python ([pip](https://pypi.org/project/pip/)) from its latest [PyPi](https://pypi.org/project/kanapy/) release via the shell command
 
 ```
 $ pip install kanapy

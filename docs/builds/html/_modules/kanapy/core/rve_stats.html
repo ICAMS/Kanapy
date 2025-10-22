@@ -1,0 +1,837 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>kanapy.core.rve_stats &mdash; kanapy 6.5.3.post1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=53ab5b41"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            kanapy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../method.html">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kanapy.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">kanapy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">kanapy.core.rve_stats</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for kanapy.core.rve_stats</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Subroutines for analysis of statistical descriptors of RVEs:</span>
+<span class="sd"> * original particles (or their inner polyhedra)</span>
+<span class="sd"> * voxel structure</span>
+<span class="sd"> * polyhedral grain structure</span>
+
+<span class="sd">@author: Alexander Hartmaier</span>
+<span class="sd">ICAMS, Ruhr University Bochum, Germany</span>
+<span class="sd">March 2024</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvexHull</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.plotting</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_stats_dict</span>
+
+
+<div class="viewcode-block" id="arr2mat">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.arr2mat">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">arr2mat</span><span class="p">(</span><span class="n">mc</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a numpy array into a symmetric matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mc</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">mc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">4</span><span class="p">]],</span>
+                     <span class="p">[</span><span class="n">mc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
+                     <span class="p">[</span><span class="n">mc</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">2</span><span class="p">]]])</span></div>
+
+
+
+<div class="viewcode-block" id="con_fun">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.con_fun">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">con_fun</span><span class="p">(</span><span class="n">mc</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constraint: matrix must be positive definite, for symmetric matrix all eigenvalues</span>
+<span class="sd">    must be positive. Constraint will penalize negative eigenvalues.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">arr2mat</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigval</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span></div>
+
+
+
+<div class="viewcode-block" id="find_rot_axis">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.find_rot_axis">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_rot_axis</span><span class="p">(</span><span class="n">len_a</span><span class="p">,</span> <span class="n">len_b</span><span class="p">,</span> <span class="n">len_c</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the rotation axis of an ellipsoid defined be three semi-axes and return the</span>
+<span class="sd">    equivalent values for the semi-axes along and transversal to the rotation axis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    len_a</span>
+<span class="sd">    len_b</span>
+<span class="sd">    len_c</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rot_ax</span>
+<span class="sd">    trans_ax</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ar_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_a</span> <span class="o">/</span> <span class="n">len_b</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_b</span> <span class="o">/</span> <span class="n">len_a</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">),</span>
+               <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_b</span> <span class="o">/</span> <span class="n">len_c</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_c</span> <span class="o">/</span> <span class="n">len_b</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">),</span>
+               <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_c</span> <span class="o">/</span> <span class="n">len_a</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_a</span> <span class="o">/</span> <span class="n">len_c</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)]</span>
+    <span class="n">minval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ar_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minval</span> <span class="o">&gt;</span> <span class="mf">0.15</span><span class="p">:</span>
+        <span class="c1"># no clear rotational symmetry, choose the longest axis as rotation axis</span>
+        <span class="n">irot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">([</span><span class="n">len_a</span><span class="p">,</span> <span class="n">len_b</span><span class="p">,</span> <span class="n">len_c</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">ar_list</span><span class="p">)</span>  <span class="c1"># identify two axes with aspect ratio closest to 1</span>
+        <span class="k">if</span> <span class="n">ind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="n">irot</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">ind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
+            <span class="n">irot</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">irot</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">irot</span></div>
+
+
+
+<div class="viewcode-block" id="get_ln_param">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.get_ln_param">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_ln_param</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="c1"># sig, loc, sc = lognorm.fit(sdict[&#39;eqd&#39;])</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">data</span> <span class="o">&gt;</span> <span class="mf">1.e-5</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">log_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">log_data</span><span class="p">))</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">log_data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sig</span><span class="p">,</span> <span class="n">scale</span></div>
+
+
+
+<div class="viewcode-block" id="pts_in_ellips">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.pts_in_ellips">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pts_in_ellips</span><span class="p">(</span><span class="n">Mcomp</span><span class="p">,</span> <span class="n">pts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Check how well points fulfill equation of ellipsoid</span>
+<span class="sd">    (pts-ctr)^T M (pts-ctr) = 1</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Mcomp</span>
+<span class="sd">    pts</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">Mcomp</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Matrix components must be given as array with shape (6,), not </span><span class="si">{</span><span class="n">Mcomp</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">ctr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">pcent</span> <span class="o">=</span> <span class="n">pts</span> <span class="o">-</span> <span class="n">ctr</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pcent</span><span class="p">:</span>
+        <span class="n">mp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">arr2mat</span><span class="p">(</span><span class="n">Mcomp</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">score</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_diameter">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.get_diameter">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_diameter</span><span class="p">(</span><span class="n">pts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get estimate of largest diameter of a set of points.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pts : (N, dim) ndarray</span>
+<span class="sd">        Point set in dim dimensions</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    diameter : (dim)-ndarray</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ind0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with lowest coordinate for each Cartesian axis</span>
+    <span class="n">ind1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with highest coordinate for each Cartesian axis</span>
+    <span class="n">v_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ind0</span><span class="p">)])</span>  <span class="c1"># min. value for each Cartesian axis</span>
+    <span class="n">v_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ind1</span><span class="p">)])</span>  <span class="c1"># max. value for each Cartesian axis</span>
+    <span class="n">ind_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">v_max</span> <span class="o">-</span> <span class="n">v_min</span><span class="p">)</span>  <span class="c1"># Cartesian axis along which largest distance occurs</span>
+    <span class="k">return</span> <span class="n">pts</span><span class="p">[</span><span class="n">ind1</span><span class="p">[</span><span class="n">ind_d</span><span class="p">],</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="n">ind0</span><span class="p">[</span><span class="n">ind_d</span><span class="p">],</span> <span class="p">:]</span></div>
+
+
+<div class="viewcode-block" id="project_pts">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.project_pts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">project_pts</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">ctr</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Project points (pts) to plane defined via center (ctr) and normal vector (axis).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pts : (N, dim) ndarray</span>
+<span class="sd">        Point set in dim dimensions</span>
+<span class="sd">    ctr : (dim)-ndarray</span>
+<span class="sd">        Center point of the projection plane</span>
+<span class="sd">    axis : (dim)-ndarray</span>
+<span class="sd">        Unit vector for plane normal</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ppt : (N, dim) ndarray</span>
+<span class="sd">        Points projected to plane with normal axis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dvec</span> <span class="o">=</span> <span class="n">pts</span> <span class="o">-</span> <span class="n">ctr</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># distance vector b/w points and center point</span>
+    <span class="n">pdist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dvec</span><span class="p">])</span>
+    <span class="n">ppt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">pts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dvec</span><span class="p">):</span>
+        <span class="n">ppt</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">p</span> <span class="o">-</span> <span class="n">pdist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">axis</span>
+    <span class="k">return</span> <span class="n">ppt</span></div>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fit_ellipse_direct</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Direct ellipse fit (Fitzgibbon 1999) in normalised coords</span>
+<span class="sd">    Fit conic: A x^2 + B x y + C y^2 + D x + E y + F = 0, mit 4AC - B^2 &gt; 0 (Ellipsis).</span>
+<span class="sd">    Return: Parameter (A,B,C,D,E,F) in normalised coords</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">Dm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x</span><span class="p">)])</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">Dm</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">Dm</span>
+    <span class="n">Cc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+    <span class="n">Cc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">Cc</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Cc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">Sinv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="n">Sinv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">Sinv</span> <span class="o">@</span> <span class="n">Cc</span>
+    <span class="n">eigvals</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+    <span class="c1"># take  EV with 4AC - B^2 &gt; 0</span>
+    <span class="n">cand</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">eigvecs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">eigvecs</span><span class="p">[:,</span> <span class="n">k</span><span class="p">])</span>
+        <span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="p">,</span><span class="n">F</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="k">if</span> <span class="mi">4</span><span class="o">*</span><span class="n">A</span><span class="o">*</span><span class="n">C</span> <span class="o">-</span> <span class="n">B</span><span class="o">*</span><span class="n">B</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cand</span> <span class="o">=</span> <span class="n">a</span>
+            <span class="k">break</span>
+    <span class="k">if</span> <span class="n">cand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No elliptical fit was found.&quot;</span><span class="p">)</span>
+    <span class="c1"># scale to meaningful value</span>
+    <span class="k">return</span> <span class="n">cand</span> <span class="o">/</span> <span class="n">cand</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_params_to_conic3</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="p">,</span><span class="n">F</span><span class="p">):</span>
+    <span class="c1"># 3x3 conic matrix in homogeneous coords</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="p">[</span><span class="n">A</span><span class="p">,</span>  <span class="n">B</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">D</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">B</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span>  <span class="n">E</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">D</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">E</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">F</span> <span class="p">]</span>
+    <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_conic3_to_params</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">];</span> <span class="n">B</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">];</span> <span class="n">C</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">];</span> <span class="n">E</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">];</span> <span class="n">F</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="p">,</span><span class="n">F</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_transform_conic3</span><span class="p">(</span><span class="n">K_prime</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    K&#39; in normalized coords (x&#39;=(x-mu)/scale). Original x = S x&#39; + mu.</span>
+<span class="sd">    Homogeneous Affine-Transform: K = T^{-T} K&#39; T^{-1},</span>
+<span class="sd">    with T = [[sx,0,mu_x],[0,sy,mu_y],[0,0,1]].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">mx</span><span class="p">,</span> <span class="n">my</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>   <span class="nb">float</span><span class="p">(</span><span class="n">mu</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">sx</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">mx</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sy</span><span class="p">,</span> <span class="n">my</span><span class="p">],</span>
+                  <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
+    <span class="n">Ti</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Ti</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">K_prime</span> <span class="o">@</span> <span class="n">Ti</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_conic3_to_geometric</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    K (3x3) -&gt; Centre, principal directions, semi axes.</span>
+<span class="sd">    Ellipsis condition: Q (2x2) pos. definite, and F_c &lt; 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">K</span><span class="p">[:</span><span class="mi">2</span><span class="p">,:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">K</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># Numerical stability: if Q neg. definite, invert everything</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="o">-</span><span class="n">K</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="o">-</span><span class="n">Q</span><span class="p">;</span> <span class="n">q</span> <span class="o">=</span> <span class="o">-</span><span class="n">q</span><span class="p">;</span> <span class="n">F</span> <span class="o">=</span> <span class="o">-</span><span class="n">F</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+    <span class="c1"># Centre from Q c = -q</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Ellipsis centre not determined (Q is singular).&quot;</span><span class="p">)</span>
+    <span class="c1"># value at centre: F_c = c^T Q c + 2 q^T c + F  (= f(c))</span>
+    <span class="n">F_c</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">Q</span> <span class="o">@</span> <span class="n">c</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">q</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">c</span> <span class="o">+</span> <span class="n">F</span><span class="p">)</span>
+
+    <span class="c1"># check ellipticality</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">F_c</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No valid ellipsis parameters found.&quot;</span><span class="p">)</span>
+    <span class="c1"># semi-axes (a &gt;= b): a = sqrt(-F_c / λ_min), b = sqrt(-F_c / λ_max)</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>          <span class="c1"># increasing</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">order</span><span class="p">]</span>                <span class="c1"># cols = unit vect. to lam</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">F_c</span> <span class="o">/</span> <span class="n">lam</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">F_c</span> <span class="o">/</span> <span class="n">lam</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="c1"># assert a &gt;= b</span>
+    <span class="k">if</span> <span class="n">b</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="o">*</span><span class="n">a</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Aspect ratio too high: axes </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">b</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># Principal directions as unit vectors (columns)</span>
+    <span class="n">u_major</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">V</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>  <span class="c1"># Richtung zu λ_min -&gt; große Halbachse</span>
+    <span class="n">u_minor</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">V</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">u_major</span><span class="p">,</span> <span class="n">u_minor</span>
+
+
+<div class="viewcode-block" id="get_grain_geom">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.get_grain_geom">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_grain_geom</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;raw&#39;</span><span class="p">,</span> <span class="n">two_dim</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fit of an ellipsis to the 2D convex hull of grain pixels.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      a, b: semi-axes with a &gt;= b</span>
+<span class="sd">      u_major, u_minor: unit vector of principal directions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">two_dim</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Method &quot;get_grain_geom&quot; not implemented in 3D yet.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;raw&#39;</span><span class="p">]:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Too few points on grain hull, fallback to method &quot;raw&quot;.&#39;</span><span class="p">)</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;raw&#39;</span>
+    <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;ell&#39;</span><span class="p">,</span> <span class="s1">&#39;ellipsis&#39;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># get grain geometry by fitting an ellipsis to points on hull</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">sc</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">sc</span><span class="p">[</span><span class="n">sc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">Qn</span> <span class="o">=</span> <span class="p">(</span><span class="n">points</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">sc</span>
+            <span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="p">,</span><span class="n">F</span> <span class="o">=</span> <span class="n">_fit_ellipse_direct</span><span class="p">(</span><span class="n">Qn</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">Qn</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">Kp</span> <span class="o">=</span> <span class="n">_params_to_conic3</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="p">,</span><span class="n">F</span><span class="p">)</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">_transform_conic3</span><span class="p">(</span><span class="n">Kp</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sc</span><span class="p">)</span>
+            <span class="n">ea</span><span class="p">,</span> <span class="n">eb</span><span class="p">,</span> <span class="n">va</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">_conic3_to_geometric</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Fallback to method &quot;raw&quot; due to exception </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+            <span class="n">ea</span><span class="p">,</span> <span class="n">eb</span><span class="p">,</span> <span class="n">va</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">bbox</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">return_vector</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">two_dim</span><span class="o">=</span><span class="n">two_dim</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;pca&#39;</span><span class="p">:</span>
+        <span class="c1"># perform principal component analysis to points on hull</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="n">points</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">Y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">vals</span><span class="p">,</span> <span class="n">vecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>  <span class="c1"># for symmetric matrices</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">vals</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+        <span class="n">vecs</span> <span class="o">=</span> <span class="n">vecs</span><span class="p">[:,</span> <span class="n">order</span><span class="p">]</span>
+        <span class="n">scales</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">ea</span> <span class="o">=</span> <span class="n">scales</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">eb</span> <span class="o">=</span> <span class="n">scales</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">va</span> <span class="o">=</span> <span class="n">vecs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">vb</span> <span class="o">=</span> <span class="n">vecs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;raw&#39;</span><span class="p">]:</span>
+        <span class="c1"># get rectangular bounding box of points on hull</span>
+        <span class="n">ea</span><span class="p">,</span> <span class="n">eb</span><span class="p">,</span> <span class="n">va</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">bbox</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">return_vector</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">two_dim</span><span class="o">=</span><span class="n">two_dim</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Method &quot;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s1">&quot; not implemented in &quot;get_grain_geom&quot; yet.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ea</span><span class="p">,</span> <span class="n">eb</span><span class="p">,</span> <span class="n">va</span><span class="p">,</span> <span class="n">vb</span></div>
+
+
+
+<div class="viewcode-block" id="bbox">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.bbox">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bbox</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">return_vector</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">two_dim</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># Approximate smallest rectangular cuboid around points of grains</span>
+    <span class="c1"># to analyse prolate (aspect ratio &gt; 1) and oblate (a.r. &lt; 1) particles correctly</span>
+    <span class="n">dia</span> <span class="o">=</span> <span class="n">get_diameter</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>  <span class="c1"># approx. of largest diameter of grain</span>
+    <span class="n">ctr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># approx. center of grain</span>
+    <span class="n">len_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dia</span><span class="p">)</span>  <span class="c1"># length of largest side</span>
+    <span class="k">if</span> <span class="n">len_a</span> <span class="o">&lt;</span> <span class="mf">1.e-3</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Very small grain at </span><span class="si">{</span><span class="n">ctr</span><span class="si">}</span><span class="s1"> with max. diameter = </span><span class="si">{</span><span class="n">len_a</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">len_a</span> <span class="o">&lt;</span> <span class="mf">1.e-8</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Grain of almost zero dimension at </span><span class="si">{</span><span class="n">ctr</span><span class="si">}</span><span class="s1"> with max. diameter = </span><span class="si">{</span><span class="n">len_a</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">ax_a</span> <span class="o">=</span> <span class="n">dia</span> <span class="o">/</span> <span class="n">len_a</span>  <span class="c1"># unit vector along longest side</span>
+    <span class="n">ppt</span> <span class="o">=</span> <span class="n">project_pts</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">ctr</span><span class="p">,</span> <span class="n">ax_a</span><span class="p">)</span>  <span class="c1"># project points onto central plane normal to diameter</span>
+    <span class="n">trans1</span> <span class="o">=</span> <span class="n">get_diameter</span><span class="p">(</span><span class="n">ppt</span><span class="p">)</span>  <span class="c1"># largest side transversal to long axis</span>
+    <span class="n">len_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">trans1</span><span class="p">)</span>  <span class="c1"># length of second-largest side</span>
+    <span class="n">ax_b</span> <span class="o">=</span> <span class="n">trans1</span> <span class="o">/</span> <span class="n">len_b</span>  <span class="c1"># unit vector of second axis (normal to diameter)</span>
+    <span class="k">if</span> <span class="n">two_dim</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">return_vector</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">len_a</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">len_b</span><span class="p">,</span> <span class="n">ax_a</span><span class="p">,</span> <span class="n">ax_b</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">len_a</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">len_b</span>
+    <span class="n">ax_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">ax_a</span><span class="p">,</span> <span class="n">ax_b</span><span class="p">)</span>  <span class="c1"># calculate third orthogonal axes of rectangular cuboid</span>
+    <span class="n">lpt</span> <span class="o">=</span> <span class="n">project_pts</span><span class="p">(</span><span class="n">ppt</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">ax_b</span><span class="p">)</span>  <span class="c1"># project points on third axis</span>
+    <span class="n">pdist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ax_c</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">lpt</span><span class="p">])</span>  <span class="c1"># calculate distance of points on third axis</span>
+    <span class="n">len_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">pdist</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">pdist</span><span class="p">)</span>  <span class="c1"># get length of shortest side</span>
+    <span class="k">if</span> <span class="n">return_vector</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">len_a</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">len_b</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">len_c</span><span class="p">,</span> <span class="n">ax_a</span><span class="p">,</span> <span class="n">ax_b</span><span class="p">,</span> <span class="n">ax_c</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">len_a</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">len_b</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">len_c</span></div>
+
+
+
+<div class="viewcode-block" id="calc_stats_dict">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.calc_stats_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_stats_dict</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">eqd</span><span class="p">):</span>
+    <span class="n">arr_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">arr_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">arr_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">arr_eqd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">eqd</span><span class="p">)</span>
+    <span class="n">a_sig</span><span class="p">,</span> <span class="n">a_sc</span> <span class="o">=</span> <span class="n">get_ln_param</span><span class="p">(</span><span class="n">arr_a</span><span class="p">)</span>
+    <span class="n">b_sig</span><span class="p">,</span> <span class="n">b_sc</span> <span class="o">=</span> <span class="n">get_ln_param</span><span class="p">(</span><span class="n">arr_b</span><span class="p">)</span>
+    <span class="n">c_sig</span><span class="p">,</span> <span class="n">c_sc</span> <span class="o">=</span> <span class="n">get_ln_param</span><span class="p">(</span><span class="n">arr_c</span><span class="p">)</span>
+    <span class="n">e_sig</span><span class="p">,</span> <span class="n">e_sc</span> <span class="o">=</span> <span class="n">get_ln_param</span><span class="p">(</span><span class="n">arr_eqd</span><span class="p">)</span>
+    <span class="n">irot</span> <span class="o">=</span> <span class="n">find_rot_axis</span><span class="p">(</span><span class="n">a_sc</span><span class="p">,</span> <span class="n">b_sc</span><span class="p">,</span> <span class="n">c_sc</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">irot</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">arr_ar</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">arr_a</span><span class="p">,</span> <span class="p">(</span><span class="n">arr_b</span> <span class="o">+</span> <span class="n">arr_c</span><span class="p">))</span>
+        <span class="n">ar_sc</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">a_sc</span> <span class="o">/</span> <span class="p">(</span><span class="n">b_sc</span> <span class="o">+</span> <span class="n">c_sc</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">irot</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">arr_ar</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">arr_b</span><span class="p">,</span> <span class="p">(</span><span class="n">arr_a</span> <span class="o">+</span> <span class="n">arr_c</span><span class="p">))</span>
+        <span class="n">ar_sc</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">b_sc</span> <span class="o">/</span> <span class="p">(</span><span class="n">a_sc</span> <span class="o">+</span> <span class="n">c_sc</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">irot</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">arr_ar</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">arr_c</span><span class="p">,</span> <span class="p">(</span><span class="n">arr_b</span> <span class="o">+</span> <span class="n">arr_a</span><span class="p">))</span>
+        <span class="n">ar_sc</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">c_sc</span> <span class="o">/</span> <span class="p">(</span><span class="n">b_sc</span> <span class="o">+</span> <span class="n">a_sc</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Wrong index of rotation axis: irot = </span><span class="si">{</span><span class="n">irot</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">arr_ar</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.</span>
+        <span class="n">ar_sc</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.</span>
+    <span class="c1"># print(f&#39;  ***   AR Median: {np.median(arr_ar)}, {ar_sc}&#39;, irot)</span>
+    <span class="n">sd</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">arr_a</span><span class="p">,</span>
+        <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">arr_b</span><span class="p">,</span>
+        <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">arr_c</span><span class="p">,</span>
+        <span class="s1">&#39;eqd&#39;</span><span class="p">:</span> <span class="n">arr_eqd</span><span class="p">,</span>
+        <span class="s1">&#39;a_sig&#39;</span><span class="p">:</span> <span class="n">a_sig</span><span class="p">,</span>
+        <span class="s1">&#39;b_sig&#39;</span><span class="p">:</span> <span class="n">b_sig</span><span class="p">,</span>
+        <span class="s1">&#39;c_sig&#39;</span><span class="p">:</span> <span class="n">c_sig</span><span class="p">,</span>
+        <span class="s1">&#39;eqd_sig&#39;</span><span class="p">:</span> <span class="n">e_sig</span><span class="p">,</span>
+        <span class="s1">&#39;a_scale&#39;</span><span class="p">:</span> <span class="n">a_sc</span><span class="p">,</span>
+        <span class="s1">&#39;b_scale&#39;</span><span class="p">:</span> <span class="n">b_sc</span><span class="p">,</span>
+        <span class="s1">&#39;c_scale&#39;</span><span class="p">:</span> <span class="n">c_sc</span><span class="p">,</span>
+        <span class="s1">&#39;eqd_scale&#39;</span><span class="p">:</span> <span class="n">e_sc</span><span class="p">,</span>
+        <span class="s1">&#39;ind_rot&#39;</span><span class="p">:</span> <span class="n">irot</span><span class="p">,</span>
+        <span class="s1">&#39;ar&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">arr_ar</span><span class="p">),</span>
+        <span class="s1">&#39;ar_scale&#39;</span><span class="p">:</span> <span class="n">ar_sc</span><span class="p">,</span>
+        <span class="s1">&#39;ar_sig&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">arr_ar</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">sd</span></div>
+
+
+
+<div class="viewcode-block" id="get_stats_part">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.get_stats_part">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_stats_part</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">minval</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Extract statistics about the microstructure from particles. If inner structure is contained</span>
+<span class="sd">    by fitting a 3D ellipsoid to each structure.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    part</span>
+<span class="sd">    minval</span>
+<span class="sd">    show_plot</span>
+<span class="sd">    verbose</span>
+<span class="sd">    ax_max</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ax_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">minval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">ax_max</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">cons</span> <span class="o">=</span> <span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;ineq&#39;</span><span class="p">,</span> <span class="s1">&#39;fun&#39;</span><span class="p">:</span> <span class="n">con_fun</span><span class="p">})</span>  <span class="c1"># constraints for minimization</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">}</span>  <span class="c1"># options for minimization</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>  <span class="c1"># start value of matrix for minimization</span>
+    <span class="n">arr_a</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_b</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_c</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_eqd</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">pc</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+        <span class="c1"># decide if phase-specific analysis is performed</span>
+        <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">iphase</span> <span class="o">!=</span> <span class="n">pc</span><span class="o">.</span><span class="n">phasenum</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">pc</span><span class="o">.</span><span class="n">inner</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pts</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">points</span>
+            <span class="n">rdict</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">pts_in_ellips</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mc</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">pts</span><span class="p">,),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;SLSQP&#39;</span><span class="p">,</span>
+                             <span class="n">constraints</span><span class="o">=</span><span class="n">cons</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimization failed for particle </span><span class="si">{</span><span class="n">pc</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">])</span>
+                <span class="k">continue</span>
+            <span class="nb">eval</span><span class="p">,</span> <span class="n">evec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">arr2mat</span><span class="p">(</span><span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">eval</span> <span class="o">&lt;=</span> <span class="n">minval</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Matrix for particle </span><span class="si">{</span><span class="n">pc</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s1"> not positive definite or semi-axes too large. &#39;</span>
+                          <span class="sa">f</span><span class="s1">&#39;Eigenvalues: </span><span class="si">{</span><span class="nb">eval</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimization succeeded for particle </span><span class="si">{</span><span class="n">pc</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s1"> after </span><span class="si">{</span><span class="n">rdict</span><span class="p">[</span><span class="s2">&quot;nit&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1"> iterations.&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Eigenvalues: </span><span class="si">{</span><span class="nb">eval</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Eigenvectors: </span><span class="si">{</span><span class="n">evec</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="c1"># Semi-axes of ellipsoid</span>
+            <span class="n">ea</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">eb</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">ec</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">eqd</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">ea</span> <span class="o">*</span> <span class="n">eb</span> <span class="o">*</span> <span class="n">ec</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span>
+            <span class="n">arr_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ea</span><span class="p">)</span>
+            <span class="n">arr_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eb</span><span class="p">)</span>
+            <span class="n">arr_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+            <span class="n">arr_eqd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqd</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eqd</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="n">pc</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="n">pc</span><span class="o">.</span><span class="n">c</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span>
+            <span class="n">arr_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">arr_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">arr_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">c</span><span class="p">)</span>
+            <span class="n">arr_eqd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqd</span><span class="p">)</span>
+
+    <span class="c1"># calculate statistical parameters</span>
+    <span class="n">part_stats_dict</span> <span class="o">=</span> <span class="n">calc_stats_dict</span><span class="p">(</span><span class="n">arr_a</span><span class="p">,</span> <span class="n">arr_b</span><span class="p">,</span> <span class="n">arr_c</span><span class="p">,</span> <span class="n">arr_eqd</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">--------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Statistical microstructure parameters of particles&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Median lengths of semi-axes of fitted ellipsoids in micron&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;a: </span><span class="si">{</span><span class="n">part_stats_dict</span><span class="p">[</span><span class="s2">&quot;a_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">, b: </span><span class="si">{</span><span class="n">part_stats_dict</span><span class="p">[</span><span class="s2">&quot;b_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">, &#39;</span>
+              <span class="sa">f</span><span class="s1">&#39;c: </span><span class="si">{</span><span class="n">part_stats_dict</span><span class="p">[</span><span class="s2">&quot;c_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">av_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">part_stats_dict</span><span class="p">[</span><span class="s1">&#39;a_sig&#39;</span><span class="p">],</span> <span class="n">part_stats_dict</span><span class="p">[</span><span class="s1">&#39;b_sig&#39;</span><span class="p">],</span> <span class="n">part_stats_dict</span><span class="p">[</span><span class="s1">&#39;c_sig&#39;</span><span class="p">]])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Average standard deviation of semi-axes: </span><span class="si">{</span><span class="n">av_std</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Assuming rotational symmetry in grains&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Rotational axis: </span><span class="si">{</span><span class="n">part_stats_dict</span><span class="p">[</span><span class="s2">&quot;ind_rot&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Median aspect ratio: </span><span class="si">{</span><span class="n">part_stats_dict</span><span class="p">[</span><span class="s2">&quot;ar_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Grain size&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Median equivalent grain diameter: </span><span class="si">{</span><span class="n">part_stats_dict</span><span class="p">[</span><span class="s2">&quot;eqd_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> micron&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Standard deviation of equivalent grain diameter: </span><span class="si">{</span><span class="n">part_stats_dict</span><span class="p">[</span><span class="s2">&quot;eqd_sig&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------------------------&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">inner</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Particle statistics&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Statistics of inner particle structures&#39;</span>
+        <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39; (phase </span><span class="si">{</span><span class="n">iphase</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="n">plot_stats_dict</span><span class="p">(</span><span class="n">part_stats_dict</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">part_stats_dict</span></div>
+
+
+
+<div class="viewcode-block" id="get_stats_vox">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.get_stats_vox">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_stats_vox</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">minval</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get statistics about the microstructure from voxels by analysing nodes at grain boundaries</span>
+<span class="sd">    and constructing a rectangular bounding box.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mesh</span>
+<span class="sd">    minval</span>
+<span class="sd">    show_plot</span>
+<span class="sd">    verbose</span>
+<span class="sd">    ax_max</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gfac</span> <span class="o">=</span> <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="n">arr_a</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_b</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_c</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_eqd</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">igr</span><span class="p">,</span> <span class="n">vlist</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># decide if phase-specific analysis is performed</span>
+        <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">iphase</span> <span class="o">!=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">vlist</span><span class="p">:</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">iv</span><span class="p">])</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nodes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">pts_all</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">pts_all</span><span class="p">)</span>
+        <span class="n">eqd</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">gfac</span> <span class="o">*</span> <span class="n">hull</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">hull</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">hull</span><span class="o">.</span><span class="n">vertices</span><span class="p">]</span>  <span class="c1"># outer nodes of grain no. igr</span>
+        <span class="c1"># find bounding box to hull points</span>
+        <span class="n">ea</span><span class="p">,</span> <span class="n">eb</span><span class="p">,</span> <span class="n">ec</span> <span class="o">=</span> <span class="n">bbox</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        if ax_max is not None:</span>
+<span class="sd">            minval = max(minval, 1. / ax_max ** 2)</span>
+<span class="sd">        cons = ({&#39;type&#39;: &#39;ineq&#39;, &#39;fun&#39;: con_fun})  # constraints for minimization</span>
+<span class="sd">        opt = {&#39;maxiter&#39;: 200}  # options for minimization</span>
+<span class="sd">        mc = np.array([1., 1., 1., 0., 0., 0.])  # start value of matrix for minimization</span>
+<span class="sd">        # find best fitting ellipsoid to points</span>
+<span class="sd">        rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method=&#39;SLSQP&#39;,</span>
+<span class="sd">                         constraints=cons, options=opt)</span>
+<span class="sd">        if not rdict[&#39;success&#39;]:</span>
+<span class="sd">            if verbose:</span>
+<span class="sd">                print(f&#39;Optimization failed for grain {igr}&#39;)</span>
+<span class="sd">                print(rdict[&#39;message&#39;])</span>
+<span class="sd">            continue</span>
+<span class="sd">        eval, evec = np.linalg.eig(arr2mat(rdict[&#39;x&#39;]))</span>
+<span class="sd">        if any(eval &lt;= minval):</span>
+<span class="sd">            if verbose:</span>
+<span class="sd">                print(f&#39;Matrix for grain {igr} not positive definite or semi-axes too large. &#39;</span>
+<span class="sd">                      f&#39;Eigenvalues: {eval}&#39;)</span>
+<span class="sd">            continue</span>
+<span class="sd">        if verbose:</span>
+<span class="sd">            print(f&#39;Optimization succeeded for grain {igr} after {rdict[&quot;nit&quot;]} iterations.&#39;)</span>
+<span class="sd">            print(f&#39;Eigenvalues: {eval}&#39;)</span>
+<span class="sd">            print(f&#39;Eigenvectors: {evec}&#39;)</span>
+<span class="sd">        # Semi-axes of ellipsoid</span>
+<span class="sd">        ea = 1. / np.sqrt(eval[0])</span>
+<span class="sd">        eb = 1. / np.sqrt(eval[1])</span>
+<span class="sd">        ec = 1. / np.sqrt(eval[2])&quot;&quot;&quot;</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;# Plot points on hull with fitted ellipsoid -- only for debugging</span>
+<span class="sd">        import matplotlib.pyplot as plt</span>
+<span class="sd">        # Points on the outer surface of optimal ellipsoid</span>
+<span class="sd">        nang = 100</span>
+<span class="sd">        col = [0.7, 0.7, 0.7, 0.5]</span>
+<span class="sd">        ctr = np.average(pts, axis=0)</span>
+<span class="sd">        u = np.linspace(0, 2 * np.pi, nang)</span>
+<span class="sd">        v = np.linspace(0, np.pi, nang)</span>
+
+<span class="sd">        # Cartesian coordinates that correspond to the spherical angles:</span>
+<span class="sd">        xval = ea * np.outer(np.cos(u), np.sin(v))</span>
+<span class="sd">        yval = eb * np.outer(np.sin(u), np.sin(v))</span>
+<span class="sd">        zval = ec * np.outer(np.ones_like(u), np.cos(v))</span>
+
+<span class="sd">        # combine the three 2D arrays element wise</span>
+<span class="sd">        surf_pts = np.stack(</span>
+<span class="sd">            (xval.ravel(), yval.ravel(), zval.ravel()), axis=1)</span>
+<span class="sd">        surf_pts = surf_pts.dot(evec.transpose())  # rotate to eigenvector frame</span>
+<span class="sd">        fig = plt.figure()</span>
+<span class="sd">        ax = fig.add_subplot(projection=&#39;3d&#39;)</span>
+<span class="sd">        x = (surf_pts[:, 0] + ctr[None, 0]).reshape((100, 100))</span>
+<span class="sd">        y = (surf_pts[:, 1] + ctr[None, 1]).reshape((100, 100))</span>
+<span class="sd">        z = (surf_pts[:, 2] + ctr[None, 2]).reshape((100, 100))</span>
+<span class="sd">        ax.plot_surface(x, y, z, rstride=4, cstride=4, color=col, linewidth=0)</span>
+<span class="sd">        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], marker=&#39;o&#39;)</span>
+<span class="sd">        plt.show()&quot;&quot;&quot;</span>
+        <span class="n">arr_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ea</span><span class="p">)</span>
+        <span class="n">arr_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eb</span><span class="p">)</span>
+        <span class="n">arr_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+        <span class="n">arr_eqd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqd</span><span class="p">)</span>
+    <span class="c1"># calculate and print statistical parameters</span>
+    <span class="n">vox_stats_dict</span> <span class="o">=</span> <span class="n">calc_stats_dict</span><span class="p">(</span><span class="n">arr_a</span><span class="p">,</span> <span class="n">arr_b</span><span class="p">,</span> <span class="n">arr_c</span><span class="p">,</span> <span class="n">arr_eqd</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">--------------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Statistical microstructure parameters in voxel structure&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Median lengths of semi-axes in micron&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;a: </span><span class="si">{</span><span class="n">vox_stats_dict</span><span class="p">[</span><span class="s2">&quot;a_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">, b: </span><span class="si">{</span><span class="n">vox_stats_dict</span><span class="p">[</span><span class="s2">&quot;b_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">, &#39;</span>
+              <span class="sa">f</span><span class="s1">&#39;c: </span><span class="si">{</span><span class="n">vox_stats_dict</span><span class="p">[</span><span class="s2">&quot;c_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">av_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">vox_stats_dict</span><span class="p">[</span><span class="s1">&#39;a_sig&#39;</span><span class="p">],</span> <span class="n">vox_stats_dict</span><span class="p">[</span><span class="s1">&#39;b_sig&#39;</span><span class="p">],</span> <span class="n">vox_stats_dict</span><span class="p">[</span><span class="s1">&#39;c_sig&#39;</span><span class="p">]])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Average standard deviation of semi-axes: </span><span class="si">{</span><span class="n">av_std</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Assuming rotational symmetry in grains&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Rotational axis: </span><span class="si">{</span><span class="n">vox_stats_dict</span><span class="p">[</span><span class="s2">&quot;ind_rot&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Median aspect ratio: </span><span class="si">{</span><span class="n">vox_stats_dict</span><span class="p">[</span><span class="s2">&quot;ar_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Grain size&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Median equivalent grain diameter: </span><span class="si">{</span><span class="n">vox_stats_dict</span><span class="p">[</span><span class="s2">&quot;eqd_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> micron&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Standard deviation of equivalent grain diameter: </span><span class="si">{</span><span class="n">vox_stats_dict</span><span class="p">[</span><span class="s2">&quot;eqd_sig&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------------------------&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Statistics of voxel structure&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Statistics of voxel structure (phase </span><span class="si">{</span><span class="n">iphase</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="n">plot_stats_dict</span><span class="p">(</span><span class="n">vox_stats_dict</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">vox_stats_dict</span></div>
+
+
+
+<div class="viewcode-block" id="get_stats_poly">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.get_stats_poly">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_stats_poly</span><span class="p">(</span><span class="n">grains</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">phase_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">minval</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Extract statistics about the microstructure from polyhedral grains</span>
+<span class="sd">        by fitting a 3D ellipsoid to each polyhedron.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        geom</span>
+<span class="sd">        minval</span>
+<span class="sd">        show_plot</span>
+<span class="sd">        verbose</span>
+<span class="sd">        ax_max</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">phase_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error in get_stats_poly: phase number provided, but no phase_dict present.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ax_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">minval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">ax_max</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">cons</span> <span class="o">=</span> <span class="p">({</span><span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;ineq&#39;</span><span class="p">,</span> <span class="s1">&#39;fun&#39;</span><span class="p">:</span> <span class="n">con_fun</span><span class="p">})</span>  <span class="c1"># constraints for minimization</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">}</span>  <span class="c1"># options for minimization</span>
+    <span class="n">mc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>  <span class="c1"># start value of matrix for minimization</span>
+    <span class="n">arr_a</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_b</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_c</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arr_eqd</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">pc</span> <span class="ow">in</span> <span class="n">grains</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># decide if phase-specific analysis is performed</span>
+        <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">iphase</span> <span class="o">!=</span> <span class="n">phase_dict</span><span class="p">[</span><span class="n">gid</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">pc</span><span class="p">[</span><span class="s1">&#39;Points&#39;</span><span class="p">]</span>
+        <span class="n">rdict</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">pts_in_ellips</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mc</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">pts</span><span class="p">,),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;SLSQP&#39;</span><span class="p">,</span>
+                         <span class="n">constraints</span><span class="o">=</span><span class="n">cons</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimization failed for particle </span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">])</span>
+            <span class="k">continue</span>
+        <span class="nb">eval</span><span class="p">,</span> <span class="n">evec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">arr2mat</span><span class="p">(</span><span class="n">rdict</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">eval</span> <span class="o">&lt;=</span> <span class="n">minval</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Matrix for particle </span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s1"> not positive definite or semi-axes too large. &#39;</span>
+                      <span class="sa">f</span><span class="s1">&#39;Eigenvalues: </span><span class="si">{</span><span class="nb">eval</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Optimization succeeded for particle </span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s1"> after </span><span class="si">{</span><span class="n">rdict</span><span class="p">[</span><span class="s2">&quot;nit&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1"> iterations.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Eigenvalues: </span><span class="si">{</span><span class="nb">eval</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Eigenvectors: </span><span class="si">{</span><span class="n">evec</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="c1"># Semi-axes of ellipsoid</span>
+        <span class="n">ea</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">eb</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ec</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">eqd</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">ea</span> <span class="o">*</span> <span class="n">eb</span> <span class="o">*</span> <span class="n">ec</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span>
+        <span class="n">arr_a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ea</span><span class="p">)</span>
+        <span class="n">arr_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eb</span><span class="p">)</span>
+        <span class="n">arr_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ec</span><span class="p">)</span>
+        <span class="n">arr_eqd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eqd</span><span class="p">)</span>
+
+    <span class="c1"># calculate statistical parameters</span>
+    <span class="n">poly_stats_dict</span> <span class="o">=</span> <span class="n">calc_stats_dict</span><span class="p">(</span><span class="n">arr_a</span><span class="p">,</span> <span class="n">arr_b</span><span class="p">,</span> <span class="n">arr_c</span><span class="p">,</span> <span class="n">arr_eqd</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">----------------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Statistical microstructure parameters of polyhedral grains&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;----------------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Median lengths of semi-axes of fitted ellipsoids in micron&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;a: </span><span class="si">{</span><span class="n">poly_stats_dict</span><span class="p">[</span><span class="s2">&quot;a_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">, b: </span><span class="si">{</span><span class="n">poly_stats_dict</span><span class="p">[</span><span class="s2">&quot;b_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">, &#39;</span>
+              <span class="sa">f</span><span class="s1">&#39;c: </span><span class="si">{</span><span class="n">poly_stats_dict</span><span class="p">[</span><span class="s2">&quot;c_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">av_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">poly_stats_dict</span><span class="p">[</span><span class="s1">&#39;a_sig&#39;</span><span class="p">],</span> <span class="n">poly_stats_dict</span><span class="p">[</span><span class="s1">&#39;b_sig&#39;</span><span class="p">],</span> <span class="n">poly_stats_dict</span><span class="p">[</span><span class="s1">&#39;c_sig&#39;</span><span class="p">]])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Average standard deviation of semi-axes: </span><span class="si">{</span><span class="n">av_std</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Assuming rotational symmetry in grains&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Rotational axis: </span><span class="si">{</span><span class="n">poly_stats_dict</span><span class="p">[</span><span class="s2">&quot;ind_rot&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Median aspect ratio: </span><span class="si">{</span><span class="n">poly_stats_dict</span><span class="p">[</span><span class="s2">&quot;ar_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Grain size&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Median equivalent grain diameter: </span><span class="si">{</span><span class="n">poly_stats_dict</span><span class="p">[</span><span class="s2">&quot;eqd_scale&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1"> micron&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Standard deviation of equivalent grain diameter: </span><span class="si">{</span><span class="n">poly_stats_dict</span><span class="p">[</span><span class="s2">&quot;eqd_sig&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--------------------------------------------------------&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Statistics of polyhedral grains&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Statistics of polyhedral grains (phase </span><span class="si">{</span><span class="n">iphase</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="n">plot_stats_dict</span><span class="p">(</span><span class="n">poly_stats_dict</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">poly_stats_dict</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright This work is published under a CC BY-SA 4.0 license.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

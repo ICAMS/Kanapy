@@ -1,24 +1,22 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Usage &mdash; kanapy 6.3.8 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>Usage &mdash; kanapy 6.5.3.post1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=a3796ccd"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=53ab5b41"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -37,9 +35,6 @@
           <a href="index.html" class="icon icon-home">
             kanapy
           </a>
-              <div class="version">
-                6.3.8
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -386,7 +381,7 @@ visualization, refer to <a class="reference internal" href="#visualize-the-packi
 elongated grains. The principle involved in generating such microstructures is described
 in the sub-section <a class="reference internal" href="applications.html#microstructure-with-elongated-grains"><span class="std std-ref">Microstructure with elongated grains</span></a>. With respect to the final RVE mesh,
 the built-in voxelization routine has to be used due to the inavailability of anisotropic tessellation techniques.
-The <a class="reference internal" href="kanapy.html#module-kanapy.voxelization"><span class="std std-ref">Module voxelization</span></a> will generate a hexahedral element (C3D8) mesh that can be read by the commercial FEM software <a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>.</p>
+The <a class="reference internal" href="kanapy.html#module-kanapy.core.voxelization"><span class="std std-ref">Module voxelization</span></a> will generate a hexahedral element (C3D8) mesh that can be read by the commercial FEM software <a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>activate<span class="w"> </span>knpy
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>kanapy-master/examples/ellipsoid_packing/
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>genStats<span class="w"> </span>-f<span class="w"> </span>stat_input.json
@@ -538,7 +533,8 @@ The dump file is generated at each timestep of the particle packing simulation. 
 the timestep, the number of particles, the simulation box dimensions and the particle’s attributes
 such as its ID, position (x, y, z), axes lengths (a, b, c) and tilt angle (Quaternion format - X, Y, Z, W).
 The OVITO user interface when loaded, should look similar to this:</p>
-<a class="reference internal image-reference" href="_images/UI.png"><img alt="_images/UI.png" src="_images/UI.png" style="width: 750px;" /></a>
+<a class="reference internal image-reference" href="_images/UI.png"><img alt="_images/UI.png" src="_images/UI.png" style="width: 750px;" />
+</a>
 <p>By default, OVITO loads the particles as spheres, this option can be changed to visualize ellipsoids.
 The asphericalshapex, asphericalshapey, and asphericalshapez columns need to be mapped to
 Aspherical Shape.X, Aspherical Shape.Y, and Aspherical Shape.Z properties of OVITO when
@@ -548,7 +544,8 @@ Orientation.Z, and Orientation.W. OVITO cannot set up this mapping automatically
 to do it manually by using the <code class="docutils literal notranslate"><span class="pre">Edit</span> <span class="pre">column</span> <span class="pre">mapping</span></code> button (at the bottom-right corner
 of the GUI) in the file import panel after loading the dump files. The required assignment
 and components are shown here:</p>
-<a class="reference internal image-reference" href="_images/UI_options.png"><img alt="_images/UI_options.png" src="_images/UI_options.png" style="width: 750px;" /></a>
+<a class="reference internal image-reference" href="_images/UI_options.png"><img alt="_images/UI_options.png" src="_images/UI_options.png" style="width: 750px;" />
+</a>
 <p>For further viewing customizations refer to OVITO’s <a class="reference external" href="https://ovito.org/manual/">documentation</a>.</p>
 </section>
 </section>
