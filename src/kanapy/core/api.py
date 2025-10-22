@@ -717,8 +717,10 @@ class Microstructure(object):
     """
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
-                  dual_phase=False, thermal=False, units=None, ialloy=None, nsdv=200, periodicBC=False,
-                  crystal_plasticity=False, phase_props=None, value=None, apply_bc=False):
+                  dual_phase=False, thermal=False, units=None, ialloy=None, nsdv=200, crystal_plasticity=False,
+                  phase_props=None,
+                  *,
+                  boundary_conditions: Optional[Dict[str, Any]] = None):
         """
         Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
         a string indicating if voxel ("v") or smoothened ("s") mesh should be written. It can also
@@ -831,9 +833,9 @@ class Microstructure(object):
                       units=units, gb_area=faces,
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
-                      thermal=thermal,  periodicBC = periodicBC,
+                      thermal=thermal,
                       crystal_plasticity = crystal_plasticity,
-                      phase_props = phase_props, value=value, apply_bc=apply_bc)
+                      phase_props = phase_props, boundary_conditions = boundary_conditions)
 
         # if orientations exist and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
@@ -1575,7 +1577,7 @@ class Microstructure(object):
                 raise ValueError(f"Missing required metadata fields: {', '.join(missing)}")
 
         ig = {
-            'RVE_size': [int(v)* length_scale for v in self.rve.size],
+            'RVE_size': [float(v) * length_scale for v in self.rve.size],
             'RVE_continuity': self.rve.periodic,
             'discretization_type': 'Structured' if structured else 'Unstructured',
             'discretization_unit_size': [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
@@ -1737,6 +1739,21 @@ class Microstructure(object):
         voxel_volume = (unit_sizes[0] if len(unit_sizes) > 0 else 0.0) \
                        * (unit_sizes[1] if len(unit_sizes) > 1 else 0.0) \
                        * (unit_sizes[2] if len(unit_sizes) > 2 else 0.0)
+
+        # grid size per axis
+        Nx, Ny, Nz = int(rve_dim[0]), int(rve_dim[1]), int(rve_dim[2])
+        # infer origin from centers if available: origin = min(center) - 0.5*unit
+        if len(vox_center_dict) > 0:
+            xs = [float(c[0])* length_scale for c in vox_center_dict.values()]
+            ys = [float(c[1])* length_scale for c in vox_center_dict.values()]
+            zs = [float(c[2])* length_scale for c in vox_center_dict.values()]
+            ox = (min(xs) if xs else 0.0) - 0.5 * unit_sizes[0]
+            oy = (min(ys) if ys else 0.0) - 0.5 * unit_sizes[1]
+            oz = (min(zs) if zs else 0.0) - 0.5 * unit_sizes[2]
+        else:
+            ox = oy = oz = 0.0
+        origin = [ox, oy, oz]
+
         # ─── precompute voxel→grain lookup ───────────────────────────────────────
         voxel_to_grain = {
             vid: gid
@@ -1747,7 +1764,7 @@ class Microstructure(object):
         grains_t0 = []
         for gid in grain_phase_dict.keys():
             entry = {
-                "gid": gid,
+                "grain_id": gid,
                 "phase_id": grain_phase_dict.get(gid),
                 "grain_volume": len(grain_to_voxels.get(gid, [])) * voxel_volume,
             }
@@ -1758,15 +1775,36 @@ class Microstructure(object):
             grains_t0.append(entry)
 
         # ─── Build time‐0 voxel dictionary ────────────────────────────────────────
+        def _coord_to_index_1based(c, o, d):
+            # i = round((c - o)/d + 0.5), robust to tiny float noise
+            return int(round((float(c) - float(o)) / float(d) + 0.5))
+
+        def _clamp(v, lo, hi):
+            return max(lo, min(hi, v))
+
         voxels_t0 = []
         for vid, gid in voxel_to_grain.items():
             cx, cy, cz = vox_center_dict.get(vid, (0.0, 0.0, 0.0))
+            centroid = [float(cx) * length_scale,
+                        float(cy) * length_scale,
+                        float(cz) * length_scale]
+
+            # Compute 1-based voxel indices from centers
+            ix = _coord_to_index_1based(centroid[0], origin[0], unit_sizes[0])
+            iy = _coord_to_index_1based(centroid[1], origin[1], unit_sizes[1])
+            iz = _coord_to_index_1based(centroid[2], origin[2], unit_sizes[2])
+
+            # Clamp to valid range [1..N*]
+            ix = _clamp(ix, 1, Nx)
+            iy = _clamp(iy, 1, Ny)
+            iz = _clamp(iz, 1, Nz)
+
+
             entry = {
-                "vid": vid,
+                "voxel_id": vid,
                 "grain_id": gid,
-                "centroid_coordinates": [float(cx) * length_scale,
-                                         float(cy) * length_scale,
-                                         float(cz) * length_scale],
+                "centroid_coordinates": centroid, # scaled for output
+                "voxel_index": [ix, iy, iz], # 1-based indices
                 "voxel_volume": voxel_volume,
             }
             if include_orientation:
