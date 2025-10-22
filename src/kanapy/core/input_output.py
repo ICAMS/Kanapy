@@ -5,6 +5,7 @@ import numpy as np
 from collections import defaultdict
 from .entities import Ellipsoid, Cuboid
 from .initializations import NodeSets
+from typing import Dict, Any, Tuple, Optional, List, Union
 
 
 def write_dump(Ellipsoids, sim_box):
@@ -119,11 +120,12 @@ def read_dump(file):
     return sim_box, Ellipsoids
 
 
-def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
+def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
                   gb_area=None, dual_phase=False, thermal=False,
                   ialloy=None, grain_phase_dict=None,
-                  periodicBC=False, crystal_plasticity=False, phase_props=None,
-                  value=None, apply_bc=False):
+                  crystal_plasticity=False, phase_props=None,
+                  *,
+                  boundary_conditions: Optional[Dict[str, Any]] = None):
     """
     Creates an ABAQUS input file with microstructure morphology information
     in the form of nodes, elements and element sets. If "dual_phase" is true,
@@ -298,50 +300,55 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             f.write('** Name: F0yzFix Type: Displacement/Rotation\n')
             f.write('*Boundary\nF0yz, 1, 1\n')
 
-    def write_strain_load():
-        displacement_bc_map = {
-            'x' : ('F1yz', 1, 'disX' ),
-            'y' : ('Fx1z', 2, 'disY' ),
-            'z':  ('Fxy1', 3, 'disZ' ),
-            'xy': ('Fx1z', 1, 'disXY'),
-            'xz': ('F1yz', 3, 'disXZ'),
-            'yz': ('Fxy1', 2, 'disYZ'),
-        }
-        direction = loading_direction.lower()
-        if direction in displacement_bc_map:
-            set_name, dof, bc_name = displacement_bc_map[direction]
+    def write_load():
 
-            # 'value' is a length-6 list; dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,
-            strain = float(mag)
+        if load_type == 'strain':
+            displacement_bc_map = {
+                'x' : ('F1yz', 1, 'disX' ),
+                'y' : ('Fx1z', 2, 'disY' ),
+                'z':  ('Fxy1', 3, 'disZ' ),
+                'xy': ('Fx1z', 1, 'disXY'),
+                'xz': ('F1yz', 3, 'disXZ'),
+                'yz': ('Fxy1', 2, 'disYZ'),
+            }
+            direction = loading_direction.lower()
+            if direction in displacement_bc_map:
+                set_name, dof, bc_name = displacement_bc_map[direction]
+                # dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,
+                vstrain = float(mag)
+                true_strain = vstrain - 1.0  # ε = 0.2 for provided value =1.2
+                displacement = edge_lengths[direction] * (np.exp(true_strain) - 1.0)  # Logarithmic strain
+                print(
+                    f"Applied component: {direction}, "
+                    f"Stretch ratio λ: {vstrain:.6f}, "
+                    f"Log strain ε (per rule): {true_strain:.6f}, "
+                    f"Edge length: {edge_lengths[direction]:.6f} mm, "
+                    f"Displacement: {displacement:.6f} mm"
+                )
+                f.write(f'** Name: {bc_name} Type: Displacement/Rotation\n')
+                f.write('*Boundary\n')
+                f.write(f'{set_name}, {dof}, {dof}, {displacement:.6f}\n')
 
-            displacement = edge_lengths[direction] * (np.exp(strain) - 1)  # Logarithmic strain
-            print(f"Direction: {direction}, Strain: {strain:.6f}, Edge length: {edge_lengths[direction]:.6f} mm, "
-                  f"Displacement: {displacement:.6f} mm")
-            f.write(f'** Name: {bc_name} Type: Displacement/Rotation\n')
-            f.write('*Boundary\n')
-            f.write(f'{set_name}, {dof}, {dof}, {displacement:.6f}\n')
+        elif load_type == 'stress':
+            load_bc_map = {
+                'x' : ('SURF-1', 1, 'loadX' ),
+                'y' : ('SURF-2', 2, 'loadY' ),
+                'z' : ('SURF-3', 3, 'loadZ' ),
+                'xy': ('SURF-2', 1, 'loadXY'),
+                'xz': ('SURF-1', 3, 'loadXZ'),
+                'yz': ('SURF-3', 2, 'loadYZ'),
+            }
+            direction = loading_direction.lower()
+            if direction in load_bc_map:
+                set_name, dof, bc_name = load_bc_map[direction]
+                # dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,
+                vstress = mag
+                f.write('** LOADS\n')
+                f.write('**\n')
+                f.write(f'** Name: {bc_name} Type: Pressure\n')
+                f.write('*Dload\n')
+                f.write(f'{set_name}, P, {-vstress:.6f}\n')
 
-    def write_stress_load():
-        f.write('** LOADS\n')
-        f.write('**\n')
-        load_bc_map = {
-            'x' : ('SURF-1', 1, 'loadX' ),
-            'y' : ('SURF-2', 2, 'loadY' ),
-            'z' : ('SURF-3', 3, 'loadZ' ),
-            'xy': ('SURF-2', 1, 'loadXY'),
-            'xz': ('SURF-1', 3, 'loadXZ'),
-            'yz': ('SURF-3', 2, 'loadYZ'),
-        }
-        direction = loading_direction.lower()
-        if direction in load_bc_map:
-            set_name, dof, bc_name = load_bc_map[direction]
-
-            # 'value' is a length-6 list; dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,
-            vstress = mag
-
-            f.write(f'** Name: {bc_name} Type: Pressure\n')
-            f.write('*Dsload\n')
-            f.write(f'{set_name}, P, {-vstress:.6f}\n')
 
     def write_periodic_load():
         if load_type == 'stress':
@@ -354,25 +361,22 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
 
             # map each index to its Abaqus CLOAD pattern
             stress_map = {
-                0: "V101,1",  # X-direction
-                1: "V011,2",  # Y-direction
-                2: "V000,3",  # Z-direction
-                3: "V011,1",  # XY-direction
-                4: "V101,3",  # XZ-direction
-                5: "V000,2",  # YZ-direction
+                'x':  "V101,1",  # σ_xx → force along x
+                'y':  "V011,2",  # σ_yy → force along y
+                'z':  "V000,3",  # σ_zz → force along z
+                'xy': "V011,1",  # τ_xy → force along x (plane normal y)
+                'xz': "V101,3",  # τ_xz → force along z (plane normal x)
+                'yz': "V000,2",  # τ_yz → force along y (plane normal z)
             }
 
-            # find all non-zero entries
-            nz = [(i, v) for i, v in enumerate(value) if v != 0]
-            if len(nz) == 1:
-                # only one non-zero → emit just that line
-                idx, val = nz[0]
-                f.write(f'{stress_map[idx]},{val}\n')
-            else:
-                # fallback: emit all, same as before
-                for idx, val in nz:
-                    f.write(f'{stress_map[idx]},{val}\n')
-
+            d = loading_direction.lower()
+            if d not in stress_map or d not in face_areas:
+                raise ValueError(f"Unsupported loading_direction for stress: {loading_direction!r}")
+            area = float(face_areas[d])
+            stress_value = float(mag)  # user-provided stress (units e.g., MPa)
+            force_value = stress_value * area  # Force = Stress × Area
+            # Write the force to CLOAD
+            f.write(f'{stress_map[d]},{force_value}\n')
             f.write('** \n')
 
         elif load_type == 'strain':
@@ -385,65 +389,137 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
 
             # map each index to (node, direction) for the *Boundary card
             strain_map = {
-                0: ("V101", 1),  # X-direction
-                1: ("V011", 2),  # Y-direction
-                2: ("V000", 3),  # Z-direction
-                3: ("V011", 1),  # XY-direction
-                4: ("V101", 3),  # XZ-direction
-                5: ("V000", 2),  # YZ-direction
+                'x':  ("V101", 1),
+                'y':  ("V011", 2),
+                'z':  ("V000", 3),
+                'xy': ("V011", 1),
+                'xz': ("V101", 3),
+                'yz': ("V000", 2),
             }
 
-            nz = [(i, v) for i, v in enumerate(value) if v != '*']
-            if len(nz) == 1:
-                idx, val = nz[0]
-                node, direction = strain_map[idx]
-                # node, start DOF, end DOF, value
-                f.write(f'{node}, {direction}, {direction}, {val}\n')
-            else:
-                # fallback: emit all non-zero entries
-                for idx, val in nz:
-                    node, direction = strain_map[idx]
-                    f.write(f'{node}, {direction}, {direction}, {val}\n')
+            d = loading_direction.lower()
+            if d not in strain_map:
+                raise ValueError(f"Unsupported loading_direction for strain: {loading_direction!r}")
 
-    def _parse_value():
-        """
-        Given value: a list/tuple of length 6, each entry either
-          • a number (float/int), or
-          • the wildcard '*' (meaning “this DOF is free for strain”)
-        Returns: load_type, bc_type, direction, magnitude
-        """
-        if len(value) != 6:
-            raise ValueError("value must be length 6")
-        magnitude = 0
-        # 1) If any entry is '*', it’s a displacement (strain) BC
-        if any(v == '*' for v in value):
-            load_type = 'strain'
-            # find the one “real” number
-            for idx, v in enumerate(value):
-                if v != '*':
-                    magnitude = float(v)
-                    break
+            node, dof = strain_map[d]
+            v_lambda = float(mag)  # stretch ratio λ (e.g., 1.2 for +20%)
+            eps_true = v_lambda - 1.0  # your convention
+            disp = edge_lengths[d] * (np.exp(eps_true) - 1.0)
+
+            f.write(f'{node}, {dof}, {dof}, {disp:.6f}\n')
+
         else:
-            # 2) else it’s stress (force) control; find the non‐zero entry
-            load_type = 'stress'
-            nonzeros = [(i, v) for i, v in enumerate(value) if v != 0]
-            if len(nonzeros) != 1:
-                raise ValueError(f"For stress you must supply exactly one non‐zero value, got {nonzeros}")
-            idx, magnitude = nonzeros[0]
+            raise ValueError(f"Unknown load_type: {load_type!r}")
+
+    def _parse_boundary_conditions():
+        """
+        Parser and validate boundary_conditions from the outer scope.
+
+        boundary_conditions schema:
+        {
+          "apply_bc": bool,              # default False
+          "periodic_bc": bool,           # default False
+          "type_bc": "stress"|"force"|"strain"|"displacement",
+          "components_bc": [
+              list of 6 elements: float or '*' for free DOF if type is "strain"/"displacement",
+              or 0 for free DOF if type is "stress"/"force"
+          ]
+        }
+
+        Returns
+        -------
+        apply_bc : bool
+        periodic_bc : bool
+        load_type : str       # 'strain' or 'stress'
+        load_case : str       # 'uni-axial' or 'shear'
+        direction : str       # 'x'|'y'|'z'|'xy'|'xz'|'yz'
+        magnitude : float
+        """
+        if boundary_conditions is None:
+            return False, False, 'strain', 'uni-axial', 'x', 0.0
+
+        if not isinstance(boundary_conditions, dict):
+            raise ValueError("boundary_conditions must be a dict (or None).")
+
+        apply_bc      = bool(boundary_conditions.get("apply_bc", False))
+        periodic_bc   = bool(boundary_conditions.get("periodic_bc", False))
+        type_bc       = boundary_conditions.get("type_bc", None)
+        components_bc = boundary_conditions.get("components_bc", None)
+
+
+        if components_bc is None or not (isinstance(components_bc, (list, tuple)) and len(components_bc) == 6):
+            raise ValueError("`components_bc` must be a list/tuple of length 6.")
+
+        if type_bc is not None:
+            t = str(type_bc).strip().lower()
+            if t in ("stress", "force"):
+                load_type = "stress"
+            elif t in ("strain", "displacement"):
+                load_type = "strain"
+            else:
+                raise ValueError("type_bc must be one of: 'stress'|'force'|'strain'|'displacement'.")
+        else:
+            load_type = "strain" if any(v == '*' for v in components_bc) else "stress"
+
+        # Validate + extract idx & magnitude
+        if load_type == "strain":
+            numeric_positions = []
+            for i, v in enumerate(components_bc):
+                if v == '*':
+                    continue
+                if isinstance(v, (int, float)):
+                    numeric_positions.append(i)
+                else:
+                    raise ValueError(
+                        f"Strain BC: entries must be either a number (the controlled DOF) or '*' (free). Got {v!r} at index {i}.")
+            if len(numeric_positions) != 1 or any(v != '*' for j, v in enumerate(components_bc) if j != (numeric_positions[0])):
+                raise ValueError("Strain BC: provide exactly one numeric magnitude and five '*' (free DOFs).")
+            idx = numeric_positions[0]
+            magnitude = float(components_bc[idx])
+
+
+        else:  # stress/force
+            if any(v == '*' for v in components_bc):
+                raise ValueError("Stress BC: '*' is not allowed. Use 0 to indicate a free DOF.")
+            if not all(isinstance(v, (int, float)) for v in components_bc):
+                bad = [(i, v) for i, v in enumerate(components_bc) if not isinstance(v, (int, float))]
+                raise ValueError(f"Stress BC: all entries must be numeric. Bad entries: {bad}")
+
+            nz_indices = [i for i, v in enumerate(components_bc) if float(v) != 0.0]
+            if len(nz_indices) != 1 or any(float(v) != 0.0 for j, v in enumerate(components_bc) if j != nz_indices[0]):
+                raise ValueError(
+                    "Stress BC: provide exactly one non-zero numeric magnitude and five zeros (free DOFs).")
+
+            idx = nz_indices[0]
+            magnitude = float(components_bc[idx])
+
+
 
         # 3) Map index → direction & bc_type
         dir_map = {0: 'x', 1: 'y', 2: 'z', 3: 'xy', 4: 'xz', 5: 'yz'}
         direction = dir_map[idx]
-        bc_type = 'uni-axial' if idx < 3 else 'shear'
-        print('load type :', load_type, ' boundary condition type :', bc_type, '\n','direction of the load :', direction, ' magnitude :', magnitude)
-        return load_type, bc_type, direction, magnitude
+        load_case = 'uni-axial' if idx < 3 else 'shear'
+        return apply_bc, periodic_bc, load_type, load_case, direction, magnitude
 
-    # Parse the value list into load type, bc_type, loading direction,and magnitude.
-    if value is None:
-        # skip parsing and writing any BC/load for this surface
-        load_type = bc_type = loading_direction = mag = None
+    # Parse boundary_conditions into control mode, loading mode, direction, and magnitude
+    if not boundary_conditions or not boundary_conditions.get("apply_bc", False):
+        apply_bc = False
+        periodic_bc = bool(boundary_conditions.get("periodic_bc", False)) if isinstance(boundary_conditions,
+                                                                                        dict) else False
+        load_type = bc_type = loading_direction = None
+        mag = None
     else:
-        load_type, bc_type, loading_direction, mag = _parse_value()
+        apply_bc, periodic_bc, load_type, bc_type, loading_direction, mag = _parse_boundary_conditions()
+
+        print(
+            f"Control mode: {load_type} | "
+            f"Boundary condition type: {periodic_bc} | "
+            f"Loading mode: {bc_type} | "
+            f"Applied component: {loading_direction} | "
+            f"Magnitude value: {mag}"
+        )
+
+
 
     print('')
     print(f'Writing RVE as ABAQUS file "{file}"')
@@ -462,9 +538,15 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         ialloy = [ialloy]
     nall = len(ialloy)
     ph_set = set()
-    # Convert input units from µm to mm for Abaqus output
-    scale_fact = 0.001  # conversion from µm to mm
+
     nsets = NodeSets(nodes)
+
+    # Convert input units from µm to mm for Abaqus output
+    if units == 'mm':
+        scale_fact = 0.001  # conversion from µm to mm
+    else:
+        scale_fact = 1  # keep µm
+
     # Calculate RVE edge lengths and face areas in mm
     edge_lengths = {
         'x':  (max(nodes[:, 0]) - min(nodes[:, 0])) * scale_fact,
@@ -475,9 +557,14 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         'yz': (max(nodes[:, 2]) - min(nodes[:, 2])) * scale_fact,
     }
     face_areas = {
+        # normal stresses
         'x': edge_lengths['y'] * edge_lengths['z'],  # yz face
         'y': edge_lengths['x'] * edge_lengths['z'],  # xz face
-        'z': edge_lengths['x'] * edge_lengths['y']  # xy face
+        'z': edge_lengths['x'] * edge_lengths['y'],  # xy face
+        # shear stresses (choose the plane normal consistent with mapping above)
+        'xy': edge_lengths['x'] * edge_lengths['z'],  # plane normal y → xz face
+        'xz': edge_lengths['y'] * edge_lengths['z'],  # plane normal x → yz face
+        'yz': edge_lengths['x'] * edge_lengths['y'],  # plane normal z → xy face
     }
 
     #####################################
@@ -535,7 +622,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             for gid, fcs in gr_fcs.items():
                 f.write('*SURFACE SECTION, ELSET=GRAIN{}_SET\n'.format(gid))
 
-        if periodicBC and apply_bc:
+        if periodic_bc and apply_bc:
             f.write('**** ======================================================== \n')
             f.write('**** Left to Right \n')
             # LeftToRight
@@ -1015,7 +1102,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         f.write('*Nset, nset=Vertices, instance=PART-1-1\n')
         f.write(f'{nsets.V000 + 1}, {nsets.V100 + 1}, {nsets.V010 + 1}, {nsets.V001 + 1}, {nsets.V011 + 1}, '
                 f'{nsets.V101 + 1}, {nsets.V110 + 1}, {nsets.V111 + 1}\n')
-        if periodicBC:
+        if periodic_bc:
             f.write('*Nset, nset=VerticesPeriodic, instance=PART-1-1\n')
             f.write(f'{nsets.V001 + 1}, {nsets.V101 + 1}, {nsets.V011 + 1}, {nsets.V000 + 1} \n')
 
@@ -1115,13 +1202,13 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
             f.write('**\n')
             f.write('**__________________________________________________________________')
         """
-        ##########################################
-        ### Creating Periodic Boundary Conditions
-        ##########################################
+        ##########################################################
+        ### Creating non-Periodic or Periodic Boundary Conditions
+        ##########################################################
         if apply_bc:
-            if not periodicBC :
+            if not periodic_bc :
                 write_boundary_conditions()
-            if periodicBC:
+            if periodic_bc:
                 f.write('** BOUNDARY CONDITIONS\n')
                 f.write('** \n')
                 f.write('*Boundary \n')
@@ -1181,13 +1268,10 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
         ### Creating Load
         #################################
         if apply_bc:
-            if not periodicBC:
-                if load_type == 'strain':
-                    write_strain_load()
-                if load_type == 'stress':
-                    write_stress_load()
+            if not periodic_bc:
+                write_load()
                 f.write('** \n')
-            elif periodicBC:
+            elif periodic_bc:
                 write_periodic_load()
         #################################
         ### Creating Fild Output

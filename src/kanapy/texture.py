@@ -881,7 +881,7 @@ class EBSDmap:
             Minimum grain size in pixels, smaller grains will be disregarded
             for the statistical analysis. The default is 3.
         vf_min : int, optional
-            Minimum volume fracture, phases with smaller values will be
+            Minimum volume fraction, phases with smaller values will be
             disregarded. The default is 0.03.
         plot : bool, optional
             Plot microstructures. The default is True.
