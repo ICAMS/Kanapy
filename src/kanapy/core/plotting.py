@@ -146,7 +146,6 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
 
     Parameters
     ----------
-    silent
     geometry : dict
         Dictionary with 'vertices' (node numbers) and 'simplices' (triangles)
     cmap : color map, optional
@@ -157,6 +156,8 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
         Color of edges. The default is [0.5,0.5,0.5,0.1].
     dual_phase : bool, optional
         Whether to plot red/green contrast for dual phase microstructure or colored grains
+    silent : bool
+        Run silent
 
     Returns
     -------
@@ -208,6 +209,7 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=None, silent=False, a
                        phases=False, cols=None):
     """
     Display ellipsoids after packing procedure
+    
     Parameters
     ----------
     particles : Class particles

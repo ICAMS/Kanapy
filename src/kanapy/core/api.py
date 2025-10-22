@@ -429,13 +429,13 @@ class Microstructure(object):
 
         Parameters
         ----------
-        sliced
-        dual_phase
-        cmap
-        ori
-        color_key: int
+        sliced : bool
+        dual_phase : bool
+        cmap : string
+        ori : Orientations
+        color_key : int
             selects the color key: 0: iphHSVKey, 1: BungeColorKey, 2: ipfHKLKey (optional, default: 0)
-        silent
+        silent : bool
 
         Returns
         -------

@@ -152,7 +152,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units='um',
     loading_direction
     value
     apply_bc : bool, optional
-        If True, boundary conditions are written to the Abaqus input file. Default is False.
+    If True, boundary conditions are written to the Abaqus input file. Default is False.
     """
 
     def write_node_set(name, nset):
