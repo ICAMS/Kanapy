@@ -4,21 +4,30 @@ import numpy as np
 
 def collision_routine(E1, E2):
     """
-    Calls the method :meth:'collide_detect' to determine whether the given two ellipsoid objects overlap using
-    the Algebraic separation condition developed by W. Wang et al. A detailed description is provided
-    therein.
+    Detect and handle collision between two ellipsoid objects
 
-    Also calls the :meth:`collision_react` to evaluate the response after collision.     
+    Uses the algebraic separation condition by W. Wang et al. to detect overlap
+    between two ellipsoids, and if a collision occurs, computes the contact
+    response via the `collision_react` method.
 
-    :param E1: Ellipsoid :math:`i` 
-    :type E1: object :obj:`Ellipsoid`
-    :param E2: Ellipsoid :math:`j`
-    :type E2: object :obj:`Ellipsoid`
+    Parameters
+    ----------
+    E1 : Ellipsoid
+        First ellipsoid object (particle i)
+    E2 : Ellipsoid
+        Second ellipsoid object (particle j)
 
-    .. note:: 1. If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is
-                 sufficient to determine whether they overlap.
-              2. Else, if either of them is an ellipsoid, then their coefficients, positions & rotation matrices are
-                 used to determine whether they overlap.
+    Returns
+    -------
+    bool
+        True if overlap (collision) is detected, False otherwise
+
+    Notes
+    -----
+    - If both particles are spheres, the bounding sphere hierarchy alone
+      suffices to detect collision.
+    - If either particle is an ellipsoid, their coefficients, positions,
+      and rotation matrices are used in the overlap test.
     """
 
     # call the collision detection algorithm
@@ -31,44 +40,45 @@ def collision_routine(E1, E2):
 
 
 def collision_react(ell1, ell2):
-    r"""
-    Evaluates and modifies the magnitude and direction of the ellipsoid's velocity after collision.    
+    """
+    Evaluates and modifies the magnitude and direction of the ellipsoid's velocity after collision.
 
-    :param ell1: Ellipsoid :math:`i`
-    :type ell1: object :obj:`Ellipsoid`
-    :param ell2: Ellipsoid :math:`j`
-    :type ell2: object :obj:`Ellipsoid`
+    Parameters
+    ----------
+    ell1 : Ellipsoid
+        Ellipsoid i
+    ell2 : Ellipsoid
+        Ellipsoid j
 
-    .. note:: Consider two ellipsoids :math:`i, j` at collision. Let them occupy certain positions in space
-              defined by the position vectors :math:`\mathbf{r}^{i}, \mathbf{r}^{j}` and have certain 
-              velocities represented by :math:`\mathbf{v}^{i}, \mathbf{v}^{j}` respectively. The objective
-              is to  find the velocity vectors after collision. The elevation angle :math:`\phi` between
-              the ellipsoids is determined by,      
+    Notes
+    -----
+    Consider two ellipsoids i, j at collision. Let them occupy certain positions in space
+    defined by the position vectors r^i, r^j and have certain velocities represented by v^i, v^j
+    respectively. The objective is to find the velocity vectors after collision. The elevation angle φ
+    between the ellipsoids is determined by:
 
-              .. image:: /figs/elevation_ell.png                        
-                :width: 200px
-                :height: 45px
-                :align: center                 
+    .. image:: /figs/elevation_ell.png
+        :width: 200px
+        :height: 45px
+        :align: center
 
-              where :math:`dx, dy, dz` are defined as the distance between the two ellipsoid centers along
-                    :math:`x, y, z` directions given by,
+    where dx, dy, dz are defined as the distance between the two ellipsoid centers along
+    x, y, z directions given by:
 
-              .. image:: /figs/dist_ell.png                        
-                  :width: 110px
-                  :height: 75px
-                  :align: center
+    .. image:: /figs/dist_ell.png
+        :width: 110px
+        :height: 75px
+        :align: center
 
-              Depending on the magnitudes of :math:`dx, dz` as projected on the :math:`x-z` plane, the angle
-              :math:`\Theta` is computed.
-              The angles :math:`\Theta` and :math:`\phi` determine the in-plane and out-of-plane directions along which
-              the ellipsoid :math:`i` would bounce back after collision. Thus, the updated velocity vector components
-              along the :math:`x, y, z` directions are determined by,
+    Depending on the magnitudes of dx, dz as projected on the x-z plane, the angle Θ is computed.
+    The angles Θ and φ determine the in-plane and out-of-plane directions along which
+    ellipsoid i would bounce back after collision. Thus, the updated velocity vector components
+    along the x, y, z directions are determined by:
 
-              .. image:: /figs/velocities_ell.png                        
-                  :width: 180px
-                  :height: 80px
-                  :align: center                        
-
+    .. image:: /figs/velocities_ell.png
+        :width: 180px
+        :height: 80px
+        :align: center
     """
     cdir = ell1.get_pos() - ell2.get_pos()
     dst = np.linalg.norm(cdir)
@@ -87,24 +97,37 @@ def collision_react(ell1, ell2):
 
 
 def collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j):
-    r"""Implementation of Algebraic separation condition developed by
-    W. Wang et al. 2001 for overlap detection between two static ellipsoids.
-    Kudos to ChatGPT for support with translation from C++ code.
+    """
+    Determines overlap between two static ellipsoids using the Algebraic Separation Condition
+    developed by W. Wang et al., 2001. This function implements the method for two ellipsoids
+    with given coefficients, positions, and rotation matrices.
 
-    :param coef_i: Coefficients of ellipsoid :math:`i`
-    :type coef_i: numpy array
-    :param coef_j: Coefficients of ellipsoid :math:`j`
-    :type coef_j: numpy array
-    :param r_i: Position of ellipsoid :math:`i`
-    :type r_i: numpy array
-    :param r_j: Position of ellipsoid :math:`j`
-    :type r_j: numpy array
-    :param A_i: Rotation matrix of ellipsoid :math:`i`
-    :type A_i: numpy array
-    :param A_j: Rotation matrix of ellipsoid :math:`j`
-    :type A_j: numpy array
-    :returns: **True** if ellipsoids :math:`i, j` overlap, else **False**
-    :rtype: boolean
+    Parameters
+    ----------
+    coef_i : numpy array
+        Coefficients of ellipsoid i
+    coef_j : numpy array
+        Coefficients of ellipsoid j
+    r_i : numpy array
+        Position vector of ellipsoid i
+    r_j : numpy array
+        Position vector of ellipsoid j
+    A_i : numpy array
+        Rotation matrix of ellipsoid i
+    A_j : numpy array
+        Rotation matrix of ellipsoid j
+
+    Returns
+    -------
+    bool
+        True if ellipsoids i and j overlap, False otherwise
+
+    Notes
+    -----
+    The method calculates the characteristic polynomial based on the ellipsoid coefficients
+    and rigid body transformations. Roots of this polynomial are used with the Algebraic
+    Separation Condition to determine whether the ellipsoids intersect. Real roots with
+    negative values are analyzed to establish the overlap.
     """
     SMALL = 1.e-12
 
