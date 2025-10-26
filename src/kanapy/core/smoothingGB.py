@@ -7,7 +7,42 @@ from tqdm import tqdm
 import numpy as np
 
 
-class Node(object):    
+class Node(object):
+    """
+    Class representing a single node in 3D space with position, velocity, acceleration, and anchors
+
+    Parameters
+    ----------
+    iden : int
+        Identifier to assign to the node
+    px : float
+        Initial x-coordinate of the node
+    py : float
+        Initial y-coordinate of the node
+    pz : float
+        Initial z-coordinate of the node
+
+    Attributes
+    ----------
+    id : int
+        Unique identifier of the node
+    px, py, pz : float
+        Current x, y, z coordinates of the node
+    oripx, oripy, oripz : float
+        Original x, y, z coordinates of the node
+    vx, vy, vz : float
+        Velocity components along x, y, z
+    ax, ay, az : float
+        Acceleration components along x, y, z
+    anchors : list
+        List of anchors connected to this node
+
+    Notes
+    -----
+    This class represents a single node in 3D space, storing both its kinematic state
+    (position, velocity, acceleration) and connections to anchors.
+    """
+
 
     def __init__(self,iden,px,py,pz):
         self.id = iden
@@ -33,26 +68,80 @@ class Node(object):
         # List anchors connected to the node
         self.anchors = []    
 
-    def get_pos(self):        
+    def get_pos(self):
+        """
+        Return the current position of the node as a NumPy array
+
+        Returns
+        -------
+        pos : ndarray
+            Array containing the x, y, z coordinates of the node
+        """
         return np.array([self.px, self.py, self.pz])
 
-    def get_Oripos(self):        
+    def get_Oripos(self):
+        """
+        Return the original position of the node as a NumPy array
+
+        Returns
+        -------
+        oripos : ndarray
+            Array containing the original x, y, z coordinates of the node
+        """
         return np.array([self.oripx, self.oripy, self.oripz])                 
     
-    def get_vel(self):        
+    def get_vel(self):
+        """
+        Return the current velocity of the node as a NumPy array
+
+        Returns
+        -------
+        vel : ndarray
+            Array containing the velocity components vx, vy, vz
+        """
         return np.array([self.vx, self.vy, self.vz])
         
-    def update_pos(self,dt):               
+    def update_pos(self,dt):
+        """
+        Update the position of the node based on its velocity and time step
+
+        Parameters
+        ----------
+        dt : float
+            Time step for the update
+        """
         self.px += self.vx * dt
         self.py += self.vy * dt
         self.pz += self.vz * dt   
         
-    def update_vel(self,dt):        
+    def update_vel(self,dt):
+        """
+        Update the velocity of the node based on its acceleration and time step
+
+        Parameters
+        ----------
+        dt : float
+            Time step for the update
+        """
         self.vx += self.ax * dt
         self.vy += self.ay * dt
         self.vz += self.az * dt   
 
-    def compute_acc(self,fx,fy,fz,mass):        
+    def compute_acc(self,fx,fy,fz,mass):
+        """
+        Compute the acceleration of the node given applied forces and mass
+
+        Parameters
+        ----------
+        fx : float
+            Force component along x
+        fy : float
+            Force component along y
+        fz : float
+            Force component along z
+        mass : float
+            Mass of the node
+        """
         self.ax = fx/mass
         self.ay = fy/mass
         self.az = fz/mass       
@@ -64,6 +153,27 @@ kanapy CLI and
 kanapy/api/calcPolygons which offers more functionality, e.g. polygonization
 """
 def readGrainFaces(nodes_v,elmtDict,elmtSetDict):
+    """
+    Extract outer faces of polyhedral grains from voxel connectivity
+
+    Constructs a dictionary of outer faces for each grain by analyzing voxel elements,
+    excluding faces that lie on the boundary of the RVE.
+
+    Parameters
+    ----------
+    nodes_v : ndarray
+        Array of nodal coordinates with shape (Nnodes, 3)
+    elmtDict : dict
+        Dictionary mapping element ID to its 8 node indices
+    elmtSetDict : dict
+        Dictionary mapping grain ID to a list of element IDs belonging to that grain
+
+    Returns
+    -------
+    grain_facesDict : dict
+        Dictionary mapping grain ID to a dictionary of outer faces.
+        Each face is stored as {face_id: [node1, node2, node3, node4]}.
+    """
     RVE_min = np.amin(nodes_v, axis=0)
     RVE_max = np.amax(nodes_v, axis=0)
     grain_facesDict = dict()      # {Grain: faces} 
@@ -131,6 +241,26 @@ def readGrainFaces(nodes_v,elmtDict,elmtSetDict):
 
 
 def initalizeSystem(nodes_v,grain_facesDict):
+    """
+    Initialize a spring-mass system from nodes and grain faces
+
+    Creates Node objects for all nodes, generates anchors at the center of each face,
+    and links nodes to their associated anchors for the spring-mass system.
+
+    Parameters
+    ----------
+    nodes_v : ndarray
+        Array of nodal coordinates with shape (Nnodes, 3)
+    grain_facesDict : dict
+        Dictionary mapping grain ID to a dictionary of outer faces, as returned by readGrainFaces
+
+    Returns
+    -------
+    allNodes : list of Node
+        List of Node objects with anchors assigned
+    anchDict : dict
+        Dictionary mapping face ID to anchor position (x, y, z)
+    """
     
     # Initialize all nodes as masses
     allNodes = [Node(nid+1,coords[0],coords[1],coords[2]) for nid,coords in enumerate(nodes_v)]  
@@ -170,6 +300,39 @@ def initalizeSystem(nodes_v,grain_facesDict):
 
 def relaxSystem(allNodes,anchDict,dt,N,k,c,RVE_xmin,RVE_xmax,
                          RVE_ymin,RVE_ymax,RVE_zmin,RVE_zmax):
+    """
+    Relax the spring-mass system to reach equilibrium
+
+    Integrates the motion of nodes over N time steps with time step dt,
+    considering spring forces to anchors and damping. Boundary nodes at RVE surfaces
+    are fixed in the corresponding directions.
+
+    Parameters
+    ----------
+    allNodes : list of Node
+        List of Node objects with positions, velocities, and anchors
+    anchDict : dict
+        Dictionary mapping face ID to anchor position (x, y, z)
+    dt : float
+        Time step for integration
+    N : int
+        Number of integration steps
+    k : float
+        Spring stiffness
+    c : float
+        Damping coefficient
+    RVE_xmin, RVE_xmax : float
+        Minimum and maximum x-coordinates of RVE boundary
+    RVE_ymin, RVE_ymax : float
+        Minimum and maximum y-coordinates of RVE boundary
+    RVE_zmin, RVE_zmax : float
+        Minimum and maximum z-coordinates of RVE boundary
+
+    Returns
+    -------
+    allNodes : list of Node
+        Updated list of Node objects after relaxation
+    """
 
     print('    Relaxing the system for equilibrium')                 
     nodeMass = 30
@@ -209,6 +372,28 @@ def relaxSystem(allNodes,anchDict,dt,N,k,c,RVE_xmin,RVE_xmax,
     
     
 def smoothingRoutine(nodes_v, elmtDict, elmtSetDict):
+    """
+    Smooth a voxel-based microstructure by relaxing a spring-mass-anchor system
+
+    Constructs outer faces of grains, initializes nodes with anchors at face centers,
+    and iteratively relaxes the system to reduce irregularities in node positions.
+
+    Parameters
+    ----------
+    nodes_v : ndarray, shape (N_nodes, 3)
+        Coordinates of all nodes in the voxel mesh
+    elmtDict : dict
+        Dictionary mapping element ID to its node indices
+    elmtSetDict : dict
+        Dictionary mapping grain ID to the set of element IDs it contains
+
+    Returns
+    -------
+    nodes_s : ndarray, shape (N_nodes, 3)
+        Smoothed coordinates of all nodes
+    grain_facesDict : dict
+        Dictionary mapping grain ID to its outer faces and corresponding node connectivity
+    """
 
     #coords = np.array(list(nodes_v.values()))
     xvals, yvals, zvals = nodes_v[:,0], nodes_v[:,1], nodes_v[:,2]

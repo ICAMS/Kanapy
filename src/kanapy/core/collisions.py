@@ -41,7 +41,7 @@ def collision_routine(E1, E2):
 
 def collision_react(ell1, ell2):
     """
-    Evaluates and modifies the magnitude and direction of the ellipsoid's velocity after collision.
+    Evaluates and modifies the magnitude and direction of the ellipsoid's velocity after collision
 
     Parameters
     ----------
@@ -100,7 +100,7 @@ def collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j):
     """
     Determines overlap between two static ellipsoids using the Algebraic Separation Condition
     developed by W. Wang et al., 2001. This function implements the method for two ellipsoids
-    with given coefficients, positions, and rotation matrices.
+    with given coefficients, positions, and rotation matrices
 
     Parameters
     ----------

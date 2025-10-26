@@ -16,6 +16,26 @@ from collections import defaultdict
 
 
 def stat_names(legacy=False):
+    """
+    Return standardized names for statistical descriptors
+
+    Parameters
+    ----------
+    legacy : bool, optional
+      If True, use legacy naming convention ('std', 'offs', 'mean', 'kappa');
+      otherwise, use current naming convention ('sig', 'loc', 'scale', 'kappa').
+
+    Returns
+    -------
+    sig : str
+      Name for the standard deviation descriptor
+    loc : str
+      Name for the location descriptor
+    scale : str
+      Name for the scale/mean descriptor
+    kappa : str
+      Name for the kappa/shape parameter
+    """
     if legacy:
         sig = 'std'
         loc = 'offs'
@@ -30,87 +50,118 @@ def stat_names(legacy=False):
 
 
 class RVE_creator(object):
-    r"""
+    """
     Creates an RVE based on user-defined statistics
 
-    .. note:: 1. Input parameters provided by the user in the input file are:
+    Generates ellipsoid size distribution (Log-normal) based on user-defined statistics.
+    Particle, RVE and simulation data are written as JSON files in a folder in the current working
+    directory for later access.
 
-                * Standard deviation for ellipsoid equivalent diameter (Log-normal distribution)
-                * Mean value of ellipsoid equivalent diameter (Log-normal distribution)
-                * Minimum and Maximum cut-offs for ellipsoid equivalent diameters
-                * Mean value for aspect ratio
-                * Mean value for ellipsoid tilt angles (Normal distribution)
-                * Standard deviation for ellipsoid tilt angles (Normal distribution)
-                * Side dimension of the RVE
-                * Discretization along the RVE sides
+    Parameters
+    ----------
+    stats_dicts : list of dict
+        List of dictionaries containing microstructure descriptors for each phase
+    nsteps : int, optional
+        Maximum number of steps for packing simulation (default is 1000)
+    from_voxels : bool, optional
+        If True, RVE is created from voxel input (default is False)
+    poly : object, optional
+        Optional polygon object for particle generation
 
-              2. Particle, RVE and simulation data are written as JSON files in a folder in the current
-                 working directory for later access.
+    Attributes
+    ----------
+    packing_steps : int
+        Max number of steps for packing simulation
+    size : tuple of float
+        Side lengths of the RVE along Cartesian axes
+    dim : tuple of int
+        Number of voxels along Cartesian axes
+    periodic : bool
+        Whether the RVE is periodic
+    units : str
+        Units of RVE dimensions, either "mm" or "um"
+    nparticles : list of int
+        Number of particles for each phase
+    particle_data : list of dict
+        Statistical particle data for each phase
+    phase_names : list of str
+        Names of phases
+    phase_vf : list of float
+        Volume fractions of each phase
+    ialloy : list of int
+        Alloy numbers for ICAMS CP-UMAT
 
-                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.
-                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.
-                * Simulation attributes such as periodicity and output unit scale (:math:`mm`
-                  or :math:`\mu m`) for ABAQUS .inp file.
+    Notes
+    -----
+    1. Input parameters provided by the user in the input file are:
+       - Standard deviation for ellipsoid equivalent diameter (Log-normal or Normal distribution)
+       - Mean value of ellipsoid equivalent diameter (Log-normal or Normal distribution)
+       - Minimum and Maximum cut-offs for ellipsoid equivalent diameters
+       - Mean value for aspect ratio
+       - Mean value for ellipsoid tilt angles (Normal distribution)
+       - Side dimension of the RVE
+       - Discretization along the RVE sides
 
-    Generates ellipsoid size distribution (Log-normal) based on user-defined statistics
-
-    .. note:: 1. Input parameters provided by the user in the input file are:
-
-                * Standard deviation for ellipsoid equivalent diameter (Normal distribution)
-                * Mean value of ellipsoid equivalent diameter (Normal distribution)
-                * Minimum and Maximum cut-offs for ellipsoid equivalent diameters
-                * Mean value for aspect ratio
-                * Mean value for ellipsoid tilt angles (Normal distribution)
-                * Standard deviation for ellipsoid tilt angles (Normal distribution)
-                * Side dimension of the RVE
-                * Discretization along the RVE sides
-
-              2. Particle, RVE and simulation data are written as JSON files in a folder in the current
-                 working directory for later access.
-
-                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.
-                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.
-                * Simulation attributes such as periodicity and output unit scale (:math:`mm`
-                  or :math:`\mu m`) for ABAQUS .inp file.
-
+    2. Data written in output files include:
+       - Ellipsoid attributes: Major, Minor, Equivalent diameters and tilt angle
+       - RVE attributes: size, number of voxels, voxel resolution
+       - Simulation attributes: periodicity and output unit scale (mm or μm) for ABAQUS .inp file
     """
 
     def __init__(self, stats_dicts, nsteps=1000, from_voxels=False, poly=None):
-        """
-        Create an RVE object.
-
-        Parameters
-        ----------
-        stats_dicts
-        nsteps
-        from_voxels
-        poly
-
-        Attributes
-        ----------
-        packing_steps = nsteps  # max number of steps for packing simulation
-        size = None  #  tuple of lengths along Cartesian axes
-        dim = None  # tuple of number of voxels along Cartesian axes
-        periodic = None  # Boolean for periodicity of RVE
-        units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
-        nparticles = []  # list of particle numbers for each phase
-        particle_data = []  # list of cits for statistical particle data for each grains
-        phase_names = []  # list of names of phases
-        phase_vf = []  # list of volume fractions of phases
-        ialloy : int
-            Number of alloy in ICAMS CP-UMAT
-        """
 
         def init_particles(ip):
             """
-            Extract statistical microstructure information from data dictionary
-            and initalize particles for packing accordingly
+            Initialize particle data for a given phase using statistical descriptors
+
+            Parameters
+            ----------
+            ip : int
+                Index of the phase for which particles are being initialized
+
+            Returns
+            -------
+            pdict : dict
+                Dictionary containing particle information for the phase, including number,
+                equivalent diameters, aspect ratios, tilt angles, and major/minor axes lengths
+
+            Notes
+            -----
+            - Uses gen_data_basic to generate particle numbers and equivalent diameters
+            - Uses gen_data_elong to generate aspect ratios and tilt angles for elongated grains
+            - Ensures voxel sizes are cubic and sufficient to voxelate the smallest grain
+            - Raises ValueError if RVE volume is too small, voxel size is too large, or cutoff ranges are too narrow
+            - Handles legacy and modern descriptor naming conventions
+            - Supports free-form grain generation if the 'Free' grain type is specified
             """
 
             def gen_data_basic(pdict):
-                """Computes number of particles according to equivalent diameter distribution
-                   and initializes particle ensemble with individual diameters approximating
-                   this lognormal distribution.
+                """
+                Computes the number of particles according to the equivalent diameter distribution
+                and initializes a particle ensemble with individual diameters approximating
+                a log-normal distribution.
+
+                Parameters
+                ----------
+                  pdict : dict
+                    Dictionary containing phase index ('Phase') and grain type information ('Type')
+                    for which particles are being generated.
+
+                Returns
+                -------
+                  pdict : dict
+                    Updated dictionary including:
+                      Number : int
+                        Total number of particles generated for the phase
+                      Equivalent_diameter : list of float
+                        List of individual particle diameters according to the log-normal distribution
+
+                Notes
+                -----
+                  - Ensures voxel sizes are cubic and sufficient to voxelate the smallest grain.
+                  - Raises ValueError if RVE volume is too small or voxel size is larger than the minimum grain size.
+                  - Issues warnings if voxelation may be poor or if large grains appear in a periodic RVE.
+                  - Uses rounding to keep total particle volume consistent with volume fraction.
                 """
                 # Compute the Log-normal CDF according to parameters for equiv. diameter distrib.
                 xaxis = np.linspace(0.1, 200, 1000)
@@ -196,6 +247,21 @@ class RVE_creator(object):
                 return pdict
 
             def gen_data_elong(pdict):
+                """
+                Generate tilt angles and aspect ratios for elongated particles, and compute
+                corresponding major and minor axes lengths.
+
+                Parameters
+                ----------
+                pdict : dict
+                    Dictionary containing particle information, including number and equivalent diameters.
+
+                Returns
+                -------
+                pdict : dict
+                    Updated dictionary including 'Major_diameter', 'Minor_diameter1', 'Minor_diameter2',
+                    and 'Tilt angle' for each particle.
+                """
                 # Tilt angle statistics
                 # Sample from Normal distribution: It takes mean and std of normal distribution
                 tilt_angle = []
@@ -414,25 +480,48 @@ class RVE_creator(object):
 
 
 class mesh_creator(object):
+    """
+    Create a mesh object for voxel-based microstructure representation
+
+    Parameters
+    ----------
+    dim : tuple of int
+        3-tuple representing the number of voxels along each Cartesian direction
+
+    Attributes
+    ----------
+    dim : tuple of int
+        Dimension tuple: number of voxels in each Cartesian direction
+    nvox : int
+        Total number of voxels
+    phases : ndarray
+        Field data storing phase numbers for each voxel
+    grains : ndarray
+        Field data storing grain numbers for each voxel
+    voxel_dict : dict
+        Dictionary mapping voxel number to associated nodes
+    grain_dict : dict
+        Dictionary mapping grain number to associated voxels
+    grain_phase_dict : dict
+        Dictionary storing phase per grain
+    grain_ori_dict : dict
+        Dictionary storing orientation per grain
+    vox_center_dict : dict
+        Dictionary storing center coordinates of each voxel
+    nodes : ndarray
+        Array of nodal positions
+    nodes_smooth : ndarray
+        Array of nodal positions after smoothing grain boundaries
+    prec_vf_voxels : float
+        Actual volume fraction of precipitates in voxelated structure
+
+    Notes
+    -----
+    - Raises ValueError if dim is not a 3-tuple
+    - Initializes data structures to store mesh, grains, phases, and nodes
+    - voxel_dict is initialized as defaultdict(list) to store node lists per voxel
+    """
     def __init__(self, dim):
-        """
-        Create a mesh object.
-
-        Parameters
-        ----------
-        dim: 3-tuple for dimensions of mesh (numbers of voxels in each Cartesian direction)
-
-        Attributes
-        ----------
-        self.dim = dim  # dimension tuple: number of voxels in each Cartesian direction
-        self.nvox = np.prod(dim)  # number of voxels
-        self.phases = np.zeros(dim, dtype=int)  # field data with phase numbers
-        self.grains = np.zeros(dim, dtype=int)  # field data with grain numbers
-        self.voxel_dict = dict()  # stores nodes assigned to each voxel (key; voxel number:int)
-        self.grain_dict = dict()  # stored voxels assigned to each grain (key: grain number:int
-        self.nodes = None  # array of nodal positions
-        self.nodes_smooth = None  # array of nodal positions after smoothening grain boundaries
-        """
 
         if not (type(dim) is tuple and len(dim) == 3):
             raise ValueError(f"Dimension dim must be a 3-tuple, not {type(dim)}, {dim}")
@@ -452,15 +541,24 @@ class mesh_creator(object):
 
     def get_ind(self, addr):
         """
-        Return the index in an array from a generic address.
+        Convert a voxel address to a flat array index
 
         Parameters
         ----------
-        addr
+        addr : int or tuple of int
+            Address of the voxel. Can be a single integer index or a 3-tuple (i, j, k)
+            representing voxel coordinates along each Cartesian axis
 
         Returns
         -------
+        ind : int or None
+            Flattened array index corresponding to the voxel address.
+            Returns None if addr is None, returns addr unchanged if addr is an empty list
 
+        Notes
+        -----
+        - Assumes row-major ordering: index = i*dim[1]*dim[2] + j*dim[1] + k
+        - Raises ValueError if addr is not a single integer or a 3-tuple
         """
         if addr is None:
             ind = None
@@ -474,15 +572,30 @@ class mesh_creator(object):
 
     def create_voxels(self, sim_box):
         """
-        Generates voxels inside the defined RVE (Simulation box)
+        Generate voxels and nodes inside the defined RVE (simulation box)
 
-        :param sim_box: Simulation box representing RVE dimensions
-        :type sim_box: :obj:`entities.Cuboid`
+        Parameters
+        ----------
+        sim_box : entities.Cuboid
+            Simulation box object representing the RVE dimensions
 
-        :returns: * Node list containing coordinates.
-                  * Element dictionary containing element IDs and nodal connectivities.
-                  * Voxel dictionary containing voxel ID and center coordinates.
-        :rtype: Tuple of Python dictionaries.
+        Returns
+        -------
+        None
+            Populates the mesh_creator object with:
+            - nodes : ndarray
+                Array of nodal coordinates
+            - voxel_dict : dict
+                Dictionary mapping voxel ID to list of node IDs
+            - vox_center_dict : dict
+                Dictionary mapping voxel ID to center coordinates
+
+        Notes
+        -----
+        - Nodes are generated along Cartesian axes with spacing defined by dim
+        - Voxel centers are computed as midpoint of voxel corners
+        - 8-node hexahedral (C3D8) element connectivity is maintained
+        - Duplicate nodes are avoided using verticesDict
         """
         print('    Generating voxels inside RVE')
         # generate nodes of all voxels from RVE side dimensions
@@ -536,9 +649,51 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
               periodicity=False, VF=None, phasename=None, phasenum=None,
               save_file=False):
     """
-    grains = [sigma, loc , scale of lognorm distrib. of equiv. diameter]
-    ar = [sigma, loc, scale of logorm distrib of aspect ratio]
-    omega = [kappa, loc of von Mises distrib. of tilt angle]
+    Create a dictionary containing statistical grain and RVE information
+
+    Parameters
+    ----------
+    grains : list of float
+        Parameters [sigma, loc, scale] of lognormal distribution for equivalent diameter
+    ar : list of float, optional
+        Parameters [sigma, loc, scale] of lognormal distribution for aspect ratio (required for Elongated grains)
+    omega : list of float, optional
+        Parameters [kappa, loc] of von Mises distribution for tilt angle (required for Elongated grains)
+    deq_min, deq_max : float, optional
+        Minimum and maximum cutoff for equivalent diameter
+    asp_min, asp_max : float, optional
+        Minimum and maximum cutoff for aspect ratio
+    omega_min, omega_max : float, optional
+        Minimum and maximum cutoff for tilt angle
+    size : int, optional
+        Side length of cubic RVE
+    voxels : int, optional
+        Number of voxels per side of RVE
+    gtype : str, optional
+        Grain type, either 'Elongated' or 'Equiaxed'
+    rveunit : str, optional
+        Unit of RVE dimensions ('um' or 'mm')
+    periodicity : bool or str, optional
+        Whether RVE is periodic
+    VF : float, optional
+        Volume fraction of phase
+    phasename : str, optional
+        Name of phase
+    phasenum : int, optional
+        Phase number
+    save_file : bool, optional
+        If True, save the dictionary as JSON
+
+    Returns
+    -------
+    ms_stats : dict
+        Dictionary containing statistical grain data, RVE info, simulation settings, and phase info
+
+    Notes
+    -----
+    - Checks consistency of grain type and required parameters
+    - Sets default cutoff values if not provided
+    - Supports saving statistical info to JSON
     """
 
     # type of grains either 'Elongated' or 'Equiaxed'
@@ -614,6 +769,37 @@ def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
 
 
 class NodeSets(object):
+    """
+    Identify nodes on faces of a cuboidal mesh and store them in face-specific sets
+
+    Parameters
+    ----------
+    nodes : ndarray
+        Array of nodal coordinates of shape (n_nodes, 3)
+
+    Attributes
+    ----------
+    F0yz, F0yz_full : list of int
+        Nodes on left face
+    F1yz, F1yz_full : list of int
+        Nodes on right face
+    Fx0z, Fx0z_full : list of int
+        Nodes on bottom face
+    Fx1z, Fx1z_full : list of int
+        Nodes on top face
+    Fxy0, Fxy0_full : list of int
+        Nodes on rear face
+    Fxy1, Fxy1_full : list of int
+        Nodes on front face
+    surfSet : list of int
+        All nodes on any face
+
+    Notes
+    -----
+    - Uses np.isclose to identify nodes lying on the boundaries
+    - Each *_full list keeps a copy of the original face node indices
+    - surfSet includes all nodes belonging to any face
+    """
     def __init__(self, nodes):
         self.F0yz = []  # left nodes
         self.F0yz_full = [] # left nodes copy
@@ -835,8 +1021,25 @@ class NodeSets(object):
 
 
     def CreatePeriodicNodeSets(self, Nodes, sortCoord1, sortCoord2, NodeSet):
-        # Creates a List of Sorted Nodes with respect to sortCoord1 and sortCoord2 for faces
-        # Input: Nodeset of surface nodes
+        """
+        Create a sorted list of nodes for a surface to facilitate periodic boundary conditions
+
+        Parameters
+        ----------
+        Nodes : list of int
+            List of all node indices in the mesh
+        sortCoord1 : list or ndarray
+            Coordinates of nodes along the first sorting direction
+        sortCoord2 : list or ndarray
+            Coordinates of nodes along the second sorting direction
+        NodeSet : list of int
+            Node indices on a surface to be sorted
+
+        Returns
+        -------
+        sortedList : list of int
+            Node indices sorted according to sortCoord1 and sortCoord2
+        """
         import operator
         startList = []
         sortedList = []
@@ -850,7 +1053,23 @@ class NodeSets(object):
 
 
     def CreatePeriodicEdgeSets(self, Nodes, sortCoord, NodeSet):
-        # Creates a List of Sorted Nodes with respect to sortCoord for edges
+        """
+        Create a sorted list of nodes along an edge to facilitate periodic boundary conditions
+
+        Parameters
+        ----------
+        Nodes : list of int
+            List of all node indices in the mesh
+        sortCoord : list or ndarray
+            Coordinates of nodes along the sorting direction
+        NodeSet : list of int
+            Node indices on the edge to be sorted
+
+        Returns
+        -------
+        sortedList : list of int
+            Node indices sorted according to sortCoord
+        """
         import operator
         startList = []
         sortedList = []
@@ -863,7 +1082,21 @@ class NodeSets(object):
         return sortedList
 
     def RemoveItemInList(self, NodeList, ReplaceNodeList):
-        # remove set of nodes from list
+        """
+        Remove a set of nodes from a list of nodes
+
+        Parameters
+        ----------
+        NodeList : list of int
+            Original list of node indices
+        ReplaceNodeList : list of int
+            Node indices to be removed from NodeList
+
+        Returns
+        -------
+        NodeList : list of int
+            Updated list after removing the specified nodes
+        """
         for item in ReplaceNodeList:
             try:
                 NodeList.remove(item)
