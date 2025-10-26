@@ -1,0 +1,1011 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>kanapy.core.initializations &mdash; kanapy 6.5.3.post1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=53ab5b41"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            kanapy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../readme.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../method.html">Modeling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kanapy.html">Code documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">kanapy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">kanapy.core.initializations</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for kanapy.core.initializations</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Classes for RVE and mesh initialization</span>
+
+<span class="sd">Authors: Mahesh Prassad, Abhishek Biswas, Alexander Hartmaier</span>
+<span class="sd">Ruhr University Bochum, Germany</span>
+
+<span class="sd">March 2024</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">lognorm</span><span class="p">,</span> <span class="n">vonmises</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+
+
+<div class="viewcode-block" id="stat_names">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.stat_names">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stat_names</span><span class="p">(</span><span class="n">legacy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">legacy</span><span class="p">:</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="s1">&#39;std&#39;</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="s1">&#39;offs&#39;</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="s1">&#39;mean&#39;</span>
+        <span class="n">kappa</span> <span class="o">=</span> <span class="s1">&#39;kappa&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="s1">&#39;sig&#39;</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="s1">&#39;loc&#39;</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="s1">&#39;scale&#39;</span>
+        <span class="n">kappa</span> <span class="o">=</span> <span class="s1">&#39;kappa&#39;</span>
+    <span class="k">return</span> <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">kappa</span></div>
+
+
+
+<div class="viewcode-block" id="RVE_creator">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.RVE_creator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RVE_creator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates an RVE based on user-defined statistics</span>
+
+<span class="sd">    .. note:: 1. Input parameters provided by the user in the input file are:</span>
+
+<span class="sd">                * Standard deviation for ellipsoid equivalent diameter (Log-normal distribution)</span>
+<span class="sd">                * Mean value of ellipsoid equivalent diameter (Log-normal distribution)</span>
+<span class="sd">                * Minimum and Maximum cut-offs for ellipsoid equivalent diameters</span>
+<span class="sd">                * Mean value for aspect ratio</span>
+<span class="sd">                * Mean value for ellipsoid tilt angles (Normal distribution)</span>
+<span class="sd">                * Standard deviation for ellipsoid tilt angles (Normal distribution)</span>
+<span class="sd">                * Side dimension of the RVE</span>
+<span class="sd">                * Discretization along the RVE sides</span>
+
+<span class="sd">              2. Particle, RVE and simulation data are written as JSON files in a folder in the current</span>
+<span class="sd">                 working directory for later access.</span>
+
+<span class="sd">                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.</span>
+<span class="sd">                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
+<span class="sd">                * Simulation attributes such as periodicity and output unit scale (:math:`mm`</span>
+<span class="sd">                  or :math:`\mu m`) for ABAQUS .inp file.</span>
+
+<span class="sd">    Generates ellipsoid size distribution (Log-normal) based on user-defined statistics</span>
+
+<span class="sd">    .. note:: 1. Input parameters provided by the user in the input file are:</span>
+
+<span class="sd">                * Standard deviation for ellipsoid equivalent diameter (Normal distribution)</span>
+<span class="sd">                * Mean value of ellipsoid equivalent diameter (Normal distribution)</span>
+<span class="sd">                * Minimum and Maximum cut-offs for ellipsoid equivalent diameters</span>
+<span class="sd">                * Mean value for aspect ratio</span>
+<span class="sd">                * Mean value for ellipsoid tilt angles (Normal distribution)</span>
+<span class="sd">                * Standard deviation for ellipsoid tilt angles (Normal distribution)</span>
+<span class="sd">                * Side dimension of the RVE</span>
+<span class="sd">                * Discretization along the RVE sides</span>
+
+<span class="sd">              2. Particle, RVE and simulation data are written as JSON files in a folder in the current</span>
+<span class="sd">                 working directory for later access.</span>
+
+<span class="sd">                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.</span>
+<span class="sd">                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
+<span class="sd">                * Simulation attributes such as periodicity and output unit scale (:math:`mm`</span>
+<span class="sd">                  or :math:`\mu m`) for ABAQUS .inp file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stats_dicts</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">from_voxels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an RVE object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        stats_dicts</span>
+<span class="sd">        nsteps</span>
+<span class="sd">        from_voxels</span>
+<span class="sd">        poly</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        packing_steps = nsteps  # max number of steps for packing simulation</span>
+<span class="sd">        size = None  #  tuple of lengths along Cartesian axes</span>
+<span class="sd">        dim = None  # tuple of number of voxels along Cartesian axes</span>
+<span class="sd">        periodic = None  # Boolean for periodicity of RVE</span>
+<span class="sd">        units = None  # Units of RVE dimensions, either &quot;mm&quot; or &quot;um&quot; (micron)</span>
+<span class="sd">        nparticles = []  # list of particle numbers for each phase</span>
+<span class="sd">        particle_data = []  # list of cits for statistical particle data for each grains</span>
+<span class="sd">        phase_names = []  # list of names of phases</span>
+<span class="sd">        phase_vf = []  # list of volume fractions of phases</span>
+<span class="sd">        ialloy : int</span>
+<span class="sd">            Number of alloy in ICAMS CP-UMAT</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">init_particles</span><span class="p">(</span><span class="n">ip</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Extract statistical microstructure information from data dictionary</span>
+<span class="sd">            and initalize particles for packing accordingly</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">gen_data_basic</span><span class="p">(</span><span class="n">pdict</span><span class="p">):</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Computes number of particles according to equivalent diameter distribution</span>
+<span class="sd">                   and initializes particle ensemble with individual diameters approximating</span>
+<span class="sd">                   this lognormal distribution.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="c1"># Compute the Log-normal CDF according to parameters for equiv. diameter distrib.</span>
+                <span class="n">xaxis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+                <span class="n">ycdf</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">sig_ED</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc_ED</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale_ED</span><span class="p">)</span>
+
+                <span class="c1"># Get the mean value for each pair of neighboring points as centers of bins</span>
+                <span class="n">xaxis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">xaxis</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">xaxis</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+                <span class="c1"># Based on the cutoff specified, get the restricted distribution</span>
+                <span class="n">index_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">xaxis</span> <span class="o">&gt;=</span> <span class="n">dia_cutoff_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">xaxis</span> <span class="o">&lt;=</span> <span class="n">dia_cutoff_max</span><span class="p">))</span>
+                <span class="n">eq_Dia</span> <span class="o">=</span> <span class="n">xaxis</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span>  <span class="c1"># Selected diameters within the cutoff</span>
+
+                <span class="c1"># Compute the number fractions and extract them based on the cut-off</span>
+                <span class="n">number_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ediff1d</span><span class="p">(</span><span class="n">ycdf</span><span class="p">)</span>  <span class="c1"># better use lognorm.pdf</span>
+                <span class="n">numFra_Dia</span> <span class="o">=</span> <span class="n">number_fraction</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span>
+
+                <span class="c1"># Volume of each ellipsoid</span>
+                <span class="n">volume_array</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">eq_Dia</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span>
+
+                <span class="c1"># Volume fraction for each ellipsoid</span>
+                <span class="n">individualK</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">numFra_Dia</span><span class="p">,</span> <span class="n">volume_array</span><span class="p">)</span>
+                <span class="n">K</span> <span class="o">=</span> <span class="n">individualK</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">individualK</span><span class="p">)</span>
+
+                <span class="c1"># Total number of ellipsoids for packing density given by volume fraction</span>
+                <span class="n">ip</span> <span class="o">=</span> <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Phase&#39;</span><span class="p">]</span>
+                <span class="n">num_f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">K</span> <span class="o">*</span> <span class="n">phase_vf</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="n">volume_array</span><span class="p">)</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;print(f&#39;Particle numbers: {num_f}&#39;)</span>
+<span class="sd">                print(f&#39;Total volume of particles: {np.sum(np.multiply(num_f, volume_array))}&#39;)&quot;&quot;&quot;</span>
+                <span class="c1"># Rounding particle numbers to integer values keeping total volume constant</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">num_f</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+                <span class="n">rest</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">num_f</span><span class="p">):</span>
+                    <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                    <span class="n">rest</span> <span class="o">+=</span> <span class="n">v1</span> <span class="o">-</span> <span class="n">val</span>
+                    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                        <span class="n">sr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                        <span class="n">rest</span> <span class="o">-=</span> <span class="n">sr</span>
+                        <span class="n">v1</span> <span class="o">-=</span> <span class="n">sr</span>
+                    <span class="n">num</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v1</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;print(f&#39;Volume after rounding: {np.sum(np.multiply(num, volume_array))}&#39;)</span>
+<span class="sd">                print(f&#39;Particle numbers: {num}&#39;)</span>
+<span class="sd">                print(f&#39;Phase volume fraction: {phase_vf[ip]}&#39;)&quot;&quot;&quot;</span>
+                <span class="n">totalEllipsoids</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">num</span><span class="p">))</span>
+
+                <span class="c1"># Duplicate the diameter values</span>
+                <span class="n">eq_Dia</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+
+                <span class="c1"># Raise value error in case the RVE side length is too small to fit grains inside.</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s1">&#39;RVE volume too small to fit grains inside, please increase the RVE side length (or) &#39;</span> <span class="o">+</span>
+                        <span class="s1">&#39;decrease the mean size for diameters!&#39;</span><span class="p">)</span>
+
+                <span class="c1"># Voxel resolution : Smallest dimension of the smallest ellipsoid should contain at least 3 voxels</span>
+                <span class="n">voxel_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+
+                <span class="c1"># raise value error if voxel sizes along the 3 directions are not equal</span>
+                <span class="n">dif1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">voxel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">voxel_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">dif2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">voxel_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">voxel_size</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                <span class="n">dif3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">voxel_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">voxel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">dif1</span> <span class="o">&gt;</span> <span class="mf">1.e-5</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">dif2</span> <span class="o">&gt;</span> <span class="mf">1.e-5</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">dif3</span> <span class="o">&gt;</span> <span class="mf">1.e-5</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Voxels are not cubic, voxel sizes must be identical in all directions.&#39;</span><span class="p">)</span>
+
+                <span class="c1"># raise value error in case the grains are not voxelated well</span>
+                <span class="k">if</span> <span class="n">voxel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Grains with minimum size </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">)</span><span class="si">}</span><span class="s2"> will not be voxelated well!&quot;</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Voxel size is </span><span class="si">{</span><span class="n">voxel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;    Consider increasing the voxel numbers (OR) decreasing the RVE side lengths</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">voxel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39; Voxel size larger than minimum grain size.&#39;</span><span class="p">)</span>
+
+                <span class="c1"># raise warning if large grain occur in periodic box</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.5</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;    Periodic box with grains larger than half of box width.&quot;</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;    Check grain RVE carefully.&quot;</span><span class="p">)</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    Analyzed statistical data for phase </span><span class="si">{</span><span class="n">phase_names</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    Total number of particles  = </span><span class="si">{</span><span class="n">totalEllipsoids</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">totalEllipsoids</span>
+                <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">eq_Dia</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">pdict</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">gen_data_elong</span><span class="p">(</span><span class="n">pdict</span><span class="p">):</span>
+                <span class="c1"># Tilt angle statistics</span>
+                <span class="c1"># Sample from Normal distribution: It takes mean and std of normal distribution</span>
+                <span class="n">tilt_angle</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">]</span>
+                <span class="nb">iter</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">while</span> <span class="n">num</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">tilt</span> <span class="o">=</span> <span class="n">vonmises</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">kappa</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc_ori</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">num</span><span class="p">)</span>
+                    <span class="n">index_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">tilt</span> <span class="o">&gt;=</span> <span class="n">ori_cutoff_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">tilt</span> <span class="o">&lt;=</span> <span class="n">ori_cutoff_max</span><span class="p">))</span>
+                    <span class="n">TA</span> <span class="o">=</span> <span class="n">tilt</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                    <span class="n">tilt_angle</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">TA</span><span class="p">)</span>
+                    <span class="n">num</span> <span class="o">=</span> <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">tilt_angle</span><span class="p">)</span>
+                    <span class="nb">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="nb">iter</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">StopIteration</span><span class="p">(</span><span class="s1">&#39;Iteration for tilt angles did not converge in 10000 iterations.&#39;</span>
+                                            <span class="s1">&#39;Increase cutoff range to assure proper generation of particles.&#39;</span><span class="p">)</span>
+
+                <span class="c1"># Aspect ratio statistics</span>
+                <span class="c1"># Sample from lognormal or gamma distribution:</span>
+                <span class="c1"># it takes mean, std and scale of the underlying normal distribution</span>
+                <span class="n">finalAR</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">]</span>
+                <span class="nb">iter</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">while</span> <span class="n">num</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">ar</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">sig_AR</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc_AR</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale_AR</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">num</span><span class="p">)</span>
+                    <span class="n">index_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">ar</span> <span class="o">&gt;=</span> <span class="n">ar_cutoff_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">ar</span> <span class="o">&lt;=</span> <span class="n">ar_cutoff_max</span><span class="p">))</span>
+                    <span class="n">AR</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="n">index_array</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                    <span class="n">finalAR</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">AR</span><span class="p">)</span>
+                    <span class="n">num</span> <span class="o">=</span> <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">finalAR</span><span class="p">)</span>
+                    <span class="nb">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="nb">iter</span> <span class="o">&gt;</span> <span class="mi">10000</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">StopIteration</span><span class="p">(</span><span class="s1">&#39;Iteration for aspect ratios did not converge in 10000 iterations.&#39;</span>
+                                            <span class="s1">&#39;Increase cutoff range to assure proper generation of particles.&#39;</span><span class="p">)</span>
+                <span class="n">finalAR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">finalAR</span><span class="p">)</span>
+
+                <span class="c1"># Calculate the major, minor axes lengths for particles using:</span>
+                <span class="c1"># (4/3)*pi*(r**3) = (4/3)*pi*(a*b*c) &amp; b=c &amp; a=AR*b</span>
+                <span class="n">minDia</span> <span class="o">=</span> <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Equivalent_diameter&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">finalAR</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>  <span class="c1"># Minor axis length</span>
+                <span class="n">majDia</span> <span class="o">=</span> <span class="n">minDia</span> <span class="o">*</span> <span class="n">finalAR</span>  <span class="c1"># Major axis length</span>
+                <span class="n">minDia2</span> <span class="o">=</span> <span class="n">minDia</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Minor2 axis length (assuming rotational shape)</span>
+
+                <span class="c1"># Add data to dictionary to store the data generated</span>
+                <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Major_diameter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">majDia</span><span class="p">)</span>
+                <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Minor_diameter1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia</span><span class="p">)</span>
+                <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Minor_diameter2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">minDia2</span><span class="p">)</span>
+                <span class="n">pdict</span><span class="p">[</span><span class="s1">&#39;Tilt angle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tilt_angle</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">pdict</span>
+
+            <span class="c1"># start of particle initialization</span>
+            <span class="c1"># analyze information on grains in &quot;stats&quot; dictionary from outer scope</span>
+            <span class="c1"># 1. Attributes for equivalent diameter</span>
+            <span class="k">if</span> <span class="s1">&#39;mean&#39;</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;Equivalent diameter&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="c1"># load legacy names to ensure compatibility with previous versions</span>
+                <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">kappa</span> <span class="o">=</span> <span class="n">stat_names</span><span class="p">(</span><span class="n">legacy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Keys for descriptor parameters have changed.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span>
+                                <span class="s1">&#39;Please exchange std-&gt;sig, offs-&gt;loc, mean-&gt;scale&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">kappa</span> <span class="o">=</span> <span class="n">stat_names</span><span class="p">(</span><span class="n">legacy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">sig_ED</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="n">sig</span><span class="p">]</span>
+            <span class="n">scale_ED</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="n">scale</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">loc_ED</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="n">loc</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">loc_ED</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+            <span class="n">dia_cutoff_min</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_min&quot;</span><span class="p">]</span>
+            <span class="n">dia_cutoff_max</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Equivalent diameter&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_max&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">dia_cutoff_min</span> <span class="o">/</span> <span class="n">dia_cutoff_max</span> <span class="o">&gt;</span> <span class="mf">0.75</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Min/Max values for cutoffs of equiavalent diameter are too close: &#39;</span> <span class="o">+</span>
+                                 <span class="sa">f</span><span class="s1">&#39;Max: </span><span class="si">{</span><span class="n">dia_cutoff_max</span><span class="si">}</span><span class="s1">, Min: </span><span class="si">{</span><span class="n">dia_cutoff_min</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="c1"># generate dict for basic particle data: number of particles and equiv. diameters</span>
+            <span class="n">pdict</span> <span class="o">=</span> <span class="n">gen_data_basic</span><span class="p">(</span><span class="nb">dict</span><span class="p">({</span><span class="s1">&#39;Type&#39;</span><span class="p">:</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Grain type&quot;</span><span class="p">],</span> <span class="s1">&#39;Phase&#39;</span><span class="p">:</span> <span class="n">ip</span><span class="p">}))</span>
+
+            <span class="c1"># 2. Additional attributes for elongated or freely-defined grains</span>
+            <span class="k">if</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Grain type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Elongated&quot;</span><span class="p">:</span>
+                <span class="c1"># Extract descriptors for aspect ratio distrib. from dict</span>
+                <span class="n">sig_AR</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">][</span><span class="n">sig</span><span class="p">]</span>
+                <span class="n">scale_AR</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">][</span><span class="n">scale</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">loc_AR</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">][</span><span class="n">loc</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">loc_AR</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">ar_cutoff_min</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_min&quot;</span><span class="p">]</span>
+                <span class="n">ar_cutoff_max</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Aspect ratio&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_max&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">ar_cutoff_min</span> <span class="o">/</span> <span class="n">ar_cutoff_max</span> <span class="o">&gt;</span> <span class="mf">0.75</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Min/Max values for cutoffs of aspect ratio are too close: &#39;</span> <span class="o">+</span>
+                                     <span class="sa">f</span><span class="s1">&#39;Max: </span><span class="si">{</span><span class="n">ar_cutoff_max</span><span class="si">}</span><span class="s1">, Min: </span><span class="si">{</span><span class="n">ar_cutoff_min</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+                <span class="c1"># Extract grain tilt angle statistics info from dict</span>
+                <span class="n">kappa</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="n">kappa</span><span class="p">]</span>
+                <span class="n">loc_ori</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="n">loc</span><span class="p">]</span>
+                <span class="n">ori_cutoff_min</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_min&quot;</span><span class="p">]</span>
+                <span class="n">ori_cutoff_max</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Tilt angle&quot;</span><span class="p">][</span><span class="s2">&quot;cutoff_max&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">ori_cutoff_min</span> <span class="o">/</span> <span class="n">ori_cutoff_max</span> <span class="o">&gt;</span> <span class="mf">0.75</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Min/Max values for cutoffs of orientation of tilt axis are too close: &#39;</span> <span class="o">+</span>
+                                     <span class="sa">f</span><span class="s1">&#39;Max: </span><span class="si">{</span><span class="n">ori_cutoff_max</span><span class="si">}</span><span class="s1">, Min: </span><span class="si">{</span><span class="n">ori_cutoff_min</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="c1"># Add attributes for elongated particle to dictionary</span>
+                <span class="n">pdict</span> <span class="o">=</span> <span class="n">gen_data_elong</span><span class="p">(</span><span class="n">pdict</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Grain type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Free&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="kn">from</span><span class="w"> </span><span class="nn">kanapy.triple_surface</span><span class="w"> </span><span class="kn">import</span> <span class="n">gen_data_free</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Free grain definitions are not available &#39;</span>
+                                              <span class="s1">&#39;in the public version of Kanapy.&#39;</span><span class="p">)</span>
+                <span class="c1"># Add attributes for elongated particle to dictionary</span>
+                <span class="n">pdict</span> <span class="o">=</span> <span class="n">gen_data_free</span><span class="p">(</span><span class="n">pdict</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">pdict</span>
+            <span class="k">return</span> <span class="n">pdict</span>
+
+        <span class="c1"># Start RVE generation</span>
+        <span class="k">if</span> <span class="n">from_voxels</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating an RVE from voxel input&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Creating an RVE based on user defined statistics&#39;</span><span class="p">)</span>
+        <span class="c1"># declare attributes of RVE object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">packing_steps</span> <span class="o">=</span> <span class="n">nsteps</span>  <span class="c1"># max number of steps for packing simulation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># tuple of lengths along Cartesian axes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># tuple of number of voxels along Cartesian axes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Boolean for periodicity of RVE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Units of RVE dimensions, either &quot;mm&quot; or &quot;um&quot; (micron)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ialloy</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Number of alloy in ICAMS CP-UMAT</span>
+        <span class="n">phase_names</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of names of phases</span>
+        <span class="n">phase_vf</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of volume fractions of phases</span>
+        <span class="n">ialloy</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">from_voxels</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">particle_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nparticles</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">particle_data</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of cits for statistical particle data for each grains</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nparticles</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List of article numbers for each phase</span>
+
+        <span class="c1"># extract data from descriptors of individual phases</span>
+        <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">stats</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stats_dicts</span><span class="p">):</span>
+            <span class="c1"># Extract RVE side lengths and voxel numbers, must be provided for phase 0</span>
+            <span class="k">if</span> <span class="s1">&#39;RVE&#39;</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;sideX&quot;</span><span class="p">],</span>
+                        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;sideY&quot;</span><span class="p">],</span>
+                        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;sideZ&quot;</span><span class="p">])</span>
+                <span class="n">nvox</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;Nx&quot;</span><span class="p">]),</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;Ny&quot;</span><span class="p">]),</span>
+                        <span class="nb">int</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;RVE&quot;</span><span class="p">][</span><span class="s2">&quot;Nz&quot;</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">size</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Conflicting RVE sizes in descriptors: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">size</span><span class="si">}</span><span class="s1">.&#39;</span> <span class="o">+</span>
+                                        <span class="s1">&#39;Using first value.&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">nvox</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">!=</span> <span class="n">nvox</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Conflicting RVE voxel dimensions in descriptors: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nvox</span><span class="si">}</span><span class="s1">.&#39;</span> <span class="o">+</span>
+                                        <span class="s1">&#39;Using first value.&#39;</span><span class="p">)</span>
+                <span class="c1"># Extract Alloy number for ICAMS CP-UMAT</span>
+                <span class="k">if</span> <span class="s2">&quot;ialloy&quot;</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;RVE&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">ialloy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;RVE&#39;</span><span class="p">][</span><span class="s1">&#39;ialloy&#39;</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">ip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;RVE properties must be specified in descriptors for first phase.&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Extract other simulation attributes, must be specified for phase 0</span>
+            <span class="k">if</span> <span class="s2">&quot;Simulation&quot;</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">peri</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Simulation&quot;</span><span class="p">][</span><span class="s2">&quot;periodicity&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">peri</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
+                    <span class="n">periodic</span> <span class="o">=</span> <span class="n">peri</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">periodic</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">peri</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span> <span class="k">else</span> <span class="kc">False</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span> <span class="o">=</span> <span class="n">periodic</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span> <span class="o">!=</span> <span class="n">periodic</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Inconsistent values for periodicity. Using periodicity: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">periodic</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+                <span class="n">units</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Simulation&quot;</span><span class="p">][</span><span class="s2">&quot;output_units&quot;</span><span class="p">])</span>
+                <span class="c1"># Raise ValueError if units are not specified as &#39;mm&#39; or &#39;um&#39;</span>
+                <span class="k">if</span> <span class="n">units</span> <span class="o">!=</span> <span class="s1">&#39;mm&#39;</span> <span class="ow">and</span> <span class="n">units</span> <span class="o">!=</span> <span class="s1">&#39;um&#39;</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Output units can only be &quot;mm&quot; or &quot;um&quot;!&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="n">units</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Inconsistent values for units. Using units: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">ip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Simulation attributes must be specified in descriptors for first phase.&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Extract phase information</span>
+            <span class="k">if</span> <span class="s2">&quot;Phase&quot;</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">phase_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Phase&quot;</span><span class="p">][</span><span class="s2">&quot;Name&quot;</span><span class="p">])</span>
+                <span class="n">phase_vf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Phase&quot;</span><span class="p">][</span><span class="s2">&quot;Volume fraction&quot;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">phase_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Phase_</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">phase_vf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">))</span>  <span class="c1"># volume fraction can only be unspecified for last phase</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sum of all phase fractions exceeds 1: </span><span class="si">{</span><span class="n">phase_vf</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Extract grains shape attributes to initialize particles</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">from_voxels</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;Grain type&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Elongated&quot;</span><span class="p">,</span> <span class="s2">&quot;Equiaxed&quot;</span><span class="p">,</span> <span class="s2">&quot;Free&quot;</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The value for &quot;Grain type&quot; must be either &quot;Equiaxed&quot; or &quot;Elongated&quot;.&#39;</span><span class="p">)</span>
+                <span class="n">part_dict</span> <span class="o">=</span> <span class="n">init_particles</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">particle_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part_dict</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nparticles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part_dict</span><span class="p">[</span><span class="s1">&#39;Number&#39;</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  RVE characteristics:&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    RVE side lengths (X, Y, Z) = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    Number of voxels (X, Y, Z) = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    Voxel resolution (X, Y, Z) = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span> <span class="o">+</span>
+              <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    Total number of voxels     = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Considered phases (volume fraction): &#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">phase_names</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">phase_vf</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100.</span><span class="si">}</span><span class="s1">%)&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_names</span> <span class="o">=</span> <span class="n">phase_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_vf</span> <span class="o">=</span> <span class="n">phase_vf</span>
+        <span class="n">nall</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ialloy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nall</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nall</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">):</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">nall</span><span class="si">}</span><span class="s1"> values of &quot;ialloy&quot; provided, but only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">)</span><span class="si">}</span><span class="s1"> phases defined.&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ialloy</span> <span class="o">=</span> <span class="n">ialloy</span>
+        <span class="k">return</span></div>
+
+
+
+<div class="viewcode-block" id="mesh_creator">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.mesh_creator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">mesh_creator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a mesh object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dim: 3-tuple for dimensions of mesh (numbers of voxels in each Cartesian direction)</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        self.dim = dim  # dimension tuple: number of voxels in each Cartesian direction</span>
+<span class="sd">        self.nvox = np.prod(dim)  # number of voxels</span>
+<span class="sd">        self.phases = np.zeros(dim, dtype=int)  # field data with phase numbers</span>
+<span class="sd">        self.grains = np.zeros(dim, dtype=int)  # field data with grain numbers</span>
+<span class="sd">        self.voxel_dict = dict()  # stores nodes assigned to each voxel (key; voxel number:int)</span>
+<span class="sd">        self.grain_dict = dict()  # stored voxels assigned to each grain (key: grain number:int</span>
+<span class="sd">        self.nodes = None  # array of nodal positions</span>
+<span class="sd">        self.nodes_smooth = None  # array of nodal positions after smoothening grain boundaries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dimension dim must be a 3-tuple, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>  <span class="c1"># dimension tuple: number of voxels in each Cartesian direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nvox</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>  <span class="c1"># number of voxels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grains</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phases</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grain_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># voxels assigned to each grain (key: grain number:int)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grain_phase_dict</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># phases per grain (key: grain number:int)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># orientations per grain (key: grain number:int)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">voxel_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># dictionary to store list of node ids for each element</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vox_center_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># dictionary to store center of each voxel as 3-tupel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># array of nodal positions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes_smooth</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># array of nodal positions after smoothening grain boundaries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prec_vf_voxels</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># actual volume fraction of precipitates in voxelated structure</span>
+        <span class="k">return</span>
+
+<div class="viewcode-block" id="mesh_creator.get_ind">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.mesh_creator.get_ind">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_ind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">addr</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the index in an array from a generic address.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        addr</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">addr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">addr</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">addr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">addr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">addr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Address must be a single int or a 3-tuple, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">addr</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ind</span></div>
+
+
+<div class="viewcode-block" id="mesh_creator.create_voxels">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.mesh_creator.create_voxels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_voxels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates voxels inside the defined RVE (Simulation box)</span>
+
+<span class="sd">        :param sim_box: Simulation box representing RVE dimensions</span>
+<span class="sd">        :type sim_box: :obj:`entities.Cuboid`</span>
+
+<span class="sd">        :returns: * Node list containing coordinates.</span>
+<span class="sd">                  * Element dictionary containing element IDs and nodal connectivities.</span>
+<span class="sd">                  * Voxel dictionary containing voxel ID and center coordinates.</span>
+<span class="sd">        :rtype: Tuple of Python dictionaries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Generating voxels inside RVE&#39;</span><span class="p">)</span>
+        <span class="c1"># generate nodes of all voxels from RVE side dimensions</span>
+        <span class="n">lim_minX</span><span class="p">,</span> <span class="n">lim_maxX</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">right</span>
+        <span class="n">lim_minY</span><span class="p">,</span> <span class="n">lim_maxY</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">top</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">bottom</span>
+        <span class="n">lim_minZ</span><span class="p">,</span> <span class="n">lim_maxZ</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">front</span><span class="p">,</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">back</span>  <span class="c1"># define the cuboidal RVE limits</span>
+
+        <span class="c1"># generate points within these limits</span>
+        <span class="n">pointsX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">lim_minX</span><span class="p">,</span> <span class="n">lim_maxX</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">pointsY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">lim_minY</span><span class="p">,</span> <span class="n">lim_maxY</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">pointsZ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">lim_minZ</span><span class="p">,</span> <span class="n">lim_maxZ</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># duplicate neighbouring points</span>
+        <span class="n">pointsX_dup</span> <span class="o">=</span> <span class="p">[(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="k">for</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pointsX</span><span class="p">,</span> <span class="n">pointsX</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span>
+        <span class="n">pointsY_dup</span> <span class="o">=</span> <span class="p">[(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="k">for</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pointsY</span><span class="p">,</span> <span class="n">pointsY</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span>
+        <span class="n">pointsZ_dup</span> <span class="o">=</span> <span class="p">[(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="k">for</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pointsZ</span><span class="p">,</span> <span class="n">pointsZ</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span>
+
+        <span class="n">verticesDict</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dictionary to store vertices</span>
+        <span class="n">node_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">elmt_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># loop over the duplicate pairs</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">ni</span><span class="p">),</span> <span class="p">(</span><span class="n">mj</span><span class="p">,</span> <span class="n">nj</span><span class="p">),</span> <span class="p">(</span><span class="n">mk</span><span class="p">,</span> <span class="n">nk</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">pointsX_dup</span><span class="p">,</span> <span class="n">pointsY_dup</span><span class="p">,</span> <span class="n">pointsZ_dup</span><span class="p">):</span>
+
+            <span class="c1"># Find the center of each voxel and update the center dictionary</span>
+            <span class="n">elmt_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vox_center_dict</span><span class="p">[</span><span class="n">elmt_count</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">mi</span> <span class="o">+</span> <span class="n">ni</span><span class="p">),</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">mj</span> <span class="o">+</span> <span class="n">nj</span><span class="p">),</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">mk</span> <span class="o">+</span> <span class="n">nk</span><span class="p">))</span>
+
+            <span class="c1"># group the 8 nodes of an element and update node &amp; element dictionary accordingly</span>
+            <span class="c1"># C3D8 element connectivity is maintained by this list (DON&#39;T change this order)</span>
+            <span class="n">vertices</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ni</span><span class="p">,</span> <span class="n">mj</span><span class="p">,</span> <span class="n">nk</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span> <span class="n">mj</span><span class="p">,</span> <span class="n">mk</span><span class="p">),</span> <span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">mj</span><span class="p">,</span> <span class="n">mk</span><span class="p">),</span> <span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">mj</span><span class="p">,</span> <span class="n">nk</span><span class="p">),</span>
+                        <span class="p">(</span><span class="n">ni</span><span class="p">,</span> <span class="n">nj</span><span class="p">,</span> <span class="n">nk</span><span class="p">),</span> <span class="p">(</span><span class="n">ni</span><span class="p">,</span> <span class="n">nj</span><span class="p">,</span> <span class="n">mk</span><span class="p">),</span> <span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">nj</span><span class="p">,</span> <span class="n">mk</span><span class="p">),</span> <span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">nj</span><span class="p">,</span> <span class="n">nk</span><span class="p">)]</span>
+
+            <span class="k">for</span> <span class="n">coo</span> <span class="ow">in</span> <span class="n">vertices</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">coo</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">verticesDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">node_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">verticesDict</span><span class="p">[</span><span class="n">coo</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_count</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">elmt_count</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_count</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">voxel_dict</span><span class="p">[</span><span class="n">elmt_count</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">verticesDict</span><span class="p">[</span><span class="n">coo</span><span class="p">])</span>
+
+        <span class="c1"># nodal positions array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">node_count</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">verticesDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">pos</span>
+        <span class="k">return</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="set_stats">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.set_stats">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_stats</span><span class="p">(</span><span class="n">grains</span><span class="p">,</span> <span class="n">ar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">deq_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">deq_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">asp_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">asp_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">omega_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">omega_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">voxels</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">gtype</span><span class="o">=</span><span class="s1">&#39;Elongated&#39;</span><span class="p">,</span> <span class="n">rveunit</span><span class="o">=</span><span class="s1">&#39;um&#39;</span><span class="p">,</span>
+              <span class="n">periodicity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">VF</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">phasename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">phasenum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">save_file</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    grains = [sigma, loc , scale of lognorm distrib. of equiv. diameter]</span>
+<span class="sd">    ar = [sigma, loc, scale of logorm distrib of aspect ratio]</span>
+<span class="sd">    omega = [kappa, loc of von Mises distrib. of tilt angle]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># type of grains either &#39;Elongated&#39; or &#39;Equiaxed&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">gtype</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span> <span class="ow">or</span> <span class="n">gtype</span> <span class="o">==</span> <span class="s1">&#39;Equiaxed&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Wrong grain type given in set_stats: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gtype</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">gtype</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ar</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">omega</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;If elliptical grains are specified, aspect ratio &#39;</span> <span class="o">+</span>
+                         <span class="s1">&#39;(ar) and orientation (omega) need to be given.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gtype</span> <span class="o">==</span> <span class="s1">&#39;Equiaxed&#39;</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">omega</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Equiaxed grains have been specified, but aspect ratio&#39;</span> <span class="o">+</span>
+                        <span class="s1">&#39; (ar) and orientation (omega) have been provided. &#39;</span> <span class="o">+</span>
+                        <span class="s1">&#39;Will change grain type to &quot;Elongated&quot;.&#39;</span><span class="p">)</span>
+        <span class="n">gtype</span> <span class="o">=</span> <span class="s1">&#39;Elongated&#39;</span>
+
+    <span class="c1"># define cutoff values</span>
+    <span class="c1"># cutoff deq</span>
+    <span class="k">if</span> <span class="n">deq_min</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">deq_min</span> <span class="o">=</span> <span class="mf">1.3</span> <span class="o">*</span> <span class="n">grains</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># 316L: 8</span>
+    <span class="k">if</span> <span class="n">deq_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">deq_max</span> <span class="o">=</span> <span class="n">grains</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">grains</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mf">6.</span> <span class="o">*</span> <span class="n">grains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># 316L: 30</span>
+    <span class="k">if</span> <span class="n">gtype</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span><span class="p">:</span>
+        <span class="c1"># cutoff asp</span>
+        <span class="k">if</span> <span class="n">asp_min</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">asp_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="n">ar</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># 316L: 1</span>
+        <span class="k">if</span> <span class="n">asp_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">asp_max</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">ar</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># 316L: 3</span>
+        <span class="c1"># cutoff omega</span>
+        <span class="k">if</span> <span class="n">omega_min</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">omega_min</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># omega[1] - 2 * omega[0]</span>
+        <span class="k">if</span> <span class="n">omega_max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">omega_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>  <span class="c1"># omega[1] + 2 * omega[0]</span>
+
+    <span class="c1"># RVE box size</span>
+    <span class="n">lx</span> <span class="o">=</span> <span class="n">ly</span> <span class="o">=</span> <span class="n">lz</span> <span class="o">=</span> <span class="n">size</span>  <span class="c1"># size of box in each direction</span>
+    <span class="c1"># number of voxels</span>
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">ny</span> <span class="o">=</span> <span class="n">nz</span> <span class="o">=</span> <span class="n">voxels</span>  <span class="c1"># number of voxels in each direction</span>
+    <span class="c1"># specify RVE info</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">periodicity</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">pbc</span> <span class="o">=</span> <span class="n">periodicity</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pbc</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">periodicity</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span> <span class="k">else</span> <span class="kc">False</span>
+
+    <span class="c1"># check grain type</span>
+    <span class="c1"># create the corresponding dict with statistical grain geometry information</span>
+    <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">kappa</span> <span class="o">=</span> <span class="n">stat_names</span><span class="p">(</span><span class="n">legacy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ms_stats</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Grain type&#39;</span><span class="p">:</span> <span class="n">gtype</span><span class="p">,</span>
+                <span class="s1">&#39;Equivalent diameter&#39;</span><span class="p">:</span>
+                    <span class="p">{</span><span class="n">sig</span><span class="p">:</span> <span class="n">grains</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">loc</span><span class="p">:</span> <span class="n">grains</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale</span><span class="p">:</span> <span class="n">grains</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                     <span class="s1">&#39;cutoff_min&#39;</span><span class="p">:</span> <span class="n">deq_min</span><span class="p">,</span> <span class="s1">&#39;cutoff_max&#39;</span><span class="p">:</span> <span class="n">deq_max</span><span class="p">},</span>
+                <span class="s1">&#39;RVE&#39;</span><span class="p">:</span>
+                    <span class="p">{</span><span class="s1">&#39;sideX&#39;</span><span class="p">:</span> <span class="n">lx</span><span class="p">,</span> <span class="s1">&#39;sideY&#39;</span><span class="p">:</span> <span class="n">ly</span><span class="p">,</span> <span class="s1">&#39;sideZ&#39;</span><span class="p">:</span> <span class="n">lz</span><span class="p">,</span>
+                     <span class="s1">&#39;Nx&#39;</span><span class="p">:</span> <span class="n">nx</span><span class="p">,</span> <span class="s1">&#39;Ny&#39;</span><span class="p">:</span> <span class="n">ny</span><span class="p">,</span> <span class="s1">&#39;Nz&#39;</span><span class="p">:</span> <span class="n">nz</span><span class="p">},</span>
+                <span class="s1">&#39;Simulation&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;periodicity&#39;</span><span class="p">:</span> <span class="n">pbc</span><span class="p">,</span>
+                               <span class="s1">&#39;output_units&#39;</span><span class="p">:</span> <span class="n">rveunit</span><span class="p">},</span>
+                <span class="s1">&#39;Phase&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Name&#39;</span><span class="p">:</span> <span class="n">phasename</span><span class="p">,</span>
+                          <span class="s1">&#39;Number&#39;</span><span class="p">:</span> <span class="n">phasenum</span><span class="p">,</span>
+                          <span class="s1">&#39;Volume fraction&#39;</span><span class="p">:</span> <span class="n">VF</span><span class="p">}}</span>
+    <span class="k">if</span> <span class="n">gtype</span> <span class="o">==</span> <span class="s1">&#39;Elongated&#39;</span><span class="p">:</span>
+        <span class="n">ms_stats</span><span class="p">[</span><span class="s1">&#39;Aspect ratio&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">sig</span><span class="p">:</span> <span class="n">ar</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">loc</span><span class="p">:</span> <span class="n">ar</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale</span><span class="p">:</span> <span class="n">ar</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                                    <span class="s1">&#39;cutoff_min&#39;</span><span class="p">:</span> <span class="n">asp_min</span><span class="p">,</span> <span class="s1">&#39;cutoff_max&#39;</span><span class="p">:</span> <span class="n">asp_max</span><span class="p">}</span>
+        <span class="n">ms_stats</span><span class="p">[</span><span class="s1">&#39;Tilt angle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">kappa</span><span class="p">:</span> <span class="n">omega</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">loc</span><span class="p">:</span> <span class="n">omega</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                  <span class="s1">&#39;cutoff_min&#39;</span><span class="p">:</span> <span class="n">omega_min</span><span class="p">,</span> <span class="s1">&#39;cutoff_max&#39;</span><span class="p">:</span> <span class="n">omega_max</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">save_file</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">cwd</span> <span class="o">+</span> <span class="s1">&#39;/json_files&#39;</span>  <span class="c1"># Folder to store the json files</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">json_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">json_dir</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_dir</span> <span class="o">+</span> <span class="s1">&#39;/stat_info.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">ms_stats</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ms_stats</span></div>
+
+
+
+<div class="viewcode-block" id="NodeSets">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.NodeSets">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NodeSets</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F0yz</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># left nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F0yz_full</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># left nodes copy</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">F1yz</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># right nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F1yz_full</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># right nodes copy</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx0z</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># bottom nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx0z_full</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># bottom nodes copy</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx1z</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># top nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx1z_full</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># top nodes copy</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># rear nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0_full</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># rear nodes copy</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># front nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1_full</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># front nodes copy</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># nodes on any surface</span>
+        <span class="n">maxX</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">minX</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">maxY</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">minY</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">maxZ</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">minZ</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="c1"># select all nodes on a surface and assign to face</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+            <span class="n">surface</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">maxX</span><span class="p">):</span>
+                <span class="n">surface</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">F1yz</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>    <span class="c1"># rightSet, nodes belong to the right face</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">F1yz_full</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">minX</span><span class="p">):</span>
+                <span class="n">surface</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">F0yz</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>    <span class="c1"># leftSet, nodes belong to the left face</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">F0yz_full</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">maxY</span><span class="p">):</span>
+                <span class="n">surface</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Fx1z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>    <span class="c1"># topSet, nodes belong to the top face</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Fx1z_full</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">minY</span><span class="p">):</span>
+                <span class="n">surface</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Fx0z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>    <span class="c1"># bottomSet, nodes belong to the bottom face</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Fx0z_full</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">coord</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">maxZ</span><span class="p">):</span>
+                <span class="n">surface</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>    <span class="c1"># frontSet, nodes belong to the front face</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1_full</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">coord</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">minZ</span><span class="p">):</span>
+                <span class="n">surface</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>    <span class="c1"># rearSet, nodes belong to the rear face</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0_full</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">surface</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="c1"># set for all nodes that belong to the faces (includes all previous face sets)</span>
+
+        <span class="c1">#########</span>
+        <span class="c1"># EDGES #</span>
+        <span class="c1">#########</span>
+        <span class="c1"># top front edge</span>
+        <span class="n">E_T1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx1z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex11_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">E_T1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex11</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">E_T1</span><span class="p">)</span>
+        <span class="c1"># top back edge</span>
+        <span class="n">E_T3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx1z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex10_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">E_T3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex10</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">E_T3</span><span class="p">)</span>
+        <span class="c1"># top left edge</span>
+        <span class="n">E_T4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F0yz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx1z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E01z_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">E_T4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E01z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">E_T4</span><span class="p">)</span>
+        <span class="c1"># top right edge</span>
+        <span class="n">E_T2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F1yz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx1z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E11z_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">E_T2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E11z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">E_T2</span><span class="p">)</span>
+
+        <span class="c1"># bottom front edge</span>
+        <span class="n">E_B1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx0z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex01_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">E_B1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex01</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">E_B1</span><span class="p">)</span>
+        <span class="c1"># bottom rear edge</span>
+        <span class="n">E_B3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx0z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex00_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">E_B3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex00</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">E_B3</span><span class="p">)</span>
+        <span class="c1"># bottom left edge</span>
+        <span class="n">E_B4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F0yz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx0z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E00z_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">E_B4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E00z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">E_B4</span><span class="p">)</span>
+        <span class="c1"># bottom right edge</span>
+        <span class="n">E_B2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F1yz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx0z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E10z_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">E_B2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E10z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">E_B2</span><span class="p">)</span>
+
+        <span class="c1"># left front edge</span>
+        <span class="n">E_M1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F0yz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E0y1_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">E_M1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E0y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">E_M1</span><span class="p">)</span>
+        <span class="c1"># right front edge</span>
+        <span class="n">E_M2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F1yz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E1y1_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">E_M2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E1y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">E_M2</span><span class="p">)</span>
+        <span class="c1"># left rear edge</span>
+        <span class="n">E_M4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F0yz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E0y0_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">E_M4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E0y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">E_M4</span><span class="p">)</span>
+        <span class="c1"># right rear edge</span>
+        <span class="n">E_M3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F1yz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E1y0_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">E_M3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E1y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">E_M3</span><span class="p">)</span>
+
+        <span class="c1">############</span>
+        <span class="c1"># VERTICES #</span>
+        <span class="c1">############</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V001</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex01</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">E00z</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># V1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V101</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex01</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">E10z</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># V2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V000</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex00</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">E00z</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># H1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V100</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E10z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ex00</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># H2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V111</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex11</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">E11z</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># V3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V110</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E11z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ex10</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># H3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V011</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex11</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">E01z</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># V4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V010</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex10</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">E01z</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># H4</span>
+
+        <span class="n">CORNERNODES</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">V000</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V100</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V010</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V001</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V011</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V101</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V110</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V111</span><span class="p">]</span>
+
+        <span class="c1">#####################</span>
+        <span class="c1"># CreateEdgeNodeset #</span>
+        <span class="c1">#####################</span>
+        <span class="n">EdgeNodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex11</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex10</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E01z</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E11z</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex01</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex00</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E00z</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E10z</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E0y1</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E1y1</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E0y0</span><span class="p">)</span>
+        <span class="n">EdgeNodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E1y0</span><span class="p">)</span>
+
+        <span class="c1"># Remove Corner Nodes from Edge Nodesets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex11P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex11_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># top front edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex10P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex10_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># top rear edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex01P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex01_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># bottom front edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ex00P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ex00_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># bottom rear edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E01zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E01z_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># top left edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E00zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E00z_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># bottom left edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E10zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E10z_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># bottom right edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E11zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E11z_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># top right edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E0y0P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E0y0_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># left rear edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E1y0P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E1y0_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># right rear edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E1y1P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E1y1_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># right front edge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">E0y1P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E0y1_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span> <span class="c1"># left front edge</span>
+
+        <span class="c1">######### Sorts the Nodesets with respect to their coordinates</span>
+        <span class="c1"># print(&#39;Pure surface nodes after deleting edge and corner nodes&#39;)</span>
+
+        <span class="c1"># Pure BottomSet nodes without vertices and edges.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx0zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fx0z_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx0zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fx0zP</span><span class="p">,</span> <span class="n">EdgeNodes</span><span class="p">)</span>
+        <span class="c1"># print(&quot;Bottom Face: &quot;, len(self.Fx0zP))</span>
+
+        <span class="c1"># Pure TopSet nodes without vertices and edges.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx1zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fx1z_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx1zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fx1zP</span><span class="p">,</span> <span class="n">EdgeNodes</span><span class="p">)</span>
+        <span class="c1"># print(&quot;Top Face: &quot;, len(self.Fx1zP))</span>
+
+        <span class="c1"># Pure LeftSet nodes without vertices and edges.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F0yz_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx1zP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx0zP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span><span class="p">,</span> <span class="n">EdgeNodes</span><span class="p">)</span>
+        <span class="c1"># print(&quot;Left Face: &quot;, len(self.F0yzP))</span>
+
+        <span class="c1"># Pure RightSet nodes without vertices and edges.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F1yz_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx1zP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx0zP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span><span class="p">,</span> <span class="n">EdgeNodes</span><span class="p">)</span>
+        <span class="c1"># print(&quot;Right Face: &quot;, len(self.F1yzP))</span>
+
+        <span class="c1"># Pure FrontSet nodes without vertices and edges.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy1_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx1zP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx0zP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span><span class="p">,</span> <span class="n">EdgeNodes</span><span class="p">)</span>
+        <span class="c1"># print(&quot;Front Face: &quot;, len(self.Fxy1P))</span>
+
+        <span class="c1"># Pure RearSet nodes without vertices and edges.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0_full</span><span class="p">,</span> <span class="n">CORNERNODES</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx1zP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx0zP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span><span class="p">,</span> <span class="n">EdgeNodes</span><span class="p">)</span>
+        <span class="c1"># print(&quot;Rear Face: &quot;, len(self.Fxy0P))</span>
+
+        <span class="c1"># Order opposite surfaces in the same way so that corresponding nodes are directly at same position in nodeSet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx0zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicNodeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                               <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx0zP</span><span class="p">)</span> <span class="c1"># BottomSet</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fx1zP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicNodeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                               <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fx1zP</span><span class="p">)</span> <span class="c1"># TopSet</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicNodeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                                                               <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">F0yzP</span><span class="p">)</span> <span class="c1"># LeftSet</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicNodeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                                                               <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">F1yzP</span><span class="p">)</span>  <span class="c1"># RightSet</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicNodeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                               <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fxy1P</span><span class="p">)</span>  <span class="c1"># FrontSet</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreatePeriodicNodeSets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                                                               <span class="n">nodes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">surfSet</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fxy0P</span><span class="p">)</span>  <span class="c1"># RearSet</span>
+
+
+<div class="viewcode-block" id="NodeSets.CreatePeriodicNodeSets">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.NodeSets.CreatePeriodicNodeSets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">CreatePeriodicNodeSets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nodes</span><span class="p">,</span> <span class="n">sortCoord1</span><span class="p">,</span> <span class="n">sortCoord2</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">):</span>
+        <span class="c1"># Creates a List of Sorted Nodes with respect to sortCoord1 and sortCoord2 for faces</span>
+        <span class="c1"># Input: Nodeset of surface nodes</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
+        <span class="n">startList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sortedList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">NodeSet</span><span class="p">:</span>
+            <span class="n">startList</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">number</span><span class="p">,</span> <span class="n">sortCoord1</span><span class="p">[</span><span class="n">Nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">number</span><span class="p">)],</span> <span class="n">sortCoord2</span><span class="p">[</span><span class="n">Nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">number</span><span class="p">)]])</span>
+        <span class="n">startList</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">startList</span><span class="p">)):</span>
+            <span class="n">sortedList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">startList</span><span class="p">[</span><span class="n">item</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">sortedList</span></div>
+
+
+
+<div class="viewcode-block" id="NodeSets.CreatePeriodicEdgeSets">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.NodeSets.CreatePeriodicEdgeSets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nodes</span><span class="p">,</span> <span class="n">sortCoord</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">):</span>
+        <span class="c1"># Creates a List of Sorted Nodes with respect to sortCoord for edges</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
+        <span class="n">startList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sortedList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">NodeSet</span><span class="p">:</span>
+            <span class="n">startList</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">number</span><span class="p">,</span> <span class="n">sortCoord</span><span class="p">[</span><span class="n">Nodes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">number</span><span class="p">)]])</span>
+        <span class="n">startList</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">startList</span><span class="p">)):</span>
+            <span class="n">sortedList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">startList</span><span class="p">[</span><span class="n">item</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">sortedList</span></div>
+
+
+<div class="viewcode-block" id="NodeSets.RemoveItemInList">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.NodeSets.RemoveItemInList">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">NodeList</span><span class="p">,</span> <span class="n">ReplaceNodeList</span><span class="p">):</span>
+        <span class="c1"># remove set of nodes from list</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">ReplaceNodeList</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">NodeList</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">NodeList</span></div>
+</div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright This work is published under a CC BY-SA 4.0 license.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

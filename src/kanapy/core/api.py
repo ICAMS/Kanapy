@@ -37,48 +37,65 @@ from .plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
 
 
 class Microstructure(object):
-    """Define class for synthetic microstructures
+    """
+    Define a class for creating and managing synthetic microstructures
 
-    Attributes:
-        name : str
-            Name of microstructure
-        nphases : int
-            Number of phases in microstructure
-        ngrains : ndarray
-            Array of grain number in each phase
-        Ngr : int
-            Total number of grains summed over all phases
-        nparticles : list
-            List with number of particles in each phase
-        descriptor : list
-            List of dictionaries describing the microstructure of each phase;
-            Dict Keys: "Grains type", "Equivalent diameter", "Aspect ratio", "Tilt Angle", "RVE", "Simulation"
-        precipit : None or float
-            Indicates microstructure with precipitates/pores/particles in continuous matrix. If type is float,
-             it gives volume the fraction of that precipitate phase
-        from_voxels : bool
-            Indicates whether microstructure object is imported from voxel file, not generated from particle simulation
-        particles : list
-            List of particle objects of class entities containing information object particle geometries
-        rve : object of class RVE_creator
-            Contains information about the RVE
-            Attributes: dim, size, nparticles, periodic, units, packing_steps, particle_data,
-            phase_names, phase_vf, ialloy
-        simbox : Object of class Simulation_Box
-            Contains information about geometry of simulation box for particle simulation
-        mesh : object of class mesh_creator
-            Attributes: dim, grain_dict, grain_ori_dict, grain_phase_dict, grains, ngrains_phase. nodes, nodes_smooth,
-                nvox, phases, prec_vf_voxels, vox_center_dict, voxel_dict
-        geometry : dict
-            Dictionary of grain geometries;
-            Dict keys: "Vertices", "Points", "Simplices", "Facets", "Grains", "GBnodes", GBarea" "GBfaces"
-            "Grains" : dictionary with key grain_number  
-            Keys:"Vertices", "Points", "Center", "Simplices", "Volume", "Area", "Phase", "eqDia", "majDia", "minDia"
-        rve_stats : list
-            List of dictionaries containing statistical information on different RVE types: particles, voxels,
-            polyhedral grains
-        rve_stats_labels : list
-            List of strings containing the labels for the RVE types, i.e. Partcls, Voxels, Grains
+    This class provides tools to define, generate, and analyze synthetic
+    microstructures composed of one or multiple phases. It integrates particle
+    packing, voxelization, and grain geometry generation for RVE (Representative
+    Volume Element) modeling.
+
+    Attributes
+    ----------
+    name : str
+        Name of the microstructure.
+    nphases : int or None
+        Number of phases in the microstructure.
+    ngrains : ndarray or None
+        Array of grain counts in each phase.
+    nparticles : list or None
+        List of the number of particles in each phase.
+    descriptor : list of dict or None
+        List of dictionaries describing the microstructure of each phase.
+        Defined when input `descriptor` or `file` is provided.
+        Dictionary keys typically include:
+        "Grains type", "Equivalent diameter", "Aspect ratio",
+        "Tilt Angle", "RVE", and "Simulation".
+    precipit : None or float
+        Indicates the presence of precipitates, pores, or secondary particles
+        in a continuous matrix. If float, specifies their volume fraction.
+    from_voxels : bool
+        Indicates whether the microstructure object is imported from a voxel file
+        rather than generated from a particle simulation.
+    particles : list or None
+        List of particle objects containing geometric information.
+    rve : RVE_creator or None
+        Object containing information about the Representative Volume Element (RVE),
+        including mesh dimensions, particle count, periodicity, and phase volume fractions.
+    simbox : Simulation_Box or None
+        Object defining the geometric boundaries of the RVE simulation domain.
+    mesh : mesh_creator or None
+        Object storing voxelized mesh data including grain assignments,
+        voxel connectivity, and smoothed node coordinates.
+    geometry : dict or None
+        Dictionary of grain geometries. Keys may include:
+        "Vertices", "Points", "Simplices", "Facets", "Grains",
+        "GBnodes", "GBarea", and "GBfaces".
+    rve_stats : list of dict or None
+        List containing statistical information for different RVE representations,
+        including particles, voxels, and polyhedral grains.
+    rve_stats_labels : list of str or None
+        Labels corresponding to the types of RVEs analyzed, e.g., "Particles",
+        "Voxels", "Grains".
+    vf_vox : ndarray or None
+        Array containing the phase volume fractions obtained from voxelized structures.
+
+    Notes
+    -----
+    - The class can initialize from either a statistical descriptor or a JSON data file.
+    - When only one phase is specified with a volume fraction < 1.0,
+      a matrix phase is automatically added with a complementary fraction (1 - vf).
+    - Kanapy is tested for up to two phases; using more may yield unpredictable results.
     """
 
     def __init__(self, descriptor=None, file=None, name='Microstructure'):
@@ -142,17 +159,47 @@ class Microstructure(object):
 
     def init_RVE(self, descriptor=None, nsteps=1000):
         """
-        Creates particle distribution inside simulation box (RVE) based on
-        the data provided in the data file.
+        Initialize the Representative Volume Element (RVE) of the microstructure
+
+        This method creates the voxel- or particle-based RVE using the provided
+        phase descriptor(s). It sets up the mesh dimensions, particle distribution,
+        and simulation box geometry. The RVE object is constructed using the
+        `RVE_creator` class, and key attributes such as `nparticles` and `simbox`
+        are updated accordingly.
 
         Parameters
         ----------
-        descriptor
-        nsteps
+        descriptor : list of dict, dict, or None, optional
+            Description of the microstructure phases. Each dictionary specifies
+            parameters such as grain type, equivalent diameter, aspect ratio,
+            and tilt angle. If `None`, the class attribute `self.descriptor` is used.
+        nsteps : int, optional
+            Number of optimization or relaxation steps for RVE generation.
+            Default is 1000.
+
+        Notes
+        -----
+        - Assumes that `RVE_creator` and `Simulation_Box` are available and correctly configured.
+        - If `self.precipit` is defined, an additional 'Matrix' phase is automatically
+          added to preserve total volume fraction normalization.
+
+        Attributes Updated
+        ------------------
+        rve : RVE_creator
+            The created RVE object containing voxel/particle information, size,
+            periodicity, and phase volume fractions.
+        nparticles : list
+            Number of particles per phase after RVE generation.
+        simbox : Simulation_Box
+            Object containing the geometric boundaries of the RVE domain.
+        precipit : float or None
+            If not None, a 'Matrix' phase is appended to `rve.phase_names` and its
+            volume fraction is adjusted as (1.0 - precipit).
 
         Returns
         -------
-
+        None
+            Updates class attributes with the initialized RVE and simulation box.
         """
         if descriptor is None:
             descriptor = self.descriptor
@@ -171,8 +218,39 @@ class Microstructure(object):
     def pack(self, particle_data=None,
              k_rep=0.0, k_att=0.0, fill_factor=None,
              poly=None, save_files=False, verbose=False):
+        """
+        Pack particles into the simulation box according to the RVE settings
 
-        """ Packs the particles into a simulation box."""
+        Parameters
+        ----------
+        particle_data : array-like or None, optional
+            Particle information. If None, uses self.rve.particle_data. Raises
+            ValueError if no particle data is available.
+        k_rep : float, optional
+            Repulsion coefficient between particles. Default is 0.0.
+        k_att : float, optional
+            Attraction coefficient between particles. Default is 0.0.
+        fill_factor : float or None, optional
+            Fraction of simulation box to fill. Defaults to 1.0 if self.precipit is set.
+        poly : optional
+            Additional packing options for polyhedral particles.
+        save_files : bool, optional
+            If True, saves packed particle data to files.
+        verbose : bool, optional
+            If True, prints progress and warnings during packing.
+
+        Returns
+        -------
+        particles : list
+            List of packed particle objects with positions and geometrical information.
+        simbox : Simulation_Box
+            Updated simulation box reflecting particle packing.
+
+        Notes
+        -----
+        If self.precipit > 0.65, particle overlaps may occur. Requires self.rve
+        and self.simbox to be initialized before calling.
+        """
         if particle_data is None:
             particle_data = self.rve.particle_data
             if particle_data is None:
@@ -190,7 +268,37 @@ class Microstructure(object):
                            poly=poly, save_files=save_files, verbose=verbose)
 
     def voxelize(self, particles=None, dim=None):
-        """ Generates the RVE by assigning voxels to grains."""
+        """
+        Generate the RVE by assigning voxels to grains
+
+        Parameters
+        ----------
+        particles : list or None, optional
+            List of particle objects to voxelize. If None, uses `self.particles`.
+            Raises ValueError if no particles are available.
+        dim : tuple of int, optional
+            3-tuple specifying the number of voxels in each spatial direction.
+            If None, uses `self.rve.dim`. Raises ValueError if not a 3-tuple.
+
+        Notes
+        -----
+        - Requires `self.particles` to be initialized by `pack`.
+        - Updates `self.mesh`, `self.ngrains`, `self.Ngr`, and `self.vf_vox`.
+        - Logs warnings if phase volume fractions do not sum to 1.
+        - Removes polyhedral grain geometries (`self.geometry`) after re-meshing to avoid inconsistencies.
+
+        Returns
+        -------
+        None
+            The voxelized mesh is stored in `self.mesh`. Phase voxel fractions are
+            stored in `self.vf_vox` and printed to the console.
+
+        Raises
+        ------
+        ValueError
+            - If `particles` is None and `self.particles` is not available.
+            - If `dim` is not a 3-tuple when specified.
+        """
         if particles is None:
             particles = self.particles
             if particles is None:
@@ -238,7 +346,36 @@ class Microstructure(object):
             self.geometry = None
 
     def smoothen(self, nodes_v=None, voxel_dict=None, grain_dict=None):
-        """ Generates smoothed grain boundary from a voxelated mesh."""
+        """
+        Generate smoothed grain boundaries from a voxelated mesh
+
+        Parameters
+        ----------
+        nodes_v : array-like or None, optional
+            Mesh node coordinates. If None, uses `self.mesh.nodes`. Raises
+            ValueError if no nodes are available.
+        voxel_dict : dict or None, optional
+            Dictionary of voxels in the mesh. If None, uses `self.mesh.voxel_dict`.
+        grain_dict : dict or None, optional
+            Dictionary mapping grains to their voxels. If None, uses `self.mesh.grain_dict`.
+
+        Notes
+        -----
+        - Requires `self.mesh` to be initialized by `voxelize`.
+        - Updates `self.mesh.nodes_smooth` with smoothed node coordinates.
+        - Adds 'GBfaces' entry to `self.geometry` if it exists.
+
+        Returns
+        -------
+        None
+            The smoothed nodes are stored in `self.mesh.nodes_smooth`. Grain boundary
+            faces are optionally stored in `self.geometry['GBfaces']`.
+
+        Raises
+        ------
+        ValueError
+            - If `nodes_v` is None and `self.mesh.nodes` is not available.
+        """
         if nodes_v is None:
             nodes_v = self.mesh.nodes
             if nodes_v is None:
@@ -253,9 +390,33 @@ class Microstructure(object):
             self.geometry['GBfaces'] = grain_facesDict
 
     def generate_grains(self):
-        """ Writes out the particle- and grain diameter attributes for
-        statistical comparison. Final RVE grain volumes and shared grain
-        boundary surface areas info are written out as well."""
+        """
+        Calculate and store polyhedral grain geometry, including particle- and grain-diameter attributes,
+        for statistical comparison
+
+        Notes
+        -----
+        - Requires `self.mesh` to be initialized by `voxelize`.
+        - Updates `self.geometry` with polyhedral grain volumes and shared grain boundary (GB) areas.
+        - If `self.precipit` is True, irregular grain 0 is temporarily removed from analysis.
+        - Logs warnings if grains are not represented in the polyhedral geometry.
+        - Prints volume fractions of each phase in the polyhedral geometry.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+            The calculated grain geometry is stored in `self.geometry`. Phase volume fractions
+            are printed to the console.
+
+        Raises
+        ------
+        ValueError
+            - If `self.mesh` or `self.mesh.grains` is None (i.e., voxelized microstructure not available).
+        """
 
         if self.mesh is None or self.mesh.grains is None:
             raise ValueError('No information about voxelized microstructure. Run voxelize first.')
@@ -314,21 +475,64 @@ class Microstructure(object):
     def generate_orientations(self, data, ang=None, omega=None, Nbase=5000,
                               hist=None, shared_area=None, iphase=None, verbose=False):
         """
-        Calculates the orientations of grains to give a desired crystallographic texture
-        for the number of grains in RVE.
+        Generate orientations for grains in a representative volume element (RVE)
+        to achieve a desired crystallographic texture
+
+        This method assigns grain orientations to achieve a specified texture. The
+        input can be an EBSDmap object or a string defining the type of orientation set
+        (random or unimodal). For unimodal textures, `ang` and `omega` must be specified.
+        Generated orientations are stored in `self.mesh.grain_ori_dict`, and
+        `self.mesh.texture` is updated accordingly.
 
         Parameters
         ----------
-        data
-        ang
-        omega
-        Nbase
-        hist
-        shared_area
+        data : EBSDmap or str
+            Input source for orientations. Can be an `EBSDmap` object or a string
+            specifying the type of orientation set:
+            - 'random' or 'rnd' : generate a random orientation set
+            - 'unimodal', 'uni_mod', or 'uni_modal' : generate a unimodal orientation set
+        ang : float, optional
+            Orientation angle for unimodal texture (required if `data` is unimodal).
+        omega : float, optional
+            Kernel halfwidth for unimodal texture (required if `data` is unimodal).
+        Nbase : int, default=5000
+            Number of base orientations used in random or unimodal generation.
+        hist : array_like, optional
+            Histogram for the grain orientations, used to weight orientations.
+        shared_area : array_like or float, optional
+            Shared grain boundary area for weighted orientation generation.
+        iphase : int, optional
+            Phase index for which orientations are generated. If None, all phases are processed.
+        verbose : bool, default=False
+            If True, prints additional information during orientation generation.
 
         Returns
         -------
+        None
+            The generated orientations are stored in `self.mesh.grain_ori_dict` and
+            `self.mesh.texture` is updated to reflect the type of generated texture.
 
+        Raises
+        ------
+        ValueError
+            - If grain geometry is not defined (i.e., `self.mesh.grains` is None).
+            - If `data` is unimodal but `ang` or `omega` are not provided.
+            - If `data` is neither `EBSDmap` nor a recognized string option.
+            - If histogram is provided but GB areas are not defined (and `shared_area` is None).
+
+        Examples
+        --------
+        >>> # Generate random orientations for all grains
+        >>> rve.generate_orientations('random')
+
+        >>> # Generate unimodal orientations with specified angle and halfwidth
+        >>> rve.generate_orientations('unimodal', ang=30.0, omega=10.0)
+
+        >>> # Generate orientations for a specific phase with histogram weighting
+        >>> rve.generate_orientations('random', hist=hist_array, iphase=1)
+
+        >>> # Generate orientations using an EBSDmap object
+        >>> rve.generate_orientations(ebsd_map_obj)
         """
         from kanapy import __backend__
         if __backend__ == 'mtex':
@@ -394,7 +598,50 @@ class Microstructure(object):
     """
 
     def plot_ellipsoids(self, cmap='prism', dual_phase=None, phases=False):
-        """ Generates plot of particles"""
+        """
+        Generate a 3D plot of particles in the RVE
+
+        This function visualizes ellipsoidal particles in the Representative Volume Element (RVE).
+        Particles can be colored according to phase, and a custom colormap can be used.
+        Note that `dual_phase` is deprecated; use `phases` instead.
+
+        Parameters
+        ----------
+        cmap : str, optional
+            Colormap used for plotting particles. Default is 'prism'.
+        dual_phase : bool or None, optional
+            Deprecated parameter for indicating dual-phase visualization.
+            Use `phases` instead. Default is None.
+        phases : bool, optional
+            If True, color particles according to their phase. Default is False.
+
+        Notes
+        -----
+        - Requires `self.particles` to be initialized by `pack`.
+        - Automatically calculates aspect ratios of the RVE for proper 3D plotting.
+        - Prints a warning if `dual_phase` is used and maps it to `phases`.
+
+        Returns
+        -------
+        None
+            Displays a 3D plot of ellipsoidal particles using `plot_ellipsoids_3D`.
+
+        Raises
+        ------
+        ValueError
+            - If `self.particles` is None.
+
+        Examples
+        --------
+        >>> # Simple 3D plot with default colormap
+        >>> rve.plot_ellipsoids()
+
+        >>> # Color particles according to phase
+        >>> rve.plot_ellipsoids(phases=True)
+
+        >>> # Use a custom colormap
+        >>> rve.plot_ellipsoids(cmap='viridis')
+        """
         if dual_phase is not None:
             print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
             phases = dual_phase
@@ -407,7 +654,55 @@ class Microstructure(object):
         plot_ellipsoids_3D(self.particles, cmap=cmap, phases=phases, asp_arr=asp_arr)
 
     def plot_particles(self, cmap='prism', dual_phase=None, phases=False, plot_hull=True):
-        """ Generates plot of particles"""
+        """
+        Generate a 3D plot of particles in the RVE
+
+        This function visualizes particles in the Representative Volume Element (RVE) in 3D.
+        Particles can be colored according to phase, plotted with their convex hulls, and
+        displayed using a custom colormap. Note that `dual_phase` is deprecated; use `phases`
+        instead.
+
+        Parameters
+        ----------
+        cmap : str, optional
+            Colormap used for plotting particles. Default is 'prism'.
+        dual_phase : bool or None, optional
+            Deprecated parameter for indicating dual-phase visualization.
+            Use `phases` instead. Default is None.
+        phases : bool, optional
+            If True, color particles according to their phase. Default is False.
+        plot_hull : bool, optional
+            If True, plot the convex hull (inner polygon) of each particle. Default is True.
+
+        Notes
+        -----
+        - Requires `self.particles` to be initialized by `pack`.
+        - Raises a ValueError if `self.particles` is None or if particles lack inner polygons.
+        - Automatically calculates aspect ratios of the RVE for proper 3D plotting.
+        - Prints a warning if `dual_phase` is used and maps it to `phases`.
+
+        Returns
+        -------
+        None
+            Displays a 3D plot of particles using `plot_particles_3D`.
+
+        Raises
+        ------
+        ValueError
+            - If `self.particles` is None.
+            - If particles do not have inner polygons.
+
+        Examples
+        --------
+        >>> # Simple 3D plot with default colormap and convex hulls
+        >>> rve.plot_particles()
+
+        >>> # Color particles according to phase
+        >>> rve.plot_particles(phases=True)
+
+        >>> # Plot particles without convex hulls and use a custom colormap
+        >>> rve.plot_particles(cmap='viridis', plot_hull=False)
+        """
         if dual_phase is not None:
             print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
             phases = dual_phase
@@ -425,21 +720,70 @@ class Microstructure(object):
     def plot_voxels(self, sliced=False, dual_phase=None, phases=False, cmap='prism', ori=None,
                     color_key=0, silent=False):
         """
-        Generates plot of voxel structure
+        Generate a 3D visualization of the voxelized RVE structure
+
+        This function visualizes the voxel-based microstructure of the RVE. It supports
+        coloring by phase, grain ID, or crystallographic orientation, and can optionally
+        render a sliced view of the 3D voxel mesh.
 
         Parameters
         ----------
-        sliced
-        dual_phase
-        cmap
-        ori
-        color_key: int
-            selects the color key: 0: iphHSVKey, 1: BungeColorKey, 2: ipfHKLKey (optional, default: 0)
-        silent
+        sliced : bool, optional
+            If True, generates a sliced view of the voxel mesh to visualize the internal structure.
+            Default is False.
+        dual_phase : bool or None, optional
+            Deprecated parameter for dual-phase visualization. Use `phases` instead.
+            Default is None.
+        phases : bool, optional
+            If True, color voxels by phase instead of grain ID. Default is False.
+        cmap : str, optional
+            Name of the matplotlib colormap used for rendering. Default is 'prism'.
+        ori : array-like, bool, or None, optional
+            Array of grain orientations, or True to use `self.mesh.grain_ori_dict` for coloring
+            via inverse pole figure (IPF) mapping. Default is None.
+        color_key : int, optional
+            Selects the color mapping for orientations:
+            - 0: iphHSVKey
+            - 1: BungeColorKey
+            - 2: ipfHKLKey
+            Default is 0.
+        silent : bool, optional
+            If True, suppresses figure display and returns the matplotlib figure object instead.
+            Default is False.
 
         Returns
         -------
+        fig : matplotlib.figure.Figure or None
+            Returns the figure object if `silent=True`. Otherwise, displays the 3D plot and returns None.
 
+        Raises
+        ------
+        ValueError
+            If `self.mesh.grains` is None, indicating that voxelization has not been performed.
+
+        Notes
+        -----
+        - Requires that the voxel mesh (`self.mesh`) has been generated by `voxelize()`.
+        - If `ori` is provided, orientation-based coloring is applied using `get_ipf_colors()`.
+        - Prints a warning if `dual_phase` is used, since it is deprecated and replaced by `phases`.
+        - Automatically computes aspect ratios of the RVE to ensure accurate 3D visualization.
+
+        Examples
+        --------
+        >>> # Simple 3D plot of voxelized RVE
+        >>> rve.plot_voxels()
+
+        >>> # Plot a sliced view of the voxel mesh
+        >>> rve.plot_voxels(sliced=True)
+
+        >>> # Color voxels by phase and use a custom colormap
+        >>> rve.plot_voxels(phases=True, cmap='viridis')
+
+        >>> # Use orientation-based coloring via IPF mapping
+        >>> rve.plot_voxels(ori=True, color_key=2)
+
+        >>> # Suppress figure display and get the matplotlib Figure object
+        >>> fig = rve.plot_voxels(silent=True)
         """
         if dual_phase is not None:
             print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
@@ -473,7 +817,59 @@ class Microstructure(object):
 
     def plot_grains(self, geometry=None, cmap='prism', alpha=0.4,
                     ec=None, dual_phase=None, phases=False):
-        """ Plot polygonalized microstructure"""
+        """
+        Plot the polygonalized microstructure of the RVE in 3D
+
+        This function visualizes the polygonal (polyhedral) grain geometry of the
+        microstructure, typically after `generate_grains()` has been executed.
+        Users can customize the colormap, transparency, and edge color. It also
+        supports coloring grains by phase.
+
+        Parameters
+        ----------
+        geometry : dict or None, optional
+            Dictionary containing the polygonal grain geometries. If None, uses
+            `self.geometry`. Raises ValueError if geometry is unavailable.
+        cmap : str, optional
+            Matplotlib colormap name for rendering grain colors. Default is 'prism'.
+        alpha : float, optional
+            Transparency level of the grain surfaces (0 = fully transparent,
+            1 = fully opaque). Default is 0.4.
+        ec : list or None, optional
+            Edge color specified as an RGBA list, e.g. `[0.5, 0.5, 0.5, 0.1]`.
+            Default is `[0.5, 0.5, 0.5, 0.1]`.
+        dual_phase : bool or None, optional
+            Deprecated parameter for dual-phase coloring. Use `phases` instead.
+            Default is None.
+        phases : bool, optional
+            If True, color grains by phase rather than by grain ID. Default is False.
+
+        Raises
+        ------
+        ValueError
+            If no polygonal geometry is available (i.e., `self.geometry` is None).
+
+        Notes
+        -----
+        - Requires polygonal grain data generated by `generate_grains()`.
+        - Automatically computes the aspect ratio of the RVE for correct 3D scaling.
+        - The parameter `dual_phase` is deprecated; prefer using `phases` instead.
+        - Visualization is handled by `plot_polygons_3D()`.
+
+        Examples
+        --------
+        >>> # Simple 3D plot of polygonal grains with default settings
+        >>> rve.plot_grains()
+
+        >>> # Color grains by phase
+        >>> rve.plot_grains(phases=True)
+
+        >>> # Use a custom colormap and set transparency
+        >>> rve.plot_grains(cmap='viridis', alpha=0.6)
+
+        >>> # Specify edge color
+        >>> rve.plot_grains(ec=[0.2, 0.2, 0.2, 0.3])
+        """
         if ec is None:
             ec = [0.5, 0.5, 0.5, 0.1]
         if dual_phase is not None:
@@ -497,8 +893,77 @@ class Microstructure(object):
                    save_files=False,
                    show_all=False, verbose=False,
                    silent=False, enhanced_plot=False):
-        """ Plots the particle- and grain diameter attributes for statistical 
-        comparison."""
+        """
+        Plot particle, voxel, and grain diameter statistics for comparison
+
+        This method analyzes the microstructure at different representation levels
+        (particles, voxels, and polyhedral grains) and plots corresponding statistical
+        distributions. It can optionally handle multiphase materials, save plots,
+        and display detailed information about geometric parameters.
+
+        Parameters
+        ----------
+        data : str or None, optional
+            Specifies which type of data to analyze and plot:
+            - `'p'` : particles
+            - `'v'` : voxels
+            - `'g'` : grains
+            If None, all available data types are analyzed.
+        gs_data : list or array-like, optional
+            Grain size data for comparison with simulation results.
+        gs_param : list or array-like, optional
+            Parameters for fitting grain size distributions.
+        ar_data : list or array-like, optional
+            Aspect ratio data for comparison with simulation results.
+        ar_param : list or array-like, optional
+            Parameters for fitting aspect ratio distributions.
+        dual_phase : bool or None, optional
+            Deprecated. Use `phases` instead.
+        phases : bool, optional
+            If True, perform separate statistical analysis for each phase.
+        save_files : bool, optional
+            If True, save generated plots and statistical results to files.
+        show_all : bool, optional
+            If True, display all generated plots interactively.
+        verbose : bool, optional
+            If True, print detailed numerical results during analysis.
+        silent : bool, optional
+            If True, suppresses console output and returns figures directly.
+        enhanced_plot : bool, optional
+            If True, use enhanced plot styling (automatically enabled when `silent=True`).
+
+        Returns
+        -------
+        flist : list of matplotlib.figure.Figure or None
+            List of generated figure objects if `silent=True`, otherwise None.
+
+        Raises
+        ------
+        ValueError
+            If required data (particles, voxels, or grains) are missing for the selected mode.
+
+        Notes
+        -----
+        - The method computes and compares geometric parameters such as:
+          principal axis lengths (a, b, c), aspect ratios, rotation axes,
+          and equivalent diameters.
+        - The results are stored in `self.rve_stats` and labeled in `self.rve_stats_labels`.
+        - For multiphase structures, statistics are calculated per phase.
+
+        Examples
+        --------
+        >>> # Plot all statistics with default settings
+        >>> rve.plot_stats()
+
+        >>> # Plot only particle statistics and show all plots interactively
+        >>> rve.plot_stats(data='p', show_all=True)
+
+        >>> # Perform multiphase statistical analysis and save figures
+        >>> rve.plot_stats(phases=True, save_files=True)
+
+        >>> # Suppress console output and get figure objects
+        >>> figs = rve.plot_stats(silent=True)
+        """
         if dual_phase is not None:
             print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
             phases = dual_phase
@@ -604,8 +1069,88 @@ class Microstructure(object):
                         porous=False,
                         get_res=False, show_res=False,
                         save_files=False, silent=False, return_descriptors=False):
-        """ Plots initial statistical microstructure descriptors ."""
+        """
+        Plot initial statistical microstructure descriptors of RVE and optionally return computed descriptors
+
+        This method analyzes the initial microstructure defined by input descriptors
+        (or the class attribute `self.descriptor`) and plots the distributions of
+        equivalent diameters and aspect ratios. For elongated grains, it prints a
+        summary of input and output statistics. Optionally, statistical descriptors
+        can be returned for further processing.
+
+        Parameters
+        ----------
+        descriptor : list of dict, dict, or None, optional
+            Microstructure phase descriptor(s). If None, uses `self.descriptor`.
+        gs_data : list or array-like, optional
+            Grain size data for comparison with initial statistics.
+        ar_data : list or array-like, optional
+            Aspect ratio data for comparison with initial statistics.
+        porous : bool, optional
+            If True, only the first phase is considered (e.g., for porous structures).
+        get_res : bool, optional
+            If True, computes statistical descriptors from the voxelized structure.
+        show_res : bool, optional
+            If True, prints detailed statistical results to the console.
+        save_files : bool, optional
+            If True, saves generated plots to files.
+        silent : bool, optional
+            If True, suppresses console output and returns figures directly.
+        return_descriptors : bool, optional
+            If True, returns computed statistical descriptors along with figures.
+
+        Returns
+        -------
+        flist : list of matplotlib.figure.Figure
+            List of generated figure objects.
+        descs : list of dict
+            Optional list of computed statistical descriptors if `return_descriptors=True`.
+
+        Notes
+        -----
+        - Requires voxelized microstructure (`self.mesh`) for computing descriptors.
+        - Computes statistics for equivalent diameter, aspect ratio, principal axes,
+          and rotation axes when applicable.
+        - Can handle multiphase or single-phase microstructures.
+
+        Examples
+        --------
+        >>> # Plot initial statistics with default settings
+        >>> rve.plot_stats_init()
+
+        >>> # Plot only the first phase (porous) and save figures
+        >>> rve.plot_stats_init(porous=True, save_files=True)
+
+        >>> # Compute descriptors and get figures and descriptor objects
+        >>> figs, descs = rve.plot_stats_init(get_res=True, return_descriptors=True)
+
+        >>> # Suppress console output and return figure objects
+        >>> figs = rve.plot_stats_init(silent=True)
+        """
         def analyze_voxels(ip, des):
+            """
+            Compute voxel-based statistical descriptors for a given phase of the RVE
+
+            This function calculates equivalent diameter, aspect ratio, principal axes, and rotation axis
+            statistics from the voxelized microstructure. It prints input vs output statistics if the phase
+            is elongated and returns formatted arrays for grain size, aspect ratio, and a dictionary of descriptors
+
+            Parameters
+            ----------
+            ip : int
+                Index of the phase to analyze
+            des : dict
+                Descriptor dictionary for the phase containing grain type and target statistics
+
+            Returns
+            -------
+            gsp : list
+                Summary of equivalent diameter statistics for plotting
+            arp : list
+                Summary of aspect ratio statistics for plotting
+            statistical_descriptors : dict
+                Detailed statistics including mean, std, min, max of eqd, ar, axes, and rotation axis
+            """
             if self.mesh is None:
                 raise ValueError('show_res is True, but no voxels have been defined. Run voxelize first.')
             vox_stats = get_stats_vox(self.mesh, iphase=ip, show_plot=show_res)
@@ -684,33 +1229,37 @@ class Microstructure(object):
     def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
                    dual_phase=False, save_files=False):
         """
-        Plot a slice through the microstructure.
-        
-        If polygonalized microstructure is available, it will be used as data 
-        basis, otherwise or if data='voxels' the voxelized microstructure 
-        will be plotted.
-        
-        This subroutine calls the output_ang function with plotting active 
-        and writing of ang file deactivated.
+        Plot a 2D slice through the microstructure.
+
+        The function visualizes a cross-section of the microstructure. If a polygonalized
+        microstructure is available, it will be used as the plotting basis; otherwise,
+        or if `data='voxels'`, the voxelized microstructure will be plotted. This method
+        internally calls `output_ang` with plotting enabled and file writing disabled.
 
         Parameters
         ----------
         cut : str, optional
-            Define cutting plane of slice as 'xy', 'xz' or 'yz'. The default is 'xy'.
+            The cutting plane of the slice. Options are 'xy', 'xz', or 'yz'.
+            Default is 'xy'.
         data : str, optional
-            Define data basis for plotting as 'voxels' or 'poly'. The default is None.
-        pos : str or float
-            Position in which slice is taken, either as absolute value, or as 
-            one of 'top', 'bottom', 'left', 'right'. The default is None.
+            Data basis for plotting. Options are 'voxels' or 'poly'. Default is None.
+        pos : str or float, optional
+            Position of the slice, either as an absolute value or as one of
+            'top', 'bottom', 'left', 'right'. Default is None.
         fname : str, optional
-            Filename of PDF file. The default is None.
+            Filename to save the figure as a PDF. Default is None.
+        dual_phase : bool, optional
+            If True, enable dual-phase visualization. Default is False.
         save_files : bool, optional
-            Indicate if figure file is saved and PDF. The default is False.
+            If True, the figure will be saved to disk. Default is False.
 
         Returns
         -------
-        None.
+        None
 
+        Examples
+        --------
+        >>> micro.plot_slice(cut='xz', data='poly', pos='top', save_files=True)
         """
         self.output_ang(cut=cut, data=data, plot=True, save_files=False,
                         pos=pos, fname=fname, dual_phase=dual_phase,
@@ -726,39 +1275,79 @@ class Microstructure(object):
                   *,
                   boundary_conditions: Optional[Dict[str, Any]] = None):
         """
-        Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be
-        a string indicating if voxel ("v") or smoothened ("s") mesh should be written. It can also
-        provide an array of nodal positions. If dual_phase is true, the
-        generated deck contains plain material definitions for each phase. Material parameters must
-        be specified by the user. If ialloy is provided, the generated deck material definitions
-        for each grain. For dual phase structures to be used with crystal plasticity, ialloy
-        can be a list with all required material definitions. If the list ialloy is shorter than the
-        number of phases in the RVE, plain material definitions for the remaining phases will
-        be included in the input deck.
+        Write the Abaqus input deck (.inp) for the generated RVE
+
+        This method generates an Abaqus input file for the current RVE. It supports
+        voxelized or smoothened meshes, dual-phase materials, crystal plasticity,
+        thermal analysis, custom material properties, and optional boundary conditions.
+        Material definitions and mesh data are automatically handled based on provided
+        arguments or class attributes.
 
         Parameters
         ----------
-        nodes
-        file
-        path
-        voxel_dict
-        grain_dict
-        dual_phase
-        thermal
-        units
-        ialloy
-        nsdv
-        bc_type
-        load_type
-        loading_direction
-        value
-        apply_bc : bool, optional
-            If True, boundary conditions are written to the Abaqus input file. Default is False.
+        nodes : str or array-like, optional
+            Defines the mesh to write:
+            - 'voxels', 'v' : use voxelized mesh
+            - 'smooth', 's' : use smoothened mesh
+            - array-like : explicit nodal coordinates
+            Default is None, automatically selecting available mesh.
+        file : str, optional
+            Filename for the Abaqus input deck. Default is auto-generated.
+        path : str, optional
+            Directory path to save the input deck. Default is './'.
+        voxel_dict : dict, optional
+            Dictionary with voxel information. Default is `self.mesh.voxel_dict`.
+        grain_dict : dict, optional
+            Dictionary mapping grain IDs to nodes. Default is `self.mesh.grain_dict`.
+        dual_phase : bool, optional
+            If True, generate input for dual-phase materials. Default is False.
+        thermal : bool, optional
+            If True, include thermal material definitions. Default is False.
+        units : str, optional
+            Units for the model, 'mm' or 'um'. Default is `self.rve.units`.
+        ialloy : list or object, optional
+            Material definitions for each phase. Default is `self.rve.ialloy`.
+        nsdv : int, optional
+            Number of state variables per integration point for crystal plasticity. Default is 200.
+        crystal_plasticity : bool, optional
+            If True, enable crystal plasticity material definitions. Default is False.
+        phase_props : dict, optional
+            Additional phase-specific material properties.
+        boundary_conditions : dict, optional
+            Dictionary specifying boundary conditions to write. Default is None.
 
         Returns
         -------
         file : str
-            Path to the generated Abaqus input file.
+            Full path to the generated Abaqus input file.
+
+        Raises
+        ------
+        ValueError
+            - If no voxelized or smoothened mesh is available when required.
+            - If invalid `nodes` argument is provided.
+            - If units are not 'mm' or 'um'.
+            - If the list `ialloy` is longer than the number of phases in the RVE.
+            - If periodic boundary conditions are requested but the RVE is non-periodic.
+
+        Notes
+        -----
+        - Automatically selects voxel or smoothened mesh if `nodes` is None.
+        - Handles dual-phase structures and crystal plasticity input.
+        - Writes additional material files if orientations are available and `ialloy` is provided.
+        - Visualization or mesh generation must be performed before calling this function.
+
+        Examples
+        --------
+        >>> # Write voxelized RVE input deck with default settings
+        >>> abq_file = rve.write_abq(nodes='voxels')
+
+        >>> # Write smoothened RVE deck for dual-phase material
+        >>> abq_file = rve.write_abq(nodes='smooth', dual_phase=True, ialloy=alloy_list)
+
+        >>> # Include boundary conditions
+        >>> bc = {'ux': [0, 0.1], 'uy': [0, 0.1]}
+        >>> abq_file = rve.write_abq(nodes='voxels', boundary_conditions=bc)
         """
         if nodes is None:
             if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():

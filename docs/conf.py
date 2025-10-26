@@ -51,7 +51,8 @@ master_doc = 'index'
 # General information about the project.
 project = u'kanapy'
 copyright = u'This work is published under a CC BY-SA 4.0 license'
-author = u"Mahesh R.G Prasad, Abhisek Biswas, Golsa Tolooei Eshlaghi, Alexander Hartmaier"
+author = u"Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, Napat Vajragupta, " +\
+         u"Yousef Rezek, Hrushikesh Uday Bhimavarapu, Jun Xue, Alexander Hartmaier"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout

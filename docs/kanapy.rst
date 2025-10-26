@@ -4,16 +4,25 @@ Code documentation
 Module API
 ----------
 
-.. automodule:: kanapy.api
+.. automodule:: kanapy.core.api
    :members:
    :undoc-members:
    :show-inheritance:
 
 
+Module GUI
+----------
+
+.. automodule:: kanapy.core.gui
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+
 Module CLI
 ----------
 
-.. automodule:: kanapy.cli
+.. automodule:: kanapy.core.cli
    :members:
    :undoc-members:
    :show-inheritance:
@@ -22,7 +31,7 @@ Module CLI
 Module initialization
 ---------------------
 
-.. automodule:: kanapy.initializations
+.. automodule:: kanapy.core.initializations
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,7 +40,7 @@ Module initialization
 Module input\_output
 ---------------------
 
-.. automodule:: kanapy.input_output
+.. automodule:: kanapy.core.input_output
    :members:
    :undoc-members:
    :show-inheritance:
@@ -40,7 +49,7 @@ Module input\_output
 Module packing
 --------------
 
-.. automodule:: kanapy.packing
+.. automodule:: kanapy.core.packing
    :members:
    :undoc-members:
    :show-inheritance:
@@ -49,7 +58,7 @@ Module packing
 Module entities
 ---------------
 
-.. automodule:: kanapy.entities
+.. automodule:: kanapy.core.entities
    :members:
    :undoc-members:
    :show-inheritance:
@@ -58,7 +67,7 @@ Module entities
 Module collisions
 -----------------
 
-.. automodule:: kanapy.collisions
+.. automodule:: kanapy.core.collisions
    :members:
    :undoc-members:
    :show-inheritance:
@@ -67,7 +76,7 @@ Module collisions
 Module voxelization
 -------------------
 
-.. automodule:: kanapy.voxelization
+.. automodule:: kanapy.core.voxelization
    :members:
    :undoc-members:
    :show-inheritance:
@@ -76,16 +85,25 @@ Module voxelization
 Module grains
 -------------
 
-.. automodule:: kanapy.grains
+.. automodule:: kanapy.core.grains
    :members:
    :undoc-members:
    :show-inheritance:
 
 
+Module rve\_stats
+-----------------
+
+.. automodule:: kanapy.core.rve_stats
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+
 Module texture
 --------------
 
-.. automodule:: kanapy.textures
+.. automodule:: kanapy.texture
    :members:
    :undoc-members:
    :show-inheritance:   
@@ -94,7 +112,7 @@ Module texture
 Module plotting
 ---------------
 
-.. automodule:: kanapy.plotting
+.. automodule:: kanapy.core.plotting
    :members:
    :undoc-members:
    :show-inheritance:
@@ -103,7 +121,7 @@ Module plotting
 Module smoothing
 ----------------
 
-.. automodule:: kanapy.smoothingGB
+.. automodule:: kanapy.core.smoothingGB
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,23 +1,21 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overview &mdash; kanapy 6.3.8 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>Overview &mdash; kanapy 6.5.3.post1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=a3796ccd"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=53ab5b41"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,9 +34,6 @@
           <a href="index.html" class="icon icon-home">
             kanapy
           </a>
-              <div class="version">
-                6.3.8
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -51,17 +46,14 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#installation-as-system-administrator">Installation as system administrator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-tests">Running tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#updates">Updates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#documentation-build">Documentation build</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#core-dependencies">Core dependencies</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#optional-dependencies">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-kanapy-in-your-python-scripts">Using Kanapy in your Python scripts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-tools">Command line tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#graphical-user-interface-gui">Graphical User Interface (GUI)</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citation">Citation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#related-works-and-applications">Related works and applications</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#license">License</a></li>
@@ -104,23 +96,30 @@
              
   <section id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h1>
-<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3662366"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg" /></a>
-<a class="reference external image-reference" href="https://doi.org/10.21105/joss.01732"><img alt="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" src="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" /></a>
-<img alt="https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical" src="https://img.shields.io/badge/Platform-Linux%2C%20MacOS%2C%20Windows-critical" />
-<a class="reference external image-reference" href="https://www.gnu.org/licenses/agpl-3.0.html"><img alt="https://img.shields.io/badge/License-GNU%20AGPLv3-blue" src="https://img.shields.io/badge/License-GNU%20AGPLv3-blue" /></a>
-<p>Kanapy is a python package for generating complex three-dimensional (3D) synthetic
-polycrystalline microstructures. The microstructures are built based on statistical
-information about grain geometry, given as grain size distribution and aspect ratio of
-grains, and crystallographic texture, in form of orientation distribution functions
-(ODF) and misorientation distribution functions (MDF). Kanapy offers tools to analyze
-EBSD maps with respect to the geometry and texture of microstructures. Based on this
-experimental data, it generates 3D synthetic microstructures mimicking real ones in a
-statistical sense. The implementation is done in
-<a class="reference external" href="http://www.python.org">Python</a>.</p>
-<p>The texture module of Kanapy is implemented as
-<a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> functions
-using several algorithms implemented in
-<a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> for texture analysis.</p>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3662366"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3662366.svg" />
+</a>
+<a class="reference external image-reference" href="https://doi.org/10.21105/joss.01732"><img alt="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" src="https://joss.theoj.org/papers/10.21105/joss.01732/status.svg" />
+</a>
+<a class="reference external image-reference" href="https://anaconda.org/conda-forge/kanapy"><img alt="https://anaconda.org/conda-forge/kanapy/badges/platforms.svg" src="https://anaconda.org/conda-forge/kanapy/badges/platforms.svg" />
+</a>
+<a class="reference external image-reference" href="https://anaconda.org/conda-forge/kanapy"><img alt="https://anaconda.org/conda-forge/kanapy/badges/license.svg" src="https://anaconda.org/conda-forge/kanapy/badges/license.svg" />
+</a>
+<a class="reference external image-reference" href="https://mybinder.org/v2/gh/ICAMS/Kanapy.git/HEAD?urlpath=%2Fdoc%2Ftree%2Findex.ipynb"><img alt="https://mybinder.org/badge_logo.svg" src="https://mybinder.org/badge_logo.svg" />
+</a>
+<a class="reference external image-reference" href="https://anaconda.org/conda-forge/kanapy"><img alt="https://anaconda.org/conda-forge/kanapy/badges/downloads.svg" src="https://anaconda.org/conda-forge/kanapy/badges/downloads.svg" />
+</a>
+<p>Kanapy is a <a class="reference external" href="http://www.python.org">python</a> package for generating complex
+three-dimensional (3D) synthetic polycrystalline microstructures. The microstructures
+are built based on statistical information about phase and grain morphologies, given
+as size distributions and aspect ratio distrubitions of grains and phase regions.
+Furthermore, crystallographic texture is
+considered in form of orientation distribution functions (ODF) and misorientation
+distribution functions (MDF). Kanapy offers tools to analyze EBSD maps with respect to
+the morphology and texture of microstructures. Based on this experimental data, it
+generates 3D synthetic microstructures mimicking real ones in a statistical sense.</p>
+<p>The basic implementation of Kanapy is done in form of a Python Appplication Programming
+Interface (API). There is also a command line interface (CLI) for administrative
+functions and and Graphical User Interface (GUI), which is still under development.</p>
 <section id="motivation">
 <h2>Motivation<a class="headerlink" href="#motivation" title="Link to this heading"></a></h2>
 <p>An accurate representation of a material’s microstructure is fundamental in
@@ -135,10 +134,10 @@ experiments concurrently maintaining the numerical efficiency of the
 micromechanical model. Kanapy is developed to overcome the limitations of
 spatial tessellation methods and to provide an alternative to the existing
 Random Sequential Addition technique of microstructure geometry generation.</p>
-<figure class="align-center" id="id3">
+<figure class="align-center" id="id1">
 <img alt="_images/kanapy_graphical_abstract.png" src="_images/kanapy_graphical_abstract.png" />
 <figcaption>
-<p><span class="caption-text"><strong>Figure</strong>: Kanapy workflow.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+<p><span class="caption-text"><strong>Figure</strong>: Kanapy workflow.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 </section>
@@ -146,155 +145,117 @@ Random Sequential Addition technique of microstructure geometry generation.</p>
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Kanapy offers a Python Application Programming Interface (API).</p></li>
+<li><p>Kanapy offers a Python Application Programming Interface (API).</p></li>
 <li><p>Possibility to analyze experimental microstructures based on
-<a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> functions.</p></li>
-<li><p>Generation of microstructure geometry based on statistical features
-as grain size distribution and grain aspect ratio distribution.</p></li>
+<a class="reference external" href="https://orix.readthedocs.io/en/stable/#">orix</a> functions.</p></li>
+<li><p>Support of multiphase microstructures.</p></li>
+<li><p>Generation of 3D microstructure morphology based on statistical features as size
+distributions and aspect ratio distributions of grains and phase regions.</p></li>
 <li><p>Crystallographic texture reconstruction using orientations from
 experimental data in form of Orientation Distribution Function (ODF).</p></li>
-<li><p>Optimal orientation assignment based on measured Misorientation
-Distribution Function (MDF) that maintains correct statistical
-description of high-angle or low-angle grain boundary
-characteristics.</p></li>
-<li><p>Independent execution of individual modules through easy data storage
-and handling.</p></li>
-<li><p>In-built hexahedral mesh generator for complex polycrystalline
-microstructures.</p></li>
-<li><p>Efficient generation of space filling structures by particle dynamics
-method.</p></li>
-<li><p>Collision handling of particles through a two-layer collision
-detection method employing the Octree spatial data structure and the
-bounding sphere hierarchy.</p></li>
-<li><p>Option to generate spherical particle position- and radius files that
-can be read by the Voronoi tessellation software
-<a class="reference external" href="http://neper.sourceforge.net/">Neper</a>.</p></li>
-<li><p>Option to generate input files for the commercial finite-element
-software
-<a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>.</p></li>
-<li><p>Analysis and RVE generation for dual-phase microstructures.</p></li>
-<li><p>Import and export of voxelated structures for data transfer between different tools.</p></li>
+<li><p>Optimal orientation assignment based on measured Misorientation Distribution Function
+(MDF) that maintains correct statistical description of high-angle or low-angle grain
+boundary characteristics.</p></li>
+<li><p>Independent execution of individual modules through easy data storage and handling.</p></li>
+<li><p>In-built hexahedral mesh generator for representation of complex polycrystalline
+microstructures in form of voxels.</p></li>
+<li><p>Efficient generation of space filling structures by particle dynamics method.</p></li>
+<li><p>Collision handling of particles through a two-layer collision detection method
+employing the Octree spatial data structure and the bounding sphere hierarchy.</p></li>
+<li><p>Option to generate spherical particle position and radius files that can be read by
+the Voronoi tessellation software <a class="reference external" href="http://neper.sourceforge.net/">Neper</a>.</p></li>
+<li><p>Option to generate input files for finite-element packages.</p></li>
+<li><p>Import and export of voxel structures according to following the modular materials
+data schema published on <a class="reference external" href="https://github.com/Ronakshoghi/MetadataSchema.git">GitHub</a>
+for data transfer between different tools.</p></li>
 </ul>
 </section>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
-<p>The preferred method to install kanapy is through
-Anaconda or Miniconda Python distributions. If you do not have any, we suggest installing <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>.</p>
-<p>Once done, create a virtual environment for Kanapy installation and clone the repository to
-a desired location and install.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ICAMS/Kanapy.git<span class="w"> </span>&lt;location<span class="w"> </span>to<span class="w"> </span>clone&gt;/kanapy-master
+<p>The preferred method to use Kanapy is within <a class="reference external" href="https://www.anaconda.com">Anaconda</a>
+or <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a>, into which it can be
+easily installed from <a class="reference external" href="https://conda-forge.org">conda-forge</a> by</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>install<span class="w"> </span>kanapy<span class="w"> </span>-c<span class="w"> </span>conda-forge
+</pre></div>
+</div>
+<p>Generally, it can be installed within any
+Python environment supporting the package installer for python
+(<a class="reference external" href="https://pypi.org/project/pip/">pip</a>) from its latest
+<a class="reference external" href="https://pypi.org/project/kanapy/">PyPi</a> release via the shell command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>kanapy
+</pre></div>
+</div>
+<p>Alternatively, the most recent version of the complete repository, including the source
+code, documentation and examples, can be cloned and installed locally from
+<a class="reference external" href="https://github.com/ICAMS/kanapy">GitHub</a>. It is recommended
+to create a conda environment before installation. This can be done by the following the
+command line instructions</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/ICAMS/Kanapy.git<span class="w"> </span>./kanapy
 <span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>kanapy
 <span class="gp">$ </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml
 <span class="gp">$ </span>conda<span class="w"> </span>activate<span class="w"> </span>knpy
 <span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
 </pre></div>
 </div>
-<p>Kanapy is now installed along with all its dependencies. If you intend to use Kanapy’s
-texture module, a <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> installation
-is required because the texture module is based on <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> functions. Kanapy uses a local
-version of MTEX stored in libs/mtex, if you want to use another version, please set the
-paths accordingly.  If MATLAB is available on your system, the texture module is
-initialized by the command</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>setupTexture
+<p>Kanapy is now installed along with all its dependencies. The correct installation with
+this method can be tested with</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>runTests
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">knpy</span></code> can be replaced with any name for your environment.</p></li>
-</ol>
-<p>2. The absolute paths to {user_dependent_path}/kanapy/src/kanapy and
-{user_dependent_path}/kanapy/libs/mtex should to be added to the MATLABPATH
-environment variable, see <a class="reference external" href="https://de.mathworks.com/help/matlab/matlab_env/add-folders-to-matlab-search-path-at-startup.html#">Mathworks documentation</a>.</p>
-<p>3. The installation scripts have been tested for Matlab R2023a with Python 3.9
-and 3.10. If you are using other Matlab versions, the script
-“setupTexture” might fail. In that case, you can setup the Matlab
-Engine API for Python manually. To do so, please follow the instructions
-given on the <a class="reference external" href="https://de.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html">Mathworks</a> website, to (i) Verify your configuration, (ii)
-Install Engine API, and (iii) Start MATLAB Engine.
-The Python version of the <em>knpy</em>-environment can be changed according to the
-requirements of the Matlab Engine API by editing the “environment.yml” file
-and re-creating the conda environment <em>knpy</em>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">knpy</span></code> can be replaced with any name for your environment.</p>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>To learn more about managing environments see Anaconda <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html">documentation</a>.</p>
 </div>
-</section>
-<section id="installation-as-system-administrator">
-<h2>Installation as system administrator<a class="headerlink" href="#installation-as-system-administrator" title="Link to this heading"></a></h2>
-<p>If system administrators with write access to the root directory of the knpy-environment want to install Kanapy for all users, they need to run</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>python<span class="w"> </span>admin_setup.py
-</pre></div>
-</div>
-<p>after activating the <em>knpy</em>-environment. This will automatically execute the Kanapy installation and texture setup in administrator mode. After that step, users can directly access Kanapy in the conda environment.</p>
-</section>
-<section id="running-tests">
-<h2>Running tests<a class="headerlink" href="#running-tests" title="Link to this heading"></a></h2>
-<p>Kanapy uses pytest to perform all its unit testing.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>runTests
+<section id="using-kanapy-in-your-python-scripts">
+<h3>Using Kanapy in your Python scripts<a class="headerlink" href="#using-kanapy-in-your-python-scripts" title="Link to this heading"></a></h3>
+<p>After installation by any of those methods, the package can be used as API within python,
+e.g. by importing the entire package with</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">kanapy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">knpy</span>
 </pre></div>
 </div>
 </section>
-<section id="updates">
-<h2>Updates<a class="headerlink" href="#updates" title="Link to this heading"></a></h2>
-<p>Kanapy is constantly under development and there will be frequent updates with bugfixes and new features. To update Kanapy, follow these steps:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>kanapy
-<span class="gp">$ </span>git<span class="w"> </span>pull
-<span class="gp">$ </span>conda<span class="w"> </span>activate<span class="w"> </span>knpy
-<span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+<section id="command-line-tools">
+<h3>Command line tools<a class="headerlink" href="#command-line-tools" title="Link to this heading"></a></h3>
+<p>Kanapy supports some command line tools, a list of supported tools can be displayed with</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>--help
 </pre></div>
 </div>
-<p>This will make the new version available in your <em>knpy</em>-environment. If your Kanapy installation has been setup for textures (MTEX module), this feature will not be affected by such updates. This update routine is also valid for global installations as system administrator.</p>
+</section>
+<section id="graphical-user-interface-gui">
+<h3>Graphical User Interface (GUI)<a class="headerlink" href="#graphical-user-interface-gui" title="Link to this heading"></a></h3>
+<p>The alpha-version of the GUI can be started with the shell command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>gui
+</pre></div>
+</div>
+</section>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
-<p>Kanapy comes with several examples in form of Python scripts and Juypter notebooks. If you want
-to create a local copy of the kanapy/examples directory within the current working directory (cwd),
-please run the command</p>
+<p>Kanapy comes with several examples in form of Python scripts and Juypter notebooks.
+If you want to create a local copy of the kanapy/examples directory within the current
+working directory (cwd), please run the command</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>copyExamples
 </pre></div>
 </div>
-</section>
-<section id="documentation-build">
-<h2>Documentation build<a class="headerlink" href="#documentation-build" title="Link to this heading"></a></h2>
-<p>The complete documentation for kanapy is available online on GitHub
-Pages: <a class="reference external" href="https://icams.github.io/Kanapy/">https://icams.github.io/Kanapy/</a></p>
-<p>Documentation for kanapy is generated using Sphinx. You can create or
-update your local documentation with the command</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(knpy)</span> <span class="gp">$ </span>kanapy<span class="w"> </span>genDocs
-</pre></div>
-</div>
-<p>The HTML documentation is then found at <em>kanapy/docs/builds/html/index.html</em></p>
+<p>Kanapy notebooks can also be used on
+<a class="reference external" href="https://mybinder.org/v2/gh/ICAMS/Kanapy.git/HEAD?urlpath=%2Fdoc%2Ftree%2Findex.ipynb">Binder</a>.</p>
 </section>
 <section id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
-<p>Kanapy’s texture module requires <a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> to be
-installed on your machine. Make sure to use MATLAB v2015a and above. The
-module uses a local version of <a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> contained in <em>kanapy/libs</em>
-and does not interfere with other installations of MTEX.</p>
-<section id="core-dependencies">
-<h3>Core dependencies<a class="headerlink" href="#core-dependencies" title="Link to this heading"></a></h3>
-<p>Below are the listed dependencies for running kanapy:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><a class="reference external" href="http://numpy.scipy.org">NumPy</a> for array manipulation.</p></li>
-<li><p><a class="reference external" href="https://www.scipy.org/">Scipy</a> for functionalities like Convexhull.</p></li>
-<li><p><a class="reference external" href="https://www.pytest.org">pytest</a> for running kanapy unit tests.</p></li>
-<li><p><a class="reference external" href="http://www.sphinx-doc.org/en/master/">sphinx</a> for generating documentation.</p></li>
-<li><p><a class="reference external" href="https://www.mathworks.com/products/matlab.html">MATLAB</a> for texture modules.</p></li>
-<li><p><a class="reference external" href="https://mtex-toolbox.github.io/">MTEX</a> for texture modules.</p></li>
-</ul>
-</div></blockquote>
-</section>
-<section id="optional-dependencies">
-<h3>Optional dependencies<a class="headerlink" href="#optional-dependencies" title="Link to this heading"></a></h3>
-<blockquote>
-<div><ul class="simple">
+<p>Below are the listed dependencies for running Kanapy:</p>
+<ul class="simple">
+<li><p><a href="#id2"><span class="problematic" id="id3">`NumPy &lt;https://numpy.org`__</span></a> for array manipulation.</p></li>
+<li><p><a class="reference external" href="https://www.scipy.org/">SciPy</a> for functionalities like Convexhull.</p></li>
 <li><p><a class="reference external" href="https://matplotlib.org/">Matplotlib</a> for plotting and visualizing.</p></li>
-<li><p><a class="reference external" href="https://ovito.org/">OVITO</a> for visualizing simulation data.</p></li>
+<li><p><a class="reference external" href="https://orix.readthedocs.io/en/stable/#">orix</a> for reading and analyzing EBSD maps
+and for generation of crystal orientations.</p></li>
+<li><p><a class="reference external" href="https://networkx.org">NetworkX</a> generating graph networks of microstructures.</p></li>
+<li><p><a class="reference external" href="https://scikit-image.org">scikit-image</a> processing of microstructure images.</p></li>
 </ul>
-</div></blockquote>
-</section>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading"></a></h2>

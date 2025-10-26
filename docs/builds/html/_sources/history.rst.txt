@@ -68,29 +68,41 @@ History
 
 * Last version with support of Command Line Interface (CLI)
 
-6.0.1 (2024-01-04)
-------------------
+6.0 (2024-01-04)
+----------------
 
  * Completely new internal data structure for improved support of dual-phase and porous structures
  * Full support of voxel files in JSON format for input and output
  * CLI tools are deactivated
  
-6.1.3 (2024-02-03)
-------------------
+6.1 (2024-02-03)
+----------------
 
  * Full support of dual-phase and porous microstructures in analysis of microstructure descriptors
  * Modified keywords of microstructure descriptors for compatibility with scipy fit functions
  * Unified notation of input/output methods
  * New methods and attributes for generation and handling of orientations
  
-6.2.1 (2024-02-25)
-------------------
+6.2 (2024-02-25)
+----------------
 
  * Improved installation process, paths stored in local copy of package
  * Possibility to include inner polyhedral structures into ellipsoids
  
-6.3.1 (2024-03-03)
-------------------
+6.3 (2024-03-03)
+----------------
 
  * Trajectories integrated by Verlet algorithm during packing
  * Extract statistical microstructure data from voxels, particles and polyhedra 
+ 
+6.4 (2025-06-07)
+----------------
+
+ * Definition of 2D EBSD microstructures as graphs based on networkx
+ * Support of the modular materials data schema for import and export of microstructures
+ 
+6.5 (2025-08-29)
+----------------
+
+ * Pure Python version for reading and analyzing EBSD maps based on Orix. The MTEX backend is still available with Kanapy-mtex.
+ 
