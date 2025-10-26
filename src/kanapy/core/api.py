@@ -1777,6 +1777,7 @@ class Microstructure(object):
                 if ori is not None:
                     entry["orientation"] = list(ori)
             grains_t0.append(entry)
+        grains_t0_sorted = sorted(grains_t0, key=lambda d: int(d["grain_id"]))
 
         # ─── Build time‐0 voxel dictionary ────────────────────────────────────────
         def _coord_to_index_1based(c, o, d):
@@ -1816,12 +1817,13 @@ class Microstructure(object):
                 if ori is not None:
                     entry["orientation"] = list(ori)
             voxels_t0.append(entry)
+        voxels_t0_sorted = sorted(voxels_t0, key=lambda d: int(d["voxel_id"]))
 
         # ─── wrap under the time‐step keys ────────────────────────────────────────
         time_steps = [
             {   "time"  : 0        ,
-                "grains": grains_t0,
-                "voxels": voxels_t0,
+                "grains": grains_t0_sorted,
+                "voxels": voxels_t0_sorted,
             },
             # …etc…
         ]
