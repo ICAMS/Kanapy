@@ -10,15 +10,26 @@ from typing import Dict, Any, Tuple, Optional, List, Union
 
 def write_dump(Ellipsoids, sim_box):
     """
-    Writes the (.dump) files into a sub-directory "dump_files", which can be read by visualization software OVITO
-    or imported again into Kanapy to avoid the packing simulation.
+    Write .dump files into a sub-directory "dump_files" for visualization or reuse in Kanapy
 
-    :param Ellipsoids: Contains information of ellipsoids such as its position, axes lengths and tilt angles 
-    :type Ellipsoids: list    
-    :param sim_box: Contains information of the dimensions of the simulation box
-    :type sim_box: :obj:`Cuboid`
+    Parameters
+    ----------
+    Ellipsoids : list
+        Contains information of ellipsoids such as positions, axes lengths, and tilt angles
+    sim_box : Cuboid
+        Contains information of the dimensions of the simulation box
 
-    .. note:: This function writes (.dump) files containing simulation domain and ellipsoid attribute information. 
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    The function creates a 'dump_files' directory in the current working directory if it does not exist
+    and writes a file named 'particle.<timestep>.dump', where <timestep> is given by sim_box.sim_ts.
+    The generated .dump files can be read by visualization software like OVITO or imported back into Kanapy
+    to avoid repeating the packing simulation. Each file contains simulation domain bounds and ellipsoid
+    attributes including position, axes lengths, and quaternion orientation.
     """
     num_particles = len(Ellipsoids)
     cwd = os.getcwd()
@@ -47,14 +58,30 @@ def write_dump(Ellipsoids, sim_box):
 
 def read_dump(file):
     """
-    Reads the (.dump) file to extract information for voxelization (meshing) routine    
+    Read a .dump file to extract simulation box and ellipsoid information for voxelization
 
-    :param file: Contains information of ellipsoids generated in the packing routine.
-    :type file: document
+    Parameters
+    ----------
+    file : str
+        Path to the .dump file containing ellipsoid data generated in the packing routine
 
-    :returns: * Cuboid object that represents the RVE.
-              * List of ellipsoid objects that represent the grains.
-    :rtype: Tuple of python objects (:obj:`Cuboid`, :obj:`Ellipsoid`)
+    Returns
+    -------
+    sim_box : Cuboid
+        Cuboid object representing the RVE (simulation box)
+    Ellipsoids : list of Ellipsoid
+        List of ellipsoid objects representing the grains
+
+    Raises
+    ------
+    FileNotFoundError
+        If the specified .dump file does not exist
+
+    Notes
+    -----
+    The function reads the simulation box dimensions and ellipsoid attributes including
+    position, axes lengths, orientation, and phase number. Duplicate ellipsoids are identified
+    based on naming convention in the dump file
     """
     print('    Reading the .dump file for particle information')
 
@@ -127,37 +154,61 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
                   *,
                   boundary_conditions: Optional[Dict[str, Any]] = None):
     """
-    Creates an ABAQUS input file with microstructure morphology information
-    in the form of nodes, elements and element sets. If "dual_phase" is true,
-    element sets with phase numbers will be defined and assigned to materials
-    "PHASE_{phase_id}MAT" plain material definitions for phases will be included.
-    Otherwise, it will be assumed that each grain refers to a material
-    "GRAIN_{grain_id}MAT. In this case, a "_mat.inp" file with the same name
-    trunc will be included, in which the alloy number and Euler angles for each
-    grain must be defined.
+    Create an ABAQUS input file with microstructure morphology information including nodes, elements, and element sets
 
     Parameters
     ----------
-    nodes
-    file
-    grain_dict
-    voxel_dict
-    units
-    gb_area
-    dual_phase
-    thermal
-    ialloy
-    grain_phase_dict
-    periodic
-    bc_type
-    load_type
-    loading_direction
-    value
-    apply_bc : bool, optional
-    If True, boundary conditions are written to the Abaqus input file. Default is False.
+    nodes : list
+        List of node objects or coordinates
+    file : str
+        Output file path for the ABAQUS input file
+    grain_dict : dict
+        Dictionary containing grain information
+    voxel_dict : dict
+        Dictionary containing voxel-to-grain mapping
+    units : str, optional
+        Units used in the input file (default is 'um')
+    gb_area : optional
+        Grain boundary area information
+    dual_phase : bool, optional
+        If True, element sets with phase numbers are defined and assigned to materials "PHASE_{phase_id}MAT"
+        If False, each grain refers to a material "GRAIN_{grain_id}MAT"
+    thermal : bool, optional
+        If True, thermal properties are included
+    ialloy : optional
+        Alloy information for grains, used if dual_phase is False
+    grain_phase_dict : dict, optional
+        Mapping from grain ID to phase ID
+    crystal_plasticity : bool, optional
+        If True, crystal plasticity data is included
+    phase_props : optional
+        Phase properties for crystal plasticity
+    boundary_conditions : dict, optional
+        Dictionary defining boundary conditions, keys may include type, loading_direction, value, etc.
+
+    Notes
+    -----
+    If dual_phase is False, a "_mat.inp" file with the same name is expected to define alloy number
+    and Euler angles for each grain. Element sets are written for grains or phases depending on dual_phase.
+    The function handles nodes, elements, sets, and optionally boundary conditions for ABAQUS simulations.
     """
 
     def write_node_set(name, nset):
+        """
+        Write a node set to a file with formatting compatible with ABAQUS input
+
+        Parameters
+        ----------
+        name : str
+            Name of the node set to be written
+        nset : list of int
+            List of node indices belonging to the node set
+
+        Notes
+        -----
+        Nodes are written in rows of 16 entries. Node indices are incremented by 1
+        to match ABAQUS indexing convention (1-based)
+        """
         f.write(name)
         for i, val in enumerate(nset[:-1], start=1):
             if i % 16 == 0:
@@ -167,6 +218,18 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
         f.write(f'{nset[-1] + 1}\n')
 
     def write_grain_sets():
+        """
+        Write element sets for grains and assign materials in an ABAQUS input file
+
+        Notes
+        -----
+        For each grain in grain_dict, an element set named "GRAIN{grain_id}_SET" is written.
+        Elements are written in rows of 16 entries. Each set is assigned to a material:
+        - If grain_phase_dict is None or the phase ID is less than nall, the grain is assigned
+          "GRAIN{grain_id}_MAT"
+        - Otherwise, the grain is assigned "PHASE{phase_id}_MAT"
+        The function updates ph_set with phase IDs used for dual-phase assignments
+        """
         for k, v in grain_dict.items():
             f.write('*ELSET, ELSET=GRAIN{0}_SET\n'.format(k))
             for enum, el in enumerate(v[:-1], start=1):
@@ -188,6 +251,15 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
         return
 
     def write_phase_sets():
+        """
+        Write element sets for phases and assign phase materials in an ABAQUS input file
+
+        Notes
+        -----
+        For each phase in grain_dict, an element set named "PHASE{phase_id}_SET" is written.
+        Elements are written in rows of 16 entries. Each set is assigned to a material
+        "PHASE{phase_id}_MAT". The function updates ph_set with all phase IDs used.
+        """
         for k, v in grain_dict.items():
             f.write('*ELSET, ELSET=PHASE{0}_SET\n'.format(k))
             for enum, el in enumerate(v, start=1):
@@ -206,7 +278,17 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
         return
 
     def write_surface_sets():
+        """
+        Write surface element sets for the simulation domain in an ABAQUS input file
 
+        Notes
+        -----
+        The function identifies the maximum faces along X, Y, and Z directions using the node grid.
+        For each face, an ELSET and corresponding SURFACE block is written. Element IDs are sorted
+        and written in rows of 16 entries per line. The helper function _emit handles formatting
+        and writing of each face. Surface sets are named "_Surf-{idx}_{label}" and the corresponding
+        SURFACE block is named "Surf-{idx}" with type ELEMENT.
+        """
         # 1) Find grid dimensions
         xs = np.unique(nodes[:, 0])
         ys = np.unique(nodes[:, 1])
@@ -235,6 +317,24 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
 
         # 3) Helper to write one ELSET/SURFACE block
         def _emit(face_ids, idx, label):
+            """
+            Write a single surface element set and corresponding SURFACE block to a file
+
+            Parameters
+            ----------
+            face_ids : set of int
+                Set of element IDs belonging to the surface
+            idx : int
+                Index of the surface for labeling
+            label : str
+                Label indicating the surface direction or type
+
+            Notes
+            -----
+            Element IDs are sorted and written in rows of 16 entries per line.
+            The ELSET is named "_Surf-{idx}_{label}" and the corresponding SURFACE block
+            is named "Surf-{idx}" with type ELEMENT.
+            """
             f.write(f'*ELSET, ELSET=_Surf-{idx}_{label}, internal, instance=PART-1-1\n')
             # chunk 16 IDs per line
             ids = sorted(face_ids)
@@ -252,6 +352,15 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
         _emit(z_max, 3, 'S6')  # Z = max
 
     def write_boundary_conditions():
+        """
+        Write boundary conditions for the ABAQUS input file based on the loading direction
+
+        Notes
+        -----
+        Depending on the value of loading_direction ('x', 'y', 'z', 'xy', 'xz', 'yz'),
+        corresponding nodes are fixed in specific displacement/rotation directions.
+        Each boundary condition block is preceded by a comment indicating its name and type.
+        """
         f.write('** BOUNDARY CONDITIONS\n')
         f.write('**\n')
         if loading_direction == 'x':
@@ -301,6 +410,17 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
             f.write('*Boundary\nF0yz, 1, 1\n')
 
     def write_load():
+        """
+        Write loading conditions to the ABAQUS input file based on load type and direction
+
+        Notes
+        -----
+        Supports 'strain' or 'stress' loading types. For strain loading, the displacement
+        is calculated using logarithmic strain based on the edge length and stretch ratio.
+        For stress loading, a pressure load is applied to the corresponding surface set.
+        The function uses mappings from loading_direction to node or surface sets and
+        writes appropriate *Boundary or *Dload blocks in the ABAQUS input file.
+        """
 
         if load_type == 'strain':
             displacement_bc_map = {
@@ -351,6 +471,22 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
 
 
     def write_periodic_load():
+        """
+        Write periodic loading conditions for stress or strain to the ABAQUS input file
+
+        Raises
+        ------
+        ValueError
+            If loading_direction is unsupported for the selected load_type
+            or if load_type is not 'stress' or 'strain'
+
+        Notes
+        -----
+        For stress loading, the force is calculated as stress multiplied by the face area and
+        applied using *Cload. For strain loading, the displacement is calculated using
+        logarithmic strain based on edge length and applied using *Boundary.
+        Maps from loading_direction to node or surface IDs are used for correct application.
+        """
         if load_type == 'stress':
             f.write('** BOUNDARY CONDITIONS\n')
             f.write('** \n')
@@ -413,27 +549,37 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
 
     def _parse_boundary_conditions():
         """
-        Parser and validate boundary_conditions from the outer scope.
+        Parse and validate the boundary_conditions dictionary
 
-        boundary_conditions schema:
-        {
-          "apply_bc": bool,              # default False
-          "periodic_bc": bool,           # default False
-          "type_bc": "stress"|"force"|"strain"|"displacement",
-          "components_bc": [
-              list of 6 elements: float or '*' for free DOF if type is "strain"/"displacement",
-              or 0 for free DOF if type is "stress"/"force"
-          ]
-        }
+        Parameters
+        ----------
+        None
+            Uses the `boundary_conditions` variable from the outer scope
 
         Returns
         -------
         apply_bc : bool
+            Whether boundary conditions should be applied
         periodic_bc : bool
-        load_type : str       # 'strain' or 'stress'
-        load_case : str       # 'uni-axial' or 'shear'
-        direction : str       # 'x'|'y'|'z'|'xy'|'xz'|'yz'
+            Whether periodic boundary conditions are requested
+        load_type : str
+            'strain' or 'stress' depending on type_bc or components_bc
+        load_case : str
+            'uni-axial' for normal loads or 'shear' for shear loads
+        direction : str
+            Loading direction: 'x', 'y', 'z', 'xy', 'xz', or 'yz'
         magnitude : float
+            Magnitude of the load or displacement
+
+        Raises
+        ------
+        ValueError
+            If `boundary_conditions` is not a dict, has invalid format, or contains invalid entries
+
+        Notes
+        -----
+        The function validates that only one degree of freedom has a non-zero magnitude (for stress)
+        or a numeric value (for strain), and maps the index to the corresponding direction and load type.
         """
         if boundary_conditions is None:
             return False, False, 'strain', 'uni-axial', 'x', 0.0
@@ -1378,21 +1524,29 @@ def writeAbaqusPhase(grains, nsdv=200):
 
 
 def pickle2microstructure(file, path='./'):
-    """Read pickled microstructure file.
-
+    """
+    Load a pickled microstructure object from disk.
 
     Parameters
     ----------
-    file : string
-        File name of pickled microstructure to be read.
-    path : string
-        Path under which pickle-files are stored (optional, default: './')
+    file : str
+        Filename of the pickled microstructure.
+    path : str, optional
+        Directory where the pickle file is stored (default: './').
 
     Returns
     -------
-    pcl : Material object
-        unpickled microstructure
+    pcl : Material
+        Unpickled microstructure object.
 
+    Raises
+    ------
+    ValueError
+        If `file` is None.
+    FileNotFoundError
+        If the specified pickle file does not exist.
+    pickle.UnpicklingError
+        If the file cannot be unpickled (e.g., corrupted or invalid format).
     """
     import pickle
 
@@ -1405,6 +1559,58 @@ def pickle2microstructure(file, path='./'):
 
 
 def import_voxels(file, path='./'):
+    """
+    Import a voxelized microstructure from a JSON file and reconstruct
+    a `Microstructure` object for further analysis or simulation.
+
+    The voxel file typically contains:
+    - Grain-wise orientation, phase, and shape information
+    - Global model metadata (size, periodicity, phase names, etc.)
+    - Optionally, mesh node coordinates and voxel connectivity
+
+    Parameters
+    ----------
+    file : str
+        Filename of the voxelized microstructure JSON file to import.
+    path : str, optional
+        Path where the JSON file is located (default: './').
+
+    Returns
+    -------
+    ms : Microstructure
+        Fully reconstructed microstructure object containing:
+        - Grain geometry, phases, orientations
+        - Voxel-level mesh and connectivity
+        - Simulation box and RVE setup
+        - Volume fractions and statistics
+
+    Raises
+    ------
+    ValueError
+        If `file` is None.
+    FileNotFoundError
+        If the specified voxel file cannot be found.
+    KeyError
+        If required keys (e.g. 'Data', 'Model') are missing in the JSON file.
+    json.JSONDecodeError
+        If the file is not a valid JSON.
+    RuntimeError
+        If the phase volume fractions do not sum to 1.0 (severe data inconsistency).
+
+    Notes
+    -----
+    - If `grain_phase_dict` or orientation information is missing,
+      the function will fall back to single-phase mode and log warnings.
+    - The mesh is either reconstructed from the JSON (if provided)
+      or generated using `mesh_creator()`.
+    - Periodicity and unit information are retained from the model metadata.
+
+    Examples
+    --------
+    >>> ms = import_voxels('example_vox.json', path='./input')
+    >>> print(ms.Ngr, 'grains loaded with', ms.nphases, 'phases.')
+    >>> print(ms.mesh.nodes.shape, 'mesh nodes')
+    """
     import json
     import copy
     from .api import Microstructure
@@ -1523,18 +1729,42 @@ def import_voxels(file, path='./'):
 
 def write_stats(stats, file, path='./'):
     """
-    Write statistical descriptors of microstructure to JSON file.
+    Write microstructure statistical descriptors to a JSON file.
+
+    This function serializes the provided statistical data (e.g., phase
+    fractions, grain sizes, RVE dimensions) and writes it to disk in JSON format.
+    The `.json` extension is automatically appended if not provided.
 
     Parameters
     ----------
     stats : dict
-        Dictionary with statistical descriptors to be stored.
-    file : string
-        File name fpr microstructure descriptors to be written. Ending '.json' extension will be appended
-        if missing.
-    path : string
-        Path under which microstructure JSON file is stored (optional, default: './')
+        Dictionary containing statistical descriptors of the microstructure
+        (e.g., grain count, phase fractions, RVE size, or any other metadata).
+    file : str
+        Output filename for the JSON file. The '.json' extension will be appended
+        automatically if missing.
+    path : str, optional
+        Directory path where the JSON file will be written (default: './').
 
+    Raises
+    ------
+    ValueError
+        If `stats` or `file` is None.
+    OSError
+        If the file cannot be written (e.g., due to permission or path issues).
+    TypeError
+        If `stats` contains non-serializable objects (invalid for JSON encoding).
+
+    Notes
+    -----
+    - The function uses Python's built-in :mod:`json` module.
+    - The output file is overwritten if it already exists.
+
+    Examples
+    --------
+    >>> stats = {"RVE": {"Nx": 20, "Ny": 20, "Nz": 20}, "Phase": {"Volume fraction": 0.8}}
+    >>> write_stats(stats, "example_stats")
+    # Writes './example_stats.json'
     """
     import json
     if stats is None:
@@ -1550,21 +1780,46 @@ def write_stats(stats, file, path='./'):
 
 def import_stats(file, path='./'):
     """
-    Read statistical descriptors of microstructure from JSON file.
+    Read microstructure statistical descriptors from a JSON file.
+
+    This function loads and parses a JSON file containing statistical
+    information about a microstructure, such as RVE dimensions, phase fractions,
+    or grain statistics.
 
     Parameters
     ----------
-    file : string
-        File name from which microstructure descriptors to be written. Ending '.json' extension will be appended
-        if missing.
-    path : string
-        Path under which JSON file is stored (optional, default: './')
+    file : str
+        Filename of the JSON file to read. The '.json' extension will be appended
+        automatically if missing.
+    path : str, optional
+        Directory path where the JSON file is located (default: './').
 
     Returns
     -------
     desc : dict
-        Dictionary with statistical microstructure descriptors
+        Dictionary containing the statistical microstructure descriptors.
 
+    Raises
+    ------
+    ValueError
+        If `file` is None.
+    FileNotFoundError
+        If the specified JSON file does not exist.
+    json.JSONDecodeError
+        If the file cannot be parsed as valid JSON.
+    OSError
+        If the file cannot be read due to permission or I/O errors.
+
+    Notes
+    -----
+    - The function expects the JSON file to contain key-value pairs describing
+      microstructure statistics compatible with the output of :func:`write_stats`.
+
+    Examples
+    --------
+    >>> desc = import_stats("example_stats.json")
+    >>> print(desc["RVE"]["Nx"])
+    20
     """
     import json
     if file is None:

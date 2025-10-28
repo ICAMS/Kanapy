@@ -15,27 +15,31 @@ from tqdm import tqdm
 
 def calc_polygons(rve, mesh, tol=1.e-3):
     """
-    Evaluates the grain volume and the grain boundary shared surface area
-    between neighbouring grains in voxelized microstrcuture. Generate
-    vertices as contact points between 3 or more grains. Generate
-    polyhedral convex hull for vertices.
+    Evaluates grain volumes and the shared surface area of grain boundaries
+    between neighboring grains in a voxelized microstructure. Generates
+    vertices at contact points where three or more grains meet and constructs
+    polyhedral convex hulls for these vertices.
 
     Parameters
     ----------
     rve : kanapy object
-        Contains information about RVE geometry
+        Object containing information about the RVE geometry.
     mesh : kanapy object
-        Contains information about the voxel mesh and grain definitions for each voxel
+        Object containing voxel mesh details and grain assignments for each voxel.
     tol : float, optional
-        Tolerance value. The default is 1.e-3.
+        Tolerance for numerical operations. Default is 1.e-3.
 
     Returns
     -------
     geometry : dict
+        Dictionary containing the calculated geometrical information, including
+        vertices, contact points, and convex hulls for grains.
 
-    ISSUES: for periodic structures, large grains with segments in both
-    halves of the box and touching one boundary are split wrongly
-
+    Notes
+    -----
+    For periodic structures, large grains spanning both halves of the simulation
+    box and touching a boundary may be incorrectly split, which can affect
+    geometry calculations.
     """
 
     def facet_on_boundary(conn):
@@ -69,10 +73,30 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         return face
 
     def check_neigh(nodes, grains, margin):
-        """ Check if close neighbors of new vertices are already in list
-        # nodes: list of nodes identified as new vertices
-        # grains: set of grains containing the nodes in elist
-        # margin: radius in which vertices will be united"""
+        """
+        Checks if new vertices are close to existing vertices in neighboring grains
+        and merges them if within a given margin
+
+        Parameters
+        ----------
+        nodes : list
+            List of node IDs identified as new vertices.
+        grains : set
+            Set of grain IDs containing the nodes in the element list.
+        margin : float
+            Radius within which vertices will be considered identical and united.
+
+        Returns
+        -------
+        list
+            Updated list of node IDs with close neighbors merged.
+
+        Notes
+        -----
+        For each new vertex, the function computes distances to all vertices of the specified grains.
+        If a vertex lies within the specified margin, it is merged with the existing vertex.
+        Special treatment is applied for vertices on the RVE boundaries using the `RVE_min` and `RVE_max` values.
+        """
 
         # create set of all vertices of all involved grains
         vset = set()
@@ -104,22 +128,21 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     def get_voxel(pos):
         """
-        Get voxel associated with position vector pos.
+        Determines the voxel indices corresponding to a given position vector
 
         Parameters
         ----------
-        pos : TYPE
-            DESCRIPTION.
+        pos : array-like
+            Position vector in the 3D space of the RVE.
 
         Returns
         -------
-        v0 : TYPE
-            DESCRIPTION.
-        v1 : TYPE
-            DESCRIPTION.
-        v2 : TYPE
-            DESCRIPTION.
-
+        v0 : int
+            Voxel index along the x-axis.
+        v1 : int
+            Voxel index along the y-axis.
+        v2 : int
+            Voxel index along the z-axis.
         """
         v0 = np.minimum(int(pos[0] / voxel_res[0]), rve.dim[0] - 1)
         v1 = np.minimum(int(pos[1] / voxel_res[1]), rve.dim[1] - 1)
@@ -128,15 +151,19 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     def tet_in_grain(tet, vertices):
         """
+        Checks whether all vertices of a given tetrahedron belong to a specified set of vertices
 
         Parameters
         ----------
-        tet
-        vertices
+        tet : list or array-like
+            Indices of the tetrahedron's vertices
+        vertices : set or list
+            Set of vertices to check against
 
         Returns
         -------
-
+        bool
+            True if all tetrahedron vertices are in the specified set, False otherwise
         """
         return geometry['Vertices'][tet[0]] in vertices and \
             geometry['Vertices'][tet[1]] in vertices and \
@@ -145,17 +172,19 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     def vox_in_tet(vox_, tet_):
         """
-        Determine whether centre of voxel lies within tetrahedron
+        Determine whether the center of a voxel lies within a given tetrahedron
 
         Parameters
         ----------
-        vox_
-        tet_
+        vox_ : int or tuple
+            Index or identifier of the voxel
+        tet_ : list or array-like
+            Indices of the tetrahedron's vertices
 
         Returns
         -------
         contained : bool
-            Voxel lies in tetrahedron
+            True if the voxel center lies inside the tetrahedron, False otherwise
         """
 
         v_pos = mesh.vox_center_dict[vox_]
@@ -181,16 +210,17 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     def get_diameter(pts):
         """
-        Get estimate of largest diameter of a set of points.
+        Get estimate of the largest diameter of a set of points
+
         Parameters
         ----------
         pts : (N, dim) ndarray
-            Point set in dim dimensions
+            Array of points in dim-dimensional space
 
         Returns
         -------
-        diameter : (dim)-ndarray
-
+        diameter : (dim,) ndarray
+            Vector representing the largest extent of the point set along any Cartesian axis
         """
         ind0 = np.argmin(pts, axis=0)  # index of point with lowest coordinate for each Cartesian axis
         ind1 = np.argmax(pts, axis=0)  # index of point with highest coordinate for each Cartesian axis
@@ -201,7 +231,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     def project_pts(pts, ctr, axis):
         """
-        Project points (pts) to plane defined via center (ctr) and normal vector (axis).
+        Project points (pts) to plane defined via center (ctr) and normal vector (axis)
 
         Parameters
         ----------

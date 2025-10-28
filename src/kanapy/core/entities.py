@@ -38,8 +38,38 @@ def cub_oct_split(cub):
 
 class Simulation_Box(object):
     """
-    Creates :class:`~Simulation_Box` objects for the defined simulation domain.
+    Represents a 3D simulation domain box
 
+    This class defines the simulation box dimensions and boundaries,
+    and keeps track of the simulation time step.
+
+    Parameters
+    ----------
+    size : tuple of float
+        Dimensions of the box as (width, height, depth).
+
+    Attributes
+    ----------
+    w : float
+        Width of the box.
+    h : float
+        Height of the box.
+    d : float
+        Depth of the box.
+    sim_ts : int
+        Current simulation time-step, initialized to 0.
+    left : float
+        Position of the left boundary, initialized to 0.
+    top : float
+        Position of the top boundary, initialized to 0.
+    front : float
+        Position of the front boundary, initialized to 0.
+    right : float
+        Position of the right boundary, initialized to width.
+    bottom : float
+        Position of the bottom boundary, initialized to height.
+    back : float
+        Position of the back boundary, initialized to depth.
     """
 
     def __init__(self, size):
@@ -57,30 +87,77 @@ class Simulation_Box(object):
 
 class Ellipsoid(object):
     """
-    Creates :class:`~Ellipsoid` objects for each ellipsoid generated from input statistics. 
+    Creates Ellipsoid objects for each ellipsoid generated from input statistics
 
-    :param iden: ID of the ellipsoid
-    :type iden: integer
-    :param center: Position :math:`(x, y, z)` of the ellipsoid center in the simulation domain      
-    :type center: floats    
-    :param coefficient: Semi-major and semin-minor axes lengths :math:`(a, b, c)` of the ellipsoid    
-    :type coefficient: floats   
-    :param quat: Quaternion representing ellipsoid's axis and tilt angle with respect 
-                 to the positive x-axis       
-    :type quat: numpy array    
+    Parameters
+    ----------
+    iden : int
+        ID of the ellipsoid
+    x : float
+        X-coordinate of the ellipsoid center
+    y : float
+        Y-coordinate of the ellipsoid center
+    z : float
+        Z-coordinate of the ellipsoid center
+    a : float
+        Semi-major axis length of the ellipsoid
+    b : float
+        Semi-minor axis length of the ellipsoid
+    c : float
+        Semi-minor axis length of the ellipsoid
+    quat : numpy.ndarray
+        Quaternion representing the ellipsoid's orientation
+    phasenum : int, optional
+        Phase number of the ellipsoid, default is 0
+    dup : optional
+        Duplicate status used for voxelization, default is None
+    points : list or None, optional
+        Points used to create a Delaunay tessellation for the ellipsoid, default is None
 
-    .. note:: 1. The orientations of ellipsoid :math:`i` in the global coordinate space is defined by its 
-                 tilt angle and axis vector and expressed in quaternion notation as,
+    Attributes
+    ----------
+    id : int
+        ID of the ellipsoid
+    x, y, z : float
+        Position of the ellipsoid center
+    xold, yold, zold : float
+        Previous positions
+    a, b, c : float
+        Semi-major and semi-minor axes lengths
+    oria, orib, oric : float
+        Original axes lengths
+    speedx, speedy, speedz : float
+        Velocity components, initialized to 0
+    force_x, force_y, force_z : float
+        Forces acting on the ellipsoid, initialized to 0
+    rotation_matrix : ndarray
+        Rotation matrix of the ellipsoid
+    surface_points : list
+        Surface points of the ellipsoid
+    inside_voxels : list
+        Voxels belonging to the ellipsoid
+    duplicate : optional
+        Duplicate status used for voxelization
+    phasenum : int
+        Phase number
+    branches : list
+        Branches associated with the ellipsoid
+    neighborlist : set
+        Neighbor ellipsoids
+    ncollision : int
+        Number of collisions
+    inner : optional
+        Delaunay tessellation of points if provided, else None
 
-                 .. image:: /figs/quaternion_ell.png                        
-                    :width: 210px
-                    :height: 40px
-                    :align: center   
+    Notes
+    -----
+    1. The orientation of each ellipsoid in the global coordinate space is defined by its
+       tilt angle and axis vector, expressed in quaternion notation.
 
-              2. Ellipsoids are initilaized without a value for its velocity,
-                 and is later assigned a random value by :mod:`kanapy.packing.particle_generator`.
+    2. Ellipsoids are initialized without a velocity; a random value is later assigned by
+       `kanapy.packing.particle_generator`.
 
-              3. An empty list for storing voxels belonging to the ellipsoid is initialized.                   
+    3. An empty list for storing voxels belonging to the ellipsoid is initialized.
     """
 
     def __init__(self, iden, x, y, z, a, b, c, quat, phasenum=0, dup=None, points=None):
@@ -118,33 +195,45 @@ class Ellipsoid(object):
 
     def get_pos(self):
         """
-        Returns the position array of the ellipsoid
+        Return the current position of the ellipsoid
 
-        :rtype: numpy array
+        Returns
+        -------
+        numpy.ndarray
+            A 1D array [x, y, z] representing the current center coordinates of the ellipsoid.
         """
         return np.array([self.x, self.y, self.z])
 
     def get_coeffs(self):
         """
-        Returns the coefficients array of the ellipsoid
+        Return the semi-axes coefficients of the ellipsoid
 
-        :rtype: numpy array
+        Returns
+        -------
+        numpy.ndarray
+            A 1D array [a, b, c] representing the semi-major and semi-minor axes lengths of the ellipsoid.
         """
         return np.array([self.a, self.b, self.c])
 
     def get_volume(self):
         """
-        Returns the volume of the ellipsoid
+        Return the volume of the ellipsoid
 
-        :rtype: float
+        Returns
+        -------
+        float
+            The volume of the ellipsoid calculated as (4/3) * pi * a * b * c.
         """
         return (4 / 3) * np.pi * self.a * self.b * self.c
 
     def rotationMatrixGen(self):
         """
-        Evaluates the rotation matrix for the ellipsoid using the quaternion
+        Compute the rotation matrix of the ellipsoid from its quaternion
 
-        :rtype: numpy array
+        Returns
+        -------
+        numpy.ndarray
+            A 3x3 rotation matrix representing the ellipsoid's orientation.
         """
 
         FLOAT_EPS = np.finfo(float).resolution
@@ -174,9 +263,17 @@ class Ellipsoid(object):
 
     def surfacePointsGen(self, nang=20):
         """
-        Generates points on the outer surface of the ellipsoid using the rotation matrix from :meth:`rotationMatrixGen`
+        Generate points on the outer surface of the ellipsoid using its rotation matrix
 
-        :rtype: numpy array
+        Parameters
+        ----------
+        nang : int, optional
+            Number of points along each angular direction (default is 20).
+
+        Returns
+        -------
+        numpy.ndarray
+            An array of shape (nang*nang, 3) containing 3D coordinates of points on the ellipsoid surface.
         """
         # Points on the outer surface of Ellipsoid
         u = np.linspace(0, 2 * np.pi, nang)
@@ -196,10 +293,12 @@ class Ellipsoid(object):
 
     def growth(self, fac):
         """
-        Increases the size of the ellipsoid along its axes governed by the volume increment
+        Increase the size of the ellipsoid along its axes by a scaling factor
 
-        :param dv: Volume increment per time step
-        :type dv: float
+        Parameters
+        ----------
+        fac : float
+            Scaling factor applied to the original axes lengths.
         """
         self.a = self.oria * fac
         self.b = self.orib * fac
@@ -208,10 +307,12 @@ class Ellipsoid(object):
 
     def Bbox(self):
         """
-        Generates the bounding box limits along x, y, z directions using the surface points from
-        :meth:`surfacePointsGen`
+        Compute the axis-aligned bounding box of the ellipsoid using its surface points
 
-        :rtype: numpy array
+        Sets the attributes:
+        - bbox_xmin, bbox_xmax
+        - bbox_ymin, bbox_ymax
+        - bbox_zmin, bbox_zmax
         """
         # Add position vector
         self.surface_points = self.surfacePointsGen()
@@ -226,15 +327,21 @@ class Ellipsoid(object):
 
     def get_cub(self):
         """
-        Returns the cuboid object of the ellipsoid
+        Return the cuboid object of the ellipsoid
 
-        :rtype: object of the class :class:`~Cuboid` 
+        Returns
+        -------
+        Cuboid
+            Cuboid object representing the ellipsoid's bounding cuboid
         """
         return self.cub
 
     def set_cub(self):
         """
-        Initializes an object of the class :class:`~Cuboid` using the bounding box limits from :meth:`Bbox`         
+        Initialize an object of the class Cuboid using the bounding box limits from Bbox
+
+        This method calls the Bbox method to obtain the bounding box limits and then
+        creates a Cuboid object using these limits
         """
         self.Bbox()
         self.cub = Cuboid(self.bbox_xmin, self.bbox_ymin, self.bbox_xmax,
@@ -242,14 +349,39 @@ class Ellipsoid(object):
 
     def create_poly(self, points):
         """
-        Creates a polygon inside the ellipsoid
+        Create a polygon inside the ellipsoid
+
+        This method applies a rotation to the input points using the object's rotation_matrix
+        and computes the Delaunay triangulation to form a polygon
+
+        Parameters
+        ----------
+        points : array_like
+            Input points to construct the polygon
+
+        Returns
+        -------
+        Delaunay
+            A Delaunay triangulation object representing the polygon
         """
         return Delaunay(points.dot(self.rotation_matrix))
 
     def sync_poly(self, scale=None):
         """
-        Moves the center of the polygon to the center of the ellipsoid and
-        scales the hull to fit inside the ellipsoid
+        Move the center of the polygon to the center of the ellipsoid and scale the hull to fit inside the ellipsoid
+
+        This method recenters the polygon points at the ellipsoid's center, applies rotation
+        and scaling to fit the polygon inside the ellipsoid, and updates the Delaunay triangulation.
+
+        Parameters
+        ----------
+        scale : float, optional
+            Scaling factor to apply to the polygon. If None, the default poly_scale from kanapy is used.
+
+        Notes
+        -----
+        The function assumes that self.inner contains a Delaunay object representing the polygon.
+        If self.inner is None, the method does nothing.
         """
         if scale is None:
             from kanapy import poly_scale as scale
@@ -279,9 +411,19 @@ class Ellipsoid(object):
 
     def move(self, dt):
         """
-        Moves the ellipsoid by updating its position vector according to the Verlet integration method
+        Move the ellipsoid by updating its position vector using the Verlet integration method
 
-        .. note:: The :class:`~Cuboid` object of the ellipsoid has to be updated everytime it moves
+        This method updates the ellipsoid's position and velocity components based on
+        the current force and previous positions, and then updates the Cuboid object.
+
+        Parameters
+        ----------
+        dt : float
+            Time step used in the Verlet integration
+
+        Notes
+        -----
+        The Cuboid object of the ellipsoid must be updated every time the ellipsoid moves
         """
         xx = 2.0 * self.x - self.xold + self.force_x * dt * dt
         yy = 2.0 * self.y - self.yold + self.force_y * dt * dt
@@ -299,12 +441,16 @@ class Ellipsoid(object):
 
     def gravity_effect(self, value):
         """
-        Moves the ellipsoid downwards to mimick the effect of gravity acting on it  
+        Move the ellipsoid downwards to mimic the effect of gravity acting on it
 
-        :param value: User defined value for downward movement 
-        :type value: float
+        Parameters
+        ----------
+        value : float
+            User defined value for downward movement
 
-        .. note:: The :class:`~Cuboid` object of the ellipsoid has to be updated everytime it moves
+        Notes
+        -----
+        The Cuboid object of the ellipsoid must be updated every time it moves
         """
         self.x += 0
         self.y -= value
@@ -313,19 +459,27 @@ class Ellipsoid(object):
 
     def wallCollision(self, sim_box, periodicity):
         """
-        Evaluates whether the ellipsoid collides with the boundaries of the simulation box.
+        Evaluate whether the ellipsoid collides with the boundaries of the simulation box
 
-        * If periodicity is enabled -> Creates duplicates of the ellipsoid on opposite faces of the box
-        * If periodicity is disabled -> Mimicks the bouncing back effect.
+        This method checks if the ellipsoid intersects with the simulation box walls.
+        If periodicity is enabled, duplicates of the ellipsoid are created on opposite faces.
+        If periodicity is disabled, the ellipsoid bounces back from the walls.
 
-        :param sim_box: Simulation box
-        :type sim_box: object of the class :class:`~Simulation_Box`
-        :param periodicity: Status of periodicity
-        :type periodicity: boolean
-        :returns: if periodic - ellipsoid duplicates, else None
-        :rtype: list
+        Parameters
+        ----------
+        sim_box : Simulation_Box
+            Simulation box object containing boundary limits
+        periodicity : bool
+            Status of periodicity
 
-        .. note:: The :class:`~Cuboid` object of the ellipsoid has to be updated everytime it moves
+        Returns
+        -------
+        list
+            List of ellipsoid duplicates if periodicity is enabled, otherwise an empty list
+
+        Notes
+        -----
+        The Cuboid object of the ellipsoid must be updated every time the ellipsoid moves
         """
         duplicates = []
         # for periodic boundaries
@@ -748,20 +902,22 @@ class Ellipsoid(object):
 
 class Cuboid(object):
     """
-    Creates :class:`Cuboid` objects for ellipsoids and Octree sub-branches.
+    Create Cuboid objects for ellipsoids and Octree sub-branches
 
-    :param left: Bounding box minimum along x
-    :param top: Bounding box minimum along y
-    :param right: Bounding box maximum along x
-    :param bottom: Bounding box maximum along y
-    :param front: Bounding box minimum along z
-    :param back: Bounding box maximum along z
-    :type left: float
-    :type top: float
-    :type right: float
-    :type bottom: float
-    :type front: float
-    :type back: float   
+    Parameters
+    ----------
+    left : float
+        Bounding box minimum along x
+    top : float
+        Bounding box minimum along y
+    right : float
+        Bounding box maximum along x
+    bottom : float
+        Bounding box maximum along y
+    front : float
+        Bounding box minimum along z
+    back : float
+        Bounding box maximum along z
     """
 
     def __init__(self, left, top, right, bottom, front, back):
@@ -778,13 +934,17 @@ class Cuboid(object):
 
     def intersect(self, other):
         """
-        Evaluates whether the :class:`Cuboid` object of the ellipsoid intersects with the :class:`Cuboid` object
-        of the :class:`Octree` sub-branch.
+        Evaluate whether the Cuboid object of the ellipsoid intersects with the Cuboid object of the Octree sub-branch
 
-        :param other: Sub-branch cuboid object of the octree
-        :type other: object of the class :class:`Cuboid`
-        :returns: if intersection - **True**, else **False**
-        :rtype: boolean
+        Parameters
+        ----------
+        other: Cuboid
+            Sub-branch cuboid object of the octree
+
+        Returns
+        -------
+        bool
+            True if intersection occurs, False otherwise
         """
 
         # six conditions that guarantee non-overlapping of cuboids
@@ -800,18 +960,22 @@ class Cuboid(object):
 
 class Octree(object):
     """
-    Creates :class:`~Octree` objects for tree trunk and its sub-branches.
+    Create an Octree object for tree trunk and its sub-branches
 
-    :param level: Current level of the Octree
-    :param cub: Cuboid object of the tree trunk / sub-branches
-    :param particles: Particles within the tree trunk / sub-branches
-    :type level: int
-    :type cub: object of the class :class:`~Cuboid`
-    :type particles: list  
+    Parameters
+    ----------
+    level: int
+        Current level of the Octree, 0 for the trunk
+    cub: Cuboid
+        Cuboid object of the tree trunk or sub-branches, should be entire simulation box for the trunk
+    particles: list
+        List of particles within the tree trunk or sub-branches, contains all ellipsoids in the simulation domain for the trunk
 
-    .. note:: 1. **level** is set to zero for the trunk of the Octree.
-              2. **cub** should be entire simulation box for the tree trunk.
-              3. **particles** list contains all the ellipsoids in the simulation domain for the tree trunk.
+    Notes
+    -----
+    1. level is set to zero for the trunk of the Octree
+    2. cub should be entire simulation box for the tree trunk
+    3. particles list contains all the ellipsoids in the simulation domain for the tree trunk
     """
 
     def __init__(self, level, cub, particles=[]):
@@ -825,16 +989,22 @@ class Octree(object):
 
     def get_cub(self):
         """
-        Returns the cuboid object of the octree sub-branch        
+        Return the cuboid object of the octree sub-branch
 
-        :rtype: object :obj:`Cuboid`                
+        Returns
+        -------
+        Cuboid
+            Cuboid object corresponding to the octree sub-branch
         """
         return self.cub
 
     def subdivide(self):
         """
-        Divides the given Octree sub-branch into eight further sub-branches and 
-        initializes each newly created sub-branch as an :class:`~Octree` object             
+        Divide the Octree sub-branch into eight further sub-branches and initialize each as an Octree object
+
+        Notes
+        -----
+        Each newly created sub-branch is appended to the branches list of the current Octree
         """
         for cub in cub_oct_split(self.cub):
             branch = Octree(self.level + 1, cub, [])
@@ -842,14 +1012,23 @@ class Octree(object):
 
     def add_particle(self, particle):
         """
-        Update the particle list of the Octree sub-branch            
+        Update the particle list of the Octree sub-branch
+
+        Parameters
+        ----------
+        particle: object
+            Particle object to be added to the sub-branch
         """
         self.particles.append(particle)
 
     def subdivide_particles(self):
         """
-        Evaluates whether ellipsoids belong to a particular Octree sub-branch
-        by calling :meth:`intersect` on each ellipsoid.           
+        Evaluate which ellipsoids belong to each Octree sub-branch by checking intersections
+
+        Notes
+        -----
+        Calls the intersect method of each sub-branch cuboid with each particle cuboid
+        and adds the particle to the sub-branch if an intersection occurs
         """
         for particle, branch in itertools.product(self.particles, self.branches):
             if branch.get_cub().intersect(particle.get_cub()):
@@ -857,7 +1036,12 @@ class Octree(object):
 
     def make_neighborlist(self):
         """
-        Finds the neighborlist for each particle
+        Find the neighbor list for each particle in the Octree sub-branch
+
+        Notes
+        -----
+        Initializes the neighborlist of each particle as a set and updates it with particles
+        from all branches that the particle belongs to
         """
         for particle in self.particles:
             particle.neighborlist = set()
@@ -866,7 +1050,18 @@ class Octree(object):
 
     def collisionsTest(self):
         """
-        Tests for collision between all ellipsoids in the particle list of octree         
+        Test for collisions between all ellipsoids in the Octree sub-branch
+
+        Returns
+        -------
+        int
+            Number of collisions detected
+
+        Notes
+        -----
+        Uses bounding sphere check as a preliminary filter and then calls the
+        collision_routine to determine actual overlaps. Updates the collision count
+        for each ellipsoid
         """
         self.make_neighborlist()
         ncoll = 0
@@ -902,7 +1097,14 @@ class Octree(object):
 
     def update(self):
         """
-        Updates the Octree and begins the recursive process of subdividing or collision testing           
+        Update the Octree and begin recursive subdivision or particle assignment
+
+        Notes
+        -----
+        If the number of particles exceeds the maximum allowed and the current
+        level is below the maximum, the sub-branch is subdivided and particles
+        are distributed among the new branches. Otherwise, particles are
+        associated with this branch
         """
         if len(self.particles) > self.maxparticles and self.level <= self.maxlevel:
             self.subdivide()

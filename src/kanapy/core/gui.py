@@ -26,11 +26,19 @@ else:
 
 def self_closing_message(message, duration=4000):
     """
-    Display a self-closing message box.
+    Display a temporary popup message box that closes automatically after a given duration
 
-    :param message: The message to be displayed.
-    :param duration: The time in milliseconds before the message box closes automatically.
-    :return: A reference to the popup window.
+    Parameters
+    ----------
+    message : str
+        The message text to display in the popup window
+    duration : int, optional
+        Time in milliseconds before the message box closes automatically (default is 4000)
+
+    Returns
+    -------
+    None
+        The function creates and destroys a popup window; no value is returned
     """
     popup = Toplevel()
     popup.title("Information")
@@ -53,6 +61,33 @@ def self_closing_message(message, duration=4000):
 
 def add_label_and_entry(frame, row, label_text, entry_var, entry_type="entry", bold=False,
                         options=None, col=0):
+    """
+    Add a label and an input widget (entry, checkbox, or combobox) to a given frame
+
+    Parameters
+    ----------
+    frame : tkinter.Frame
+        Parent frame where the widgets will be added
+    row : int
+        Row index in the frame grid layout
+    label_text : str or None
+        Text for the label; if None, no label is created
+    entry_var : tkinter variable
+        Variable bound to the input widget (e.g., StringVar, BooleanVar)
+    entry_type : str, optional
+        Type of input widget: "entry", "checkbox", or "combobox" (default is "entry")
+    bold : bool, optional
+        Whether to display the label text in bold (default is False)
+    options : list, optional
+        List of selectable options when entry_type is "combobox"
+    col : int, optional
+        Column index for placing the label and entry in the grid (default is 0)
+
+    Returns
+    -------
+    None
+        The function adds widgets directly to the frame
+    """
     if label_text is not None:
         label_font = ("Helvetica", 12, "bold") if bold else ("Helvetica", 12)
         ttk.Label(frame, text=label_text, font=label_font).grid(row=row, column=col, sticky='w')
@@ -74,12 +109,119 @@ def add_label_and_entry(frame, row, label_text, entry_var, entry_type="entry", b
 
 
 def parse_entry(entry):
+    """
+    Convert a comma-separated string into a list of integers
+
+    Parameters
+    ----------
+    entry : str
+        String of comma-separated integer values
+
+    Returns
+    -------
+    list of int
+        List of integers parsed from the input string
+    """
     return list(map(int, entry.strip().split(',')))
 
 
 class particle_rve(object):
-    """Class for RVEs based on particle simulations
+    """
+    Class for generating Representative Volume Elements (RVEs) based on particle simulations
     first tab
+
+    This class defines the GUI logic and default parameters for building RVEs using
+    particle-based microstructure simulations. It manages various parameters such as
+    particle size distribution, aspect ratio, texture settings, and periodic boundary conditions.
+
+    Parameters
+    ----------
+    app : tkinter.Tk or tkinter.Frame
+        Reference to the main Tkinter application instance.
+    notebook : ttk.Notebook
+        The notebook widget in which this tab (RVE setup) is placed.
+
+    Attributes
+    ----------
+    app : tkinter.Tk or tkinter.Frame
+        Main application reference.
+    ms : object or None
+        Placeholder for microstructure data.
+    ms_stats : object or None
+        Placeholder for microstructure statistical data.
+    ebsd : object or None
+        Placeholder for EBSD data (if used).
+    stats_canvas1 : tkinter.Canvas or None
+        Canvas for displaying statistical plots.
+    rve_canvas1 : tkinter.Canvas or None
+        Canvas for displaying the RVE visualization.
+
+    texture_var1 : tk.StringVar
+        Texture type, default "random".
+    matname_var1 : tk.StringVar
+        Material name, default "Simulanium".
+    nphases : tk.IntVar
+        Number of material phases, default 1.
+    ialloy : tk.IntVar
+        Alloy type indicator, default 2.
+    nvox_var1 : tk.IntVar
+        Number of voxels per dimension in the RVE, default 30.
+    size_var1 : tk.IntVar
+        Physical size of the RVE, default 30.
+    periodic_var1 : tk.BooleanVar
+        Whether to apply periodic boundary conditions, default True.
+    volume_fraction : tk.DoubleVar
+        Target total volume fraction, default 1.0.
+    vf_act : tk.DoubleVar
+        Actual volume fraction, initialized to 0.0.
+
+    eq_diameter_sig : tk.DoubleVar
+        Standard deviation of equivalent diameter distribution.
+    eq_diameter_scale : tk.DoubleVar
+        Scale parameter for equivalent diameter distribution.
+    eq_diameter_loc : tk.DoubleVar
+        Location parameter for equivalent diameter distribution.
+    eq_diameter_min : tk.DoubleVar
+        Minimum equivalent diameter.
+    eq_diameter_max : tk.DoubleVar
+        Maximum equivalent diameter.
+    eqd_act_sig : tk.DoubleVar
+        Active (fitted or adjusted) standard deviation for equivalent diameter.
+    eqd_act_scale : tk.DoubleVar
+        Active scale for equivalent diameter.
+    eqd_act_loc : tk.DoubleVar
+        Active location for equivalent diameter.
+
+    aspect_ratio_sig : tk.DoubleVar
+        Standard deviation for aspect ratio distribution.
+    aspect_ratio_scale : tk.DoubleVar
+        Scale parameter for aspect ratio distribution.
+    aspect_ratio_loc : tk.DoubleVar
+        Location parameter for aspect ratio distribution.
+    aspect_ratio_min : tk.DoubleVar
+        Minimum aspect ratio.
+    aspect_ratio_max : tk.DoubleVar
+        Maximum aspect ratio.
+    ar_act_sig : tk.DoubleVar
+        Active standard deviation for aspect ratio.
+    ar_act_scale : tk.DoubleVar
+        Active scale for aspect ratio.
+    ar_act_loc : tk.DoubleVar
+        Active location for aspect ratio.
+
+    tilt_angle_kappa : tk.DoubleVar
+        Concentration parameter for tilt angle distribution.
+    tilt_angle_loc : tk.DoubleVar
+        Mean (location) of tilt angle distribution in radians.
+    tilt_angle_min : tk.DoubleVar
+        Minimum tilt angle (0.0).
+    tilt_angle_max : tk.DoubleVar
+        Maximum tilt angle (π).
+
+    kernel_var1 : tk.StringVar
+        Orientation kernel width; depends on texture setting.
+    euler_var1 : tk.StringVar
+        Euler angles defining the texture orientation; depends on texture setting.
     """
 
     def __init__(self, app, notebook):
@@ -247,17 +389,64 @@ class particle_rve(object):
         button_exit1.grid(row=2, column=2, padx=(10, 5), pady=5, sticky='ew')
 
     def close(self):
+        """
+        Quit and destroy the particle_rve GUI main window
+
+        Notes
+        -----
+        This method quits the Tkinter application and destroys the main window
+        """
         self.app.quit()
         self.app.destroy()
 
     def update_kernel_var(self, *args):
+        """
+        Update the kernel variable based on the current texture selection
+
+        Parameters
+        ----------
+        *args : tuple
+            Optional arguments passed by the tkinter trace callback, not used directly
+
+        Notes
+        -----
+        If `self.texture_var1` is 'unimodal', `self.kernel_var1` is set to "7.5"
+        Otherwise, `self.kernel_var1` is set to "-"
+        """
         self.kernel_var1.set("7.5" if self.texture_var1.get() == 'unimodal' else "-")
 
     def update_euler_var(self, *args):
+        """
+        Update the Euler angles variable based on the current texture selection
+
+        Parameters
+        ----------
+        *args : tuple
+            Optional arguments passed by the tkinter trace callback, not used directly
+
+        Notes
+        -----
+        If `self.texture_var1` is 'unimodal', `self.euler_var1` is set to "0.0, 45.0, 0.0"
+        Otherwise, `self.euler_var1` is set to "-"
+        """
         self.euler_var1.set("0.0, 45.0, 0.0" if self.texture_var1.get() == 'unimodal' else "-")
 
     def display_plot(self, fig, plot_type):
-        """ Show either stats graph or RVE on canvas. """
+        """
+        Show a statistics graph or RVE plot on the GUI canvas
+
+        Parameters
+        ----------
+        fig : matplotlib.figure.Figure
+            The figure object to be displayed
+        plot_type : str
+            Type of plot to display, either 'stats' for statistics graph or 'rve' for RVE plot
+
+        Notes
+        -----
+        Existing canvas for the specified plot type will be destroyed before displaying the new figure
+        The GUI window size is updated to fit the new plot
+        """
         self.app.update_idletasks()
         width, height = self.app.winfo_reqwidth(), self.app.winfo_reqheight()
         self.app.geometry(f"{width}x{height}")
@@ -280,7 +469,15 @@ class particle_rve(object):
         self.app.geometry(f"{width}x{height}")
 
     def import_ebsd(self):
-        """Import EBSD map."""
+        """
+        Import an EBSD map and extract microstructure parameters
+
+        Notes
+        -----
+        Opens a file dialog to select an EBSD map with extensions '.ctf' or '.ang'
+        Displays messages indicating progress and success or failure
+        Calls `extract_microstructure_params` and `reset_act` after successful import
+        """
         file_path = filedialog.askopenfilename(title="Select EBSD map", filetypes=[("EBSD maps", ".ctf .ang")])
         if file_path:
             self_closing_message("Reading EBSD map, please wait..")
@@ -293,6 +490,15 @@ class particle_rve(object):
                 self_closing_message("ERROR: Could not read EBSD map!")
 
     def write_stat_param(self):
+        """
+        Save the current microstructure statistics to a file
+
+        Notes
+        -----
+        If `self.ms_stats` is None, a message is shown indicating no stats are available
+        Opens a file dialog to select the save location
+        Calls `write_stats` to write the statistics to the selected file
+        """
         if self.ms_stats is None:
             self_closing_message("No stats created yet.")
         else:
@@ -302,6 +508,13 @@ class particle_rve(object):
                 write_stats(self.ms_stats, file_path)
 
     def reset_act(self):
+        """
+        Reset all activity-related variables to zero
+
+        Notes
+        -----
+        Sets `vf_act`, `eqd_act_sig`, `eqd_act_scale`, `ar_act_sig`, and `ar_act_scale` to 0.0
+        """
         self.vf_act.set(0.0)
         self.eqd_act_sig.set(0.0)
         self.eqd_act_scale.set(0.0)
@@ -309,6 +522,21 @@ class particle_rve(object):
         self.ar_act_scale.set(0.0)
 
     def readout_stats(self):
+        """
+        Collect and return the current microstructure and RVE statistics
+
+        Returns
+        -------
+        dict
+            A dictionary containing:
+            - 'Grain type': Type of grain
+            - 'Equivalent diameter': Distribution parameters (sig, scale, loc, cutoff_min, cutoff_max)
+            - 'Aspect ratio': Distribution parameters (sig, scale, loc, cutoff_min, cutoff_max)
+            - 'Tilt angle': Orientation parameters (kappa, loc, cutoff_min, cutoff_max)
+            - 'RVE': RVE size and voxel counts
+            - 'Simulation': Simulation settings including periodicity and output units
+            - 'Phase': Material phase information including name, number, and volume fraction
+        """
         matname = self.matname_var1.get()
         nvox = int(self.nvox_var1.get())
         size = int(self.size_var1.get())
@@ -337,7 +565,17 @@ class particle_rve(object):
         return sd
 
     def import_stats(self):
-        """Import statistical data ."""
+        """
+        Import statistical data from a JSON file and update GUI variables
+
+        Notes
+        -----
+        Opens a file dialog to select a statistics file with '.json' extension
+        Updates GUI variables for material name, RVE size, voxel counts, periodicity, volume fraction,
+        equivalent diameter, aspect ratio, and tilt angle based on imported data
+        Calls `reset_act` and clears `ebsd` after successful import
+        Displays a message indicating success or failure
+        """
         file_path = filedialog.askopenfilename(title="Select statistics file", filetypes=[("Stats files", ".json")])
         if file_path:
             try:
@@ -378,7 +616,17 @@ class particle_rve(object):
                 self_closing_message(f"ERROR: Statistical parameters could not be imported! {e}")
 
     def extract_microstructure_params(self):
-        """Extracts microstructure parameters from the EBSD data."""
+        """
+        Extract microstructure parameters from the EBSD data and update GUI variables
+
+        Notes
+        -----
+        If `self.ebsd` is None, the method does nothing
+        Extracts grain size, aspect ratio, and orientation parameters from the first EBSD dataset
+        Updates GUI variables for material name, volume fraction, equivalent diameter, aspect ratio,
+        tilt angle, and texture type
+        Computed min and max cutoff values are based on statistical scaling of the extracted parameters
+        """
         if self.ebsd is None:
             return
 
@@ -411,8 +659,17 @@ class particle_rve(object):
         self.texture_var1.set('EBSD-ODF')
 
     def create_and_plot_stats(self):
-        """Plot statistics of current microstructure descriptors
-        Will erase global microstructure object if it exists."""
+        """
+        Plot statistics of the current microstructure descriptors and initialize a new Microstructure object
+
+        Notes
+        -----
+        Will erase the global microstructure object `self.ms` if it exists
+        Reads current statistics using `readout_stats`
+        Initializes `self.ms` with the selected material and texture
+        Plots statistics using `plot_stats_init` and displays each figure on the GUI
+        Resets activity-related variables after plotting
+        """
         self.ms_stats = self.readout_stats()
         texture = self.texture_var1.get()
         matname = self.matname_var1.get()
@@ -430,8 +687,18 @@ class particle_rve(object):
         self.reset_act()
 
     def create_and_plot_rve(self):
-        """Create and plot the RVE
-        Will overwrite existing ms_stats and ms objects"""
+        """
+        Create the RVE from current statistics and plot it along with associated statistics
+
+        Notes
+        -----
+        Will overwrite existing `ms_stats` and `ms` objects
+        Displays a progress message and measures processing time
+        Initializes `self.ms` with the selected material and voxelizes the RVE
+        Plots the voxelized RVE using `plot_voxels` and displays it on the GUI
+        Updates activity-related variables based on voxelized statistics
+        Also plots statistics figures returned from `plot_stats_init`
+        """
 
         self_closing_message("The process has been started, please wait...")
         start_time = time.time()
@@ -456,7 +723,17 @@ class particle_rve(object):
             self.display_plot(fig, plot_type="stats")
 
     def create_orientation(self):
-        """A function to create the orientation """
+        """
+        Generate grain orientations based on the selected texture and assign them to the RVE
+
+        Notes
+        -----
+        Supports 'unimodal' textures with user-specified kernel and Euler angles, or 'EBSD-ODF' textures
+        Automatically generates the RVE if `ms_stats` or `ms` objects are not initialized
+        Calls `generate_orientations` to assign orientations to the microstructure
+        Writes voxel data to a JSON file and plots the voxelized RVE with orientations
+        Displays messages indicating progress and processing time
+        """
         self_closing_message("The process has been started, please wait...")
         texture = self.texture_var1.get()
         matname = self.matname_var1.get()
@@ -484,6 +761,16 @@ class particle_rve(object):
         self_closing_message(f"Process completed in {duration:.2f} seconds, the Voxel file has been saved. ")
 
     def export_abq(self):
+        """
+        Export the RVE mesh to an Abaqus input file
+
+        Notes
+        -----
+        If `ms_stats`, `ms`, or `ms.mesh` is not initialized, the RVE is first generated without orientations
+        Checks if the material is dual-phase based on volume fraction
+        Calls `write_abq` to export the mesh in millimeter units
+        Displays a progress message if RVE generation is required
+        """
         if self.ms_stats is None or self.ms is None or self.ms.mesh is None:
             self_closing_message("Generating and exporting RVE without orientations.")
             self.create_and_plot_rve()
@@ -492,8 +779,47 @@ class particle_rve(object):
 
 
 class cuboid_rve(object):
-    """ Functions for RVEs with cuboid grains
-    second tab"""
+    """
+    Class for managing RVEs with cuboid grains and associated GUI controls
+
+    Parameters
+    ----------
+    app: tk.Tk or tk.Frame
+      Reference to the main Tkinter application instance
+    notebook: ttk.Notebook
+      Reference to the parent notebook widget for GUI tab placement
+
+    Attributes
+    ----------
+    app: tk.Tk or tk.Frame
+      Reference to the main Tkinter application instance
+    canvas: tk.Canvas
+      Canvas for displaying the cuboid RVE
+    ms: object
+      Placeholder for the microstructure object
+    texture_var2: tk.StringVar
+      Selected texture type (default "random")
+    matname_var2: tk.StringVar
+      Material name (default "Simulanium")
+    ialloy: tk.IntVar
+      Number of alloys (default 2)
+    ngr_var: tk.StringVar
+      Number of grains in each direction (default "5, 5, 5")
+    nv_gr_var: tk.StringVar
+      Number of voxels per grain in each direction (default "3, 3, 3")
+    size_var2: tk.StringVar
+      RVE size in each direction (default "45, 45, 45")
+    kernel_var2: tk.StringVar
+      Kernel parameter for unimodal textures (default "-" or "7.5")
+    euler_var2: tk.StringVar
+      Euler angles for unimodal textures (default "-" or "0.0, 45.0, 0.0")
+
+    Notes
+    -----
+    The class handles creation, visualization, and parameter management for cuboid RVEs.
+    GUI variable traces are used to automatically update dependent parameters such as
+    kernel and Euler angle values based on the selected texture type.
+    """
 
     def __init__(self, app, notebook):
         # define standard parameters
@@ -564,16 +890,60 @@ class cuboid_rve(object):
         button_exit2.grid(row=1, column=1, padx=10, pady=5, sticky='ew')
 
     def close(self):
+        """
+        Quit and destroy the cuboid_rve GUI main window
+
+        Notes
+        -----
+        This method terminates the Tkinter application and closes the main window
+        """
         self.app.quit()
         self.app.destroy()
 
     def update_kernel_var(self, *args):
+        """
+        Update the kernel parameter variable based on the current texture selection
+
+        Parameters
+        ----------
+        *args : tuple
+          Optional arguments passed by the tkinter trace callback, not used directly
+
+        Notes
+        -----
+        Sets `kernel_var2` to "7.5" if `texture_var2` is 'unimodal', otherwise sets it to "-"
+        """
         self.kernel_var2.set("7.5" if self.texture_var2.get() == 'unimodal' else "-")
 
     def update_euler_var(self, *args):
+        """
+        Update the Euler angles variable based on the current texture selection
+
+        Parameters
+        ----------
+        *args : tuple
+          Optional arguments passed by the tkinter trace callback, not used directly
+
+        Notes
+        -----
+        Sets `euler_var2` to "0.0, 45.0, 0.0" if `texture_var2` is 'unimodal', otherwise sets it to "-"
+        """
         self.euler_var2.set("0.0, 45.0, 0.0" if self.texture_var2.get() == 'unimodal' else "-")
 
     def display_cuboid(self, fig):
+        """
+        Display the cuboid RVE figure on the GUI canvas
+
+        Parameters
+        ----------
+        fig : matplotlib.figure.Figure
+          The figure object representing the cuboid RVE to display
+
+        Notes
+        -----
+        Destroys any existing canvas before displaying the new figure
+        Updates the Tkinter window geometry to fit the figure
+        """
         self.app.update_idletasks()
         width, height = self.app.winfo_reqwidth(), self.app.winfo_reqheight()
         self.app.geometry(f"{width}x{height}")
@@ -587,8 +957,16 @@ class cuboid_rve(object):
         self.app.geometry(f"{width}x{height}")
 
     def create_cubes_and_plot(self):
-        """Create and plot microstructure object with cuboid grains
-        return figure axes
+        """
+        Create a microstructure object with cuboid grains and plot the RVE
+
+        Notes
+        -----
+        Parses GUI parameters for number of grains, voxels per grain, and RVE size
+        Initializes a Microstructure object and sets up the voxel mesh
+        Assigns each cuboid grain an index and populates grain dictionaries
+        Calls `plot_voxels` to generate the RVE figure and displays it on the GUI
+        Returns nothing; updates the GUI canvas with the plotted RVE
         """
         matname = self.matname_var2.get()
         ngr = parse_entry(self.ngr_var.get())
@@ -641,7 +1019,17 @@ class cuboid_rve(object):
         return
 
     def create_orientation(self):
-        """Create grain orientations according to texture descriptors"""
+        """
+        Create grain orientations for the cuboid RVE based on texture descriptors
+
+        Notes
+        -----
+        Supports 'unimodal' textures with user-specified kernel and Euler angles
+        Automatically generates the cuboid RVE if `ms` or `ms.mesh` is not initialized
+        Calls `generate_orientations` to assign orientations to the microstructure
+        Writes voxel data to a JSON file and plots the voxelized RVE with orientations
+        Displays messages indicating progress and processing time
+        """
         self_closing_message("The process has been started, please wait...")
         texture = self.texture_var2.get()
         matname = self.matname_var2.get()
@@ -665,6 +1053,15 @@ class cuboid_rve(object):
         self_closing_message(f"Process completed in {duration:.2f} seconds, the Voxel file has been saved.")
 
     def export_abq(self):
+        """
+        Export the cuboid RVE mesh to an Abaqus input file
+
+        Notes
+        -----
+        Automatically generates the cuboid RVE without orientations if `ms` is not initialized
+        Calls `write_abq` to export the mesh in millimeter units
+        Displays a progress message if RVE generation is required
+        """
         if self.ms is None:
             self_closing_message("Generating and exporting RVE with cuboid grains w/o orientations.")
             self.create_cubes_and_plot()

@@ -77,6 +77,40 @@ def neighbors(r, c, connectivity=8):
 
 
 def merge_nodes(G, node1, node2):
+    """
+    Merge the pixel and attribute data of node1 into node2 in a graph
+
+    This function performs the following steps:
+    1. Concatenates the pixel lists of node1 and node2 and updates node2's 'pixels' attribute
+    2. Updates the average orientation 'ori_av' and pixel count 'npix' for node2
+    3. Updates the convex hull for node2 if it exists
+    4. Adds edges from node1's neighbors to node2, avoiding duplicates
+    5. Removes node1 from the graph
+    6. Updates the graph's 'label_map' to replace all occurrences of node1 with node2
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        Graph object where nodes represent grains and have attributes:
+        - 'pixels' : array of pixel indices
+        - 'ori_av' : average orientation
+        - 'npix' : number of pixels
+        - optional 'hull' : ConvexHull object
+        The graph also contains:
+        - 'label_map' : 2D array of node labels
+        - 'dx', 'dy' : pixel spacing in x and y directions
+    node1 : int
+        Node ID to be merged and removed
+    node2 : int
+        Node ID to merge into and retain
+
+    Notes
+    -----
+    - Modifies the graph `G` in place
+    - Updates 'pixels', 'ori_av', 'npix', 'hull' for node2
+    - Updates 'label_map' to replace node1 with node2
+    - Adds new edges from node1 to node2 while avoiding duplicates
+    """
     # merge pixel lists of node 1 into node 2, delete node 1
     G.nodes[node2]['pixels'] = np.concatenate((G.nodes[node1]['pixels'], G.nodes[node2]['pixels']))
     ntot = len(G.nodes)
@@ -101,6 +135,30 @@ def merge_nodes(G, node1, node2):
 
 
 def find_largest_neighbor(G, node):
+    """
+    Find the largest neighboring node of a given node in a graph
+
+    This function iterates over all neighbors of the specified node and returns
+    the neighbor with the largest 'npix' (number of pixels).
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        Graph object where nodes have an attribute 'npix' representing their size.
+    node : int
+        Node ID for which the largest neighbor is to be found.
+
+    Returns
+    -------
+    int
+        Node ID of the largest neighbor.
+
+    Notes
+    -----
+    - Raises a ValueError if the node has no neighbors.
+    - Raises a ValueError if the graph contains circular edges (neighbor is the node itself).
+    - Does not modify the graph.
+    """
     # find the largest neighbor of given grain
     size_ln = 0  # size of largest neighbor grain
     num_ln = -1  # ID of largest neighbor grain
@@ -116,6 +174,33 @@ def find_largest_neighbor(G, node):
 
 
 def find_sim_neighbor(G, nn):
+    """
+    Find the neighboring node most similar in orientation to the given node
+
+    This function computes the misorientation angles between the given node and
+    all its neighbors, and returns the neighbor with the smallest misorientation.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        Graph object where nodes have an 'ori_av' attribute representing average orientation.
+        The graph also contains a 'symmetry' key in G.graph used for orientation calculations.
+    nn : int
+        Node ID for which the most similar neighbor is to be found.
+
+    Returns
+    -------
+    tuple
+        A tuple (neighbor_id, angle) where:
+        - neighbor_id : int, ID of the neighbor with smallest misorientation
+        - angle : float, misorientation angle with the given node
+
+    Notes
+    -----
+    - Uses the `Orientation` class for misorientation calculations
+    - Assumes all neighbors have a valid 'ori_av' attribute
+    - Does not modify the graph
+    """
     sym = G.graph['symmetry']
     ori0 = Orientation(G.nodes[nn]['ori_av'], sym)
     on = []
@@ -130,12 +215,38 @@ def find_sim_neighbor(G, nn):
 
 def summarize_labels(label_array, rotations, wanted_labels=None):
     """
-    label_array: (H,W) int
-    rotations:   (H*W, D) float  (emap.rotations.data)
-    wanted_labels: Sequenz von Label-IDs; None => alle im Array
+    Summarize labeled pixels with average orientation and statistics
 
-    returns: list[(lbl, info_dict)]
-             info_dict: {'npix', 'pixels', 'ori_av', 'ori_std'}
+    This function computes, for each label in `label_array` (or a subset of `wanted_labels`):
+    - Number of pixels
+    - Pixel indices
+    - Average orientation vector
+    - Standard deviation of orientation
+
+    Parameters
+    ----------
+    label_array : ndarray of shape (H, W)
+        2D array of integer labels.
+    rotations : ndarray of shape (H*W, D)
+        Orientation data corresponding to each pixel (e.g., emap.rotations.data).
+    wanted_labels : sequence of int, optional
+        List of label IDs to summarize. If None, all labels in `label_array` are used.
+
+    Returns
+    -------
+    list of tuples
+        Each tuple is `(label, info_dict)` where `info_dict` contains:
+        - 'npix' : int, number of pixels
+        - 'pixels' : array of 1D indices in `label_array.ravel()`
+        - 'ori_av' : ndarray of shape (D,), average orientation vector
+        - 'ori_std' : ndarray of shape (D,), standard deviation of orientation
+
+    Notes
+    -----
+    - Uses `np.add.reduceat` and sorting for efficient computation
+    - The returned list preserves the order of `wanted_labels` if provided,
+      otherwise follows sorted unique labels from `label_array`
+    - Does not modify input arrays
     """
     lab = label_array.ravel()
     N = lab.size
@@ -186,6 +297,41 @@ def summarize_labels(label_array, rotations, wanted_labels=None):
 
 
 def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
+    """
+    Build a graph representation of a microstructure from labeled pixels
+
+    Each node in the graph represents a grain (label) and stores pixel indices,
+    average orientation, and orientation statistics. Edges connect neighboring grains
+    based on pixel adjacency.
+
+    Parameters
+    ----------
+    label_array : ndarray of shape (H, W)
+        2D array of integer labels representing grains.
+    emap : object
+        Orientation map object containing:
+        - `rotations.data` : orientation vectors for each pixel
+        - `phases.point_groups` : symmetry information for each phase
+        - `dx`, `dy` : pixel spacing in x and y directions
+    phase : int
+        Phase index to select the corresponding symmetry from `emap.phases.point_groups`.
+    connectivity : int, optional
+        Connectivity criterion for neighbors (4 or 8). Default is 8.
+
+    Returns
+    -------
+    networkx.Graph
+        Graph object with:
+        - Nodes representing grains, storing 'pixels', 'ori_av', 'ori_std', 'npix'
+        - Edges representing neighboring grains (shared boundaries)
+        - Graph attributes: 'label_map', 'symmetry', 'dx', 'dy'
+
+    Notes
+    -----
+    - Uses `summarize_labels` to extract node properties from labeled pixels
+    - Loops over all pixels to add edges between neighboring grains
+    - The function preserves the shape and indices of `label_array`
+    """
     # t1 = time.time()
     nodes = summarize_labels(label_array, emap.rotations.data)
     # t2 = time.time()
@@ -213,6 +359,28 @@ def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
 
 
 def visualize_graph(G, node_size=100, fs=12):
+    """
+    Visualize a microstructure graph using a spring layout
+
+    This function draws the nodes and edges of the graph with labels,
+    using a spring layout for positioning. Node color, edge color,
+    node size, and font size can be adjusted.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        Graph object representing the microstructure. Nodes should have meaningful labels.
+    node_size : int, optional
+        Size of the nodes in the plot. Default is 100.
+    fs : int, optional
+        Font size for node labels. Default is 12.
+
+    Notes
+    -----
+    - Uses NetworkX's `spring_layout` for node positioning
+    - Uses Matplotlib to render the plot
+    - Does not modify the graph
+    """
     pos = nx.spring_layout(G, seed=42)  # positioning
     nx.draw(G, pos, with_labels=True,
             node_color='lightblue', edge_color='gray',
@@ -221,6 +389,25 @@ def visualize_graph(G, node_size=100, fs=12):
 
 
 def export_graph(G, filename, format="graphml"):
+    """
+    Export a microstructure graph to a file in the specified format
+
+    This function writes the NetworkX graph to disk in either GraphML or GEXF format.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        Graph object representing the microstructure.
+    filename : str
+        Path to the output file.
+    format : str, optional
+        File format for export. Supported options are 'graphml' and 'gexf'. Default is 'graphml'.
+
+    Notes
+    -----
+    - Raises a ValueError if an unsupported format is provided
+    - Does not modify the graph
+    """
     if format == "graphml":
         nx.write_graphml(G, filename)
     elif format == "gexf":
@@ -231,16 +418,32 @@ def export_graph(G, filename, format="graphml"):
 
 def find_similar_regions(array, tolerance=0.087, connectivity=1):
     """
-    Identifies connected regions of similar values in a 2D array.
+    Identify connected regions of similar values in a 2D array
 
-    Parameters:
-        array (ndarray): 2D NumPy array with values.
-        tolerance (float): Max allowed difference between connected values.
-        connectivity (int): 1 for 4-connectivity, 2 for 8-connectivity.
+    This function labels all connected pixels in the input array whose values
+    differ by at most `tolerance`. Connectivity can be 4- or 8-connected.
 
-    Returns:
-        labeled_array (ndarray): 2D array of region labels.
-        num_features (int): Total number of connected regions found.
+    Parameters
+    ----------
+    array : ndarray of shape (H, W)
+        2D input array with values to segment.
+    tolerance : float, optional
+        Maximum allowed difference between connected values. Default is 0.087.
+    connectivity : int, optional
+        Connectivity criterion for neighbors: 1 for 4-connectivity, 2 for 8-connectivity. Default is 1.
+
+    Returns
+    -------
+    labeled_array : ndarray of shape (H, W)
+        Array where each connected region of similar values has a unique label.
+    num_features : int
+        Total number of connected regions found.
+
+    Notes
+    -----
+    - Uses a depth-first search to find connected regions.
+    - Does not modify the input array.
+    - Assumes `neighbors(i, j, connectivity)` returns valid neighboring indices.
     """
 
     array = np.asarray(array)
@@ -265,6 +468,32 @@ def find_similar_regions(array, tolerance=0.087, connectivity=1):
 
 
 def calc_error(odf_ref, odf_test, res=10.):
+    """
+    Compute the normalized difference between two orientation distribution functions (ODFs)
+
+    This function evaluates the ODFs on a sample grid in fundamental space and
+    computes the L1 norm of the difference after normalization.
+
+    Parameters
+    ----------
+    odf_ref : object
+        Reference ODF object. Must have `.orientations.symmetry` and `.evaluate()` method.
+    odf_test : object
+        Test ODF object to compare. Must have the same symmetry as `odf_ref`.
+    res : float, optional
+        Resolution for sampling the fundamental space grid. Default is 10.
+
+    Returns
+    -------
+    float
+        L1 error between the normalized ODFs.
+
+    Notes
+    -----
+    - Raises a RuntimeError if the symmetries of the two ODFs do not match.
+    - Uses `get_sample_fundamental` to sample the fundamental zone and `Orientation` for evaluation.
+    - Does not modify the input ODFs.
+    """
     cs = odf_ref.orientations.symmetry
     if cs != odf_test.orientations.symmetry:
         raise RuntimeError("Symmetries of ODF's do not match.")
@@ -277,6 +506,35 @@ def calc_error(odf_ref, odf_test, res=10.):
 
 
 def calc_orientations(odf, nori, res=None):
+    """
+    Generate a set of orientations sampled from an orientation distribution function (ODF)
+
+    This function uses Monte Carlo sampling to generate `nori` orientations according to
+    the probabilities defined by the input ODF. Sampling is performed in the fundamental
+    zone of the crystal symmetry.
+
+    Parameters
+    ----------
+    odf : object
+        Orientation distribution function object. Must have `.orientations.symmetry` and `.evaluate()` method.
+    nori : int
+        Number of orientations to generate.
+    res : float, optional
+        Angular resolution in degrees for sampling the fundamental zone grid.
+        If None, a resolution between 2° and 5° is selected based on ODF half-width.
+
+    Returns
+    -------
+    Orientation
+        Orientation object containing `nori` orientations sampled from the ODF.
+
+    Notes
+    -----
+    - Raises a RuntimeError if the Monte Carlo sampling does not converge after 200 iterations.
+    - Logs a warning if the SO3 grid resolution is too coarse for the requested number of orientations.
+    - Uses `get_sample_fundamental` to generate the sampling grid and `Orientation` to store results.
+    - Does not modify the input ODF.
+    """
     oq = np.zeros((nori, 4))
     indstart = 0
     rem = nori
@@ -308,6 +566,40 @@ def calc_orientations(odf, nori, res=None):
 
 
 def odf_est(ori, odf, nstep=50, step=0.5, halfwidth=None, verbose=False):
+    """
+    Estimate an ODF from a set of orientations using iterative half-width adjustment
+
+    This function generates a new orientation distribution function (ODF) from
+    input orientations by iteratively adjusting the half-width to minimize the
+    error relative to a reference ODF.
+
+    Parameters
+    ----------
+    ori : Orientation
+        Input orientations used to estimate the ODF.
+    odf : ODF
+        Reference orientation distribution function for error comparison.
+    nstep : int, optional
+        Maximum number of iterations for adjusting the half-width. Default is 50.
+    step : float, optional
+        Increment step in degrees for half-width adjustment. Default is 0.5.
+    halfwidth : float, optional
+        Initial half-width in radians. If None, a value based on `odf.halfwidth` is used.
+    verbose : bool, optional
+        If True, prints iteration details. Default is False.
+
+    Returns
+    -------
+    ODF
+        Estimated orientation distribution function corresponding to input orientations.
+
+    Notes
+    -----
+    - Uses `calc_error` to compare the estimated ODF with the reference ODF.
+    - Iteratively increases half-width until the error starts to increase.
+    - The returned ODF corresponds to the last half-width before error increased.
+    - Does not modify the input orientations or reference ODF.
+    """
     e0 = 1e8
     st_rad = np.radians(step)
     hwmin = np.radians(2)
@@ -338,6 +630,34 @@ def odf_est(ori, odf, nstep=50, step=0.5, halfwidth=None, verbose=False):
 
 def plot_pole_figure(orientations, phase, vector=None,
                      size=None, alpha=None):
+    """
+    Plot an inverse pole figure and pole density function for given orientations
+
+    This function visualizes the orientation distribution of a crystal phase by
+    plotting the stereographic projection of specified poles and the corresponding
+    pole density function (PDF).
+
+    Parameters
+    ----------
+    orientations : Orientation
+        Orientation object containing crystal orientations to plot.
+    phase : object
+        Crystal phase object containing symmetry information and name.
+    vector : array-like of shape (3,), optional
+        Miller indices of the pole vector to plot. Default is [0, 0, 1].
+    size : float, optional
+        Marker size for scatter plot. Automatically scaled if None.
+    alpha : float, optional
+        Marker transparency for scatter plot. Automatically scaled if None.
+
+    Notes
+    -----
+    - Uses Matplotlib for plotting with stereographic projection.
+    - The first subplot shows the inverse pole figure (scatter of poles).
+    - The second subplot shows the pole density function.
+    - Marker size and transparency are scaled inversely with the number of orientations.
+    - Does not modify the input `orientations` or `phase`.
+    """
     # plot inverse pole figure
     # <111> poles in the sample reference frame
     if vector is None:
@@ -372,6 +692,36 @@ def plot_pole_figure(orientations, phase, vector=None,
 
 def plot_pole_figure_proj(orientations, phase, vector=None,
                           title=None, alpha=None, size=None):
+    """
+    Plot an inverse pole figure (IPF) projection and pole density function for EBSD data
+
+    This function visualizes crystal orientations along a specified sample direction
+    using an IPF projection. The first subplot shows the scatter of rotated poles,
+    and the second subplot shows the corresponding pole density function (PDF).
+
+    Parameters
+    ----------
+    orientations : Orientation
+        Orientation object containing crystal orientations to plot.
+    phase : object
+        Crystal phase object with symmetry information and name.
+    vector : array-like of shape (3,), optional
+        Sample direction to project (Miller indices). Default is [0, 0, 1].
+    title : str, optional
+        Title for the plot. If None, automatically uses the principal axis of `vector`.
+    alpha : float, optional
+        Marker transparency for scatter plot. Automatically scaled if None.
+    size : float, optional
+        Marker size for scatter plot. Automatically scaled if None.
+
+    Notes
+    -----
+    - Uses Matplotlib with stereographic projection (IPF) for plotting.
+    - Marker size and transparency are scaled inversely with the number of orientations.
+    - The first subplot shows the inverse pole figure (scatter of rotated poles).
+    - The second subplot shows the pole density function (PDF).
+    - Does not modify the input `orientations` or `phase`.
+    """
     # Some sample direction, v
     if vector is None:
         vector = [0, 0, 1]
@@ -411,7 +761,7 @@ def plot_pole_figure_proj(orientations, phase, vector=None,
 
 def find_orientations_fast(ori1: Orientation, ori2: Orientation, tol: float = 1e-3) -> np.ndarray:
     """
-    Find closest matches in ori1 for each orientation in ori2 using KDTree.
+    Find closest matches in ori1 for each orientation in ori2 using KDTree
 
     Parameters
     ----------
@@ -451,48 +801,59 @@ def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
                           grainsfile=None, grains=None, kernel=None, kernel_halfwidth=5,
                           res_low=5, res_high=25, res_step=2, lim=5, verbose=False):
     """
-    This function systematically reconstructs an ODF by a given number of
-    orientations (refer .....)
-    also the misorientation distribution is reproduced
+    Reconstruct a reduced ODF from EBSD or orientation data
 
+    This function systematically reconstructs an orientation distribution function (ODF)
+    using a given number of orientations or grains in a representative volume element (RVE).
+    The reconstructed ODF approximates the misorientation distribution of the input data.
+    Follows the method described in Biswas et al. (https://doi.org/10.1107/S1600576719017138).
 
-    Inputs:
-    1) ns: number of reduced orientations/grains in RVE
-    2) Either path+filename of ebsd data saved as *.mat file (it should
-      contain only one phase/mineral) or ebsd(single phase)/orientations
-    3) Either path+filename of the estiamted grains from above
-      EBSD saved as *.mat file (it should contain only one phase/mineral)
-      or kernel(only deLaValeePoussinKernel)/kernelshape, if nothing
-      mentioned then default value kappa = 5 (degree) is assumed.
-
-    Output: reduced orientation set, ODF and L1 error
-
-    Following steps described in Biswas et al (https://doi.org/10.1107/S1600576719017138)
-
-   input fields and checks
     Parameters
     ----------
-    ebsd
-    ebsdfile
-    orientations
-    grainsfile
-    grains
-    kernel
-    kernel_halfwidth
-    res_low
-    res_high
-    res_step
-    lim
-    verbose
-    ns
+    ns : int
+        Number of reduced orientations/grains in the RVE.
+    ebsd : EBSDmap, optional
+        EBSD map containing orientations for a single phase.
+    ebsdfile : str, optional
+        Path to a *.mat file with EBSD data (not yet supported).
+    orientations : Orientation, optional
+        Predefined orientations to use instead of EBSD data.
+    grainsfile : str, optional
+        Path to estimated grains file (*.mat). Not used for kernel estimation.
+    grains : object, optional
+        Grain data. Not used for kernel estimation.
+    kernel : DeLaValleePoussinKernel, optional
+        Kernel for ODF estimation. Default: halfwidth=kernel_halfwidth.
+    kernel_halfwidth : float, optional
+        Halfwidth in degrees for default DeLaValleePoussin kernel. Default is 5°.
+    res_low : float, optional
+        Minimum resolution (in degrees) of orientation grid for reconstruction. Default 5°.
+    res_high : float, optional
+        Maximum resolution (in degrees) of orientation grid. Default 25°.
+    res_step : float, optional
+        Step size (in degrees) for grid resolution. Default 2°.
+    lim : int, optional
+        Maximum number of consecutive worsening errors before stopping. Default 5.
+    verbose : bool, optional
+        If True, print progress and error information. Default False.
 
     Returns
     -------
-    orired_f
-    odfred_f
-    ero
-    res
+    orired_f : Orientation
+        Reduced set of orientations in the fundamental region.
+    odfred_f : ODF
+        Reconstructed ODF using the reduced orientations.
+    ero : float
+        L1 error between reference ODF and reconstructed ODF.
+    res : float
+        Grid resolution (degrees) at which the minimum error was achieved.
 
+    Notes
+    -----
+    - Uses Monte Carlo sampling and kernel smoothing to generate reduced orientations.
+    - Only supports single-phase EBSD data.
+    - Kernel estimation from grains or files is not yet supported; default kernel is used.
+    - The reconstructed ODF approximates the misorientation distribution of the input data.
     """
     ori = None
     psi = None
@@ -639,37 +1000,147 @@ def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
 
 
 class Kernel(ABC):
+    """
+    Abstract base class for kernels used in orientation distribution estimation.
+
+    Attributes
+    ----------
+    A : ndarray
+        Flattened array of kernel parameters. Initialized to empty array if not provided.
+    """
     def __init__(self, A=None):
         self.A = np.array(A).flatten() if A is not None else np.array([])
 
     @property
     def bandwidth(self):
+        """
+        Returns the bandwidth of the kernel.
+
+        The bandwidth is defined as the number of elements in `A` minus one.
+
+        Returns
+        -------
+        int
+            Bandwidth of the kernel.
+        """
         return len(self.A) - 1
 
     @bandwidth.setter
     def bandwidth(self, L):
+        """
+        Set the bandwidth of the kernel.
+
+        Truncates the kernel parameter array `A` to have at most `L + 1` elements.
+
+        Parameters
+        ----------
+        L : int
+            Desired bandwidth.
+        """
         self.A = self.A[:min(L + 1, len(self.A))]
 
     def __str__(self):
+        """
+        Return a human-readable string representation of the kernel.
+
+        Displays the kernel type and its halfwidth in degrees.
+
+        Returns
+        -------
+        str
+            String describing the kernel.
+        """
         return f"custom, halfwidth {np.degrees(self.halfwidth()):.2f}°"
 
     def __eq__(self, other):
+        """
+        Check if two kernels are equal.
+
+        Comparison is based on the truncated arrays of kernel parameters `A` up to
+        the minimum bandwidth of the two kernels. Returns True if the relative
+        difference is less than 1e-6.
+
+        Parameters
+        ----------
+        other : Kernel
+            Another kernel to compare against.
+
+        Returns
+        -------
+        bool
+            True if kernels are considered equal, False otherwise.
+        """
         L = min(self.bandwidth, other.bandwidth)
         return np.linalg.norm(self.A[:L + 1] - other.A[:L + 1]) / np.linalg.norm(self.A) < 1e-6
 
     def __mul__(self, other):
+        """
+        Multiply two kernels element-wise with scaling by (2l + 1).
+
+        Only the first `L + 1` elements are used, where L is the minimum bandwidth
+        of the two kernels. Returns a new Kernel instance with the resulting array.
+
+        Parameters
+        ----------
+        other : Kernel
+            Another kernel to multiply with.
+
+        Returns
+        -------
+        Kernel
+            New kernel resulting from element-wise multiplication and scaling.
+        """
         L = min(self.bandwidth, other.bandwidth)
         l = np.arange(L + 1)
         return Kernel(self.A[:L + 1] * other.A[:L + 1] / (2 * l + 1))
 
     def __pow__(self, p):
+        """
+        Raise kernel elements to a given power with scaling.
+
+        Each element of the kernel parameter array `A` is scaled by (2l + 1),
+        raised to the power `p`, and then rescaled by (2l + 1).
+
+        Parameters
+        ----------
+        p : float
+            Power to raise the kernel elements to.
+
+        Returns
+        -------
+        Kernel
+            New kernel resulting from the power operation with scaling.
+        """
         l = np.arange(self.bandwidth + 1)
         return Kernel(((self.A / (2 * l + 1)) ** p) * (2 * l + 1))
 
     def norm(self):
+        """
+        Compute the L2 norm of the squared kernel elements.
+
+        Returns
+        -------
+        float
+            L2 norm of the squared elements of the kernel array `A`.
+        """
         return np.linalg.norm(self.A ** 2)
 
     def cutA(self, fft_accuracy=1e-2):
+        """
+        Truncate the kernel array `A` based on the specified FFT accuracy.
+
+        Elements of `A` are scaled by 1/(l^2), and elements smaller than
+        a threshold determined from `fft_accuracy` are removed.
+
+        Parameters
+        ----------
+        fft_accuracy : float, optional
+            Desired FFT accuracy (default is 1e-2).
+
+        Notes
+        -----
+        The first element is never truncated.
+        """
         epsilon = fft_accuracy / 150
         A_mod = self.A / (np.arange(1, len(self.A) + 1) ** 2)
         idx = np.where(A_mod[1:] <= max(min([np.min(A_mod[1:]), 10 * epsilon]), epsilon))[0]
@@ -677,26 +1148,106 @@ class Kernel(ABC):
             self.A = self.A[:idx[0] + 2]
 
     def halfwidth(self):
+        """
+        Compute the halfwidth of the kernel.
+
+        The halfwidth is determined by finding the angle `omega` that minimizes
+        the squared difference between K(1) and 2*K(cos(omega/2)).
+
+        Returns
+        -------
+        float
+            Halfwidth angle in radians.
+        """
         def error_fn(omega):
+            """
+            Compute the squared difference used to determine kernel halfwidth.
+
+            Parameters
+            ----------
+            omega : float
+                Angle in radians to evaluate the kernel function.
+
+            Returns
+            -------
+            float
+                Squared difference: (K(1) - 2*K(cos(omega/2)))**2
+            """
             return (self.K(1) - 2 * self.K(np.cos(omega / 2))) ** 2
 
         return fminbound(error_fn, 0, 3 * np.pi / 4)
 
     def K(self, co2):
+        """
+        Evaluate the kernel function at a given squared cosine value.
+
+        Parameters
+        ----------
+        co2 : float or ndarray
+            Cosine squared value(s), will be clipped to [-1, 1].
+
+        Returns
+        -------
+        float or ndarray
+            Value(s) of the kernel function.
+        """
         co2 = np.clip(co2, -1, 1)
         omega = 2 * np.arccos(co2)
         return self._clenshawU(self.A, omega)
 
     def K_orientations(self, orientations_ref, orientations):
+        """
+        Evaluate the kernel function for the misorientation angles between two sets of orientations.
+
+        Parameters
+        ----------
+        orientations_ref : Orientation
+            Reference set of orientations.
+        orientations : Orientation
+            Target set of orientations to compare.
+
+        Returns
+        -------
+        ndarray
+            Kernel values corresponding to misorientation angles.
+        """
         misangles = orientations.angle_with(orientations_ref)
         co2 = np.cos(misangles / 2)
         return self.K(co2)
 
     def RK(self, d):
+        """
+        Evaluate the kernel using the Clenshaw-L method for given cosine distances.
+
+        Parameters
+        ----------
+        d : array_like
+            Cosine of angles (distance metric) in the range [-1, 1].
+
+        Returns
+        -------
+        ndarray
+            Kernel values for the given distances.
+        """
         d = np.clip(d, -1, 1)
         return self._clenshawL(self.A, d)
 
     def RRK(self, dh, dr):
+        """
+        Evaluate the kernel on two sets of cosine distances using a reduced rotational kernel.
+
+        Parameters
+        ----------
+        dh : array_like
+            Cosines of angles for the first set, clipped to [-1, 1].
+        dr : array_like
+            Cosines of angles for the second set, clipped to [-1, 1].
+
+        Returns
+        -------
+        ndarray
+            2D array of kernel values for each combination of dh and dr.
+        """
         dh = np.clip(dh, -1, 1)
         dr = np.clip(dr, -1, 1)
         L = self.bandwidth
@@ -714,6 +1265,21 @@ class Kernel(ABC):
         return result
 
     def _clenshawU(self, A, omega):
+        """
+        Evaluate the kernel using the Clenshaw algorithm in the Chebyshev U basis.
+
+        Parameters
+        ----------
+        A : array_like
+            Coefficients of the kernel.
+        omega : array_like
+            Angles in radians.
+
+        Returns
+        -------
+        ndarray
+            Kernel values evaluated at the given angles.
+        """
         omega = omega / 2
         res = np.ones_like(omega) * A[0]
         for l in range(1, len(A)):
@@ -723,6 +1289,21 @@ class Kernel(ABC):
         return res
 
     def _clenshawL(self, A, x):
+        """
+        Evaluate the kernel using the Clenshaw algorithm in the Legendre basis.
+
+        Parameters
+        ----------
+        A : array_like
+            Coefficients of the kernel.
+        x : array_like
+            Input values where the kernel is evaluated (should be within [-1, 1]).
+
+        Returns
+        -------
+        ndarray or float
+            Kernel values evaluated at the given input(s).
+        """
         b_next, b_curr = 0.0, 0.0
         x2 = 2 * x
         for a in reversed(A[1:]):
@@ -730,6 +1311,24 @@ class Kernel(ABC):
         return A[0] + x * b_curr - b_next
 
     def calc_fourier(self, L, max_angle=np.pi, fft_accuracy=1e-2):
+        """
+        Compute the Fourier coefficients of the kernel up to order L.
+
+        Parameters
+        ----------
+        L : int
+            Maximum order of the Fourier coefficients.
+        max_angle : float, optional
+            Upper limit of integration in radians (default is pi).
+        fft_accuracy : float, optional
+            Threshold below which coefficients are considered negligible and
+            computation stops early (default is 1e-2).
+
+        Returns
+        -------
+        ndarray
+            Array of Fourier coefficients of length <= L+1.
+        """
         A = []
         small = 0
         for l in range(L + 1):
@@ -748,6 +1347,14 @@ class Kernel(ABC):
         return np.array(A)
 
     def plot_K(self, n_points=200):
+        """
+        Plot the kernel function K as a function of misorientation angle.
+
+        Parameters
+        ----------
+        n_points : int, optional
+            Number of points used for plotting the kernel function (default is 200).
+        """
         omega = np.linspace(0, np.pi, n_points)
         co2 = np.cos(omega / 2)
         values = self.K(co2)
@@ -761,6 +1368,27 @@ class Kernel(ABC):
 
 
 class DeLaValleePoussinKernel(Kernel):
+    """
+    De La Vallee Poussin kernel class for orientation distribution functions
+
+    Parameters
+    ----------
+    kappa : float, optional
+        Shape parameter of the kernel
+    halfwidth : float, optional
+        Halfwidth in radians; overrides kappa if provided
+    bandwidth : int, optional
+        Maximum degree of the series expansion
+
+    Attributes
+    ----------
+    A : ndarray
+        Series coefficients of the kernel
+    kappa : float
+        Shape parameter of the kernel
+    C : float
+        Normalization constant
+    """
     def __init__(self, kappa=None, halfwidth=None, bandwidth=None):
         if halfwidth is not None:
             kappa = 0.5 * np.log(0.5) / np.log(np.cos(0.5*halfwidth))
@@ -785,48 +1413,116 @@ class DeLaValleePoussinKernel(Kernel):
         self.cutA()
 
     def K(self, co2):
+        """
+        Evaluate the De La Vallee Poussin kernel function.
+
+        Parameters
+        ----------
+        co2 : float or ndarray
+            Cosine of half the misorientation angle. Values will be clipped to [-1, 1].
+
+        Returns
+        -------
+        float or ndarray
+            Kernel value(s) evaluated at the input `co2`.
+        """
         co2 = np.clip(co2, -1, 1)
         return self.C * co2 ** (2 * self.kappa)
 
     def DK(self, co2):
+        """
+        Evaluate the derivative of the De La Vallee Poussin kernel with respect to misorientation.
+
+        Parameters
+        ----------
+        co2 : float or ndarray
+            Cosine of half the misorientation angle. Values should be in [-1, 1].
+
+        Returns
+        -------
+        float or ndarray
+            Derivative of the kernel function evaluated at the input `co2`.
+        """
         return -self.C * self.kappa * np.sqrt(1 - co2 ** 2) * co2 ** (2 * self.kappa - 1)
 
     def RK(self, t):
+        """
+        Evaluate the reduced kernel function R_K at a given input.
+
+        Parameters
+        ----------
+        t : float or ndarray
+            Input value, typically representing a normalized distance or cosine value.
+
+        Returns
+        -------
+        float or ndarray
+            Value of the reduced kernel function R_K at `t`.
+        """
         return (1 + self.kappa) * ((1 + t) / 2) ** self.kappa
 
     def DRK(self, t):
+        """
+        Evaluate the derivative of the reduced kernel function R_K at a given input.
+
+        Parameters
+        ----------
+        t : float or ndarray
+            Input value, typically representing a normalized distance or cosine value.
+
+        Returns
+        -------
+        float or ndarray
+            Value of the derivative of R_K at `t`.
+        """
         return self.kappa * (1 + self.kappa) * ((1 + t) / 2) ** (self.kappa - 1) / 2
 
     def halfwidth(self):
+        """
+        Compute the halfwidth of the DeLaValleePoussin kernel.
+
+        The halfwidth is the misorientation angle ω where the kernel value
+        drops to half its maximum.
+
+        Returns
+        -------
+        float
+            Halfwidth angle in radians.
+        """
         return 2 * np.arccos(0.5 ** (1 / (2 * self.kappa)))
 
 
 class ODF(object):
+    """
+    Estimate an Orientation Distribution Function (ODF) from a set of orientations
+    using kernel density estimation.
+
+    Parameters
+    ----------
+    orientations : orix.quaternion.Orientation
+        Input orientation set.
+    halfwidth : float, optional
+        Halfwidth of the kernel in radians (default: 10 degrees).
+    weights : array-like, optional
+        Weights for each orientation. If None, uniform weights are used.
+    kernel : Kernel instance, optional
+        Kernel function to use. If None, DeLaValleePoussinKernel is used.
+    exact : bool, optional
+        If False and orientation count > 1000, approximation using grid is applied.
+
+    Attributes
+    ----------
+    orientations : orix.quaternion.Orientation
+        Orientation set stored in the ODF.
+    weights : ndarray
+        Normalized weights of the orientations.
+    kernel : Kernel
+        Kernel used for density estimation.
+    halfwidth : float
+        Halfwidth of the kernel in radians.
+    """
     def __init__(self, orientations, halfwidth=np.radians(10), weights=None, kernel=None, exact=False):
-        """
-            Estimate an Orientation Distribution Function (ODF) from individual orientations
-            using kernel density estimation.
 
-            Parameters
-            ----------
-            orientations : orix.quaternion.Orientation
-                Input orientation set.
-            halfwidth : float, optional
-                Halfwidth of the kernel in radians (default: 10 degrees).
-            weights : array-like, optional
-                Weights for each orientation. If None, weights are uniform.
-            kernel : Kernel instance, optional
-                Kernel function to use. If None, DeLaValleePoussinKernel is used.
-            exact : bool, optional
-                If False and orientation count > 1000, approximate using grid.
-
-            Attributes
-            ----------
-            orientations
-            weights
-            kernel
-            halfwidth
-            """
         if orientations.size == 0:
             raise ValueError("Orientation set is empty.")
 
@@ -853,6 +1549,19 @@ class ODF(object):
         self.halfwidth = hw
 
     def evaluate(self, ori):
+        """
+        Evaluate the ODF at given orientations.
+
+        Parameters
+        ----------
+        ori : Orientation
+            Orientation(s) at which to evaluate the ODF.
+
+        Returns
+        -------
+        values : ndarray
+            ODF values at the specified orientations.
+        """
         values = np.zeros(ori.size)
         for o in self.orientations:
             values += self.kernel.K_orientations(o, ori)
@@ -860,58 +1569,94 @@ class ODF(object):
 
 
 class EBSDmap:
-    """Class to store attributes and methods to import EBSD maps
+    """
+    Class to store attributes and methods to import EBSD maps
     and filter out their statistical data needed to generate
     synthetic RVEs
+
+    Parameters
+    ----------
+    fname : str
+        Filename including path to EBSD file.
+    gs_min : float, optional
+        Minimum grain size in pixels. Grains smaller than this are disregarded
+        for statistical analysis. Default is 10.0.
+    vf_min : float, optional
+        Minimum volume fraction. Phases with smaller values are disregarded.
+        Default is 0.03.
+    max_angle : float, optional
+        Maximum misorientation angle (degrees) used for grain merging.
+        Default is 5.0.
+    connectivity : int, optional
+        Connectivity for grain identification. Default is 8.
+    show_plot : bool, optional
+        If True, plots microstructure maps. Default is True.
+    show_hist : bool, optional
+        If True, plots histograms of grain statistics. Default follows `show_plot`.
+    felzenszwalb : bool, optional
+        If True, applies Felzenszwalb segmentation. Default is False.
+    show_grains : bool, optional
+        If True, plots grain labeling. Default is False.
+    hist : bool, optional
+        Deprecated. Use `show_hist` instead.
+    plot : bool, optional
+        Deprecated. Use `show_plot` instead.
+
+    Attributes
+    ----------
+    emap : object
+        Loaded EBSD map object.
+    sh_x, sh_y : int
+        Shape of EBSD map in pixels.
+    dx, dy : float
+        Pixel size in microns.
+    npx : int
+        Total number of pixels in the map.
+    ms_data : list of dict
+        Phase-specific microstructure information including:
+        - name : str — phase name
+        - vf : float — volume fraction
+        - index : int — phase index
+        - ori : Orientation — grain orientations
+        - cs : crystal symmetry / Laue group
+        - mo_map : ndarray — misorientation field
+        - rgb_im : ndarray — IPF color image
+        - ngrains : int — number of grains
+        - gs_param, ar_param, om_param : ndarray — grain size, aspect ratio, main axis angle parameters
+        - gs_data, ar_data, om_data : ndarray — raw distributions
+        - gs_moments, ar_moments, om_moments : list — distribution moments
+        - graph : object — microstructure graph
+    ci_map : ndarray
+        Optional confidence index map if available.
+    ngrains : int
+        Total number of grains after merging/pruning.
     """
 
     def __init__(self, fname, gs_min=10.0, vf_min=0.03, max_angle=5.0, connectivity=8,
                  show_plot=True, show_hist=None, felzenszwalb=False, show_grains=False,
                  hist=None, plot=None):
-        """
-        Generate microstructural data from EBSD maps
 
-        Parameters
-        ----------
-        fname : str
-            filname incl. path to EBSD file.
-        matname : str, optional
-            Name of material, depracted. The default is None.
-        gs_min : int, optional
-            Minimum grain size in pixels, smaller grains will be disregarded
-            for the statistical analysis. The default is 3.
-        vf_min : int, optional
-            Minimum volume fraction, phases with smaller values will be
-            disregarded. The default is 0.03.
-        plot : bool, optional
-            Plot microstructures. The default is True.
-
-        Returns
-        -------
-        None.
-        
-        Attributes
-        ----------
-        ms_data : list of dict
-            List of dictionaries with phase specific microstructure
-            information.  
-            name : name of phase  
-            vf : volume fraction
-            ngrain : number of grains in phase
-            ori : matlab object with grain orientations
-            cs : matlab object with crystal structure
-            grains : matlab object with grains in each phase
-            omega : orientations of major grain axis
-            gs_param : statistical grain size parameters
-            gs_data : grain sizes
-            ar_param
-            ar_data
-            om_param
-            om_data
-
-        """
 
         def reassign(pix, ori, phid, bads):
+            """
+            Reassign the orientation of a pixel based on neighboring pixels of the same phase.
+
+            Parameters
+            ----------
+            pix : int
+                Index of the pixel to be reassigned.
+            ori : ndarray
+                Array of orientations for all pixels.
+            phid : ndarray
+                Array of phase IDs for all pixels.
+            bads : set
+                Set of indices corresponding to pixels that could not be reassigned previously.
+
+            Returns
+            -------
+            None
+                Modifies `ori` in-place. If no valid neighbor is found, `pix` is added to `bads`.
+            """
             phase = phid[pix]
             ix = -1
             if pix - 1 >= 0 and phid[pix - 1] == phase and pix - 1 not in bads:
@@ -1210,7 +1955,7 @@ class EBSDmap:
                 verbose=False, full_output=False):
         """
         Estimate optimum kernel half-width and produce reduced set of
-        orientations for given number of grains.
+        orientations for given number of grains
 
         Parameters
         ----------
@@ -1250,12 +1995,7 @@ class EBSDmap:
 
     def showIPF(self):
         """
-        Plot IPF key.
-
-        Returns
-        -------
-        None.
-
+        Plot the inverse pole figure (IPF) color key for all phases in the EBSD map
         """
         for i in self.emap.phases.ids:
             pg = self.emap.phases[i].point_group.laue
@@ -1266,6 +2006,9 @@ class EBSDmap:
             plt.show()
 
     def plot_ci_map(self):
+        """
+        Plot the confidence index (CI) map of the EBSD data if available
+        """
         if 'ci' in self.emap.prop.keys():
             plt.imshow(self.ci_map.reshape((self.sh_x, self.sh_y)))
             plt.title('CI values in EBSD map')
@@ -1273,6 +2016,18 @@ class EBSDmap:
             plt.show()
 
     def plot_pf(self, vector=None):
+        """
+        Plot pole figures for all phases using the specified sample direction
+
+        Parameters
+        ----------
+        vector : array-like, optional
+            Sample reference vector for the pole figure. Default is [0, 0, 1].
+
+        Notes
+        -----
+        Plots <111> poles in the sample reference frame for each phase.
+        """
         # plot inverse pole figure
         # <111> poles in the sample reference frame
         if vector is None:
@@ -1292,6 +2047,18 @@ class EBSDmap:
             #plt.show()
 
     def plot_pf_proj(self, vector=None):
+        """
+        Plot projected pole figures for all phases using the specified sample direction
+
+        Parameters
+        ----------
+        vector : array-like, optional
+            Sample reference vector for the projected pole figure. Default is [0, 0, 1].
+
+        Notes
+        -----
+        Uses a projection method to visualize <111> poles in the sample reference frame.
+        """
         # plot inverse pole figure
         # <111> poles in the sample reference frame
         if vector is None:
@@ -1303,6 +2070,14 @@ class EBSDmap:
             plot_pole_figure_proj(orientations, self.emap.phases[pids[n_ph]], vector=vector)
 
     def plot_grains_marked(self):
+        """
+        Plot grains with labels and major/minor axes for all phases
+
+        Notes
+        -----
+        Each grain is annotated with its number. Major axes are plotted in black,
+        minor axes in red. The plot uses a distinct colormap for different grains.
+        """
         # plot grain with numbers and axes
         for data in self.ms_data:
             ngr = data['ngrains']
@@ -1326,6 +2101,13 @@ class EBSDmap:
             plt.show()
 
     def plot_mo_map(self):
+        """
+        Plot the misorientation map for all phases
+
+        Notes
+        -----
+        Shows the misorientation angle of each pixel with respect to a reference orientation.
+        """
         for data in self.ms_data:
             plt.imshow(data['mo_map'].reshape((self.sh_x, self.sh_y)))
             plt.title(f"Phase #{data['index']} ({data['name']}): Misorientation angle wrt reference")
@@ -1333,6 +2115,20 @@ class EBSDmap:
             plt.show()
 
     def plot_segmentation(self, show_mo=True, show_ipf=True):
+        """
+        Plot segmentation results for all phases
+
+        Parameters
+        ----------
+        show_mo : bool, optional
+            If True, overlay grain boundaries on the misorientation map. Default is True.
+        show_ipf : bool, optional
+            If True, overlay grain boundaries on the IPF map. Default is True.
+
+        Notes
+        -----
+        Uses similarity-based segmentation to highlight grain boundaries on the maps.
+        """
         # plot segmentation results
         for data in self.ms_data:
             if show_mo:
@@ -1346,6 +2142,14 @@ class EBSDmap:
                 plt.show()
 
     def plot_felsenszwalb(self):
+        """
+        Apply Felzenszwalb segmentation to the misorientation map and plot the results
+
+        Notes
+        -----
+        Segments the misorientation map using the Felzenszwalb algorithm and overlays
+        the segment boundaries for visualization.
+        """
         from skimage.segmentation import felzenszwalb
         for data in self.ms_data:
             gscale_map = data['mo_map'].reshape((self.sh_x, self.sh_y)) / np.pi
@@ -1355,11 +2159,25 @@ class EBSDmap:
             plt.show()
 
     def plot_graph(self):
+        """
+        Visualize the microstructure graph for all phases
+
+        Notes
+        -----
+        Uses the `visualize_graph` function to display nodes and connections of each phase's graph.
+        """
         # visualize graph
         for data in self.ms_data:
             visualize_graph(data['graph'])
 
     def plot_ipf_map(self):
+        """
+        Plot the IPF (inverse pole figure) map for all phases
+
+        Notes
+        -----
+        Pixels belonging to other phases are set to black. Each phase is visualized separately.
+        """
         # plot EBSD maps for all phase
         # set pixels of other phases to black
         for data in self.ms_data:
@@ -1371,6 +2189,19 @@ class EBSDmap:
             fig.show()
 
     def plot_grains(self, N=5):
+        """
+        Plot the N largest grains with one-hot maps, convex hulls, and principal axes
+
+        Parameters
+        ----------
+        N : int, optional
+            Number of largest grains to plot for each phase. Default is 5.
+
+        Notes
+        -----
+        Each grain is visualized with its pixels, convex hull, and major/minor axes.
+        Major axes are plotted in cyan, minor axes in green.
+        """
         # select N largest gains and create a one-hot-plot for each grain
         # showing its pixels, the vertices of the convex hull and the convex hull itself
         # together with the principal axes of the grain
@@ -1417,19 +2248,24 @@ class EBSDmap:
 
 def get_ipf_colors(ori_list, color_key=0):
     """
-    Get colors of list of orientations (in radians).
-    Assumes cubic crystal symmetry and cubic specimen symmetry.
+    Get RGB colors for a list of orientations in radians
 
     Parameters
     ----------
-    ori_list: (N, 3) ndarray
+    ori_list : (N, 3) ndarray
         List of N Euler angles in radians
+
+    color_key : int, optional
+        Index of the IPF color key to use. Default is 0
 
     Returns
     -------
-    colors: (N, 3) ndarray
-        List of RGB values
+    colors : (N, 3) ndarray
+        RGB values corresponding to each orientation
 
+    Notes
+    -----
+    Assumes cubic crystal symmetry and cubic specimen symmetry
     """
 
     # get colors
@@ -1445,32 +2281,44 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
                  res_low=5, res_high=25, res_step=2, lim=5,
                  verbose=False, full_output=False):
     """
-    Create a set of num Euler angles according to the ODF defined by the
-    set of Euler angles ang and the kernel half-width omega.
-    Example: Goss texture: ang = [0, 45, 0], omega = 5
+    Create a set of Euler angles according to an ODF defined by input orientations and kernel half-width
 
     Parameters
     ----------
     num : int
-        Number of Euler angles in set to be created.
-    ang : (3, ) or (M, 3) array
-        Set of Euler angles (in degrees or radians) defining the ODF.
+        Number of Euler angles to generate
+    ang : (3,) or (M, 3) array or Orientation
+        Input set of Euler angles (in degrees or radians) defining the ODF
     omega : float
-        Half-width of kernel in degrees or radians.
+        Kernel half-width (in degrees or radians)
     hist : array, optional
-        Histogram of MDF. The default is None.
-    shared_area: array, optional
-        The shared area between pairs of grains. The default in None.
-    cs : str, optional
-        Crystal symmetry group. The default is 'm3m'.
+        Histogram of MDF. Default is None
+    shared_area : array, optional
+        Shared area between pairs of grains. Default is None
+    cs : Symmetry, optional
+        Crystal symmetry group. Default is 'm3m'
+    degree : bool, optional
+        If True, input angles and omega are in degrees. Default is True
     Nbase : int, optional
-        Base number of orientations for random texture. The default is 10000
+        Base number of orientations for artificial ODF. Default is 10000
+    resolution : float, optional
+        Resolution for orientation generation. If None, derived from omega
+    res_low, res_high, res_step, lim : int, optional
+        Parameters for texture reconstruction
+    verbose : bool, optional
+        If True, prints progress messages. Default is False
+    full_output : bool, optional
+        If True, returns additional reconstruction outputs. Default is False
 
     Returns
     -------
-    ori : (num, 3) array
-        Set of Euler angles
+    ori : (num, 3) ndarray
+        Reduced set of Euler angles
 
+    Notes
+    -----
+    Can generate artificial ODFs if input set is small. Grain-boundary-texture
+    reconstruction with hist or shared_area requires the kanapy-mtex module.
     """
     # prepare parameters
     if hist is not None or shared_area is not None:
@@ -1530,31 +2378,33 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
 
 def createOrisetRandom(num, omega=None, hist=None, shared_area=None, cs=None, Nbase=None):
     """
-    Create a set of num Euler angles for Random texture.
-    Other than knpy.createOriset() this method does not create an artificial
-    EBSD which is reduced in a second step to num discrete orientations but
-    directly samples num randomly distributed orientations.s
+    Create a set of Euler angles for a random texture
 
     Parameters
     ----------
     num : int
-        Number of Euler angles in set to be created.
-    omega : float
-        Halfwidth of kernel in degrees (optional, default: 7.5)
+        Number of Euler angles to generate
+    omega : float, optional
+        Kernel half-width in degrees. Default is 7.5
     hist : array, optional
-        Histogram of MDF. The default is None.
-    shared_area: array, optional
-        The shared area between pairs of grains. The default in None.
-    cs : str, optional
-        Crystal symmetry group. The default is 'm3m'.
+        Histogram of MDF. Default is None
+    shared_area : array, optional
+        Shared area between pairs of grains. Default is None
+    cs : Symmetry, optional
+        Crystal symmetry group. Default is 'm3m'
     Nbase : int, optional
-        Base number of orientations for random texture. The default is 5000
+        Base number of orientations for random texture. Default is 5000
 
     Returns
     -------
-    ori : (num, 3) array
-        Set of Euler angles
+    ori : (num, 3) ndarray
+        Set of randomly distributed Euler angles
 
+    Notes
+    -----
+    Unlike `createOriset`, this function directly generates `num` random orientations
+    without reducing a larger artificial EBSD set. Grain-boundary-texture reconstruction
+    using `hist` or `shared_area` requires the kanapy-mtex module.
     """
     if hist is not None or shared_area is not None:
         raise ModuleNotFoundError('The grain-boundary-texture module is currently only available in kanapy-mtex.')
