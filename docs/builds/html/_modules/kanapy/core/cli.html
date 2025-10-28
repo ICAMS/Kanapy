@@ -95,7 +95,23 @@
 <span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;gui&#39;</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">gui</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Start Kanapy&#39;s GUI (experimental alpha-version). &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Start Kanapy&#39;s graphical user interface (experimental alpha version)</span>
+
+<span class="sd">    This function initializes and launches the Kanapy GUI using Tkinter.</span>
+<span class="sd">    It creates a main application window with multiple tabs for different</span>
+<span class="sd">    RVE generation modes, such as particle-based and cuboid-based RVEs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ctx : object</span>
+<span class="sd">        Execution context (reserved for CLI or application integration)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - This GUI version is experimental and intended for testing only</span>
+<span class="sd">    - Requires `matplotlib` and `tkinter` libraries</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tk</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tkinter.font</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tkFont</span>
@@ -131,7 +147,26 @@
 <span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--no_texture&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">tests</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">no_texture</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Runs unittests built within kanapy.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run Kanapy&#39;s internal unittests</span>
+
+<span class="sd">    Executes the built-in test suite for Kanapy using pytest.</span>
+<span class="sd">    Depending on the `no_texture` flag, it either runs a subset of tests</span>
+<span class="sd">    or all available tests in the `tests` directory.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ctx : object</span>
+<span class="sd">        Execution context (reserved for CLI or internal use)</span>
+<span class="sd">    no_texture : bool</span>
+<span class="sd">        If True, run tests excluding texture-related modules;</span>
+<span class="sd">        if False, run the full test suite</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Must be executed from the root directory of the Kanapy installation</span>
+<span class="sd">    - Temporary dump files generated during testing are automatically removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Will only work in root directory of kanapy installation.&#39;</span><span class="p">)</span>
     <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">no_texture</span><span class="p">:</span>
@@ -150,7 +185,17 @@
 <span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;readDocs&#39;</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">docs</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open webpage with  Kanapy documentation.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Open the Kanapy documentation webpage</span>
+
+<span class="sd">    Launches the default web browser and navigates to the official</span>
+<span class="sd">    Kanapy documentation page hosted on GitHub Pages.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ctx : object</span>
+<span class="sd">        Execution context (reserved for CLI or internal use)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;https://icams.github.io/Kanapy/&quot;</span><span class="p">)</span>
 
 
@@ -158,8 +203,22 @@
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">download_subdir</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Download examples from Kanapy&#39;s GitHub repository.</span>
+<span class="sd">    Download example files from Kanapy&#39;s GitHub repository</span>
 
+<span class="sd">    Fetches the latest Kanapy repository archive from GitHub,</span>
+<span class="sd">    extracts the `examples` subdirectory, and saves it to the local</span>
+<span class="sd">    working directory as `kanapy_examples`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ctx : object</span>
+<span class="sd">        Execution context (reserved for CLI or internal use)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Requires an active internet connection</span>
+<span class="sd">    - Downloads from the `master` branch of the Kanapy repository</span>
+<span class="sd">    - Automatically creates the output directory if it does not exist</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">zip_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://github.com/ICAMS/kanapy/archive/refs/heads/master.zip&quot;</span>
     <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;kanapy_examples&#39;</span><span class="p">)</span>
@@ -190,14 +249,44 @@
 <span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;setupMTEX&#39;</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">setup_mtex</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Starts Matlab engine and initializes MTEX.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Start the MATLAB engine and initialize MTEX</span>
+
+<span class="sd">    Launches the MATLAB engine from Python and sets up the</span>
+<span class="sd">    MTEX toolbox environment for crystallographic computations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ctx : object</span>
+<span class="sd">        Execution context (reserved for CLI or internal use)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Requires MATLAB and the MTEX toolbox to be installed</span>
+<span class="sd">    - Calls `setPaths()` to configure MATLAB path settings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">setPaths</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="chkVersion">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.cli.chkVersion">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">chkVersion</span><span class="p">(</span><span class="n">matlab</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Read the version of Matlab&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read the installed MATLAB version from a version string</span>
+
+<span class="sd">    Parses the given MATLAB version string to extract the release year</span>
+<span class="sd">    (e.g., &#39;R2023a&#39; → 2023). If the version cannot be determined, returns None.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    matlab : str</span>
+<span class="sd">        String containing MATLAB version information</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int or None</span>
+<span class="sd">        MATLAB release year if successfully parsed, otherwise None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ind</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;R20&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ind</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span> 
@@ -214,7 +303,23 @@
 <div class="viewcode-block" id="setPaths">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.cli.setPaths">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">setPaths</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Starts matlab engine, after installation if required, and initializes MTEX.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Start the MATLAB engine and initialize the MTEX environment</span>
+
+<span class="sd">    Checks if the MATLAB engine for Python is installed and installs it if missing.</span>
+<span class="sd">    Then initializes the MATLAB engine and MTEX toolbox for use with Kanapy.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ModuleNotFoundError</span>
+<span class="sd">        If `kanapy-mtex` or MATLAB are not installed,</span>
+<span class="sd">        or if the MATLAB engine installation fails</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Requires MATLAB 2025a or later</span>
+<span class="sd">    - Automatically installs the `matlabengine` package if not found</span>
+<span class="sd">    - Configures Kanapy for texture analysis by running `init_engine.py`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">kanapy_mtex</span><span class="w"> </span><span class="kn">import</span> <span class="n">ROOT_DIR</span>

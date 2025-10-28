@@ -94,27 +94,31 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.grains.calc_polygons">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calc_polygons</span><span class="p">(</span><span class="n">rve</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.e-3</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Evaluates the grain volume and the grain boundary shared surface area</span>
-<span class="sd">    between neighbouring grains in voxelized microstrcuture. Generate</span>
-<span class="sd">    vertices as contact points between 3 or more grains. Generate</span>
-<span class="sd">    polyhedral convex hull for vertices.</span>
+<span class="sd">    Evaluates grain volumes and the shared surface area of grain boundaries</span>
+<span class="sd">    between neighboring grains in a voxelized microstructure. Generates</span>
+<span class="sd">    vertices at contact points where three or more grains meet and constructs</span>
+<span class="sd">    polyhedral convex hulls for these vertices.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    rve : kanapy object</span>
-<span class="sd">        Contains information about RVE geometry</span>
+<span class="sd">        Object containing information about the RVE geometry.</span>
 <span class="sd">    mesh : kanapy object</span>
-<span class="sd">        Contains information about the voxel mesh and grain definitions for each voxel</span>
+<span class="sd">        Object containing voxel mesh details and grain assignments for each voxel.</span>
 <span class="sd">    tol : float, optional</span>
-<span class="sd">        Tolerance value. The default is 1.e-3.</span>
+<span class="sd">        Tolerance for numerical operations. Default is 1.e-3.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    geometry : dict</span>
+<span class="sd">        Dictionary containing the calculated geometrical information, including</span>
+<span class="sd">        vertices, contact points, and convex hulls for grains.</span>
 
-<span class="sd">    ISSUES: for periodic structures, large grains with segments in both</span>
-<span class="sd">    halves of the box and touching one boundary are split wrongly</span>
-
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For periodic structures, large grains spanning both halves of the simulation</span>
+<span class="sd">    box and touching a boundary may be incorrectly split, which can affect</span>
+<span class="sd">    geometry calculations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">facet_on_boundary</span><span class="p">(</span><span class="n">conn</span><span class="p">):</span>
@@ -148,10 +152,30 @@
         <span class="k">return</span> <span class="n">face</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">check_neigh</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">grains</span><span class="p">,</span> <span class="n">margin</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Check if close neighbors of new vertices are already in list</span>
-<span class="sd">        # nodes: list of nodes identified as new vertices</span>
-<span class="sd">        # grains: set of grains containing the nodes in elist</span>
-<span class="sd">        # margin: radius in which vertices will be united&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if new vertices are close to existing vertices in neighboring grains</span>
+<span class="sd">        and merges them if within a given margin</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nodes : list</span>
+<span class="sd">            List of node IDs identified as new vertices.</span>
+<span class="sd">        grains : set</span>
+<span class="sd">            Set of grain IDs containing the nodes in the element list.</span>
+<span class="sd">        margin : float</span>
+<span class="sd">            Radius within which vertices will be considered identical and united.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Updated list of node IDs with close neighbors merged.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        For each new vertex, the function computes distances to all vertices of the specified grains.</span>
+<span class="sd">        If a vertex lies within the specified margin, it is merged with the existing vertex.</span>
+<span class="sd">        Special treatment is applied for vertices on the RVE boundaries using the `RVE_min` and `RVE_max` values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># create set of all vertices of all involved grains</span>
         <span class="n">vset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -183,22 +207,21 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_voxel</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get voxel associated with position vector pos.</span>
+<span class="sd">        Determines the voxel indices corresponding to a given position vector</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        pos : TYPE</span>
-<span class="sd">            DESCRIPTION.</span>
+<span class="sd">        pos : array-like</span>
+<span class="sd">            Position vector in the 3D space of the RVE.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        v0 : TYPE</span>
-<span class="sd">            DESCRIPTION.</span>
-<span class="sd">        v1 : TYPE</span>
-<span class="sd">            DESCRIPTION.</span>
-<span class="sd">        v2 : TYPE</span>
-<span class="sd">            DESCRIPTION.</span>
-
+<span class="sd">        v0 : int</span>
+<span class="sd">            Voxel index along the x-axis.</span>
+<span class="sd">        v1 : int</span>
+<span class="sd">            Voxel index along the y-axis.</span>
+<span class="sd">        v2 : int</span>
+<span class="sd">            Voxel index along the z-axis.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">v0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">voxel_res</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">voxel_res</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
@@ -207,15 +230,19 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">tet_in_grain</span><span class="p">(</span><span class="n">tet</span><span class="p">,</span> <span class="n">vertices</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether all vertices of a given tetrahedron belong to a specified set of vertices</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        tet</span>
-<span class="sd">        vertices</span>
+<span class="sd">        tet : list or array-like</span>
+<span class="sd">            Indices of the tetrahedron&#39;s vertices</span>
+<span class="sd">        vertices : set or list</span>
+<span class="sd">            Set of vertices to check against</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-
+<span class="sd">        bool</span>
+<span class="sd">            True if all tetrahedron vertices are in the specified set, False otherwise</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Vertices&#39;</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span> <span class="ow">and</span> \
             <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Vertices&#39;</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span> <span class="ow">and</span> \
@@ -224,17 +251,19 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">vox_in_tet</span><span class="p">(</span><span class="n">vox_</span><span class="p">,</span> <span class="n">tet_</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determine whether centre of voxel lies within tetrahedron</span>
+<span class="sd">        Determine whether the center of a voxel lies within a given tetrahedron</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        vox_</span>
-<span class="sd">        tet_</span>
+<span class="sd">        vox_ : int or tuple</span>
+<span class="sd">            Index or identifier of the voxel</span>
+<span class="sd">        tet_ : list or array-like</span>
+<span class="sd">            Indices of the tetrahedron&#39;s vertices</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        contained : bool</span>
-<span class="sd">            Voxel lies in tetrahedron</span>
+<span class="sd">            True if the voxel center lies inside the tetrahedron, False otherwise</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">v_pos</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vox_center_dict</span><span class="p">[</span><span class="n">vox_</span><span class="p">]</span>
@@ -260,16 +289,17 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_diameter</span><span class="p">(</span><span class="n">pts</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get estimate of largest diameter of a set of points.</span>
+<span class="sd">        Get estimate of the largest diameter of a set of points</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        pts : (N, dim) ndarray</span>
-<span class="sd">            Point set in dim dimensions</span>
+<span class="sd">            Array of points in dim-dimensional space</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        diameter : (dim)-ndarray</span>
-
+<span class="sd">        diameter : (dim,) ndarray</span>
+<span class="sd">            Vector representing the largest extent of the point set along any Cartesian axis</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ind0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with lowest coordinate for each Cartesian axis</span>
         <span class="n">ind1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with highest coordinate for each Cartesian axis</span>
@@ -280,7 +310,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">project_pts</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">ctr</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Project points (pts) to plane defined via center (ctr) and normal vector (axis).</span>
+<span class="sd">        Project points (pts) to plane defined via center (ctr) and normal vector (axis)</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

@@ -120,8 +120,38 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Simulation_Box">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Simulation_Box</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Creates :class:`~Simulation_Box` objects for the defined simulation domain.</span>
+<span class="sd">    Represents a 3D simulation domain box</span>
 
+<span class="sd">    This class defines the simulation box dimensions and boundaries,</span>
+<span class="sd">    and keeps track of the simulation time step.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    size : tuple of float</span>
+<span class="sd">        Dimensions of the box as (width, height, depth).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    w : float</span>
+<span class="sd">        Width of the box.</span>
+<span class="sd">    h : float</span>
+<span class="sd">        Height of the box.</span>
+<span class="sd">    d : float</span>
+<span class="sd">        Depth of the box.</span>
+<span class="sd">    sim_ts : int</span>
+<span class="sd">        Current simulation time-step, initialized to 0.</span>
+<span class="sd">    left : float</span>
+<span class="sd">        Position of the left boundary, initialized to 0.</span>
+<span class="sd">    top : float</span>
+<span class="sd">        Position of the top boundary, initialized to 0.</span>
+<span class="sd">    front : float</span>
+<span class="sd">        Position of the front boundary, initialized to 0.</span>
+<span class="sd">    right : float</span>
+<span class="sd">        Position of the right boundary, initialized to width.</span>
+<span class="sd">    bottom : float</span>
+<span class="sd">        Position of the bottom boundary, initialized to height.</span>
+<span class="sd">    back : float</span>
+<span class="sd">        Position of the back boundary, initialized to depth.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
@@ -142,30 +172,77 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Ellipsoid</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Creates :class:`~Ellipsoid` objects for each ellipsoid generated from input statistics. </span>
+<span class="sd">    Creates Ellipsoid objects for each ellipsoid generated from input statistics</span>
 
-<span class="sd">    :param iden: ID of the ellipsoid</span>
-<span class="sd">    :type iden: integer</span>
-<span class="sd">    :param center: Position :math:`(x, y, z)` of the ellipsoid center in the simulation domain      </span>
-<span class="sd">    :type center: floats    </span>
-<span class="sd">    :param coefficient: Semi-major and semin-minor axes lengths :math:`(a, b, c)` of the ellipsoid    </span>
-<span class="sd">    :type coefficient: floats   </span>
-<span class="sd">    :param quat: Quaternion representing ellipsoid&#39;s axis and tilt angle with respect </span>
-<span class="sd">                 to the positive x-axis       </span>
-<span class="sd">    :type quat: numpy array    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    iden : int</span>
+<span class="sd">        ID of the ellipsoid</span>
+<span class="sd">    x : float</span>
+<span class="sd">        X-coordinate of the ellipsoid center</span>
+<span class="sd">    y : float</span>
+<span class="sd">        Y-coordinate of the ellipsoid center</span>
+<span class="sd">    z : float</span>
+<span class="sd">        Z-coordinate of the ellipsoid center</span>
+<span class="sd">    a : float</span>
+<span class="sd">        Semi-major axis length of the ellipsoid</span>
+<span class="sd">    b : float</span>
+<span class="sd">        Semi-minor axis length of the ellipsoid</span>
+<span class="sd">    c : float</span>
+<span class="sd">        Semi-minor axis length of the ellipsoid</span>
+<span class="sd">    quat : numpy.ndarray</span>
+<span class="sd">        Quaternion representing the ellipsoid&#39;s orientation</span>
+<span class="sd">    phasenum : int, optional</span>
+<span class="sd">        Phase number of the ellipsoid, default is 0</span>
+<span class="sd">    dup : optional</span>
+<span class="sd">        Duplicate status used for voxelization, default is None</span>
+<span class="sd">    points : list or None, optional</span>
+<span class="sd">        Points used to create a Delaunay tessellation for the ellipsoid, default is None</span>
 
-<span class="sd">    .. note:: 1. The orientations of ellipsoid :math:`i` in the global coordinate space is defined by its </span>
-<span class="sd">                 tilt angle and axis vector and expressed in quaternion notation as,</span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    id : int</span>
+<span class="sd">        ID of the ellipsoid</span>
+<span class="sd">    x, y, z : float</span>
+<span class="sd">        Position of the ellipsoid center</span>
+<span class="sd">    xold, yold, zold : float</span>
+<span class="sd">        Previous positions</span>
+<span class="sd">    a, b, c : float</span>
+<span class="sd">        Semi-major and semi-minor axes lengths</span>
+<span class="sd">    oria, orib, oric : float</span>
+<span class="sd">        Original axes lengths</span>
+<span class="sd">    speedx, speedy, speedz : float</span>
+<span class="sd">        Velocity components, initialized to 0</span>
+<span class="sd">    force_x, force_y, force_z : float</span>
+<span class="sd">        Forces acting on the ellipsoid, initialized to 0</span>
+<span class="sd">    rotation_matrix : ndarray</span>
+<span class="sd">        Rotation matrix of the ellipsoid</span>
+<span class="sd">    surface_points : list</span>
+<span class="sd">        Surface points of the ellipsoid</span>
+<span class="sd">    inside_voxels : list</span>
+<span class="sd">        Voxels belonging to the ellipsoid</span>
+<span class="sd">    duplicate : optional</span>
+<span class="sd">        Duplicate status used for voxelization</span>
+<span class="sd">    phasenum : int</span>
+<span class="sd">        Phase number</span>
+<span class="sd">    branches : list</span>
+<span class="sd">        Branches associated with the ellipsoid</span>
+<span class="sd">    neighborlist : set</span>
+<span class="sd">        Neighbor ellipsoids</span>
+<span class="sd">    ncollision : int</span>
+<span class="sd">        Number of collisions</span>
+<span class="sd">    inner : optional</span>
+<span class="sd">        Delaunay tessellation of points if provided, else None</span>
 
-<span class="sd">                 .. image:: /figs/quaternion_ell.png                        </span>
-<span class="sd">                    :width: 210px</span>
-<span class="sd">                    :height: 40px</span>
-<span class="sd">                    :align: center   </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    1. The orientation of each ellipsoid in the global coordinate space is defined by its</span>
+<span class="sd">       tilt angle and axis vector, expressed in quaternion notation.</span>
 
-<span class="sd">              2. Ellipsoids are initilaized without a value for its velocity,</span>
-<span class="sd">                 and is later assigned a random value by :mod:`kanapy.packing.particle_generator`.</span>
+<span class="sd">    2. Ellipsoids are initialized without a velocity; a random value is later assigned by</span>
+<span class="sd">       `kanapy.packing.particle_generator`.</span>
 
-<span class="sd">              3. An empty list for storing voxels belonging to the ellipsoid is initialized.                   </span>
+<span class="sd">    3. An empty list for storing voxels belonging to the ellipsoid is initialized.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iden</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">quat</span><span class="p">,</span> <span class="n">phasenum</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dup</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -205,9 +282,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.get_pos">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the position array of the ellipsoid</span>
+<span class="sd">        Return the current position of the ellipsoid</span>
 
-<span class="sd">        :rtype: numpy array</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            A 1D array [x, y, z] representing the current center coordinates of the ellipsoid.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">])</span></div>
 
@@ -216,9 +296,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.get_coeffs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_coeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the coefficients array of the ellipsoid</span>
+<span class="sd">        Return the semi-axes coefficients of the ellipsoid</span>
 
-<span class="sd">        :rtype: numpy array</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            A 1D array [a, b, c] representing the semi-major and semi-minor axes lengths of the ellipsoid.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">])</span></div>
 
@@ -227,9 +310,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.get_volume">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the volume of the ellipsoid</span>
+<span class="sd">        Return the volume of the ellipsoid</span>
 
-<span class="sd">        :rtype: float</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The volume of the ellipsoid calculated as (4/3) * pi * a * b * c.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="mi">4</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span></div>
 
@@ -238,9 +324,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.rotationMatrixGen">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rotationMatrixGen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluates the rotation matrix for the ellipsoid using the quaternion</span>
+<span class="sd">        Compute the rotation matrix of the ellipsoid from its quaternion</span>
 
-<span class="sd">        :rtype: numpy array</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            A 3x3 rotation matrix representing the ellipsoid&#39;s orientation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">FLOAT_EPS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span>
@@ -273,9 +362,17 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.surfacePointsGen">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">surfacePointsGen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nang</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generates points on the outer surface of the ellipsoid using the rotation matrix from :meth:`rotationMatrixGen`</span>
+<span class="sd">        Generate points on the outer surface of the ellipsoid using its rotation matrix</span>
 
-<span class="sd">        :rtype: numpy array</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nang : int, optional</span>
+<span class="sd">            Number of points along each angular direction (default is 20).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            An array of shape (nang*nang, 3) containing 3D coordinates of points on the ellipsoid surface.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Points on the outer surface of Ellipsoid</span>
         <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">nang</span><span class="p">)</span>
@@ -298,10 +395,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.growth">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">growth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fac</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Increases the size of the ellipsoid along its axes governed by the volume increment</span>
+<span class="sd">        Increase the size of the ellipsoid along its axes by a scaling factor</span>
 
-<span class="sd">        :param dv: Volume increment per time step</span>
-<span class="sd">        :type dv: float</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fac : float</span>
+<span class="sd">            Scaling factor applied to the original axes lengths.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">oria</span> <span class="o">*</span> <span class="n">fac</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">orib</span> <span class="o">*</span> <span class="n">fac</span>
@@ -313,10 +412,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.Bbox">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">Bbox</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generates the bounding box limits along x, y, z directions using the surface points from</span>
-<span class="sd">        :meth:`surfacePointsGen`</span>
+<span class="sd">        Compute the axis-aligned bounding box of the ellipsoid using its surface points</span>
 
-<span class="sd">        :rtype: numpy array</span>
+<span class="sd">        Sets the attributes:</span>
+<span class="sd">        - bbox_xmin, bbox_xmax</span>
+<span class="sd">        - bbox_ymin, bbox_ymax</span>
+<span class="sd">        - bbox_zmin, bbox_zmax</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Add position vector</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">surface_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">surfacePointsGen</span><span class="p">()</span>
@@ -334,9 +435,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.get_cub">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_cub</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the cuboid object of the ellipsoid</span>
+<span class="sd">        Return the cuboid object of the ellipsoid</span>
 
-<span class="sd">        :rtype: object of the class :class:`~Cuboid` </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Cuboid</span>
+<span class="sd">            Cuboid object representing the ellipsoid&#39;s bounding cuboid</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cub</span></div>
 
@@ -345,7 +449,10 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.set_cub">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_cub</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initializes an object of the class :class:`~Cuboid` using the bounding box limits from :meth:`Bbox`         </span>
+<span class="sd">        Initialize an object of the class Cuboid using the bounding box limits from Bbox</span>
+
+<span class="sd">        This method calls the Bbox method to obtain the bounding box limits and then</span>
+<span class="sd">        creates a Cuboid object using these limits</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Bbox</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cub</span> <span class="o">=</span> <span class="n">Cuboid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bbox_xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_ymin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_xmax</span><span class="p">,</span>
@@ -356,7 +463,20 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.create_poly">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_poly</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Creates a polygon inside the ellipsoid</span>
+<span class="sd">        Create a polygon inside the ellipsoid</span>
+
+<span class="sd">        This method applies a rotation to the input points using the object&#39;s rotation_matrix</span>
+<span class="sd">        and computes the Delaunay triangulation to form a polygon</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points : array_like</span>
+<span class="sd">            Input points to construct the polygon</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Delaunay</span>
+<span class="sd">            A Delaunay triangulation object representing the polygon</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Delaunay</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">))</span></div>
 
@@ -365,8 +485,20 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.sync_poly">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sync_poly</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Moves the center of the polygon to the center of the ellipsoid and</span>
-<span class="sd">        scales the hull to fit inside the ellipsoid</span>
+<span class="sd">        Move the center of the polygon to the center of the ellipsoid and scale the hull to fit inside the ellipsoid</span>
+
+<span class="sd">        This method recenters the polygon points at the ellipsoid&#39;s center, applies rotation</span>
+<span class="sd">        and scaling to fit the polygon inside the ellipsoid, and updates the Delaunay triangulation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scale : float, optional</span>
+<span class="sd">            Scaling factor to apply to the polygon. If None, the default poly_scale from kanapy is used.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The function assumes that self.inner contains a Delaunay object representing the polygon.</span>
+<span class="sd">        If self.inner is None, the method does nothing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">kanapy</span><span class="w"> </span><span class="kn">import</span> <span class="n">poly_scale</span> <span class="k">as</span> <span class="n">scale</span>
@@ -399,9 +531,19 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.move">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Moves the ellipsoid by updating its position vector according to the Verlet integration method</span>
+<span class="sd">        Move the ellipsoid by updating its position vector using the Verlet integration method</span>
 
-<span class="sd">        .. note:: The :class:`~Cuboid` object of the ellipsoid has to be updated everytime it moves</span>
+<span class="sd">        This method updates the ellipsoid&#39;s position and velocity components based on</span>
+<span class="sd">        the current force and previous positions, and then updates the Cuboid object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : float</span>
+<span class="sd">            Time step used in the Verlet integration</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The Cuboid object of the ellipsoid must be updated every time the ellipsoid moves</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">xx</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xold</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_x</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">dt</span>
         <span class="n">yy</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">yold</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_y</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">*</span> <span class="n">dt</span>
@@ -422,12 +564,16 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.gravity_effect">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">gravity_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Moves the ellipsoid downwards to mimick the effect of gravity acting on it  </span>
+<span class="sd">        Move the ellipsoid downwards to mimic the effect of gravity acting on it</span>
 
-<span class="sd">        :param value: User defined value for downward movement </span>
-<span class="sd">        :type value: float</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : float</span>
+<span class="sd">            User defined value for downward movement</span>
 
-<span class="sd">        .. note:: The :class:`~Cuboid` object of the ellipsoid has to be updated everytime it moves</span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The Cuboid object of the ellipsoid must be updated every time it moves</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-=</span> <span class="n">value</span>
@@ -439,19 +585,27 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Ellipsoid.wallCollision">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">wallCollision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluates whether the ellipsoid collides with the boundaries of the simulation box.</span>
+<span class="sd">        Evaluate whether the ellipsoid collides with the boundaries of the simulation box</span>
 
-<span class="sd">        * If periodicity is enabled -&gt; Creates duplicates of the ellipsoid on opposite faces of the box</span>
-<span class="sd">        * If periodicity is disabled -&gt; Mimicks the bouncing back effect.</span>
+<span class="sd">        This method checks if the ellipsoid intersects with the simulation box walls.</span>
+<span class="sd">        If periodicity is enabled, duplicates of the ellipsoid are created on opposite faces.</span>
+<span class="sd">        If periodicity is disabled, the ellipsoid bounces back from the walls.</span>
 
-<span class="sd">        :param sim_box: Simulation box</span>
-<span class="sd">        :type sim_box: object of the class :class:`~Simulation_Box`</span>
-<span class="sd">        :param periodicity: Status of periodicity</span>
-<span class="sd">        :type periodicity: boolean</span>
-<span class="sd">        :returns: if periodic - ellipsoid duplicates, else None</span>
-<span class="sd">        :rtype: list</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sim_box : Simulation_Box</span>
+<span class="sd">            Simulation box object containing boundary limits</span>
+<span class="sd">        periodicity : bool</span>
+<span class="sd">            Status of periodicity</span>
 
-<span class="sd">        .. note:: The :class:`~Cuboid` object of the ellipsoid has to be updated everytime it moves</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of ellipsoid duplicates if periodicity is enabled, otherwise an empty list</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The Cuboid object of the ellipsoid must be updated every time the ellipsoid moves</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">duplicates</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># for periodic boundaries</span>
@@ -878,20 +1032,22 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Cuboid">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Cuboid</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Creates :class:`Cuboid` objects for ellipsoids and Octree sub-branches.</span>
+<span class="sd">    Create Cuboid objects for ellipsoids and Octree sub-branches</span>
 
-<span class="sd">    :param left: Bounding box minimum along x</span>
-<span class="sd">    :param top: Bounding box minimum along y</span>
-<span class="sd">    :param right: Bounding box maximum along x</span>
-<span class="sd">    :param bottom: Bounding box maximum along y</span>
-<span class="sd">    :param front: Bounding box minimum along z</span>
-<span class="sd">    :param back: Bounding box maximum along z</span>
-<span class="sd">    :type left: float</span>
-<span class="sd">    :type top: float</span>
-<span class="sd">    :type right: float</span>
-<span class="sd">    :type bottom: float</span>
-<span class="sd">    :type front: float</span>
-<span class="sd">    :type back: float   </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    left : float</span>
+<span class="sd">        Bounding box minimum along x</span>
+<span class="sd">    top : float</span>
+<span class="sd">        Bounding box minimum along y</span>
+<span class="sd">    right : float</span>
+<span class="sd">        Bounding box maximum along x</span>
+<span class="sd">    bottom : float</span>
+<span class="sd">        Bounding box maximum along y</span>
+<span class="sd">    front : float</span>
+<span class="sd">        Bounding box minimum along z</span>
+<span class="sd">    back : float</span>
+<span class="sd">        Bounding box maximum along z</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">front</span><span class="p">,</span> <span class="n">back</span><span class="p">):</span>
@@ -910,13 +1066,17 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Cuboid.intersect">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluates whether the :class:`Cuboid` object of the ellipsoid intersects with the :class:`Cuboid` object</span>
-<span class="sd">        of the :class:`Octree` sub-branch.</span>
+<span class="sd">        Evaluate whether the Cuboid object of the ellipsoid intersects with the Cuboid object of the Octree sub-branch</span>
 
-<span class="sd">        :param other: Sub-branch cuboid object of the octree</span>
-<span class="sd">        :type other: object of the class :class:`Cuboid`</span>
-<span class="sd">        :returns: if intersection - **True**, else **False**</span>
-<span class="sd">        :rtype: boolean</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other: Cuboid</span>
+<span class="sd">            Sub-branch cuboid object of the octree</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if intersection occurs, False otherwise</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># six conditions that guarantee non-overlapping of cuboids</span>
@@ -936,18 +1096,22 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Octree">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Octree</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Creates :class:`~Octree` objects for tree trunk and its sub-branches.</span>
+<span class="sd">    Create an Octree object for tree trunk and its sub-branches</span>
 
-<span class="sd">    :param level: Current level of the Octree</span>
-<span class="sd">    :param cub: Cuboid object of the tree trunk / sub-branches</span>
-<span class="sd">    :param particles: Particles within the tree trunk / sub-branches</span>
-<span class="sd">    :type level: int</span>
-<span class="sd">    :type cub: object of the class :class:`~Cuboid`</span>
-<span class="sd">    :type particles: list  </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    level: int</span>
+<span class="sd">        Current level of the Octree, 0 for the trunk</span>
+<span class="sd">    cub: Cuboid</span>
+<span class="sd">        Cuboid object of the tree trunk or sub-branches, should be entire simulation box for the trunk</span>
+<span class="sd">    particles: list</span>
+<span class="sd">        List of particles within the tree trunk or sub-branches, contains all ellipsoids in the simulation domain for the trunk</span>
 
-<span class="sd">    .. note:: 1. **level** is set to zero for the trunk of the Octree.</span>
-<span class="sd">              2. **cub** should be entire simulation box for the tree trunk.</span>
-<span class="sd">              3. **particles** list contains all the ellipsoids in the simulation domain for the tree trunk.</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    1. level is set to zero for the trunk of the Octree</span>
+<span class="sd">    2. cub should be entire simulation box for the tree trunk</span>
+<span class="sd">    3. particles list contains all the ellipsoids in the simulation domain for the tree trunk</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">cub</span><span class="p">,</span> <span class="n">particles</span><span class="o">=</span><span class="p">[]):</span>
@@ -963,9 +1127,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Octree.get_cub">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_cub</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the cuboid object of the octree sub-branch        </span>
+<span class="sd">        Return the cuboid object of the octree sub-branch</span>
 
-<span class="sd">        :rtype: object :obj:`Cuboid`                </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Cuboid</span>
+<span class="sd">            Cuboid object corresponding to the octree sub-branch</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cub</span></div>
 
@@ -974,8 +1141,11 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Octree.subdivide">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Divides the given Octree sub-branch into eight further sub-branches and </span>
-<span class="sd">        initializes each newly created sub-branch as an :class:`~Octree` object             </span>
+<span class="sd">        Divide the Octree sub-branch into eight further sub-branches and initialize each as an Octree object</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Each newly created sub-branch is appended to the branches list of the current Octree</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">cub</span> <span class="ow">in</span> <span class="n">cub_oct_split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cub</span><span class="p">):</span>
             <span class="n">branch</span> <span class="o">=</span> <span class="n">Octree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cub</span><span class="p">,</span> <span class="p">[])</span>
@@ -986,7 +1156,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Octree.add_particle">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_particle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the particle list of the Octree sub-branch            </span>
+<span class="sd">        Update the particle list of the Octree sub-branch</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        particle: object</span>
+<span class="sd">            Particle object to be added to the sub-branch</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">particle</span><span class="p">)</span></div>
 
@@ -995,8 +1170,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Octree.subdivide_particles">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">subdivide_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluates whether ellipsoids belong to a particular Octree sub-branch</span>
-<span class="sd">        by calling :meth:`intersect` on each ellipsoid.           </span>
+<span class="sd">        Evaluate which ellipsoids belong to each Octree sub-branch by checking intersections</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Calls the intersect method of each sub-branch cuboid with each particle cuboid</span>
+<span class="sd">        and adds the particle to the sub-branch if an intersection occurs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">particle</span><span class="p">,</span> <span class="n">branch</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">branches</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">branch</span><span class="o">.</span><span class="n">get_cub</span><span class="p">()</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">particle</span><span class="o">.</span><span class="n">get_cub</span><span class="p">()):</span>
@@ -1007,7 +1186,12 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Octree.make_neighborlist">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">make_neighborlist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Finds the neighborlist for each particle</span>
+<span class="sd">        Find the neighbor list for each particle in the Octree sub-branch</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Initializes the neighborlist of each particle as a set and updates it with particles</span>
+<span class="sd">        from all branches that the particle belongs to</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">:</span>
             <span class="n">particle</span><span class="o">.</span><span class="n">neighborlist</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -1019,7 +1203,18 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Octree.collisionsTest">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">collisionsTest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Tests for collision between all ellipsoids in the particle list of octree         </span>
+<span class="sd">        Test for collisions between all ellipsoids in the Octree sub-branch</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of collisions detected</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Uses bounding sphere check as a preliminary filter and then calls the</span>
+<span class="sd">        collision_routine to determine actual overlaps. Updates the collision count</span>
+<span class="sd">        for each ellipsoid</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">make_neighborlist</span><span class="p">()</span>
         <span class="n">ncoll</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1058,7 +1253,14 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.entities.Octree.update">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Updates the Octree and begins the recursive process of subdividing or collision testing           </span>
+<span class="sd">        Update the Octree and begin recursive subdivision or particle assignment</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If the number of particles exceeds the maximum allowed and the current</span>
+<span class="sd">        level is below the maximum, the sub-branch is subdivided and particles</span>
+<span class="sd">        are distributed among the new branches. Otherwise, particles are</span>
+<span class="sd">        associated with this branch</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxparticles</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxlevel</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">subdivide</span><span class="p">()</span>

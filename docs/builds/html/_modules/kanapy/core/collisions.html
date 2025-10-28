@@ -83,21 +83,30 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.collisions.collision_routine">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">collision_routine</span><span class="p">(</span><span class="n">E1</span><span class="p">,</span> <span class="n">E2</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calls the method :meth:&#39;collide_detect&#39; to determine whether the given two ellipsoid objects overlap using</span>
-<span class="sd">    the Algebraic separation condition developed by W. Wang et al. A detailed description is provided</span>
-<span class="sd">    therein.</span>
+<span class="sd">    Detect and handle collision between two ellipsoid objects</span>
 
-<span class="sd">    Also calls the :meth:`collision_react` to evaluate the response after collision.     </span>
+<span class="sd">    Uses the algebraic separation condition by W. Wang et al. to detect overlap</span>
+<span class="sd">    between two ellipsoids, and if a collision occurs, computes the contact</span>
+<span class="sd">    response via the `collision_react` method.</span>
 
-<span class="sd">    :param E1: Ellipsoid :math:`i` </span>
-<span class="sd">    :type E1: object :obj:`Ellipsoid`</span>
-<span class="sd">    :param E2: Ellipsoid :math:`j`</span>
-<span class="sd">    :type E2: object :obj:`Ellipsoid`</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    E1 : Ellipsoid</span>
+<span class="sd">        First ellipsoid object (particle i)</span>
+<span class="sd">    E2 : Ellipsoid</span>
+<span class="sd">        Second ellipsoid object (particle j)</span>
 
-<span class="sd">    .. note:: 1. If both the particles to be tested for overlap are spheres, then the bounding sphere hierarchy is</span>
-<span class="sd">                 sufficient to determine whether they overlap.</span>
-<span class="sd">              2. Else, if either of them is an ellipsoid, then their coefficients, positions &amp; rotation matrices are</span>
-<span class="sd">                 used to determine whether they overlap.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if overlap (collision) is detected, False otherwise</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - If both particles are spheres, the bounding sphere hierarchy alone</span>
+<span class="sd">      suffices to detect collision.</span>
+<span class="sd">    - If either particle is an ellipsoid, their coefficients, positions,</span>
+<span class="sd">      and rotation matrices are used in the overlap test.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># call the collision detection algorithm</span>
@@ -113,44 +122,45 @@
 <div class="viewcode-block" id="collision_react">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.collisions.collision_react">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">collision_react</span><span class="p">(</span><span class="n">ell1</span><span class="p">,</span> <span class="n">ell2</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Evaluates and modifies the magnitude and direction of the ellipsoid&#39;s velocity after collision.    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates and modifies the magnitude and direction of the ellipsoid&#39;s velocity after collision</span>
 
-<span class="sd">    :param ell1: Ellipsoid :math:`i`</span>
-<span class="sd">    :type ell1: object :obj:`Ellipsoid`</span>
-<span class="sd">    :param ell2: Ellipsoid :math:`j`</span>
-<span class="sd">    :type ell2: object :obj:`Ellipsoid`</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ell1 : Ellipsoid</span>
+<span class="sd">        Ellipsoid i</span>
+<span class="sd">    ell2 : Ellipsoid</span>
+<span class="sd">        Ellipsoid j</span>
 
-<span class="sd">    .. note:: Consider two ellipsoids :math:`i, j` at collision. Let them occupy certain positions in space</span>
-<span class="sd">              defined by the position vectors :math:`\mathbf{r}^{i}, \mathbf{r}^{j}` and have certain </span>
-<span class="sd">              velocities represented by :math:`\mathbf{v}^{i}, \mathbf{v}^{j}` respectively. The objective</span>
-<span class="sd">              is to  find the velocity vectors after collision. The elevation angle :math:`\phi` between</span>
-<span class="sd">              the ellipsoids is determined by,      </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Consider two ellipsoids i, j at collision. Let them occupy certain positions in space</span>
+<span class="sd">    defined by the position vectors r^i, r^j and have certain velocities represented by v^i, v^j</span>
+<span class="sd">    respectively. The objective is to find the velocity vectors after collision. The elevation angle φ</span>
+<span class="sd">    between the ellipsoids is determined by:</span>
 
-<span class="sd">              .. image:: /figs/elevation_ell.png                        </span>
-<span class="sd">                :width: 200px</span>
-<span class="sd">                :height: 45px</span>
-<span class="sd">                :align: center                 </span>
+<span class="sd">    .. image:: /figs/elevation_ell.png</span>
+<span class="sd">        :width: 200px</span>
+<span class="sd">        :height: 45px</span>
+<span class="sd">        :align: center</span>
 
-<span class="sd">              where :math:`dx, dy, dz` are defined as the distance between the two ellipsoid centers along</span>
-<span class="sd">                    :math:`x, y, z` directions given by,</span>
+<span class="sd">    where dx, dy, dz are defined as the distance between the two ellipsoid centers along</span>
+<span class="sd">    x, y, z directions given by:</span>
 
-<span class="sd">              .. image:: /figs/dist_ell.png                        </span>
-<span class="sd">                  :width: 110px</span>
-<span class="sd">                  :height: 75px</span>
-<span class="sd">                  :align: center</span>
+<span class="sd">    .. image:: /figs/dist_ell.png</span>
+<span class="sd">        :width: 110px</span>
+<span class="sd">        :height: 75px</span>
+<span class="sd">        :align: center</span>
 
-<span class="sd">              Depending on the magnitudes of :math:`dx, dz` as projected on the :math:`x-z` plane, the angle</span>
-<span class="sd">              :math:`\Theta` is computed.</span>
-<span class="sd">              The angles :math:`\Theta` and :math:`\phi` determine the in-plane and out-of-plane directions along which</span>
-<span class="sd">              the ellipsoid :math:`i` would bounce back after collision. Thus, the updated velocity vector components</span>
-<span class="sd">              along the :math:`x, y, z` directions are determined by,</span>
+<span class="sd">    Depending on the magnitudes of dx, dz as projected on the x-z plane, the angle Θ is computed.</span>
+<span class="sd">    The angles Θ and φ determine the in-plane and out-of-plane directions along which</span>
+<span class="sd">    ellipsoid i would bounce back after collision. Thus, the updated velocity vector components</span>
+<span class="sd">    along the x, y, z directions are determined by:</span>
 
-<span class="sd">              .. image:: /figs/velocities_ell.png                        </span>
-<span class="sd">                  :width: 180px</span>
-<span class="sd">                  :height: 80px</span>
-<span class="sd">                  :align: center                        </span>
-
+<span class="sd">    .. image:: /figs/velocities_ell.png</span>
+<span class="sd">        :width: 180px</span>
+<span class="sd">        :height: 80px</span>
+<span class="sd">        :align: center</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">cdir</span> <span class="o">=</span> <span class="n">ell1</span><span class="o">.</span><span class="n">get_pos</span><span class="p">()</span> <span class="o">-</span> <span class="n">ell2</span><span class="o">.</span><span class="n">get_pos</span><span class="p">()</span>
     <span class="n">dst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">cdir</span><span class="p">)</span>
@@ -172,24 +182,37 @@
 <div class="viewcode-block" id="collide_detect">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.collisions.collide_detect">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">collide_detect</span><span class="p">(</span><span class="n">coef_i</span><span class="p">,</span> <span class="n">coef_j</span><span class="p">,</span> <span class="n">r_i</span><span class="p">,</span> <span class="n">r_j</span><span class="p">,</span> <span class="n">A_i</span><span class="p">,</span> <span class="n">A_j</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Implementation of Algebraic separation condition developed by</span>
-<span class="sd">    W. Wang et al. 2001 for overlap detection between two static ellipsoids.</span>
-<span class="sd">    Kudos to ChatGPT for support with translation from C++ code.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines overlap between two static ellipsoids using the Algebraic Separation Condition</span>
+<span class="sd">    developed by W. Wang et al., 2001. This function implements the method for two ellipsoids</span>
+<span class="sd">    with given coefficients, positions, and rotation matrices</span>
 
-<span class="sd">    :param coef_i: Coefficients of ellipsoid :math:`i`</span>
-<span class="sd">    :type coef_i: numpy array</span>
-<span class="sd">    :param coef_j: Coefficients of ellipsoid :math:`j`</span>
-<span class="sd">    :type coef_j: numpy array</span>
-<span class="sd">    :param r_i: Position of ellipsoid :math:`i`</span>
-<span class="sd">    :type r_i: numpy array</span>
-<span class="sd">    :param r_j: Position of ellipsoid :math:`j`</span>
-<span class="sd">    :type r_j: numpy array</span>
-<span class="sd">    :param A_i: Rotation matrix of ellipsoid :math:`i`</span>
-<span class="sd">    :type A_i: numpy array</span>
-<span class="sd">    :param A_j: Rotation matrix of ellipsoid :math:`j`</span>
-<span class="sd">    :type A_j: numpy array</span>
-<span class="sd">    :returns: **True** if ellipsoids :math:`i, j` overlap, else **False**</span>
-<span class="sd">    :rtype: boolean</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coef_i : numpy array</span>
+<span class="sd">        Coefficients of ellipsoid i</span>
+<span class="sd">    coef_j : numpy array</span>
+<span class="sd">        Coefficients of ellipsoid j</span>
+<span class="sd">    r_i : numpy array</span>
+<span class="sd">        Position vector of ellipsoid i</span>
+<span class="sd">    r_j : numpy array</span>
+<span class="sd">        Position vector of ellipsoid j</span>
+<span class="sd">    A_i : numpy array</span>
+<span class="sd">        Rotation matrix of ellipsoid i</span>
+<span class="sd">    A_j : numpy array</span>
+<span class="sd">        Rotation matrix of ellipsoid j</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if ellipsoids i and j overlap, False otherwise</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The method calculates the characteristic polynomial based on the ellipsoid coefficients</span>
+<span class="sd">    and rigid body transformations. Roots of this polynomial are used with the Algebraic</span>
+<span class="sd">    Separation Condition to determine whether the ellipsoids intersect. Real roots with</span>
+<span class="sd">    negative values are analyzed to establish the overlap.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">SMALL</span> <span class="o">=</span> <span class="mf">1.e-12</span>
 

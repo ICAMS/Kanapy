@@ -82,21 +82,33 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.entities</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ellipsoid</span><span class="p">,</span> <span class="n">Cuboid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.initializations</span><span class="w"> </span><span class="kn">import</span> <span class="n">NodeSets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
 
 <div class="viewcode-block" id="write_dump">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.input_output.write_dump">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">write_dump</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Writes the (.dump) files into a sub-directory &quot;dump_files&quot;, which can be read by visualization software OVITO</span>
-<span class="sd">    or imported again into Kanapy to avoid the packing simulation.</span>
+<span class="sd">    Write .dump files into a sub-directory &quot;dump_files&quot; for visualization or reuse in Kanapy</span>
 
-<span class="sd">    :param Ellipsoids: Contains information of ellipsoids such as its position, axes lengths and tilt angles </span>
-<span class="sd">    :type Ellipsoids: list    </span>
-<span class="sd">    :param sim_box: Contains information of the dimensions of the simulation box</span>
-<span class="sd">    :type sim_box: :obj:`Cuboid`</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Ellipsoids : list</span>
+<span class="sd">        Contains information of ellipsoids such as positions, axes lengths, and tilt angles</span>
+<span class="sd">    sim_box : Cuboid</span>
+<span class="sd">        Contains information of the dimensions of the simulation box</span>
 
-<span class="sd">    .. note:: This function writes (.dump) files containing simulation domain and ellipsoid attribute information. </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function creates a &#39;dump_files&#39; directory in the current working directory if it does not exist</span>
+<span class="sd">    and writes a file named &#39;particle.&lt;timestep&gt;.dump&#39;, where &lt;timestep&gt; is given by sim_box.sim_ts.</span>
+<span class="sd">    The generated .dump files can be read by visualization software like OVITO or imported back into Kanapy</span>
+<span class="sd">    to avoid repeating the packing simulation. Each file contains simulation domain bounds and ellipsoid</span>
+<span class="sd">    attributes including position, axes lengths, and quaternion orientation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">num_particles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">)</span>
     <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
@@ -128,14 +140,30 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.input_output.read_dump">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_dump</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Reads the (.dump) file to extract information for voxelization (meshing) routine    </span>
+<span class="sd">    Read a .dump file to extract simulation box and ellipsoid information for voxelization</span>
 
-<span class="sd">    :param file: Contains information of ellipsoids generated in the packing routine.</span>
-<span class="sd">    :type file: document</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file : str</span>
+<span class="sd">        Path to the .dump file containing ellipsoid data generated in the packing routine</span>
 
-<span class="sd">    :returns: * Cuboid object that represents the RVE.</span>
-<span class="sd">              * List of ellipsoid objects that represent the grains.</span>
-<span class="sd">    :rtype: Tuple of python objects (:obj:`Cuboid`, :obj:`Ellipsoid`)</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sim_box : Cuboid</span>
+<span class="sd">        Cuboid object representing the RVE (simulation box)</span>
+<span class="sd">    Ellipsoids : list of Ellipsoid</span>
+<span class="sd">        List of ellipsoid objects representing the grains</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If the specified .dump file does not exist</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function reads the simulation box dimensions and ellipsoid attributes including</span>
+<span class="sd">    position, axes lengths, orientation, and phase number. Duplicate ellipsoids are identified</span>
+<span class="sd">    based on naming convention in the dump file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Reading the .dump file for particle information&#39;</span><span class="p">)</span>
 
@@ -204,43 +232,68 @@
 
 <div class="viewcode-block" id="export2abaqus">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.input_output.export2abaqus">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">export2abaqus</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">grain_dict</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;um&#39;</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">export2abaqus</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">grain_dict</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">,</span> <span class="n">units</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span><span class="s1">&#39;um&#39;</span><span class="p">,</span>
                   <span class="n">gb_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">ialloy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grain_phase_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">periodicBC</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">crystal_plasticity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">phase_props</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">apply_bc</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                  <span class="n">crystal_plasticity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">phase_props</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="o">*</span><span class="p">,</span>
+                  <span class="n">boundary_conditions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Creates an ABAQUS input file with microstructure morphology information</span>
-<span class="sd">    in the form of nodes, elements and element sets. If &quot;dual_phase&quot; is true,</span>
-<span class="sd">    element sets with phase numbers will be defined and assigned to materials</span>
-<span class="sd">    &quot;PHASE_{phase_id}MAT&quot; plain material definitions for phases will be included.</span>
-<span class="sd">    Otherwise, it will be assumed that each grain refers to a material</span>
-<span class="sd">    &quot;GRAIN_{grain_id}MAT. In this case, a &quot;_mat.inp&quot; file with the same name</span>
-<span class="sd">    trunc will be included, in which the alloy number and Euler angles for each</span>
-<span class="sd">    grain must be defined.</span>
+<span class="sd">    Create an ABAQUS input file with microstructure morphology information including nodes, elements, and element sets</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    nodes</span>
-<span class="sd">    file</span>
-<span class="sd">    grain_dict</span>
-<span class="sd">    voxel_dict</span>
-<span class="sd">    units</span>
-<span class="sd">    gb_area</span>
-<span class="sd">    dual_phase</span>
-<span class="sd">    thermal</span>
-<span class="sd">    ialloy</span>
-<span class="sd">    grain_phase_dict</span>
-<span class="sd">    periodic</span>
-<span class="sd">    bc_type</span>
-<span class="sd">    load_type</span>
-<span class="sd">    loading_direction</span>
-<span class="sd">    value</span>
-<span class="sd">    apply_bc : bool, optional</span>
-<span class="sd">        If True, boundary conditions are written to the Abaqus input file. Default is False.</span>
+<span class="sd">    nodes : list</span>
+<span class="sd">        List of node objects or coordinates</span>
+<span class="sd">    file : str</span>
+<span class="sd">        Output file path for the ABAQUS input file</span>
+<span class="sd">    grain_dict : dict</span>
+<span class="sd">        Dictionary containing grain information</span>
+<span class="sd">    voxel_dict : dict</span>
+<span class="sd">        Dictionary containing voxel-to-grain mapping</span>
+<span class="sd">    units : str, optional</span>
+<span class="sd">        Units used in the input file (default is &#39;um&#39;)</span>
+<span class="sd">    gb_area : optional</span>
+<span class="sd">        Grain boundary area information</span>
+<span class="sd">    dual_phase : bool, optional</span>
+<span class="sd">        If True, element sets with phase numbers are defined and assigned to materials &quot;PHASE_{phase_id}MAT&quot;</span>
+<span class="sd">        If False, each grain refers to a material &quot;GRAIN_{grain_id}MAT&quot;</span>
+<span class="sd">    thermal : bool, optional</span>
+<span class="sd">        If True, thermal properties are included</span>
+<span class="sd">    ialloy : optional</span>
+<span class="sd">        Alloy information for grains, used if dual_phase is False</span>
+<span class="sd">    grain_phase_dict : dict, optional</span>
+<span class="sd">        Mapping from grain ID to phase ID</span>
+<span class="sd">    crystal_plasticity : bool, optional</span>
+<span class="sd">        If True, crystal plasticity data is included</span>
+<span class="sd">    phase_props : optional</span>
+<span class="sd">        Phase properties for crystal plasticity</span>
+<span class="sd">    boundary_conditions : dict, optional</span>
+<span class="sd">        Dictionary defining boundary conditions, keys may include type, loading_direction, value, etc.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    If dual_phase is False, a &quot;_mat.inp&quot; file with the same name is expected to define alloy number</span>
+<span class="sd">    and Euler angles for each grain. Element sets are written for grains or phases depending on dual_phase.</span>
+<span class="sd">    The function handles nodes, elements, sets, and optionally boundary conditions for ABAQUS simulations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">write_node_set</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">nset</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write a node set to a file with formatting compatible with ABAQUS input</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Name of the node set to be written</span>
+<span class="sd">        nset : list of int</span>
+<span class="sd">            List of node indices belonging to the node set</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Nodes are written in rows of 16 entries. Node indices are incremented by 1</span>
+<span class="sd">        to match ABAQUS indexing convention (1-based)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nset</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -250,6 +303,18 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">nset</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">write_grain_sets</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write element sets for grains and assign materials in an ABAQUS input file</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        For each grain in grain_dict, an element set named &quot;GRAIN{grain_id}_SET&quot; is written.</span>
+<span class="sd">        Elements are written in rows of 16 entries. Each set is assigned to a material:</span>
+<span class="sd">        - If grain_phase_dict is None or the phase ID is less than nall, the grain is assigned</span>
+<span class="sd">          &quot;GRAIN{grain_id}_MAT&quot;</span>
+<span class="sd">        - Otherwise, the grain is assigned &quot;PHASE{phase_id}_MAT&quot;</span>
+<span class="sd">        The function updates ph_set with phase IDs used for dual-phase assignments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">grain_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*ELSET, ELSET=GRAIN</span><span class="si">{0}</span><span class="s1">_SET</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
@@ -271,6 +336,15 @@
         <span class="k">return</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">write_phase_sets</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write element sets for phases and assign phase materials in an ABAQUS input file</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        For each phase in grain_dict, an element set named &quot;PHASE{phase_id}_SET&quot; is written.</span>
+<span class="sd">        Elements are written in rows of 16 entries. Each set is assigned to a material</span>
+<span class="sd">        &quot;PHASE{phase_id}_MAT&quot;. The function updates ph_set with all phase IDs used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">grain_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*ELSET, ELSET=PHASE</span><span class="si">{0}</span><span class="s1">_SET</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
@@ -289,7 +363,17 @@
         <span class="k">return</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">write_surface_sets</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write surface element sets for the simulation domain in an ABAQUS input file</span>
 
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The function identifies the maximum faces along X, Y, and Z directions using the node grid.</span>
+<span class="sd">        For each face, an ELSET and corresponding SURFACE block is written. Element IDs are sorted</span>
+<span class="sd">        and written in rows of 16 entries per line. The helper function _emit handles formatting</span>
+<span class="sd">        and writing of each face. Surface sets are named &quot;_Surf-{idx}_{label}&quot; and the corresponding</span>
+<span class="sd">        SURFACE block is named &quot;Surf-{idx}&quot; with type ELEMENT.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># 1) Find grid dimensions</span>
         <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
         <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
@@ -318,6 +402,24 @@
 
         <span class="c1"># 3) Helper to write one ELSET/SURFACE block</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">_emit</span><span class="p">(</span><span class="n">face_ids</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Write a single surface element set and corresponding SURFACE block to a file</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            face_ids : set of int</span>
+<span class="sd">                Set of element IDs belonging to the surface</span>
+<span class="sd">            idx : int</span>
+<span class="sd">                Index of the surface for labeling</span>
+<span class="sd">            label : str</span>
+<span class="sd">                Label indicating the surface direction or type</span>
+
+<span class="sd">            Notes</span>
+<span class="sd">            -----</span>
+<span class="sd">            Element IDs are sorted and written in rows of 16 entries per line.</span>
+<span class="sd">            The ELSET is named &quot;_Surf-{idx}_{label}&quot; and the corresponding SURFACE block</span>
+<span class="sd">            is named &quot;Surf-{idx}&quot; with type ELEMENT.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;*ELSET, ELSET=_Surf-</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1">, internal, instance=PART-1-1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="c1"># chunk 16 IDs per line</span>
             <span class="n">ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">face_ids</span><span class="p">)</span>
@@ -335,6 +437,15 @@
         <span class="n">_emit</span><span class="p">(</span><span class="n">z_max</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;S6&#39;</span><span class="p">)</span>  <span class="c1"># Z = max</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">write_boundary_conditions</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write boundary conditions for the ABAQUS input file based on the loading direction</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Depending on the value of loading_direction (&#39;x&#39;, &#39;y&#39;, &#39;z&#39;, &#39;xy&#39;, &#39;xz&#39;, &#39;yz&#39;),</span>
+<span class="sd">        corresponding nodes are fixed in specific displacement/rotation directions.</span>
+<span class="sd">        Each boundary condition block is preceded by a comment indicating its name and type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** BOUNDARY CONDITIONS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">loading_direction</span> <span class="o">==</span> <span class="s1">&#39;x&#39;</span><span class="p">:</span>
@@ -383,52 +494,84 @@
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** Name: F0yzFix Type: Displacement/Rotation</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Boundary</span><span class="se">\n</span><span class="s1">F0yz, 1, 1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">write_strain_load</span><span class="p">():</span>
-        <span class="n">displacement_bc_map</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;F1yz&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;disX&#39;</span> <span class="p">),</span>
-            <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fx1z&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;disY&#39;</span> <span class="p">),</span>
-            <span class="s1">&#39;z&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="s1">&#39;Fxy1&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;disZ&#39;</span> <span class="p">),</span>
-            <span class="s1">&#39;xy&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fx1z&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;disXY&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;xz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;F1yz&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;disXZ&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fxy1&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;disYZ&#39;</span><span class="p">),</span>
-        <span class="p">}</span>
-        <span class="n">direction</span> <span class="o">=</span> <span class="n">loading_direction</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">displacement_bc_map</span><span class="p">:</span>
-            <span class="n">set_name</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">bc_name</span> <span class="o">=</span> <span class="n">displacement_bc_map</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_load</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write loading conditions to the ABAQUS input file based on load type and direction</span>
 
-            <span class="c1"># &#39;value&#39; is a length-6 list; dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,</span>
-            <span class="n">strain</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mag</span><span class="p">)</span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Supports &#39;strain&#39; or &#39;stress&#39; loading types. For strain loading, the displacement</span>
+<span class="sd">        is calculated using logarithmic strain based on the edge length and stretch ratio.</span>
+<span class="sd">        For stress loading, a pressure load is applied to the corresponding surface set.</span>
+<span class="sd">        The function uses mappings from loading_direction to node or surface sets and</span>
+<span class="sd">        writes appropriate *Boundary or *Dload blocks in the ABAQUS input file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-            <span class="n">displacement</span> <span class="o">=</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">strain</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Logarithmic strain</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Direction: </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2">, Strain: </span><span class="si">{</span><span class="n">strain</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, Edge length: </span><span class="si">{</span><span class="n">edge_lengths</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> mm, &quot;</span>
-                  <span class="sa">f</span><span class="s2">&quot;Displacement: </span><span class="si">{</span><span class="n">displacement</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> mm&quot;</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;** Name: </span><span class="si">{</span><span class="n">bc_name</span><span class="si">}</span><span class="s1"> Type: Displacement/Rotation</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Boundary</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">set_name</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">dof</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">dof</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">displacement</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s1">&#39;strain&#39;</span><span class="p">:</span>
+            <span class="n">displacement_bc_map</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;F1yz&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;disX&#39;</span> <span class="p">),</span>
+                <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fx1z&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;disY&#39;</span> <span class="p">),</span>
+                <span class="s1">&#39;z&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="s1">&#39;Fxy1&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;disZ&#39;</span> <span class="p">),</span>
+                <span class="s1">&#39;xy&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fx1z&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;disXY&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;xz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;F1yz&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;disXZ&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fxy1&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;disYZ&#39;</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="n">loading_direction</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">displacement_bc_map</span><span class="p">:</span>
+                <span class="n">set_name</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">bc_name</span> <span class="o">=</span> <span class="n">displacement_bc_map</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span>
+                <span class="c1"># dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,</span>
+                <span class="n">vstrain</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mag</span><span class="p">)</span>
+                <span class="n">true_strain</span> <span class="o">=</span> <span class="n">vstrain</span> <span class="o">-</span> <span class="mf">1.0</span>  <span class="c1"># ε = 0.2 for provided value =1.2</span>
+                <span class="n">displacement</span> <span class="o">=</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">true_strain</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># Logarithmic strain</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Applied component: </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Stretch ratio λ: </span><span class="si">{</span><span class="n">vstrain</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Log strain ε (per rule): </span><span class="si">{</span><span class="n">true_strain</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Edge length: </span><span class="si">{</span><span class="n">edge_lengths</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> mm, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Displacement: </span><span class="si">{</span><span class="n">displacement</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> mm&quot;</span>
+                <span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;** Name: </span><span class="si">{</span><span class="n">bc_name</span><span class="si">}</span><span class="s1"> Type: Displacement/Rotation</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Boundary</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">set_name</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">dof</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">dof</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">displacement</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">write_stress_load</span><span class="p">():</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** LOADS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">load_bc_map</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-1&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;loadX&#39;</span> <span class="p">),</span>
-            <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-2&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;loadY&#39;</span> <span class="p">),</span>
-            <span class="s1">&#39;z&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-3&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;loadZ&#39;</span> <span class="p">),</span>
-            <span class="s1">&#39;xy&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-2&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;loadXY&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;xz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-1&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;loadXZ&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-3&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;loadYZ&#39;</span><span class="p">),</span>
-        <span class="p">}</span>
-        <span class="n">direction</span> <span class="o">=</span> <span class="n">loading_direction</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">load_bc_map</span><span class="p">:</span>
-            <span class="n">set_name</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">bc_name</span> <span class="o">=</span> <span class="n">load_bc_map</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s1">&#39;stress&#39;</span><span class="p">:</span>
+            <span class="n">load_bc_map</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-1&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;loadX&#39;</span> <span class="p">),</span>
+                <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-2&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;loadY&#39;</span> <span class="p">),</span>
+                <span class="s1">&#39;z&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-3&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;loadZ&#39;</span> <span class="p">),</span>
+                <span class="s1">&#39;xy&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-2&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;loadXY&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;xz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-1&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;loadXZ&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;SURF-3&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;loadYZ&#39;</span><span class="p">),</span>
+            <span class="p">}</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="n">loading_direction</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">load_bc_map</span><span class="p">:</span>
+                <span class="n">set_name</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">bc_name</span> <span class="o">=</span> <span class="n">load_bc_map</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span>
+                <span class="c1"># dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,</span>
+                <span class="n">vstress</span> <span class="o">=</span> <span class="n">mag</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** LOADS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;** Name: </span><span class="si">{</span><span class="n">bc_name</span><span class="si">}</span><span class="s1"> Type: Pressure</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Dload</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">set_name</span><span class="si">}</span><span class="s1">, P, </span><span class="si">{</span><span class="o">-</span><span class="n">vstress</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
-            <span class="c1"># &#39;value&#39; is a length-6 list; dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,</span>
-            <span class="n">vstress</span> <span class="o">=</span> <span class="n">mag</span>
-
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;** Name: </span><span class="si">{</span><span class="n">bc_name</span><span class="si">}</span><span class="s1"> Type: Pressure</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Dsload</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">set_name</span><span class="si">}</span><span class="s1">, P, </span><span class="si">{</span><span class="o">-</span><span class="n">vstress</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">write_periodic_load</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write periodic loading conditions for stress or strain to the ABAQUS input file</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If loading_direction is unsupported for the selected load_type</span>
+<span class="sd">            or if load_type is not &#39;stress&#39; or &#39;strain&#39;</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        For stress loading, the force is calculated as stress multiplied by the face area and</span>
+<span class="sd">        applied using *Cload. For strain loading, the displacement is calculated using</span>
+<span class="sd">        logarithmic strain based on edge length and applied using *Boundary.</span>
+<span class="sd">        Maps from loading_direction to node or surface IDs are used for correct application.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s1">&#39;stress&#39;</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** BOUNDARY CONDITIONS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -439,25 +582,22 @@
 
             <span class="c1"># map each index to its Abaqus CLOAD pattern</span>
             <span class="n">stress_map</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;V101,1&quot;</span><span class="p">,</span>  <span class="c1"># X-direction</span>
-                <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;V011,2&quot;</span><span class="p">,</span>  <span class="c1"># Y-direction</span>
-                <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;V000,3&quot;</span><span class="p">,</span>  <span class="c1"># Z-direction</span>
-                <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;V011,1&quot;</span><span class="p">,</span>  <span class="c1"># XY-direction</span>
-                <span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;V101,3&quot;</span><span class="p">,</span>  <span class="c1"># XZ-direction</span>
-                <span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;V000,2&quot;</span><span class="p">,</span>  <span class="c1"># YZ-direction</span>
+                <span class="s1">&#39;x&#39;</span><span class="p">:</span>  <span class="s2">&quot;V101,1&quot;</span><span class="p">,</span>  <span class="c1"># σ_xx → force along x</span>
+                <span class="s1">&#39;y&#39;</span><span class="p">:</span>  <span class="s2">&quot;V011,2&quot;</span><span class="p">,</span>  <span class="c1"># σ_yy → force along y</span>
+                <span class="s1">&#39;z&#39;</span><span class="p">:</span>  <span class="s2">&quot;V000,3&quot;</span><span class="p">,</span>  <span class="c1"># σ_zz → force along z</span>
+                <span class="s1">&#39;xy&#39;</span><span class="p">:</span> <span class="s2">&quot;V011,1&quot;</span><span class="p">,</span>  <span class="c1"># τ_xy → force along x (plane normal y)</span>
+                <span class="s1">&#39;xz&#39;</span><span class="p">:</span> <span class="s2">&quot;V101,3&quot;</span><span class="p">,</span>  <span class="c1"># τ_xz → force along z (plane normal x)</span>
+                <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="s2">&quot;V000,2&quot;</span><span class="p">,</span>  <span class="c1"># τ_yz → force along y (plane normal z)</span>
             <span class="p">}</span>
 
-            <span class="c1"># find all non-zero entries</span>
-            <span class="n">nz</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nz</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="c1"># only one non-zero → emit just that line</span>
-                <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">nz</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">stress_map</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="si">}</span><span class="s1">,</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># fallback: emit all, same as before</span>
-                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">nz</span><span class="p">:</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">stress_map</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="si">}</span><span class="s1">,</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-
+            <span class="n">d</span> <span class="o">=</span> <span class="n">loading_direction</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stress_map</span> <span class="ow">or</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">face_areas</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported loading_direction for stress: </span><span class="si">{</span><span class="n">loading_direction</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">area</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">face_areas</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
+            <span class="n">stress_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mag</span><span class="p">)</span>  <span class="c1"># user-provided stress (units e.g., MPa)</span>
+            <span class="n">force_value</span> <span class="o">=</span> <span class="n">stress_value</span> <span class="o">*</span> <span class="n">area</span>  <span class="c1"># Force = Stress × Area</span>
+            <span class="c1"># Write the force to CLOAD</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">stress_map</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="si">}</span><span class="s1">,</span><span class="si">{</span><span class="n">force_value</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s1">&#39;strain&#39;</span><span class="p">:</span>
@@ -470,65 +610,147 @@
 
             <span class="c1"># map each index to (node, direction) for the *Boundary card</span>
             <span class="n">strain_map</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="mi">0</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;V101&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>  <span class="c1"># X-direction</span>
-                <span class="mi">1</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;V011&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>  <span class="c1"># Y-direction</span>
-                <span class="mi">2</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;V000&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>  <span class="c1"># Z-direction</span>
-                <span class="mi">3</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;V011&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>  <span class="c1"># XY-direction</span>
-                <span class="mi">4</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;V101&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>  <span class="c1"># XZ-direction</span>
-                <span class="mi">5</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;V000&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>  <span class="c1"># YZ-direction</span>
+                <span class="s1">&#39;x&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="s2">&quot;V101&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="s1">&#39;y&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="s2">&quot;V011&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="s1">&#39;z&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="s2">&quot;V000&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="s1">&#39;xy&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;V011&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="s1">&#39;xz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;V101&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;V000&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
             <span class="p">}</span>
 
-            <span class="n">nz</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="s1">&#39;*&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nz</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">nz</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">node</span><span class="p">,</span> <span class="n">direction</span> <span class="o">=</span> <span class="n">strain_map</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-                <span class="c1"># node, start DOF, end DOF, value</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># fallback: emit all non-zero entries</span>
-                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">nz</span><span class="p">:</span>
-                    <span class="n">node</span><span class="p">,</span> <span class="n">direction</span> <span class="o">=</span> <span class="n">strain_map</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">loading_direction</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">strain_map</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported loading_direction for strain: </span><span class="si">{</span><span class="n">loading_direction</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_value</span><span class="p">():</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Given value: a list/tuple of length 6, each entry either</span>
-<span class="sd">          • a number (float/int), or</span>
-<span class="sd">          • the wildcard &#39;*&#39; (meaning “this DOF is free for strain”)</span>
-<span class="sd">        Returns: load_type, bc_type, direction, magnitude</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">6</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;value must be length 6&quot;</span><span class="p">)</span>
-        <span class="n">magnitude</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="c1"># 1) If any entry is &#39;*&#39;, it’s a displacement (strain) BC</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">):</span>
-            <span class="n">load_type</span> <span class="o">=</span> <span class="s1">&#39;strain&#39;</span>
-            <span class="c1"># find the one “real” number</span>
-            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span>
-                    <span class="n">magnitude</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-                    <span class="k">break</span>
+            <span class="n">node</span><span class="p">,</span> <span class="n">dof</span> <span class="o">=</span> <span class="n">strain_map</span><span class="p">[</span><span class="n">d</span><span class="p">]</span>
+            <span class="n">v_lambda</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mag</span><span class="p">)</span>  <span class="c1"># stretch ratio λ (e.g., 1.2 for +20%)</span>
+            <span class="n">eps_true</span> <span class="o">=</span> <span class="n">v_lambda</span> <span class="o">-</span> <span class="mf">1.0</span>  <span class="c1"># your convention</span>
+            <span class="n">disp</span> <span class="o">=</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">eps_true</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>
+
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">dof</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">dof</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">disp</span><span class="si">:</span><span class="s1">.6f</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># 2) else it’s stress (force) control; find the non‐zero entry</span>
-            <span class="n">load_type</span> <span class="o">=</span> <span class="s1">&#39;stress&#39;</span>
-            <span class="n">nonzeros</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonzeros</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;For stress you must supply exactly one non‐zero value, got </span><span class="si">{</span><span class="n">nonzeros</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">idx</span><span class="p">,</span> <span class="n">magnitude</span> <span class="o">=</span> <span class="n">nonzeros</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown load_type: </span><span class="si">{</span><span class="n">load_type</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_boundary_conditions</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse and validate the boundary_conditions dictionary</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">            Uses the `boundary_conditions` variable from the outer scope</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        apply_bc : bool</span>
+<span class="sd">            Whether boundary conditions should be applied</span>
+<span class="sd">        periodic_bc : bool</span>
+<span class="sd">            Whether periodic boundary conditions are requested</span>
+<span class="sd">        load_type : str</span>
+<span class="sd">            &#39;strain&#39; or &#39;stress&#39; depending on type_bc or components_bc</span>
+<span class="sd">        load_case : str</span>
+<span class="sd">            &#39;uni-axial&#39; for normal loads or &#39;shear&#39; for shear loads</span>
+<span class="sd">        direction : str</span>
+<span class="sd">            Loading direction: &#39;x&#39;, &#39;y&#39;, &#39;z&#39;, &#39;xy&#39;, &#39;xz&#39;, or &#39;yz&#39;</span>
+<span class="sd">        magnitude : float</span>
+<span class="sd">            Magnitude of the load or displacement</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `boundary_conditions` is not a dict, has invalid format, or contains invalid entries</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The function validates that only one degree of freedom has a non-zero magnitude (for stress)</span>
+<span class="sd">        or a numeric value (for strain), and maps the index to the corresponding direction and load type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">boundary_conditions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;strain&#39;</span><span class="p">,</span> <span class="s1">&#39;uni-axial&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mf">0.0</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">boundary_conditions</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;boundary_conditions must be a dict (or None).&quot;</span><span class="p">)</span>
+
+        <span class="n">apply_bc</span>      <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">boundary_conditions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;apply_bc&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="n">periodic_bc</span>   <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">boundary_conditions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;periodic_bc&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="n">type_bc</span>       <span class="o">=</span> <span class="n">boundary_conditions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type_bc&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">components_bc</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;components_bc&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="n">components_bc</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">components_bc</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">components_bc</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`components_bc` must be a list/tuple of length 6.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">type_bc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">type_bc</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;stress&quot;</span><span class="p">,</span> <span class="s2">&quot;force&quot;</span><span class="p">):</span>
+                <span class="n">load_type</span> <span class="o">=</span> <span class="s2">&quot;stress&quot;</span>
+            <span class="k">elif</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;strain&quot;</span><span class="p">,</span> <span class="s2">&quot;displacement&quot;</span><span class="p">):</span>
+                <span class="n">load_type</span> <span class="o">=</span> <span class="s2">&quot;strain&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;type_bc must be one of: &#39;stress&#39;|&#39;force&#39;|&#39;strain&#39;|&#39;displacement&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">load_type</span> <span class="o">=</span> <span class="s2">&quot;strain&quot;</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">components_bc</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;stress&quot;</span>
+
+        <span class="c1"># Validate + extract idx &amp; magnitude</span>
+        <span class="k">if</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s2">&quot;strain&quot;</span><span class="p">:</span>
+            <span class="n">numeric_positions</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">components_bc</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                    <span class="n">numeric_positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Strain BC: entries must be either a number (the controlled DOF) or &#39;*&#39; (free). Got </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2"> at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">numeric_positions</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="o">!=</span> <span class="s1">&#39;*&#39;</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">components_bc</span><span class="p">)</span> <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="p">(</span><span class="n">numeric_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Strain BC: provide exactly one numeric magnitude and five &#39;*&#39; (free DOFs).&quot;</span><span class="p">)</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">numeric_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">magnitude</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">components_bc</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># stress/force</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">components_bc</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Stress BC: &#39;*&#39; is not allowed. Use 0 to indicate a free DOF.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">components_bc</span><span class="p">):</span>
+                <span class="n">bad</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">components_bc</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))]</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stress BC: all entries must be numeric. Bad entries: </span><span class="si">{</span><span class="n">bad</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">nz_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">components_bc</span><span class="p">)</span> <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nz_indices</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">components_bc</span><span class="p">)</span> <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">nz_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Stress BC: provide exactly one non-zero numeric magnitude and five zeros (free DOFs).&quot;</span><span class="p">)</span>
+
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">nz_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">magnitude</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">components_bc</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+
 
         <span class="c1"># 3) Map index → direction &amp; bc_type</span>
         <span class="n">dir_map</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="s1">&#39;xz&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="s1">&#39;yz&#39;</span><span class="p">}</span>
         <span class="n">direction</span> <span class="o">=</span> <span class="n">dir_map</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-        <span class="n">bc_type</span> <span class="o">=</span> <span class="s1">&#39;uni-axial&#39;</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="k">else</span> <span class="s1">&#39;shear&#39;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;load type :&#39;</span><span class="p">,</span> <span class="n">load_type</span><span class="p">,</span> <span class="s1">&#39; boundary condition type :&#39;</span><span class="p">,</span> <span class="n">bc_type</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;direction of the load :&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="s1">&#39; magnitude :&#39;</span><span class="p">,</span> <span class="n">magnitude</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">load_type</span><span class="p">,</span> <span class="n">bc_type</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">magnitude</span>
+        <span class="n">load_case</span> <span class="o">=</span> <span class="s1">&#39;uni-axial&#39;</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="k">else</span> <span class="s1">&#39;shear&#39;</span>
+        <span class="k">return</span> <span class="n">apply_bc</span><span class="p">,</span> <span class="n">periodic_bc</span><span class="p">,</span> <span class="n">load_type</span><span class="p">,</span> <span class="n">load_case</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">magnitude</span>
 
-    <span class="c1"># Parse the value list into load type, bc_type, loading direction,and magnitude.</span>
-    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># skip parsing and writing any BC/load for this surface</span>
-        <span class="n">load_type</span> <span class="o">=</span> <span class="n">bc_type</span> <span class="o">=</span> <span class="n">loading_direction</span> <span class="o">=</span> <span class="n">mag</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># Parse boundary_conditions into control mode, loading mode, direction, and magnitude</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">boundary_conditions</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">boundary_conditions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;apply_bc&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">apply_bc</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">periodic_bc</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">boundary_conditions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;periodic_bc&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">boundary_conditions</span><span class="p">,</span>
+                                                                                        <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">False</span>
+        <span class="n">load_type</span> <span class="o">=</span> <span class="n">bc_type</span> <span class="o">=</span> <span class="n">loading_direction</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">mag</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">load_type</span><span class="p">,</span> <span class="n">bc_type</span><span class="p">,</span> <span class="n">loading_direction</span><span class="p">,</span> <span class="n">mag</span> <span class="o">=</span> <span class="n">_parse_value</span><span class="p">()</span>
+        <span class="n">apply_bc</span><span class="p">,</span> <span class="n">periodic_bc</span><span class="p">,</span> <span class="n">load_type</span><span class="p">,</span> <span class="n">bc_type</span><span class="p">,</span> <span class="n">loading_direction</span><span class="p">,</span> <span class="n">mag</span> <span class="o">=</span> <span class="n">_parse_boundary_conditions</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Control mode: </span><span class="si">{</span><span class="n">load_type</span><span class="si">}</span><span class="s2"> | &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Boundary condition type: </span><span class="si">{</span><span class="n">periodic_bc</span><span class="si">}</span><span class="s2"> | &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Loading mode: </span><span class="si">{</span><span class="n">bc_type</span><span class="si">}</span><span class="s2"> | &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Applied component: </span><span class="si">{</span><span class="n">loading_direction</span><span class="si">}</span><span class="s2"> | &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Magnitude value: </span><span class="si">{</span><span class="n">mag</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+
 
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Writing RVE as ABAQUS file &quot;</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
@@ -547,9 +769,15 @@
         <span class="n">ialloy</span> <span class="o">=</span> <span class="p">[</span><span class="n">ialloy</span><span class="p">]</span>
     <span class="n">nall</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ialloy</span><span class="p">)</span>
     <span class="n">ph_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-    <span class="c1"># Convert input units from µm to mm for Abaqus output</span>
-    <span class="n">scale_fact</span> <span class="o">=</span> <span class="mf">0.001</span>  <span class="c1"># conversion from µm to mm</span>
+
     <span class="n">nsets</span> <span class="o">=</span> <span class="n">NodeSets</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+    <span class="c1"># Convert input units from µm to mm for Abaqus output</span>
+    <span class="k">if</span> <span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;mm&#39;</span><span class="p">:</span>
+        <span class="n">scale_fact</span> <span class="o">=</span> <span class="mf">0.001</span>  <span class="c1"># conversion from µm to mm</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scale_fact</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># keep µm</span>
+
     <span class="c1"># Calculate RVE edge lengths and face areas in mm</span>
     <span class="n">edge_lengths</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;x&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span> <span class="o">*</span> <span class="n">scale_fact</span><span class="p">,</span>
@@ -560,9 +788,14 @@
         <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">nodes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]))</span> <span class="o">*</span> <span class="n">scale_fact</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="n">face_areas</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1"># normal stresses</span>
         <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span>  <span class="c1"># yz face</span>
         <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span>  <span class="c1"># xz face</span>
-        <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>  <span class="c1"># xy face</span>
+        <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>  <span class="c1"># xy face</span>
+        <span class="c1"># shear stresses (choose the plane normal consistent with mapping above)</span>
+        <span class="s1">&#39;xy&#39;</span><span class="p">:</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span>  <span class="c1"># plane normal y → xz face</span>
+        <span class="s1">&#39;xz&#39;</span><span class="p">:</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">],</span>  <span class="c1"># plane normal x → yz face</span>
+        <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span>  <span class="c1"># plane normal z → xy face</span>
     <span class="p">}</span>
 
     <span class="c1">#####################################</span>
@@ -620,7 +853,7 @@
             <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">fcs</span> <span class="ow">in</span> <span class="n">gr_fcs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*SURFACE SECTION, ELSET=GRAIN</span><span class="si">{}</span><span class="s1">_SET</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gid</span><span class="p">))</span>
 
-        <span class="k">if</span> <span class="n">periodicBC</span> <span class="ow">and</span> <span class="n">apply_bc</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">periodic_bc</span> <span class="ow">and</span> <span class="n">apply_bc</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**** ======================================================== </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**** Left to Right </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="c1"># LeftToRight</span>
@@ -1100,7 +1333,7 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Nset, nset=Vertices, instance=PART-1-1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V000</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V100</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V010</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V001</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V011</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, &#39;</span>
                 <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V101</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V110</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V111</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">periodicBC</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">periodic_bc</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Nset, nset=VerticesPeriodic, instance=PART-1-1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V001</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V101</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V011</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nsets</span><span class="o">.</span><span class="n">V000</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1"> </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
@@ -1200,13 +1433,13 @@
 <span class="sd">            f.write(&#39;**\n&#39;)</span>
 <span class="sd">            f.write(&#39;**__________________________________________________________________&#39;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1">##########################################</span>
-        <span class="c1">### Creating Periodic Boundary Conditions</span>
-        <span class="c1">##########################################</span>
+        <span class="c1">##########################################################</span>
+        <span class="c1">### Creating non-Periodic or Periodic Boundary Conditions</span>
+        <span class="c1">##########################################################</span>
         <span class="k">if</span> <span class="n">apply_bc</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">periodicBC</span> <span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">periodic_bc</span> <span class="p">:</span>
                 <span class="n">write_boundary_conditions</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">periodicBC</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">periodic_bc</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** BOUNDARY CONDITIONS</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Boundary </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -1266,13 +1499,10 @@
         <span class="c1">### Creating Load</span>
         <span class="c1">#################################</span>
         <span class="k">if</span> <span class="n">apply_bc</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">periodicBC</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s1">&#39;strain&#39;</span><span class="p">:</span>
-                    <span class="n">write_strain_load</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s1">&#39;stress&#39;</span><span class="p">:</span>
-                    <span class="n">write_stress_load</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">periodic_bc</span><span class="p">:</span>
+                <span class="n">write_load</span><span class="p">()</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;** </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">periodicBC</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">periodic_bc</span><span class="p">:</span>
                 <span class="n">write_periodic_load</span><span class="p">()</span>
         <span class="c1">#################################</span>
         <span class="c1">### Creating Fild Output</span>
@@ -1385,21 +1615,29 @@
 <div class="viewcode-block" id="pickle2microstructure">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.input_output.pickle2microstructure">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pickle2microstructure</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read pickled microstructure file.</span>
-
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load a pickled microstructure object from disk.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    file : string</span>
-<span class="sd">        File name of pickled microstructure to be read.</span>
-<span class="sd">    path : string</span>
-<span class="sd">        Path under which pickle-files are stored (optional, default: &#39;./&#39;)</span>
+<span class="sd">    file : str</span>
+<span class="sd">        Filename of the pickled microstructure.</span>
+<span class="sd">    path : str, optional</span>
+<span class="sd">        Directory where the pickle file is stored (default: &#39;./&#39;).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    pcl : Material object</span>
-<span class="sd">        unpickled microstructure</span>
+<span class="sd">    pcl : Material</span>
+<span class="sd">        Unpickled microstructure object.</span>
 
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `file` is None.</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If the specified pickle file does not exist.</span>
+<span class="sd">    pickle.UnpicklingError</span>
+<span class="sd">        If the file cannot be unpickled (e.g., corrupted or invalid format).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
 
@@ -1415,6 +1653,58 @@
 <div class="viewcode-block" id="import_voxels">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.input_output.import_voxels">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">import_voxels</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Import a voxelized microstructure from a JSON file and reconstruct</span>
+<span class="sd">    a `Microstructure` object for further analysis or simulation.</span>
+
+<span class="sd">    The voxel file typically contains:</span>
+<span class="sd">    - Grain-wise orientation, phase, and shape information</span>
+<span class="sd">    - Global model metadata (size, periodicity, phase names, etc.)</span>
+<span class="sd">    - Optionally, mesh node coordinates and voxel connectivity</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file : str</span>
+<span class="sd">        Filename of the voxelized microstructure JSON file to import.</span>
+<span class="sd">    path : str, optional</span>
+<span class="sd">        Path where the JSON file is located (default: &#39;./&#39;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ms : Microstructure</span>
+<span class="sd">        Fully reconstructed microstructure object containing:</span>
+<span class="sd">        - Grain geometry, phases, orientations</span>
+<span class="sd">        - Voxel-level mesh and connectivity</span>
+<span class="sd">        - Simulation box and RVE setup</span>
+<span class="sd">        - Volume fractions and statistics</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `file` is None.</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If the specified voxel file cannot be found.</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If required keys (e.g. &#39;Data&#39;, &#39;Model&#39;) are missing in the JSON file.</span>
+<span class="sd">    json.JSONDecodeError</span>
+<span class="sd">        If the file is not a valid JSON.</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        If the phase volume fractions do not sum to 1.0 (severe data inconsistency).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - If `grain_phase_dict` or orientation information is missing,</span>
+<span class="sd">      the function will fall back to single-phase mode and log warnings.</span>
+<span class="sd">    - The mesh is either reconstructed from the JSON (if provided)</span>
+<span class="sd">      or generated using `mesh_creator()`.</span>
+<span class="sd">    - Periodicity and unit information are retained from the model metadata.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; ms = import_voxels(&#39;example_vox.json&#39;, path=&#39;./input&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; print(ms.Ngr, &#39;grains loaded with&#39;, ms.nphases, &#39;phases.&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; print(ms.mesh.nodes.shape, &#39;mesh nodes&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">Microstructure</span>
@@ -1536,18 +1826,42 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.input_output.write_stats">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">write_stats</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Write statistical descriptors of microstructure to JSON file.</span>
+<span class="sd">    Write microstructure statistical descriptors to a JSON file.</span>
+
+<span class="sd">    This function serializes the provided statistical data (e.g., phase</span>
+<span class="sd">    fractions, grain sizes, RVE dimensions) and writes it to disk in JSON format.</span>
+<span class="sd">    The `.json` extension is automatically appended if not provided.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    stats : dict</span>
-<span class="sd">        Dictionary with statistical descriptors to be stored.</span>
-<span class="sd">    file : string</span>
-<span class="sd">        File name fpr microstructure descriptors to be written. Ending &#39;.json&#39; extension will be appended</span>
-<span class="sd">        if missing.</span>
-<span class="sd">    path : string</span>
-<span class="sd">        Path under which microstructure JSON file is stored (optional, default: &#39;./&#39;)</span>
+<span class="sd">        Dictionary containing statistical descriptors of the microstructure</span>
+<span class="sd">        (e.g., grain count, phase fractions, RVE size, or any other metadata).</span>
+<span class="sd">    file : str</span>
+<span class="sd">        Output filename for the JSON file. The &#39;.json&#39; extension will be appended</span>
+<span class="sd">        automatically if missing.</span>
+<span class="sd">    path : str, optional</span>
+<span class="sd">        Directory path where the JSON file will be written (default: &#39;./&#39;).</span>
 
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `stats` or `file` is None.</span>
+<span class="sd">    OSError</span>
+<span class="sd">        If the file cannot be written (e.g., due to permission or path issues).</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `stats` contains non-serializable objects (invalid for JSON encoding).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The function uses Python&#39;s built-in :mod:`json` module.</span>
+<span class="sd">    - The output file is overwritten if it already exists.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; stats = {&quot;RVE&quot;: {&quot;Nx&quot;: 20, &quot;Ny&quot;: 20, &quot;Nz&quot;: 20}, &quot;Phase&quot;: {&quot;Volume fraction&quot;: 0.8}}</span>
+<span class="sd">    &gt;&gt;&gt; write_stats(stats, &quot;example_stats&quot;)</span>
+<span class="sd">    # Writes &#39;./example_stats.json&#39;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
     <span class="k">if</span> <span class="n">stats</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1566,21 +1880,46 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.input_output.import_stats">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">import_stats</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read statistical descriptors of microstructure from JSON file.</span>
+<span class="sd">    Read microstructure statistical descriptors from a JSON file.</span>
+
+<span class="sd">    This function loads and parses a JSON file containing statistical</span>
+<span class="sd">    information about a microstructure, such as RVE dimensions, phase fractions,</span>
+<span class="sd">    or grain statistics.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    file : string</span>
-<span class="sd">        File name from which microstructure descriptors to be written. Ending &#39;.json&#39; extension will be appended</span>
-<span class="sd">        if missing.</span>
-<span class="sd">    path : string</span>
-<span class="sd">        Path under which JSON file is stored (optional, default: &#39;./&#39;)</span>
+<span class="sd">    file : str</span>
+<span class="sd">        Filename of the JSON file to read. The &#39;.json&#39; extension will be appended</span>
+<span class="sd">        automatically if missing.</span>
+<span class="sd">    path : str, optional</span>
+<span class="sd">        Directory path where the JSON file is located (default: &#39;./&#39;).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    desc : dict</span>
-<span class="sd">        Dictionary with statistical microstructure descriptors</span>
+<span class="sd">        Dictionary containing the statistical microstructure descriptors.</span>
 
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `file` is None.</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If the specified JSON file does not exist.</span>
+<span class="sd">    json.JSONDecodeError</span>
+<span class="sd">        If the file cannot be parsed as valid JSON.</span>
+<span class="sd">    OSError</span>
+<span class="sd">        If the file cannot be read due to permission or I/O errors.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The function expects the JSON file to contain key-value pairs describing</span>
+<span class="sd">      microstructure statistics compatible with the output of :func:`write_stats`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; desc = import_stats(&quot;example_stats.json&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; print(desc[&quot;RVE&quot;][&quot;Nx&quot;])</span>
+<span class="sd">    20</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
     <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

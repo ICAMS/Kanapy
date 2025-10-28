@@ -88,19 +88,31 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.packing.particle_generator">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">particle_generator</span><span class="p">(</span><span class="n">particle_data</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">poly</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Initializes ellipsoids by assigning them random positions and speeds within</span>
-<span class="sd">    the simulation box.</span>
+<span class="sd">    Initialize a list of ellipsoids by assigning random positions, orientations,</span>
+<span class="sd">    and sizes within the given simulation box.</span>
 
-<span class="sd">    :param particle_data: Ellipsoid information such as Major, Minor,</span>
-<span class="sd">          Equivalent diameters and its tilt angle. </span>
-<span class="sd">    :type particle_data: Python dictionary </span>
-<span class="sd">    :param sim_box: Simulation box representing RVE.</span>
-<span class="sd">    :type sim_box: :class:`entities.Simulation_Box`</span>
-<span class="sd">    :param poly: Points defining primitive polygon inside ellipsoid (optional).</span>
-<span class="sd">    :type poly: :class: ndarry(N, 3)</span>
-<span class="sd">    </span>
-<span class="sd">    :returns: Ellipsoids for the packing routine</span>
-<span class="sd">    :rtype: list       </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    particle_data : dict</span>
+<span class="sd">        Dictionary containing ellipsoid properties such as major, minor, and</span>
+<span class="sd">        equivalent diameters, tilt angles, and number of particles per phase.</span>
+<span class="sd">    sim_box : entities.Simulation_Box</span>
+<span class="sd">        Simulation box object defining the representative volume element (RVE)</span>
+<span class="sd">        dimensions (width, height, depth).</span>
+<span class="sd">    poly : ndarray of shape (N, 3), optional</span>
+<span class="sd">        Points defining a primitive polygon inside the ellipsoid. Used for</span>
+<span class="sd">        geometry construction.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of `Ellipsoid` objects initialized for the packing routine.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function introduces a scaling factor (0.5) to reduce overlap among</span>
+<span class="sd">    generated ellipsoids. Ellipsoids are assigned random colors and positions</span>
+<span class="sd">    within the simulation box.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">Ellipsoids</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">id_ctr</span> <span class="o">=</span> <span class="mi">0</span>
@@ -166,43 +178,95 @@
                   <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fill_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">dump</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Initializes the :class:`entities.Octree` class and performs recursive</span>
-<span class="sd">    subdivision with collision checks and response for the ellipsoids. At each</span>
-<span class="sd">    time step of the simulation it increases the size of the ellipsoid by a </span>
-<span class="sd">    factor, which depends on the user-defined value for total number of time</span>
-<span class="sd">    steps.</span>
+<span class="sd">    Perform recursive particle growth and collision detection within the</span>
+<span class="sd">    simulation box. Initializes an :class:`entities.Octree` instance and</span>
+<span class="sd">    progressively grows ellipsoids while handling inter-particle and</span>
+<span class="sd">    wall collisions.</span>
 
-<span class="sd">    :param sim_box: Simulation box representing RVE.</span>
-<span class="sd">    :type sim_box: :obj:`entities.Simulation_Box`  </span>
-<span class="sd">    :param Ellipsoids: Ellipsoids for the packing routine.</span>
-<span class="sd">    :type Ellipsoids: list    </span>
-<span class="sd">    :param periodicity: Status of periodicity.</span>
-<span class="sd">    :type periodicity: boolean </span>
-<span class="sd">    :param nsteps:  Total simulation steps to fill box volume with particle</span>
-<span class="sd">         volume.</span>
-<span class="sd">    :type nsteps: int</span>
-<span class="sd">    :param k_rep: Repulsion factor for particles</span>
-<span class="sd">    :type k_rep: float</span>
-<span class="sd">    :param k_att: Attraction factor for particles</span>
-<span class="sd">    :type k_att: float</span>
-<span class="sd">    :param fill_factor: Target volume fraction for particle filling</span>
-<span class="sd">    :type fill_factor: float</span>
-<span class="sd">    :param dump: Indicate if dump files for particles are written.</span>
-<span class="sd">    :type dump: boolean</span>
-<span class="sd">    :param verbose: Indicate if detailed output in iteration steps occurs</span>
-<span class="sd">    :type verbose: bool</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sim_box : entities.Simulation_Box</span>
+<span class="sd">        Simulation box representing the representative volume element (RVE).</span>
+<span class="sd">    Ellipsoids : list</span>
+<span class="sd">        List of `Ellipsoid` objects used in the packing routine.</span>
+<span class="sd">    periodicity : bool</span>
+<span class="sd">        Whether periodic boundary conditions are applied.</span>
+<span class="sd">    nsteps : int</span>
+<span class="sd">        Total number of simulation steps for filling the box with particles.</span>
+<span class="sd">    k_rep : float, optional</span>
+<span class="sd">        Repulsion factor for particle interactions (default: 0.0).</span>
+<span class="sd">    k_att : float, optional</span>
+<span class="sd">        Attraction factor for particle interactions (default: 0.0).</span>
+<span class="sd">    fill_factor : float, optional</span>
+<span class="sd">        Target volume fraction for particle filling (default: 0.65).</span>
+<span class="sd">    dump : bool, optional</span>
+<span class="sd">        If True, dump files for particles are written at intervals (default: False).</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        If True, print detailed information at iteration steps (default: False).</span>
 
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Ellipsoids : list</span>
+<span class="sd">        Updated list of `Ellipsoid` objects after particle growth.</span>
+<span class="sd">    sim_box : entities.Simulation_Box</span>
+<span class="sd">        Updated simulation box object after the packing process.</span>
 
-<span class="sd">    .. note:: :meth:`kanapy.input_output.write_dump` function is called at each</span>
-<span class="sd">              time step of the simulation to write output (.dump) files. </span>
-<span class="sd">              By default, periodic images are written to the output file, </span>
-<span class="sd">              but this option can be disabled within the function.         </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function calls :func:`kanapy.input_output.write_dump` at each time step</span>
+<span class="sd">    to write `.dump` files. Periodic images are written by default but can be</span>
+<span class="sd">    disabled inside that function.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">t_step</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the adaptive time step based on the current iteration number</span>
+
+<span class="sd">        The time step decreases as the iteration progresses, ensuring smoother</span>
+<span class="sd">        particle growth and improved numerical stability near the final packing</span>
+<span class="sd">        stage.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        N : int</span>
+<span class="sd">            Current iteration number</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Computed time step for the given iteration</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The function uses the relation `t_step = K * N ** m`, where `K` and `m`</span>
+<span class="sd">        are constants defined in the outer scope of the `particle_grow` function.</span>
+<span class="sd">        A negative exponent `m` results in smaller time steps at later iterations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">K</span> <span class="o">*</span> <span class="n">N</span> <span class="o">**</span> <span class="n">m</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">stop_part</span><span class="p">(</span><span class="n">ell</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stop the motion of a given ellipsoid and slightly shrink its position</span>
+
+<span class="sd">        Sets all velocity and force components of the ellipsoid to zero, reduces</span>
+<span class="sd">        its position coordinates by 10%, and updates the old position attributes</span>
+<span class="sd">        to match the new coordinates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ell : Ellipsoid</span>
+<span class="sd">            The ellipsoid instance whose motion is to be stopped</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            The function modifies the ellipsoid in-place and does not return a value</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This function is used during the particle growth simulation to prevent</span>
+<span class="sd">        fast-moving or unstable ellipsoids from causing numerical issues.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ell</span><span class="o">.</span><span class="n">speedx</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="n">ell</span><span class="o">.</span><span class="n">speedy</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="n">ell</span><span class="o">.</span><span class="n">speedz</span> <span class="o">=</span> <span class="mf">0.</span>
@@ -329,18 +393,23 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.packing.calculateForce">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calculateForce</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">,</span> <span class="n">periodicity</span><span class="p">,</span> <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculate interaction force between ellipsoids.</span>
+<span class="sd">    Calculate the interaction forces between ellipsoids within the simulation box</span>
 
-<span class="sd">    :param Ellipsoids: </span>
-<span class="sd">    :type Ellipsoids: </span>
-<span class="sd">    :param sim_box :</span>
-<span class="sd">    :type sim_box:</span>
-<span class="sd">    :param periodicity:</span>
-<span class="sd">    :type periodicity:</span>
-<span class="sd">    :param k_rep: optional, default is 0.0</span>
-<span class="sd">    :type k_rep: float</span>
-<span class="sd">    :param k_att: optional, default is 0.0</span>
-<span class="sd">    :type k_att: float</span>
+<span class="sd">    Computes pairwise repulsive or attractive forces based on distance and phase</span>
+<span class="sd">    between ellipsoids. Applies periodic boundary conditions if enabled.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Ellipsoids : list of Ellipsoid</span>
+<span class="sd">        List of ellipsoid instances for which forces are calculated</span>
+<span class="sd">    sim_box : Simulation_Box</span>
+<span class="sd">        Simulation box representing the RVE dimensions</span>
+<span class="sd">    periodicity : bool</span>
+<span class="sd">        If True, applies periodic boundary conditions</span>
+<span class="sd">    k_rep : float, optional</span>
+<span class="sd">        Repulsion factor for particles of the same phase (default is 0.0)</span>
+<span class="sd">    k_att : float, optional</span>
+<span class="sd">        Attraction factor for particles of different phases (default is 0.0)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">w_half</span> <span class="o">=</span> <span class="n">sim_box</span><span class="o">.</span><span class="n">w</span> <span class="o">/</span> <span class="mi">2</span>
@@ -393,19 +462,51 @@
                    <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fill_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The main function that controls the particle packing routine using:</span>
-<span class="sd">        :meth:`particle_grow` &amp; :meth:`particle_generator`</span>
-<span class="sd">    </span>
-<span class="sd">    .. note:: Particle, RVE and simulation data are read from the JSON files</span>
-<span class="sd">              generated by :meth:`kanapy.input_output.particleStatGenerator`.</span>
-<span class="sd">              They contain the following information:</span>
-<span class="sd">    </span>
-<span class="sd">              * Ellipsoid attributes such as Major, Minor, Equivalent diameters</span>
-<span class="sd">                and its tilt angle.  </span>
-<span class="sd">              * RVE attributes such as RVE (Simulation domain) size, the number</span>
-<span class="sd">                of voxels and the voxel resolution.  </span>
-<span class="sd">              * Simulation attributes such as total number of timesteps and</span>
-<span class="sd">                periodicity.                         </span>
+<span class="sd">    Perform particle packing routine using particle generation and growth simulation</span>
+
+<span class="sd">    The function first generates ellipsoids from the provided particle statistics</span>
+<span class="sd">    and then grows them over time steps while handling collisions and interactions.</span>
+<span class="sd">    Uses :meth:`particle_generator` to create particles and :meth:`particle_grow`</span>
+<span class="sd">    to grow and settle them.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    particle_data : list of dict</span>
+<span class="sd">        Statistics describing particle attributes for generation</span>
+<span class="sd">    periodic : bool</span>
+<span class="sd">        Flag indicating if periodic boundary conditions are applied</span>
+<span class="sd">    nsteps : int</span>
+<span class="sd">        Total number of timesteps for the growth simulation</span>
+<span class="sd">    sim_box : Simulation_Box</span>
+<span class="sd">        Simulation box representing the RVE dimensions</span>
+<span class="sd">    k_rep : float, optional</span>
+<span class="sd">        Repulsion factor for same-phase particles (default 0.0)</span>
+<span class="sd">    k_att : float, optional</span>
+<span class="sd">        Attraction factor for different-phase particles (default 0.0)</span>
+<span class="sd">    fill_factor : float, optional</span>
+<span class="sd">        Target volume fraction for particle filling (default None, uses 0.65)</span>
+<span class="sd">    poly : ndarray, optional</span>
+<span class="sd">        Points defining a primitive polygon inside ellipsoids (default None)</span>
+<span class="sd">    save_files : bool, optional</span>
+<span class="sd">        Whether to save dump files during simulation (default False)</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        If True, prints detailed simulation output (default False)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    particles : list</span>
+<span class="sd">        List of generated and packed ellipsoids</span>
+<span class="sd">    simbox : Simulation_Box</span>
+<span class="sd">        Updated simulation box with current timestep information</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Particle, RVE, and simulation data are read from JSON files generated by</span>
+<span class="sd">    :meth:`kanapy.input_output.particleStatGenerator`. These files contain:</span>
+
+<span class="sd">    * Ellipsoid attributes such as Major, Minor, Equivalent diameters, and tilt angles</span>
+<span class="sd">    * RVE attributes such as simulation domain size, number of voxels, and voxel resolution</span>
+<span class="sd">    * Simulation attributes such as total number of timesteps and periodicity</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Starting particle simulation&#39;</span><span class="p">)</span>
 
