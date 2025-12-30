@@ -6,6 +6,7 @@ Tools for analysis of EBSD maps in form of .ang files
 import logging
 import numpy as np
 import networkx as nx
+import json
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from kanapy.core import get_grain_geom
@@ -14,14 +15,20 @@ from scipy.spatial import ConvexHull, KDTree
 from scipy.special import legendre, beta
 from scipy.optimize import fminbound
 from scipy.integrate import quad
+from scipy.sparse import coo_matrix
+from scipy.sparse.csgraph import connected_components
 from skimage.segmentation import mark_boundaries
 from orix import io
 from orix import plot as ox_plot
-from orix.quaternion import Orientation
+from orix.quaternion import Orientation, symmetry
 from orix.quaternion.symmetry import Symmetry
 from orix.sampling import get_sample_fundamental
 from orix.vector import Miller
 from abc import ABC
+from collections import Counter
+
+
+
 
 
 def get_distinct_colormap(N, cmap='prism'):
@@ -1574,3 +1581,423 @@ def createOrisetRandom(num, omega=None, hist=None, shared_area=None, cs=None, Nb
     #        eng.gb_textureReconstruction(matlab.double(hist), ori,
     #                                     matlab.double(shared_area), len(hist), nargout=4)
     #    return np.array(eng.Euler(orilist))
+
+def segment_microstructure(
+    json_path: str,
+    *,
+    th_cut_deg: float = 5.0,
+    th_merge_deg: float = 7.5,
+    min_voxels: int = 5,
+    print_topk_rag: int = 10,
+    tiny_cutoff: int = 5,
+    verbose: bool = True,
+) -> None:
+    """
+    Segment all snapshots in a  microstructure JSON in-place.
+
+    - Snapshot 0 is assumed already segmented and is kept as reference for phase_id mapping.
+    - Snapshots 1..last are re-segmented from voxel orientations using:
+        Step 1: 6-neighbor voxel graph + ORIX misorientation on edges
+        Step 2: threshold cut (<= th_cut_deg) + connected components
+        Step 3: segment-RAG boundary stats + ORIX mean orientation per segment
+        Step 4: merge/prune via union-find:
+            Rule A: merge adjacent segments if mean-orientation miso <= th_merge_deg
+            Rule B: absorb tiny components (<= min_voxels) into best neighbor using root-mean miso
+        Step 5: diagnostics (post-merge boundary stats)
+        Step 6/7: write voxel grain_id + rebuild grains[] with ORIX mean orientation
+
+    This function overwrites `json_path` (no new file).
+
+    Parameters
+    ----------
+    json_path : str
+        Path to the JSON file to update in-place.
+    th_cut_deg : float
+        Edge cut threshold in degrees (keep edges <= th_cut_deg).
+    th_merge_deg : float
+        Merge threshold in degrees for Rule A (mean-orientation miso).
+    min_voxels : int
+        Tiny component cutoff (<= min_voxels) for Rule B.
+    print_topk_rag : int
+        Number of highest-contact boundaries printed for diagnostics.
+    tiny_cutoff : int
+        Diagnostics: count segments with <= tiny_cutoff voxels after Step 2.
+    verbose : bool
+        Print progress and diagnostics.
+
+    Returns
+    -------
+    None
+        Updates the JSON file in-place.
+    """
+
+    def _p(*args):
+        if verbose:
+            print(*args)
+
+    # -----------------------------
+    # helpers: union-find
+    # -----------------------------
+    def _uf_find(parent: np.ndarray, x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def _uf_union(parent: np.ndarray, rank: np.ndarray, a: int, b: int) -> bool:
+        ra, rb = _uf_find(parent, a), _uf_find(parent, b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            parent[ra] = rb
+        elif rank[ra] > rank[rb]:
+            parent[rb] = ra
+        else:
+            parent[rb] = ra
+            rank[ra] += 1
+        return True
+
+    # -----------------------------
+    # Load JSON
+    # -----------------------------
+    _p("=== LOAD JSON ===")
+    with open(json_path, "r") as f:
+        data = json.load(f)
+
+    if "microstructure" not in data:
+        raise KeyError("Top-level key 'microstructure' not found.")
+
+    micro = data["microstructure"]
+    n_snaps = len(micro)
+    if n_snaps < 2:
+        _p("Nothing to do: only one snapshot found.")
+        return
+
+    # Snapshot 0 reference phase mapping
+    snap0 = micro[0]
+    if "grains" not in snap0:
+        raise KeyError("Snapshot 0 must contain 'grains' for phase mapping.")
+    grainid_to_phase = {int(g["grain_id"]): int(g.get("phase_id", 0)) for g in snap0["grains"]}
+
+    _p("File:", json_path)
+    _p("Number of snapshots:", n_snaps)
+    _p("Will update snapshots:", list(range(1, n_snaps)))
+
+    # -----------------------------
+    # Process each snapshot INC = 1..last
+    # -----------------------------
+    for inc in range(1, n_snaps):
+        _p("\n" + "=" * 90)
+        _p(f"=== PROCESS SNAPSHOT {inc}  time={micro[inc].get('time', None)} ===")
+        _p("=" * 90)
+
+        snap = micro[inc]
+        voxels = snap.get("voxels", None)
+        if voxels is None:
+            raise KeyError(f"Snapshot {inc} missing 'voxels'.")
+
+        N = len(voxels)
+        if N == 0:
+            _p(f"Snapshot {inc}: empty voxels; skipping.")
+            continue
+
+        # -----------------------------------------------------------------------------
+        # STEP 1 — BUILD VOXEL GRAPH (6-neigh) + MISORIENTATION EDGE WEIGHTS (ORIX)
+        # -----------------------------------------------------------------------------
+        _p("\n=== STEP 1: VOXEL GRAPH + MISORIENTATION (ORIX) ===")
+
+        idx_to_pos = {}
+        eulers = np.empty((N, 3), dtype=float)
+        voxel_vol = np.empty(N, dtype=float)
+        old_gid = np.empty(N, dtype=int)
+
+        for pos, v in enumerate(voxels):
+            ijk = tuple(int(x) for x in v["voxel_index"])  # 1-based indices
+            idx_to_pos[ijk] = pos
+            eulers[pos, :] = np.asarray(v["orientation"], dtype=float)
+            voxel_vol[pos] = float(v["voxel_volume"])
+            old_gid[pos] = int(v["grain_id"])
+
+        edges_pos_u = []
+        edges_pos_v = []
+
+        for (i, j, k), pos in idx_to_pos.items():
+            nbs = [
+                (i - 1, j, k), (i + 1, j, k),
+                (i, j - 1, k), (i, j + 1, k),
+                (i, j, k - 1), (i, j, k + 1),
+            ]
+            for nb in nbs:
+                nb_pos = idx_to_pos.get(nb, None)
+                if nb_pos is None:
+                    continue
+                if nb_pos > pos:  # store undirected edge once
+                    edges_pos_u.append(pos)
+                    edges_pos_v.append(nb_pos)
+
+        edges_pos_u = np.asarray(edges_pos_u, dtype=int)
+        edges_pos_v = np.asarray(edges_pos_v, dtype=int)
+        E = len(edges_pos_u)
+
+        _p("N voxels:", N)
+        _p("E edges (6-neigh undirected):", E)
+
+        cs = symmetry.Oh  # cubic m-3m
+        O = Orientation.from_euler(eulers, symmetry=cs, direction="lab2crystal", degrees=False)
+        w_deg = np.asarray(O[edges_pos_u].angle_with(O[edges_pos_v], degrees=True), dtype=float)
+
+        _p("Misorientation (deg): min/mean/max =",
+           float(w_deg.min()), float(w_deg.mean()), float(w_deg.max()))
+        _p("=== STEP 1 COMPLETE ===")
+
+        # -----------------------------------------------------------------------------
+        # STEP 2 — INITIAL CUT + CONNECTED COMPONENTS => INITIAL SEGMENTS
+        # -----------------------------------------------------------------------------
+        _p("\n=== STEP 2: INITIAL CUT SEGMENTATION ===")
+        _p("TH_CUT (deg):", th_cut_deg)
+
+        keep = (w_deg <= th_cut_deg)
+        u = edges_pos_u[keep]
+        v = edges_pos_v[keep]
+        _p("edges kept:", int(keep.sum()), "edges cut:", int((~keep).sum()))
+
+        rows = np.concatenate([u, v])
+        cols = np.concatenate([v, u])
+        vals = np.ones(rows.shape[0], dtype=np.int8)
+        A = coo_matrix((vals, (rows, cols)), shape=(N, N))
+
+        n_seg, labels = connected_components(A, directed=False, connection="weak")
+        sizes = np.bincount(labels, minlength=n_seg)
+        sizes_sorted = np.sort(sizes)[::-1]
+
+        _p("n_initial_segments:", int(n_seg))
+        _p("largest 10 sizes:", sizes_sorted[:10].tolist())
+        _p("smallest 10 sizes:", sizes_sorted[-10:].tolist())
+        _p(f"segments with <= {tiny_cutoff} voxels:", int((sizes <= tiny_cutoff).sum()))
+        _p("=== STEP 2 COMPLETE ===")
+
+        # -----------------------------------------------------------------------------
+        # STEP 3 — BUILD SEGMENT-RAG + MEAN ORIENTATIONS (ORIX)
+        # -----------------------------------------------------------------------------
+        _p("\n=== STEP 3: BUILD SEGMENT-RAG ===")
+        _p("segments:", int(n_seg), "labels min/max:", int(labels.min()), int(labels.max()))
+
+        seg_size = sizes.astype(int)
+
+        seg_mean_O = [None] * n_seg
+        for s in range(n_seg):
+            mask = (labels == s)
+            seg_mean_O[s] = O[mask].mean()
+
+        # Boundary aggregation using voxel edges
+        rag_contact = {}   # (sa,sb)->int
+        rag_miso_sum = {}  # (sa,sb)->float (voxel-edge miso sum)
+
+        for i in range(E):
+            a = int(labels[int(edges_pos_u[i])])
+            b = int(labels[int(edges_pos_v[i])])
+            if a == b:
+                continue
+            if a > b:
+                a, b = b, a
+            key = (a, b)
+            rag_contact[key] = rag_contact.get(key, 0) + 1
+            rag_miso_sum[key] = rag_miso_sum.get(key, 0.0) + float(w_deg[i])
+
+        rag_miso_mean = {k: rag_miso_sum[k] / rag_contact[k] for k in rag_contact}
+        _p("segment-RAG edges:", len(rag_contact))
+
+        if print_topk_rag > 0:
+            top_edges = sorted(rag_contact.items(), key=lambda kv: kv[1], reverse=True)[:print_topk_rag]
+            _p(f"\nTop {print_topk_rag} neighbors by boundary contact count:")
+            for (sa, sb), cnt in top_edges:
+                _p(f"  seg {sa} -- seg {sb} : contacts={cnt}, boundary_mean_miso_deg={rag_miso_mean[(sa, sb)]:.3f}")
+
+        _p("=== STEP 3 COMPLETE ===")
+
+        # -----------------------------------------------------------------------------
+        # STEP 4 — MERGE / PRUNE USING UNION-FIND
+        #   Rule A: merge neighbors if mean-orientation miso <= th_merge_deg
+        #   Rule B: absorb tiny components (<= min_voxels) into best neighbor
+        # -----------------------------------------------------------------------------
+        _p("\n=== STEP 4: MERGE / PRUNE SEGMENTS ===")
+        _p("TH_MERGE (deg):", th_merge_deg, "MIN_VOXELS:", min_voxels)
+
+        parent = np.arange(n_seg, dtype=int)
+        rank = np.zeros(n_seg, dtype=int)
+
+        # Rule A
+        merge_A = 0
+        for (sa, sb) in rag_contact.keys():
+            miso_meanO = float(np.asarray(seg_mean_O[sa].angle_with(seg_mean_O[sb], degrees=True)).squeeze())
+            if miso_meanO <= th_merge_deg:
+                if _uf_union(parent, rank, sa, sb):
+                    merge_A += 1
+        _p("Rule A merges performed:", merge_A)
+
+        # Build root members after Rule A
+        root_members = {}
+        for s in range(n_seg):
+            r = _uf_find(parent, s)
+            root_members.setdefault(r, []).append(s)
+
+        # Root sizes
+        root_size = {r: int(sum(seg_size[s] for s in members)) for r, members in root_members.items()}
+        tiny_roots = [r for r, sz in root_size.items() if sz <= min_voxels]
+        _p("tiny components after Rule A:", len(tiny_roots), "roots:", tiny_roots)
+
+        # Root mean orientation (ORIX) from voxel sets
+        root_mean_O = {}
+        for r, members in root_members.items():
+            mask = np.isin(labels, members)
+            root_mean_O[r] = O[mask].mean()
+
+        # Rule B: absorb each tiny root
+        merge_B = 0
+        for r0 in tiny_roots:
+            r = _uf_find(parent, r0)  # update in case previous unions changed it
+            if r not in root_size:
+                continue
+            if root_size[r] > min_voxels:
+                continue
+
+            best = None  # (miso_root_deg, -contact, nbr_root)
+
+            for (sa, sb), contact in rag_contact.items():
+                ra = _uf_find(parent, sa)
+                rb = _uf_find(parent, sb)
+                if ra == rb:
+                    continue
+                if ra != r and rb != r:
+                    continue
+
+                nbr = rb if ra == r else ra
+
+                miso_root = float(np.asarray(root_mean_O[r].angle_with(root_mean_O[nbr], degrees=True)).squeeze())
+                score = (miso_root, -int(contact), nbr)
+                if (best is None) or (score < best):
+                    best = score
+
+            if best is None:
+                continue
+
+            _, _, nbr_root = best
+            if _uf_union(parent, rank, r, nbr_root):
+                merge_B += 1
+
+                # Update bookkeeping (sizes + mean orientations) for stability
+                newr = _uf_find(parent, r)
+                oldr = nbr_root if newr == r else r  # whichever got absorbed
+
+                root_size[newr] = root_size.get(r, 0) + root_size.get(nbr_root, 0)
+                root_size.pop(oldr, None)
+
+                # Recompute mean orientation for new root (safe and correct)
+                # (voxel mask uses ORIGINAL segment labels; rebuild members by scanning is OK at this scale)
+                members_new = [s for s in range(n_seg) if _uf_find(parent, s) == newr]
+                mask_new = np.isin(labels, members_new)
+                root_mean_O[newr] = O[mask_new].mean()
+
+        _p("Rule B merges performed:", merge_B)
+
+        # Finalize merged voxel labels (compact 0..n_final-1)
+        root_to_new = {}
+        labels_merged = np.empty_like(labels)
+        next_id = 0
+        for pos in range(N):
+            s = int(labels[pos])
+            r = _uf_find(parent, s)
+            if r not in root_to_new:
+                root_to_new[r] = next_id
+                next_id += 1
+            labels_merged[pos] = root_to_new[r]
+
+        n_final = next_id
+        final_sizes = np.bincount(labels_merged, minlength=n_final)
+
+        _p("\nAfter merging:")
+        _p("n_final_segments:", n_final)
+        _p("sum(final_sizes) == N:", int(final_sizes.sum()), "==", N)
+        _p("sorted final sizes:", np.sort(final_sizes)[::-1].tolist())
+        _p("segments with <= 5 voxels:", int((final_sizes <= 5).sum()))
+        _p("=== STEP 4 COMPLETE ===")
+
+        # -----------------------------------------------------------------------------
+        # STEP 5 — VALIDATE (post-merge boundary diagnostic)
+        # -----------------------------------------------------------------------------
+        _p("\n=== STEP 5: POST-MERGE RAG VALIDATION ===")
+        rag2_contact = {}
+        rag2_sum = {}
+
+        for i in range(E):
+            a = int(labels_merged[int(edges_pos_u[i])])
+            b = int(labels_merged[int(edges_pos_v[i])])
+            if a == b:
+                continue
+            if a > b:
+                a, b = b, a
+            key = (a, b)
+            rag2_contact[key] = rag2_contact.get(key, 0) + 1
+            rag2_sum[key] = rag2_sum.get(key, 0.0) + float(w_deg[i])
+
+        rag2_mean = {k: rag2_sum[k] / rag2_contact[k] for k in rag2_contact}
+        _p("post-merge RAG edges:", len(rag2_contact))
+
+        if print_topk_rag > 0:
+            top2 = sorted(rag2_contact.items(), key=lambda kv: kv[1], reverse=True)[:print_topk_rag]
+            _p(f"\nTop {print_topk_rag} post-merge neighbors by contact:")
+            for (a, b), cnt in top2:
+                _p(f"  seg {a} -- seg {b} : contacts={cnt}, boundary_mean_miso_deg={rag2_mean[(a,b)]:.3f}")
+
+        _p("=== STEP 5 COMPLETE ===")
+
+        # -----------------------------------------------------------------------------
+        # STEP 6/7 — UPDATE SNAPSHOT: voxels[*].grain_id + rebuild grains[]
+        # -----------------------------------------------------------------------------
+        _p("\n=== STEP 6/7: UPDATE JSON (voxels + grains) ===")
+
+        # Write new grain_id (1-based) into voxels
+        new_gid = labels_merged.astype(int) + 1
+        for pos in range(N):
+            voxels[pos]["grain_id"] = int(new_gid[pos])
+
+        n_grains_out = int(new_gid.max())
+        _p("n_final grains:", n_grains_out)
+        _p("first 10 new grain_id:", new_gid[:10].tolist())
+
+        # Rebuild grains[]
+        new_grains = []
+        for k in range(1, n_grains_out + 1):
+            mask = (new_gid == k)
+            if not np.any(mask):
+                continue
+
+            gv = float(voxel_vol[mask].sum())
+
+            Omean = O[mask].mean()
+            e_mean = np.asarray(Omean.to_euler(), dtype=float).reshape(3)
+
+            phases = [grainid_to_phase[int(og)] for og in old_gid[mask] if int(og) in grainid_to_phase]
+            phase_id = Counter(phases).most_common(1)[0][0] if phases else 0
+
+            new_grains.append({
+                "grain_id": int(k),
+                "phase_id": int(phase_id),
+                "grain_volume": gv,
+                "orientation": [float(e_mean[0]), float(e_mean[1]), float(e_mean[2])],
+            })
+
+        new_grains.sort(key=lambda g: g["grain_id"])
+        snap["grains"] = new_grains
+
+        _p("rebuilt grains[] -> n_grains:", len(new_grains))
+        _p("total grain_volume:", float(sum(g["grain_volume"] for g in new_grains)))
+        _p("=== STEP 6/7 COMPLETE ===")
+
+    # -----------------------------
+    # Overwrite the same JSON file
+    # -----------------------------
+    _p("\n=== WRITE JSON (IN-PLACE) ===")
+    with open(json_path, "w") as f:
+        json.dump(data, f, indent=2)
+    _p("Updated in-place:", json_path)

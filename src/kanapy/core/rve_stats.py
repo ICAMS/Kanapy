@@ -15,7 +15,6 @@ from scipy.optimize import minimize
 from scipy.spatial import ConvexHull
 from .plotting import plot_stats_dict
 
-
 def arr2mat(mc):
     """
     Converts a numpy array into a symmetric matrix.
@@ -689,3 +688,7 @@ def get_stats_poly(grains, iphase=None, ax_max=None,
         plot_stats_dict(poly_stats_dict, title=title, save_files=save_files)
 
     return poly_stats_dict
+
+
+
+

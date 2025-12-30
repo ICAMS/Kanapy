@@ -16,6 +16,7 @@ import json
 import logging
 import platform
 import hashlib
+import orix
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1972,7 +1973,7 @@ class Microstructure(object):
             json.dump(structure, fp)
         return
 
-    def write_dataSchema(self,
+    def write_data(self,
                          user_metadata: Optional[Dict[str, Any]] = None,
                          boundary_condition: Optional[Dict[str, Any]] = None,
                          phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
@@ -1996,6 +1997,8 @@ class Microstructure(object):
             length_scale = 1.0
         elif length_unit == 'mm':
             length_scale = 1e-3
+        elif length_unit == 'm':
+            length_scale = 1e-6
         else:
             raise ValueError("length_unit must be 'µm' or 'mm'")
 
@@ -2175,7 +2178,6 @@ class Microstructure(object):
             'discretization_type': 'Structured' if structured else 'Unstructured',
             'discretization_unit_size': [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
             'discretization_count': int(self.mesh.nvox),
-            'global_rotation_convention': str(),
             'Origin': {
                 'software': 'kanapy',
                 'software_version': pkg_version('kanapy'),
@@ -2225,7 +2227,7 @@ class Microstructure(object):
                     if bc_choice == 'mechanical':
                         job_bc = {'mechanical_BC': []}
                     else:
-                        job_bc = {'thermal_BC': {}}
+                        job_bc = {'thermal_BC': []}
                 else:
                     raise ValueError(
                         "boundary_condition dict must include 'mechanical_BC' or 'thermal_BC' key when interactive=False.")
@@ -2261,7 +2263,7 @@ class Microstructure(object):
                     })
                 job_bc = {'mechanical_BC': mech_entries}
             else:
-                job_bc = {'thermal_BC': {}}
+                job_bc = {'thermal_BC': []}
         else:
             job_bc = {}
 
@@ -2286,15 +2288,15 @@ class Microstructure(object):
                     )
 
             for idx in range(self.nphases):
-                phase_name = self.rve.phase_names[idx]
-                vf = self.rve.phase_vf[idx]
                 mat = material_library[ialloy]
                 pe = mat['elastic_parameters']
                 pp = mat['plastic_parameters']
 
                 phase_entry = {
                     "id": idx,
-                    "phase_identifier": phase_name,
+                    "phase_identifier": self.rve.phase_names[idx],
+                    "volume_fraction": self.rve.phase_vf[idx],
+                    "lattice_structure": None,
                     "constitutive_model": {
                         "$schema": "http://json-schema.org/draft-04/schema#",
                         "elastic_model_name": mat['elastic_model_name'],
@@ -2302,11 +2304,17 @@ class Microstructure(object):
                         "plastic_model_name": mat['plastic_model_name'],
                         "plastic_parameters": pp
                     },
-                    "microstructural_information": {
-                        "phase_volume_fraction": float(vf),
-                        "grain_count": int(self.ngrains[idx]),
-                        "texture_type": getattr(self.mesh, "texture", None),
-                        "lattice_structure": None,
+                    "orientation": {
+                        "euler_angles": {
+                            "Phi1": None,
+                            "Phi": None,
+                            "Phi2": None,
+                        },
+                        "grain_count": self.mesh.ngrains_phase[idx],
+                        "orientation_identifier": None,
+                        "texture_type": None,
+                        "software": "orix",
+                        "software_version": orix.__version__,
                     }
                 }
                 phase_list.append(phase_entry)
@@ -2352,6 +2360,12 @@ class Microstructure(object):
             vid: gid
             for gid, vids in grain_to_voxels.items()
             for vid in vids
+        }
+        # ─── build time-0 grid dict  ────────────────────────────────────────────
+        grid_t0 = {
+            "status": "regular",
+            "grid_size": [float(v) * length_scale for v in self.rve.size],
+            "grid_spacing": [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
         }
         # ─── build time‐0 grain dict ────────────────────────────────────────────
         grains_t0 = []
@@ -2410,7 +2424,8 @@ class Microstructure(object):
 
         # ─── wrap under the time‐step keys ────────────────────────────────────────
         time_steps = [
-            {   "time"  : 0        ,
+            {   "time"  : 0               ,
+                "grid"  : grid_t0         ,
                 "grains": grains_t0_sorted,
                 "voxels": voxels_t0_sorted,
             },
@@ -2422,22 +2437,21 @@ class Microstructure(object):
         # Assemble final structure with placeholders
         data = {
             **use,                   # expand user-specific dict entries directly
-            'software': '',
-            'software_version': '',
-            'system': '',
-            'system_version': '',
-            'processor_specifications': '',
-            'input_path': '',
-            'results_path': '',
+            "software": "",
+            "software_version": "",
+            "system": "",
+            "system_version": "",
+            "processor_specifications": "",
+            "input_path": "",
+            "results_path": "",
             **ig,                    # expand initial geometry dict entries directly
-            'global_temperature': 298,
+            "global_temperature": 298,
             **job_bc,                 # expand boundary condition dict entries directly
-            'phases':phase_list,
-            'microstructure_evolution':  time_steps  # Time-level storage: time-frame data of voxels and grains
+            "phases":phase_list,
+            "microstructure":  time_steps  # Time-level storage: time-frame data of voxels and grains
         }
 
         return data
-
 
 
 
