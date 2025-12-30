@@ -162,6 +162,40 @@
 <div class="viewcode-block" id="merge_nodes">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.merge_nodes">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">merge_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node1</span><span class="p">,</span> <span class="n">node2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Merge the pixel and attribute data of node1 into node2 in a graph</span>
+
+<span class="sd">    This function performs the following steps:</span>
+<span class="sd">    1. Concatenates the pixel lists of node1 and node2 and updates node2&#39;s &#39;pixels&#39; attribute</span>
+<span class="sd">    2. Updates the average orientation &#39;ori_av&#39; and pixel count &#39;npix&#39; for node2</span>
+<span class="sd">    3. Updates the convex hull for node2 if it exists</span>
+<span class="sd">    4. Adds edges from node1&#39;s neighbors to node2, avoiding duplicates</span>
+<span class="sd">    5. Removes node1 from the graph</span>
+<span class="sd">    6. Updates the graph&#39;s &#39;label_map&#39; to replace all occurrences of node1 with node2</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : networkx.Graph</span>
+<span class="sd">        Graph object where nodes represent grains and have attributes:</span>
+<span class="sd">        - &#39;pixels&#39; : array of pixel indices</span>
+<span class="sd">        - &#39;ori_av&#39; : average orientation</span>
+<span class="sd">        - &#39;npix&#39; : number of pixels</span>
+<span class="sd">        - optional &#39;hull&#39; : ConvexHull object</span>
+<span class="sd">        The graph also contains:</span>
+<span class="sd">        - &#39;label_map&#39; : 2D array of node labels</span>
+<span class="sd">        - &#39;dx&#39;, &#39;dy&#39; : pixel spacing in x and y directions</span>
+<span class="sd">    node1 : int</span>
+<span class="sd">        Node ID to be merged and removed</span>
+<span class="sd">    node2 : int</span>
+<span class="sd">        Node ID to merge into and retain</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Modifies the graph `G` in place</span>
+<span class="sd">    - Updates &#39;pixels&#39;, &#39;ori_av&#39;, &#39;npix&#39;, &#39;hull&#39; for node2</span>
+<span class="sd">    - Updates &#39;label_map&#39; to replace node1 with node2</span>
+<span class="sd">    - Adds new edges from node1 to node2 while avoiding duplicates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># merge pixel lists of node 1 into node 2, delete node 1</span>
     <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node2</span><span class="p">][</span><span class="s1">&#39;pixels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node1</span><span class="p">][</span><span class="s1">&#39;pixels&#39;</span><span class="p">],</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node2</span><span class="p">][</span><span class="s1">&#39;pixels&#39;</span><span class="p">]))</span>
     <span class="n">ntot</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
@@ -189,6 +223,30 @@
 <div class="viewcode-block" id="find_largest_neighbor">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.find_largest_neighbor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_largest_neighbor</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the largest neighboring node of a given node in a graph</span>
+
+<span class="sd">    This function iterates over all neighbors of the specified node and returns</span>
+<span class="sd">    the neighbor with the largest &#39;npix&#39; (number of pixels).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : networkx.Graph</span>
+<span class="sd">        Graph object where nodes have an attribute &#39;npix&#39; representing their size.</span>
+<span class="sd">    node : int</span>
+<span class="sd">        Node ID for which the largest neighbor is to be found.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Node ID of the largest neighbor.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Raises a ValueError if the node has no neighbors.</span>
+<span class="sd">    - Raises a ValueError if the graph contains circular edges (neighbor is the node itself).</span>
+<span class="sd">    - Does not modify the graph.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># find the largest neighbor of given grain</span>
     <span class="n">size_ln</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># size of largest neighbor grain</span>
     <span class="n">num_ln</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># ID of largest neighbor grain</span>
@@ -207,6 +265,33 @@
 <div class="viewcode-block" id="find_sim_neighbor">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.find_sim_neighbor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_sim_neighbor</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nn</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the neighboring node most similar in orientation to the given node</span>
+
+<span class="sd">    This function computes the misorientation angles between the given node and</span>
+<span class="sd">    all its neighbors, and returns the neighbor with the smallest misorientation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : networkx.Graph</span>
+<span class="sd">        Graph object where nodes have an &#39;ori_av&#39; attribute representing average orientation.</span>
+<span class="sd">        The graph also contains a &#39;symmetry&#39; key in G.graph used for orientation calculations.</span>
+<span class="sd">    nn : int</span>
+<span class="sd">        Node ID for which the most similar neighbor is to be found.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        A tuple (neighbor_id, angle) where:</span>
+<span class="sd">        - neighbor_id : int, ID of the neighbor with smallest misorientation</span>
+<span class="sd">        - angle : float, misorientation angle with the given node</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses the `Orientation` class for misorientation calculations</span>
+<span class="sd">    - Assumes all neighbors have a valid &#39;ori_av&#39; attribute</span>
+<span class="sd">    - Does not modify the graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sym</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s1">&#39;symmetry&#39;</span><span class="p">]</span>
     <span class="n">ori0</span> <span class="o">=</span> <span class="n">Orientation</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">nn</span><span class="p">][</span><span class="s1">&#39;ori_av&#39;</span><span class="p">],</span> <span class="n">sym</span><span class="p">)</span>
     <span class="n">on</span> <span class="o">=</span> <span class="p">[]</span>
@@ -224,12 +309,38 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.summarize_labels">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">summarize_labels</span><span class="p">(</span><span class="n">label_array</span><span class="p">,</span> <span class="n">rotations</span><span class="p">,</span> <span class="n">wanted_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    label_array: (H,W) int</span>
-<span class="sd">    rotations:   (H*W, D) float  (emap.rotations.data)</span>
-<span class="sd">    wanted_labels: Sequenz von Label-IDs; None =&gt; alle im Array</span>
+<span class="sd">    Summarize labeled pixels with average orientation and statistics</span>
 
-<span class="sd">    returns: list[(lbl, info_dict)]</span>
-<span class="sd">             info_dict: {&#39;npix&#39;, &#39;pixels&#39;, &#39;ori_av&#39;, &#39;ori_std&#39;}</span>
+<span class="sd">    This function computes, for each label in `label_array` (or a subset of `wanted_labels`):</span>
+<span class="sd">    - Number of pixels</span>
+<span class="sd">    - Pixel indices</span>
+<span class="sd">    - Average orientation vector</span>
+<span class="sd">    - Standard deviation of orientation</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label_array : ndarray of shape (H, W)</span>
+<span class="sd">        2D array of integer labels.</span>
+<span class="sd">    rotations : ndarray of shape (H*W, D)</span>
+<span class="sd">        Orientation data corresponding to each pixel (e.g., emap.rotations.data).</span>
+<span class="sd">    wanted_labels : sequence of int, optional</span>
+<span class="sd">        List of label IDs to summarize. If None, all labels in `label_array` are used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of tuples</span>
+<span class="sd">        Each tuple is `(label, info_dict)` where `info_dict` contains:</span>
+<span class="sd">        - &#39;npix&#39; : int, number of pixels</span>
+<span class="sd">        - &#39;pixels&#39; : array of 1D indices in `label_array.ravel()`</span>
+<span class="sd">        - &#39;ori_av&#39; : ndarray of shape (D,), average orientation vector</span>
+<span class="sd">        - &#39;ori_std&#39; : ndarray of shape (D,), standard deviation of orientation</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses `np.add.reduceat` and sorting for efficient computation</span>
+<span class="sd">    - The returned list preserves the order of `wanted_labels` if provided,</span>
+<span class="sd">      otherwise follows sorted unique labels from `label_array`</span>
+<span class="sd">    - Does not modify input arrays</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">lab</span> <span class="o">=</span> <span class="n">label_array</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
     <span class="n">N</span> <span class="o">=</span> <span class="n">lab</span><span class="o">.</span><span class="n">size</span>
@@ -283,6 +394,41 @@
 <div class="viewcode-block" id="build_graph_from_labeled_pixels">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.build_graph_from_labeled_pixels">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_graph_from_labeled_pixels</span><span class="p">(</span><span class="n">label_array</span><span class="p">,</span> <span class="n">emap</span><span class="p">,</span> <span class="n">phase</span><span class="p">,</span> <span class="n">connectivity</span><span class="o">=</span><span class="mi">8</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a graph representation of a microstructure from labeled pixels</span>
+
+<span class="sd">    Each node in the graph represents a grain (label) and stores pixel indices,</span>
+<span class="sd">    average orientation, and orientation statistics. Edges connect neighboring grains</span>
+<span class="sd">    based on pixel adjacency.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    label_array : ndarray of shape (H, W)</span>
+<span class="sd">        2D array of integer labels representing grains.</span>
+<span class="sd">    emap : object</span>
+<span class="sd">        Orientation map object containing:</span>
+<span class="sd">        - `rotations.data` : orientation vectors for each pixel</span>
+<span class="sd">        - `phases.point_groups` : symmetry information for each phase</span>
+<span class="sd">        - `dx`, `dy` : pixel spacing in x and y directions</span>
+<span class="sd">    phase : int</span>
+<span class="sd">        Phase index to select the corresponding symmetry from `emap.phases.point_groups`.</span>
+<span class="sd">    connectivity : int, optional</span>
+<span class="sd">        Connectivity criterion for neighbors (4 or 8). Default is 8.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    networkx.Graph</span>
+<span class="sd">        Graph object with:</span>
+<span class="sd">        - Nodes representing grains, storing &#39;pixels&#39;, &#39;ori_av&#39;, &#39;ori_std&#39;, &#39;npix&#39;</span>
+<span class="sd">        - Edges representing neighboring grains (shared boundaries)</span>
+<span class="sd">        - Graph attributes: &#39;label_map&#39;, &#39;symmetry&#39;, &#39;dx&#39;, &#39;dy&#39;</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses `summarize_labels` to extract node properties from labeled pixels</span>
+<span class="sd">    - Loops over all pixels to add edges between neighboring grains</span>
+<span class="sd">    - The function preserves the shape and indices of `label_array`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># t1 = time.time()</span>
     <span class="n">nodes</span> <span class="o">=</span> <span class="n">summarize_labels</span><span class="p">(</span><span class="n">label_array</span><span class="p">,</span> <span class="n">emap</span><span class="o">.</span><span class="n">rotations</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
     <span class="c1"># t2 = time.time()</span>
@@ -313,6 +459,28 @@
 <div class="viewcode-block" id="visualize_graph">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.visualize_graph">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">visualize_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mi">12</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Visualize a microstructure graph using a spring layout</span>
+
+<span class="sd">    This function draws the nodes and edges of the graph with labels,</span>
+<span class="sd">    using a spring layout for positioning. Node color, edge color,</span>
+<span class="sd">    node size, and font size can be adjusted.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : networkx.Graph</span>
+<span class="sd">        Graph object representing the microstructure. Nodes should have meaningful labels.</span>
+<span class="sd">    node_size : int, optional</span>
+<span class="sd">        Size of the nodes in the plot. Default is 100.</span>
+<span class="sd">    fs : int, optional</span>
+<span class="sd">        Font size for node labels. Default is 12.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses NetworkX&#39;s `spring_layout` for node positioning</span>
+<span class="sd">    - Uses Matplotlib to render the plot</span>
+<span class="sd">    - Does not modify the graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>  <span class="c1"># positioning</span>
     <span class="n">nx</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;lightblue&#39;</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span>
@@ -324,6 +492,25 @@
 <div class="viewcode-block" id="export_graph">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.export_graph">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">export_graph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;graphml&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Export a microstructure graph to a file in the specified format</span>
+
+<span class="sd">    This function writes the NetworkX graph to disk in either GraphML or GEXF format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : networkx.Graph</span>
+<span class="sd">        Graph object representing the microstructure.</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        Path to the output file.</span>
+<span class="sd">    format : str, optional</span>
+<span class="sd">        File format for export. Supported options are &#39;graphml&#39; and &#39;gexf&#39;. Default is &#39;graphml&#39;.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Raises a ValueError if an unsupported format is provided</span>
+<span class="sd">    - Does not modify the graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;graphml&quot;</span><span class="p">:</span>
         <span class="n">nx</span><span class="o">.</span><span class="n">write_graphml</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;gexf&quot;</span><span class="p">:</span>
@@ -337,16 +524,32 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.find_similar_regions">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_similar_regions</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.087</span><span class="p">,</span> <span class="n">connectivity</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Identifies connected regions of similar values in a 2D array.</span>
+<span class="sd">    Identify connected regions of similar values in a 2D array</span>
 
-<span class="sd">    Parameters:</span>
-<span class="sd">        array (ndarray): 2D NumPy array with values.</span>
-<span class="sd">        tolerance (float): Max allowed difference between connected values.</span>
-<span class="sd">        connectivity (int): 1 for 4-connectivity, 2 for 8-connectivity.</span>
+<span class="sd">    This function labels all connected pixels in the input array whose values</span>
+<span class="sd">    differ by at most `tolerance`. Connectivity can be 4- or 8-connected.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        labeled_array (ndarray): 2D array of region labels.</span>
-<span class="sd">        num_features (int): Total number of connected regions found.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    array : ndarray of shape (H, W)</span>
+<span class="sd">        2D input array with values to segment.</span>
+<span class="sd">    tolerance : float, optional</span>
+<span class="sd">        Maximum allowed difference between connected values. Default is 0.087.</span>
+<span class="sd">    connectivity : int, optional</span>
+<span class="sd">        Connectivity criterion for neighbors: 1 for 4-connectivity, 2 for 8-connectivity. Default is 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    labeled_array : ndarray of shape (H, W)</span>
+<span class="sd">        Array where each connected region of similar values has a unique label.</span>
+<span class="sd">    num_features : int</span>
+<span class="sd">        Total number of connected regions found.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses a depth-first search to find connected regions.</span>
+<span class="sd">    - Does not modify the input array.</span>
+<span class="sd">    - Assumes `neighbors(i, j, connectivity)` returns valid neighboring indices.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
@@ -374,6 +577,32 @@
 <div class="viewcode-block" id="calc_error">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.calc_error">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calc_error</span><span class="p">(</span><span class="n">odf_ref</span><span class="p">,</span> <span class="n">odf_test</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="mf">10.</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the normalized difference between two orientation distribution functions (ODFs)</span>
+
+<span class="sd">    This function evaluates the ODFs on a sample grid in fundamental space and</span>
+<span class="sd">    computes the L1 norm of the difference after normalization.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    odf_ref : object</span>
+<span class="sd">        Reference ODF object. Must have `.orientations.symmetry` and `.evaluate()` method.</span>
+<span class="sd">    odf_test : object</span>
+<span class="sd">        Test ODF object to compare. Must have the same symmetry as `odf_ref`.</span>
+<span class="sd">    res : float, optional</span>
+<span class="sd">        Resolution for sampling the fundamental space grid. Default is 10.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        L1 error between the normalized ODFs.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Raises a RuntimeError if the symmetries of the two ODFs do not match.</span>
+<span class="sd">    - Uses `get_sample_fundamental` to sample the fundamental zone and `Orientation` for evaluation.</span>
+<span class="sd">    - Does not modify the input ODFs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">cs</span> <span class="o">=</span> <span class="n">odf_ref</span><span class="o">.</span><span class="n">orientations</span><span class="o">.</span><span class="n">symmetry</span>
     <span class="k">if</span> <span class="n">cs</span> <span class="o">!=</span> <span class="n">odf_test</span><span class="o">.</span><span class="n">orientations</span><span class="o">.</span><span class="n">symmetry</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Symmetries of ODF&#39;s do not match.&quot;</span><span class="p">)</span>
@@ -389,6 +618,35 @@
 <div class="viewcode-block" id="calc_orientations">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.calc_orientations">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calc_orientations</span><span class="p">(</span><span class="n">odf</span><span class="p">,</span> <span class="n">nori</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a set of orientations sampled from an orientation distribution function (ODF)</span>
+
+<span class="sd">    This function uses Monte Carlo sampling to generate `nori` orientations according to</span>
+<span class="sd">    the probabilities defined by the input ODF. Sampling is performed in the fundamental</span>
+<span class="sd">    zone of the crystal symmetry.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    odf : object</span>
+<span class="sd">        Orientation distribution function object. Must have `.orientations.symmetry` and `.evaluate()` method.</span>
+<span class="sd">    nori : int</span>
+<span class="sd">        Number of orientations to generate.</span>
+<span class="sd">    res : float, optional</span>
+<span class="sd">        Angular resolution in degrees for sampling the fundamental zone grid.</span>
+<span class="sd">        If None, a resolution between 2° and 5° is selected based on ODF half-width.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Orientation</span>
+<span class="sd">        Orientation object containing `nori` orientations sampled from the ODF.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Raises a RuntimeError if the Monte Carlo sampling does not converge after 200 iterations.</span>
+<span class="sd">    - Logs a warning if the SO3 grid resolution is too coarse for the requested number of orientations.</span>
+<span class="sd">    - Uses `get_sample_fundamental` to generate the sampling grid and `Orientation` to store results.</span>
+<span class="sd">    - Does not modify the input ODF.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">oq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nori</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
     <span class="n">indstart</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">rem</span> <span class="o">=</span> <span class="n">nori</span>
@@ -423,6 +681,40 @@
 <div class="viewcode-block" id="odf_est">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.odf_est">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">odf_est</span><span class="p">(</span><span class="n">ori</span><span class="p">,</span> <span class="n">odf</span><span class="p">,</span> <span class="n">nstep</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">halfwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimate an ODF from a set of orientations using iterative half-width adjustment</span>
+
+<span class="sd">    This function generates a new orientation distribution function (ODF) from</span>
+<span class="sd">    input orientations by iteratively adjusting the half-width to minimize the</span>
+<span class="sd">    error relative to a reference ODF.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ori : Orientation</span>
+<span class="sd">        Input orientations used to estimate the ODF.</span>
+<span class="sd">    odf : ODF</span>
+<span class="sd">        Reference orientation distribution function for error comparison.</span>
+<span class="sd">    nstep : int, optional</span>
+<span class="sd">        Maximum number of iterations for adjusting the half-width. Default is 50.</span>
+<span class="sd">    step : float, optional</span>
+<span class="sd">        Increment step in degrees for half-width adjustment. Default is 0.5.</span>
+<span class="sd">    halfwidth : float, optional</span>
+<span class="sd">        Initial half-width in radians. If None, a value based on `odf.halfwidth` is used.</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        If True, prints iteration details. Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ODF</span>
+<span class="sd">        Estimated orientation distribution function corresponding to input orientations.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses `calc_error` to compare the estimated ODF with the reference ODF.</span>
+<span class="sd">    - Iteratively increases half-width until the error starts to increase.</span>
+<span class="sd">    - The returned ODF corresponds to the last half-width before error increased.</span>
+<span class="sd">    - Does not modify the input orientations or reference ODF.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">e0</span> <span class="o">=</span> <span class="mf">1e8</span>
     <span class="n">st_rad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
     <span class="n">hwmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
@@ -456,6 +748,34 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.plot_pole_figure">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_pole_figure</span><span class="p">(</span><span class="n">orientations</span><span class="p">,</span> <span class="n">phase</span><span class="p">,</span> <span class="n">vector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot an inverse pole figure and pole density function for given orientations</span>
+
+<span class="sd">    This function visualizes the orientation distribution of a crystal phase by</span>
+<span class="sd">    plotting the stereographic projection of specified poles and the corresponding</span>
+<span class="sd">    pole density function (PDF).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    orientations : Orientation</span>
+<span class="sd">        Orientation object containing crystal orientations to plot.</span>
+<span class="sd">    phase : object</span>
+<span class="sd">        Crystal phase object containing symmetry information and name.</span>
+<span class="sd">    vector : array-like of shape (3,), optional</span>
+<span class="sd">        Miller indices of the pole vector to plot. Default is [0, 0, 1].</span>
+<span class="sd">    size : float, optional</span>
+<span class="sd">        Marker size for scatter plot. Automatically scaled if None.</span>
+<span class="sd">    alpha : float, optional</span>
+<span class="sd">        Marker transparency for scatter plot. Automatically scaled if None.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses Matplotlib for plotting with stereographic projection.</span>
+<span class="sd">    - The first subplot shows the inverse pole figure (scatter of poles).</span>
+<span class="sd">    - The second subplot shows the pole density function.</span>
+<span class="sd">    - Marker size and transparency are scaled inversely with the number of orientations.</span>
+<span class="sd">    - Does not modify the input `orientations` or `phase`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># plot inverse pole figure</span>
     <span class="c1"># &lt;111&gt; poles in the sample reference frame</span>
     <span class="k">if</span> <span class="n">vector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -493,6 +813,36 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.plot_pole_figure_proj">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_pole_figure_proj</span><span class="p">(</span><span class="n">orientations</span><span class="p">,</span> <span class="n">phase</span><span class="p">,</span> <span class="n">vector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                           <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot an inverse pole figure (IPF) projection and pole density function for EBSD data</span>
+
+<span class="sd">    This function visualizes crystal orientations along a specified sample direction</span>
+<span class="sd">    using an IPF projection. The first subplot shows the scatter of rotated poles,</span>
+<span class="sd">    and the second subplot shows the corresponding pole density function (PDF).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    orientations : Orientation</span>
+<span class="sd">        Orientation object containing crystal orientations to plot.</span>
+<span class="sd">    phase : object</span>
+<span class="sd">        Crystal phase object with symmetry information and name.</span>
+<span class="sd">    vector : array-like of shape (3,), optional</span>
+<span class="sd">        Sample direction to project (Miller indices). Default is [0, 0, 1].</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        Title for the plot. If None, automatically uses the principal axis of `vector`.</span>
+<span class="sd">    alpha : float, optional</span>
+<span class="sd">        Marker transparency for scatter plot. Automatically scaled if None.</span>
+<span class="sd">    size : float, optional</span>
+<span class="sd">        Marker size for scatter plot. Automatically scaled if None.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses Matplotlib with stereographic projection (IPF) for plotting.</span>
+<span class="sd">    - Marker size and transparency are scaled inversely with the number of orientations.</span>
+<span class="sd">    - The first subplot shows the inverse pole figure (scatter of rotated poles).</span>
+<span class="sd">    - The second subplot shows the pole density function (PDF).</span>
+<span class="sd">    - Does not modify the input `orientations` or `phase`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Some sample direction, v</span>
     <span class="k">if</span> <span class="n">vector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">vector</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
@@ -535,7 +885,7 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.find_orientations_fast">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_orientations_fast</span><span class="p">(</span><span class="n">ori1</span><span class="p">:</span> <span class="n">Orientation</span><span class="p">,</span> <span class="n">ori2</span><span class="p">:</span> <span class="n">Orientation</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Find closest matches in ori1 for each orientation in ori2 using KDTree.</span>
+<span class="sd">    Find closest matches in ori1 for each orientation in ori2 using KDTree</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -578,48 +928,59 @@
                           <span class="n">grainsfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grains</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kernel_halfwidth</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                           <span class="n">res_low</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">res_high</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">res_step</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">lim</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function systematically reconstructs an ODF by a given number of</span>
-<span class="sd">    orientations (refer .....)</span>
-<span class="sd">    also the misorientation distribution is reproduced</span>
+<span class="sd">    Reconstruct a reduced ODF from EBSD or orientation data</span>
 
+<span class="sd">    This function systematically reconstructs an orientation distribution function (ODF)</span>
+<span class="sd">    using a given number of orientations or grains in a representative volume element (RVE).</span>
+<span class="sd">    The reconstructed ODF approximates the misorientation distribution of the input data.</span>
+<span class="sd">    Follows the method described in Biswas et al. (https://doi.org/10.1107/S1600576719017138).</span>
 
-<span class="sd">    Inputs:</span>
-<span class="sd">    1) ns: number of reduced orientations/grains in RVE</span>
-<span class="sd">    2) Either path+filename of ebsd data saved as *.mat file (it should</span>
-<span class="sd">      contain only one phase/mineral) or ebsd(single phase)/orientations</span>
-<span class="sd">    3) Either path+filename of the estiamted grains from above</span>
-<span class="sd">      EBSD saved as *.mat file (it should contain only one phase/mineral)</span>
-<span class="sd">      or kernel(only deLaValeePoussinKernel)/kernelshape, if nothing</span>
-<span class="sd">      mentioned then default value kappa = 5 (degree) is assumed.</span>
-
-<span class="sd">    Output: reduced orientation set, ODF and L1 error</span>
-
-<span class="sd">    Following steps described in Biswas et al (https://doi.org/10.1107/S1600576719017138)</span>
-
-<span class="sd">   input fields and checks</span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ebsd</span>
-<span class="sd">    ebsdfile</span>
-<span class="sd">    orientations</span>
-<span class="sd">    grainsfile</span>
-<span class="sd">    grains</span>
-<span class="sd">    kernel</span>
-<span class="sd">    kernel_halfwidth</span>
-<span class="sd">    res_low</span>
-<span class="sd">    res_high</span>
-<span class="sd">    res_step</span>
-<span class="sd">    lim</span>
-<span class="sd">    verbose</span>
-<span class="sd">    ns</span>
+<span class="sd">    ns : int</span>
+<span class="sd">        Number of reduced orientations/grains in the RVE.</span>
+<span class="sd">    ebsd : EBSDmap, optional</span>
+<span class="sd">        EBSD map containing orientations for a single phase.</span>
+<span class="sd">    ebsdfile : str, optional</span>
+<span class="sd">        Path to a *.mat file with EBSD data (not yet supported).</span>
+<span class="sd">    orientations : Orientation, optional</span>
+<span class="sd">        Predefined orientations to use instead of EBSD data.</span>
+<span class="sd">    grainsfile : str, optional</span>
+<span class="sd">        Path to estimated grains file (*.mat). Not used for kernel estimation.</span>
+<span class="sd">    grains : object, optional</span>
+<span class="sd">        Grain data. Not used for kernel estimation.</span>
+<span class="sd">    kernel : DeLaValleePoussinKernel, optional</span>
+<span class="sd">        Kernel for ODF estimation. Default: halfwidth=kernel_halfwidth.</span>
+<span class="sd">    kernel_halfwidth : float, optional</span>
+<span class="sd">        Halfwidth in degrees for default DeLaValleePoussin kernel. Default is 5°.</span>
+<span class="sd">    res_low : float, optional</span>
+<span class="sd">        Minimum resolution (in degrees) of orientation grid for reconstruction. Default 5°.</span>
+<span class="sd">    res_high : float, optional</span>
+<span class="sd">        Maximum resolution (in degrees) of orientation grid. Default 25°.</span>
+<span class="sd">    res_step : float, optional</span>
+<span class="sd">        Step size (in degrees) for grid resolution. Default 2°.</span>
+<span class="sd">    lim : int, optional</span>
+<span class="sd">        Maximum number of consecutive worsening errors before stopping. Default 5.</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        If True, print progress and error information. Default False.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    orired_f</span>
-<span class="sd">    odfred_f</span>
-<span class="sd">    ero</span>
-<span class="sd">    res</span>
+<span class="sd">    orired_f : Orientation</span>
+<span class="sd">        Reduced set of orientations in the fundamental region.</span>
+<span class="sd">    odfred_f : ODF</span>
+<span class="sd">        Reconstructed ODF using the reduced orientations.</span>
+<span class="sd">    ero : float</span>
+<span class="sd">        L1 error between reference ODF and reconstructed ODF.</span>
+<span class="sd">    res : float</span>
+<span class="sd">        Grid resolution (degrees) at which the minimum error was achieved.</span>
 
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses Monte Carlo sampling and kernel smoothing to generate reduced orientations.</span>
+<span class="sd">    - Only supports single-phase EBSD data.</span>
+<span class="sd">    - Kernel estimation from grains or files is not yet supported; default kernel is used.</span>
+<span class="sd">    - The reconstructed ODF approximates the misorientation distribution of the input data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ori</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">psi</span> <span class="o">=</span> <span class="kc">None</span>
@@ -769,42 +1130,152 @@
 <div class="viewcode-block" id="Kernel">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Kernel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for kernels used in orientation distribution estimation.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A : ndarray</span>
+<span class="sd">        Flattened array of kernel parameters. Initialized to empty array if not provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">bandwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the bandwidth of the kernel.</span>
+
+<span class="sd">        The bandwidth is defined as the number of elements in `A` minus one.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Bandwidth of the kernel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
 
     <span class="nd">@bandwidth</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">bandwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">L</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the bandwidth of the kernel.</span>
+
+<span class="sd">        Truncates the kernel parameter array `A` to have at most `L + 1` elements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        L : int</span>
+<span class="sd">            Desired bandwidth.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">[:</span><span class="nb">min</span><span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">))]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a human-readable string representation of the kernel.</span>
+
+<span class="sd">        Displays the kernel type and its halfwidth in degrees.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            String describing the kernel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;custom, halfwidth </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">halfwidth</span><span class="p">())</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">°&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if two kernels are equal.</span>
+
+<span class="sd">        Comparison is based on the truncated arrays of kernel parameters `A` up to</span>
+<span class="sd">        the minimum bandwidth of the two kernels. Returns True if the relative</span>
+<span class="sd">        difference is less than 1e-6.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : Kernel</span>
+<span class="sd">            Another kernel to compare against.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if kernels are considered equal, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">L</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bandwidth</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">bandwidth</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">[:</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">A</span><span class="p">[:</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-6</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multiply two kernels element-wise with scaling by (2l + 1).</span>
+
+<span class="sd">        Only the first `L + 1` elements are used, where L is the minimum bandwidth</span>
+<span class="sd">        of the two kernels. Returns a new Kernel instance with the resulting array.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : Kernel</span>
+<span class="sd">            Another kernel to multiply with.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Kernel</span>
+<span class="sd">            New kernel resulting from element-wise multiplication and scaling.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">L</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bandwidth</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">bandwidth</span><span class="p">)</span>
         <span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Kernel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">[:</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">other</span><span class="o">.</span><span class="n">A</span><span class="p">[:</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raise kernel elements to a given power with scaling.</span>
+
+<span class="sd">        Each element of the kernel parameter array `A` is scaled by (2l + 1),</span>
+<span class="sd">        raised to the power `p`, and then rescaled by (2l + 1).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        p : float</span>
+<span class="sd">            Power to raise the kernel elements to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Kernel</span>
+<span class="sd">            New kernel resulting from the power operation with scaling.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Kernel</span><span class="p">(((</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">**</span> <span class="n">p</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
 
 <div class="viewcode-block" id="Kernel.norm">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel.norm">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">norm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the L2 norm of the squared kernel elements.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            L2 norm of the squared elements of the kernel array `A`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Kernel.cutA">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel.cutA">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cutA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fft_accuracy</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Truncate the kernel array `A` based on the specified FFT accuracy.</span>
+
+<span class="sd">        Elements of `A` are scaled by 1/(l^2), and elements smaller than</span>
+<span class="sd">        a threshold determined from `fft_accuracy` are removed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fft_accuracy : float, optional</span>
+<span class="sd">            Desired FFT accuracy (default is 1e-2).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The first element is never truncated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">epsilon</span> <span class="o">=</span> <span class="n">fft_accuracy</span> <span class="o">/</span> <span class="mi">150</span>
         <span class="n">A_mod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">A_mod</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">&lt;=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">A_mod</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">epsilon</span><span class="p">]),</span> <span class="n">epsilon</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
@@ -815,7 +1286,31 @@
 <div class="viewcode-block" id="Kernel.halfwidth">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel.halfwidth">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">halfwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the halfwidth of the kernel.</span>
+
+<span class="sd">        The halfwidth is determined by finding the angle `omega` that minimizes</span>
+<span class="sd">        the squared difference between K(1) and 2*K(cos(omega/2)).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Halfwidth angle in radians.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">error_fn</span><span class="p">(</span><span class="n">omega</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Compute the squared difference used to determine kernel halfwidth.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            omega : float</span>
+<span class="sd">                Angle in radians to evaluate the kernel function.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            float</span>
+<span class="sd">                Squared difference: (K(1) - 2*K(cos(omega/2)))**2</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)))</span> <span class="o">**</span> <span class="mi">2</span>
 
         <span class="k">return</span> <span class="n">fminbound</span><span class="p">(</span><span class="n">error_fn</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span></div>
@@ -824,6 +1319,19 @@
 <div class="viewcode-block" id="Kernel.K">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel.K">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">co2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the kernel function at a given squared cosine value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        co2 : float or ndarray</span>
+<span class="sd">            Cosine squared value(s), will be clipped to [-1, 1].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float or ndarray</span>
+<span class="sd">            Value(s) of the kernel function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">co2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">co2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">co2</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clenshawU</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span></div>
@@ -832,6 +1340,21 @@
 <div class="viewcode-block" id="Kernel.K_orientations">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel.K_orientations">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">K_orientations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orientations_ref</span><span class="p">,</span> <span class="n">orientations</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the kernel function for the misorientation angles between two sets of orientations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        orientations_ref : Orientation</span>
+<span class="sd">            Reference set of orientations.</span>
+<span class="sd">        orientations : Orientation</span>
+<span class="sd">            Target set of orientations to compare.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            Kernel values corresponding to misorientation angles.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">misangles</span> <span class="o">=</span> <span class="n">orientations</span><span class="o">.</span><span class="n">angle_with</span><span class="p">(</span><span class="n">orientations_ref</span><span class="p">)</span>
         <span class="n">co2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">misangles</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">co2</span><span class="p">)</span></div>
@@ -840,6 +1363,19 @@
 <div class="viewcode-block" id="Kernel.RK">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel.RK">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">RK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the kernel using the Clenshaw-L method for given cosine distances.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        d : array_like</span>
+<span class="sd">            Cosine of angles (distance metric) in the range [-1, 1].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            Kernel values for the given distances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clenshawL</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span></div>
 
@@ -847,6 +1383,21 @@
 <div class="viewcode-block" id="Kernel.RRK">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel.RRK">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">RRK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dh</span><span class="p">,</span> <span class="n">dr</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the kernel on two sets of cosine distances using a reduced rotational kernel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dh : array_like</span>
+<span class="sd">            Cosines of angles for the first set, clipped to [-1, 1].</span>
+<span class="sd">        dr : array_like</span>
+<span class="sd">            Cosines of angles for the second set, clipped to [-1, 1].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            2D array of kernel values for each combination of dh and dr.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">dh</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">dr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">dr</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">L</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bandwidth</span>
@@ -865,6 +1416,21 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_clenshawU</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the kernel using the Clenshaw algorithm in the Chebyshev U basis.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        A : array_like</span>
+<span class="sd">            Coefficients of the kernel.</span>
+<span class="sd">        omega : array_like</span>
+<span class="sd">            Angles in radians.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            Kernel values evaluated at the given angles.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span> <span class="o">/</span> <span class="mi">2</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="p">)):</span>
@@ -874,6 +1440,21 @@
         <span class="k">return</span> <span class="n">res</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_clenshawL</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the kernel using the Clenshaw algorithm in the Legendre basis.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        A : array_like</span>
+<span class="sd">            Coefficients of the kernel.</span>
+<span class="sd">        x : array_like</span>
+<span class="sd">            Input values where the kernel is evaluated (should be within [-1, 1]).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray or float</span>
+<span class="sd">            Kernel values evaluated at the given input(s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">b_next</span><span class="p">,</span> <span class="n">b_curr</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
         <span class="n">x2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span>
         <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
@@ -883,6 +1464,24 @@
 <div class="viewcode-block" id="Kernel.calc_fourier">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel.calc_fourier">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">calc_fourier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">max_angle</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">fft_accuracy</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the Fourier coefficients of the kernel up to order L.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        L : int</span>
+<span class="sd">            Maximum order of the Fourier coefficients.</span>
+<span class="sd">        max_angle : float, optional</span>
+<span class="sd">            Upper limit of integration in radians (default is pi).</span>
+<span class="sd">        fft_accuracy : float, optional</span>
+<span class="sd">            Threshold below which coefficients are considered negligible and</span>
+<span class="sd">            computation stops early (default is 1e-2).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            Array of Fourier coefficients of length &lt;= L+1.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">A</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">small</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
@@ -904,6 +1503,14 @@
 <div class="viewcode-block" id="Kernel.plot_K">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.Kernel.plot_K">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the kernel function K as a function of misorientation angle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_points : int, optional</span>
+<span class="sd">            Number of points used for plotting the kernel function (default is 200).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
         <span class="n">co2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">(</span><span class="n">co2</span><span class="p">)</span>
@@ -921,6 +1528,27 @@
 <div class="viewcode-block" id="DeLaValleePoussinKernel">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.DeLaValleePoussinKernel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DeLaValleePoussinKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    De La Vallee Poussin kernel class for orientation distribution functions</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kappa : float, optional</span>
+<span class="sd">        Shape parameter of the kernel</span>
+<span class="sd">    halfwidth : float, optional</span>
+<span class="sd">        Halfwidth in radians; overrides kappa if provided</span>
+<span class="sd">    bandwidth : int, optional</span>
+<span class="sd">        Maximum degree of the series expansion</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A : ndarray</span>
+<span class="sd">        Series coefficients of the kernel</span>
+<span class="sd">    kappa : float</span>
+<span class="sd">        Shape parameter of the kernel</span>
+<span class="sd">    C : float</span>
+<span class="sd">        Normalization constant</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kappa</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">halfwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bandwidth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">halfwidth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">kappa</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">halfwidth</span><span class="p">))</span>
@@ -947,6 +1575,19 @@
 <div class="viewcode-block" id="DeLaValleePoussinKernel.K">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.DeLaValleePoussinKernel.K">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">co2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the De La Vallee Poussin kernel function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        co2 : float or ndarray</span>
+<span class="sd">            Cosine of half the misorientation angle. Values will be clipped to [-1, 1].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float or ndarray</span>
+<span class="sd">            Kernel value(s) evaluated at the input `co2`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">co2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">co2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">C</span> <span class="o">*</span> <span class="n">co2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span><span class="p">)</span></div>
 
@@ -954,24 +1595,74 @@
 <div class="viewcode-block" id="DeLaValleePoussinKernel.DK">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.DeLaValleePoussinKernel.DK">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">DK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">co2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the derivative of the De La Vallee Poussin kernel with respect to misorientation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        co2 : float or ndarray</span>
+<span class="sd">            Cosine of half the misorientation angle. Values should be in [-1, 1].</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float or ndarray</span>
+<span class="sd">            Derivative of the kernel function evaluated at the input `co2`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">C</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">co2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">co2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DeLaValleePoussinKernel.RK">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.DeLaValleePoussinKernel.RK">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">RK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the reduced kernel function R_K at a given input.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        t : float or ndarray</span>
+<span class="sd">            Input value, typically representing a normalized distance or cosine value.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float or ndarray</span>
+<span class="sd">            Value of the reduced kernel function R_K at `t`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span></div>
 
 
 <div class="viewcode-block" id="DeLaValleePoussinKernel.DRK">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.DeLaValleePoussinKernel.DRK">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">DRK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the derivative of the reduced kernel function R_K at a given input.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        t : float or ndarray</span>
+<span class="sd">            Input value, typically representing a normalized distance or cosine value.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float or ndarray</span>
+<span class="sd">            Value of the derivative of R_K at `t`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kappa</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span></div>
 
 
 <div class="viewcode-block" id="DeLaValleePoussinKernel.halfwidth">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.DeLaValleePoussinKernel.halfwidth">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">halfwidth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the halfwidth of the DeLaValleePoussin kernel.</span>
+
+<span class="sd">        The halfwidth is the misorientation angle ω where the kernel value</span>
+<span class="sd">        drops to half its maximum.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Halfwidth angle in radians.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span><span class="p">)))</span></div>
 </div>
 
@@ -980,31 +1671,36 @@
 <div class="viewcode-block" id="ODF">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.ODF">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ODF</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimate an Orientation Distribution Function (ODF) from a set of orientations</span>
+<span class="sd">    using kernel density estimation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    orientations : orix.quaternion.Orientation</span>
+<span class="sd">        Input orientation set.</span>
+<span class="sd">    halfwidth : float, optional</span>
+<span class="sd">        Halfwidth of the kernel in radians (default: 10 degrees).</span>
+<span class="sd">    weights : array-like, optional</span>
+<span class="sd">        Weights for each orientation. If None, uniform weights are used.</span>
+<span class="sd">    kernel : Kernel instance, optional</span>
+<span class="sd">        Kernel function to use. If None, DeLaValleePoussinKernel is used.</span>
+<span class="sd">    exact : bool, optional</span>
+<span class="sd">        If False and orientation count &gt; 1000, approximation using grid is applied.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    orientations : orix.quaternion.Orientation</span>
+<span class="sd">        Orientation set stored in the ODF.</span>
+<span class="sd">    weights : ndarray</span>
+<span class="sd">        Normalized weights of the orientations.</span>
+<span class="sd">    kernel : Kernel</span>
+<span class="sd">        Kernel used for density estimation.</span>
+<span class="sd">    halfwidth : float</span>
+<span class="sd">        Halfwidth of the kernel in radians.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orientations</span><span class="p">,</span> <span class="n">halfwidth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Estimate an Orientation Distribution Function (ODF) from individual orientations</span>
-<span class="sd">            using kernel density estimation.</span>
 
-<span class="sd">            Parameters</span>
-<span class="sd">            ----------</span>
-<span class="sd">            orientations : orix.quaternion.Orientation</span>
-<span class="sd">                Input orientation set.</span>
-<span class="sd">            halfwidth : float, optional</span>
-<span class="sd">                Halfwidth of the kernel in radians (default: 10 degrees).</span>
-<span class="sd">            weights : array-like, optional</span>
-<span class="sd">                Weights for each orientation. If None, weights are uniform.</span>
-<span class="sd">            kernel : Kernel instance, optional</span>
-<span class="sd">                Kernel function to use. If None, DeLaValleePoussinKernel is used.</span>
-<span class="sd">            exact : bool, optional</span>
-<span class="sd">                If False and orientation count &gt; 1000, approximate using grid.</span>
-
-<span class="sd">            Attributes</span>
-<span class="sd">            ----------</span>
-<span class="sd">            orientations</span>
-<span class="sd">            weights</span>
-<span class="sd">            kernel</span>
-<span class="sd">            halfwidth</span>
-<span class="sd">            &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">orientations</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Orientation set is empty.&quot;</span><span class="p">)</span>
 
@@ -1033,6 +1729,19 @@
 <div class="viewcode-block" id="ODF.evaluate">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.ODF.evaluate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ori</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the ODF at given orientations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ori : Orientation</span>
+<span class="sd">            Orientation(s) at which to evaluate the ODF.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        values : ndarray</span>
+<span class="sd">            ODF values at the specified orientations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ori</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">orientations</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K_orientations</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">ori</span><span class="p">)</span>
@@ -1044,58 +1753,94 @@
 <div class="viewcode-block" id="EBSDmap">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">EBSDmap</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to store attributes and methods to import EBSD maps</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to store attributes and methods to import EBSD maps</span>
 <span class="sd">    and filter out their statistical data needed to generate</span>
 <span class="sd">    synthetic RVEs</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        Filename including path to EBSD file.</span>
+<span class="sd">    gs_min : float, optional</span>
+<span class="sd">        Minimum grain size in pixels. Grains smaller than this are disregarded</span>
+<span class="sd">        for statistical analysis. Default is 10.0.</span>
+<span class="sd">    vf_min : float, optional</span>
+<span class="sd">        Minimum volume fraction. Phases with smaller values are disregarded.</span>
+<span class="sd">        Default is 0.03.</span>
+<span class="sd">    max_angle : float, optional</span>
+<span class="sd">        Maximum misorientation angle (degrees) used for grain merging.</span>
+<span class="sd">        Default is 5.0.</span>
+<span class="sd">    connectivity : int, optional</span>
+<span class="sd">        Connectivity for grain identification. Default is 8.</span>
+<span class="sd">    show_plot : bool, optional</span>
+<span class="sd">        If True, plots microstructure maps. Default is True.</span>
+<span class="sd">    show_hist : bool, optional</span>
+<span class="sd">        If True, plots histograms of grain statistics. Default follows `show_plot`.</span>
+<span class="sd">    felzenszwalb : bool, optional</span>
+<span class="sd">        If True, applies Felzenszwalb segmentation. Default is False.</span>
+<span class="sd">    show_grains : bool, optional</span>
+<span class="sd">        If True, plots grain labeling. Default is False.</span>
+<span class="sd">    hist : bool, optional</span>
+<span class="sd">        Deprecated. Use `show_hist` instead.</span>
+<span class="sd">    plot : bool, optional</span>
+<span class="sd">        Deprecated. Use `show_plot` instead.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    emap : object</span>
+<span class="sd">        Loaded EBSD map object.</span>
+<span class="sd">    sh_x, sh_y : int</span>
+<span class="sd">        Shape of EBSD map in pixels.</span>
+<span class="sd">    dx, dy : float</span>
+<span class="sd">        Pixel size in microns.</span>
+<span class="sd">    npx : int</span>
+<span class="sd">        Total number of pixels in the map.</span>
+<span class="sd">    ms_data : list of dict</span>
+<span class="sd">        Phase-specific microstructure information including:</span>
+<span class="sd">        - name : str — phase name</span>
+<span class="sd">        - vf : float — volume fraction</span>
+<span class="sd">        - index : int — phase index</span>
+<span class="sd">        - ori : Orientation — grain orientations</span>
+<span class="sd">        - cs : crystal symmetry / Laue group</span>
+<span class="sd">        - mo_map : ndarray — misorientation field</span>
+<span class="sd">        - rgb_im : ndarray — IPF color image</span>
+<span class="sd">        - ngrains : int — number of grains</span>
+<span class="sd">        - gs_param, ar_param, om_param : ndarray — grain size, aspect ratio, main axis angle parameters</span>
+<span class="sd">        - gs_data, ar_data, om_data : ndarray — raw distributions</span>
+<span class="sd">        - gs_moments, ar_moments, om_moments : list — distribution moments</span>
+<span class="sd">        - graph : object — microstructure graph</span>
+<span class="sd">    ci_map : ndarray</span>
+<span class="sd">        Optional confidence index map if available.</span>
+<span class="sd">    ngrains : int</span>
+<span class="sd">        Total number of grains after merging/pruning.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">gs_min</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">vf_min</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">max_angle</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">connectivity</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
                  <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">felzenszwalb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_grains</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate microstructural data from EBSD maps</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        fname : str</span>
-<span class="sd">            filname incl. path to EBSD file.</span>
-<span class="sd">        matname : str, optional</span>
-<span class="sd">            Name of material, depracted. The default is None.</span>
-<span class="sd">        gs_min : int, optional</span>
-<span class="sd">            Minimum grain size in pixels, smaller grains will be disregarded</span>
-<span class="sd">            for the statistical analysis. The default is 3.</span>
-<span class="sd">        vf_min : int, optional</span>
-<span class="sd">            Minimum volume fracture, phases with smaller values will be</span>
-<span class="sd">            disregarded. The default is 0.03.</span>
-<span class="sd">        plot : bool, optional</span>
-<span class="sd">            Plot microstructures. The default is True.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None.</span>
-<span class="sd">        </span>
-<span class="sd">        Attributes</span>
-<span class="sd">        ----------</span>
-<span class="sd">        ms_data : list of dict</span>
-<span class="sd">            List of dictionaries with phase specific microstructure</span>
-<span class="sd">            information.  </span>
-<span class="sd">            name : name of phase  </span>
-<span class="sd">            vf : volume fraction</span>
-<span class="sd">            ngrain : number of grains in phase</span>
-<span class="sd">            ori : matlab object with grain orientations</span>
-<span class="sd">            cs : matlab object with crystal structure</span>
-<span class="sd">            grains : matlab object with grains in each phase</span>
-<span class="sd">            omega : orientations of major grain axis</span>
-<span class="sd">            gs_param : statistical grain size parameters</span>
-<span class="sd">            gs_data : grain sizes</span>
-<span class="sd">            ar_param</span>
-<span class="sd">            ar_data</span>
-<span class="sd">            om_param</span>
-<span class="sd">            om_data</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">reassign</span><span class="p">(</span><span class="n">pix</span><span class="p">,</span> <span class="n">ori</span><span class="p">,</span> <span class="n">phid</span><span class="p">,</span> <span class="n">bads</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Reassign the orientation of a pixel based on neighboring pixels of the same phase.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            pix : int</span>
+<span class="sd">                Index of the pixel to be reassigned.</span>
+<span class="sd">            ori : ndarray</span>
+<span class="sd">                Array of orientations for all pixels.</span>
+<span class="sd">            phid : ndarray</span>
+<span class="sd">                Array of phase IDs for all pixels.</span>
+<span class="sd">            bads : set</span>
+<span class="sd">                Set of indices corresponding to pixels that could not be reassigned previously.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            None</span>
+<span class="sd">                Modifies `ori` in-place. If no valid neighbor is found, `pix` is added to `bads`.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">phase</span> <span class="o">=</span> <span class="n">phid</span><span class="p">[</span><span class="n">pix</span><span class="p">]</span>
             <span class="n">ix</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
             <span class="k">if</span> <span class="n">pix</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">phid</span><span class="p">[</span><span class="n">pix</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">phase</span> <span class="ow">and</span> <span class="n">pix</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bads</span><span class="p">:</span>
@@ -1396,7 +2141,7 @@
                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">full_output</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Estimate optimum kernel half-width and produce reduced set of</span>
-<span class="sd">        orientations for given number of grains.</span>
+<span class="sd">        orientations for given number of grains</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1439,12 +2184,7 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.showIPF">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">showIPF</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plot IPF key.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None.</span>
-
+<span class="sd">        Plot the inverse pole figure (IPF) color key for all phases in the EBSD map</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">emap</span><span class="o">.</span><span class="n">phases</span><span class="o">.</span><span class="n">ids</span><span class="p">:</span>
             <span class="n">pg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">emap</span><span class="o">.</span><span class="n">phases</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">point_group</span><span class="o">.</span><span class="n">laue</span>
@@ -1458,6 +2198,9 @@
 <div class="viewcode-block" id="EBSDmap.plot_ci_map">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_ci_map">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_ci_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the confidence index (CI) map of the EBSD data if available</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;ci&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">emap</span><span class="o">.</span><span class="n">prop</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ci_map</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">sh_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sh_y</span><span class="p">)))</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;CI values in EBSD map&#39;</span><span class="p">)</span>
@@ -1468,6 +2211,18 @@
 <div class="viewcode-block" id="EBSDmap.plot_pf">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_pf">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_pf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot pole figures for all phases using the specified sample direction</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vector : array-like, optional</span>
+<span class="sd">            Sample reference vector for the pole figure. Default is [0, 0, 1].</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Plots &lt;111&gt; poles in the sample reference frame for each phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># plot inverse pole figure</span>
         <span class="c1"># &lt;111&gt; poles in the sample reference frame</span>
         <span class="k">if</span> <span class="n">vector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1490,6 +2245,18 @@
 <div class="viewcode-block" id="EBSDmap.plot_pf_proj">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_pf_proj">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_pf_proj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot projected pole figures for all phases using the specified sample direction</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vector : array-like, optional</span>
+<span class="sd">            Sample reference vector for the projected pole figure. Default is [0, 0, 1].</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Uses a projection method to visualize &lt;111&gt; poles in the sample reference frame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># plot inverse pole figure</span>
         <span class="c1"># &lt;111&gt; poles in the sample reference frame</span>
         <span class="k">if</span> <span class="n">vector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1504,6 +2271,14 @@
 <div class="viewcode-block" id="EBSDmap.plot_grains_marked">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_grains_marked">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_grains_marked</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot grains with labels and major/minor axes for all phases</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Each grain is annotated with its number. Major axes are plotted in black,</span>
+<span class="sd">        minor axes in red. The plot uses a distinct colormap for different grains.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># plot grain with numbers and axes</span>
         <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms_data</span><span class="p">:</span>
             <span class="n">ngr</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;ngrains&#39;</span><span class="p">]</span>
@@ -1530,6 +2305,13 @@
 <div class="viewcode-block" id="EBSDmap.plot_mo_map">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_mo_map">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_mo_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the misorientation map for all phases</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Shows the misorientation angle of each pixel with respect to a reference orientation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms_data</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;mo_map&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">sh_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sh_y</span><span class="p">)))</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Phase #</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">): Misorientation angle wrt reference&quot;</span><span class="p">)</span>
@@ -1540,6 +2322,20 @@
 <div class="viewcode-block" id="EBSDmap.plot_segmentation">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_segmentation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_segmentation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_mo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_ipf</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot segmentation results for all phases</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        show_mo : bool, optional</span>
+<span class="sd">            If True, overlay grain boundaries on the misorientation map. Default is True.</span>
+<span class="sd">        show_ipf : bool, optional</span>
+<span class="sd">            If True, overlay grain boundaries on the IPF map. Default is True.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Uses similarity-based segmentation to highlight grain boundaries on the maps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># plot segmentation results</span>
         <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms_data</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">show_mo</span><span class="p">:</span>
@@ -1556,6 +2352,14 @@
 <div class="viewcode-block" id="EBSDmap.plot_felsenszwalb">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_felsenszwalb">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_felsenszwalb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply Felzenszwalb segmentation to the misorientation map and plot the results</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Segments the misorientation map using the Felzenszwalb algorithm and overlays</span>
+<span class="sd">        the segment boundaries for visualization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">skimage.segmentation</span><span class="w"> </span><span class="kn">import</span> <span class="n">felzenszwalb</span>
         <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms_data</span><span class="p">:</span>
             <span class="n">gscale_map</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;mo_map&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">sh_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sh_y</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
@@ -1568,6 +2372,13 @@
 <div class="viewcode-block" id="EBSDmap.plot_graph">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_graph">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Visualize the microstructure graph for all phases</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Uses the `visualize_graph` function to display nodes and connections of each phase&#39;s graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># visualize graph</span>
         <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms_data</span><span class="p">:</span>
             <span class="n">visualize_graph</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;graph&#39;</span><span class="p">])</span></div>
@@ -1576,6 +2387,13 @@
 <div class="viewcode-block" id="EBSDmap.plot_ipf_map">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_ipf_map">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_ipf_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the IPF (inverse pole figure) map for all phases</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Pixels belonging to other phases are set to black. Each phase is visualized separately.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># plot EBSD maps for all phase</span>
         <span class="c1"># set pixels of other phases to black</span>
         <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms_data</span><span class="p">:</span>
@@ -1590,6 +2408,19 @@
 <div class="viewcode-block" id="EBSDmap.plot_grains">
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.EBSDmap.plot_grains">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_grains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the N largest grains with one-hot maps, convex hulls, and principal axes</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        N : int, optional</span>
+<span class="sd">            Number of largest grains to plot for each phase. Default is 5.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Each grain is visualized with its pixels, convex hull, and major/minor axes.</span>
+<span class="sd">        Major axes are plotted in cyan, minor axes in green.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># select N largest gains and create a one-hot-plot for each grain</span>
         <span class="c1"># showing its pixels, the vertices of the convex hull and the convex hull itself</span>
         <span class="c1"># together with the principal axes of the grain</span>
@@ -1640,19 +2471,24 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.get_ipf_colors">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_ipf_colors</span><span class="p">(</span><span class="n">ori_list</span><span class="p">,</span> <span class="n">color_key</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get colors of list of orientations (in radians).</span>
-<span class="sd">    Assumes cubic crystal symmetry and cubic specimen symmetry.</span>
+<span class="sd">    Get RGB colors for a list of orientations in radians</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ori_list: (N, 3) ndarray</span>
+<span class="sd">    ori_list : (N, 3) ndarray</span>
 <span class="sd">        List of N Euler angles in radians</span>
+
+<span class="sd">    color_key : int, optional</span>
+<span class="sd">        Index of the IPF color key to use. Default is 0</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    colors: (N, 3) ndarray</span>
-<span class="sd">        List of RGB values</span>
+<span class="sd">    colors : (N, 3) ndarray</span>
+<span class="sd">        RGB values corresponding to each orientation</span>
 
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Assumes cubic crystal symmetry and cubic specimen symmetry</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># get colors</span>
@@ -1671,32 +2507,44 @@
                  <span class="n">res_low</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">res_high</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">res_step</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">lim</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                  <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">full_output</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create a set of num Euler angles according to the ODF defined by the</span>
-<span class="sd">    set of Euler angles ang and the kernel half-width omega.</span>
-<span class="sd">    Example: Goss texture: ang = [0, 45, 0], omega = 5</span>
+<span class="sd">    Create a set of Euler angles according to an ODF defined by input orientations and kernel half-width</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    num : int</span>
-<span class="sd">        Number of Euler angles in set to be created.</span>
-<span class="sd">    ang : (3, ) or (M, 3) array</span>
-<span class="sd">        Set of Euler angles (in degrees or radians) defining the ODF.</span>
+<span class="sd">        Number of Euler angles to generate</span>
+<span class="sd">    ang : (3,) or (M, 3) array or Orientation</span>
+<span class="sd">        Input set of Euler angles (in degrees or radians) defining the ODF</span>
 <span class="sd">    omega : float</span>
-<span class="sd">        Half-width of kernel in degrees or radians.</span>
+<span class="sd">        Kernel half-width (in degrees or radians)</span>
 <span class="sd">    hist : array, optional</span>
-<span class="sd">        Histogram of MDF. The default is None.</span>
-<span class="sd">    shared_area: array, optional</span>
-<span class="sd">        The shared area between pairs of grains. The default in None.</span>
-<span class="sd">    cs : str, optional</span>
-<span class="sd">        Crystal symmetry group. The default is &#39;m3m&#39;.</span>
+<span class="sd">        Histogram of MDF. Default is None</span>
+<span class="sd">    shared_area : array, optional</span>
+<span class="sd">        Shared area between pairs of grains. Default is None</span>
+<span class="sd">    cs : Symmetry, optional</span>
+<span class="sd">        Crystal symmetry group. Default is &#39;m3m&#39;</span>
+<span class="sd">    degree : bool, optional</span>
+<span class="sd">        If True, input angles and omega are in degrees. Default is True</span>
 <span class="sd">    Nbase : int, optional</span>
-<span class="sd">        Base number of orientations for random texture. The default is 10000</span>
+<span class="sd">        Base number of orientations for artificial ODF. Default is 10000</span>
+<span class="sd">    resolution : float, optional</span>
+<span class="sd">        Resolution for orientation generation. If None, derived from omega</span>
+<span class="sd">    res_low, res_high, res_step, lim : int, optional</span>
+<span class="sd">        Parameters for texture reconstruction</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        If True, prints progress messages. Default is False</span>
+<span class="sd">    full_output : bool, optional</span>
+<span class="sd">        If True, returns additional reconstruction outputs. Default is False</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    ori : (num, 3) array</span>
-<span class="sd">        Set of Euler angles</span>
+<span class="sd">    ori : (num, 3) ndarray</span>
+<span class="sd">        Reduced set of Euler angles</span>
 
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Can generate artificial ODFs if input set is small. Grain-boundary-texture</span>
+<span class="sd">    reconstruction with hist or shared_area requires the kanapy-mtex module.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># prepare parameters</span>
     <span class="k">if</span> <span class="n">hist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">shared_area</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1759,31 +2607,33 @@
 <a class="viewcode-back" href="../../kanapy.html#kanapy.texture.createOrisetRandom">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">createOrisetRandom</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Nbase</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create a set of num Euler angles for Random texture.</span>
-<span class="sd">    Other than knpy.createOriset() this method does not create an artificial</span>
-<span class="sd">    EBSD which is reduced in a second step to num discrete orientations but</span>
-<span class="sd">    directly samples num randomly distributed orientations.s</span>
+<span class="sd">    Create a set of Euler angles for a random texture</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    num : int</span>
-<span class="sd">        Number of Euler angles in set to be created.</span>
-<span class="sd">    omega : float</span>
-<span class="sd">        Halfwidth of kernel in degrees (optional, default: 7.5)</span>
+<span class="sd">        Number of Euler angles to generate</span>
+<span class="sd">    omega : float, optional</span>
+<span class="sd">        Kernel half-width in degrees. Default is 7.5</span>
 <span class="sd">    hist : array, optional</span>
-<span class="sd">        Histogram of MDF. The default is None.</span>
-<span class="sd">    shared_area: array, optional</span>
-<span class="sd">        The shared area between pairs of grains. The default in None.</span>
-<span class="sd">    cs : str, optional</span>
-<span class="sd">        Crystal symmetry group. The default is &#39;m3m&#39;.</span>
+<span class="sd">        Histogram of MDF. Default is None</span>
+<span class="sd">    shared_area : array, optional</span>
+<span class="sd">        Shared area between pairs of grains. Default is None</span>
+<span class="sd">    cs : Symmetry, optional</span>
+<span class="sd">        Crystal symmetry group. Default is &#39;m3m&#39;</span>
 <span class="sd">    Nbase : int, optional</span>
-<span class="sd">        Base number of orientations for random texture. The default is 5000</span>
+<span class="sd">        Base number of orientations for random texture. Default is 5000</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    ori : (num, 3) array</span>
-<span class="sd">        Set of Euler angles</span>
+<span class="sd">    ori : (num, 3) ndarray</span>
+<span class="sd">        Set of randomly distributed Euler angles</span>
 
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Unlike `createOriset`, this function directly generates `num` random orientations</span>
+<span class="sd">    without reducing a larger artificial EBSD set. Grain-boundary-texture reconstruction</span>
+<span class="sd">    using `hist` or `shared_area` requires the kanapy-mtex module.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">hist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">shared_area</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;The grain-boundary-texture module is currently only available in kanapy-mtex.&#39;</span><span class="p">)</span>

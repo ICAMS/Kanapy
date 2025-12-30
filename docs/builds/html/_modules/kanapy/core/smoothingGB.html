@@ -86,7 +86,42 @@
 
 <div class="viewcode-block" id="Node">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.Node">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>    
+<span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class representing a single node in 3D space with position, velocity, acceleration, and anchors</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    iden : int</span>
+<span class="sd">        Identifier to assign to the node</span>
+<span class="sd">    px : float</span>
+<span class="sd">        Initial x-coordinate of the node</span>
+<span class="sd">    py : float</span>
+<span class="sd">        Initial y-coordinate of the node</span>
+<span class="sd">    pz : float</span>
+<span class="sd">        Initial z-coordinate of the node</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    id : int</span>
+<span class="sd">        Unique identifier of the node</span>
+<span class="sd">    px, py, pz : float</span>
+<span class="sd">        Current x, y, z coordinates of the node</span>
+<span class="sd">    oripx, oripy, oripz : float</span>
+<span class="sd">        Original x, y, z coordinates of the node</span>
+<span class="sd">    vx, vy, vz : float</span>
+<span class="sd">        Velocity components along x, y, z</span>
+<span class="sd">    ax, ay, az : float</span>
+<span class="sd">        Acceleration components along x, y, z</span>
+<span class="sd">    anchors : list</span>
+<span class="sd">        List of anchors connected to this node</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This class represents a single node in 3D space, storing both its kinematic state</span>
+<span class="sd">    (position, velocity, acceleration) and connections to anchors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">iden</span><span class="p">,</span><span class="n">px</span><span class="p">,</span><span class="n">py</span><span class="p">,</span><span class="n">pz</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">iden</span>
@@ -114,25 +149,57 @@
 
 <div class="viewcode-block" id="Node.get_pos">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.Node.get_pos">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the current position of the node as a NumPy array</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pos : ndarray</span>
+<span class="sd">            Array containing the x, y, z coordinates of the node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">px</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pz</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="Node.get_Oripos">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.Node.get_Oripos">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_Oripos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_Oripos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the original position of the node as a NumPy array</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        oripos : ndarray</span>
+<span class="sd">            Array containing the original x, y, z coordinates of the node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">oripx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">oripy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">oripz</span><span class="p">])</span>                 </div>
 
     
 <div class="viewcode-block" id="Node.get_vel">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.Node.get_vel">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_vel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>        
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_vel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the current velocity of the node as a NumPy array</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vel : ndarray</span>
+<span class="sd">            Array containing the velocity components vx, vy, vz</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">vx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vz</span><span class="p">])</span></div>
 
         
 <div class="viewcode-block" id="Node.update_pos">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.Node.update_pos">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">update_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>               
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the position of the node based on its velocity and time step</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : float</span>
+<span class="sd">            Time step for the update</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">px</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">*</span> <span class="n">dt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">py</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">*</span> <span class="n">dt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pz</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vz</span> <span class="o">*</span> <span class="n">dt</span>   </div>
@@ -140,7 +207,15 @@
         
 <div class="viewcode-block" id="Node.update_vel">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.Node.update_vel">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">update_vel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>        
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_vel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the velocity of the node based on its acceleration and time step</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : float</span>
+<span class="sd">            Time step for the update</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">*</span> <span class="n">dt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ay</span> <span class="o">*</span> <span class="n">dt</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vz</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">az</span> <span class="o">*</span> <span class="n">dt</span>   </div>
@@ -148,7 +223,21 @@
 
 <div class="viewcode-block" id="Node.compute_acc">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.Node.compute_acc">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute_acc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fx</span><span class="p">,</span><span class="n">fy</span><span class="p">,</span><span class="n">fz</span><span class="p">,</span><span class="n">mass</span><span class="p">):</span>        
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_acc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">fx</span><span class="p">,</span><span class="n">fy</span><span class="p">,</span><span class="n">fz</span><span class="p">,</span><span class="n">mass</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the acceleration of the node given applied forces and mass</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fx : float</span>
+<span class="sd">            Force component along x</span>
+<span class="sd">        fy : float</span>
+<span class="sd">            Force component along y</span>
+<span class="sd">        fz : float</span>
+<span class="sd">            Force component along z</span>
+<span class="sd">        mass : float</span>
+<span class="sd">            Mass of the node</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="n">fx</span><span class="o">/</span><span class="n">mass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ay</span> <span class="o">=</span> <span class="n">fy</span><span class="o">/</span><span class="n">mass</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">az</span> <span class="o">=</span> <span class="n">fz</span><span class="o">/</span><span class="n">mass</span>       </div>
@@ -164,6 +253,27 @@
 <div class="viewcode-block" id="readGrainFaces">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.readGrainFaces">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">readGrainFaces</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span><span class="n">elmtDict</span><span class="p">,</span><span class="n">elmtSetDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract outer faces of polyhedral grains from voxel connectivity</span>
+
+<span class="sd">    Constructs a dictionary of outer faces for each grain by analyzing voxel elements,</span>
+<span class="sd">    excluding faces that lie on the boundary of the RVE.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nodes_v : ndarray</span>
+<span class="sd">        Array of nodal coordinates with shape (Nnodes, 3)</span>
+<span class="sd">    elmtDict : dict</span>
+<span class="sd">        Dictionary mapping element ID to its 8 node indices</span>
+<span class="sd">    elmtSetDict : dict</span>
+<span class="sd">        Dictionary mapping grain ID to a list of element IDs belonging to that grain</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    grain_facesDict : dict</span>
+<span class="sd">        Dictionary mapping grain ID to a dictionary of outer faces.</span>
+<span class="sd">        Each face is stored as {face_id: [node1, node2, node3, node4]}.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">RVE_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">RVE_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">grain_facesDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>      <span class="c1"># {Grain: faces} </span>
@@ -234,6 +344,26 @@
 <div class="viewcode-block" id="initalizeSystem">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.initalizeSystem">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">initalizeSystem</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span><span class="n">grain_facesDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize a spring-mass system from nodes and grain faces</span>
+
+<span class="sd">    Creates Node objects for all nodes, generates anchors at the center of each face,</span>
+<span class="sd">    and links nodes to their associated anchors for the spring-mass system.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nodes_v : ndarray</span>
+<span class="sd">        Array of nodal coordinates with shape (Nnodes, 3)</span>
+<span class="sd">    grain_facesDict : dict</span>
+<span class="sd">        Dictionary mapping grain ID to a dictionary of outer faces, as returned by readGrainFaces</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    allNodes : list of Node</span>
+<span class="sd">        List of Node objects with anchors assigned</span>
+<span class="sd">    anchDict : dict</span>
+<span class="sd">        Dictionary mapping face ID to anchor position (x, y, z)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Initialize all nodes as masses</span>
     <span class="n">allNodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">Node</span><span class="p">(</span><span class="n">nid</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">coords</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">nid</span><span class="p">,</span><span class="n">coords</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">)]</span>  
@@ -276,6 +406,39 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.relaxSystem">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">relaxSystem</span><span class="p">(</span><span class="n">allNodes</span><span class="p">,</span><span class="n">anchDict</span><span class="p">,</span><span class="n">dt</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">RVE_xmin</span><span class="p">,</span><span class="n">RVE_xmax</span><span class="p">,</span>
                          <span class="n">RVE_ymin</span><span class="p">,</span><span class="n">RVE_ymax</span><span class="p">,</span><span class="n">RVE_zmin</span><span class="p">,</span><span class="n">RVE_zmax</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Relax the spring-mass system to reach equilibrium</span>
+
+<span class="sd">    Integrates the motion of nodes over N time steps with time step dt,</span>
+<span class="sd">    considering spring forces to anchors and damping. Boundary nodes at RVE surfaces</span>
+<span class="sd">    are fixed in the corresponding directions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    allNodes : list of Node</span>
+<span class="sd">        List of Node objects with positions, velocities, and anchors</span>
+<span class="sd">    anchDict : dict</span>
+<span class="sd">        Dictionary mapping face ID to anchor position (x, y, z)</span>
+<span class="sd">    dt : float</span>
+<span class="sd">        Time step for integration</span>
+<span class="sd">    N : int</span>
+<span class="sd">        Number of integration steps</span>
+<span class="sd">    k : float</span>
+<span class="sd">        Spring stiffness</span>
+<span class="sd">    c : float</span>
+<span class="sd">        Damping coefficient</span>
+<span class="sd">    RVE_xmin, RVE_xmax : float</span>
+<span class="sd">        Minimum and maximum x-coordinates of RVE boundary</span>
+<span class="sd">    RVE_ymin, RVE_ymax : float</span>
+<span class="sd">        Minimum and maximum y-coordinates of RVE boundary</span>
+<span class="sd">    RVE_zmin, RVE_zmax : float</span>
+<span class="sd">        Minimum and maximum z-coordinates of RVE boundary</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    allNodes : list of Node</span>
+<span class="sd">        Updated list of Node objects after relaxation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Relaxing the system for equilibrium&#39;</span><span class="p">)</span>                 
     <span class="n">nodeMass</span> <span class="o">=</span> <span class="mi">30</span>
@@ -318,6 +481,28 @@
 <div class="viewcode-block" id="smoothingRoutine">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.smoothingGB.smoothingRoutine">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">smoothingRoutine</span><span class="p">(</span><span class="n">nodes_v</span><span class="p">,</span> <span class="n">elmtDict</span><span class="p">,</span> <span class="n">elmtSetDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Smooth a voxel-based microstructure by relaxing a spring-mass-anchor system</span>
+
+<span class="sd">    Constructs outer faces of grains, initializes nodes with anchors at face centers,</span>
+<span class="sd">    and iteratively relaxes the system to reduce irregularities in node positions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nodes_v : ndarray, shape (N_nodes, 3)</span>
+<span class="sd">        Coordinates of all nodes in the voxel mesh</span>
+<span class="sd">    elmtDict : dict</span>
+<span class="sd">        Dictionary mapping element ID to its node indices</span>
+<span class="sd">    elmtSetDict : dict</span>
+<span class="sd">        Dictionary mapping grain ID to the set of element IDs it contains</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nodes_s : ndarray, shape (N_nodes, 3)</span>
+<span class="sd">        Smoothed coordinates of all nodes</span>
+<span class="sd">    grain_facesDict : dict</span>
+<span class="sd">        Dictionary mapping grain ID to its outer faces and corresponding node connectivity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1">#coords = np.array(list(nodes_v.values()))</span>
     <span class="n">xvals</span><span class="p">,</span> <span class="n">yvals</span><span class="p">,</span> <span class="n">zvals</span> <span class="o">=</span> <span class="n">nodes_v</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">nodes_v</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">nodes_v</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>

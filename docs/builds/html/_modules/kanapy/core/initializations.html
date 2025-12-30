@@ -95,6 +95,26 @@
 <div class="viewcode-block" id="stat_names">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.stat_names">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">stat_names</span><span class="p">(</span><span class="n">legacy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return standardized names for statistical descriptors</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    legacy : bool, optional</span>
+<span class="sd">      If True, use legacy naming convention (&#39;std&#39;, &#39;offs&#39;, &#39;mean&#39;, &#39;kappa&#39;);</span>
+<span class="sd">      otherwise, use current naming convention (&#39;sig&#39;, &#39;loc&#39;, &#39;scale&#39;, &#39;kappa&#39;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sig : str</span>
+<span class="sd">      Name for the standard deviation descriptor</span>
+<span class="sd">    loc : str</span>
+<span class="sd">      Name for the location descriptor</span>
+<span class="sd">    scale : str</span>
+<span class="sd">      Name for the scale/mean descriptor</span>
+<span class="sd">    kappa : str</span>
+<span class="sd">      Name for the kappa/shape parameter</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">legacy</span><span class="p">:</span>
         <span class="n">sig</span> <span class="o">=</span> <span class="s1">&#39;std&#39;</span>
         <span class="n">loc</span> <span class="o">=</span> <span class="s1">&#39;offs&#39;</span>
@@ -112,87 +132,118 @@
 <div class="viewcode-block" id="RVE_creator">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.RVE_creator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RVE_creator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates an RVE based on user-defined statistics</span>
 
-<span class="sd">    .. note:: 1. Input parameters provided by the user in the input file are:</span>
+<span class="sd">    Generates ellipsoid size distribution (Log-normal) based on user-defined statistics.</span>
+<span class="sd">    Particle, RVE and simulation data are written as JSON files in a folder in the current working</span>
+<span class="sd">    directory for later access.</span>
 
-<span class="sd">                * Standard deviation for ellipsoid equivalent diameter (Log-normal distribution)</span>
-<span class="sd">                * Mean value of ellipsoid equivalent diameter (Log-normal distribution)</span>
-<span class="sd">                * Minimum and Maximum cut-offs for ellipsoid equivalent diameters</span>
-<span class="sd">                * Mean value for aspect ratio</span>
-<span class="sd">                * Mean value for ellipsoid tilt angles (Normal distribution)</span>
-<span class="sd">                * Standard deviation for ellipsoid tilt angles (Normal distribution)</span>
-<span class="sd">                * Side dimension of the RVE</span>
-<span class="sd">                * Discretization along the RVE sides</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    stats_dicts : list of dict</span>
+<span class="sd">        List of dictionaries containing microstructure descriptors for each phase</span>
+<span class="sd">    nsteps : int, optional</span>
+<span class="sd">        Maximum number of steps for packing simulation (default is 1000)</span>
+<span class="sd">    from_voxels : bool, optional</span>
+<span class="sd">        If True, RVE is created from voxel input (default is False)</span>
+<span class="sd">    poly : object, optional</span>
+<span class="sd">        Optional polygon object for particle generation</span>
 
-<span class="sd">              2. Particle, RVE and simulation data are written as JSON files in a folder in the current</span>
-<span class="sd">                 working directory for later access.</span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    packing_steps : int</span>
+<span class="sd">        Max number of steps for packing simulation</span>
+<span class="sd">    size : tuple of float</span>
+<span class="sd">        Side lengths of the RVE along Cartesian axes</span>
+<span class="sd">    dim : tuple of int</span>
+<span class="sd">        Number of voxels along Cartesian axes</span>
+<span class="sd">    periodic : bool</span>
+<span class="sd">        Whether the RVE is periodic</span>
+<span class="sd">    units : str</span>
+<span class="sd">        Units of RVE dimensions, either &quot;mm&quot; or &quot;um&quot;</span>
+<span class="sd">    nparticles : list of int</span>
+<span class="sd">        Number of particles for each phase</span>
+<span class="sd">    particle_data : list of dict</span>
+<span class="sd">        Statistical particle data for each phase</span>
+<span class="sd">    phase_names : list of str</span>
+<span class="sd">        Names of phases</span>
+<span class="sd">    phase_vf : list of float</span>
+<span class="sd">        Volume fractions of each phase</span>
+<span class="sd">    ialloy : list of int</span>
+<span class="sd">        Alloy numbers for ICAMS CP-UMAT</span>
 
-<span class="sd">                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.</span>
-<span class="sd">                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
-<span class="sd">                * Simulation attributes such as periodicity and output unit scale (:math:`mm`</span>
-<span class="sd">                  or :math:`\mu m`) for ABAQUS .inp file.</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    1. Input parameters provided by the user in the input file are:</span>
+<span class="sd">       - Standard deviation for ellipsoid equivalent diameter (Log-normal or Normal distribution)</span>
+<span class="sd">       - Mean value of ellipsoid equivalent diameter (Log-normal or Normal distribution)</span>
+<span class="sd">       - Minimum and Maximum cut-offs for ellipsoid equivalent diameters</span>
+<span class="sd">       - Mean value for aspect ratio</span>
+<span class="sd">       - Mean value for ellipsoid tilt angles (Normal distribution)</span>
+<span class="sd">       - Side dimension of the RVE</span>
+<span class="sd">       - Discretization along the RVE sides</span>
 
-<span class="sd">    Generates ellipsoid size distribution (Log-normal) based on user-defined statistics</span>
-
-<span class="sd">    .. note:: 1. Input parameters provided by the user in the input file are:</span>
-
-<span class="sd">                * Standard deviation for ellipsoid equivalent diameter (Normal distribution)</span>
-<span class="sd">                * Mean value of ellipsoid equivalent diameter (Normal distribution)</span>
-<span class="sd">                * Minimum and Maximum cut-offs for ellipsoid equivalent diameters</span>
-<span class="sd">                * Mean value for aspect ratio</span>
-<span class="sd">                * Mean value for ellipsoid tilt angles (Normal distribution)</span>
-<span class="sd">                * Standard deviation for ellipsoid tilt angles (Normal distribution)</span>
-<span class="sd">                * Side dimension of the RVE</span>
-<span class="sd">                * Discretization along the RVE sides</span>
-
-<span class="sd">              2. Particle, RVE and simulation data are written as JSON files in a folder in the current</span>
-<span class="sd">                 working directory for later access.</span>
-
-<span class="sd">                * Ellipsoid attributes such as Major, Minor, Equivalent diameters and its tilt angle.</span>
-<span class="sd">                * RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution.</span>
-<span class="sd">                * Simulation attributes such as periodicity and output unit scale (:math:`mm`</span>
-<span class="sd">                  or :math:`\mu m`) for ABAQUS .inp file.</span>
-
+<span class="sd">    2. Data written in output files include:</span>
+<span class="sd">       - Ellipsoid attributes: Major, Minor, Equivalent diameters and tilt angle</span>
+<span class="sd">       - RVE attributes: size, number of voxels, voxel resolution</span>
+<span class="sd">       - Simulation attributes: periodicity and output unit scale (mm or μm) for ABAQUS .inp file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stats_dicts</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">from_voxels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create an RVE object.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        stats_dicts</span>
-<span class="sd">        nsteps</span>
-<span class="sd">        from_voxels</span>
-<span class="sd">        poly</span>
-
-<span class="sd">        Attributes</span>
-<span class="sd">        ----------</span>
-<span class="sd">        packing_steps = nsteps  # max number of steps for packing simulation</span>
-<span class="sd">        size = None  #  tuple of lengths along Cartesian axes</span>
-<span class="sd">        dim = None  # tuple of number of voxels along Cartesian axes</span>
-<span class="sd">        periodic = None  # Boolean for periodicity of RVE</span>
-<span class="sd">        units = None  # Units of RVE dimensions, either &quot;mm&quot; or &quot;um&quot; (micron)</span>
-<span class="sd">        nparticles = []  # list of particle numbers for each phase</span>
-<span class="sd">        particle_data = []  # list of cits for statistical particle data for each grains</span>
-<span class="sd">        phase_names = []  # list of names of phases</span>
-<span class="sd">        phase_vf = []  # list of volume fractions of phases</span>
-<span class="sd">        ialloy : int</span>
-<span class="sd">            Number of alloy in ICAMS CP-UMAT</span>
-<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">init_particles</span><span class="p">(</span><span class="n">ip</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Extract statistical microstructure information from data dictionary</span>
-<span class="sd">            and initalize particles for packing accordingly</span>
+<span class="sd">            Initialize particle data for a given phase using statistical descriptors</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            ip : int</span>
+<span class="sd">                Index of the phase for which particles are being initialized</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            pdict : dict</span>
+<span class="sd">                Dictionary containing particle information for the phase, including number,</span>
+<span class="sd">                equivalent diameters, aspect ratios, tilt angles, and major/minor axes lengths</span>
+
+<span class="sd">            Notes</span>
+<span class="sd">            -----</span>
+<span class="sd">            - Uses gen_data_basic to generate particle numbers and equivalent diameters</span>
+<span class="sd">            - Uses gen_data_elong to generate aspect ratios and tilt angles for elongated grains</span>
+<span class="sd">            - Ensures voxel sizes are cubic and sufficient to voxelate the smallest grain</span>
+<span class="sd">            - Raises ValueError if RVE volume is too small, voxel size is too large, or cutoff ranges are too narrow</span>
+<span class="sd">            - Handles legacy and modern descriptor naming conventions</span>
+<span class="sd">            - Supports free-form grain generation if the &#39;Free&#39; grain type is specified</span>
 <span class="sd">            &quot;&quot;&quot;</span>
 
             <span class="k">def</span><span class="w"> </span><span class="nf">gen_data_basic</span><span class="p">(</span><span class="n">pdict</span><span class="p">):</span>
-<span class="w">                </span><span class="sd">&quot;&quot;&quot;Computes number of particles according to equivalent diameter distribution</span>
-<span class="sd">                   and initializes particle ensemble with individual diameters approximating</span>
-<span class="sd">                   this lognormal distribution.</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Computes the number of particles according to the equivalent diameter distribution</span>
+<span class="sd">                and initializes a particle ensemble with individual diameters approximating</span>
+<span class="sd">                a log-normal distribution.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                  pdict : dict</span>
+<span class="sd">                    Dictionary containing phase index (&#39;Phase&#39;) and grain type information (&#39;Type&#39;)</span>
+<span class="sd">                    for which particles are being generated.</span>
+
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                  pdict : dict</span>
+<span class="sd">                    Updated dictionary including:</span>
+<span class="sd">                      Number : int</span>
+<span class="sd">                        Total number of particles generated for the phase</span>
+<span class="sd">                      Equivalent_diameter : list of float</span>
+<span class="sd">                        List of individual particle diameters according to the log-normal distribution</span>
+
+<span class="sd">                Notes</span>
+<span class="sd">                -----</span>
+<span class="sd">                  - Ensures voxel sizes are cubic and sufficient to voxelate the smallest grain.</span>
+<span class="sd">                  - Raises ValueError if RVE volume is too small or voxel size is larger than the minimum grain size.</span>
+<span class="sd">                  - Issues warnings if voxelation may be poor or if large grains appear in a periodic RVE.</span>
+<span class="sd">                  - Uses rounding to keep total particle volume consistent with volume fraction.</span>
 <span class="sd">                &quot;&quot;&quot;</span>
                 <span class="c1"># Compute the Log-normal CDF according to parameters for equiv. diameter distrib.</span>
                 <span class="n">xaxis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
@@ -278,6 +329,21 @@
                 <span class="k">return</span> <span class="n">pdict</span>
 
             <span class="k">def</span><span class="w"> </span><span class="nf">gen_data_elong</span><span class="p">(</span><span class="n">pdict</span><span class="p">):</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Generate tilt angles and aspect ratios for elongated particles, and compute</span>
+<span class="sd">                corresponding major and minor axes lengths.</span>
+
+<span class="sd">                Parameters</span>
+<span class="sd">                ----------</span>
+<span class="sd">                pdict : dict</span>
+<span class="sd">                    Dictionary containing particle information, including number and equivalent diameters.</span>
+
+<span class="sd">                Returns</span>
+<span class="sd">                -------</span>
+<span class="sd">                pdict : dict</span>
+<span class="sd">                    Updated dictionary including &#39;Major_diameter&#39;, &#39;Minor_diameter1&#39;, &#39;Minor_diameter2&#39;,</span>
+<span class="sd">                    and &#39;Tilt angle&#39; for each particle.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
                 <span class="c1"># Tilt angle statistics</span>
                 <span class="c1"># Sample from Normal distribution: It takes mean and std of normal distribution</span>
                 <span class="n">tilt_angle</span> <span class="o">=</span> <span class="p">[]</span>
@@ -499,25 +565,48 @@
 <div class="viewcode-block" id="mesh_creator">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.mesh_creator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">mesh_creator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a mesh object for voxel-based microstructure representation</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dim : tuple of int</span>
+<span class="sd">        3-tuple representing the number of voxels along each Cartesian direction</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dim : tuple of int</span>
+<span class="sd">        Dimension tuple: number of voxels in each Cartesian direction</span>
+<span class="sd">    nvox : int</span>
+<span class="sd">        Total number of voxels</span>
+<span class="sd">    phases : ndarray</span>
+<span class="sd">        Field data storing phase numbers for each voxel</span>
+<span class="sd">    grains : ndarray</span>
+<span class="sd">        Field data storing grain numbers for each voxel</span>
+<span class="sd">    voxel_dict : dict</span>
+<span class="sd">        Dictionary mapping voxel number to associated nodes</span>
+<span class="sd">    grain_dict : dict</span>
+<span class="sd">        Dictionary mapping grain number to associated voxels</span>
+<span class="sd">    grain_phase_dict : dict</span>
+<span class="sd">        Dictionary storing phase per grain</span>
+<span class="sd">    grain_ori_dict : dict</span>
+<span class="sd">        Dictionary storing orientation per grain</span>
+<span class="sd">    vox_center_dict : dict</span>
+<span class="sd">        Dictionary storing center coordinates of each voxel</span>
+<span class="sd">    nodes : ndarray</span>
+<span class="sd">        Array of nodal positions</span>
+<span class="sd">    nodes_smooth : ndarray</span>
+<span class="sd">        Array of nodal positions after smoothing grain boundaries</span>
+<span class="sd">    prec_vf_voxels : float</span>
+<span class="sd">        Actual volume fraction of precipitates in voxelated structure</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Raises ValueError if dim is not a 3-tuple</span>
+<span class="sd">    - Initializes data structures to store mesh, grains, phases, and nodes</span>
+<span class="sd">    - voxel_dict is initialized as defaultdict(list) to store node lists per voxel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a mesh object.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        dim: 3-tuple for dimensions of mesh (numbers of voxels in each Cartesian direction)</span>
-
-<span class="sd">        Attributes</span>
-<span class="sd">        ----------</span>
-<span class="sd">        self.dim = dim  # dimension tuple: number of voxels in each Cartesian direction</span>
-<span class="sd">        self.nvox = np.prod(dim)  # number of voxels</span>
-<span class="sd">        self.phases = np.zeros(dim, dtype=int)  # field data with phase numbers</span>
-<span class="sd">        self.grains = np.zeros(dim, dtype=int)  # field data with grain numbers</span>
-<span class="sd">        self.voxel_dict = dict()  # stores nodes assigned to each voxel (key; voxel number:int)</span>
-<span class="sd">        self.grain_dict = dict()  # stored voxels assigned to each grain (key: grain number:int</span>
-<span class="sd">        self.nodes = None  # array of nodal positions</span>
-<span class="sd">        self.nodes_smooth = None  # array of nodal positions after smoothening grain boundaries</span>
-<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dimension dim must be a 3-tuple, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -539,15 +628,24 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.mesh_creator.get_ind">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_ind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">addr</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the index in an array from a generic address.</span>
+<span class="sd">        Convert a voxel address to a flat array index</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        addr</span>
+<span class="sd">        addr : int or tuple of int</span>
+<span class="sd">            Address of the voxel. Can be a single integer index or a 3-tuple (i, j, k)</span>
+<span class="sd">            representing voxel coordinates along each Cartesian axis</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
+<span class="sd">        ind : int or None</span>
+<span class="sd">            Flattened array index corresponding to the voxel address.</span>
+<span class="sd">            Returns None if addr is None, returns addr unchanged if addr is an empty list</span>
 
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Assumes row-major ordering: index = i*dim[1]*dim[2] + j*dim[1] + k</span>
+<span class="sd">        - Raises ValueError if addr is not a single integer or a 3-tuple</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">addr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ind</span> <span class="o">=</span> <span class="kc">None</span>
@@ -564,15 +662,30 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.mesh_creator.create_voxels">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_voxels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_box</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generates voxels inside the defined RVE (Simulation box)</span>
+<span class="sd">        Generate voxels and nodes inside the defined RVE (simulation box)</span>
 
-<span class="sd">        :param sim_box: Simulation box representing RVE dimensions</span>
-<span class="sd">        :type sim_box: :obj:`entities.Cuboid`</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sim_box : entities.Cuboid</span>
+<span class="sd">            Simulation box object representing the RVE dimensions</span>
 
-<span class="sd">        :returns: * Node list containing coordinates.</span>
-<span class="sd">                  * Element dictionary containing element IDs and nodal connectivities.</span>
-<span class="sd">                  * Voxel dictionary containing voxel ID and center coordinates.</span>
-<span class="sd">        :rtype: Tuple of Python dictionaries.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            Populates the mesh_creator object with:</span>
+<span class="sd">            - nodes : ndarray</span>
+<span class="sd">                Array of nodal coordinates</span>
+<span class="sd">            - voxel_dict : dict</span>
+<span class="sd">                Dictionary mapping voxel ID to list of node IDs</span>
+<span class="sd">            - vox_center_dict : dict</span>
+<span class="sd">                Dictionary mapping voxel ID to center coordinates</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Nodes are generated along Cartesian axes with spacing defined by dim</span>
+<span class="sd">        - Voxel centers are computed as midpoint of voxel corners</span>
+<span class="sd">        - 8-node hexahedral (C3D8) element connectivity is maintained</span>
+<span class="sd">        - Duplicate nodes are avoided using verticesDict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Generating voxels inside RVE&#39;</span><span class="p">)</span>
         <span class="c1"># generate nodes of all voxels from RVE side dimensions</span>
@@ -630,9 +743,51 @@
               <span class="n">periodicity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">VF</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">phasename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">phasenum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
               <span class="n">save_file</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    grains = [sigma, loc , scale of lognorm distrib. of equiv. diameter]</span>
-<span class="sd">    ar = [sigma, loc, scale of logorm distrib of aspect ratio]</span>
-<span class="sd">    omega = [kappa, loc of von Mises distrib. of tilt angle]</span>
+<span class="sd">    Create a dictionary containing statistical grain and RVE information</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    grains : list of float</span>
+<span class="sd">        Parameters [sigma, loc, scale] of lognormal distribution for equivalent diameter</span>
+<span class="sd">    ar : list of float, optional</span>
+<span class="sd">        Parameters [sigma, loc, scale] of lognormal distribution for aspect ratio (required for Elongated grains)</span>
+<span class="sd">    omega : list of float, optional</span>
+<span class="sd">        Parameters [kappa, loc] of von Mises distribution for tilt angle (required for Elongated grains)</span>
+<span class="sd">    deq_min, deq_max : float, optional</span>
+<span class="sd">        Minimum and maximum cutoff for equivalent diameter</span>
+<span class="sd">    asp_min, asp_max : float, optional</span>
+<span class="sd">        Minimum and maximum cutoff for aspect ratio</span>
+<span class="sd">    omega_min, omega_max : float, optional</span>
+<span class="sd">        Minimum and maximum cutoff for tilt angle</span>
+<span class="sd">    size : int, optional</span>
+<span class="sd">        Side length of cubic RVE</span>
+<span class="sd">    voxels : int, optional</span>
+<span class="sd">        Number of voxels per side of RVE</span>
+<span class="sd">    gtype : str, optional</span>
+<span class="sd">        Grain type, either &#39;Elongated&#39; or &#39;Equiaxed&#39;</span>
+<span class="sd">    rveunit : str, optional</span>
+<span class="sd">        Unit of RVE dimensions (&#39;um&#39; or &#39;mm&#39;)</span>
+<span class="sd">    periodicity : bool or str, optional</span>
+<span class="sd">        Whether RVE is periodic</span>
+<span class="sd">    VF : float, optional</span>
+<span class="sd">        Volume fraction of phase</span>
+<span class="sd">    phasename : str, optional</span>
+<span class="sd">        Name of phase</span>
+<span class="sd">    phasenum : int, optional</span>
+<span class="sd">        Phase number</span>
+<span class="sd">    save_file : bool, optional</span>
+<span class="sd">        If True, save the dictionary as JSON</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ms_stats : dict</span>
+<span class="sd">        Dictionary containing statistical grain data, RVE info, simulation settings, and phase info</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Checks consistency of grain type and required parameters</span>
+<span class="sd">    - Sets default cutoff values if not provided</span>
+<span class="sd">    - Supports saving statistical info to JSON</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># type of grains either &#39;Elongated&#39; or &#39;Equiaxed&#39;</span>
@@ -711,6 +866,37 @@
 <div class="viewcode-block" id="NodeSets">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.NodeSets">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">NodeSets</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Identify nodes on faces of a cuboidal mesh and store them in face-specific sets</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nodes : ndarray</span>
+<span class="sd">        Array of nodal coordinates of shape (n_nodes, 3)</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    F0yz, F0yz_full : list of int</span>
+<span class="sd">        Nodes on left face</span>
+<span class="sd">    F1yz, F1yz_full : list of int</span>
+<span class="sd">        Nodes on right face</span>
+<span class="sd">    Fx0z, Fx0z_full : list of int</span>
+<span class="sd">        Nodes on bottom face</span>
+<span class="sd">    Fx1z, Fx1z_full : list of int</span>
+<span class="sd">        Nodes on top face</span>
+<span class="sd">    Fxy0, Fxy0_full : list of int</span>
+<span class="sd">        Nodes on rear face</span>
+<span class="sd">    Fxy1, Fxy1_full : list of int</span>
+<span class="sd">        Nodes on front face</span>
+<span class="sd">    surfSet : list of int</span>
+<span class="sd">        All nodes on any face</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Uses np.isclose to identify nodes lying on the boundaries</span>
+<span class="sd">    - Each *_full list keeps a copy of the original face node indices</span>
+<span class="sd">    - surfSet includes all nodes belonging to any face</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">F0yz</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># left nodes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">F0yz_full</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># left nodes copy</span>
@@ -934,8 +1120,25 @@
 <div class="viewcode-block" id="NodeSets.CreatePeriodicNodeSets">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.NodeSets.CreatePeriodicNodeSets">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">CreatePeriodicNodeSets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nodes</span><span class="p">,</span> <span class="n">sortCoord1</span><span class="p">,</span> <span class="n">sortCoord2</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">):</span>
-        <span class="c1"># Creates a List of Sorted Nodes with respect to sortCoord1 and sortCoord2 for faces</span>
-        <span class="c1"># Input: Nodeset of surface nodes</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a sorted list of nodes for a surface to facilitate periodic boundary conditions</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Nodes : list of int</span>
+<span class="sd">            List of all node indices in the mesh</span>
+<span class="sd">        sortCoord1 : list or ndarray</span>
+<span class="sd">            Coordinates of nodes along the first sorting direction</span>
+<span class="sd">        sortCoord2 : list or ndarray</span>
+<span class="sd">            Coordinates of nodes along the second sorting direction</span>
+<span class="sd">        NodeSet : list of int</span>
+<span class="sd">            Node indices on a surface to be sorted</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sortedList : list of int</span>
+<span class="sd">            Node indices sorted according to sortCoord1 and sortCoord2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
         <span class="n">startList</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">sortedList</span> <span class="o">=</span> <span class="p">[]</span>
@@ -952,7 +1155,23 @@
 <div class="viewcode-block" id="NodeSets.CreatePeriodicEdgeSets">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.NodeSets.CreatePeriodicEdgeSets">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">CreatePeriodicEdgeSets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Nodes</span><span class="p">,</span> <span class="n">sortCoord</span><span class="p">,</span> <span class="n">NodeSet</span><span class="p">):</span>
-        <span class="c1"># Creates a List of Sorted Nodes with respect to sortCoord for edges</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a sorted list of nodes along an edge to facilitate periodic boundary conditions</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Nodes : list of int</span>
+<span class="sd">            List of all node indices in the mesh</span>
+<span class="sd">        sortCoord : list or ndarray</span>
+<span class="sd">            Coordinates of nodes along the sorting direction</span>
+<span class="sd">        NodeSet : list of int</span>
+<span class="sd">            Node indices on the edge to be sorted</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sortedList : list of int</span>
+<span class="sd">            Node indices sorted according to sortCoord</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
         <span class="n">startList</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">sortedList</span> <span class="o">=</span> <span class="p">[]</span>
@@ -968,7 +1187,21 @@
 <div class="viewcode-block" id="NodeSets.RemoveItemInList">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.NodeSets.RemoveItemInList">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">RemoveItemInList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">NodeList</span><span class="p">,</span> <span class="n">ReplaceNodeList</span><span class="p">):</span>
-        <span class="c1"># remove set of nodes from list</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a set of nodes from a list of nodes</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        NodeList : list of int</span>
+<span class="sd">            Original list of node indices</span>
+<span class="sd">        ReplaceNodeList : list of int</span>
+<span class="sd">            Node indices to be removed from NodeList</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        NodeList : list of int</span>
+<span class="sd">            Updated list after removing the specified nodes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">ReplaceNodeList</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">NodeList</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>

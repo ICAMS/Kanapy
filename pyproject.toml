@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kanapy"
-version = "6.5.3.post1"
+version = "6.5.4"
 description = "Kanapy: Python package for microstructure analyse and generation of microstructure models"
 authors = [
     { name = "Alexander Hartmaier", email = "alexander.hartmaier@rub.de" },

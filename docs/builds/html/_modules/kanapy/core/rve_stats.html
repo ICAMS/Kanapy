@@ -97,15 +97,18 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.arr2mat">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">arr2mat</span><span class="p">(</span><span class="n">mc</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Converts a numpy array into a symmetric matrix.</span>
+<span class="sd">    Convert a 6-element numpy array into a 3x3 symmetric matrix</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    mc</span>
+<span class="sd">    mc : array-like of length 6</span>
+<span class="sd">        Input array containing the elements of a symmetric matrix in Voigt notation:</span>
+<span class="sd">        [M11, M22, M33, M23, M13, M12]</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-
+<span class="sd">    mat : ndarray of shape (3, 3)</span>
+<span class="sd">        Symmetric 3x3 matrix corresponding to the input array</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">mc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">4</span><span class="p">]],</span>
                      <span class="p">[</span><span class="n">mc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mc</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
@@ -116,8 +119,22 @@
 <div class="viewcode-block" id="con_fun">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.con_fun">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">con_fun</span><span class="p">(</span><span class="n">mc</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constraint: matrix must be positive definite, for symmetric matrix all eigenvalues</span>
-<span class="sd">    must be positive. Constraint will penalize negative eigenvalues.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Constraint function: penalizes non-positive-definite matrices</span>
+
+<span class="sd">    For a symmetric matrix, all eigenvalues must be positive. This constraint</span>
+<span class="sd">    returns a large negative value if the matrix has negative eigenvalues.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mc : array-like of length 6</span>
+<span class="sd">        Input array representing a symmetric 3x3 matrix in Voigt notation</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The smallest eigenvalue multiplied by 1000, serving as a penalty for</span>
+<span class="sd">        negative eigenvalues</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">arr2mat</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">eigval</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span></div>
@@ -128,20 +145,24 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.find_rot_axis">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_rot_axis</span><span class="p">(</span><span class="n">len_a</span><span class="p">,</span> <span class="n">len_b</span><span class="p">,</span> <span class="n">len_c</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Find the rotation axis of an ellipsoid defined be three semi-axes and return the</span>
-<span class="sd">    equivalent values for the semi-axes along and transversal to the rotation axis.</span>
+<span class="sd">    Determine the rotation axis of an ellipsoid based on its three semi-axes</span>
+
+<span class="sd">    The function identifies the axis of approximate rotational symmetry. If no</span>
+<span class="sd">    clear symmetry is found, the longest axis is chosen as the rotation axis.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    len_a</span>
-<span class="sd">    len_b</span>
-<span class="sd">    len_c</span>
+<span class="sd">    len_a : float</span>
+<span class="sd">        Length of the first semi-axis</span>
+<span class="sd">    len_b : float</span>
+<span class="sd">        Length of the second semi-axis</span>
+<span class="sd">    len_c : float</span>
+<span class="sd">        Length of the third semi-axis</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    rot_ax</span>
-<span class="sd">    trans_ax</span>
-
+<span class="sd">    irot : int</span>
+<span class="sd">        Index of the rotation axis (0 for a, 1 for b, 2 for c)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ar_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_a</span> <span class="o">/</span> <span class="n">len_b</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_b</span> <span class="o">/</span> <span class="n">len_a</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">),</span>
                <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_b</span> <span class="o">/</span> <span class="n">len_c</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">len_c</span> <span class="o">/</span> <span class="n">len_b</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">),</span>
@@ -165,6 +186,25 @@
 <div class="viewcode-block" id="get_ln_param">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.get_ln_param">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_ln_param</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute log-normal parameters (sigma and scale) from a dataset</span>
+
+<span class="sd">    This function calculates the parameters for a log-normal distribution</span>
+<span class="sd">    by taking the logarithm of positive data points and computing the</span>
+<span class="sd">    standard deviation and median-based scale.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : array-like</span>
+<span class="sd">        Input data array. Values should be non-negative.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sig : float</span>
+<span class="sd">        Standard deviation of the log-transformed data</span>
+<span class="sd">    scale : float</span>
+<span class="sd">        Scale parameter of the log-normal distribution (exp of median)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># sig, loc, sc = lognorm.fit(sdict[&#39;eqd&#39;])</span>
     <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">data</span> <span class="o">&gt;</span> <span class="mf">1.e-5</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">log_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
@@ -177,17 +217,22 @@
 <div class="viewcode-block" id="pts_in_ellips">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.pts_in_ellips">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pts_in_ellips</span><span class="p">(</span><span class="n">Mcomp</span><span class="p">,</span> <span class="n">pts</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Check how well points fulfill equation of ellipsoid</span>
-<span class="sd">    (pts-ctr)^T M (pts-ctr) = 1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check how well a set of points satisfy the equation of an ellipsoid</span>
+<span class="sd">    (pts - ctr)^T M (pts - ctr) = 1</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    Mcomp</span>
-<span class="sd">    pts</span>
+<span class="sd">    Mcomp : array-like, shape (6,)</span>
+<span class="sd">        Components of a symmetric matrix representing the ellipsoid.</span>
+<span class="sd">    pts : array-like, shape (N, 3)</span>
+<span class="sd">        Coordinates of points to be tested.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-
+<span class="sd">    score : float</span>
+<span class="sd">        Average deviation of points from the ellipsoid equation. Lower values</span>
+<span class="sd">        indicate points are closer to lying on the ellipsoid surface.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">Mcomp</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Matrix components must be given as array with shape (6,), not </span><span class="si">{</span><span class="n">Mcomp</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -205,16 +250,18 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.get_diameter">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_diameter</span><span class="p">(</span><span class="n">pts</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get estimate of largest diameter of a set of points.</span>
+<span class="sd">    Estimate the largest diameter of a set of points along Cartesian axes</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    pts : (N, dim) ndarray</span>
+<span class="sd">    pts : ndarray, shape (N, dim)</span>
 <span class="sd">        Point set in dim dimensions</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    diameter : (dim)-ndarray</span>
-
+<span class="sd">    diameter : ndarray, shape (dim,)</span>
+<span class="sd">        Vector connecting the two points with the largest separation along</span>
+<span class="sd">        the axis of maximum extent</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ind0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with lowest coordinate for each Cartesian axis</span>
     <span class="n">ind1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with highest coordinate for each Cartesian axis</span>
@@ -228,21 +275,21 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.project_pts">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">project_pts</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">ctr</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Project points (pts) to plane defined via center (ctr) and normal vector (axis).</span>
+<span class="sd">    Project points to a plane defined by a center point and a normal vector</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    pts : (N, dim) ndarray</span>
+<span class="sd">    pts : ndarray, shape (N, dim)</span>
 <span class="sd">        Point set in dim dimensions</span>
-<span class="sd">    ctr : (dim)-ndarray</span>
+<span class="sd">    ctr : ndarray, shape (dim,)</span>
 <span class="sd">        Center point of the projection plane</span>
-<span class="sd">    axis : (dim)-ndarray</span>
-<span class="sd">        Unit vector for plane normal</span>
+<span class="sd">    axis : ndarray, shape (dim,)</span>
+<span class="sd">        Unit vector normal to the plane</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    ppt : (N, dim) ndarray</span>
-<span class="sd">        Points projected to plane with normal axis</span>
+<span class="sd">    ppt : ndarray, shape (N, dim)</span>
+<span class="sd">        Points projected onto the plane</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dvec</span> <span class="o">=</span> <span class="n">pts</span> <span class="o">-</span> <span class="n">ctr</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># distance vector b/w points and center point</span>
     <span class="n">pdist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dvec</span><span class="p">])</span>
@@ -254,9 +301,24 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_fit_ellipse_direct</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Direct ellipse fit (Fitzgibbon 1999) in normalised coords</span>
-<span class="sd">    Fit conic: A x^2 + B x y + C y^2 + D x + E y + F = 0, mit 4AC - B^2 &gt; 0 (Ellipsis).</span>
-<span class="sd">    Return: Parameter (A,B,C,D,E,F) in normalised coords</span>
+<span class="sd">    Fit an ellipse directly in normalized coordinates using Fitzgibbon 1999 method</span>
+
+<span class="sd">    Fits the conic:</span>
+<span class="sd">        A x^2 + B x y + C y^2 + D x + E y + F = 0</span>
+<span class="sd">    with the ellipse constraint: 4*A*C - B^2 &gt; 0</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : ndarray, shape (N,)</span>
+<span class="sd">        x-coordinates of points</span>
+<span class="sd">    y : ndarray, shape (N,)</span>
+<span class="sd">        y-coordinates of points</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    params : ndarray, shape (6,)</span>
+<span class="sd">        Ellipse parameters (A, B, C, D, E, F) in normalized coordinates,</span>
+<span class="sd">        scaled so that F = 1</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
@@ -285,6 +347,20 @@
     <span class="k">return</span> <span class="n">cand</span> <span class="o">/</span> <span class="n">cand</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_params_to_conic3</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="p">,</span><span class="n">F</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert ellipse/conic parameters to a 3x3 homogeneous coordinate matrix</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A, B, C, D, E, F : float</span>
+<span class="sd">        Parameters of the conic equation</span>
+<span class="sd">        A x^2 + B x y + C y^2 + D x + E y + F = 0</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    conic_mat : ndarray, shape (3, 3)</span>
+<span class="sd">        3x3 conic matrix in homogeneous coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># 3x3 conic matrix in homogeneous coords</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
         <span class="p">[</span><span class="n">A</span><span class="p">,</span>  <span class="n">B</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">D</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span>
@@ -293,15 +369,50 @@
     <span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_conic3_to_params</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a 3x3 homogeneous conic matrix to conic parameters</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    K : ndarray, shape (3,3)</span>
+<span class="sd">        3x3 conic matrix in homogeneous coordinates</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    A, B, C, D, E, F : float</span>
+<span class="sd">        Parameters of the conic equation</span>
+<span class="sd">        A x^2 + B x y + C y^2 + D x + E y + F = 0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">];</span> <span class="n">B</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">];</span> <span class="n">C</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">D</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">];</span> <span class="n">E</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">K</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">];</span> <span class="n">F</span> <span class="o">=</span> <span class="n">K</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">D</span><span class="p">,</span><span class="n">E</span><span class="p">,</span><span class="n">F</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_transform_conic3</span><span class="p">(</span><span class="n">K_prime</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    K&#39; in normalized coords (x&#39;=(x-mu)/scale). Original x = S x&#39; + mu.</span>
-<span class="sd">    Homogeneous Affine-Transform: K = T^{-T} K&#39; T^{-1},</span>
-<span class="sd">    with T = [[sx,0,mu_x],[0,sy,mu_y],[0,0,1]].</span>
+<span class="sd">    Transform a conic matrix from normalized coordinates back to original coordinates</span>
+
+<span class="sd">    The conic in normalized coordinates K&#39; corresponds to points</span>
+<span class="sd">    x&#39; = (x - mu) / scale. In homogeneous coordinates, the original conic</span>
+<span class="sd">    matrix K is obtained by an affine transformation:</span>
+<span class="sd">        K = T^{-T} @ K&#39; @ T^{-1}</span>
+<span class="sd">    where</span>
+<span class="sd">        T = [[sx, 0,  mu_x],</span>
+<span class="sd">             [0,  sy, mu_y],</span>
+<span class="sd">             [0,  0,  1  ]]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    K_prime : (3,3) ndarray</span>
+<span class="sd">        Conic matrix in normalized coordinates.</span>
+<span class="sd">    mu : array-like, shape (2,)</span>
+<span class="sd">        Translation vector (mu_x, mu_y) used in normalization.</span>
+<span class="sd">    scale : array-like, shape (2,)</span>
+<span class="sd">        Scaling factors (sx, sy) used in normalization.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    K : (3,3) ndarray</span>
+<span class="sd">        Conic matrix in original coordinates</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">mx</span><span class="p">,</span> <span class="n">my</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>   <span class="nb">float</span><span class="p">(</span><span class="n">mu</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -313,8 +424,27 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_conic3_to_geometric</span><span class="p">(</span><span class="n">K</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    K (3x3) -&gt; Centre, principal directions, semi axes.</span>
-<span class="sd">    Ellipsis condition: Q (2x2) pos. definite, and F_c &lt; 0.</span>
+<span class="sd">    Convert a 3x3 conic matrix to geometric ellipse parameters</span>
+
+<span class="sd">    Extracts the ellipse center, principal directions, and semi-axes from</span>
+<span class="sd">    a 3x3 conic matrix K. Ellipse validity requires Q (top-left 2x2) to be</span>
+<span class="sd">    positive definite and the value at the center F_c &lt; 0.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    K : (3,3) ndarray</span>
+<span class="sd">        Conic matrix in homogeneous coordinates</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    a : float</span>
+<span class="sd">        Semi-major axis length</span>
+<span class="sd">    b : float</span>
+<span class="sd">        Semi-minor axis length</span>
+<span class="sd">    u_major : (2,) ndarray</span>
+<span class="sd">        Unit vector along the major axis</span>
+<span class="sd">    u_minor : (2,) ndarray</span>
+<span class="sd">        Unit vector along the minor axis</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">Q</span> <span class="o">=</span> <span class="n">K</span><span class="p">[:</span><span class="mi">2</span><span class="p">,:</span><span class="mi">2</span><span class="p">]</span>
     <span class="n">q</span> <span class="o">=</span> <span class="n">K</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
@@ -356,11 +486,34 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.get_grain_geom">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_grain_geom</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;raw&#39;</span><span class="p">,</span> <span class="n">two_dim</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Fit of an ellipsis to the 2D convex hull of grain pixels.</span>
+<span class="sd">    Fit an ellipse to the 2D convex hull of grain pixels</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">      a, b: semi-axes with a &gt;= b</span>
-<span class="sd">      u_major, u_minor: unit vector of principal directions</span>
+<span class="sd">    Depending on the chosen method, the ellipse can be obtained from</span>
+<span class="sd">    direct fitting, PCA, or a rectangular bounding box. Currently,</span>
+<span class="sd">    3D grains are not supported.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    points : (N, 2) ndarray</span>
+<span class="sd">        Coordinates of points on the grain hull</span>
+<span class="sd">    method : str, default=&#39;raw&#39;</span>
+<span class="sd">        Method to obtain ellipse parameters:</span>
+<span class="sd">        - &#39;raw&#39;: rectangular bounding box</span>
+<span class="sd">        - &#39;pca&#39;: principal component analysis</span>
+<span class="sd">        - &#39;ell&#39;, &#39;ellipsis&#39;, &#39;e&#39;: direct ellipse fitting</span>
+<span class="sd">    two_dim : bool, default=False</span>
+<span class="sd">        If True, process as 2D data; 3D is not yet implemented</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ea : float</span>
+<span class="sd">        Semi-major axis length (a &gt;= b)</span>
+<span class="sd">    eb : float</span>
+<span class="sd">        Semi-minor axis length</span>
+<span class="sd">    va : (2,) ndarray</span>
+<span class="sd">        Unit vector along the major axis</span>
+<span class="sd">    vb : (2,) ndarray</span>
+<span class="sd">        Unit vector along the minor axis</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">two_dim</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Method &quot;get_grain_geom&quot; not implemented in 3D yet.&#39;</span><span class="p">)</span>
@@ -409,6 +562,47 @@
 <div class="viewcode-block" id="bbox">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.bbox">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">bbox</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">return_vector</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">two_dim</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Approximate the smallest rectangular cuboid around points of a grain</span>
+
+<span class="sd">    The function computes the principal axes and lengths of a cuboid</span>
+<span class="sd">    that encloses the grain, allowing analysis of prolate (aspect ratio &gt; 1)</span>
+<span class="sd">    and oblate (aspect ratio &lt; 1) particles. For 2D points, only two axes are returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pts : (N, dim) ndarray</span>
+<span class="sd">        Coordinates of points representing the grain</span>
+<span class="sd">    return_vector : bool, default=False</span>
+<span class="sd">        If True, return the unit vectors along each principal axis</span>
+<span class="sd">    two_dim : bool, default=False</span>
+<span class="sd">        If True, treat points as 2D; otherwise, treat as 3D</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    If two_dim is True:</span>
+<span class="sd">        len_a : float</span>
+<span class="sd">            Semi-major axis length</span>
+<span class="sd">        len_b : float</span>
+<span class="sd">            Semi-minor axis length</span>
+<span class="sd">        ax_a : (dim,) ndarray, optional</span>
+<span class="sd">            Unit vector along major axis (only if return_vector=True)</span>
+<span class="sd">        ax_b : (dim,) ndarray, optional</span>
+<span class="sd">            Unit vector along minor axis (only if return_vector=True)</span>
+<span class="sd">    If two_dim is False:</span>
+<span class="sd">        len_a : float</span>
+<span class="sd">            Semi-major axis length</span>
+<span class="sd">        len_b : float</span>
+<span class="sd">            Semi-intermediate axis length</span>
+<span class="sd">        len_c : float</span>
+<span class="sd">            Semi-minor axis length</span>
+<span class="sd">        ax_a : (3,) ndarray, optional</span>
+<span class="sd">            Unit vector along major axis (only if return_vector=True)</span>
+<span class="sd">        ax_b : (3,) ndarray, optional</span>
+<span class="sd">            Unit vector along intermediate axis (only if return_vector=True)</span>
+<span class="sd">        ax_c : (3,) ndarray, optional</span>
+<span class="sd">            Unit vector along minor axis (only if return_vector=True)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Approximate smallest rectangular cuboid around points of grains</span>
     <span class="c1"># to analyse prolate (aspect ratio &gt; 1) and oblate (a.r. &lt; 1) particles correctly</span>
     <span class="n">dia</span> <span class="o">=</span> <span class="n">get_diameter</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>  <span class="c1"># approx. of largest diameter of grain</span>
@@ -442,6 +636,29 @@
 <div class="viewcode-block" id="calc_stats_dict">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.rve_stats.calc_stats_dict">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">calc_stats_dict</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">eqd</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate statistical descriptors of grain semi-axes and equivalent diameters</span>
+
+<span class="sd">    Computes log-normal parameters, identifies the rotation axis, and calculates aspect ratios</span>
+<span class="sd">    for a set of grain semi-axes and equivalent diameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : ndarray</span>
+<span class="sd">        Array of semi-axis a lengths</span>
+<span class="sd">    b : ndarray</span>
+<span class="sd">        Array of semi-axis b lengths</span>
+<span class="sd">    c : ndarray</span>
+<span class="sd">        Array of semi-axis c lengths</span>
+<span class="sd">    eqd : ndarray</span>
+<span class="sd">        Array of equivalent diameters</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sd : dict</span>
+<span class="sd">        Dictionary containing sorted semi-axes, equivalent diameters, their log-normal</span>
+<span class="sd">        parameters (sigma and scale), rotation axis index, aspect ratios, and related statistics</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">arr_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
     <span class="n">arr_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
     <span class="n">arr_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
@@ -492,20 +709,34 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">get_stats_part</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">minval</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Extract statistics about the microstructure from particles. If inner structure is contained</span>
-<span class="sd">    by fitting a 3D ellipsoid to each structure.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract statistics of particles and optionally their inner structures</span>
+
+<span class="sd">    Fits a 3D ellipsoid to each particle or its inner structure, calculates</span>
+<span class="sd">    semi-axes, equivalent diameters, and statistical descriptors of the microstructure.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    part</span>
-<span class="sd">    minval</span>
-<span class="sd">    show_plot</span>
-<span class="sd">    verbose</span>
-<span class="sd">    ax_max</span>
+<span class="sd">    part : list</span>
+<span class="sd">        List of particle objects, each with attributes `a`, `b`, `c` or `inner.points`</span>
+<span class="sd">    iphase : int, optional</span>
+<span class="sd">        Phase number to restrict analysis to, default is None (all phases)</span>
+<span class="sd">    ax_max : float, optional</span>
+<span class="sd">        Maximum allowed semi-axis, used to adjust minval for numerical stability</span>
+<span class="sd">    minval : float, optional</span>
+<span class="sd">        Minimum allowed eigenvalue for positive-definiteness, default 1.e-5</span>
+<span class="sd">    show_plot : bool, optional</span>
+<span class="sd">        Whether to display plots of the statistics, default True</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        If True, print detailed information during processing, default False</span>
+<span class="sd">    save_files : bool, optional</span>
+<span class="sd">        If True, save plots as files, default False</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-
+<span class="sd">    part_stats_dict : dict</span>
+<span class="sd">        Dictionary containing semi-axes, equivalent diameters, log-normal parameters,</span>
+<span class="sd">        rotation axis index, aspect ratios, and related statistics</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">ax_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">minval</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">ax_max</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
@@ -592,20 +823,33 @@
                   <span class="n">minval</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                   <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get statistics about the microstructure from voxels by analysing nodes at grain boundaries</span>
-<span class="sd">    and constructing a rectangular bounding box.</span>
+<span class="sd">    Extract statistics of the microstructure from voxels</span>
+
+<span class="sd">    Analyses nodes at grain boundaries, constructs a rectangular bounding box,</span>
+<span class="sd">    and calculates semi-axes, equivalent diameters, and statistical descriptors.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    mesh</span>
-<span class="sd">    minval</span>
-<span class="sd">    show_plot</span>
-<span class="sd">    verbose</span>
-<span class="sd">    ax_max</span>
+<span class="sd">    mesh : object</span>
+<span class="sd">        Mesh object containing grain and voxel information</span>
+<span class="sd">    iphase : int, optional</span>
+<span class="sd">        Phase number to restrict analysis to, default is None (all phases)</span>
+<span class="sd">    ax_max : float, optional</span>
+<span class="sd">        Maximum allowed semi-axis, used to adjust minval for numerical stability</span>
+<span class="sd">    minval : float, optional</span>
+<span class="sd">        Minimum allowed eigenvalue for positive-definiteness, default 1.e-5</span>
+<span class="sd">    show_plot : bool, optional</span>
+<span class="sd">        Whether to display plots of the statistics, default True</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        If True, print detailed information during processing, default False</span>
+<span class="sd">    save_files : bool, optional</span>
+<span class="sd">        If True, save plots as files, default False</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-
+<span class="sd">    vox_stats_dict : dict</span>
+<span class="sd">        Dictionary containing semi-axes, equivalent diameters, log-normal parameters,</span>
+<span class="sd">        rotation axis index, aspect ratios, and related statistics</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">gfac</span> <span class="o">=</span> <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
     <span class="n">arr_a</span> <span class="o">=</span> <span class="p">[]</span>
@@ -720,21 +964,37 @@
                    <span class="n">phase_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">minval</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Extract statistics about the microstructure from polyhedral grains</span>
-<span class="sd">        by fitting a 3D ellipsoid to each polyhedron.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract statistics about the microstructure from polyhedral grains</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        geom</span>
-<span class="sd">        minval</span>
-<span class="sd">        show_plot</span>
-<span class="sd">        verbose</span>
-<span class="sd">        ax_max</span>
+<span class="sd">    Fits a 3D ellipsoid to each polyhedron to compute semi-axes, equivalent diameters,</span>
+<span class="sd">    and other statistical descriptors.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    grains : dict</span>
+<span class="sd">        Dictionary of polyhedral grains with &#39;Points&#39; for each grain</span>
+<span class="sd">    iphase : int, optional</span>
+<span class="sd">        Phase number to restrict analysis to, default is None (all phases)</span>
+<span class="sd">    phase_dict : dict, optional</span>
+<span class="sd">        Dictionary mapping grain ID to phase number, required if iphase is provided</span>
+<span class="sd">    ax_max : float, optional</span>
+<span class="sd">        Maximum allowed semi-axis, used to adjust minval for numerical stability</span>
+<span class="sd">    minval : float, optional</span>
+<span class="sd">        Minimum allowed eigenvalue for positive-definiteness, default 1.e-5</span>
+<span class="sd">    show_plot : bool, optional</span>
+<span class="sd">        Whether to display plots of the statistics, default True</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        If True, print detailed information during processing, default False</span>
+<span class="sd">    save_files : bool, optional</span>
+<span class="sd">        If True, save plots as files, default False</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    poly_stats_dict : dict</span>
+<span class="sd">        Dictionary containing semi-axes, equivalent diameters, log-normal parameters,</span>
+<span class="sd">        rotation axis index, aspect ratios, and related statistics</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">phase_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error in get_stats_poly: phase number provided, but no phase_dict present.&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ax_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

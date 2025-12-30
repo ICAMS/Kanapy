@@ -105,11 +105,19 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.self_closing_message">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">self_closing_message</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">4000</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Display a self-closing message box.</span>
+<span class="sd">    Display a temporary popup message box that closes automatically after a given duration</span>
 
-<span class="sd">    :param message: The message to be displayed.</span>
-<span class="sd">    :param duration: The time in milliseconds before the message box closes automatically.</span>
-<span class="sd">    :return: A reference to the popup window.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message : str</span>
+<span class="sd">        The message text to display in the popup window</span>
+<span class="sd">    duration : int, optional</span>
+<span class="sd">        Time in milliseconds before the message box closes automatically (default is 4000)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        The function creates and destroys a popup window; no value is returned</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">popup</span> <span class="o">=</span> <span class="n">Toplevel</span><span class="p">()</span>
     <span class="n">popup</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Information&quot;</span><span class="p">)</span>
@@ -135,6 +143,33 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.add_label_and_entry">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">add_label_and_entry</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">label_text</span><span class="p">,</span> <span class="n">entry_var</span><span class="p">,</span> <span class="n">entry_type</span><span class="o">=</span><span class="s2">&quot;entry&quot;</span><span class="p">,</span> <span class="n">bold</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a label and an input widget (entry, checkbox, or combobox) to a given frame</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    frame : tkinter.Frame</span>
+<span class="sd">        Parent frame where the widgets will be added</span>
+<span class="sd">    row : int</span>
+<span class="sd">        Row index in the frame grid layout</span>
+<span class="sd">    label_text : str or None</span>
+<span class="sd">        Text for the label; if None, no label is created</span>
+<span class="sd">    entry_var : tkinter variable</span>
+<span class="sd">        Variable bound to the input widget (e.g., StringVar, BooleanVar)</span>
+<span class="sd">    entry_type : str, optional</span>
+<span class="sd">        Type of input widget: &quot;entry&quot;, &quot;checkbox&quot;, or &quot;combobox&quot; (default is &quot;entry&quot;)</span>
+<span class="sd">    bold : bool, optional</span>
+<span class="sd">        Whether to display the label text in bold (default is False)</span>
+<span class="sd">    options : list, optional</span>
+<span class="sd">        List of selectable options when entry_type is &quot;combobox&quot;</span>
+<span class="sd">    col : int, optional</span>
+<span class="sd">        Column index for placing the label and entry in the grid (default is 0)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        The function adds widgets directly to the frame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">label_text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">label_font</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="s2">&quot;bold&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">bold</span> <span class="k">else</span> <span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
         <span class="n">ttk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">label_text</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">label_font</span><span class="p">)</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="n">col</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
@@ -159,6 +194,19 @@
 <div class="viewcode-block" id="parse_entry">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.parse_entry">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_entry</span><span class="p">(</span><span class="n">entry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a comma-separated string into a list of integers</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    entry : str</span>
+<span class="sd">        String of comma-separated integer values</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of int</span>
+<span class="sd">        List of integers parsed from the input string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)))</span></div>
 
 
@@ -166,8 +214,102 @@
 <div class="viewcode-block" id="particle_rve">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">particle_rve</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class for RVEs based on particle simulations</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for generating Representative Volume Elements (RVEs) based on particle simulations</span>
 <span class="sd">    first tab</span>
+
+<span class="sd">    This class defines the GUI logic and default parameters for building RVEs using</span>
+<span class="sd">    particle-based microstructure simulations. It manages various parameters such as</span>
+<span class="sd">    particle size distribution, aspect ratio, texture settings, and periodic boundary conditions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    app : tkinter.Tk or tkinter.Frame</span>
+<span class="sd">        Reference to the main Tkinter application instance.</span>
+<span class="sd">    notebook : ttk.Notebook</span>
+<span class="sd">        The notebook widget in which this tab (RVE setup) is placed.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    app : tkinter.Tk or tkinter.Frame</span>
+<span class="sd">        Main application reference.</span>
+<span class="sd">    ms : object or None</span>
+<span class="sd">        Placeholder for microstructure data.</span>
+<span class="sd">    ms_stats : object or None</span>
+<span class="sd">        Placeholder for microstructure statistical data.</span>
+<span class="sd">    ebsd : object or None</span>
+<span class="sd">        Placeholder for EBSD data (if used).</span>
+<span class="sd">    stats_canvas1 : tkinter.Canvas or None</span>
+<span class="sd">        Canvas for displaying statistical plots.</span>
+<span class="sd">    rve_canvas1 : tkinter.Canvas or None</span>
+<span class="sd">        Canvas for displaying the RVE visualization.</span>
+
+<span class="sd">    texture_var1 : tk.StringVar</span>
+<span class="sd">        Texture type, default &quot;random&quot;.</span>
+<span class="sd">    matname_var1 : tk.StringVar</span>
+<span class="sd">        Material name, default &quot;Simulanium&quot;.</span>
+<span class="sd">    nphases : tk.IntVar</span>
+<span class="sd">        Number of material phases, default 1.</span>
+<span class="sd">    ialloy : tk.IntVar</span>
+<span class="sd">        Alloy type indicator, default 2.</span>
+<span class="sd">    nvox_var1 : tk.IntVar</span>
+<span class="sd">        Number of voxels per dimension in the RVE, default 30.</span>
+<span class="sd">    size_var1 : tk.IntVar</span>
+<span class="sd">        Physical size of the RVE, default 30.</span>
+<span class="sd">    periodic_var1 : tk.BooleanVar</span>
+<span class="sd">        Whether to apply periodic boundary conditions, default True.</span>
+<span class="sd">    volume_fraction : tk.DoubleVar</span>
+<span class="sd">        Target total volume fraction, default 1.0.</span>
+<span class="sd">    vf_act : tk.DoubleVar</span>
+<span class="sd">        Actual volume fraction, initialized to 0.0.</span>
+
+<span class="sd">    eq_diameter_sig : tk.DoubleVar</span>
+<span class="sd">        Standard deviation of equivalent diameter distribution.</span>
+<span class="sd">    eq_diameter_scale : tk.DoubleVar</span>
+<span class="sd">        Scale parameter for equivalent diameter distribution.</span>
+<span class="sd">    eq_diameter_loc : tk.DoubleVar</span>
+<span class="sd">        Location parameter for equivalent diameter distribution.</span>
+<span class="sd">    eq_diameter_min : tk.DoubleVar</span>
+<span class="sd">        Minimum equivalent diameter.</span>
+<span class="sd">    eq_diameter_max : tk.DoubleVar</span>
+<span class="sd">        Maximum equivalent diameter.</span>
+<span class="sd">    eqd_act_sig : tk.DoubleVar</span>
+<span class="sd">        Active (fitted or adjusted) standard deviation for equivalent diameter.</span>
+<span class="sd">    eqd_act_scale : tk.DoubleVar</span>
+<span class="sd">        Active scale for equivalent diameter.</span>
+<span class="sd">    eqd_act_loc : tk.DoubleVar</span>
+<span class="sd">        Active location for equivalent diameter.</span>
+
+<span class="sd">    aspect_ratio_sig : tk.DoubleVar</span>
+<span class="sd">        Standard deviation for aspect ratio distribution.</span>
+<span class="sd">    aspect_ratio_scale : tk.DoubleVar</span>
+<span class="sd">        Scale parameter for aspect ratio distribution.</span>
+<span class="sd">    aspect_ratio_loc : tk.DoubleVar</span>
+<span class="sd">        Location parameter for aspect ratio distribution.</span>
+<span class="sd">    aspect_ratio_min : tk.DoubleVar</span>
+<span class="sd">        Minimum aspect ratio.</span>
+<span class="sd">    aspect_ratio_max : tk.DoubleVar</span>
+<span class="sd">        Maximum aspect ratio.</span>
+<span class="sd">    ar_act_sig : tk.DoubleVar</span>
+<span class="sd">        Active standard deviation for aspect ratio.</span>
+<span class="sd">    ar_act_scale : tk.DoubleVar</span>
+<span class="sd">        Active scale for aspect ratio.</span>
+<span class="sd">    ar_act_loc : tk.DoubleVar</span>
+<span class="sd">        Active location for aspect ratio.</span>
+
+<span class="sd">    tilt_angle_kappa : tk.DoubleVar</span>
+<span class="sd">        Concentration parameter for tilt angle distribution.</span>
+<span class="sd">    tilt_angle_loc : tk.DoubleVar</span>
+<span class="sd">        Mean (location) of tilt angle distribution in radians.</span>
+<span class="sd">    tilt_angle_min : tk.DoubleVar</span>
+<span class="sd">        Minimum tilt angle (0.0).</span>
+<span class="sd">    tilt_angle_max : tk.DoubleVar</span>
+<span class="sd">        Maximum tilt angle (π).</span>
+
+<span class="sd">    kernel_var1 : tk.StringVar</span>
+<span class="sd">        Orientation kernel width; depends on texture setting.</span>
+<span class="sd">    euler_var1 : tk.StringVar</span>
+<span class="sd">        Euler angles defining the texture orientation; depends on texture setting.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">,</span> <span class="n">notebook</span><span class="p">):</span>
@@ -337,6 +479,13 @@
 <div class="viewcode-block" id="particle_rve.close">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.close">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Quit and destroy the particle_rve GUI main window</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This method quits the Tkinter application and destroys the main window</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span></div>
 
@@ -344,19 +493,59 @@
 <div class="viewcode-block" id="particle_rve.update_kernel_var">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.update_kernel_var">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_kernel_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the kernel variable based on the current texture selection</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *args : tuple</span>
+<span class="sd">            Optional arguments passed by the tkinter trace callback, not used directly</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If `self.texture_var1` is &#39;unimodal&#39;, `self.kernel_var1` is set to &quot;7.5&quot;</span>
+<span class="sd">        Otherwise, `self.kernel_var1` is set to &quot;-&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kernel_var1</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;7.5&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">texture_var1</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;unimodal&#39;</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="particle_rve.update_euler_var">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.update_euler_var">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_euler_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the Euler angles variable based on the current texture selection</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *args : tuple</span>
+<span class="sd">            Optional arguments passed by the tkinter trace callback, not used directly</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If `self.texture_var1` is &#39;unimodal&#39;, `self.euler_var1` is set to &quot;0.0, 45.0, 0.0&quot;</span>
+<span class="sd">        Otherwise, `self.euler_var1` is set to &quot;-&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">euler_var1</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;0.0, 45.0, 0.0&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">texture_var1</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;unimodal&#39;</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="particle_rve.display_plot">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.display_plot">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">display_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fig</span><span class="p">,</span> <span class="n">plot_type</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Show either stats graph or RVE on canvas. &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show a statistics graph or RVE plot on the GUI canvas</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fig : matplotlib.figure.Figure</span>
+<span class="sd">            The figure object to be displayed</span>
+<span class="sd">        plot_type : str</span>
+<span class="sd">            Type of plot to display, either &#39;stats&#39; for statistics graph or &#39;rve&#39; for RVE plot</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Existing canvas for the specified plot type will be destroyed before displaying the new figure</span>
+<span class="sd">        The GUI window size is updated to fit the new plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">update_idletasks</span><span class="p">()</span>
         <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">winfo_reqwidth</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">winfo_reqheight</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">width</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">height</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -382,7 +571,15 @@
 <div class="viewcode-block" id="particle_rve.import_ebsd">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.import_ebsd">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">import_ebsd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Import EBSD map.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Import an EBSD map and extract microstructure parameters</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Opens a file dialog to select an EBSD map with extensions &#39;.ctf&#39; or &#39;.ang&#39;</span>
+<span class="sd">        Displays messages indicating progress and success or failure</span>
+<span class="sd">        Calls `extract_microstructure_params` and `reset_act` after successful import</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">file_path</span> <span class="o">=</span> <span class="n">filedialog</span><span class="o">.</span><span class="n">askopenfilename</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Select EBSD map&quot;</span><span class="p">,</span> <span class="n">filetypes</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;EBSD maps&quot;</span><span class="p">,</span> <span class="s2">&quot;.ctf .ang&quot;</span><span class="p">)])</span>
         <span class="k">if</span> <span class="n">file_path</span><span class="p">:</span>
             <span class="n">self_closing_message</span><span class="p">(</span><span class="s2">&quot;Reading EBSD map, please wait..&quot;</span><span class="p">)</span>
@@ -398,6 +595,15 @@
 <div class="viewcode-block" id="particle_rve.write_stat_param">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.write_stat_param">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_stat_param</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the current microstructure statistics to a file</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If `self.ms_stats` is None, a message is shown indicating no stats are available</span>
+<span class="sd">        Opens a file dialog to select the save location</span>
+<span class="sd">        Calls `write_stats` to write the statistics to the selected file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms_stats</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">self_closing_message</span><span class="p">(</span><span class="s2">&quot;No stats created yet.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -410,6 +616,13 @@
 <div class="viewcode-block" id="particle_rve.reset_act">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.reset_act">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_act</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset all activity-related variables to zero</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Sets `vf_act`, `eqd_act_sig`, `eqd_act_scale`, `ar_act_sig`, and `ar_act_scale` to 0.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vf_act</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eqd_act_sig</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eqd_act_scale</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
@@ -420,6 +633,21 @@
 <div class="viewcode-block" id="particle_rve.readout_stats">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.readout_stats">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">readout_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect and return the current microstructure and RVE statistics</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A dictionary containing:</span>
+<span class="sd">            - &#39;Grain type&#39;: Type of grain</span>
+<span class="sd">            - &#39;Equivalent diameter&#39;: Distribution parameters (sig, scale, loc, cutoff_min, cutoff_max)</span>
+<span class="sd">            - &#39;Aspect ratio&#39;: Distribution parameters (sig, scale, loc, cutoff_min, cutoff_max)</span>
+<span class="sd">            - &#39;Tilt angle&#39;: Orientation parameters (kappa, loc, cutoff_min, cutoff_max)</span>
+<span class="sd">            - &#39;RVE&#39;: RVE size and voxel counts</span>
+<span class="sd">            - &#39;Simulation&#39;: Simulation settings including periodicity and output units</span>
+<span class="sd">            - &#39;Phase&#39;: Material phase information including name, number, and volume fraction</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">matname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matname_var1</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
         <span class="n">nvox</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nvox_var1</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
         <span class="n">size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_var1</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
@@ -451,7 +679,17 @@
 <div class="viewcode-block" id="particle_rve.import_stats">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.import_stats">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">import_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Import statistical data .&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Import statistical data from a JSON file and update GUI variables</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Opens a file dialog to select a statistics file with &#39;.json&#39; extension</span>
+<span class="sd">        Updates GUI variables for material name, RVE size, voxel counts, periodicity, volume fraction,</span>
+<span class="sd">        equivalent diameter, aspect ratio, and tilt angle based on imported data</span>
+<span class="sd">        Calls `reset_act` and clears `ebsd` after successful import</span>
+<span class="sd">        Displays a message indicating success or failure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">file_path</span> <span class="o">=</span> <span class="n">filedialog</span><span class="o">.</span><span class="n">askopenfilename</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Select statistics file&quot;</span><span class="p">,</span> <span class="n">filetypes</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;Stats files&quot;</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">)])</span>
         <span class="k">if</span> <span class="n">file_path</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -495,7 +733,17 @@
 <div class="viewcode-block" id="particle_rve.extract_microstructure_params">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.extract_microstructure_params">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">extract_microstructure_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extracts microstructure parameters from the EBSD data.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract microstructure parameters from the EBSD data and update GUI variables</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If `self.ebsd` is None, the method does nothing</span>
+<span class="sd">        Extracts grain size, aspect ratio, and orientation parameters from the first EBSD dataset</span>
+<span class="sd">        Updates GUI variables for material name, volume fraction, equivalent diameter, aspect ratio,</span>
+<span class="sd">        tilt angle, and texture type</span>
+<span class="sd">        Computed min and max cutoff values are based on statistical scaling of the extracted parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ebsd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -531,8 +779,17 @@
 <div class="viewcode-block" id="particle_rve.create_and_plot_stats">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.create_and_plot_stats">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_and_plot_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot statistics of current microstructure descriptors</span>
-<span class="sd">        Will erase global microstructure object if it exists.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot statistics of the current microstructure descriptors and initialize a new Microstructure object</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Will erase the global microstructure object `self.ms` if it exists</span>
+<span class="sd">        Reads current statistics using `readout_stats`</span>
+<span class="sd">        Initializes `self.ms` with the selected material and texture</span>
+<span class="sd">        Plots statistics using `plot_stats_init` and displays each figure on the GUI</span>
+<span class="sd">        Resets activity-related variables after plotting</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ms_stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_stats</span><span class="p">()</span>
         <span class="n">texture</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">texture_var1</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
         <span class="n">matname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matname_var1</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
@@ -553,8 +810,18 @@
 <div class="viewcode-block" id="particle_rve.create_and_plot_rve">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.create_and_plot_rve">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_and_plot_rve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create and plot the RVE</span>
-<span class="sd">        Will overwrite existing ms_stats and ms objects&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create the RVE from current statistics and plot it along with associated statistics</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Will overwrite existing `ms_stats` and `ms` objects</span>
+<span class="sd">        Displays a progress message and measures processing time</span>
+<span class="sd">        Initializes `self.ms` with the selected material and voxelizes the RVE</span>
+<span class="sd">        Plots the voxelized RVE using `plot_voxels` and displays it on the GUI</span>
+<span class="sd">        Updates activity-related variables based on voxelized statistics</span>
+<span class="sd">        Also plots statistics figures returned from `plot_stats_init`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">self_closing_message</span><span class="p">(</span><span class="s2">&quot;The process has been started, please wait...&quot;</span><span class="p">)</span>
         <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
@@ -582,7 +849,17 @@
 <div class="viewcode-block" id="particle_rve.create_orientation">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.create_orientation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_orientation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;A function to create the orientation &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate grain orientations based on the selected texture and assign them to the RVE</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Supports &#39;unimodal&#39; textures with user-specified kernel and Euler angles, or &#39;EBSD-ODF&#39; textures</span>
+<span class="sd">        Automatically generates the RVE if `ms_stats` or `ms` objects are not initialized</span>
+<span class="sd">        Calls `generate_orientations` to assign orientations to the microstructure</span>
+<span class="sd">        Writes voxel data to a JSON file and plots the voxelized RVE with orientations</span>
+<span class="sd">        Displays messages indicating progress and processing time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">self_closing_message</span><span class="p">(</span><span class="s2">&quot;The process has been started, please wait...&quot;</span><span class="p">)</span>
         <span class="n">texture</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">texture_var1</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
         <span class="n">matname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matname_var1</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
@@ -613,6 +890,16 @@
 <div class="viewcode-block" id="particle_rve.export_abq">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.particle_rve.export_abq">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">export_abq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export the RVE mesh to an Abaqus input file</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If `ms_stats`, `ms`, or `ms.mesh` is not initialized, the RVE is first generated without orientations</span>
+<span class="sd">        Checks if the material is dual-phase based on volume fraction</span>
+<span class="sd">        Calls `write_abq` to export the mesh in millimeter units</span>
+<span class="sd">        Displays a progress message if RVE generation is required</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms_stats</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">self_closing_message</span><span class="p">(</span><span class="s2">&quot;Generating and exporting RVE without orientations.&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">create_and_plot_rve</span><span class="p">()</span>
@@ -625,8 +912,47 @@
 <div class="viewcode-block" id="cuboid_rve">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.cuboid_rve">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">cuboid_rve</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Functions for RVEs with cuboid grains</span>
-<span class="sd">    second tab&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for managing RVEs with cuboid grains and associated GUI controls</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    app: tk.Tk or tk.Frame</span>
+<span class="sd">      Reference to the main Tkinter application instance</span>
+<span class="sd">    notebook: ttk.Notebook</span>
+<span class="sd">      Reference to the parent notebook widget for GUI tab placement</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    app: tk.Tk or tk.Frame</span>
+<span class="sd">      Reference to the main Tkinter application instance</span>
+<span class="sd">    canvas: tk.Canvas</span>
+<span class="sd">      Canvas for displaying the cuboid RVE</span>
+<span class="sd">    ms: object</span>
+<span class="sd">      Placeholder for the microstructure object</span>
+<span class="sd">    texture_var2: tk.StringVar</span>
+<span class="sd">      Selected texture type (default &quot;random&quot;)</span>
+<span class="sd">    matname_var2: tk.StringVar</span>
+<span class="sd">      Material name (default &quot;Simulanium&quot;)</span>
+<span class="sd">    ialloy: tk.IntVar</span>
+<span class="sd">      Number of alloys (default 2)</span>
+<span class="sd">    ngr_var: tk.StringVar</span>
+<span class="sd">      Number of grains in each direction (default &quot;5, 5, 5&quot;)</span>
+<span class="sd">    nv_gr_var: tk.StringVar</span>
+<span class="sd">      Number of voxels per grain in each direction (default &quot;3, 3, 3&quot;)</span>
+<span class="sd">    size_var2: tk.StringVar</span>
+<span class="sd">      RVE size in each direction (default &quot;45, 45, 45&quot;)</span>
+<span class="sd">    kernel_var2: tk.StringVar</span>
+<span class="sd">      Kernel parameter for unimodal textures (default &quot;-&quot; or &quot;7.5&quot;)</span>
+<span class="sd">    euler_var2: tk.StringVar</span>
+<span class="sd">      Euler angles for unimodal textures (default &quot;-&quot; or &quot;0.0, 45.0, 0.0&quot;)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The class handles creation, visualization, and parameter management for cuboid RVEs.</span>
+<span class="sd">    GUI variable traces are used to automatically update dependent parameters such as</span>
+<span class="sd">    kernel and Euler angle values based on the selected texture type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">,</span> <span class="n">notebook</span><span class="p">):</span>
         <span class="c1"># define standard parameters</span>
@@ -699,6 +1025,13 @@
 <div class="viewcode-block" id="cuboid_rve.close">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.cuboid_rve.close">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Quit and destroy the cuboid_rve GUI main window</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This method terminates the Tkinter application and closes the main window</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">quit</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span></div>
 
@@ -706,18 +1039,55 @@
 <div class="viewcode-block" id="cuboid_rve.update_kernel_var">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.cuboid_rve.update_kernel_var">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_kernel_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the kernel parameter variable based on the current texture selection</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *args : tuple</span>
+<span class="sd">          Optional arguments passed by the tkinter trace callback, not used directly</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Sets `kernel_var2` to &quot;7.5&quot; if `texture_var2` is &#39;unimodal&#39;, otherwise sets it to &quot;-&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kernel_var2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;7.5&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">texture_var2</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;unimodal&#39;</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="cuboid_rve.update_euler_var">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.cuboid_rve.update_euler_var">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_euler_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the Euler angles variable based on the current texture selection</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *args : tuple</span>
+<span class="sd">          Optional arguments passed by the tkinter trace callback, not used directly</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Sets `euler_var2` to &quot;0.0, 45.0, 0.0&quot; if `texture_var2` is &#39;unimodal&#39;, otherwise sets it to &quot;-&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">euler_var2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;0.0, 45.0, 0.0&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">texture_var2</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;unimodal&#39;</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="cuboid_rve.display_cuboid">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.cuboid_rve.display_cuboid">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">display_cuboid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fig</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Display the cuboid RVE figure on the GUI canvas</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fig : matplotlib.figure.Figure</span>
+<span class="sd">          The figure object representing the cuboid RVE to display</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Destroys any existing canvas before displaying the new figure</span>
+<span class="sd">        Updates the Tkinter window geometry to fit the figure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">update_idletasks</span><span class="p">()</span>
         <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">winfo_reqwidth</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">winfo_reqheight</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">width</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">height</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -734,8 +1104,16 @@
 <div class="viewcode-block" id="cuboid_rve.create_cubes_and_plot">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.cuboid_rve.create_cubes_and_plot">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_cubes_and_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create and plot microstructure object with cuboid grains</span>
-<span class="sd">        return figure axes</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a microstructure object with cuboid grains and plot the RVE</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Parses GUI parameters for number of grains, voxels per grain, and RVE size</span>
+<span class="sd">        Initializes a Microstructure object and sets up the voxel mesh</span>
+<span class="sd">        Assigns each cuboid grain an index and populates grain dictionaries</span>
+<span class="sd">        Calls `plot_voxels` to generate the RVE figure and displays it on the GUI</span>
+<span class="sd">        Returns nothing; updates the GUI canvas with the plotted RVE</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">matname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matname_var2</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
         <span class="n">ngr</span> <span class="o">=</span> <span class="n">parse_entry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngr_var</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
@@ -791,7 +1169,17 @@
 <div class="viewcode-block" id="cuboid_rve.create_orientation">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.cuboid_rve.create_orientation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_orientation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create grain orientations according to texture descriptors&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create grain orientations for the cuboid RVE based on texture descriptors</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Supports &#39;unimodal&#39; textures with user-specified kernel and Euler angles</span>
+<span class="sd">        Automatically generates the cuboid RVE if `ms` or `ms.mesh` is not initialized</span>
+<span class="sd">        Calls `generate_orientations` to assign orientations to the microstructure</span>
+<span class="sd">        Writes voxel data to a JSON file and plots the voxelized RVE with orientations</span>
+<span class="sd">        Displays messages indicating progress and processing time</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">self_closing_message</span><span class="p">(</span><span class="s2">&quot;The process has been started, please wait...&quot;</span><span class="p">)</span>
         <span class="n">texture</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">texture_var2</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
         <span class="n">matname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matname_var2</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
@@ -818,6 +1206,15 @@
 <div class="viewcode-block" id="cuboid_rve.export_abq">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.gui.cuboid_rve.export_abq">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">export_abq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export the cuboid RVE mesh to an Abaqus input file</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Automatically generates the cuboid RVE without orientations if `ms` is not initialized</span>
+<span class="sd">        Calls `write_abq` to export the mesh in millimeter units</span>
+<span class="sd">        Displays a progress message if RVE generation is required</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">self_closing_message</span><span class="p">(</span><span class="s2">&quot;Generating and exporting RVE with cuboid grains w/o orientations.&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">create_cubes_and_plot</span><span class="p">()</span>

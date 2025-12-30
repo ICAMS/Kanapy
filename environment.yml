@@ -23,3 +23,6 @@ dependencies:
   - scikit-image
   - networkx
   - jsonschema
+  - damask
+  - pyiron_workflow
+

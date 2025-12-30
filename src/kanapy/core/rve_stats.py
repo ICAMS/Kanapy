@@ -17,15 +17,18 @@ from .plotting import plot_stats_dict
 
 def arr2mat(mc):
     """
-    Converts a numpy array into a symmetric matrix.
+    Convert a 6-element numpy array into a 3x3 symmetric matrix
 
     Parameters
     ----------
-    mc
+    mc : array-like of length 6
+        Input array containing the elements of a symmetric matrix in Voigt notation:
+        [M11, M22, M33, M23, M13, M12]
 
     Returns
     -------
-
+    mat : ndarray of shape (3, 3)
+        Symmetric 3x3 matrix corresponding to the input array
     """
     return np.array([[mc[0], mc[5], mc[4]],
                      [mc[5], mc[1], mc[3]],
@@ -33,8 +36,22 @@ def arr2mat(mc):
 
 
 def con_fun(mc):
-    """Constraint: matrix must be positive definite, for symmetric matrix all eigenvalues
-    must be positive. Constraint will penalize negative eigenvalues.
+    """
+    Constraint function: penalizes non-positive-definite matrices
+
+    For a symmetric matrix, all eigenvalues must be positive. This constraint
+    returns a large negative value if the matrix has negative eigenvalues.
+
+    Parameters
+    ----------
+    mc : array-like of length 6
+        Input array representing a symmetric 3x3 matrix in Voigt notation
+
+    Returns
+    -------
+    float
+        The smallest eigenvalue multiplied by 1000, serving as a penalty for
+        negative eigenvalues
     """
     eigval, eigvec = np.linalg.eig(arr2mat(mc))
     return np.min(eigval) * 1000
@@ -42,20 +59,24 @@ def con_fun(mc):
 
 def find_rot_axis(len_a, len_b, len_c):
     """
-    Find the rotation axis of an ellipsoid defined be three semi-axes and return the
-    equivalent values for the semi-axes along and transversal to the rotation axis.
+    Determine the rotation axis of an ellipsoid based on its three semi-axes
+
+    The function identifies the axis of approximate rotational symmetry. If no
+    clear symmetry is found, the longest axis is chosen as the rotation axis.
 
     Parameters
     ----------
-    len_a
-    len_b
-    len_c
+    len_a : float
+        Length of the first semi-axis
+    len_b : float
+        Length of the second semi-axis
+    len_c : float
+        Length of the third semi-axis
 
     Returns
     -------
-    rot_ax
-    trans_ax
-
+    irot : int
+        Index of the rotation axis (0 for a, 1 for b, 2 for c)
     """
     ar_list = [np.abs(len_a / len_b - 1.0), np.abs(len_b / len_a - 1.0),
                np.abs(len_b / len_c - 1.0), np.abs(len_c / len_b - 1.0),
@@ -76,6 +97,25 @@ def find_rot_axis(len_a, len_b, len_c):
 
 
 def get_ln_param(data):
+    """
+    Compute log-normal parameters (sigma and scale) from a dataset
+
+    This function calculates the parameters for a log-normal distribution
+    by taking the logarithm of positive data points and computing the
+    standard deviation and median-based scale.
+
+    Parameters
+    ----------
+    data : array-like
+        Input data array. Values should be non-negative.
+
+    Returns
+    -------
+    sig : float
+        Standard deviation of the log-transformed data
+    scale : float
+        Scale parameter of the log-normal distribution (exp of median)
+    """
     # sig, loc, sc = lognorm.fit(sdict['eqd'])
     ind = np.nonzero(data > 1.e-5)[0]
     log_data = np.log(data[ind])
@@ -85,17 +125,22 @@ def get_ln_param(data):
 
 
 def pts_in_ellips(Mcomp, pts):
-    """ Check how well points fulfill equation of ellipsoid
-    (pts-ctr)^T M (pts-ctr) = 1
+    """
+    Check how well a set of points satisfy the equation of an ellipsoid
+    (pts - ctr)^T M (pts - ctr) = 1
 
     Parameters
     ----------
-    Mcomp
-    pts
+    Mcomp : array-like, shape (6,)
+        Components of a symmetric matrix representing the ellipsoid.
+    pts : array-like, shape (N, 3)
+        Coordinates of points to be tested.
 
     Returns
     -------
-
+    score : float
+        Average deviation of points from the ellipsoid equation. Lower values
+        indicate points are closer to lying on the ellipsoid surface.
     """
     if Mcomp.shape != (6,):
         raise ValueError(f'Matrix components must be given as array with shape (6,), not {Mcomp.shape}')
@@ -110,16 +155,18 @@ def pts_in_ellips(Mcomp, pts):
 
 def get_diameter(pts):
     """
-    Get estimate of largest diameter of a set of points.
+    Estimate the largest diameter of a set of points along Cartesian axes
+
     Parameters
     ----------
-    pts : (N, dim) ndarray
+    pts : ndarray, shape (N, dim)
         Point set in dim dimensions
 
     Returns
     -------
-    diameter : (dim)-ndarray
-
+    diameter : ndarray, shape (dim,)
+        Vector connecting the two points with the largest separation along
+        the axis of maximum extent
     """
     ind0 = np.argmin(pts, axis=0)  # index of point with lowest coordinate for each Cartesian axis
     ind1 = np.argmax(pts, axis=0)  # index of point with highest coordinate for each Cartesian axis
@@ -130,21 +177,21 @@ def get_diameter(pts):
 
 def project_pts(pts, ctr, axis):
     """
-    Project points (pts) to plane defined via center (ctr) and normal vector (axis).
+    Project points to a plane defined by a center point and a normal vector
 
     Parameters
     ----------
-    pts : (N, dim) ndarray
+    pts : ndarray, shape (N, dim)
         Point set in dim dimensions
-    ctr : (dim)-ndarray
+    ctr : ndarray, shape (dim,)
         Center point of the projection plane
-    axis : (dim)-ndarray
-        Unit vector for plane normal
+    axis : ndarray, shape (dim,)
+        Unit vector normal to the plane
 
     Returns
     -------
-    ppt : (N, dim) ndarray
-        Points projected to plane with normal axis
+    ppt : ndarray, shape (N, dim)
+        Points projected onto the plane
     """
     dvec = pts - ctr[None, :]  # distance vector b/w points and center point
     pdist = np.array([np.dot(axis, v) for v in dvec])
@@ -155,9 +202,24 @@ def project_pts(pts, ctr, axis):
 
 def _fit_ellipse_direct(x, y):
     """
-    Direct ellipse fit (Fitzgibbon 1999) in normalised coords
-    Fit conic: A x^2 + B x y + C y^2 + D x + E y + F = 0, mit 4AC - B^2 > 0 (Ellipsis).
-    Return: Parameter (A,B,C,D,E,F) in normalised coords
+    Fit an ellipse directly in normalized coordinates using Fitzgibbon 1999 method
+
+    Fits the conic:
+        A x^2 + B x y + C y^2 + D x + E y + F = 0
+    with the ellipse constraint: 4*A*C - B^2 > 0
+
+    Parameters
+    ----------
+    x : ndarray, shape (N,)
+        x-coordinates of points
+    y : ndarray, shape (N,)
+        y-coordinates of points
+
+    Returns
+    -------
+    params : ndarray, shape (6,)
+        Ellipse parameters (A, B, C, D, E, F) in normalized coordinates,
+        scaled so that F = 1
     """
     x = x[:, None]
     y = y[:, None]
@@ -186,6 +248,20 @@ def _fit_ellipse_direct(x, y):
     return cand / cand[-1]
 
 def _params_to_conic3(A,B,C,D,E,F):
+    """
+    Convert ellipse/conic parameters to a 3x3 homogeneous coordinate matrix
+
+    Parameters
+    ----------
+    A, B, C, D, E, F : float
+        Parameters of the conic equation
+        A x^2 + B x y + C y^2 + D x + E y + F = 0
+
+    Returns
+    -------
+    conic_mat : ndarray, shape (3, 3)
+        3x3 conic matrix in homogeneous coordinates
+    """
     # 3x3 conic matrix in homogeneous coords
     return np.array([
         [A,  B/2, D/2],
@@ -194,15 +270,50 @@ def _params_to_conic3(A,B,C,D,E,F):
     ], dtype=float)
 
 def _conic3_to_params(K):
+    """
+    Convert a 3x3 homogeneous conic matrix to conic parameters
+
+    Parameters
+    ----------
+    K : ndarray, shape (3,3)
+        3x3 conic matrix in homogeneous coordinates
+
+    Returns
+    -------
+    A, B, C, D, E, F : float
+        Parameters of the conic equation
+        A x^2 + B x y + C y^2 + D x + E y + F = 0
+    """
     A = K[0,0]; B = 2*K[0,1]; C = K[1,1]
     D = 2*K[0,2]; E = 2*K[1,2]; F = K[2,2]
     return A,B,C,D,E,F
 
 def _transform_conic3(K_prime, mu, scale):
     """
-    K' in normalized coords (x'=(x-mu)/scale). Original x = S x' + mu.
-    Homogeneous Affine-Transform: K = T^{-T} K' T^{-1},
-    with T = [[sx,0,mu_x],[0,sy,mu_y],[0,0,1]].
+    Transform a conic matrix from normalized coordinates back to original coordinates
+
+    The conic in normalized coordinates K' corresponds to points
+    x' = (x - mu) / scale. In homogeneous coordinates, the original conic
+    matrix K is obtained by an affine transformation:
+        K = T^{-T} @ K' @ T^{-1}
+    where
+        T = [[sx, 0,  mu_x],
+             [0,  sy, mu_y],
+             [0,  0,  1  ]]
+
+    Parameters
+    ----------
+    K_prime : (3,3) ndarray
+        Conic matrix in normalized coordinates.
+    mu : array-like, shape (2,)
+        Translation vector (mu_x, mu_y) used in normalization.
+    scale : array-like, shape (2,)
+        Scaling factors (sx, sy) used in normalization.
+
+    Returns
+    -------
+    K : (3,3) ndarray
+        Conic matrix in original coordinates
     """
     sx, sy = float(scale[0]), float(scale[1])
     mx, my = float(mu[0]),   float(mu[1])
@@ -214,8 +325,27 @@ def _transform_conic3(K_prime, mu, scale):
 
 def _conic3_to_geometric(K):
     """
-    K (3x3) -> Centre, principal directions, semi axes.
-    Ellipsis condition: Q (2x2) pos. definite, and F_c < 0.
+    Convert a 3x3 conic matrix to geometric ellipse parameters
+
+    Extracts the ellipse center, principal directions, and semi-axes from
+    a 3x3 conic matrix K. Ellipse validity requires Q (top-left 2x2) to be
+    positive definite and the value at the center F_c < 0.
+
+    Parameters
+    ----------
+    K : (3,3) ndarray
+        Conic matrix in homogeneous coordinates
+
+    Returns
+    -------
+    a : float
+        Semi-major axis length
+    b : float
+        Semi-minor axis length
+    u_major : (2,) ndarray
+        Unit vector along the major axis
+    u_minor : (2,) ndarray
+        Unit vector along the minor axis
     """
     Q = K[:2,:2]
     q = K[:2,2]
@@ -255,11 +385,34 @@ def _conic3_to_geometric(K):
 
 def get_grain_geom(points, method='raw', two_dim=False):
     """
-    Fit of an ellipsis to the 2D convex hull of grain pixels.
+    Fit an ellipse to the 2D convex hull of grain pixels
 
-    Returns:
-      a, b: semi-axes with a >= b
-      u_major, u_minor: unit vector of principal directions
+    Depending on the chosen method, the ellipse can be obtained from
+    direct fitting, PCA, or a rectangular bounding box. Currently,
+    3D grains are not supported.
+
+    Parameters
+    ----------
+    points : (N, 2) ndarray
+        Coordinates of points on the grain hull
+    method : str, default='raw'
+        Method to obtain ellipse parameters:
+        - 'raw': rectangular bounding box
+        - 'pca': principal component analysis
+        - 'ell', 'ellipsis', 'e': direct ellipse fitting
+    two_dim : bool, default=False
+        If True, process as 2D data; 3D is not yet implemented
+
+    Returns
+    -------
+    ea : float
+        Semi-major axis length (a >= b)
+    eb : float
+        Semi-minor axis length
+    va : (2,) ndarray
+        Unit vector along the major axis
+    vb : (2,) ndarray
+        Unit vector along the minor axis
     """
     if not two_dim:
         raise ModuleNotFoundError('Method "get_grain_geom" not implemented in 3D yet.')
@@ -305,6 +458,47 @@ def get_grain_geom(points, method='raw', two_dim=False):
 
 
 def bbox(pts, return_vector=False, two_dim=False):
+    """
+    Approximate the smallest rectangular cuboid around points of a grain
+
+    The function computes the principal axes and lengths of a cuboid
+    that encloses the grain, allowing analysis of prolate (aspect ratio > 1)
+    and oblate (aspect ratio < 1) particles. For 2D points, only two axes are returned.
+
+    Parameters
+    ----------
+    pts : (N, dim) ndarray
+        Coordinates of points representing the grain
+    return_vector : bool, default=False
+        If True, return the unit vectors along each principal axis
+    two_dim : bool, default=False
+        If True, treat points as 2D; otherwise, treat as 3D
+
+    Returns
+    -------
+    If two_dim is True:
+        len_a : float
+            Semi-major axis length
+        len_b : float
+            Semi-minor axis length
+        ax_a : (dim,) ndarray, optional
+            Unit vector along major axis (only if return_vector=True)
+        ax_b : (dim,) ndarray, optional
+            Unit vector along minor axis (only if return_vector=True)
+    If two_dim is False:
+        len_a : float
+            Semi-major axis length
+        len_b : float
+            Semi-intermediate axis length
+        len_c : float
+            Semi-minor axis length
+        ax_a : (3,) ndarray, optional
+            Unit vector along major axis (only if return_vector=True)
+        ax_b : (3,) ndarray, optional
+            Unit vector along intermediate axis (only if return_vector=True)
+        ax_c : (3,) ndarray, optional
+            Unit vector along minor axis (only if return_vector=True)
+    """
     # Approximate smallest rectangular cuboid around points of grains
     # to analyse prolate (aspect ratio > 1) and oblate (a.r. < 1) particles correctly
     dia = get_diameter(pts)  # approx. of largest diameter of grain
@@ -335,6 +529,29 @@ def bbox(pts, return_vector=False, two_dim=False):
 
 
 def calc_stats_dict(a, b, c, eqd):
+    """
+    Calculate statistical descriptors of grain semi-axes and equivalent diameters
+
+    Computes log-normal parameters, identifies the rotation axis, and calculates aspect ratios
+    for a set of grain semi-axes and equivalent diameters.
+
+    Parameters
+    ----------
+    a : ndarray
+        Array of semi-axis a lengths
+    b : ndarray
+        Array of semi-axis b lengths
+    c : ndarray
+        Array of semi-axis c lengths
+    eqd : ndarray
+        Array of equivalent diameters
+
+    Returns
+    -------
+    sd : dict
+        Dictionary containing sorted semi-axes, equivalent diameters, their log-normal
+        parameters (sigma and scale), rotation axis index, aspect ratios, and related statistics
+    """
     arr_a = np.sort(a)
     arr_b = np.sort(b)
     arr_c = np.sort(c)
@@ -382,20 +599,34 @@ def calc_stats_dict(a, b, c, eqd):
 def get_stats_part(part, iphase=None, ax_max=None,
                    minval=1.e-5, show_plot=True,
                    verbose=False, save_files=False):
-    """ Extract statistics about the microstructure from particles. If inner structure is contained
-    by fitting a 3D ellipsoid to each structure.
+    """
+    Extract statistics of particles and optionally their inner structures
+
+    Fits a 3D ellipsoid to each particle or its inner structure, calculates
+    semi-axes, equivalent diameters, and statistical descriptors of the microstructure.
 
     Parameters
     ----------
-    part
-    minval
-    show_plot
-    verbose
-    ax_max
+    part : list
+        List of particle objects, each with attributes `a`, `b`, `c` or `inner.points`
+    iphase : int, optional
+        Phase number to restrict analysis to, default is None (all phases)
+    ax_max : float, optional
+        Maximum allowed semi-axis, used to adjust minval for numerical stability
+    minval : float, optional
+        Minimum allowed eigenvalue for positive-definiteness, default 1.e-5
+    show_plot : bool, optional
+        Whether to display plots of the statistics, default True
+    verbose : bool, optional
+        If True, print detailed information during processing, default False
+    save_files : bool, optional
+        If True, save plots as files, default False
 
     Returns
     -------
-
+    part_stats_dict : dict
+        Dictionary containing semi-axes, equivalent diameters, log-normal parameters,
+        rotation axis index, aspect ratios, and related statistics
     """
     if ax_max is not None:
         minval = max(minval, 1. / ax_max ** 2)
@@ -479,20 +710,33 @@ def get_stats_vox(mesh, iphase=None, ax_max=None,
                   minval=1.e-5, show_plot=True,
                   verbose=False, save_files=False):
     """
-    Get statistics about the microstructure from voxels by analysing nodes at grain boundaries
-    and constructing a rectangular bounding box.
+    Extract statistics of the microstructure from voxels
+
+    Analyses nodes at grain boundaries, constructs a rectangular bounding box,
+    and calculates semi-axes, equivalent diameters, and statistical descriptors.
 
     Parameters
     ----------
-    mesh
-    minval
-    show_plot
-    verbose
-    ax_max
+    mesh : object
+        Mesh object containing grain and voxel information
+    iphase : int, optional
+        Phase number to restrict analysis to, default is None (all phases)
+    ax_max : float, optional
+        Maximum allowed semi-axis, used to adjust minval for numerical stability
+    minval : float, optional
+        Minimum allowed eigenvalue for positive-definiteness, default 1.e-5
+    show_plot : bool, optional
+        Whether to display plots of the statistics, default True
+    verbose : bool, optional
+        If True, print detailed information during processing, default False
+    save_files : bool, optional
+        If True, save plots as files, default False
 
     Returns
     -------
-
+    vox_stats_dict : dict
+        Dictionary containing semi-axes, equivalent diameters, log-normal parameters,
+        rotation axis index, aspect ratios, and related statistics
     """
     gfac = 3.0 / (4.0 * np.pi)
     arr_a = []
@@ -604,21 +848,37 @@ def get_stats_poly(grains, iphase=None, ax_max=None,
                    phase_dict=None,
                    minval=1.e-5, show_plot=True,
                    verbose=False, save_files=False):
-    """ Extract statistics about the microstructure from polyhedral grains
-        by fitting a 3D ellipsoid to each polyhedron.
+    """
+    Extract statistics about the microstructure from polyhedral grains
 
-        Parameters
-        ----------
-        geom
-        minval
-        show_plot
-        verbose
-        ax_max
+    Fits a 3D ellipsoid to each polyhedron to compute semi-axes, equivalent diameters,
+    and other statistical descriptors.
 
-        Returns
-        -------
+    Parameters
+    ----------
+    grains : dict
+        Dictionary of polyhedral grains with 'Points' for each grain
+    iphase : int, optional
+        Phase number to restrict analysis to, default is None (all phases)
+    phase_dict : dict, optional
+        Dictionary mapping grain ID to phase number, required if iphase is provided
+    ax_max : float, optional
+        Maximum allowed semi-axis, used to adjust minval for numerical stability
+    minval : float, optional
+        Minimum allowed eigenvalue for positive-definiteness, default 1.e-5
+    show_plot : bool, optional
+        Whether to display plots of the statistics, default True
+    verbose : bool, optional
+        If True, print detailed information during processing, default False
+    save_files : bool, optional
+        If True, save plots as files, default False
 
-        """
+    Returns
+    -------
+    poly_stats_dict : dict
+        Dictionary containing semi-axes, equivalent diameters, log-normal parameters,
+        rotation axis index, aspect ratios, and related statistics
+    """
     if iphase is not None and phase_dict is None:
         logging.error('Error in get_stats_poly: phase number provided, but no phase_dict present.')
     if ax_max is not None:

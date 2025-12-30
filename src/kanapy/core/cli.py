@@ -18,7 +18,23 @@ def main(ctx):
 @main.command(name='gui')
 @click.pass_context
 def gui(ctx):
-    """ Start Kanapy's GUI (experimental alpha-version). """
+    """
+    Start Kanapy's graphical user interface (experimental alpha version)
+
+    This function initializes and launches the Kanapy GUI using Tkinter.
+    It creates a main application window with multiple tabs for different
+    RVE generation modes, such as particle-based and cuboid-based RVEs.
+
+    Parameters
+    ----------
+    ctx : object
+        Execution context (reserved for CLI or application integration)
+
+    Notes
+    -----
+    - This GUI version is experimental and intended for testing only
+    - Requires `matplotlib` and `tkinter` libraries
+    """
     import matplotlib.pyplot as plt
     import tkinter as tk
     import tkinter.font as tkFont
@@ -54,7 +70,26 @@ def gui(ctx):
 @click.option('--no_texture', default=False)
 @click.pass_context
 def tests(ctx, no_texture: bool):
-    """ Runs unittests built within kanapy."""
+    """
+    Run Kanapy's internal unittests
+
+    Executes the built-in test suite for Kanapy using pytest.
+    Depending on the `no_texture` flag, it either runs a subset of tests
+    or all available tests in the `tests` directory.
+
+    Parameters
+    ----------
+    ctx : object
+        Execution context (reserved for CLI or internal use)
+    no_texture : bool
+        If True, run tests excluding texture-related modules;
+        if False, run the full test suite
+
+    Notes
+    -----
+    - Must be executed from the root directory of the Kanapy installation
+    - Temporary dump files generated during testing are automatically removed
+    """
     click.echo('Will only work in root directory of kanapy installation.')
     cwd = os.getcwd()
     if no_texture:
@@ -73,7 +108,17 @@ def tests(ctx, no_texture: bool):
 @main.command(name='readDocs')
 @click.pass_context
 def docs(ctx):
-    """Open webpage with  Kanapy documentation."""
+    """
+    Open the Kanapy documentation webpage
+
+    Launches the default web browser and navigates to the official
+    Kanapy documentation page hosted on GitHub Pages.
+
+    Parameters
+    ----------
+    ctx : object
+        Execution context (reserved for CLI or internal use)
+    """
     webbrowser.open("https://icams.github.io/Kanapy/")
 
 
@@ -81,8 +126,22 @@ def docs(ctx):
 @click.pass_context
 def download_subdir(ctx):
     """
-    Download examples from Kanapy's GitHub repository.
+    Download example files from Kanapy's GitHub repository
 
+    Fetches the latest Kanapy repository archive from GitHub,
+    extracts the `examples` subdirectory, and saves it to the local
+    working directory as `kanapy_examples`.
+
+    Parameters
+    ----------
+    ctx : object
+        Execution context (reserved for CLI or internal use)
+
+    Notes
+    -----
+    - Requires an active internet connection
+    - Downloads from the `master` branch of the Kanapy repository
+    - Automatically creates the output directory if it does not exist
     """
     zip_url = f"https://github.com/ICAMS/kanapy/archive/refs/heads/master.zip"
     output_dir = os.path.join(os.getcwd(), 'kanapy_examples')
@@ -113,12 +172,42 @@ def download_subdir(ctx):
 @main.command(name='setupMTEX')
 @click.pass_context
 def setup_mtex(ctx):
-    """ Starts Matlab engine and initializes MTEX."""
+    """
+    Start the MATLAB engine and initialize MTEX
+
+    Launches the MATLAB engine from Python and sets up the
+    MTEX toolbox environment for crystallographic computations.
+
+    Parameters
+    ----------
+    ctx : object
+        Execution context (reserved for CLI or internal use)
+
+    Notes
+    -----
+    - Requires MATLAB and the MTEX toolbox to be installed
+    - Calls `setPaths()` to configure MATLAB path settings
+    """
     setPaths()
 
 
 def chkVersion(matlab):
-    """ Read the version of Matlab"""
+    """
+    Read the installed MATLAB version from a version string
+
+    Parses the given MATLAB version string to extract the release year
+    (e.g., 'R2023a' → 2023). If the version cannot be determined, returns None.
+
+    Parameters
+    ----------
+    matlab : str
+        String containing MATLAB version information
+
+    Returns
+    -------
+    int or None
+        MATLAB release year if successfully parsed, otherwise None
+    """
     ind = matlab.find('R20')
     if ind < 0:
         version = None 
@@ -132,7 +221,23 @@ def chkVersion(matlab):
     
         
 def setPaths():
-    """ Starts matlab engine, after installation if required, and initializes MTEX.
+    """
+    Start the MATLAB engine and initialize the MTEX environment
+
+    Checks if the MATLAB engine for Python is installed and installs it if missing.
+    Then initializes the MATLAB engine and MTEX toolbox for use with Kanapy.
+
+    Raises
+    ------
+    ModuleNotFoundError
+        If `kanapy-mtex` or MATLAB are not installed,
+        or if the MATLAB engine installation fails
+
+    Notes
+    -----
+    - Requires MATLAB 2025a or later
+    - Automatically installs the `matlabengine` package if not found
+    - Configures Kanapy for texture analysis by running `init_engine.py`
     """
     try:
         from kanapy_mtex import ROOT_DIR

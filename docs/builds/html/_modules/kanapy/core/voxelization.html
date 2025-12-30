@@ -89,18 +89,26 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.voxelization.points_in_convexHull">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">points_in_convexHull</span><span class="p">(</span><span class="n">Points</span><span class="p">,</span> <span class="n">hull</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Determines whether the given array of points lie inside the convex hull or outside.        </span>
+<span class="sd">    Determine whether the given array of points lie inside the convex hull</span>
 
-<span class="sd">    :param Points: Array of points to be tested whether they lie inside the hull or not. </span>
-<span class="sd">    :type Points: numpy array</span>
-<span class="sd">    :param hull: Ellipsoid represented by a convex hull created from its outer surface points.  </span>
-<span class="sd">    :type hull: Scipy&#39;s :obj:`ConvexHull` object</span>
+<span class="sd">    Checks if each point in `Points` is inside or outside the convex hull defined</span>
+<span class="sd">    by `hull`. Returns a boolean array with True for points inside the hull and False otherwise.</span>
 
-<span class="sd">    :returns: Boolean values representing the status. If inside: **True**, else **False**</span>
-<span class="sd">    :rtype: numpy array</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Points : ndarray, shape (N_points, dim)</span>
+<span class="sd">        Array of points to be tested</span>
+<span class="sd">    hull : scipy.spatial.ConvexHull</span>
+<span class="sd">        Convex hull object representing an ellipsoid or other shape</span>
 
-<span class="sd">    .. seealso::</span>
-<span class="sd">       https://stackoverflow.com/questions/21698630/how-can-i-find-if-a-point-lies-inside-or-outside-of-convexhull</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray, shape (N_points,)</span>
+<span class="sd">        Boolean array indicating whether each point is inside the convex hull</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    https://stackoverflow.com/questions/21698630/how-can-i-find-if-a-point-lies-inside-or-outside-of-convexhull</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">hull</span><span class="o">.</span><span class="n">equations</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">hull</span><span class="o">.</span><span class="n">equations</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]))</span>
@@ -112,16 +120,26 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.voxelization.assign_voxels_to_ellipsoid">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">assign_voxels_to_ellipsoid</span><span class="p">(</span><span class="n">cooDict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">,</span> <span class="n">vf_target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Determines voxels belonging to each ellipsoid    </span>
+<span class="sd">    Assign voxels to each ellipsoid based on spatial position and shared nodes</span>
 
-<span class="sd">    :param cooDict: Voxel dictionary containing voxel IDs and center coordinates. </span>
-<span class="sd">    :type cooDict: Python dictionary</span>
-<span class="sd">    :param Ellipsoids: Ellipsoids from the packing routine.</span>
-<span class="sd">    :type Ellipsoids: list</span>
-<span class="sd">    :param voxel_dict: Element dictionary containing element IDs and nodal connectivities.</span>
-<span class="sd">    :type voxel_dict: Python dictionary</span>
-<span class="sd">    :param vf_target: target value for volume fraction of particles (optional, default: None)</span>
-<span class="sd">    :type: float</span>
+<span class="sd">    Iteratively grows each ellipsoid and assigns voxels whose centers lie</span>
+<span class="sd">    within the ellipsoid&#39;s convex hull. Voxels are additionally checked</span>
+<span class="sd">    to share at least 4 nodes with existing voxels of the ellipsoid to</span>
+<span class="sd">    ensure connectivity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cooDict : dict</span>
+<span class="sd">        Voxel dictionary containing voxel IDs as keys and center coordinates</span>
+<span class="sd">        as values</span>
+<span class="sd">    Ellipsoids : list</span>
+<span class="sd">        List of ellipsoid objects from the packing routine. Each object must</span>
+<span class="sd">        support `.a`, `.b`, `.c` attributes and `.surfacePointsGen()` and `.get_pos()` methods</span>
+<span class="sd">    voxel_dict : dict</span>
+<span class="sd">        Element dictionary containing voxel IDs as keys and lists of nodal</span>
+<span class="sd">        connectivity as values</span>
+<span class="sd">    vf_target : float, optional</span>
+<span class="sd">        Target volume fraction of particles to be assigned (default is 1.0)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Assigning voxels to grains&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">vf_target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">vf_target</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
@@ -282,14 +300,39 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.voxelization.reassign_shared_voxels">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">reassign_shared_voxels</span><span class="p">(</span><span class="n">cooDict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Assigns shared voxels between ellipsoids to the ellipsoid with the closest center.</span>
+<span class="sd">    Reassign shared voxels among ellipsoids to the most appropriate ellipsoid based on node overlap</span>
+<span class="sd">    and proximity to ellipsoid centers</span>
 
-<span class="sd">    :param cooDict: Voxel dictionary containing voxel IDs and center coordinates. </span>
-<span class="sd">    :type cooDict: Python dictionary            </span>
-<span class="sd">    :param Ellipsoids: Ellipsoids from the packing routine.</span>
-<span class="sd">    :type Ellipsoids: list</span>
-<span class="sd">    :param voxel_dict: Dictionary of element definitions</span>
-<span class="sd">    :type voxel_dict: dict</span>
+<span class="sd">    This function identifies voxels that are contained within multiple ellipsoids and resolves</span>
+<span class="sd">    conflicts by:</span>
+<span class="sd">    1. Removing the shared voxel from all ellipsoids initially.</span>
+<span class="sd">    2. Assigning the voxel to the ellipsoid with the largest number of shared nodes.</span>
+<span class="sd">    3. If multiple ellipsoids have the same node overlap, assigning the voxel to the closest</span>
+<span class="sd">       ellipsoid based on center distance.</span>
+<span class="sd">    4. If still tied, assigning to the ellipsoid with the smallest volume.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cooDict : dict</span>
+<span class="sd">        Dictionary mapping voxel IDs to their coordinates in 3D space.</span>
+<span class="sd">        Example: {voxel_id: [x, y, z], ...}</span>
+<span class="sd">    Ellipsoids : list</span>
+<span class="sd">        List of ellipsoid objects from the packing routine. Each ellipsoid must have attributes:</span>
+<span class="sd">        - `inside_voxels` (list of voxel IDs contained in the ellipsoid)</span>
+<span class="sd">        - `id` (unique identifier)</span>
+<span class="sd">        - `get_pos()` method returning the ellipsoid center coordinates as [x, y, z]</span>
+<span class="sd">        - `get_volume()` method returning the ellipsoid volume</span>
+<span class="sd">    voxel_dict : dict</span>
+<span class="sd">        Dictionary mapping voxel IDs to the node IDs that define the voxel.</span>
+<span class="sd">        Example: {voxel_id: [node1, node2, ...], ...}</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The reassignment loop has a maximum of 5 cycles to avoid infinite loops in edge cases.</span>
+<span class="sd">    - A voxel is assigned to an ellipsoid only if it has at least 4 nodes in common with it.</span>
+<span class="sd">    - Distance calculations assume Cartesian coordinates.</span>
+<span class="sd">    - The function can handle ties in node overlap by considering proximity and volume.</span>
+<span class="sd">    - Modifies `inside_voxels` lists of ellipsoids in place.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Find all combination of ellipsoids to check for shared voxels</span>
     <span class="n">combis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
@@ -375,20 +418,75 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.voxelization.voxelizationRoutine">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">voxelizationRoutine</span><span class="p">(</span><span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">nphases</span><span class="p">,</span> <span class="n">prec_vf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The main function that controls the voxelization routine using: :meth:`kanapy.input_output.read_dump`,</span>
-<span class="sd">    :meth:`create_voxels`, :meth:`assign_voxels_to_ellipsoid`, :meth:`reassign_shared_voxels`</span>
-<span class="sd">    </span>
-<span class="sd">    .. note:: 1. The RVE attributes such as RVE (Simulation domain) size, the number of voxels and the voxel resolution </span>
-<span class="sd">                 is read by loading the JSON file that is generated by :meth:`kanapy.input_output.read_dump`.</span>
-<span class="sd">              2. The following dictionaries are written as json files into a folder in the current working directory.</span>
+<span class="sd">    Perform voxelization of a microstructure defined by ellipsoids and mesh.</span>
 
-<span class="sd">                * Node list containing coordinates.</span>
-<span class="sd">                * Element dictionary containing element ID and nodal connectivities.</span>
-<span class="sd">                * Element set dictionary containing element set ID and group of </span>
-<span class="sd">                  elements each representing a grain of the RVE.                                 </span>
+<span class="sd">    This function controls the voxelization process by calling several subroutines:</span>
+<span class="sd">    - :meth:`kanapy.input_output.read_dump`</span>
+<span class="sd">    - :meth:`create_voxels`</span>
+<span class="sd">    - :meth:`assign_voxels_to_ellipsoid`</span>
+<span class="sd">    - :meth:`reassign_shared_voxels`</span>
+
+<span class="sd">    Depending on whether ellipsoids have inner polygons, it either assigns voxels</span>
+<span class="sd">    directly to ellipsoids or uses polygon-based voxel assignment.</span>
+
+<span class="sd">    The function also generates:</span>
+<span class="sd">    - `mesh.grains`: array of voxelized structure with grain IDs</span>
+<span class="sd">    - `mesh.phases`: array of voxelized structure with phase numbers</span>
+<span class="sd">    - `mesh.grain_dict`: dictionary mapping grain IDs to voxel IDs</span>
+<span class="sd">    - `mesh.grain_phase_dict`: dictionary mapping grain IDs to phase numbers</span>
+<span class="sd">    - `mesh.ngrains_phase`: count of grains per phase</span>
+<span class="sd">    - `mesh.prec_vf_voxels`: current volume fraction if `prec_vf` is provided</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Ellipsoids : list</span>
+<span class="sd">        List of ellipsoid objects representing grains. Each ellipsoid should have:</span>
+<span class="sd">        - `inside_voxels` (list of voxel IDs)</span>
+<span class="sd">        - `duplicate` (ID of original ellipsoid if duplicated, else None)</span>
+<span class="sd">        - `inner` (optional polygon object)</span>
+<span class="sd">        - `phasenum` (phase number)</span>
+<span class="sd">        - `get_pos()` and `create_poly()` methods.</span>
+<span class="sd">    mesh : object</span>
+<span class="sd">        Mesh object containing voxel information, including:</span>
+<span class="sd">        - `vox_center_dict` (voxel centers)</span>
+<span class="sd">        - `voxel_dict` (voxel-to-node mapping)</span>
+<span class="sd">        - `nvox` (number of voxels)</span>
+<span class="sd">        - `dim` (mesh dimensions)</span>
+<span class="sd">    nphases : int</span>
+<span class="sd">        Number of phases in the RVE.</span>
+<span class="sd">    prec_vf : float, optional</span>
+<span class="sd">        Target volume fraction for precipitates/porosity. Defaults to `None` (fully filled RVE).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Voxels shared by multiple ellipsoids are resolved using `reassign_shared_voxels`.</span>
+<span class="sd">    - Voxels not assigned to any grain are either assigned to neighbors or set to phase 1.</span>
+<span class="sd">    - If `prec_vf` &lt; 1.0, empty voxels are treated as dispersed phase (precipitates/porosity).</span>
+<span class="sd">    - The function modifies the `mesh` object in place.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mesh</span>
+<span class="sd">        The input mesh object with updated voxelized grain and phase information.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">ell2vox</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assign voxels to ellipsoids and update the mesh&#39;s grain dictionary</span>
+
+<span class="sd">        This helper function performs the following steps:</span>
+<span class="sd">        1. Calls `assign_voxels_to_ellipsoid` to assign voxels based on ellipsoid positions and target volume fraction</span>
+<span class="sd">        2. For each ellipsoid:</span>
+<span class="sd">           - If it contains voxels:</span>
+<span class="sd">               - If the ellipsoid is a duplicate, its voxels are added to the original ellipsoid&#39;s entry in `mesh.grain_dict`</span>
+<span class="sd">               - Otherwise, the ellipsoid is added as a new entry in `mesh.grain_dict`</span>
+<span class="sd">           - If it contains no voxels, logs a debug message indicating the grain could not be voxelized</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Modifies `mesh.grain_dict` in place</span>
+<span class="sd">        - Assumes `Ellipsoids` and `mesh` are accessible in the enclosing scope</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">assign_voxels_to_ellipsoid</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vox_center_dict</span><span class="p">,</span> <span class="n">Ellipsoids</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">voxel_dict</span><span class="p">,</span> <span class="n">vf_target</span><span class="o">=</span><span class="n">prec_vf</span><span class="p">)</span>
         <span class="c1"># Create element sets</span>
         <span class="k">for</span> <span class="n">ellipsoid</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
@@ -414,6 +512,25 @@
                 <span class="c1"># sys.exit(0)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">poly2vox</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assign voxels to ellipsoids based on inner polygon geometry</span>
+
+<span class="sd">        This helper function performs the following steps:</span>
+<span class="sd">        1. For each ellipsoid:</span>
+<span class="sd">           - If it is a duplicate, create its polygon from the original ellipsoid</span>
+<span class="sd">           - Synchronize the polygon using `sync_poly`</span>
+<span class="sd">           - Search for voxel centers inside the polygon</span>
+<span class="sd">               - If the voxel is already assigned to another grain, compare distances to the centers</span>
+<span class="sd">                 and reassign if the current ellipsoid is closer</span>
+<span class="sd">               - Otherwise, assign the voxel to the current ellipsoid</span>
+<span class="sd">        2. Update `mesh.grain_dict` with assigned voxels for each grain</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Modifies `mesh.grain_dict` and `inside_voxels` of ellipsoids in place</span>
+<span class="sd">        - Assumes `Ellipsoids` and `mesh` are accessible in the enclosing scope</span>
+<span class="sd">        - Keeps track of assigned voxels to avoid duplicate assignments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">assigned_vox</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">pa</span> <span class="ow">in</span> <span class="n">Ellipsoids</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">pa</span><span class="o">.</span><span class="n">duplicate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

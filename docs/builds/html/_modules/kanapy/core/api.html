@@ -116,48 +116,72 @@
 <div class="viewcode-block" id="Microstructure">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Microstructure</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Define class for synthetic microstructures</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Define a class for creating and managing synthetic microstructures</span>
 
-<span class="sd">    Attributes:</span>
-<span class="sd">        name : str</span>
-<span class="sd">            Name of microstructure</span>
-<span class="sd">        nphases : int</span>
-<span class="sd">            Number of phases in microstructure</span>
-<span class="sd">        ngrains : ndarray</span>
-<span class="sd">            Array of grain number in each phase</span>
-<span class="sd">        Ngr : int</span>
-<span class="sd">            Total number of grains summed over all phases</span>
-<span class="sd">        nparticles : list</span>
-<span class="sd">            List with number of particles in each phase</span>
-<span class="sd">        descriptor : list</span>
-<span class="sd">            List of dictionaries describing the microstructure of each phase;</span>
-<span class="sd">            Dict Keys: &quot;Grains type&quot;, &quot;Equivalent diameter&quot;, &quot;Aspect ratio&quot;, &quot;Tilt Angle&quot;, &quot;RVE&quot;, &quot;Simulation&quot;</span>
-<span class="sd">        precipit : None or float</span>
-<span class="sd">            Indicates microstructure with precipitates/pores/particles in continuous matrix. If type is float,</span>
-<span class="sd">             it gives volume the fraction of that precipitate phase</span>
-<span class="sd">        from_voxels : bool</span>
-<span class="sd">            Indicates whether microstructure object is imported from voxel file, not generated from particle simulation</span>
-<span class="sd">        particles : list</span>
-<span class="sd">            List of particle objects of class entities containing information object particle geometries</span>
-<span class="sd">        rve : object of class RVE_creator</span>
-<span class="sd">            Contains information about the RVE</span>
-<span class="sd">            Attributes: dim, size, nparticles, periodic, units, packing_steps, particle_data,</span>
-<span class="sd">            phase_names, phase_vf, ialloy</span>
-<span class="sd">        simbox : Object of class Simulation_Box</span>
-<span class="sd">            Contains information about geometry of simulation box for particle simulation</span>
-<span class="sd">        mesh : object of class mesh_creator</span>
-<span class="sd">            Attributes: dim, grain_dict, grain_ori_dict, grain_phase_dict, grains, ngrains_phase. nodes, nodes_smooth,</span>
-<span class="sd">                nvox, phases, prec_vf_voxels, vox_center_dict, voxel_dict</span>
-<span class="sd">        geometry : dict</span>
-<span class="sd">            Dictionary of grain geometries;</span>
-<span class="sd">            Dict keys: &quot;Vertices&quot;, &quot;Points&quot;, &quot;Simplices&quot;, &quot;Facets&quot;, &quot;Grains&quot;, &quot;GBnodes&quot;, GBarea&quot; &quot;GBfaces&quot;</span>
-<span class="sd">            &quot;Grains&quot; : dictionary with key grain_number  </span>
-<span class="sd">            Keys:&quot;Vertices&quot;, &quot;Points&quot;, &quot;Center&quot;, &quot;Simplices&quot;, &quot;Volume&quot;, &quot;Area&quot;, &quot;Phase&quot;, &quot;eqDia&quot;, &quot;majDia&quot;, &quot;minDia&quot;</span>
-<span class="sd">        rve_stats : list</span>
-<span class="sd">            List of dictionaries containing statistical information on different RVE types: particles, voxels,</span>
-<span class="sd">            polyhedral grains</span>
-<span class="sd">        rve_stats_labels : list</span>
-<span class="sd">            List of strings containing the labels for the RVE types, i.e. Partcls, Voxels, Grains</span>
+<span class="sd">    This class provides tools to define, generate, and analyze synthetic</span>
+<span class="sd">    microstructures composed of one or multiple phases. It integrates particle</span>
+<span class="sd">    packing, voxelization, and grain geometry generation for RVE (Representative</span>
+<span class="sd">    Volume Element) modeling.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    descriptor : list of dict, optional</span>
+<span class="sd">        List of dictionaries describing the microstructure of each phase.</span>
+<span class="sd">        Dictionary keys typically include &quot;Grains type&quot;, &quot;Equivalent diameter&quot;,</span>
+<span class="sd">        &quot;Aspect ratio&quot;, &quot;Tilt Angle&quot;, &quot;RVE&quot;, and &quot;Simulation&quot;.</span>
+<span class="sd">    file : str, optional</span>
+<span class="sd">        Path to a JSON or other input file to initialize the microstructure.</span>
+<span class="sd">    name : str, default=&#39;Microstructure&#39;</span>
+<span class="sd">        Name of the microstructure</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the microstructure</span>
+<span class="sd">    nphases : int or None</span>
+<span class="sd">        Number of phases in the microstructure</span>
+<span class="sd">    ngrains : ndarray or None</span>
+<span class="sd">        Array of grain counts in each phase</span>
+<span class="sd">    nparticles : list or None</span>
+<span class="sd">        List of the number of particles in each phase</span>
+<span class="sd">    descriptor : list of dict or None</span>
+<span class="sd">        Descriptor used to define microstructure if provided</span>
+<span class="sd">    precipit : float or None</span>
+<span class="sd">        Indicates the presence of precipitates, pores, or secondary particles</span>
+<span class="sd">        in a continuous matrix. If float, specifies their volume fraction</span>
+<span class="sd">    from_voxels : bool</span>
+<span class="sd">        True if the microstructure is imported from a voxel file</span>
+<span class="sd">    particles : list or None</span>
+<span class="sd">        List of particle objects containing geometric information</span>
+<span class="sd">    rve : RVE_creator or None</span>
+<span class="sd">        Object containing RVE information including mesh dimensions,</span>
+<span class="sd">        particle count, periodicity, and phase volume fractions</span>
+<span class="sd">    simbox : Simulation_Box or None</span>
+<span class="sd">        Object defining the geometric boundaries of the RVE simulation domain</span>
+<span class="sd">    mesh : mesh_creator or None</span>
+<span class="sd">        Object storing voxelized mesh data including grain assignments,</span>
+<span class="sd">        voxel connectivity, and smoothed node coordinates</span>
+<span class="sd">    geometry : dict or None</span>
+<span class="sd">        Dictionary of grain geometries. Keys may include &quot;Vertices&quot;, &quot;Points&quot;,</span>
+<span class="sd">        &quot;Simplices&quot;, &quot;Facets&quot;, &quot;Grains&quot;, &quot;GBnodes&quot;, &quot;GBarea&quot;, &quot;GBfaces&quot;</span>
+<span class="sd">    rve_stats : list of dict or None</span>
+<span class="sd">        Statistical information for different RVE representations,</span>
+<span class="sd">        including particles, voxels, and polyhedral grains</span>
+<span class="sd">    rve_stats_labels : list of str or None</span>
+<span class="sd">        Labels corresponding to the types of RVEs analyzed, e.g., &quot;Particles&quot;,</span>
+<span class="sd">        &quot;Voxels&quot;, &quot;Grains&quot;</span>
+<span class="sd">    vf_vox : ndarray or None</span>
+<span class="sd">        Phase volume fractions obtained from voxelized structures</span>
+<span class="sd">    ialloy : int or None</span>
+<span class="sd">        Alloy identifier used for material library mapping</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The class can initialize from either a statistical descriptor or a JSON data file</span>
+<span class="sd">    - When only one phase is specified with a volume fraction &lt; 1.0,</span>
+<span class="sd">      a matrix phase is automatically added with a complementary fraction (1 - vf)</span>
+<span class="sd">    - Kanapy is tested for up to two phases; using more may yield unpredictable results</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Microstructure&#39;</span><span class="p">):</span>
@@ -223,17 +247,47 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.init_RVE">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_RVE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Creates particle distribution inside simulation box (RVE) based on</span>
-<span class="sd">        the data provided in the data file.</span>
+<span class="sd">        Initialize the Representative Volume Element (RVE) of the microstructure</span>
+
+<span class="sd">        This method creates the voxel- or particle-based RVE using the provided</span>
+<span class="sd">        phase descriptor(s). It sets up the mesh dimensions, particle distribution,</span>
+<span class="sd">        and simulation box geometry. The RVE object is constructed using the</span>
+<span class="sd">        `RVE_creator` class, and key attributes such as `nparticles` and `simbox`</span>
+<span class="sd">        are updated accordingly.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        descriptor</span>
-<span class="sd">        nsteps</span>
+<span class="sd">        descriptor : list of dict, dict, or None, optional</span>
+<span class="sd">            Description of the microstructure phases. Each dictionary specifies</span>
+<span class="sd">            parameters such as grain type, equivalent diameter, aspect ratio,</span>
+<span class="sd">            and tilt angle. If `None`, the class attribute `self.descriptor` is used.</span>
+<span class="sd">        nsteps : int, optional</span>
+<span class="sd">            Number of optimization or relaxation steps for RVE generation.</span>
+<span class="sd">            Default is 1000.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Assumes that `RVE_creator` and `Simulation_Box` are available and correctly configured.</span>
+<span class="sd">        - If `self.precipit` is defined, an additional &#39;Matrix&#39; phase is automatically</span>
+<span class="sd">          added to preserve total volume fraction normalization.</span>
+
+<span class="sd">        Attributes Updated</span>
+<span class="sd">        ------------------</span>
+<span class="sd">        rve : RVE_creator</span>
+<span class="sd">            The created RVE object containing voxel/particle information, size,</span>
+<span class="sd">            periodicity, and phase volume fractions.</span>
+<span class="sd">        nparticles : list</span>
+<span class="sd">            Number of particles per phase after RVE generation.</span>
+<span class="sd">        simbox : Simulation_Box</span>
+<span class="sd">            Object containing the geometric boundaries of the RVE domain.</span>
+<span class="sd">        precipit : float or None</span>
+<span class="sd">            If not None, a &#39;Matrix&#39; phase is appended to `rve.phase_names` and its</span>
+<span class="sd">            volume fraction is adjusted as (1.0 - precipit).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-
+<span class="sd">        None</span>
+<span class="sd">            Updates class attributes with the initialized RVE and simulation box.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">descriptor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span>
@@ -255,8 +309,45 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">pack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particle_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">k_rep</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">k_att</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fill_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">poly</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pack particles into the simulation box according to the RVE settings.</span>
 
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Packs the particles into a simulation box.&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        particle_data : array-like or None, optional</span>
+<span class="sd">            Particle information. If None, uses self.rve.particle_data.</span>
+<span class="sd">        k_rep : float, optional</span>
+<span class="sd">            Repulsion coefficient between particles. Default is 0.0.</span>
+<span class="sd">        k_att : float, optional</span>
+<span class="sd">            Attraction coefficient between particles. Default is 0.0.</span>
+<span class="sd">        fill_factor : float or None, optional</span>
+<span class="sd">            Fraction of simulation box to fill. Defaults to 1.0 if self.precipit is set.</span>
+<span class="sd">        poly : optional</span>
+<span class="sd">            Additional packing options for polyhedral particles.</span>
+<span class="sd">        save_files : bool, optional</span>
+<span class="sd">            If True, saves packed particle data to files.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            If True, prints progress and warnings during packing.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        particles : list</span>
+<span class="sd">            List of packed particle objects with positions and geometrical information.</span>
+<span class="sd">        simbox : Simulation_Box</span>
+<span class="sd">            Updated simulation box reflecting particle packing.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If no particle data is available.</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">            If RVE or simulation box is not initialized before packing.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If self.precipit &gt; 0.65, particle overlaps may occur.</span>
+<span class="sd">        Requires self.rve and self.simbox to be initialized before calling.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">particle_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">particle_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">particle_data</span>
             <span class="k">if</span> <span class="n">particle_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -277,7 +368,38 @@
 <div class="viewcode-block" id="Microstructure.voxelize">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.voxelize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">voxelize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates the RVE by assigning voxels to grains.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate the RVE by assigning voxels to grains.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        particles : list or None, optional</span>
+<span class="sd">            List of particle objects to voxelize. If None, uses `self.particles`.</span>
+<span class="sd">        dim : tuple of int, optional</span>
+<span class="sd">            3-tuple specifying the number of voxels in each spatial direction.</span>
+<span class="sd">            If None, uses `self.rve.dim`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            The voxelized mesh is stored in `self.mesh`. Phase voxel fractions are</span>
+<span class="sd">            stored in `self.vf_vox` and printed to the console.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            - If `particles` is None and `self.particles` is not available.</span>
+<span class="sd">            - If `dim` is not a 3-tuple when specified.</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">            If `self.rve` or `self.simbox` is not initialized before voxelization.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Requires `self.particles` to be initialized by `pack()`.</span>
+<span class="sd">        - Updates `self.mesh`, `self.ngrains`, `self.Ngr`, and `self.vf_vox`.</span>
+<span class="sd">        - Logs warnings if phase volume fractions do not sum to 1.</span>
+<span class="sd">        - Removes polyhedral grain geometries (`self.geometry`) after re-meshing to avoid inconsistencies.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">particles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">particles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span>
             <span class="k">if</span> <span class="n">particles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -328,7 +450,37 @@
 <div class="viewcode-block" id="Microstructure.smoothen">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.smoothen">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">smoothen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grain_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates smoothed grain boundary from a voxelated mesh.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate smoothed grain boundaries from a voxelated mesh.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nodes_v : array-like or None, optional</span>
+<span class="sd">            Mesh node coordinates. If None, uses `self.mesh.nodes`.</span>
+<span class="sd">        voxel_dict : dict or None, optional</span>
+<span class="sd">            Dictionary of voxels in the mesh. If None, uses `self.mesh.voxel_dict`.</span>
+<span class="sd">        grain_dict : dict or None, optional</span>
+<span class="sd">            Dictionary mapping grains to their voxels. If None, uses `self.mesh.grain_dict`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            The smoothed nodes are stored in `self.mesh.nodes_smooth`. Grain boundary</span>
+<span class="sd">            faces are optionally stored in `self.geometry[&#39;GBfaces&#39;]`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `nodes_v` is None and `self.mesh.nodes` is not available.</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">            If `self.mesh` is not initialized before calling `smoothen()`.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Requires `self.mesh` to be initialized by `voxelize()`.</span>
+<span class="sd">        - Updates `self.mesh.nodes_smooth` with smoothed node coordinates.</span>
+<span class="sd">        - Adds &#39;GBfaces&#39; entry to `self.geometry` if it exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">nodes_v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">nodes_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span>
             <span class="k">if</span> <span class="n">nodes_v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -346,9 +498,33 @@
 <div class="viewcode-block" id="Microstructure.generate_grains">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.generate_grains">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_grains</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes out the particle- and grain diameter attributes for</span>
-<span class="sd">        statistical comparison. Final RVE grain volumes and shared grain</span>
-<span class="sd">        boundary surface areas info are written out as well.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate and store polyhedral grain geometry, including particle- and grain-diameter attributes,</span>
+<span class="sd">        for statistical comparison</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Requires `self.mesh` to be initialized by `voxelize`.</span>
+<span class="sd">        - Updates `self.geometry` with polyhedral grain volumes and shared grain boundary (GB) areas.</span>
+<span class="sd">        - If `self.precipit` is True, irregular grain 0 is temporarily removed from analysis.</span>
+<span class="sd">        - Logs warnings if grains are not represented in the polyhedral geometry.</span>
+<span class="sd">        - Prints volume fractions of each phase in the polyhedral geometry.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            The calculated grain geometry is stored in `self.geometry`. Phase volume fractions</span>
+<span class="sd">            are printed to the console.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            - If `self.mesh` or `self.mesh.grains` is None (i.e., voxelized microstructure not available).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grains</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No information about voxelized microstructure. Run voxelize first.&#39;</span><span class="p">)</span>
@@ -410,21 +586,64 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_orientations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ang</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Nbase</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
                               <span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the orientations of grains to give a desired crystallographic texture</span>
-<span class="sd">        for the number of grains in RVE.</span>
+<span class="sd">        Generate orientations for grains in a representative volume element (RVE)</span>
+<span class="sd">        to achieve a desired crystallographic texture</span>
+
+<span class="sd">        This method assigns grain orientations to achieve a specified texture. The</span>
+<span class="sd">        input can be an EBSDmap object or a string defining the type of orientation set</span>
+<span class="sd">        (random or unimodal). For unimodal textures, `ang` and `omega` must be specified.</span>
+<span class="sd">        Generated orientations are stored in `self.mesh.grain_ori_dict`, and</span>
+<span class="sd">        `self.mesh.texture` is updated accordingly.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        data</span>
-<span class="sd">        ang</span>
-<span class="sd">        omega</span>
-<span class="sd">        Nbase</span>
-<span class="sd">        hist</span>
-<span class="sd">        shared_area</span>
+<span class="sd">        data : EBSDmap or str</span>
+<span class="sd">            Input source for orientations. Can be an `EBSDmap` object or a string</span>
+<span class="sd">            specifying the type of orientation set:</span>
+<span class="sd">            - &#39;random&#39; or &#39;rnd&#39; : generate a random orientation set</span>
+<span class="sd">            - &#39;unimodal&#39;, &#39;uni_mod&#39;, or &#39;uni_modal&#39; : generate a unimodal orientation set</span>
+<span class="sd">        ang : float, optional</span>
+<span class="sd">            Orientation angle for unimodal texture (required if `data` is unimodal).</span>
+<span class="sd">        omega : float, optional</span>
+<span class="sd">            Kernel halfwidth for unimodal texture (required if `data` is unimodal).</span>
+<span class="sd">        Nbase : int, default=5000</span>
+<span class="sd">            Number of base orientations used in random or unimodal generation.</span>
+<span class="sd">        hist : array_like, optional</span>
+<span class="sd">            Histogram for the grain orientations, used to weight orientations.</span>
+<span class="sd">        shared_area : array_like or float, optional</span>
+<span class="sd">            Shared grain boundary area for weighted orientation generation.</span>
+<span class="sd">        iphase : int, optional</span>
+<span class="sd">            Phase index for which orientations are generated. If None, all phases are processed.</span>
+<span class="sd">        verbose : bool, default=False</span>
+<span class="sd">            If True, prints additional information during orientation generation.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            The generated orientations are stored in `self.mesh.grain_ori_dict` and</span>
+<span class="sd">            `self.mesh.texture` is updated to reflect the type of generated texture.</span>
 
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            - If grain geometry is not defined (i.e., `self.mesh.grains` is None).</span>
+<span class="sd">            - If `data` is unimodal but `ang` or `omega` are not provided.</span>
+<span class="sd">            - If `data` is neither `EBSDmap` nor a recognized string option.</span>
+<span class="sd">            - If histogram is provided but GB areas are not defined (and `shared_area` is None).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Generate random orientations for all grains</span>
+<span class="sd">        &gt;&gt;&gt; rve.generate_orientations(&#39;random&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Generate unimodal orientations with specified angle and halfwidth</span>
+<span class="sd">        &gt;&gt;&gt; rve.generate_orientations(&#39;unimodal&#39;, ang=30.0, omega=10.0)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Generate orientations for a specific phase with histogram weighting</span>
+<span class="sd">        &gt;&gt;&gt; rve.generate_orientations(&#39;random&#39;, hist=hist_array, iphase=1)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Generate orientations using an EBSDmap object</span>
+<span class="sd">        &gt;&gt;&gt; rve.generate_orientations(ebsd_map_obj)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">kanapy</span><span class="w"> </span><span class="kn">import</span> <span class="n">__backend__</span>
         <span class="k">if</span> <span class="n">__backend__</span> <span class="o">==</span> <span class="s1">&#39;mtex&#39;</span><span class="p">:</span>
@@ -493,7 +712,50 @@
 <div class="viewcode-block" id="Microstructure.plot_ellipsoids">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.plot_ellipsoids">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_ellipsoids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">phases</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates plot of particles&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a 3D plot of particles in the RVE</span>
+
+<span class="sd">        This function visualizes ellipsoidal particles in the Representative Volume Element (RVE).</span>
+<span class="sd">        Particles can be colored according to phase, and a custom colormap can be used.</span>
+<span class="sd">        Note that `dual_phase` is deprecated; use `phases` instead.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cmap : str, optional</span>
+<span class="sd">            Colormap used for plotting particles. Default is &#39;prism&#39;.</span>
+<span class="sd">        dual_phase : bool or None, optional</span>
+<span class="sd">            Deprecated parameter for indicating dual-phase visualization.</span>
+<span class="sd">            Use `phases` instead. Default is None.</span>
+<span class="sd">        phases : bool, optional</span>
+<span class="sd">            If True, color particles according to their phase. Default is False.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Requires `self.particles` to be initialized by `pack`.</span>
+<span class="sd">        - Automatically calculates aspect ratios of the RVE for proper 3D plotting.</span>
+<span class="sd">        - Prints a warning if `dual_phase` is used and maps it to `phases`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            Displays a 3D plot of ellipsoidal particles using `plot_ellipsoids_3D`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            - If `self.particles` is None.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Simple 3D plot with default colormap</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_ellipsoids()</span>
+
+<span class="sd">        &gt;&gt;&gt; # Color particles according to phase</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_ellipsoids(phases=True)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Use a custom colormap</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_ellipsoids(cmap=&#39;viridis&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">dual_phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Use of &quot;dual_phase&quot; is depracted. Use parameter &quot;phases&quot; instead.&#39;</span><span class="p">)</span>
             <span class="n">phases</span> <span class="o">=</span> <span class="n">dual_phase</span>
@@ -509,7 +771,53 @@
 <div class="viewcode-block" id="Microstructure.plot_particles">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.plot_particles">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plot_hull</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Generates plot of particles&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a 3D plot of particles in the RVE.</span>
+
+<span class="sd">        This function visualizes particles in the Representative Volume Element (RVE) in 3D.</span>
+<span class="sd">        Particles can be colored according to phase, plotted with their convex hulls, and</span>
+<span class="sd">        displayed using a custom colormap.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cmap : str, optional</span>
+<span class="sd">            Colormap used for plotting particles. Default is &#39;prism&#39;.</span>
+<span class="sd">        dual_phase : bool or None, optional</span>
+<span class="sd">            Deprecated parameter for indicating dual-phase visualization.</span>
+<span class="sd">            Use `phases` instead. Default is None.</span>
+<span class="sd">        phases : bool, optional</span>
+<span class="sd">            If True, color particles according to their phase. Default is False.</span>
+<span class="sd">        plot_hull : bool, optional</span>
+<span class="sd">            If True, plot the convex hull (inner polygon) of each particle. Default is True.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Requires `self.particles` to be initialized by `pack`.</span>
+<span class="sd">        - Automatically calculates aspect ratios of the RVE for proper 3D plotting.</span>
+<span class="sd">        - Prints a warning if `dual_phase` is used and maps it to `phases`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            Displays a 3D plot of particles using `plot_particles_3D`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            - If `self.particles` is None.</span>
+<span class="sd">            - If particles do not have inner polygons.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Simple 3D plot with default colormap and convex hulls</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_particles()</span>
+
+<span class="sd">        &gt;&gt;&gt; # Color particles according to phase</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_particles(phases=True)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Plot particles without convex hulls and use a custom colormap</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_particles(cmap=&#39;viridis&#39;, plot_hull=False)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">dual_phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Use of &quot;dual_phase&quot; is depracted. Use parameter &quot;phases&quot; instead.&#39;</span><span class="p">)</span>
             <span class="n">phases</span> <span class="o">=</span> <span class="n">dual_phase</span>
@@ -530,21 +838,70 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_voxels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sliced</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">ori</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">color_key</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generates plot of voxel structure</span>
+<span class="sd">        Generate a 3D visualization of the voxelized RVE structure</span>
+
+<span class="sd">        This function visualizes the voxel-based microstructure of the RVE. It supports</span>
+<span class="sd">        coloring by phase, grain ID, or crystallographic orientation, and can optionally</span>
+<span class="sd">        render a sliced view of the 3D voxel mesh.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        sliced</span>
-<span class="sd">        dual_phase</span>
-<span class="sd">        cmap</span>
-<span class="sd">        ori</span>
-<span class="sd">        color_key: int</span>
-<span class="sd">            selects the color key: 0: iphHSVKey, 1: BungeColorKey, 2: ipfHKLKey (optional, default: 0)</span>
-<span class="sd">        silent</span>
+<span class="sd">        sliced : bool, optional</span>
+<span class="sd">            If True, generates a sliced view of the voxel mesh to visualize the internal structure.</span>
+<span class="sd">            Default is False.</span>
+<span class="sd">        dual_phase : bool or None, optional</span>
+<span class="sd">            Deprecated parameter for dual-phase visualization. Use `phases` instead.</span>
+<span class="sd">            Default is None.</span>
+<span class="sd">        phases : bool, optional</span>
+<span class="sd">            If True, color voxels by phase instead of grain ID. Default is False.</span>
+<span class="sd">        cmap : str, optional</span>
+<span class="sd">            Name of the matplotlib colormap used for rendering. Default is &#39;prism&#39;.</span>
+<span class="sd">        ori : array-like, bool, or None, optional</span>
+<span class="sd">            Array of grain orientations, or True to use `self.mesh.grain_ori_dict` for coloring</span>
+<span class="sd">            via inverse pole figure (IPF) mapping. Default is None.</span>
+<span class="sd">        color_key : int, optional</span>
+<span class="sd">            Selects the color mapping for orientations:</span>
+<span class="sd">            - 0: iphHSVKey</span>
+<span class="sd">            - 1: BungeColorKey</span>
+<span class="sd">            - 2: ipfHKLKey</span>
+<span class="sd">            Default is 0.</span>
+<span class="sd">        silent : bool, optional</span>
+<span class="sd">            If True, suppresses figure display and returns the matplotlib figure object instead.</span>
+<span class="sd">            Default is False.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
+<span class="sd">        fig : matplotlib.figure.Figure or None</span>
+<span class="sd">            Returns the figure object if `silent=True`. Otherwise, displays the 3D plot and returns None.</span>
 
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `self.mesh.grains` is None, indicating that voxelization has not been performed.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Requires that the voxel mesh (`self.mesh`) has been generated by `voxelize()`.</span>
+<span class="sd">        - If `ori` is provided, orientation-based coloring is applied using `get_ipf_colors()`.</span>
+<span class="sd">        - Prints a warning if `dual_phase` is used, since it is deprecated and replaced by `phases`.</span>
+<span class="sd">        - Automatically computes aspect ratios of the RVE to ensure accurate 3D visualization.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Simple 3D plot of voxelized RVE</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_voxels()</span>
+
+<span class="sd">        &gt;&gt;&gt; # Plot a sliced view of the voxel mesh</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_voxels(sliced=True)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Color voxels by phase and use a custom colormap</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_voxels(phases=True, cmap=&#39;viridis&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Use orientation-based coloring via IPF mapping</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_voxels(ori=True, color_key=2)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Suppress figure display and get the matplotlib Figure object</span>
+<span class="sd">        &gt;&gt;&gt; fig = rve.plot_voxels(silent=True)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">dual_phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Use of &quot;dual_phase&quot; is depracted. Use parameter &quot;phases&quot; instead.&#39;</span><span class="p">)</span>
@@ -581,7 +938,64 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.plot_grains">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_grains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
                     <span class="n">ec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">phases</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Plot polygonalized microstructure&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the polygonalized microstructure of the RVE in 3D.</span>
+
+<span class="sd">        This function visualizes the polygonal (polyhedral) grain geometry of the</span>
+<span class="sd">        microstructure, typically after `generate_grains()` has been executed.</span>
+<span class="sd">        Users can customize the colormap, transparency, and edge color. It also</span>
+<span class="sd">        supports coloring grains by phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        geometry : dict or None, optional</span>
+<span class="sd">            Dictionary containing the polygonal grain geometries. If None, uses</span>
+<span class="sd">            `self.geometry`.</span>
+<span class="sd">        cmap : str, optional</span>
+<span class="sd">            Matplotlib colormap name for rendering grain colors. Default is &#39;prism&#39;.</span>
+<span class="sd">        alpha : float, optional</span>
+<span class="sd">            Transparency level of the grain surfaces (0 = fully transparent,</span>
+<span class="sd">            1 = fully opaque). Default is 0.4.</span>
+<span class="sd">        ec : list or None, optional</span>
+<span class="sd">            Edge color specified as an RGBA list, e.g. `[0.5, 0.5, 0.5, 0.1]`.</span>
+<span class="sd">            Default is `[0.5, 0.5, 0.5, 0.1]`.</span>
+<span class="sd">        dual_phase : bool or None, optional</span>
+<span class="sd">            Deprecated parameter for dual-phase coloring. Use `phases` instead.</span>
+<span class="sd">            Default is None.</span>
+<span class="sd">        phases : bool, optional</span>
+<span class="sd">            If True, color grains by phase rather than by grain ID. Default is False.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Requires polygonal grain data generated by `generate_grains()`.</span>
+<span class="sd">        - Automatically computes the aspect ratio of the RVE for correct 3D scaling.</span>
+<span class="sd">        - Visualization is handled by `plot_polygons_3D()`.</span>
+<span class="sd">        - The parameter `dual_phase` is deprecated; prefer using `phases` instead.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            Displays a 3D plot of polygonal grains.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If no polygonal geometry is available (i.e., `self.geometry` is None).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Simple 3D plot of polygonal grains with default settings</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_grains()</span>
+
+<span class="sd">        &gt;&gt;&gt; # Color grains by phase</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_grains(phases=True)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Use a custom colormap and set transparency</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_grains(cmap=&#39;viridis&#39;, alpha=0.6)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Specify edge color</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_grains(ec=[0.2, 0.2, 0.2, 0.3])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">ec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ec</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">dual_phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -608,8 +1022,78 @@
                    <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                    <span class="n">show_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                    <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">enhanced_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Plots the particle- and grain diameter attributes for statistical </span>
-<span class="sd">        comparison.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot particle, voxel, and grain diameter statistics for comparison</span>
+
+<span class="sd">        This method analyzes the microstructure at different representation levels</span>
+<span class="sd">        (particles, voxels, and polyhedral grains) and plots corresponding statistical</span>
+<span class="sd">        distributions. It can optionally handle multiphase materials, save plots,</span>
+<span class="sd">        and display detailed information about geometric parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : str or None, optional</span>
+<span class="sd">            Specifies which type of data to analyze and plot:</span>
+<span class="sd">            - &#39;p&#39; : particles</span>
+<span class="sd">            - &#39;v&#39; : voxels</span>
+<span class="sd">            - &#39;g&#39; : grains</span>
+<span class="sd">            If None, all available data types are analyzed.</span>
+<span class="sd">        gs_data : list or array-like, optional</span>
+<span class="sd">            Grain size data for comparison with simulation results.</span>
+<span class="sd">        gs_param : list or array-like, optional</span>
+<span class="sd">            Parameters for fitting grain size distributions.</span>
+<span class="sd">        ar_data : list or array-like, optional</span>
+<span class="sd">            Aspect ratio data for comparison with simulation results.</span>
+<span class="sd">        ar_param : list or array-like, optional</span>
+<span class="sd">            Parameters for fitting aspect ratio distributions.</span>
+<span class="sd">        dual_phase : bool or None, optional</span>
+<span class="sd">            Deprecated. Use `phases` instead.</span>
+<span class="sd">        phases : bool, optional</span>
+<span class="sd">            If True, perform separate statistical analysis for each phase.</span>
+<span class="sd">        save_files : bool, optional</span>
+<span class="sd">            If True, save generated plots and statistical results to files.</span>
+<span class="sd">        show_all : bool, optional</span>
+<span class="sd">            If True, display all generated plots interactively.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            If True, print detailed numerical results during analysis.</span>
+<span class="sd">        silent : bool, optional</span>
+<span class="sd">            If True, suppresses console output and returns figures directly.</span>
+<span class="sd">        enhanced_plot : bool, optional</span>
+<span class="sd">            If True, use enhanced plot styling (automatically enabled when `silent=True`).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        flist : list of matplotlib.figure.Figure or None</span>
+<span class="sd">            List of generated figure objects if `silent=True`, otherwise None.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            This function does not raise exceptions if data is missing. Instead, it logs an</span>
+<span class="sd">            error message and returns immediately.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Computes and compares geometric parameters such as principal axis lengths</span>
+<span class="sd">          (a, b, c), aspect ratios, rotation axes, and equivalent diameters.</span>
+<span class="sd">        - Results are stored in `self.rve_stats` and labeled in `self.rve_stats_labels`.</span>
+<span class="sd">        - For multiphase structures, statistics are calculated per phase.</span>
+<span class="sd">        - `dual_phase` is deprecated; prefer using `phases`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Plot all statistics with default settings</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_stats()</span>
+
+<span class="sd">        &gt;&gt;&gt; # Plot only particle statistics and show all plots interactively</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_stats(data=&#39;p&#39;, show_all=True)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Perform multiphase statistical analysis and save figures</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_stats(phases=True, save_files=True)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Suppress console output and get figure objects</span>
+<span class="sd">        &gt;&gt;&gt; figs = rve.plot_stats(silent=True)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">dual_phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Use of &quot;dual_phase&quot; is depracted. Use parameter &quot;phases&quot; instead.&#39;</span><span class="p">)</span>
             <span class="n">phases</span> <span class="o">=</span> <span class="n">dual_phase</span>
@@ -718,8 +1202,88 @@
                         <span class="n">porous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">get_res</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">show_res</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_descriptors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Plots initial statistical microstructure descriptors .&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot initial statistical microstructure descriptors of RVE and optionally return computed descriptors</span>
+
+<span class="sd">        This method analyzes the initial microstructure defined by input descriptors</span>
+<span class="sd">        (or the class attribute `self.descriptor`) and plots the distributions of</span>
+<span class="sd">        equivalent diameters and aspect ratios. For elongated grains, it prints a</span>
+<span class="sd">        summary of input and output statistics. Optionally, statistical descriptors</span>
+<span class="sd">        can be returned for further processing.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        descriptor : list of dict, dict, or None, optional</span>
+<span class="sd">            Microstructure phase descriptor(s). If None, uses `self.descriptor`.</span>
+<span class="sd">        gs_data : list or array-like, optional</span>
+<span class="sd">            Grain size data for comparison with initial statistics.</span>
+<span class="sd">        ar_data : list or array-like, optional</span>
+<span class="sd">            Aspect ratio data for comparison with initial statistics.</span>
+<span class="sd">        porous : bool, optional</span>
+<span class="sd">            If True, only the first phase is considered (e.g., for porous structures).</span>
+<span class="sd">        get_res : bool, optional</span>
+<span class="sd">            If True, computes statistical descriptors from the voxelized structure.</span>
+<span class="sd">        show_res : bool, optional</span>
+<span class="sd">            If True, prints detailed statistical results to the console.</span>
+<span class="sd">        save_files : bool, optional</span>
+<span class="sd">            If True, saves generated plots to files.</span>
+<span class="sd">        silent : bool, optional</span>
+<span class="sd">            If True, suppresses console output and returns figures directly.</span>
+<span class="sd">        return_descriptors : bool, optional</span>
+<span class="sd">            If True, returns computed statistical descriptors along with figures.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        flist : list of matplotlib.figure.Figure</span>
+<span class="sd">            List of generated figure objects.</span>
+<span class="sd">        descs : list of dict</span>
+<span class="sd">            Optional list of computed statistical descriptors if `return_descriptors=True`.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Requires voxelized microstructure (`self.mesh`) for computing descriptors.</span>
+<span class="sd">        - Computes statistics for equivalent diameter, aspect ratio, principal axes,</span>
+<span class="sd">          and rotation axes when applicable.</span>
+<span class="sd">        - Can handle multiphase or single-phase microstructures.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Plot initial statistics with default settings</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_stats_init()</span>
+
+<span class="sd">        &gt;&gt;&gt; # Plot only the first phase (porous) and save figures</span>
+<span class="sd">        &gt;&gt;&gt; rve.plot_stats_init(porous=True, save_files=True)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Compute descriptors and get figures and descriptor objects</span>
+<span class="sd">        &gt;&gt;&gt; figs, descs = rve.plot_stats_init(get_res=True, return_descriptors=True)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Suppress console output and return figure objects</span>
+<span class="sd">        &gt;&gt;&gt; figs = rve.plot_stats_init(silent=True)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">analyze_voxels</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">des</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Compute voxel-based statistical descriptors for a given phase of the RVE</span>
+
+<span class="sd">            This function calculates equivalent diameter, aspect ratio, principal axes, and rotation axis</span>
+<span class="sd">            statistics from the voxelized microstructure. It prints input vs output statistics if the phase</span>
+<span class="sd">            is elongated and returns formatted arrays for grain size, aspect ratio, and a dictionary of descriptors</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            ip : int</span>
+<span class="sd">                Index of the phase to analyze</span>
+<span class="sd">            des : dict</span>
+<span class="sd">                Descriptor dictionary for the phase containing grain type and target statistics</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            gsp : list</span>
+<span class="sd">                Summary of equivalent diameter statistics for plotting</span>
+<span class="sd">            arp : list</span>
+<span class="sd">                Summary of aspect ratio statistics for plotting</span>
+<span class="sd">            statistical_descriptors : dict</span>
+<span class="sd">                Detailed statistics including mean, std, min, max of eqd, ar, axes, and rotation axis</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;show_res is True, but no voxels have been defined. Run voxelize first.&#39;</span><span class="p">)</span>
             <span class="n">vox_stats</span> <span class="o">=</span> <span class="n">get_stats_vox</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">ip</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="n">show_res</span><span class="p">)</span>
@@ -801,33 +1365,37 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cut</span><span class="o">=</span><span class="s1">&#39;xy&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plot a slice through the microstructure.</span>
-<span class="sd">        </span>
-<span class="sd">        If polygonalized microstructure is available, it will be used as data </span>
-<span class="sd">        basis, otherwise or if data=&#39;voxels&#39; the voxelized microstructure </span>
-<span class="sd">        will be plotted.</span>
-<span class="sd">        </span>
-<span class="sd">        This subroutine calls the output_ang function with plotting active </span>
-<span class="sd">        and writing of ang file deactivated.</span>
+<span class="sd">        Plot a 2D slice through the microstructure.</span>
+
+<span class="sd">        The function visualizes a cross-section of the microstructure. If a polygonalized</span>
+<span class="sd">        microstructure is available, it will be used as the plotting basis; otherwise,</span>
+<span class="sd">        or if `data=&#39;voxels&#39;`, the voxelized microstructure will be plotted. This method</span>
+<span class="sd">        internally calls `output_ang` with plotting enabled and file writing disabled.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        cut : str, optional</span>
-<span class="sd">            Define cutting plane of slice as &#39;xy&#39;, &#39;xz&#39; or &#39;yz&#39;. The default is &#39;xy&#39;.</span>
+<span class="sd">            The cutting plane of the slice. Options are &#39;xy&#39;, &#39;xz&#39;, or &#39;yz&#39;.</span>
+<span class="sd">            Default is &#39;xy&#39;.</span>
 <span class="sd">        data : str, optional</span>
-<span class="sd">            Define data basis for plotting as &#39;voxels&#39; or &#39;poly&#39;. The default is None.</span>
-<span class="sd">        pos : str or float</span>
-<span class="sd">            Position in which slice is taken, either as absolute value, or as </span>
-<span class="sd">            one of &#39;top&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;right&#39;. The default is None.</span>
+<span class="sd">            Data basis for plotting. Options are &#39;voxels&#39; or &#39;poly&#39;. Default is None.</span>
+<span class="sd">        pos : str or float, optional</span>
+<span class="sd">            Position of the slice, either as an absolute value or as one of</span>
+<span class="sd">            &#39;top&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;right&#39;. Default is None.</span>
 <span class="sd">        fname : str, optional</span>
-<span class="sd">            Filename of PDF file. The default is None.</span>
+<span class="sd">            Filename to save the figure as a PDF. Default is None.</span>
+<span class="sd">        dual_phase : bool, optional</span>
+<span class="sd">            If True, enable dual-phase visualization. Default is False.</span>
 <span class="sd">        save_files : bool, optional</span>
-<span class="sd">            Indicate if figure file is saved and PDF. The default is False.</span>
+<span class="sd">            If True, the figure will be saved to disk. Default is False.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        None.</span>
+<span class="sd">        None</span>
 
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; micro.plot_slice(cut=&#39;xz&#39;, data=&#39;poly&#39;, pos=&#39;top&#39;, save_files=True)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_ang</span><span class="p">(</span><span class="n">cut</span><span class="o">=</span><span class="n">cut</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span>
@@ -841,42 +1409,84 @@
 <div class="viewcode-block" id="Microstructure.write_abq">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.write_abq">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_abq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grain_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ialloy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">periodicBC</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                  <span class="n">crystal_plasticity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">phase_props</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">apply_bc</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                  <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ialloy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">crystal_plasticity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">phase_props</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="o">*</span><span class="p">,</span>
+                  <span class="n">boundary_conditions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Writes out the Abaqus deck (.inp file) for the generated RVE. The parameter nodes should be</span>
-<span class="sd">        a string indicating if voxel (&quot;v&quot;) or smoothened (&quot;s&quot;) mesh should be written. It can also</span>
-<span class="sd">        provide an array of nodal positions. If dual_phase is true, the</span>
-<span class="sd">        generated deck contains plain material definitions for each phase. Material parameters must</span>
-<span class="sd">        be specified by the user. If ialloy is provided, the generated deck material definitions</span>
-<span class="sd">        for each grain. For dual phase structures to be used with crystal plasticity, ialloy</span>
-<span class="sd">        can be a list with all required material definitions. If the list ialloy is shorter than the</span>
-<span class="sd">        number of phases in the RVE, plain material definitions for the remaining phases will</span>
-<span class="sd">        be included in the input deck.</span>
+<span class="sd">        Write the Abaqus input deck (.inp) for the generated RVE</span>
+
+<span class="sd">        This method generates an Abaqus input file for the current RVE. It supports</span>
+<span class="sd">        voxelized or smoothened meshes, dual-phase materials, crystal plasticity,</span>
+<span class="sd">        thermal analysis, custom material properties, and optional boundary conditions.</span>
+<span class="sd">        Material definitions and mesh data are automatically handled based on provided</span>
+<span class="sd">        arguments or class attributes.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        nodes</span>
-<span class="sd">        file</span>
-<span class="sd">        path</span>
-<span class="sd">        voxel_dict</span>
-<span class="sd">        grain_dict</span>
-<span class="sd">        dual_phase</span>
-<span class="sd">        thermal</span>
-<span class="sd">        units</span>
-<span class="sd">        ialloy</span>
-<span class="sd">        nsdv</span>
-<span class="sd">        bc_type</span>
-<span class="sd">        load_type</span>
-<span class="sd">        loading_direction</span>
-<span class="sd">        value</span>
-<span class="sd">        apply_bc : bool, optional</span>
-<span class="sd">            If True, boundary conditions are written to the Abaqus input file. Default is False.</span>
+<span class="sd">        nodes : str or array-like, optional</span>
+<span class="sd">            Defines the mesh to write:</span>
+<span class="sd">            - &#39;voxels&#39;, &#39;v&#39; : use voxelized mesh</span>
+<span class="sd">            - &#39;smooth&#39;, &#39;s&#39; : use smoothened mesh</span>
+<span class="sd">            - array-like : explicit nodal coordinates</span>
+<span class="sd">            Default is None, automatically selecting available mesh.</span>
+<span class="sd">        file : str, optional</span>
+<span class="sd">            Filename for the Abaqus input deck. Default is auto-generated.</span>
+<span class="sd">        path : str, optional</span>
+<span class="sd">            Directory path to save the input deck. Default is &#39;./&#39;.</span>
+<span class="sd">        voxel_dict : dict, optional</span>
+<span class="sd">            Dictionary with voxel information. Default is `self.mesh.voxel_dict`.</span>
+<span class="sd">        grain_dict : dict, optional</span>
+<span class="sd">            Dictionary mapping grain IDs to nodes. Default is `self.mesh.grain_dict`.</span>
+<span class="sd">        dual_phase : bool, optional</span>
+<span class="sd">            If True, generate input for dual-phase materials. Default is False.</span>
+<span class="sd">        thermal : bool, optional</span>
+<span class="sd">            If True, include thermal material definitions. Default is False.</span>
+<span class="sd">        units : str, optional</span>
+<span class="sd">            Units for the model, &#39;mm&#39; or &#39;um&#39;. Default is `self.rve.units`.</span>
+<span class="sd">        ialloy : list or object, optional</span>
+<span class="sd">            Material definitions for each phase. Default is `self.rve.ialloy`.</span>
+<span class="sd">        nsdv : int, optional</span>
+<span class="sd">            Number of state variables per integration point for crystal plasticity. Default is 200.</span>
+<span class="sd">        crystal_plasticity : bool, optional</span>
+<span class="sd">            If True, enable crystal plasticity material definitions. Default is False.</span>
+<span class="sd">        phase_props : dict, optional</span>
+<span class="sd">            Additional phase-specific material properties.</span>
+<span class="sd">        boundary_conditions : dict, optional</span>
+<span class="sd">            Dictionary specifying boundary conditions to write. Default is None.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        file : str</span>
-<span class="sd">            Path to the generated Abaqus input file.</span>
+<span class="sd">            Full path to the generated Abaqus input file.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            - If no voxelized or smoothened mesh is available when required.</span>
+<span class="sd">            - If invalid `nodes` argument is provided.</span>
+<span class="sd">            - If units are not &#39;mm&#39; or &#39;um&#39;.</span>
+<span class="sd">            - If the list `ialloy` is longer than the number of phases in the RVE.</span>
+<span class="sd">            - If periodic boundary conditions are requested but the RVE is non-periodic.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Automatically selects voxel or smoothened mesh if `nodes` is None.</span>
+<span class="sd">        - Handles dual-phase structures and crystal plasticity input.</span>
+<span class="sd">        - Writes additional material files if orientations are available and `ialloy` is provided.</span>
+<span class="sd">        - Visualization or mesh generation must be performed before calling this function.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Write voxelized RVE input deck with default settings</span>
+<span class="sd">        &gt;&gt;&gt; abq_file = rve.write_abq(nodes=&#39;voxels&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Write smoothened RVE deck for dual-phase material</span>
+<span class="sd">        &gt;&gt;&gt; abq_file = rve.write_abq(nodes=&#39;smooth&#39;, dual_phase=True, ialloy=alloy_list)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Include boundary conditions</span>
+<span class="sd">        &gt;&gt;&gt; bc = {&#39;ux&#39;: [0, 0.1], &#39;uy&#39;: [0, 0.1]}</span>
+<span class="sd">        &gt;&gt;&gt; abq_file = rve.write_abq(nodes=&#39;voxels&#39;, boundary_conditions=bc)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nodes_smooth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;GBarea&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -955,9 +1565,9 @@
                       <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="n">gb_area</span><span class="o">=</span><span class="n">faces</span><span class="p">,</span>
                       <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span>
                       <span class="n">ialloy</span><span class="o">=</span><span class="n">ialloy</span><span class="p">,</span> <span class="n">grain_phase_dict</span><span class="o">=</span><span class="n">grpd</span><span class="p">,</span>
-                      <span class="n">thermal</span><span class="o">=</span><span class="n">thermal</span><span class="p">,</span>  <span class="n">periodicBC</span> <span class="o">=</span> <span class="n">periodicBC</span><span class="p">,</span>
+                      <span class="n">thermal</span><span class="o">=</span><span class="n">thermal</span><span class="p">,</span>
                       <span class="n">crystal_plasticity</span> <span class="o">=</span> <span class="n">crystal_plasticity</span><span class="p">,</span>
-                      <span class="n">phase_props</span> <span class="o">=</span> <span class="n">phase_props</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">apply_bc</span><span class="o">=</span><span class="n">apply_bc</span><span class="p">)</span>
+                      <span class="n">phase_props</span> <span class="o">=</span> <span class="n">phase_props</span><span class="p">,</span> <span class="n">boundary_conditions</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">)</span>
 
         <span class="c1"># if orientations exist and ialloy is defined also write material file with Euler angles</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ialloy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
@@ -970,6 +1580,50 @@
 <div class="viewcode-block" id="Microstructure.write_abq_ori">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.write_abq_ori">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_abq_ori</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ialloy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ori</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write Abaqus material input file using grain orientations for crystal plasticity</span>
+
+<span class="sd">        This function generates an Abaqus `.inp` file containing material definitions</span>
+<span class="sd">        for crystal plasticity, using the provided grain orientations and material IDs.</span>
+<span class="sd">        If `ialloy` or `ori` are not specified, the method uses the RVE&#39;s default values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ialloy : list or object, optional</span>
+<span class="sd">            Material identifiers for each phase. Default is `self.rve.ialloy`.</span>
+<span class="sd">        ori : dict or array-like, optional</span>
+<span class="sd">            Dictionary or array of grain orientations. Default is `self.mesh.grain_ori_dict`.</span>
+<span class="sd">        file : str, optional</span>
+<span class="sd">            Name of the output Abaqus material file. Default is auto-generated based on RVE name.</span>
+<span class="sd">        path : str, optional</span>
+<span class="sd">            Directory path where the file will be saved. Default is &#39;./&#39;.</span>
+<span class="sd">        nsdv : int, optional</span>
+<span class="sd">            Number of state variables per integration point for crystal plasticity. Default is 200.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        file : str</span>
+<span class="sd">            Full path to the generated Abaqus material input file.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            - If `ialloy` is not provided and `self.rve.ialloy` is None.</span>
+<span class="sd">            - If `ori` is not provided and `self.mesh.grain_ori_dict` is None.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Calls `writeAbaqusMat` internally to generate the material definitions.</span>
+<span class="sd">        - Assumes the RVE and grain orientations have been initialized prior to calling.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Write material file using default RVE orientations and material numbers</span>
+<span class="sd">        &gt;&gt;&gt; abq_file = rve.write_abq_ori()</span>
+
+<span class="sd">        &gt;&gt;&gt; # Specify custom material IDs and orientations</span>
+<span class="sd">        &gt;&gt;&gt; abq_file = rve.write_abq_ori(ialloy=alloy_list, ori=ori_dict, file=&#39;custom_mat.inp&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">ialloy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ialloy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">ialloy</span>
             <span class="k">if</span> <span class="n">ialloy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -991,8 +1645,31 @@
 <div class="viewcode-block" id="Microstructure.output_neper">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.output_neper">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">output_neper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Writes out particle position and weights files required for</span>
-<span class="sd">        tessellation in Neper.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write particle position and weight files for Neper tessellation</span>
+
+<span class="sd">        This function generates two text files required for tessellation in Neper:</span>
+<span class="sd">        - `sphere_positions.txt` containing the x, y, z coordinates of each particle</span>
+<span class="sd">        - `sphere_weights.txt` containing the weight (radius) of each particle</span>
+
+<span class="sd">        The files are written in the current working directory. Each particle in</span>
+<span class="sd">        `self.particles` is included in the output.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `self.particles` is None, indicating that particles have not been packed yet.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Requires that particles are initialized via the `pack()` method.</span>
+<span class="sd">        - The particle dictionary is built internally but not returned.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Write Neper input files for current particles</span>
+<span class="sd">        &gt;&gt;&gt; rve.output_neper()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># write_position_weights(timestep)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No particle to plot. Run pack first.&#39;</span><span class="p">)</span>
@@ -1021,45 +1698,69 @@
                    <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">matname</span><span class="o">=</span><span class="s1">&#39;XXXX&#39;</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                    <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convert orientation information of microstructure into a .ang file,</span>
-<span class="sd">        mimicking an EBSD map.</span>
-<span class="sd">        If polygonalized microstructure is available, it will be used as data </span>
-<span class="sd">        basis, otherwise or if data=&#39;voxels&#39; the voxelized microstructure </span>
-<span class="sd">        will be exported.</span>
-<span class="sd">        If no orientations are provided, each grain will get a random </span>
-<span class="sd">        Euler angle.</span>
-<span class="sd">        Values in ANG file:</span>
-<span class="sd">        phi1 Phi phi2 X Y imageQuality confidenseIndex phase semSignal Fit(/mad)</span>
-<span class="sd">        Output of ang file can be deactivated if called for plotting of slice.</span>
+<span class="sd">        Convert microstructure orientations into a .ang file, optionally plotting a slice</span>
 
+<span class="sd">        This function generates a .ang file mimicking an EBSD map. If polygonalized</span>
+<span class="sd">        microstructure is available, it will be used; otherwise, or if `data=&#39;voxels&#39;`,</span>
+<span class="sd">        the voxelized microstructure will be exported. If no orientations are provided,</span>
+<span class="sd">        each grain receives a random Euler angle. The function can also plot a 2D slice</span>
+<span class="sd">        of the orientation map along a specified cutting plane.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        ori : (self.Ngr, )-array, optional</span>
-<span class="sd">            Euler angles of grains. The default is None.</span>
-<span class="sd">        cut : str, optional</span>
-<span class="sd">            Define cutting plane of slice as &#39;xy&#39;, &#39;xz&#39; or &#39;yz&#39;. The default is &#39;xy&#39;.</span>
-<span class="sd">        data : str, optional</span>
-<span class="sd">            Define data basis for plotting as &#39;voxels&#39; or &#39;poly&#39;. The default is None.</span>
+<span class="sd">        ori : array-like of shape (self.Ngr, 3), optional</span>
+<span class="sd">            Euler angles of grains. If None, random angles are generated.</span>
+<span class="sd">        cut : {&#39;xy&#39;, &#39;xz&#39;, &#39;yz&#39;}, optional</span>
+<span class="sd">            Plane along which to take a slice. Default is &#39;xy&#39;.</span>
+<span class="sd">        data : {&#39;voxels&#39;, &#39;poly&#39;}, optional</span>
+<span class="sd">            Basis for generating the ANG file. Default is None, automatically selected.</span>
 <span class="sd">        plot : bool, optional</span>
-<span class="sd">            Indicate if slice is plotted. The default is True.</span>
-<span class="sd">        pos : str or float</span>
-<span class="sd">            Position in which slice is taken, either as absolute value, or as </span>
-<span class="sd">            one of &#39;top&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;right&#39;. The default is None.</span>
-<span class="sd">        cs : str, Optional</span>
-<span class="sd">            Crystal symmetry. Default is None</span>
+<span class="sd">            Whether to display a plot of the slice. Default is True.</span>
+<span class="sd">        cs : str, optional</span>
+<span class="sd">            Crystal symmetry. Default is None.</span>
+<span class="sd">        pos : float or str, optional</span>
+<span class="sd">            Slice position as a numerical value or one of &#39;top&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;right&#39;.</span>
+<span class="sd">            Default is None (uses top/right edge).</span>
 <span class="sd">        fname : str, optional</span>
-<span class="sd">            Filename of ang file. The default is None.</span>
+<span class="sd">            Filename for the output ANG file. Default is generated automatically.</span>
 <span class="sd">        matname : str, optional</span>
-<span class="sd">            Name of the material to be written in ang file. The default is &#39;XXXX&#39;</span>
+<span class="sd">            Material name to write in the ANG file. Default is &#39;XXXX&#39;.</span>
 <span class="sd">        save_files : bool, optional</span>
-<span class="sd">            Indicate if ang file is saved, The default is True.</span>
+<span class="sd">            Whether to save the ANG file. Default is True.</span>
+<span class="sd">        dual_phase : bool, optional</span>
+<span class="sd">            Whether to output dual-phase information. Default is False.</span>
+<span class="sd">        save_plot : bool, optional</span>
+<span class="sd">            Whether to save the plot as a PDF. Default is False.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        fname : str</span>
-<span class="sd">            Name of ang file.</span>
+<span class="sd">            Name of the generated ANG file.</span>
 
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            - If `pos` is not a float or one of &#39;top&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;right&#39;.</span>
+<span class="sd">            - If `cut` is not &#39;xy&#39;, &#39;xz&#39;, or &#39;yz&#39;.</span>
+<span class="sd">            - If neither polygonal nor voxel microstructure is available.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Uses Delaunay triangulation to determine which grain each pixel belongs to</span>
+<span class="sd">          when exporting polygons.</span>
+<span class="sd">        - Slice plotting uses a colormap (default &#39;prism&#39;) and includes optional</span>
+<span class="sd">          dual-phase coloring.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Export an XY slice with default settings</span>
+<span class="sd">        &gt;&gt;&gt; fname = rve.output_ang(cut=&#39;xy&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Export a slice using voxel data and a specific Euler angles array</span>
+<span class="sd">        &gt;&gt;&gt; fname = rve.output_ang(ori=euler_array, data=&#39;voxels&#39;, cut=&#39;xz&#39;, pos=10)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Plot and save the slice as PDF</span>
+<span class="sd">        &gt;&gt;&gt; fname = rve.output_ang(save_plot=True)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">ori</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
             <span class="n">ori</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">ori</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
@@ -1274,9 +1975,13 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.write_stl">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_stl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s1">&#39;grains&#39;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
                   <span class="n">phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">phase_num</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Write triangles of convex polyhedra forming grains in form of STL</span>
-<span class="sd">        files in the format</span>
-<span class="sd">        &#39;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Export grains or particles as STL files representing convex polyhedra</span>
+
+<span class="sd">        This function writes STL files with triangular facets for grains or particles.</span>
+<span class="sd">        Each facet is written in standard STL ASCII format:</span>
+
+<span class="sd">        ```</span>
 <span class="sd">        solid name</span>
 <span class="sd">          facet normal n1 n2 n3</span>
 <span class="sd">            outer loop</span>
@@ -1286,15 +1991,64 @@
 <span class="sd">            endloop</span>
 <span class="sd">          endfacet</span>
 <span class="sd">        endsolid name</span>
-<span class="sd">        &#39;</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : {&#39;grains&#39;, &#39;particles&#39;}, optional</span>
+<span class="sd">            Determines whether to export grains or particles. Default is &#39;grains&#39;.</span>
+<span class="sd">        file : str, optional</span>
+<span class="sd">            Filename for the STL file. Default is generated from `self.name`.</span>
+<span class="sd">        path : str, optional</span>
+<span class="sd">            Directory to save the STL file. Default is &#39;./&#39;.</span>
+<span class="sd">        phases : bool, optional</span>
+<span class="sd">            If True, export only grains of a specific phase. Default is False.</span>
+<span class="sd">        phase_num : int, optional</span>
+<span class="sd">            Phase number to export if `phases=True`. Required in that case.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        None.</span>
+<span class="sd">        None</span>
 
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            - If `phases=True` but `phase_num` is not provided.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Facet normals are automatically computed using cross products of vertices.</span>
+<span class="sd">        - Acute or irregular facets trigger warnings.</span>
+<span class="sd">        - For particle export, each particle must have a valid inner polyhedron.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Export all grains to STL</span>
+<span class="sd">        &gt;&gt;&gt; rve.write_stl()</span>
+
+<span class="sd">        &gt;&gt;&gt; # Export particles to STL</span>
+<span class="sd">        &gt;&gt;&gt; rve.write_stl(data=&#39;particles&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; # Export only phase 1 grains</span>
+<span class="sd">        &gt;&gt;&gt; rve.write_stl(phases=True, phase_num=1)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">write_facet</span><span class="p">(</span><span class="n">nv</span><span class="p">,</span> <span class="n">pts</span><span class="p">,</span> <span class="n">ft</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Write a single triangular facet to the STL file with a normalized normal vector</span>
+
+<span class="sd">            Checks for degenerate or nearly zero-length normals and issues warnings</span>
+<span class="sd">            if the facet is acute or irregular. Writes the facet in ASCII STL format.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            nv : ndarray</span>
+<span class="sd">                Initial normal vector of the facet.</span>
+<span class="sd">            pts : ndarray</span>
+<span class="sd">                3x3 array of vertex coordinates defining the facet.</span>
+<span class="sd">            ft : int</span>
+<span class="sd">                Facet index, used for logging warnings.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">nv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Acute facet detected. Facet: </span><span class="si">{</span><span class="n">ft</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">nv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -1314,12 +2068,32 @@
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; endfacet</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">write_grains</span><span class="p">():</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Write all grain facets of the microstructure to the STL file</span>
+
+<span class="sd">            Iterates over all facets defined in `self.geometry[&#39;Facets&#39;]`, computes</span>
+<span class="sd">            the facet normal, and calls `write_facet` to output each triangular facet.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">for</span> <span class="n">ft</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Facets&#39;</span><span class="p">]:</span>
                 <span class="n">pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Points&#39;</span><span class="p">][</span><span class="n">ft</span><span class="p">]</span>
                 <span class="n">nv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># facet normal</span>
                 <span class="n">write_facet</span><span class="p">(</span><span class="n">nv</span><span class="p">,</span> <span class="n">pts</span><span class="p">,</span> <span class="n">ft</span><span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">write_phases</span><span class="p">(</span><span class="n">ip</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Write facets of grains belonging to a specific phase to the STL file</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            ip : int</span>
+<span class="sd">                Phase number for which the grain facets should be exported.</span>
+
+<span class="sd">            Notes</span>
+<span class="sd">            -----</span>
+<span class="sd">            Iterates over all grains in `self.geometry[&#39;Grains&#39;]` and writes only</span>
+<span class="sd">            the facets of grains whose &#39;Phase&#39; matches `ip`. Each facet is output</span>
+<span class="sd">            using the `write_facet` function.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">for</span> <span class="n">grain</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">grain</span><span class="p">[</span><span class="s1">&#39;Phase&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">ip</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">ft</span> <span class="ow">in</span> <span class="n">grain</span><span class="p">[</span><span class="s1">&#39;Simplices&#39;</span><span class="p">]:</span>
@@ -1328,6 +2102,14 @@
                         <span class="n">write_facet</span><span class="p">(</span><span class="n">nv</span><span class="p">,</span> <span class="n">pts</span><span class="p">,</span> <span class="n">ft</span><span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">write_particles</span><span class="p">():</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Write facets of all particle convex hulls to the STL file</span>
+
+<span class="sd">            Notes</span>
+<span class="sd">            -----</span>
+<span class="sd">            Iterates over all particles in `self.particles` and exports each facet</span>
+<span class="sd">            from the particle&#39;s inner convex hull using the `write_facet` function.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">for</span> <span class="n">pa</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">ft</span> <span class="ow">in</span> <span class="n">pa</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">convex_hull</span><span class="p">:</span>
                     <span class="n">pts</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">inner</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">ft</span><span class="p">]</span>
@@ -1364,7 +2146,27 @@
 <div class="viewcode-block" id="Microstructure.write_centers">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.write_centers">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">grains</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write grain center positions into CSV file.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the center positions of grains to a CSV file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file : str, optional</span>
+<span class="sd">            Filename for the CSV file. Default is auto-generated based on `self.name`.</span>
+<span class="sd">        path : str, optional</span>
+<span class="sd">            Directory path to save the CSV file. Default is &#39;./&#39;.</span>
+<span class="sd">        grains : dict, optional</span>
+<span class="sd">            Dictionary of grain data. Default is `self.geometry[&#39;Grains&#39;]`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Each line in the CSV file corresponds to a grain center in the format: x, y, z.</span>
+<span class="sd">        - Polyhedral grains without simplices are skipped.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Microstructure&#39;</span><span class="p">:</span>
                 <span class="n">file</span> <span class="o">=</span> <span class="s1">&#39;px_</span><span class="si">{}</span><span class="s1">grains_centroid.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="p">)</span>
@@ -1385,6 +2187,47 @@
 <div class="viewcode-block" id="Microstructure.write_ori">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.write_ori">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_ori</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write grain orientations (Euler angles) to a CSV file</span>
+
+<span class="sd">        This method exports the orientations of grains in the microstructure. If no angles</span>
+<span class="sd">        are provided, the method uses the stored grain orientations from the mesh. The CSV</span>
+<span class="sd">        file contains one row per grain with three values representing the Euler angles</span>
+<span class="sd">        (phi1, Phi, phi2).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        angles : array-like of shape (N, 3), optional</span>
+<span class="sd">            Euler angles for each grain. If None, the stored orientations are used.</span>
+<span class="sd">        file : str, optional</span>
+<span class="sd">            Name of the output CSV file. If None, a default name based on the microstructure</span>
+<span class="sd">            name and number of grains is used.</span>
+<span class="sd">        path : str, optional</span>
+<span class="sd">            Directory path where the CSV file will be saved. Default is &#39;./&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Full path to the generated CSV file.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `angles` is None and no grain orientations are stored in `self.mesh.grain_ori_dict`.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Each row in the CSV corresponds to one grain.</span>
+<span class="sd">        - Values are written in the order: phi1, Phi, phi2 (in radians).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Export stored orientations to default file</span>
+<span class="sd">        &gt;&gt;&gt; rve.write_ori()</span>
+
+<span class="sd">        &gt;&gt;&gt; # Export provided orientations to a specific file</span>
+<span class="sd">        &gt;&gt;&gt; rve.write_ori(angles=my_angles, file=&#39;grain_orientations.csv&#39;, path=&#39;./data&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Microstructure&#39;</span><span class="p">:</span>
                 <span class="n">file</span> <span class="o">=</span> <span class="s1">&#39;px_</span><span class="si">{}</span><span class="s1">grains_ori.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="p">)</span>
@@ -1408,21 +2251,37 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">write_voxels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">script_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
                      <span class="n">mesh</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">system</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Write voxel structure into JSON file.</span>
+<span class="sd">        Write voxel structure of the microstructure to a JSON file</span>
+
+<span class="sd">        This function exports the voxel-based representation of the microstructure,</span>
+<span class="sd">        including grain numbers, optional orientations, and mesh data. Metadata such</span>
+<span class="sd">        as owner, system information, and script name are included.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        angles</span>
-<span class="sd">        script_name</span>
-<span class="sd">        file</span>
-<span class="sd">        path</span>
-<span class="sd">        mesh</span>
-<span class="sd">        source</span>
-<span class="sd">        system</span>
+<span class="sd">        angles : np.ndarray, optional</span>
+<span class="sd">            Array of Euler angles for grain orientations. If None, stored orientations</span>
+<span class="sd">            are used if available. Default is None.</span>
+<span class="sd">        script_name : str, optional</span>
+<span class="sd">            Name of the script used to generate the microstructure. Default is the</span>
+<span class="sd">            current script file.</span>
+<span class="sd">        file : str, optional</span>
+<span class="sd">            Name of the output JSON file. Default is based on microstructure name and</span>
+<span class="sd">            number of grains.</span>
+<span class="sd">        path : str, optional</span>
+<span class="sd">            Directory path to save the JSON file. Default is current directory &#39;./&#39;.</span>
+<span class="sd">        mesh : bool, optional</span>
+<span class="sd">            Whether to include mesh nodes and voxel connectivity in the output. Default</span>
+<span class="sd">            is True.</span>
+<span class="sd">        source : Any, optional</span>
+<span class="sd">            Optional input or source information to include in the JSON metadata.</span>
+<span class="sd">        system : bool, optional</span>
+<span class="sd">            Whether to include system information in the JSON metadata. Default is False.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-
+<span class="sd">        None</span>
+<span class="sd">            The function writes a JSON file and does not return any value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
@@ -1535,12 +2394,42 @@
                          <span class="n">length_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;µm&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate a JSON file containing User-, System-, and Job-Specific Elements.</span>
+<span class="sd">        Generate a JSON-compatible data schema containing user, system, and job-specific elements</span>
 
-<span class="sd">        - `user_metadata`: prefilled metadata fields (if interactive=False).</span>
-<span class="sd">        - `boundary_condition`: separate BC dict (mechanical_BC or thermal_BC).</span>
-<span class="sd">        - `interactive`: if True and inputs missing, prompt user.</span>
-<span class="sd">        - `structured`: whether mesh is structured.</span>
+<span class="sd">        This function builds a comprehensive data dictionary for a microstructure simulation,</span>
+<span class="sd">        including metadata, boundary conditions, phase information, voxel and grain data.</span>
+<span class="sd">        It supports interactive prompts for missing information, structured/unstructured meshes,</span>
+<span class="sd">        and unit scaling.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        user_metadata : dict, optional</span>
+<span class="sd">            Prefilled metadata fields; required if interactive=False. Default is None.</span>
+<span class="sd">        boundary_condition : dict, optional</span>
+<span class="sd">            Dictionary specifying mechanical or thermal boundary conditions. Default is None.</span>
+<span class="sd">        phases : dict or list of dicts, optional</span>
+<span class="sd">            Phase-specific information; if None, default material library and ialloy are used.</span>
+<span class="sd">        interactive : bool, optional</span>
+<span class="sd">            If True, prompt user for missing information. Default is True.</span>
+<span class="sd">        structured : bool, optional</span>
+<span class="sd">            Whether the mesh is structured. Default is True.</span>
+<span class="sd">        ialloy : int, optional</span>
+<span class="sd">            Alloy index for selecting material properties from the built-in library. Default is 1.</span>
+<span class="sd">        length_unit : str, optional</span>
+<span class="sd">            Unit for length scaling; either &#39;µm&#39; or &#39;mm&#39;. Default is &#39;µm&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A nested dictionary containing the complete data schema for the simulation.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If interactive=False and required metadata fields or boundary conditions are missing,</span>
+<span class="sd">            or if length_unit is invalid</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `phases` is not a dict or a list of dicts when provided</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
 
@@ -1668,6 +2557,23 @@
         <span class="p">]</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">prompt_list</span><span class="p">(</span><span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Prompt the user to enter a comma-separated list of values</span>
+
+<span class="sd">            This function requests user input for a given field name and splits</span>
+<span class="sd">            the input string into a list of stripped strings. Returns an empty</span>
+<span class="sd">            list if the input is blank.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            field_name : str</span>
+<span class="sd">                Name of the field to prompt the user for</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            list of str</span>
+<span class="sd">                List of values entered by the user, with leading/trailing whitespace removed</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">vals</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Enter comma-separated </span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">: &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vals</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span> <span class="k">if</span> <span class="n">vals</span> <span class="k">else</span> <span class="p">[]</span>
 
@@ -1723,7 +2629,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required metadata fields: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">ig</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;RVE_size&#39;</span><span class="p">:</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">*</span> <span class="n">length_scale</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">],</span>
+            <span class="s1">&#39;RVE_size&#39;</span><span class="p">:</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="n">length_scale</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">],</span>
             <span class="s1">&#39;RVE_continuity&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">periodic</span><span class="p">,</span>
             <span class="s1">&#39;discretization_type&#39;</span><span class="p">:</span> <span class="s1">&#39;Structured&#39;</span> <span class="k">if</span> <span class="n">structured</span> <span class="k">else</span> <span class="s1">&#39;Unstructured&#39;</span><span class="p">,</span>
             <span class="s1">&#39;discretization_unit_size&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> <span class="o">*</span> <span class="n">length_scale</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">)],</span>
@@ -1885,6 +2791,21 @@
         <span class="n">voxel_volume</span> <span class="o">=</span> <span class="p">(</span><span class="n">unit_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit_sizes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span> \
                        <span class="o">*</span> <span class="p">(</span><span class="n">unit_sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit_sizes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span> \
                        <span class="o">*</span> <span class="p">(</span><span class="n">unit_sizes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unit_sizes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="c1"># grid size per axis</span>
+        <span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="n">Nz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rve_dim</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">rve_dim</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">rve_dim</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="c1"># infer origin from centers if available: origin = min(center) - 0.5*unit</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vox_center_dict</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span> <span class="n">length_scale</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">vox_center_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+            <span class="n">ys</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span> <span class="n">length_scale</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">vox_center_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+            <span class="n">zs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span> <span class="n">length_scale</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">vox_center_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+            <span class="n">ox</span> <span class="o">=</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="k">if</span> <span class="n">xs</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">unit_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">oy</span> <span class="o">=</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span> <span class="k">if</span> <span class="n">ys</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">unit_sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">oz</span> <span class="o">=</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">zs</span><span class="p">)</span> <span class="k">if</span> <span class="n">zs</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">unit_sizes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ox</span> <span class="o">=</span> <span class="n">oy</span> <span class="o">=</span> <span class="n">oz</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="p">[</span><span class="n">ox</span><span class="p">,</span> <span class="n">oy</span><span class="p">,</span> <span class="n">oz</span><span class="p">]</span>
+
         <span class="c1"># ─── precompute voxel→grain lookup ───────────────────────────────────────</span>
         <span class="n">voxel_to_grain</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">vid</span><span class="p">:</span> <span class="n">gid</span>
@@ -1895,7 +2816,7 @@
         <span class="n">grains_t0</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">gid</span> <span class="ow">in</span> <span class="n">grain_phase_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;gid&quot;</span><span class="p">:</span> <span class="n">gid</span><span class="p">,</span>
+                <span class="s2">&quot;grain_id&quot;</span><span class="p">:</span> <span class="n">gid</span><span class="p">,</span>
                 <span class="s2">&quot;phase_id&quot;</span><span class="p">:</span> <span class="n">grain_phase_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gid</span><span class="p">),</span>
                 <span class="s2">&quot;grain_volume&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">grain_to_voxels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">*</span> <span class="n">voxel_volume</span><span class="p">,</span>
             <span class="p">}</span>
@@ -1904,17 +2825,81 @@
                 <span class="k">if</span> <span class="n">ori</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;orientation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ori</span><span class="p">)</span>
             <span class="n">grains_t0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+        <span class="n">grains_t0_sorted</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">grains_t0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;grain_id&quot;</span><span class="p">]))</span>
 
         <span class="c1"># ─── Build time‐0 voxel dictionary ────────────────────────────────────────</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_coord_to_index_1based</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Convert a coordinate to a 1-based voxel index</span>
+
+<span class="sd">            This function computes the voxel index corresponding to a coordinate `c`,</span>
+<span class="sd">            given the origin `o` and voxel size `d`. The result is rounded and adjusted</span>
+<span class="sd">            to be 1-based, robust to small floating-point errors.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            c : float</span>
+<span class="sd">                Coordinate value</span>
+<span class="sd">            o : float</span>
+<span class="sd">                Origin coordinate of the voxel grid</span>
+<span class="sd">            d : float</span>
+<span class="sd">                Size of a voxel along the corresponding axis</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            int</span>
+<span class="sd">                1-based voxel index corresponding to the coordinate</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># i = round((c - o)/d + 0.5), robust to tiny float noise</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">o</span><span class="p">))</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">))</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_clamp</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Clamp a value between a lower and upper bound</span>
+
+<span class="sd">            This function ensures that the input value `v` lies within the range</span>
+<span class="sd">            [`lo`, `hi`]. Values below `lo` are set to `lo`, and values above `hi`</span>
+<span class="sd">            are set to `hi`.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            v : float</span>
+<span class="sd">                Value to be clamped</span>
+<span class="sd">            lo : float</span>
+<span class="sd">                Lower bound</span>
+<span class="sd">            hi : float</span>
+<span class="sd">                Upper bound</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            float</span>
+<span class="sd">                The clamped value within the specified bounds</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">lo</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">hi</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+
         <span class="n">voxels_t0</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">vid</span><span class="p">,</span> <span class="n">gid</span> <span class="ow">in</span> <span class="n">voxel_to_grain</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cz</span> <span class="o">=</span> <span class="n">vox_center_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">vid</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="n">centroid</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">cx</span><span class="p">)</span> <span class="o">*</span> <span class="n">length_scale</span><span class="p">,</span>
+                        <span class="nb">float</span><span class="p">(</span><span class="n">cy</span><span class="p">)</span> <span class="o">*</span> <span class="n">length_scale</span><span class="p">,</span>
+                        <span class="nb">float</span><span class="p">(</span><span class="n">cz</span><span class="p">)</span> <span class="o">*</span> <span class="n">length_scale</span><span class="p">]</span>
+
+            <span class="c1"># Compute 1-based voxel indices from centers</span>
+            <span class="n">ix</span> <span class="o">=</span> <span class="n">_coord_to_index_1based</span><span class="p">(</span><span class="n">centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">unit_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">iy</span> <span class="o">=</span> <span class="n">_coord_to_index_1based</span><span class="p">(</span><span class="n">centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">unit_sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">iz</span> <span class="o">=</span> <span class="n">_coord_to_index_1based</span><span class="p">(</span><span class="n">centroid</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">origin</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">unit_sizes</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+            <span class="c1"># Clamp to valid range [1..N*]</span>
+            <span class="n">ix</span> <span class="o">=</span> <span class="n">_clamp</span><span class="p">(</span><span class="n">ix</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Nx</span><span class="p">)</span>
+            <span class="n">iy</span> <span class="o">=</span> <span class="n">_clamp</span><span class="p">(</span><span class="n">iy</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Ny</span><span class="p">)</span>
+            <span class="n">iz</span> <span class="o">=</span> <span class="n">_clamp</span><span class="p">(</span><span class="n">iz</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Nz</span><span class="p">)</span>
+
+
             <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;vid&quot;</span><span class="p">:</span> <span class="n">vid</span><span class="p">,</span>
+                <span class="s2">&quot;voxel_id&quot;</span><span class="p">:</span> <span class="n">vid</span><span class="p">,</span>
                 <span class="s2">&quot;grain_id&quot;</span><span class="p">:</span> <span class="n">gid</span><span class="p">,</span>
-                <span class="s2">&quot;centroid_coordinates&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">cx</span><span class="p">)</span> <span class="o">*</span> <span class="n">length_scale</span><span class="p">,</span>
-                                         <span class="nb">float</span><span class="p">(</span><span class="n">cy</span><span class="p">)</span> <span class="o">*</span> <span class="n">length_scale</span><span class="p">,</span>
-                                         <span class="nb">float</span><span class="p">(</span><span class="n">cz</span><span class="p">)</span> <span class="o">*</span> <span class="n">length_scale</span><span class="p">],</span>
+                <span class="s2">&quot;centroid_coordinates&quot;</span><span class="p">:</span> <span class="n">centroid</span><span class="p">,</span> <span class="c1"># scaled for output</span>
+                <span class="s2">&quot;voxel_index&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ix</span><span class="p">,</span> <span class="n">iy</span><span class="p">,</span> <span class="n">iz</span><span class="p">],</span> <span class="c1"># 1-based indices</span>
                 <span class="s2">&quot;voxel_volume&quot;</span><span class="p">:</span> <span class="n">voxel_volume</span><span class="p">,</span>
             <span class="p">}</span>
             <span class="k">if</span> <span class="n">include_orientation</span><span class="p">:</span>
@@ -1922,12 +2907,13 @@
                 <span class="k">if</span> <span class="n">ori</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">entry</span><span class="p">[</span><span class="s2">&quot;orientation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ori</span><span class="p">)</span>
             <span class="n">voxels_t0</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+        <span class="n">voxels_t0_sorted</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">voxels_t0</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;voxel_id&quot;</span><span class="p">]))</span>
 
         <span class="c1"># ─── wrap under the time‐step keys ────────────────────────────────────────</span>
         <span class="n">time_steps</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">{</span>   <span class="s2">&quot;time&quot;</span>  <span class="p">:</span> <span class="mi">0</span>        <span class="p">,</span>
-                <span class="s2">&quot;grains&quot;</span><span class="p">:</span> <span class="n">grains_t0</span><span class="p">,</span>
-                <span class="s2">&quot;voxels&quot;</span><span class="p">:</span> <span class="n">voxels_t0</span><span class="p">,</span>
+                <span class="s2">&quot;grains&quot;</span><span class="p">:</span> <span class="n">grains_t0_sorted</span><span class="p">,</span>
+                <span class="s2">&quot;voxels&quot;</span><span class="p">:</span> <span class="n">voxels_t0_sorted</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="c1"># …etc…</span>
         <span class="p">]</span>
@@ -1961,21 +2947,23 @@
 <div class="viewcode-block" id="Microstructure.pckl">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.pckl">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">pckl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write microstructure into pickle file. Usefull for to store complex structures.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the microstructure into a pickle file</span>
 
+<span class="sd">        This function serializes the microstructure object using pickle, allowing</span>
+<span class="sd">        complex structures to be stored and later reloaded.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        file : string (optional, default: None)</span>
-<span class="sd">            File name for pickled microstructure. The default is None, in which case</span>
-<span class="sd">            the filename will be the microstructure name + &#39;.pckl&#39;.</span>
-<span class="sd">        path : string</span>
-<span class="sd">            Path to location for pickles</span>
+<span class="sd">        file : str, optional</span>
+<span class="sd">            File name for the pickled microstructure. If None, the filename defaults</span>
+<span class="sd">            to the microstructure name plus &#39;.pckl&#39;.</span>
+<span class="sd">        path : str, optional</span>
+<span class="sd">            Directory path to save the pickle file. Default is current directory &#39;./&#39;.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        None.</span>
-
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
 
@@ -1994,6 +2982,25 @@
 <div class="viewcode-block" id="Microstructure.import_particles">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.import_particles">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">import_particles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Import particle data from a dump file</span>
+
+<span class="sd">        This function reads particle information from a specified dump file and</span>
+<span class="sd">        stores it in the microstructure object, updating the simulation box and</span>
+<span class="sd">        particle list.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file : str</span>
+<span class="sd">            Name of the input dump file containing particle data</span>
+<span class="sd">        path : str, optional</span>
+<span class="sd">            Directory path where the dump file is located. Default is current directory &#39;./&#39;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            Updates the object&#39;s simbox and particles attributes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simbox</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles</span> <span class="o">=</span> <span class="n">read_dump</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></div>
@@ -2006,7 +3013,30 @@
 <div class="viewcode-block" id="Microstructure.init_stats">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.init_stats">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">porous</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Legacy function for plot_stats_init.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Legacy function that redirects to plot_stats_init</span>
+
+<span class="sd">        This function is deprecated and serves as a wrapper for `plot_stats_init`.</span>
+<span class="sd">        A warning is logged advising users to use `plot_stats_init` directly.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        descriptor : Any, optional</span>
+<span class="sd">            Descriptor data passed to `plot_stats_init`. Default is None.</span>
+<span class="sd">        gs_data : Any, optional</span>
+<span class="sd">            Grain size data passed to `plot_stats_init`. Default is None.</span>
+<span class="sd">        ar_data : Any, optional</span>
+<span class="sd">            Aspect ratio data passed to `plot_stats_init`. Default is None.</span>
+<span class="sd">        porous : bool, optional</span>
+<span class="sd">            Deprecated parameter, ignored. Default is False.</span>
+<span class="sd">        save_files : bool, optional</span>
+<span class="sd">            Whether to save generated statistics files. Default is False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            Calls `plot_stats_init` and does not return any value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;&quot;init_stats&quot; is a legacy function and will be depracted, please use &quot;plot_stats_init()&quot;.&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plot_stats_init</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="n">gs_data</span><span class="o">=</span><span class="n">gs_data</span><span class="p">,</span> <span class="n">ar_data</span><span class="o">=</span><span class="n">ar_data</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">)</span></div>
 
@@ -2016,7 +3046,37 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">output_abq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">voxel_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grain_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                    <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Legacy function for write_abq.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Legacy function that redirects to write_abq</span>
+
+<span class="sd">        This function is deprecated and serves as a wrapper for `write_abq`.</span>
+<span class="sd">        Warnings are logged advising users to use `write_abq` directly. The `faces`</span>
+<span class="sd">        parameter is determined automatically if provided.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nodes : array-like, optional</span>
+<span class="sd">            Nodal coordinates to include in the output. Default is None.</span>
+<span class="sd">        name : str, optional</span>
+<span class="sd">            File name for the Abaqus input file. Default is None.</span>
+<span class="sd">        voxel_dict : dict, optional</span>
+<span class="sd">            Voxel connectivity information. Default is None.</span>
+<span class="sd">        grain_dict : dict, optional</span>
+<span class="sd">            Grain-to-voxel mapping. Default is None.</span>
+<span class="sd">        faces : Any, optional</span>
+<span class="sd">            Deprecated parameter, automatically determined. Default is None.</span>
+<span class="sd">        dual_phase : bool, optional</span>
+<span class="sd">            Whether to include dual-phase data. Default is False.</span>
+<span class="sd">        thermal : bool, optional</span>
+<span class="sd">            Whether to include thermal data. Default is False.</span>
+<span class="sd">        units : dict, optional</span>
+<span class="sd">            Dictionary of units for the Abaqus model. Default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            Calls `write_abq` and does not return any value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;&quot;output_abq&quot; is a legacy function and will be depracted, please use &quot;write_abq()&quot;.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">faces</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Parameter &quot;faces&quot; will be determined automatically.&#39;</span><span class="p">)</span>

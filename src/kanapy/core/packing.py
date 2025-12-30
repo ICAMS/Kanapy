@@ -9,19 +9,31 @@ from .collisions import collision_routine
 
 def particle_generator(particle_data, sim_box, poly):
     """
-    Initializes ellipsoids by assigning them random positions and speeds within
-    the simulation box.
+    Initialize a list of ellipsoids by assigning random positions, orientations,
+    and sizes within the given simulation box.
 
-    :param particle_data: Ellipsoid information such as Major, Minor,
-          Equivalent diameters and its tilt angle. 
-    :type particle_data: Python dictionary 
-    :param sim_box: Simulation box representing RVE.
-    :type sim_box: :class:`entities.Simulation_Box`
-    :param poly: Points defining primitive polygon inside ellipsoid (optional).
-    :type poly: :class: ndarry(N, 3)
-    
-    :returns: Ellipsoids for the packing routine
-    :rtype: list       
+    Parameters
+    ----------
+    particle_data : dict
+        Dictionary containing ellipsoid properties such as major, minor, and
+        equivalent diameters, tilt angles, and number of particles per phase.
+    sim_box : entities.Simulation_Box
+        Simulation box object defining the representative volume element (RVE)
+        dimensions (width, height, depth).
+    poly : ndarray of shape (N, 3), optional
+        Points defining a primitive polygon inside the ellipsoid. Used for
+        geometry construction.
+
+    Returns
+    -------
+    list
+        List of `Ellipsoid` objects initialized for the packing routine.
+
+    Notes
+    -----
+    The function introduces a scaling factor (0.5) to reduce overlap among
+    generated ellipsoids. Ellipsoids are assigned random colors and positions
+    within the simulation box.
     """
     Ellipsoids = []
     id_ctr = 0
@@ -84,43 +96,95 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
                   k_rep=0.0, k_att=0.0, fill_factor=None,
                   dump=False, verbose=False):
     """
-    Initializes the :class:`entities.Octree` class and performs recursive
-    subdivision with collision checks and response for the ellipsoids. At each
-    time step of the simulation it increases the size of the ellipsoid by a 
-    factor, which depends on the user-defined value for total number of time
-    steps.
+    Perform recursive particle growth and collision detection within the
+    simulation box. Initializes an :class:`entities.Octree` instance and
+    progressively grows ellipsoids while handling inter-particle and
+    wall collisions.
 
-    :param sim_box: Simulation box representing RVE.
-    :type sim_box: :obj:`entities.Simulation_Box`  
-    :param Ellipsoids: Ellipsoids for the packing routine.
-    :type Ellipsoids: list    
-    :param periodicity: Status of periodicity.
-    :type periodicity: boolean 
-    :param nsteps:  Total simulation steps to fill box volume with particle
-         volume.
-    :type nsteps: int
-    :param k_rep: Repulsion factor for particles
-    :type k_rep: float
-    :param k_att: Attraction factor for particles
-    :type k_att: float
-    :param fill_factor: Target volume fraction for particle filling
-    :type fill_factor: float
-    :param dump: Indicate if dump files for particles are written.
-    :type dump: boolean
-    :param verbose: Indicate if detailed output in iteration steps occurs
-    :type verbose: bool
+    Parameters
+    ----------
+    sim_box : entities.Simulation_Box
+        Simulation box representing the representative volume element (RVE).
+    Ellipsoids : list
+        List of `Ellipsoid` objects used in the packing routine.
+    periodicity : bool
+        Whether periodic boundary conditions are applied.
+    nsteps : int
+        Total number of simulation steps for filling the box with particles.
+    k_rep : float, optional
+        Repulsion factor for particle interactions (default: 0.0).
+    k_att : float, optional
+        Attraction factor for particle interactions (default: 0.0).
+    fill_factor : float, optional
+        Target volume fraction for particle filling (default: 0.65).
+    dump : bool, optional
+        If True, dump files for particles are written at intervals (default: False).
+    verbose : bool, optional
+        If True, print detailed information at iteration steps (default: False).
 
+    Returns
+    -------
+    Ellipsoids : list
+        Updated list of `Ellipsoid` objects after particle growth.
+    sim_box : entities.Simulation_Box
+        Updated simulation box object after the packing process.
 
-    .. note:: :meth:`kanapy.input_output.write_dump` function is called at each
-              time step of the simulation to write output (.dump) files. 
-              By default, periodic images are written to the output file, 
-              but this option can be disabled within the function.         
+    Notes
+    -----
+    The function calls :func:`kanapy.input_output.write_dump` at each time step
+    to write `.dump` files. Periodic images are written by default but can be
+    disabled inside that function.
     """
 
     def t_step(N):
+        """
+        Compute the adaptive time step based on the current iteration number
+
+        The time step decreases as the iteration progresses, ensuring smoother
+        particle growth and improved numerical stability near the final packing
+        stage.
+
+        Parameters
+        ----------
+        N : int
+            Current iteration number
+
+        Returns
+        -------
+        float
+            Computed time step for the given iteration
+
+        Notes
+        -----
+        The function uses the relation `t_step = K * N ** m`, where `K` and `m`
+        are constants defined in the outer scope of the `particle_grow` function.
+        A negative exponent `m` results in smaller time steps at later iterations.
+        """
         return K * N ** m
 
     def stop_part(ell):
+        """
+        Stop the motion of a given ellipsoid and slightly shrink its position
+
+        Sets all velocity and force components of the ellipsoid to zero, reduces
+        its position coordinates by 10%, and updates the old position attributes
+        to match the new coordinates.
+
+        Parameters
+        ----------
+        ell : Ellipsoid
+            The ellipsoid instance whose motion is to be stopped
+
+        Returns
+        -------
+        None
+            The function modifies the ellipsoid in-place and does not return a value
+
+        Notes
+        -----
+        This function is used during the particle growth simulation to prevent
+        fast-moving or unstable ellipsoids from causing numerical issues.
+        """
         ell.speedx = 0.
         ell.speedy = 0.
         ell.speedz = 0.
@@ -244,18 +308,23 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
 
 def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
     """
-    Calculate interaction force between ellipsoids.
+    Calculate the interaction forces between ellipsoids within the simulation box
 
-    :param Ellipsoids: 
-    :type Ellipsoids: 
-    :param sim_box :
-    :type sim_box:
-    :param periodicity:
-    :type periodicity:
-    :param k_rep: optional, default is 0.0
-    :type k_rep: float
-    :param k_att: optional, default is 0.0
-    :type k_att: float
+    Computes pairwise repulsive or attractive forces based on distance and phase
+    between ellipsoids. Applies periodic boundary conditions if enabled.
+
+    Parameters
+    ----------
+    Ellipsoids : list of Ellipsoid
+        List of ellipsoid instances for which forces are calculated
+    sim_box : Simulation_Box
+        Simulation box representing the RVE dimensions
+    periodicity : bool
+        If True, applies periodic boundary conditions
+    k_rep : float, optional
+        Repulsion factor for particles of the same phase (default is 0.0)
+    k_att : float, optional
+        Attraction factor for particles of different phases (default is 0.0)
     """
 
     w_half = sim_box.w / 2
@@ -305,19 +374,51 @@ def packingRoutine(particle_data, periodic, nsteps, sim_box,
                    k_rep=0.0, k_att=0.0, fill_factor=None, poly=None,
                    save_files=False, verbose=False):
     """
-    The main function that controls the particle packing routine using:
-        :meth:`particle_grow` & :meth:`particle_generator`
-    
-    .. note:: Particle, RVE and simulation data are read from the JSON files
-              generated by :meth:`kanapy.input_output.particleStatGenerator`.
-              They contain the following information:
-    
-              * Ellipsoid attributes such as Major, Minor, Equivalent diameters
-                and its tilt angle.  
-              * RVE attributes such as RVE (Simulation domain) size, the number
-                of voxels and the voxel resolution.  
-              * Simulation attributes such as total number of timesteps and
-                periodicity.                         
+    Perform particle packing routine using particle generation and growth simulation
+
+    The function first generates ellipsoids from the provided particle statistics
+    and then grows them over time steps while handling collisions and interactions.
+    Uses :meth:`particle_generator` to create particles and :meth:`particle_grow`
+    to grow and settle them.
+
+    Parameters
+    ----------
+    particle_data : list of dict
+        Statistics describing particle attributes for generation
+    periodic : bool
+        Flag indicating if periodic boundary conditions are applied
+    nsteps : int
+        Total number of timesteps for the growth simulation
+    sim_box : Simulation_Box
+        Simulation box representing the RVE dimensions
+    k_rep : float, optional
+        Repulsion factor for same-phase particles (default 0.0)
+    k_att : float, optional
+        Attraction factor for different-phase particles (default 0.0)
+    fill_factor : float, optional
+        Target volume fraction for particle filling (default None, uses 0.65)
+    poly : ndarray, optional
+        Points defining a primitive polygon inside ellipsoids (default None)
+    save_files : bool, optional
+        Whether to save dump files during simulation (default False)
+    verbose : bool, optional
+        If True, prints detailed simulation output (default False)
+
+    Returns
+    -------
+    particles : list
+        List of generated and packed ellipsoids
+    simbox : Simulation_Box
+        Updated simulation box with current timestep information
+
+    Notes
+    -----
+    Particle, RVE, and simulation data are read from JSON files generated by
+    :meth:`kanapy.input_output.particleStatGenerator`. These files contain:
+
+    * Ellipsoid attributes such as Major, Minor, Equivalent diameters, and tilt angles
+    * RVE attributes such as simulation domain size, number of voxels, and voxel resolution
+    * Simulation attributes such as total number of timesteps and periodicity
     """
     print('Starting particle simulation')
 

@@ -140,29 +140,43 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
                      dual_phase=None, silent=False, asp_arr=None,
                      phases=False, cols=None):
     """
-    Plot triangularized convex hulls of grains, based on vertices, i.e.
-    connection points of 4 up to 8 grains or the end points of triple or quadruple
-    lines between grains.
+    Plot triangularized convex hulls of grains based on vertices and simplices
 
     Parameters
     ----------
     geometry : dict
-        Dictionary with 'vertices' (node numbers) and 'simplices' (triangles)
-    cmap : color map, optional
-        Color map for triangles. The default is 'prism'.
+        Dictionary containing grain geometry with keys:
+        - 'Grains': dict with simplices (triangles) for each grain
+        - 'Points': ndarray of vertex coordinates (N, 3)
+    cmap : str, optional
+        Colormap for coloring the triangles. Default is 'prism'.
     alpha : float, optional
-        Transparency of plotted objects. The default is 0.4.
-    ec : color, optional
-        Color of edges. The default is [0.5,0.5,0.5,0.1].
+        Transparency of the polygons. Default is 0.4.
+    ec : color or list, optional
+        Edge color for triangles. Default is [0.5, 0.5, 0.5, 0.1].
     dual_phase : bool, optional
-        Whether to plot red/green contrast for dual phase microstructure or colored grains
-    silent : bool
-        Run silent
+        Deprecated. Use `phases` instead. If True, grains are colored
+        by phase in red/green contrast.
+    silent : bool, optional
+        If True, returns the figure object instead of showing it. Default is False.
+    asp_arr : list of 3 floats, optional
+        Aspect ratio for the 3D axes (x, y, z). Default is [1, 1, 1].
+    phases : bool, optional
+        If True, colors grains according to their phase number.
+    cols : list of str, optional
+        Colors to use for each phase when `phases=True`.
 
     Returns
     -------
-    None.
+    fig : matplotlib.figure.Figure, optional
+        Matplotlib figure object if `silent=True`.
 
+    Notes
+    -----
+    - The `dual_phase` parameter is deprecated. Use `phases` to control
+      coloring by phase.
+    - Each grain is plotted using its convex hull triangles defined in
+      `geometry['Grains'][igr]['Simplices']`.
     """
     if dual_phase is not None:
         print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
@@ -208,16 +222,37 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
 def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=None, silent=False, asp_arr=None,
                        phases=False, cols=None):
     """
-    Display ellipsoids after packing procedure
-    
+    Display ellipsoids after the packing procedure
+
     Parameters
     ----------
-    particles : Class particles
-        Ellipsoids in microstructure before voxelization.
-    cmap : color map, optional
-        Color map for ellipsoids. The default is 'prism'.
+    particles : list
+        List of ellipsoid objects representing particles in the microstructure.
+    cmap : str, optional
+        Color map for ellipsoids. Default is 'prism'.
     dual_phase : bool, optional
-        Whether to display the ellipsoids in red/green contrast or in colors
+        Deprecated. Use `phases` instead. If True, ellipsoids are colored
+        according to phase (red/green contrast).
+    silent : bool, optional
+        If True, returns the figure object without displaying it. Default is False.
+    asp_arr : list of 3 floats, optional
+        Aspect ratio for the 3D axes (x, y, z). Default is [1, 1, 1].
+    phases : bool, optional
+        If True, ellipsoids are colored according to their phase number.
+    cols : list of str, optional
+        List of colors used for each phase when `phases=True`.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure, optional
+        The matplotlib figure object if `silent=True`.
+
+    Notes
+    -----
+    - The `dual_phase` parameter is deprecated. Use `phases` to control
+      coloring by phase.
+    - Each ellipsoid is represented by its surface mesh generated via
+      `surfacePointsGen` method of the ellipsoid object.
     """
     if asp_arr is None:
         asp_arr = [1, 1, 1]
@@ -261,23 +296,34 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=None, silent=False, a
 def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
                       silent=False, asp_arr=None):
     """
-    Display inner polyhedra of ellipsoids after packing procedure
+    Display inner polyhedra and optional hulls of ellipsoids after packing procedure
 
     Parameters
     ----------
-    particles : Class particles
-        Ellipsoids in microstructure before voxelization.
-    cmap : color map, optional
-        Color map for ellipsoids. The default is 'prism'.
+    particles : list
+        List of ellipsoid objects containing inner polygons and convex hulls.
+    cmap : str, optional
+        Colormap for ellipsoids. Default is 'prism'.
     dual_phase : bool, optional
-        Whether to display the ellipsoids in red/green contrast or in colors
+        If True, colors ellipsoids according to phase (red/green contrast).
     plot_hull : bool, optional
-        Whether to display the ellipsoids as hulls. Defaults to True
+        If True, plots the outer hull of the ellipsoid. Default is True.
+    silent : bool, optional
+        If True, returns the figure object instead of displaying the plot.
+    asp_arr : list of 3 floats, optional
+        Aspect ratio for the 3D axes (x, y, z). Default is [1, 1, 1].
 
     Returns
     -------
-    None.
+    fig : matplotlib.figure.Figure, optional
+        Matplotlib figure object if `silent=True`.
 
+    Notes
+    -----
+    - Each ellipsoid must have an inner polygon (`pa.inner`) to be plotted.
+    - The convex hull of the ellipsoid is displayed using `plot_trisurf`.
+    - If `plot_hull` is True, the outer surface of the ellipsoid is also plotted
+      using `plot_surface`.
     """
     if asp_arr is None:
         asp_arr = [1, 1, 1]
@@ -328,9 +374,44 @@ def plot_output_stats(data_list, labels, iphase=None,
                       gs_data=None, gs_param=None,
                       ar_data=None, ar_param=None,
                       save_files=False, silent=False, enhanced_plot=False):
-    r"""
-    Evaluates particle- and output RVE grain statistics with respect to Major, Minor & Equivalent diameters and plots
-    the distributions.
+    """
+    Evaluate and plot particle- and RVE grain statistics, including equivalent diameters and aspect ratios
+
+    Parameters
+    ----------
+    data_list : list of dict
+        List of dictionaries containing particle/grain statistics. Each dictionary
+        should include keys like 'eqd', 'eqd_scale', 'eqd_sig', 'ar', 'ar_scale', 'ar_sig'.
+    labels : list of str
+        Labels indicating the type of data in `data_list`, e.g., ['Grains', 'Partcls'].
+    iphase : int, optional
+        Phase index to label the plots. Default is None.
+    gs_data : array-like, optional
+        Experimental equivalent diameter data for comparison. Default is None.
+    gs_param : tuple, optional
+        Parameters for lognormal distribution of experimental data (s, loc, scale). Default is None.
+    ar_data : array-like, optional
+        Experimental aspect ratio data for comparison. Default is None.
+    ar_param : tuple, optional
+        Parameters for lognormal distribution of experimental aspect ratio data (s, loc, scale). Default is None.
+    save_files : bool, optional
+        If True, saves the generated figures as PNG files. Default is False.
+    silent : bool, optional
+        If True, returns the figure objects instead of showing them. Default is False.
+    enhanced_plot : bool, optional
+        If True, produces higher-resolution comparison plots using lognormal PDFs. Default is False.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure, optional
+        Figure object if `silent=True`.
+
+    Notes
+    -----
+    - The function can compare statistical distributions between grains, particles, and experimental data.
+    - Both histograms and lognormal probability density functions are used to display distributions.
+    - If `enhanced_plot=True`, PDFs for equivalent diameter and aspect ratio are plotted using a dense x-axis.
+    - `labels` must contain at least 'Grains' or 'Voxels'. Otherwise, a ValueError is raised.
     """
     if 'Grains' not in labels and 'Voxels' not in labels:
         print(f'Argument "labels": {labels}')
@@ -611,10 +692,63 @@ def plot_init_stats(stats_dict,
                     gs_param=None, ar_param=None,
                     save_files=False, silent=False):
 
-    r"""
-    Plot initial microstructure descriptors, including cut-offs, based on user defined statistics
+    """
+    Plot initial microstructure descriptors (grain size and aspect ratio) based on user-defined statistics.
+
+    Parameters
+    ----------
+    stats_dict : dict
+        Dictionary containing initial microstructure statistics. Expected keys:
+        - "Equivalent diameter": dict with 'sig', 'scale', optionally 'loc', 'cutoff_min', 'cutoff_max'
+        - "Aspect ratio": dict with 'sig', 'scale', optionally 'loc', 'cutoff_min', 'cutoff_max' (for elongated grains)
+        - "Grain type": str, one of "Equiaxed", "Elongated", or "Free"
+        - "Semi axes": dict with 'scale', 'sig', 'cutoff_min', 'cutoff_max' (for free grains)
+        - "Phase": dict with 'Number' and 'Name', optional
+    gs_data : array-like, optional
+        Experimental equivalent diameter data. Default is None.
+    ar_data : array-like, optional
+        Experimental aspect ratio data. Default is None.
+    gs_param : tuple, optional
+        Parameters (s, loc, scale, min, max) for lognormal distribution of experimental equivalent diameters. Default is None.
+    ar_param : tuple, optional
+        Parameters (s, loc, scale, min, max) for lognormal distribution of experimental aspect ratios. Default is None.
+    save_files : bool, optional
+        If True, save the figure to file "Input_distribution.png". Default is False.
+    silent : bool, optional
+        If True, return the figure object instead of displaying it. Default is False.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure, optional
+        The figure object if `silent=True`.
+
+    Notes
+    -----
+    - The function automatically selects plotting style depending on "Grain type":
+        - "Equiaxed": only equivalent diameter distribution
+        - "Elongated": both equivalent diameter and aspect ratio distributions
+        - "Free": compute aspect ratio from semi-axes and rotation axis
+    - Vertical dashed lines mark the minimum and maximum cut-offs from `stats_dict`.
+    - Overlays experimental data (histogram) and lognormal fits if `gs_data` or `ar_data` are provided.
+    - Uses lognormal PDFs for both grain size and aspect ratio.
     """
     def plot_lognorm(x, sig, loc, scale, axis):
+        """
+        Plot a log-normal probability density function (PDF) on a given matplotlib axis
+
+        Parameters
+        ----------
+        x : array-like
+            Points at which to evaluate the PDF.
+        sig : float
+            Shape parameter (standard deviation of log of the variable).
+        loc : float
+            Location parameter (shifts the distribution along x-axis).
+        scale : float
+            Scale parameter (exp(mean of log of the variable)).
+        axis : matplotlib.axes.Axes
+            Matplotlib axis to plot the PDF on.
+        """
         y = lognorm.pdf(x, sig, loc=loc, scale=scale)
         """area = np.trapz(y, xv)
         if np.isclose(area, 0.0):
@@ -844,18 +978,17 @@ def plot_init_stats(stats_dict,
 
 def plot_stats_dict(sdict, title=None, save_files=False):
     """
-    Plot statistical data on semi axes of effective ellipsoids in RVE
-    as histogram.
+    Plot statistical data on semi-axes of effective ellipsoids in RVE as histogram
 
     Parameters
     ----------
-    save_files
-    sdict
-    title
-
-    Returns
-    -------
-
+    sdict : dict
+        Dictionary containing semi-axis data and log-normal parameters.
+        Keys should include 'a', 'b', 'c', and their corresponding '_sig' and '_scale'.
+    title : str, optional
+        Title for the plot
+    save_files : bool, optional
+        Whether to save the plot as PNG in the current working directory
     """
     shared_bins = np.histogram_bin_edges(sdict['eqd'], bins='fd')
     binNum = len(shared_bins)

@@ -222,29 +222,43 @@
                      <span class="n">dual_phase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">asp_arr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Plot triangularized convex hulls of grains, based on vertices, i.e.</span>
-<span class="sd">    connection points of 4 up to 8 grains or the end points of triple or quadruple</span>
-<span class="sd">    lines between grains.</span>
+<span class="sd">    Plot triangularized convex hulls of grains based on vertices and simplices</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    geometry : dict</span>
-<span class="sd">        Dictionary with &#39;vertices&#39; (node numbers) and &#39;simplices&#39; (triangles)</span>
-<span class="sd">    cmap : color map, optional</span>
-<span class="sd">        Color map for triangles. The default is &#39;prism&#39;.</span>
+<span class="sd">        Dictionary containing grain geometry with keys:</span>
+<span class="sd">        - &#39;Grains&#39;: dict with simplices (triangles) for each grain</span>
+<span class="sd">        - &#39;Points&#39;: ndarray of vertex coordinates (N, 3)</span>
+<span class="sd">    cmap : str, optional</span>
+<span class="sd">        Colormap for coloring the triangles. Default is &#39;prism&#39;.</span>
 <span class="sd">    alpha : float, optional</span>
-<span class="sd">        Transparency of plotted objects. The default is 0.4.</span>
-<span class="sd">    ec : color, optional</span>
-<span class="sd">        Color of edges. The default is [0.5,0.5,0.5,0.1].</span>
+<span class="sd">        Transparency of the polygons. Default is 0.4.</span>
+<span class="sd">    ec : color or list, optional</span>
+<span class="sd">        Edge color for triangles. Default is [0.5, 0.5, 0.5, 0.1].</span>
 <span class="sd">    dual_phase : bool, optional</span>
-<span class="sd">        Whether to plot red/green contrast for dual phase microstructure or colored grains</span>
-<span class="sd">    silent : bool</span>
-<span class="sd">        Run silent</span>
+<span class="sd">        Deprecated. Use `phases` instead. If True, grains are colored</span>
+<span class="sd">        by phase in red/green contrast.</span>
+<span class="sd">    silent : bool, optional</span>
+<span class="sd">        If True, returns the figure object instead of showing it. Default is False.</span>
+<span class="sd">    asp_arr : list of 3 floats, optional</span>
+<span class="sd">        Aspect ratio for the 3D axes (x, y, z). Default is [1, 1, 1].</span>
+<span class="sd">    phases : bool, optional</span>
+<span class="sd">        If True, colors grains according to their phase number.</span>
+<span class="sd">    cols : list of str, optional</span>
+<span class="sd">        Colors to use for each phase when `phases=True`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    None.</span>
+<span class="sd">    fig : matplotlib.figure.Figure, optional</span>
+<span class="sd">        Matplotlib figure object if `silent=True`.</span>
 
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The `dual_phase` parameter is deprecated. Use `phases` to control</span>
+<span class="sd">      coloring by phase.</span>
+<span class="sd">    - Each grain is plotted using its convex hull triangles defined in</span>
+<span class="sd">      `geometry[&#39;Grains&#39;][igr][&#39;Simplices&#39;]`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">dual_phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Use of &quot;dual_phase&quot; is depracted. Use parameter &quot;phases&quot; instead.&#39;</span><span class="p">)</span>
@@ -293,16 +307,37 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_ellipsoids_3D</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">asp_arr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">phases</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Display ellipsoids after packing procedure</span>
-<span class="sd">    </span>
+<span class="sd">    Display ellipsoids after the packing procedure</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    particles : Class particles</span>
-<span class="sd">        Ellipsoids in microstructure before voxelization.</span>
-<span class="sd">    cmap : color map, optional</span>
-<span class="sd">        Color map for ellipsoids. The default is &#39;prism&#39;.</span>
+<span class="sd">    particles : list</span>
+<span class="sd">        List of ellipsoid objects representing particles in the microstructure.</span>
+<span class="sd">    cmap : str, optional</span>
+<span class="sd">        Color map for ellipsoids. Default is &#39;prism&#39;.</span>
 <span class="sd">    dual_phase : bool, optional</span>
-<span class="sd">        Whether to display the ellipsoids in red/green contrast or in colors</span>
+<span class="sd">        Deprecated. Use `phases` instead. If True, ellipsoids are colored</span>
+<span class="sd">        according to phase (red/green contrast).</span>
+<span class="sd">    silent : bool, optional</span>
+<span class="sd">        If True, returns the figure object without displaying it. Default is False.</span>
+<span class="sd">    asp_arr : list of 3 floats, optional</span>
+<span class="sd">        Aspect ratio for the 3D axes (x, y, z). Default is [1, 1, 1].</span>
+<span class="sd">    phases : bool, optional</span>
+<span class="sd">        If True, ellipsoids are colored according to their phase number.</span>
+<span class="sd">    cols : list of str, optional</span>
+<span class="sd">        List of colors used for each phase when `phases=True`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure, optional</span>
+<span class="sd">        The matplotlib figure object if `silent=True`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The `dual_phase` parameter is deprecated. Use `phases` to control</span>
+<span class="sd">      coloring by phase.</span>
+<span class="sd">    - Each ellipsoid is represented by its surface mesh generated via</span>
+<span class="sd">      `surfacePointsGen` method of the ellipsoid object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">asp_arr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">asp_arr</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
@@ -349,23 +384,34 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_particles_3D</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plot_hull</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                       <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">asp_arr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Display inner polyhedra of ellipsoids after packing procedure</span>
+<span class="sd">    Display inner polyhedra and optional hulls of ellipsoids after packing procedure</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    particles : Class particles</span>
-<span class="sd">        Ellipsoids in microstructure before voxelization.</span>
-<span class="sd">    cmap : color map, optional</span>
-<span class="sd">        Color map for ellipsoids. The default is &#39;prism&#39;.</span>
+<span class="sd">    particles : list</span>
+<span class="sd">        List of ellipsoid objects containing inner polygons and convex hulls.</span>
+<span class="sd">    cmap : str, optional</span>
+<span class="sd">        Colormap for ellipsoids. Default is &#39;prism&#39;.</span>
 <span class="sd">    dual_phase : bool, optional</span>
-<span class="sd">        Whether to display the ellipsoids in red/green contrast or in colors</span>
+<span class="sd">        If True, colors ellipsoids according to phase (red/green contrast).</span>
 <span class="sd">    plot_hull : bool, optional</span>
-<span class="sd">        Whether to display the ellipsoids as hulls. Defaults to True</span>
+<span class="sd">        If True, plots the outer hull of the ellipsoid. Default is True.</span>
+<span class="sd">    silent : bool, optional</span>
+<span class="sd">        If True, returns the figure object instead of displaying the plot.</span>
+<span class="sd">    asp_arr : list of 3 floats, optional</span>
+<span class="sd">        Aspect ratio for the 3D axes (x, y, z). Default is [1, 1, 1].</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    None.</span>
+<span class="sd">    fig : matplotlib.figure.Figure, optional</span>
+<span class="sd">        Matplotlib figure object if `silent=True`.</span>
 
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Each ellipsoid must have an inner polygon (`pa.inner`) to be plotted.</span>
+<span class="sd">    - The convex hull of the ellipsoid is displayed using `plot_trisurf`.</span>
+<span class="sd">    - If `plot_hull` is True, the outer surface of the ellipsoid is also plotted</span>
+<span class="sd">      using `plot_surface`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">asp_arr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">asp_arr</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
@@ -419,9 +465,44 @@
                       <span class="n">gs_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gs_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">ar_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                       <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">enhanced_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Evaluates particle- and output RVE grain statistics with respect to Major, Minor &amp; Equivalent diameters and plots</span>
-<span class="sd">    the distributions.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate and plot particle- and RVE grain statistics, including equivalent diameters and aspect ratios</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_list : list of dict</span>
+<span class="sd">        List of dictionaries containing particle/grain statistics. Each dictionary</span>
+<span class="sd">        should include keys like &#39;eqd&#39;, &#39;eqd_scale&#39;, &#39;eqd_sig&#39;, &#39;ar&#39;, &#39;ar_scale&#39;, &#39;ar_sig&#39;.</span>
+<span class="sd">    labels : list of str</span>
+<span class="sd">        Labels indicating the type of data in `data_list`, e.g., [&#39;Grains&#39;, &#39;Partcls&#39;].</span>
+<span class="sd">    iphase : int, optional</span>
+<span class="sd">        Phase index to label the plots. Default is None.</span>
+<span class="sd">    gs_data : array-like, optional</span>
+<span class="sd">        Experimental equivalent diameter data for comparison. Default is None.</span>
+<span class="sd">    gs_param : tuple, optional</span>
+<span class="sd">        Parameters for lognormal distribution of experimental data (s, loc, scale). Default is None.</span>
+<span class="sd">    ar_data : array-like, optional</span>
+<span class="sd">        Experimental aspect ratio data for comparison. Default is None.</span>
+<span class="sd">    ar_param : tuple, optional</span>
+<span class="sd">        Parameters for lognormal distribution of experimental aspect ratio data (s, loc, scale). Default is None.</span>
+<span class="sd">    save_files : bool, optional</span>
+<span class="sd">        If True, saves the generated figures as PNG files. Default is False.</span>
+<span class="sd">    silent : bool, optional</span>
+<span class="sd">        If True, returns the figure objects instead of showing them. Default is False.</span>
+<span class="sd">    enhanced_plot : bool, optional</span>
+<span class="sd">        If True, produces higher-resolution comparison plots using lognormal PDFs. Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure, optional</span>
+<span class="sd">        Figure object if `silent=True`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The function can compare statistical distributions between grains, particles, and experimental data.</span>
+<span class="sd">    - Both histograms and lognormal probability density functions are used to display distributions.</span>
+<span class="sd">    - If `enhanced_plot=True`, PDFs for equivalent diameter and aspect ratio are plotted using a dense x-axis.</span>
+<span class="sd">    - `labels` must contain at least &#39;Grains&#39; or &#39;Voxels&#39;. Otherwise, a ValueError is raised.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s1">&#39;Grains&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labels</span> <span class="ow">and</span> <span class="s1">&#39;Voxels&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Argument &quot;labels&quot;: </span><span class="si">{</span><span class="n">labels</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -705,10 +786,63 @@
                     <span class="n">gs_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ar_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Plot initial microstructure descriptors, including cut-offs, based on user defined statistics</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot initial microstructure descriptors (grain size and aspect ratio) based on user-defined statistics.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    stats_dict : dict</span>
+<span class="sd">        Dictionary containing initial microstructure statistics. Expected keys:</span>
+<span class="sd">        - &quot;Equivalent diameter&quot;: dict with &#39;sig&#39;, &#39;scale&#39;, optionally &#39;loc&#39;, &#39;cutoff_min&#39;, &#39;cutoff_max&#39;</span>
+<span class="sd">        - &quot;Aspect ratio&quot;: dict with &#39;sig&#39;, &#39;scale&#39;, optionally &#39;loc&#39;, &#39;cutoff_min&#39;, &#39;cutoff_max&#39; (for elongated grains)</span>
+<span class="sd">        - &quot;Grain type&quot;: str, one of &quot;Equiaxed&quot;, &quot;Elongated&quot;, or &quot;Free&quot;</span>
+<span class="sd">        - &quot;Semi axes&quot;: dict with &#39;scale&#39;, &#39;sig&#39;, &#39;cutoff_min&#39;, &#39;cutoff_max&#39; (for free grains)</span>
+<span class="sd">        - &quot;Phase&quot;: dict with &#39;Number&#39; and &#39;Name&#39;, optional</span>
+<span class="sd">    gs_data : array-like, optional</span>
+<span class="sd">        Experimental equivalent diameter data. Default is None.</span>
+<span class="sd">    ar_data : array-like, optional</span>
+<span class="sd">        Experimental aspect ratio data. Default is None.</span>
+<span class="sd">    gs_param : tuple, optional</span>
+<span class="sd">        Parameters (s, loc, scale, min, max) for lognormal distribution of experimental equivalent diameters. Default is None.</span>
+<span class="sd">    ar_param : tuple, optional</span>
+<span class="sd">        Parameters (s, loc, scale, min, max) for lognormal distribution of experimental aspect ratios. Default is None.</span>
+<span class="sd">    save_files : bool, optional</span>
+<span class="sd">        If True, save the figure to file &quot;Input_distribution.png&quot;. Default is False.</span>
+<span class="sd">    silent : bool, optional</span>
+<span class="sd">        If True, return the figure object instead of displaying it. Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig : matplotlib.figure.Figure, optional</span>
+<span class="sd">        The figure object if `silent=True`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The function automatically selects plotting style depending on &quot;Grain type&quot;:</span>
+<span class="sd">        - &quot;Equiaxed&quot;: only equivalent diameter distribution</span>
+<span class="sd">        - &quot;Elongated&quot;: both equivalent diameter and aspect ratio distributions</span>
+<span class="sd">        - &quot;Free&quot;: compute aspect ratio from semi-axes and rotation axis</span>
+<span class="sd">    - Vertical dashed lines mark the minimum and maximum cut-offs from `stats_dict`.</span>
+<span class="sd">    - Overlays experimental data (histogram) and lognormal fits if `gs_data` or `ar_data` are provided.</span>
+<span class="sd">    - Uses lognormal PDFs for both grain size and aspect ratio.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot_lognorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot a log-normal probability density function (PDF) on a given matplotlib axis</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : array-like</span>
+<span class="sd">            Points at which to evaluate the PDF.</span>
+<span class="sd">        sig : float</span>
+<span class="sd">            Shape parameter (standard deviation of log of the variable).</span>
+<span class="sd">        loc : float</span>
+<span class="sd">            Location parameter (shifts the distribution along x-axis).</span>
+<span class="sd">        scale : float</span>
+<span class="sd">            Scale parameter (exp(mean of log of the variable)).</span>
+<span class="sd">        axis : matplotlib.axes.Axes</span>
+<span class="sd">            Matplotlib axis to plot the PDF on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;area = np.trapz(y, xv)</span>
 <span class="sd">        if np.isclose(area, 0.0):</span>
@@ -941,18 +1075,17 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.plotting.plot_stats_dict">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_stats_dict</span><span class="p">(</span><span class="n">sdict</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_files</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Plot statistical data on semi axes of effective ellipsoids in RVE</span>
-<span class="sd">    as histogram.</span>
+<span class="sd">    Plot statistical data on semi-axes of effective ellipsoids in RVE as histogram</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    save_files</span>
-<span class="sd">    sdict</span>
-<span class="sd">    title</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-
+<span class="sd">    sdict : dict</span>
+<span class="sd">        Dictionary containing semi-axis data and log-normal parameters.</span>
+<span class="sd">        Keys should include &#39;a&#39;, &#39;b&#39;, &#39;c&#39;, and their corresponding &#39;_sig&#39; and &#39;_scale&#39;.</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        Title for the plot</span>
+<span class="sd">    save_files : bool, optional</span>
+<span class="sd">        Whether to save the plot as PNG in the current working directory</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">shared_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram_bin_edges</span><span class="p">(</span><span class="n">sdict</span><span class="p">[</span><span class="s1">&#39;eqd&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;fd&#39;</span><span class="p">)</span>
     <span class="n">binNum</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shared_bins</span><span class="p">)</span>
