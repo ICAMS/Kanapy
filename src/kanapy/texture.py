@@ -3071,6 +3071,7 @@ def step3_track_from_overlap(C, row_sum, col_sum, *,
             events["split"].append((i, children, strong))
 
     return parents_of_child, best_parent, best_child, events
+
 def step4_assign_tracked_ids(
     row_sum: np.ndarray,
     col_sum: np.ndarray,
@@ -3270,6 +3271,7 @@ def step4_assign_tracked_ids(
         _p(f"  {j:2d} -> {track_of_child[j]:2d}")
 
     return track_of_child, events4, next_track_id
+
 def step5_apply_tracking_to_snapshot(
     json_path: str,
     t: int,
@@ -3450,7 +3452,7 @@ def track_all_grains_across_snapshots(
     # -----------------------------
     # Resolve JSON path
     # -----------------------------
-    if folder_path.lower().endswith(".json") and os.path.isfile(folder_path):
+    if os.path.isfile(folder_path):
         json_path = folder_path
     else:
         candidate = os.path.join(folder_path, json_name)
@@ -3547,9 +3549,9 @@ def track_all_grains_across_snapshots(
         _p("  C shape       :", C.shape, " total voxels:", int(C.sum()))
         if int(C.sum()) != N:
             raise RuntimeError(f"Overlap sum mismatch at t={t}: C.sum()={int(C.sum())} vs N={N}")
-        _p("=" * 40)
-        print_full_matrix(C)
-        _p("=" * 40)
+        #_p("=" * 40)
+        #print_full_matrix(C)
+        #_p("=" * 40)
 
         # Step 3
         _p("[STEP 3] events")
@@ -3564,8 +3566,8 @@ def track_all_grains_across_snapshots(
         c_split = len(events["split"])
         c_birth = len(events["birth"])
         c_death = len(events["death"])
-        _p("MERGE:", events["merge"])
-        _p("SPLITS:", events["split"])
+        #_p("MERGE:", events["merge"])
+        #_p("SPLITS:", events["split"])
         _p(f"  CONTINUE: {c_continue}  MERGE: {c_merge}  SPLIT: {c_split}  BIRTH: {c_birth}  DEATH: {c_death}")
 
         # Step 4 (child grain_id -> persistent id)

@@ -11,9 +11,14 @@ March 2024
 """
 import logging
 import numpy as np
+import copy
+import json
+from pathlib import Path
+from typing import Union, List, Tuple
 from scipy.optimize import minimize
 from scipy.spatial import ConvexHull
 from .plotting import plot_stats_dict
+from scipy import spatial
 
 def arr2mat(mc):
     """
@@ -950,5 +955,627 @@ def get_stats_poly(grains, iphase=None, ax_max=None,
     return poly_stats_dict
 
 
+def update_grid(
+        json_path: Union[str, Path],
+        snapshot_index: int = -1,
+        spacing_sigfig: int = 1,)  -> Tuple[List[float], List[float], List[int], np.ndarray]:
+    """
+    Update grid size, spacing, and voxel counts based on the average deformation
+    gradient of a selected snapshot in a microstructure time series.
 
+    The function assumes that all length-related quantities are expressed in the
+    unit specified by ``units["Length"]`` in the JSON file. If the unit is ``"m"``,
+    values are used directly without conversion. Other units are currently not
+    supported and will raise an error.
+
+    The average deformation gradient is computed from voxel-level data and returned
+    as a numeric NumPy array. Any rounding applied to the deformation gradient is
+    for printing only and does not modify the returned values unless explicitly
+    rounded in code.
+
+    Parameters
+    ----------
+    json_path : str or pathlib.Path
+        Path to the JSON file containing the microstructure time series.
+    snapshot_index : int, optional
+        Index of the target snapshot used to compute the deformation.
+        Defaults to -1 (last snapshot).
+    spacing_sigfig : int, optional
+        Number of significant figures used when rounding the uniform grid spacing.
+        Default is 1.
+
+    Returns
+    -------
+    grid_size_new : list of float
+        Updated physical grid size (same length unit as the input JSON).
+    grid_spacing_new : list of float
+        Updated uniform grid spacing (same length unit as the input JSON).
+    voxel_counts_new : list of int
+        Updated number of voxels along each spatial direction.
+    F_avg : numpy.ndarray, shape (3, 3)
+        Average deformation gradient of the selected snapshot. This array is
+        returned as numeric data with full floating-point precision; any reduced
+        precision shown in printed output is for display only.
+
+    Raises
+    ------
+    ValueError
+        If ``units["Length"]`` is not ``"m"``.
+    """
+
+
+    def round_to_sigfig(x: float, sigfig: int) -> float:
+        """Round a scalar to a given number of significant figures using NumPy."""
+        if x == 0.0:
+            return 0.0
+        exp = np.floor(np.log10(np.abs(x)))
+        scale = 10.0 ** (sigfig - 1 - exp)
+        return np.round(x * scale) / scale
+
+    def fmt(x, sigfig=3):
+        return f"{x:.{sigfig}g}"
+
+    def fmt_list(arr, sigfig=3):
+        return "[" + ", ".join(fmt(x, sigfig) for x in arr) + "]"
+
+    # --------------------------------------------------
+    # Load JSON
+    # --------------------------------------------------
+    data = json.loads(Path(json_path).read_text(encoding="utf-8"))
+
+    # --------------------------------------------------
+    # Unit check (no conversion)
+    # --------------------------------------------------
+    length_unit = data["units"]["Length"]
+    if length_unit != "m":
+        raise ValueError(
+            f'Unsupported Length unit "{length_unit}". '
+            'This function currently assumes SI units ("m").'
+        )
+
+    micro = data["microstructure"]
+    snap0 = micro[0]
+    snapT = micro[snapshot_index]
+
+    idx0, t0 = 0, snap0.get("time", None)
+    idxT = snapshot_index if snapshot_index >= 0 else len(micro) + snapshot_index
+    tT = snapT.get("time", None)
+
+    # --------------------------------------------------
+    # Old grid (already in meters)
+    # --------------------------------------------------
+    g0 = snap0["grid"]
+    size_old = np.asarray(g0["grid_size"], dtype=float)
+    spacing_old = np.asarray(g0["grid_spacing"], dtype=float)
+    cells_old = np.rint(size_old / spacing_old).astype(int)
+
+    # --------------------------------------------------
+    # Average deformation gradient (unitless)
+    # --------------------------------------------------
+    F_all = np.asarray(
+        [v["deformation_gradient"] for v in snapT["voxels"]],
+        dtype=float,
+    )
+    F_avg = np.average(F_all, axis=0)
+
+    # --------------------------------------------------
+    # DAMASK-style voxel count update
+    # --------------------------------------------------
+    cells = cells_old.astype(float)
+    proposed = F_avg @ cells
+    proposed = np.maximum(np.abs(proposed), 1e-12)
+
+    scale = np.max(cells / proposed)
+    cells_new = np.rint(proposed * scale).astype(int)
+    cells_new = np.maximum(cells_new, 1)
+
+    # --------------------------------------------------
+    # New size and uniform spacing (still meters)
+    # --------------------------------------------------
+    size_new = F_avg @ size_old
+    spacing_new = size_new / cells_new
+
+    spacing_uniform_raw = np.min(spacing_new)
+    spacing_uniform = round_to_sigfig(spacing_uniform_raw, spacing_sigfig)
+    spacing_uniform = float(spacing_uniform)
+
+    grid_size_new = (cells_new * spacing_uniform).tolist()
+    grid_spacing_new = [spacing_uniform] * 3
+    voxel_counts_new = cells_new.tolist()
+
+    # --------------------------------------------------
+    # Pretty printing
+    # --------------------------------------------------
+    print("\n" + "=" * 72)
+    print("GRID UPDATE SUMMARY")
+    print("=" * 72)
+
+    print("\nSnapshots used:")
+    print(f"  • Snapshot 0      : index = {idx0}, time = {t0}")
+    print(f"  • Target snapshot : index = {idxT}, time = {tT}")
+
+    print(f"\nLength unit: {length_unit}")
+
+    print("\nGrid comparison (old → new):")
+    print("-" * 72)
+    print(f"{'Quantity':<18} {'Old':<24} {'New':<24}")
+    print("-" * 72)
+    print(
+        f"{'Grid size [m]':<18} "
+        f"{fmt_list(size_old)} → {fmt_list(grid_size_new)}")
+    print(
+        f"{'Grid spacing [m]':<18} "
+        f"{fmt_list(spacing_old)} → {fmt_list(grid_spacing_new)}"
+    )
+    print(f"{'Voxel counts':<18} {cells_old.tolist()} → {voxel_counts_new}")
+    print("-" * 72)
+
+    print("\nAverage deformation gradient F_avg:")
+    print(np.array2string(F_avg, precision=4, suppress_small=True))
+
+    print("=" * 72 + "\n")
+
+    return grid_size_new, grid_spacing_new, voxel_counts_new, F_avg
+
+
+def regrid(
+        json_path: Union[str, Path],
+        F_average: np.ndarray,
+        new_grid_cell: List[int],
+        *,
+        snapshot_index: int = -1,
+        spacing_sigfig: int = 1,
+        verbose: bool = True,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Build a voxel-index remapping from a deformed periodic box to a new regular grid.
+
+    The reference box (old grid size/spacing) is taken from snapshot 0 in the JSON.
+    A periodic "search box" is constructed from the provided average deformation
+    gradient, then each new-grid cell center is mapped to the nearest voxel centroid
+    of the target snapshot under periodic boundary conditions.
+
+    Parameters
+    ----------
+    json_path : str or pathlib.Path
+        Path to the JSON file containing the microstructure time series.
+    F_average : numpy.ndarray, shape (3, 3)
+        Average deformation gradient (unitless).
+    new_grid_cell : list of int, length 3
+        Number of cells (Nx, Ny, Nz) of the new grid to remesh onto.
+    snapshot_index : int, optional
+        Target snapshot index to use for voxel centroids. Default is -1 (last).
+    spacing_sigfig : int, optional
+        Reserved for consistency with other workflow steps. Not used in this
+        function at the moment. Default is 1.
+    verbose : bool, optional
+        If True, prints progress and key computed values. Default is True.
+
+    Returns
+    -------
+    idx : numpy.ndarray, shape (Nx, Ny, Nz)
+        For each new-grid cell, the index into the original voxel list
+        (0..Nvox-1) of the nearest voxel centroid under periodic boundary
+        conditions.
+    box : numpy.ndarray, shape (3,)
+        Periodic box lengths (Lx, Ly, Lz) used for the remeshing search.
+
+    Notes
+    -----
+    - The mapping is computed using a periodic cKDTree query on centroid positions.
+    - To reduce boundary artifacts, the voxel centroid cloud can be repeated
+      periodically using `repeats`. In your current workflow, repeats may be [1,1,1],
+      which is valid when `boxsize=box` is used.
+    - This function assumes voxel centroid coordinates are in the same length unit
+      as the grid stored in the JSON (typically meters), and that `F_average` is unitless.
+    """
+
+    # --------------------------
+    # local helpers
+    # --------------------------
+    def _p(*args) -> None:
+        if verbose:
+            print(*args)
+
+    def shortest_linear_combinations(bases: np.ndarray, max_coeff=3, max_candidates=200) -> np.ndarray:
+        """
+        Generate short lattice vectors as integer linear combinations of basis vectors.
+
+        Parameters
+        ----------
+        bases : numpy.ndarray, shape (3, 3)
+            Basis vectors as rows.
+        max_coeff : int, optional
+            Coefficient range is [-max_coeff, ..., +max_coeff]. Default is 3.
+        max_candidates : int, optional
+            Return only the `max_candidates` shortest vectors by norm. Default is 200.
+
+        Returns
+        -------
+        vecs : numpy.ndarray, shape (m, 3)
+            Candidate vectors sorted by norm (shortest first).
+        """
+        coeffs = range(-max_coeff, max_coeff + 1)
+        coeffs_arr = np.stack([n.ravel() for n in np.meshgrid(*[coeffs] * len(bases), indexing='ij')],
+                              axis=1)
+
+        coeffs_arr = coeffs_arr[np.any(coeffs_arr != 0, axis=1)]  # remove zero tuple
+        vecs = coeffs_arr @ bases  # lattice vectors
+
+        if max_candidates is not None:
+            norms = np.linalg.norm(vecs, axis=1)
+            idx = np.argpartition(norms, max_candidates - 1)[:max_candidates]  # O(N), not full sort
+            vecs = vecs[idx[np.argsort(norms[idx])]]  # sort those by actual norm and use as index
+
+        return vecs
+
+    def shortest_aligned(vectors: np.ndarray) -> dict:
+        """
+        From a set of 3D vectors, find the shortest vector aligned with each global basis vector.
+
+        'Aligned with a basis' means that only that vector component is nonzero
+        (within tolerance). Example: [1.42,0,0] is aligned with the x-axis,
+        whereas [3.2,0,1.1] is not aligned with any axis.
+
+        Parameters
+        ----------
+        vectors : array-like, shape (N, 3)
+            List/array of 3D vectors.
+
+        Returns
+        -------
+        result : dict
+            Keys: 'x', 'y', 'z'.
+                Values: shortest aligned vector (np.ndarray of shape (3,)) or None if none found.
+        """
+        arr = np.asarray(vectors, dtype=float)
+        result = {'x': None, 'y': None, 'z': None}
+
+        for idx, axis in enumerate(result.keys()):
+            aligned = arr[np.all(np.isclose(np.delete(arr, idx, axis=1), 0.0, atol=1e-12), axis=1)]
+            if aligned.size != 0: result[axis] = aligned[np.argmin(np.linalg.norm(aligned, axis=1))]
+
+        return result
+
+    def repeat_points(points: np.ndarray, repeats: np.ndarray, shifts: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Expand a point cloud by repeating it along x, y, z.
+
+        Parameters
+        ----------
+        points : array-like, shape (N,3)
+            Original point cloud.
+        repeats : int, len (3)
+            Number of repeats along (x, y, z). Must be >= 1.
+        shifts : array-like, shape (3,3)
+            Shift vector per repeat along each axis.
+
+        Returns
+        -------
+        expanded : numpy.ndarray, shape (N*prod(repeats),3)
+            Expanded point cloud with translated copies.
+        origin_indices : numpy.ndarray, shape (N*prod(repeats),)
+            For each expanded point, the index of the point in the original cloud it came from.
+        """
+        idx = np.array(np.meshgrid(*[np.arange(r) for r in repeats], indexing='ij')).reshape(3, -1).T
+        deltas = idx @ np.asarray(shifts)
+        expanded_points = (np.asarray(points)[:, None, :] + deltas[None, :, :]).reshape(-1, 3)
+        origin_indices = np.repeat(np.arange(len(points)), deltas.shape[0])
+        return (expanded_points, origin_indices)
+
+    def coordinates0_point(cells, size, origin=np.zeros(3)) -> np.ndarray:
+        """
+        Cell center positions (undeformed).
+
+        Parameters
+        ----------
+        cells : sequence of int, len (3)
+            Number of cells.
+        size : sequence of float, len (3)
+            Physical size of the periodic field.
+        origin : sequence of float, len(3), optional
+            Physical origin of the periodic field. Defaults to [0.0,0.0,0.0].
+
+        Returns
+        -------
+        x_p_0 : numpy.ndarray, shape (:,:,:,3)
+            Undeformed cell center coordinates.
+        """
+        size_ = np.array(size, float)
+        start = origin + size_ / np.array(cells, np.int64) * .5
+        end = origin + size_ - size_ / np.array(cells, np.int64) * .5
+
+        return np.stack(np.meshgrid(np.linspace(start[0], end[0], cells[0]),
+                                    np.linspace(start[1], end[1], cells[1]),
+                                    np.linspace(start[2], end[2], cells[2]), indexing='ij'), axis=-1)
+
+    # --------------------------
+    # validate inputs
+    # --------------------------
+    F_average = np.asarray(F_average, dtype=float)
+    if F_average.shape != (3, 3):
+        raise ValueError(f"F_average must be shape (3,3); got {F_average.shape}")
+
+    new_grid_cell = np.asarray(new_grid_cell, dtype=int)
+    if new_grid_cell.shape != (3,) or np.any(new_grid_cell <= 0):
+        raise ValueError(f"new_grid_cell must be length-3 positive ints; got {new_grid_cell}")
+
+    # --------------------------
+    # load snapshot
+    # --------------------------
+    data = json.loads(Path(json_path).read_text(encoding="utf-8"))
+    micro = data["microstructure"]
+    n_snap = len(micro)
+    snap_idx = snapshot_index if snapshot_index >= 0 else n_snap + snapshot_index
+    t_snap = micro[snap_idx].get("time", None)
+    t_unit = data.get("units", {}).get("Time", "")
+    snap0 = micro[0]
+    snapT = micro[snapshot_index]
+
+    # --------------------------------------------------
+    # Old grid (already in meters)
+    # --------------------------------------------------
+    g0 = snap0["grid"]
+    old_grid_size = np.asarray(g0["grid_size"], dtype=float)
+    old_grid_spacing = np.asarray(g0["grid_spacing"], dtype=float)
+    old_grid_cells = np.rint(old_grid_size / old_grid_spacing).astype(int)
+
+    # --------------------------
+    # build deformed basis vectors
+    # --------------------------
+    # Basis vectors as rows. Each row is the deformed edge vector originating from the reference box.
+    # Reference edge vectors are (Lx,0,0), (0,Ly,0), (0,0,Lz). Deformed: F * edge.
+    bases = (old_grid_size * F_average).T  # rows = deformed edges, shape (3,3)
+    bases = np.asarray(bases, dtype=float)
+    if bases.shape != (3, 3):
+        raise ValueError(f"bases must be (3,3), got {bases.shape}. Check old_grid_size and F_average.")
+
+    # --------------------------
+    # find orthogonal box vectors aligned to axes
+    # --------------------------
+    vecs = shortest_linear_combinations(bases)
+    shortest = shortest_aligned(vecs)
+
+    if any(v is None for v in shortest.values()):
+        raise ValueError(
+            "Cannot find axis-aligned periodic basis from F_average and old_grid_size.\n"
+            f"F_average:\n{np.array2string(F_average, precision=4, suppress_small=True)}\n"
+            f"old_grid_size: {old_grid_size.tolist()}")
+
+    box = np.linalg.norm(np.array([shortest['x'], shortest['y'], shortest['z']]), axis=1)
+
+    # repeats along each axis to ensure KDTree has enough periodic images
+    repeats = (np.ceil(box / (old_grid_size * F_average.diagonal()))).astype(int)
+
+    if not np.all(np.isfinite(repeats)):
+        raise ValueError(f"Non-finite repeats computed: {repeats}. Check F_average.diagonal().")
+
+    if np.any(repeats < 1):
+        repeats = np.maximum(repeats, 1)
+
+    if np.any(repeats > 20):
+        raise ValueError(f"Repeats too large {repeats}. Check inputs.")
+
+    # --------------------------
+    # extract points and build periodic KDTree
+    # --------------------------
+    points = np.asarray([v["centroid_coordinates"] for v in snapT["voxels"]], dtype=float)
+    c, ids = repeat_points(points=points, repeats=repeats, shifts=bases)
+
+    # periodic KDTree in the box
+    idx = ids[spatial.cKDTree(c % box, boxsize=box).query(coordinates0_point(new_grid_cell, box))[1]]
+
+    # --------------------------
+    # progress print
+    # --------------------------
+    if verbose:
+        def fvec(x, sig=3):
+            x = np.asarray(x, dtype=float)
+            return np.array2string(
+                x, separator=", ", formatter={"float_kind": lambda v: f"{v:.{sig}g}"}
+            )
+
+        _p("\n" + "=" * 72)
+        _p("REGRID SUMMARY")
+        _p("=" * 72)
+        if t_snap is None:
+            _p(f"Target snapshot: index {snap_idx} (requested {snapshot_index})")
+        else:
+            unit_str = f" {t_unit}" if t_unit else ""
+            _p(f"Target snapshot: t = {t_snap}{unit_str} (index {snap_idx})")
+        _p(f"Old grid size  : {fvec(old_grid_size)}")
+        _p(f"New grid cells : {new_grid_cell.tolist()}")
+        _p(f"Box (Lx,Ly,Lz) : {fvec(box)}")
+        _p(f"Repeats        : {repeats.tolist()}")
+        _p("F_average:")
+        _p(np.array2string(F_average, precision=4, suppress_small=True))
+        _p(f"Centroids      : {points.shape[0]}")
+        _p(f"Expanded pts   : {c.shape[0]}")
+        _p(f"Mapped cells   : {idx.size}")
+        _p(f"Mapped cells shape      : {idx.shape}")
+        _p(f"Mapped cells dtype      : {idx.dtype}")
+        _p(f"Mapped cells min/max    : {idx.min()} / {idx.max()}")
+        _p(f"Mapped cells idx        : {np.unique(idx).size} (out of {points.shape[0]})")
+        missing = np.setdiff1d(np.arange(points.shape[0]), np.unique(idx))
+        _p("Missing voxel ids:", missing)
+        _p("=" * 72 + "\n")
+
+    return idx, box
+
+def append_regridded_snapshot(
+    json_path: Union[str, Path],
+    idx: np.ndarray,
+    grid_size_new: List[float],
+    grid_spacing_new: List[float],
+    voxel_counts_new: List[int],
+    *,
+    snapshot_index: int = -1,
+    out_path: Union[str, Path, None] = None,
+    verbose: bool = True,
+) -> Path:
+    """
+    Append a regridded copy of a target snapshot to the microstructure time series.
+
+    The target snapshot (selected by `snapshot_index`) is preserved unchanged.
+    A new snapshot is appended at the end of ``data["microstructure"]`` with:
+      - updated grid metadata (regular grid),
+      - regridded voxel geometry (index, centroid, id, volume),
+      - voxel fields copied from the source snapshot via the mapping `idx`.
+
+    Mapping convention
+    ------------------
+    `idx` is a 3D integer array of shape (Nx, Ny, Nz) with 0-based indexing:
+        src_linear = idx[i, j, k]
+    where (i, j, k) correspond to the new-grid cell indices (0-based).
+    The JSON voxel list is written in **k-fastest** order (as you observed):
+        voxel 1: [1,1,1], voxel 2: [1,1,2], ...
+
+    Fields copied vs updated
+    ------------------------
+    Copied from the source voxel (selected by `idx[i,j,k]`):
+      - grain_id
+      - tracked_grain_id
+      - orientation
+      - deformation_gradient
+      - first_piola_kirchhoff_stress
+      - strain
+
+    Updated (recomputed) in the new voxel:
+      - voxel_id            (contiguous 1..Nnew)
+      - voxel_index         ([i+1, j+1, k+1], 1-based)
+      - centroid_coordinates (regular grid cell centers)
+      - voxel_volume        (uniform; product of `grid_spacing_new`)
+
+    Parameters
+    ----------
+    json_path : str or pathlib.Path
+        Path to the input JSON file.
+    idx : numpy.ndarray, shape (Nx, Ny, Nz)
+        Mapping from new-grid cells to indices of the source snapshot voxel list.
+        Must be integer indices in [0, n_old-1].
+    grid_size_new : list of float, length 3
+        New physical grid size.
+    grid_spacing_new : list of float, length 3
+        New uniform grid spacing.
+    voxel_counts_new : list of int, length 3
+        New voxel counts (Nx, Ny, Nz). Must match `idx.shape`.
+    snapshot_index : int, optional
+        Snapshot to regrid. Default is -1 (last snapshot).
+    out_path : str or pathlib.Path or None, optional
+        If provided, write to this path; otherwise overwrite `json_path`.
+    verbose : bool, optional
+        Print a short summary. Default is True.
+
+    Returns
+    -------
+    pathlib.Path
+        Path to the written JSON file.
+
+    Raises
+    ------
+    ValueError
+        If `idx.shape` does not match `voxel_counts_new`, or if `idx` contains
+        indices outside the source voxel list range.
+    KeyError
+        If required copied fields are missing from the source voxel dict.
+    """
+
+    def _p(*args) -> None:
+        if verbose:
+            print(*args)
+
+    data = json.loads(Path(json_path).read_text(encoding="utf-8"))
+    micro = data["microstructure"]
+
+    n = len(micro)
+    src_idx = snapshot_index if snapshot_index >= 0 else n + snapshot_index
+    src_snap = micro[src_idx]
+
+    # ---- validate mapping shape/range
+    idx = np.asarray(idx, dtype=int)
+    Nx, Ny, Nz = map(int, voxel_counts_new)
+    if idx.shape != (Nx, Ny, Nz):
+        raise ValueError(f"idx.shape {idx.shape} != voxel_counts_new {(Nx, Ny, Nz)}")
+
+    old_voxels = src_snap["voxels"]
+    n_old = len(old_voxels)
+    if idx.min() < 0 or idx.max() >= n_old:
+        raise ValueError(f"idx out of range: min={idx.min()}, max={idx.max()}, n_old={n_old}")
+
+    # ---- build the new snapshot (keep time and grains as-is)
+    new_snap = copy.deepcopy(src_snap)
+
+    # ---- geometry from new grid
+    spacing = np.asarray(grid_spacing_new, dtype=float)
+    size = np.asarray(grid_size_new, dtype=float)
+    if spacing.shape != (3,) or size.shape != (3,):
+        raise ValueError("grid_spacing_new and grid_size_new must be length-3.")
+
+    # If you later store/need a non-zero origin, replace this with it.
+    origin = np.zeros(3, dtype=float)
+
+    voxel_volume = float(spacing[0] * spacing[1] * spacing[2])
+
+    # ---- build new voxel list in JSON order: k-fastest
+    new_voxels: List[dict] = []
+    vid = 1
+
+    # copied keys (strict subset)
+    COPY_KEYS = (
+        "grain_id",
+        "tracked_grain_id",
+        "orientation",
+        "deformation_gradient",
+        "first_piola_kirchhoff_stress",
+        "strain",
+    )
+
+    for i in range(1, Nx + 1):
+        for j in range(1, Ny + 1):
+            for k in range(1, Nz + 1):
+                src = old_voxels[int(idx[i - 1, j - 1, k - 1])]
+
+                # regular cell-center centroid
+                cx = float(origin[0] + (i - 0.5) * spacing[0])
+                cy = float(origin[1] + (j - 0.5) * spacing[1])
+                cz = float(origin[2] + (k - 0.5) * spacing[2])
+
+                # build new voxel dict with ONLY requested fields
+                v_new = {
+                    # UPDATED
+                    "voxel_id": vid,
+                    "voxel_index": [i, j, k],
+                    "centroid_coordinates": [cx, cy, cz],
+                    "voxel_volume": voxel_volume,
+                }
+
+                # COPIED (strict)
+                for key in COPY_KEYS:
+                    if key not in src:
+                        raise KeyError(f"Source voxel missing required key '{key}'.")
+                    v_new[key] = copy.deepcopy(src[key])
+
+                new_voxels.append(v_new)
+                vid += 1
+
+    # ---- update grid in the copied snapshot
+    new_snap["grid"]["status"] = "regular"
+    new_snap["grid"]["grid_size"] = [float(x) for x in grid_size_new]
+    new_snap["grid"]["grid_spacing"] = [float(x) for x in grid_spacing_new]
+
+    # ---- replace voxels
+    new_snap["voxels"] = new_voxels
+
+    # ---- append as new snapshot
+    micro.append(new_snap)
+    new_index = len(micro) - 1
+
+    _p(f"Source snapshot kept: index {src_idx}, time={src_snap.get('time', None)}")
+    _p(f"Appended regridded snapshot: index {new_index}, time={new_snap.get('time', None)}")
+    _p(f"Voxels: {n_old} -> {len(new_voxels)}; grid status='regular'")
+    _p(f"Uniform voxel_volume: {voxel_volume:g}")
+
+    out = Path(out_path) if out_path is not None else Path(json_path)
+    out.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return out
 
