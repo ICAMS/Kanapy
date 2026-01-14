@@ -3287,14 +3287,14 @@ def step5_apply_tracking_to_snapshot(
     also_update_grains: bool = True,
     verbose: bool = True):
     """
-    Step 5 (v2):
-      - voxels: write tracked_grain_id only
-      - grains : write tracked_grain_id + parent_grain_id
+    Step 5 :
+      - voxels: overwrite grain_id with tracked id
+      - grains : overwrite grain_id with tracked id + write parent_grain_id
           * CONTINUE: parent_grain_id = parent tracked id (int)
           * SPLIT   : parent_grain_id = parent tracked id (int) for ALL split children
           * MERGE   : parent_grain_id = [parent tracked ids...] (list[int])
           * BIRTH   : parent_grain_id = None
-          * UNASSIGNED: Option A -> parent_grain_id = best_parent[j] (tracked id) if overlap>0 else None
+          * UNASSIGNED: Option A -> parent_grain_id = best_parent[j] if overlap>0 else None
     """
     with open(json_path, "r") as f:
         data = json.load(f)
@@ -3335,12 +3335,14 @@ def step5_apply_tracking_to_snapshot(
     tracked_ids = np.empty(len(vox), dtype=int)
 
     for i, v in enumerate(vox):
-        gid = int(v["grain_id"])
-        tid = track_of_child.get(gid, None)
+        gid_local = int(v["grain_id"])  # local id in snapshot t+1
+        tid = track_of_child.get(gid_local, None)
         if tid is None:
-            missing_gids.add(gid)
+            missing_gids.add(gid_local)
             tid = -1
-        v[tracked_key] = int(tid)     # ✅ voxel: tracked_grain_id only
+
+        v["grain_id"] = int(tid)  # ✅ voxel: tracked_grain_id only
+        v.pop(tracked_key, None)
         tracked_ids[i] = int(tid)
 
     # -----------------------------
@@ -3348,37 +3350,38 @@ def step5_apply_tracking_to_snapshot(
     # -----------------------------
     if also_update_grains and snap.get("grains") is not None:
         for g in snap["grains"]:
-            child_gid = int(g["grain_id"])
+            child_gid_local = int(g["grain_id"])
 
-            # identity
-            child_tid = int(track_of_child.get(child_gid, -1))
-            g[tracked_key] = child_tid
+            # identity: promote tracked -> grain_id
+            child_tid = int(track_of_child.get(child_gid_local, -1))
+            g["grain_id"] = child_tid
+            g.pop(tracked_key, None)
 
             # lineage
-            if child_gid in birth_set:
+            if child_gid_local  in birth_set:
                 g[parent_key] = None
 
-            elif child_gid in merge_child_to_parents:
+            elif child_gid_local  in merge_child_to_parents:
                 # MERGE: list of parents (tracked ids)
-                g[parent_key] = [int(p) for p in merge_child_to_parents[child_gid]]
+                g[parent_key] = [int(p) for p in merge_child_to_parents[child_gid_local ]]
 
-            elif child_gid in split_child_to_parent:
+            elif child_gid_local  in split_child_to_parent:
                 # SPLIT: scalar parent
-                g[parent_key] = int(split_child_to_parent[child_gid])
+                g[parent_key] = int(split_child_to_parent[child_gid_local ])
 
-            elif child_gid in continue_child_to_parent:
+            elif child_gid_local  in continue_child_to_parent:
                 # CONTINUE: scalar parent
-                g[parent_key] = int(continue_child_to_parent[child_gid])
+                g[parent_key] = int(continue_child_to_parent[child_gid_local ])
 
             else:
                 # UNASSIGNED:
-                # Option A -> use best_parent if overlap exists, else None
-                p = best_parent.get(child_gid, None)
-                if p is None or int(p) == 0 or int(col_sum[child_gid]) == 0:
+                # use best_parent if overlap exists, else None
+                p = best_parent.get(child_gid_local, None)
+                if p is None or int(p) == 0 or int(col_sum[child_gid_local ]) == 0:
                     g[parent_key] = None
                 else:
                     # Ensure this is a real overlap (protect against argmax on all-zeros col)
-                    if int(C[int(p), child_gid]) > 0:
+                    if int(C[int(p), child_gid_local ]) > 0:
                         g[parent_key] = int(p)
                     else:
                         g[parent_key] = None
@@ -3386,12 +3389,13 @@ def step5_apply_tracking_to_snapshot(
     if verbose:
         print("=== STEP 5 (v2): APPLY TRACKING + LINEAGE ===")
         print(f"json_path      : {json_path}")
-        print(f"applied to     : snapshot {t+1} (t={t} -> t+1)")
-        print(f"voxel key      : {tracked_key} (identity)")
-        print(f"grain keys     : {tracked_key} + {parent_key} (lineage)")
+        print(f"applied to     : snapshot {t + 1} (t={t} -> t+1)")
+        print(f"voxel key      : grain_id (identity promoted from tracked)")  # >>> CHANGED
+        print(f"grain keys     : grain_id + {parent_key} (lineage)")  # >>> CHANGED
         print(f"voxels updated : {len(vox)}")
         if missing_gids:
-            print(f"WARNING: unmapped grain_id(s) in t+1 -> wrote -1 for {len(missing_gids)} grains:", sorted(missing_gids)[:20])
+            print(f"WARNING: unmapped local grain_id(s) in t+1 -> wrote -1 for {len(missing_gids)} grains:",
+                  sorted(missing_gids)[:20])
         else:
             print("OK: all voxels mapped.")
 
@@ -3417,7 +3421,7 @@ def track_all_grains_across_snapshots(
         folder_path: str,
         *,
         json_name: str = "data_object.json",
-        tracked_key: str = "tracked_grain_id",
+        tracked_key: str = None,
         parent_key: str = "parent_grain_id",
         tau_parent: float = 0.20,
         tau_child: float = 0.20,
@@ -3427,14 +3431,12 @@ def track_all_grains_across_snapshots(
     """
     Track grains across all snapshots, leaving snapshot 0 unchanged (baseline).
 
-    - Snapshot 0: only grain_id (no tracked_key written)
-    - Snapshot t>=1: has both grain_id (local) and tracked_key (persistent)
+    - Snapshot 0: grain_id is the baseline (local ids)
+    - Snapshot t>=1: grain_id is promoted to persistent tracked ids (after step5 change)
     - For each transition t->t+1:
         parents use tracked_key if present else grain_id
         children use grain_id
-        tracked_key is written into snapshot t+1
     """
-
     def _p(*a):
         if verbose:
             print(*a)
@@ -3474,10 +3476,9 @@ def track_all_grains_across_snapshots(
     if n_snaps < 2:
         raise ValueError("Need at least 2 snapshots to track.")
 
-    # -----------------------------
-    # Baseline: snapshot 0 untouched
-    # next_track_id starts after snapshot0 grain_id max
-    # -----------------------------
+    # ----------------------------------------------
+    # Baseline: snapshot 0 (initial microstructure)
+    # ----------------------------------------------
     snap0 = micro[0]
     if "voxels" not in snap0 or not snap0["voxels"]:
         raise KeyError("Snapshot 0 missing voxels.")
@@ -3530,8 +3531,16 @@ def track_all_grains_across_snapshots(
         micro = data["microstructure"]
         snap_t = micro[t]
         snap_tp1 = micro[t + 1]
-
-        has_tracked = bool(snap_t.get("voxels")) and (tracked_key in snap_t["voxels"][0])
+        # ------------------------------------------------------------------
+        # CHANGED: old check becomes meaningless if you no longer write tracked_key
+        # has_tracked = bool(snap_t.get("voxels")) and (tracked_key in snap_t["voxels"][0])
+        #
+        # New labeling:
+        #   - t == 0: parents are grain_id baseline
+        #   - t >= 1: parents are grain_id but already persistent (promoted by step5)
+        # ------------------------------------------------------------------
+        parent_mode = "grain_id baseline" if t == 0 else "grain_id (persistent)"
+        # ------------------------------------------------------------------
 
         # Parents: tracked_key if exists else grain_id (baseline at t=0)
         gid_t = _aligned_array_for_snapshot(snap_t, idx_list, tracked_key, "grain_id")
@@ -3539,8 +3548,10 @@ def track_all_grains_across_snapshots(
         gid_tp1 = _aligned_array_for_snapshot(snap_tp1, idx_list, "grain_id", "grain_id")
 
         _p("  N voxels      :", N)
-        _p("  parents ids   :", int(gid_t.min()), "->", int(gid_t.max()),
-           f"({'tracked' if tracked_key in snap_t['voxels'][0] else 'grain_id baseline'})")
+        # ------------------------------------------------------------------
+        # CHANGED: do not probe snap_t['voxels'][0] for tracked_key
+        _p("  parents ids   :", int(gid_t.min()), "->", int(gid_t.max()), f"({parent_mode})")
+        # ------------------------------------------------------------------
         _p("  children gids :", int(gid_tp1.min()), "->", int(gid_tp1.max()))
 
         # Step 2
@@ -3549,9 +3560,6 @@ def track_all_grains_across_snapshots(
         _p("  C shape       :", C.shape, " total voxels:", int(C.sum()))
         if int(C.sum()) != N:
             raise RuntimeError(f"Overlap sum mismatch at t={t}: C.sum()={int(C.sum())} vs N={N}")
-        #_p("=" * 40)
-        #print_full_matrix(C)
-        #_p("=" * 40)
 
         # Step 3
         _p("[STEP 3] events")
@@ -3602,15 +3610,24 @@ def track_all_grains_across_snapshots(
 
         ok = not np.any(tracked_ids == -1)
         _p("  OK: all voxels mapped." if ok else "  WARNING: some voxels mapped to -1")
-
-        # refresh counts
+        # ------------------------------------------------------------------
+        # After your change, persistent IDs live in voxel['grain_id'] for t>=1.
+        # ------------------------------------------------------------------
         with open(json_path, "r") as f:
             data = json.load(f)
         micro = data["microstructure"]
-        tids_tp1 = np.array([int(v.get(tracked_key, -1)) for v in micro[t + 1]["voxels"]], dtype=np.int32)
-        tracked_counts[t + 1] = _unique_count_nonneg(tids_tp1)
-        top5 = [(k, v) for k, v in Counter(tids_tp1.tolist()).most_common(5) if k != -1]
+
+        if t + 1 == 0:
+            ids_tp1 = np.array([int(v.get("grain_id", -1)) for v in micro[t + 1]["voxels"]], dtype=np.int32)
+        else:
+            # persistent ids now stored in grain_id
+            ids_tp1 = np.array([int(v.get("grain_id", -1)) for v in micro[t + 1]["voxels"]], dtype=np.int32)
+
+
+        tracked_counts[t + 1] = _unique_count_nonneg(ids_tp1)
+        top5 = [(k, v) for k, v in Counter(ids_tp1.tolist()).most_common(5) if k != -1]
         _p(f"  unique tracked ids: {tracked_counts[t + 1]}  top5:", top5)
+        # ------------------------------------------------------------------
 
         per_step_events.append({
             "t": t, "tp1": t + 1,
