@@ -43,6 +43,7 @@ dependencies = [
     "orix>=0.13",
     "networkx",
     "scikit-image",
+	"pyvista>=0.43,<0.45",
 ]
 
 [project.optional-dependencies]
