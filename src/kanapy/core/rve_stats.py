@@ -14,11 +14,16 @@ import numpy as np
 import copy
 import json
 from pathlib import Path
-from typing import Union, List, Tuple
+from typing import Dict, List, Union, Any, Mapping, Tuple
 from scipy.optimize import minimize
 from scipy.spatial import ConvexHull
 from .plotting import plot_stats_dict
 from scipy import spatial
+from dataclasses import dataclass
+
+
+import json
+import numpy as np
 
 def arr2mat(mc):
     """
@@ -1434,7 +1439,6 @@ def append_regridded_snapshot(
     ------------------------
     Copied from the source voxel (selected by `idx[i,j,k]`):
       - grain_id
-      - tracked_grain_id
       - orientation
       - deformation_gradient
       - first_piola_kirchhoff_stress
@@ -1523,7 +1527,6 @@ def append_regridded_snapshot(
     # copied keys (strict subset)
     COPY_KEYS = (
         "grain_id",
-        "tracked_grain_id",
         "orientation",
         "deformation_gradient",
         "first_piola_kirchhoff_stress",
@@ -1559,7 +1562,7 @@ def append_regridded_snapshot(
                 vid += 1
 
     # ---- update grid in the copied snapshot
-    new_snap["grid"]["status"] = "regular"
+    new_snap["grid"]["status"] = "undeformed"
     new_snap["grid"]["grid_size"] = [float(x) for x in grid_size_new]
     new_snap["grid"]["grid_spacing"] = [float(x) for x in grid_spacing_new]
 
@@ -1578,4 +1581,411 @@ def append_regridded_snapshot(
     out = Path(out_path) if out_path is not None else Path(json_path)
     out.write_text(json.dumps(data, indent=2), encoding="utf-8")
     return out
+
+def build_and_save_stats_data(
+    initial_state: Dict[str, Any] | None,
+    regridded_state: Dict[str, Any],
+    json_updated: Union[str, Path],
+    *,
+    filename: str = "stats_data.json",
+) -> Dict[str, Any]:
+    """
+    Build the STATS_DATA dictionary (exact structure as provided) and save it as JSON
+    next to the data_object.json file.
+
+    Parameters
+    ----------
+    initial_state
+        Statistics dict returned by `knpy.core.rve_stats.get_stats_vox` for the initial mesh.
+        Can be None.
+    regridded_state
+        Statistics dict returned by `knpy.core.rve_stats.get_stats_vox` for the regridded mesh.
+    json_updated
+        Path to the data_object.json file (used only to locate output directory).
+    filename
+        Output JSON filename saved next to `json_updated`.
+
+    Returns
+    -------
+    dict
+        STATS_DATA with keys: "semi_axes", "aspect", "eq_diam".
+    """
+    # ========================= CAPTURE PLOTS FOR STEP 15 (NO DISPLAY) ===============================
+    STATS_DATA = {}
+
+    # ---- Extract arrays, using what the stats already provide ---------------------------------------
+    a_i = np.asarray((initial_state or {}).get('a', []), float).ravel()
+    b_i = np.asarray((initial_state or {}).get('b', []), float).ravel()
+    c_i = np.asarray((initial_state or {}).get('c', []), float).ravel()
+    a_s_i   =  (initial_state or {}).get('a_scale', None)
+    a_sig_i =  (initial_state or {}).get('a_sig', None)
+    b_s_i   =  (initial_state or {}).get('b_scale', None)
+    b_sig_i =  (initial_state or {}).get('b_sig', None)
+    c_s_i   =  (initial_state or {}).get('c_scale', None)
+    c_sig_i =  (initial_state or {}).get('c_sig', None)
+
+    ar_i = np.asarray((initial_state or {}).get('ar', []), float).ravel()
+    ar_s_i  = (initial_state or {}).get('ar_scale', None)
+    ar_sig_i= (initial_state or {}).get('ar_sig', None)
+    eq_i    = np.asarray((initial_state or {}).get('eqd', []), float).ravel()
+    eq_s_i  = (initial_state or {}).get('eqd_scale', None)
+    eq_sig_i= (initial_state or {}).get('eqd_sig', None)
+
+    a_r = np.asarray(regridded_state.get('a', []), float).ravel()
+    b_r = np.asarray(regridded_state.get('b', []), float).ravel()
+    c_r = np.asarray(regridded_state.get('c', []), float).ravel()
+    a_s_r   =  (regridded_state or {}).get('a_scale', None)
+    a_sig_r =  (regridded_state or {}).get('a_sig', None)
+    b_s_r   =  (regridded_state or {}).get('b_scale', None)
+    b_sig_r =  (regridded_state or {}).get('b_sig', None)
+    c_s_r   =  (regridded_state or {}).get('c_scale', None)
+    c_sig_r =  (regridded_state or {}).get('c_sig', None)
+
+    ar_r = np.asarray(regridded_state.get('ar', []), float).ravel()
+    ar_s_r  = regridded_state.get('ar_scale', None)
+    ar_sig_r= regridded_state.get('ar_sig', None)
+    eq_r    = np.asarray(regridded_state.get('eqd', []), float).ravel()
+    eq_s_r  = (regridded_state or {}).get('eqd_scale', None)
+    eq_sig_r= (regridded_state or {}).get('eqd_sig', None)
+
+    # Semi-axes pooled y-limit (for boxplots) + pooled x-limit (value domain for alt plots)
+    xmin_gl_i, xmin_gl_r = np.inf, np.inf
+    xmax_gl_i, xmax_gl_r = 0., 0.
+    for key in ['a', 'b', 'c']:
+        xmin_gl_i = min(xmin_gl_i, min(initial_state[key]))
+        xmax_gl_i = max(xmax_gl_i, max(initial_state[key]))
+        xmin_gl_r = min(xmin_gl_r, min(regridded_state[key]))
+        xmax_gl_r = max(xmax_gl_r, max(regridded_state[key]))
+
+    # Aspect ratio and x-limit
+    xmin_ar_i, xmin_ar_r = np.inf, np.inf
+    xmax_ar_i, xmax_ar_r = 0., 0.
+    xmin_ar_i = min(xmin_ar_i, min(initial_state['ar']))
+    xmax_ar_i = max(xmax_ar_i, max(initial_state['ar']))
+    xmin_ar_r = min(xmin_ar_r, min(regridded_state['ar']))
+    xmax_ar_r = max(xmax_ar_r, max(regridded_state['ar']))
+
+    # Equivalent diameter pooled x- and y-limits (value domain; no bins)
+    xmin_eq_i, xmin_eq_r = np.inf, np.inf
+    xmax_eq_i, xmax_eq_r = 0., 0.
+    xmin_eq_i = min(xmin_eq_i, min(initial_state['eqd']))
+    xmax_eq_i = max(xmax_eq_i, max(initial_state['eqd']))
+    xmin_eq_r = min(xmin_eq_r, min(regridded_state['eqd']))
+    xmax_eq_r = max(xmax_eq_r, max(regridded_state['eqd']))
+
+    STATS_DATA = {
+        'semi_axes': {
+            'initial':   {'a': a_i, 'b': b_i, 'c': c_i, 'a_scale': a_s_i, 'a_sig': a_sig_i, 'b_scale': b_s_i, 'b_sig': b_sig_i, 'c_scale': c_s_i, 'c_sig': c_sig_i, 'xmin_gl': xmin_gl_i, 'xmax_gl': xmax_gl_i},
+            'regridded': {'a': a_r, 'b': b_r, 'c': c_r, 'a_scale': a_s_r, 'a_sig': a_sig_r, 'b_scale': b_s_r, 'b_sig': b_sig_r, 'c_scale': c_s_r, 'c_sig': c_sig_r, 'xmin_gl': xmin_gl_r, 'xmax_gl': xmax_gl_r},
+        },
+        'aspect': {
+            'initial':   {'ar': ar_i, 'ar_scale': ar_s_i, 'ar_sig': ar_sig_i, 'xmin_ar_i': xmin_ar_i, 'xmax_ar_i': xmax_ar_i},
+            'regridded': {'ar': ar_r, 'ar_scale': ar_s_r, 'ar_sig': ar_sig_r, 'xmin_ar_r': xmin_ar_r, 'xmax_ar_r': xmax_ar_r},
+        },
+        'eq_diam': {
+            'initial':   {'eqd': eq_i, 'eqd_scale': eq_s_i, 'eqd_sig': eq_sig_i, 'xmin_eq_i': xmin_eq_i, 'xmax_eq_i': xmax_eq_i},
+            'regridded': {'eqd': eq_r, 'eqd_scale': eq_s_r, 'eqd_sig': eq_sig_r, 'xmin_eq_r': xmin_eq_r, 'xmax_eq_r': xmax_eq_r},
+        },
+    }
+
+    # --- Save STATS_DATA next to json_updated ---
+    def _json_default(o):
+        if hasattr(o, "tolist"):
+            return o.tolist()
+        if isinstance(o, (np.floating, np.integer)):
+            return float(o)
+        return str(o)
+
+    out_dir = Path(json_updated).parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / filename).write_text(json.dumps(STATS_DATA, default=_json_default, indent=2))
+
+    return STATS_DATA
+
+
+
+@dataclass
+class VoxelMesh:
+    """
+    Minimal mesh object compatible with knpy.core.rve_stats.get_stats_vox(mesh,...).
+
+    Expected public attributes:
+      - nodes            : (Nnodes, 3) float array
+      - voxel_dict       : {voxel_id: [n1..n8]}  (1-based node ids)
+      - grain_dict       : {grain_id: [voxel_id, ...]}
+      - grain_phase_dict : {grain_id: phase_id}
+    """
+    nodes: np.ndarray
+    voxel_dict: Dict[int, List[int]]
+    grain_dict: Dict[int, List[int]]
+    grain_phase_dict: Dict[int, int]
+
+    @staticmethod
+    def _grid_from_snapshot(snap: Mapping[str, Any]) -> Tuple[np.ndarray, int, int, int]:
+        """
+        Read grid info from the snapshot.
+
+        Expects:
+          snap["grid"]["status"]        : "undeformed" (required)
+          snap["grid"]["grid_size"]     : [Lx, Ly, Lz]
+          snap["grid"]["grid_spacing"]  : [dx, dy, dz]
+        """
+        grid = snap.get("grid", None)
+        if not isinstance(grid, Mapping):
+            raise KeyError("Snapshot is missing required key: snap['grid'].")
+
+        status = str(grid.get("status", "")).strip().lower()
+        if status != "undeformed":
+            raise RuntimeError(
+                f"Mesh creation requires an undeformed regular grid, but got grid.status='{grid.get('status')}'."
+            )
+
+        size = np.asarray(grid.get("grid_size", None), dtype=float)
+        spacing = np.asarray(grid.get("grid_spacing", None), dtype=float)
+
+        if size.shape != (3,):
+            raise ValueError(f"Expected snap['grid']['grid_size'] to be length-3, got {grid.get('grid_size')}.")
+        if spacing.shape != (3,):
+            raise ValueError(f"Expected snap['grid']['grid_spacing'] to be length-3, got {grid.get('grid_spacing')}.")
+
+        # Require regular isotropic spacing (your node generation assumes single dx)
+        if not np.allclose(spacing, spacing[0], rtol=0, atol=1e-12):
+            raise ValueError(
+                f"Expected isotropic grid spacing (dx=dy=dz) for this mesh builder, got {spacing.tolist()}."
+            )
+
+        # --- Robust voxel counts (round instead of truncating) ---
+        ratio = size / spacing  # e.g. [15, 42, 24.9999999999998]
+        n = np.rint(ratio).astype(int)  # -> [15, 42, 25]
+
+        # Validate that the ratio was indeed near-integer (protects against bad metadata)
+        if not np.allclose(ratio, n, rtol=0, atol=1e-10):
+            raise ValueError(
+                    "grid_size/grid_spacing is not near-integer. "
+                    f"ratio={ratio.tolist()}, rounded={n.tolist()}, "
+                    f"grid_size={size.tolist()}, grid_spacing={spacing.tolist()}"
+            )
+
+        Nx, Ny, Nz = map(int, n.tolist())
+        return spacing, Nx, Ny, Nz
+
+    @classmethod
+    def from_dataObject(
+            cls,
+            json_path: Union[str, Path],
+            *,
+            snapshot_index: int = -1,
+            origin_mode: str = "centroid_min",  # "centroid_min" or "json_origin"
+    ) -> "VoxelMesh":
+
+        json_path = Path(json_path)
+        data = json.loads(json_path.read_text())
+
+        snaps = data.get("microstructure", [])
+        if not isinstance(snaps, list) or len(snaps) == 0:
+            raise ValueError("No snapshots found in JSON under key 'microstructure'.")
+
+        snap = snaps[snapshot_index]
+        vox = snap.get("voxels", None)
+        if not isinstance(vox, list) or len(vox) == 0:
+            raise ValueError("Snapshot has no 'voxels' list or it is empty.")
+
+        # --- grid from snapshot (status check + Nx,Ny,Nz + dx) ---
+        spacing, Nx, Ny, Nz = cls._grid_from_snapshot(snap)
+        dx = float(spacing[0])
+
+        # --- grain table ---
+        gr_table = {int(g["grain_id"]): g for g in snap.get("grains", []) if "grain_id" in g}
+
+        # --- origin selection ---
+        grid = snap.get("grid", {})
+        origin_json = grid.get("origin", None)
+        if isinstance(origin_json, (list, tuple)) and len(origin_json) == 3:
+            origin_json = np.asarray(origin_json, dtype=float)
+        else:
+            origin_json = None
+
+        C = np.asarray([v["centroid_coordinates"] for v in vox], dtype=float)
+        origin_centroid = C.min(axis=0) - 0.5 * dx
+
+        origin = origin_centroid
+        if origin_mode == "json_origin" and origin_json is not None:
+            origin = origin_json
+
+        # --- nodes ---
+        ii, jj, kk = np.meshgrid(
+            np.arange(Nx + 1), np.arange(Ny + 1), np.arange(Nz + 1), indexing="ij"
+        )
+        nodes = np.column_stack((
+            origin[0] + ii.ravel() * dx,
+            origin[1] + jj.ravel() * dx,
+            origin[2] + kk.ravel() * dx,
+        )).astype(float)
+
+        # --- connectivity + grain maps ---
+        voxel_dict: Dict[int, List[int]] = {}
+        grain_dict: Dict[int, List[int]] = {}
+        grain_phase_dict: Dict[int, int] = {}
+
+        stride_j = (Nz + 1)
+        stride_i = (Ny + 1) * (Nz + 1)
+
+        for v in vox:
+            vid = int(v["voxel_id"])
+            i, j, k = (int(v["voxel_index"][0]) - 1,
+                       int(v["voxel_index"][1]) - 1,
+                       int(v["voxel_index"][2]) - 1)
+
+            # Recommended guard
+            if not (0 <= i < Nx and 0 <= j < Ny and 0 <= k < Nz):
+                raise ValueError(
+                    f"voxel_index out of bounds for grid (Nx,Ny,Nz)=({Nx},{Ny},{Nz}): "
+                    f"voxel_id={vid}, voxel_index={v['voxel_index']}"
+                )
+
+            n000 = 1 + i * stride_i + j * stride_j + k
+            n100 = 1 + (i + 1) * stride_i + j * stride_j + k
+            n010 = 1 + i * stride_i + (j + 1) * stride_j + k
+            n110 = 1 + (i + 1) * stride_i + (j + 1) * stride_j + k
+            n001 = 1 + i * stride_i + j * stride_j + (k + 1)
+            n101 = 1 + (i + 1) * stride_i + j * stride_j + (k + 1)
+            n011 = 1 + i * stride_i + (j + 1) * stride_j + (k + 1)
+            n111 = 1 + (i + 1) * stride_i + (j + 1) * stride_j + (k + 1)
+
+            # keep your corner order exactly
+            voxel_dict[vid] = [n101, n100, n000, n001, n111, n110, n010, n011]
+
+            gid = int(v["grain_id"])
+            grain_dict.setdefault(gid, []).append(vid)
+
+        for gid in grain_dict.keys():
+            grain_phase_dict[gid] = int(gr_table.get(gid, {}).get("phase_id", 0))
+
+        return cls(
+            nodes=nodes,
+            voxel_dict=voxel_dict,
+            grain_dict=grain_dict,
+            grain_phase_dict=grain_phase_dict,
+        )
+
+def build_stats_data(
+    initial_state: Dict[str, Any] | None,
+    regridded_state: Dict[str, Any],
+    json_updated: Union[str, Path],
+    *,
+    filename: str = "stats_data.json",
+) -> Dict[str, Any]:
+    """
+    Build the STATS_DATA dictionary (exact structure as provided) and save it as JSON
+    next to the data_object.json file.
+
+    Parameters
+    ----------
+    initial_state
+        Statistics dict returned by `knpy.core.rve_stats.get_stats_vox` for the initial mesh.
+        Can be None.
+    regridded_state
+        Statistics dict returned by `knpy.core.rve_stats.get_stats_vox` for the regridded mesh.
+    json_updated
+        Path to the data_object.json file (used only to locate output directory).
+    filename
+        Output JSON filename saved next to `json_updated`.
+
+    Returns
+    -------
+    dict
+        STATS_DATA with keys: "semi_axes", "aspect", "eq_diam".
+    """
+    # ========================= CAPTURE PLOTS FOR STEP 15 (NO DISPLAY) ===============================
+    global STATS_DATA
+    STATS_DATA = {}
+
+    # ---- Extract arrays, using what the stats already provide ---------------------------------------
+    a_i = np.asarray((initial_state or {}).get('a', []), float).ravel()
+    b_i = np.asarray((initial_state or {}).get('b', []), float).ravel()
+    c_i = np.asarray((initial_state or {}).get('c', []), float).ravel()
+    a_s_i   =  (initial_state or {}).get('a_scale', None)
+    a_sig_i =  (initial_state or {}).get('a_sig', None)
+    b_s_i   =  (initial_state or {}).get('b_scale', None)
+    b_sig_i =  (initial_state or {}).get('b_sig', None)
+    c_s_i   =  (initial_state or {}).get('c_scale', None)
+    c_sig_i =  (initial_state or {}).get('c_sig', None)
+
+    ar_i = np.asarray((initial_state or {}).get('ar', []), float).ravel()
+    ar_s_i  = (initial_state or {}).get('ar_scale', None)
+    ar_sig_i= (initial_state or {}).get('ar_sig', None)
+    eq_i    = np.asarray((initial_state or {}).get('eqd', []), float).ravel()
+    eq_s_i  = (initial_state or {}).get('eqd_scale', None)
+    eq_sig_i= (initial_state or {}).get('eqd_sig', None)
+
+    a_r = np.asarray(regridded_state.get('a', []), float).ravel()
+    b_r = np.asarray(regridded_state.get('b', []), float).ravel()
+    c_r = np.asarray(regridded_state.get('c', []), float).ravel()
+    a_s_r   =  (regridded_state or {}).get('a_scale', None)
+    a_sig_r =  (regridded_state or {}).get('a_sig', None)
+    b_s_r   =  (regridded_state or {}).get('b_scale', None)
+    b_sig_r =  (regridded_state or {}).get('b_sig', None)
+    c_s_r   =  (regridded_state or {}).get('c_scale', None)
+    c_sig_r =  (regridded_state or {}).get('c_sig', None)
+
+    ar_r = np.asarray(regridded_state.get('ar', []), float).ravel()
+    ar_s_r  = regridded_state.get('ar_scale', None)
+    ar_sig_r= regridded_state.get('ar_sig', None)
+    eq_r    = np.asarray(regridded_state.get('eqd', []), float).ravel()
+    eq_s_r  = (regridded_state or {}).get('eqd_scale', None)
+    eq_sig_r= (regridded_state or {}).get('eqd_sig', None)
+
+    # Semi-axes pooled y-limit (for boxplots) + pooled x-limit (value domain for alt plots)
+    xmin_gl_i, xmin_gl_r = np.inf, np.inf
+    xmax_gl_i, xmax_gl_r = 0., 0.
+    for key in ['a', 'b', 'c']:
+        xmin_gl_i = min(xmin_gl_i, min(initial_state[key]))
+        xmax_gl_i = max(xmax_gl_i, max(initial_state[key]))
+        xmin_gl_r = min(xmin_gl_r, min(regridded_state[key]))
+        xmax_gl_r = max(xmax_gl_r, max(regridded_state[key]))
+
+    # Aspect ratio and x-limit
+    xmin_ar_i, xmin_ar_r = np.inf, np.inf
+    xmax_ar_i, xmax_ar_r = 0., 0.
+    xmin_ar_i = min(xmin_ar_i, min(initial_state['ar']))
+    xmax_ar_i = max(xmax_ar_i, max(initial_state['ar']))
+    xmin_ar_r = min(xmin_ar_r, min(regridded_state['ar']))
+    xmax_ar_r = max(xmax_ar_r, max(regridded_state['ar']))
+
+    # Equivalent diameter pooled x- and y-limits (value domain; no bins)
+    xmin_eq_i, xmin_eq_r = np.inf, np.inf
+    xmax_eq_i, xmax_eq_r = 0., 0.
+    xmin_eq_i = min(xmin_eq_i, min(initial_state['eqd']))
+    xmax_eq_i = max(xmax_eq_i, max(initial_state['eqd']))
+    xmin_eq_r = min(xmin_eq_r, min(regridded_state['eqd']))
+    xmax_eq_r = max(xmax_eq_r, max(regridded_state['eqd']))
+
+    STATS_DATA = {
+        'semi_axes': {
+            'initial':   {'a': a_i, 'b': b_i, 'c': c_i, 'a_scale': a_s_i, 'a_sig': a_sig_i, 'b_scale': b_s_i, 'b_sig': b_sig_i, 'c_scale': c_s_i, 'c_sig': c_sig_i, 'xmin_gl': xmin_gl_i, 'xmax_gl': xmax_gl_i},
+            'regridded': {'a': a_r, 'b': b_r, 'c': c_r, 'a_scale': a_s_r, 'a_sig': a_sig_r, 'b_scale': b_s_r, 'b_sig': b_sig_r, 'c_scale': c_s_r, 'c_sig': c_sig_r, 'xmin_gl': xmin_gl_r, 'xmax_gl': xmax_gl_r},
+        },
+        'aspect': {
+            'initial':   {'ar': ar_i, 'ar_scale': ar_s_i, 'ar_sig': ar_sig_i, 'xmin_ar_i': xmin_ar_i, 'xmax_ar_i': xmax_ar_i},
+            'regridded': {'ar': ar_r, 'ar_scale': ar_s_r, 'ar_sig': ar_sig_r, 'xmin_ar_r': xmin_ar_r, 'xmax_ar_r': xmax_ar_r},
+        },
+        'eq_diam': {
+            'initial':   {'eqd': eq_i, 'eqd_scale': eq_s_i, 'eqd_sig': eq_sig_i, 'xmin_eq_i': xmin_eq_i, 'xmax_eq_i': xmax_eq_i},
+            'regridded': {'eqd': eq_r, 'eqd_scale': eq_s_r, 'eqd_sig': eq_sig_r, 'xmin_eq_r': xmin_eq_r, 'xmax_eq_r': xmax_eq_r},
+        },
+    }
+
+    # --- Save STATS_DATA next to json_updated ---
+    def _json_default(o):
+        if hasattr(o, "tolist"):
+            return o.tolist()
+        if isinstance(o, (np.floating, np.integer)):
+            return float(o)
+        return str(o)
+
+    out_dir = Path(json_updated).parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / filename).write_text(json.dumps(STATS_DATA, default=_json_default, indent=2))
+
+    return STATS_DATA
 

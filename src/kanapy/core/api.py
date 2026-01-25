@@ -2493,7 +2493,7 @@ class Microstructure(object):
             'discretization_type': 'Structured' if structured else 'Unstructured',
             'discretization_unit_size': [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
             'discretization_count': int(self.mesh.nvox),
-            'Origin': {
+            'origin': {
                 'software': 'kanapy',
                 'software_version': pkg_version('kanapy'),
                 'system': platform.system(),
@@ -2606,10 +2606,10 @@ class Microstructure(object):
                 mat = material_library[ialloy]
                 pe = mat['elastic_parameters']
                 pp = mat['plastic_parameters']
-
+                cs = self.rve.ms_data[idx]["cs"]
                 phase_entry = {
                     "id": idx,
-                    "phase_identifier": self.rve.phase_names[idx],
+                    "phase_name": self.rve.phase_names[idx],
                     "volume_fraction": self.rve.phase_vf[idx],
                     "lattice_structure": None,
                     "constitutive_model": {
@@ -2628,6 +2628,7 @@ class Microstructure(object):
                         "grain_count": self.mesh.ngrains_phase[idx],
                         "orientation_identifier": None,
                         "texture_type": None,
+                        "group_symmetry": cs.name,
                         "software": "orix",
                         "software_version": orix.__version__,
                     }
@@ -2678,7 +2679,7 @@ class Microstructure(object):
         }
         # ─── build time-0 grid dict  ────────────────────────────────────────────
         grid_t0 = {
-            "status": "regular",
+            "status": "undeformed",
             "grid_size": [float(v) * length_scale for v in self.rve.size],
             "grid_spacing": [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
         }

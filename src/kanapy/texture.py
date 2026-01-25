@@ -25,8 +25,14 @@ from orix.quaternion.symmetry import Symmetry
 from orix.sampling import get_sample_fundamental
 from orix.vector import Miller
 from abc import ABC
+from pathlib import Path
 from collections import Counter, defaultdict
+from typing import Any, Sequence, Union, Dict, Tuple, List
 import os, glob
+
+
+
+
 
 
 
@@ -2436,7 +2442,7 @@ def segment_microstructure(
     *,
     th_cut_deg: float = 5.0,
     th_merge_deg: float = 7.5,
-    min_voxels: int = 5,
+    min_voxels: int = 4,
     print_topk_rag: int = 10,
     tiny_cutoff: int = 5,
     verbose: bool = True,
@@ -2675,13 +2681,23 @@ def segment_microstructure(
         parent = np.arange(n_seg, dtype=int)
         rank = np.zeros(n_seg, dtype=int)
 
-        # Rule A
+        # Rule A (UPDATED: require BOTH mean-orientation and boundary mean miso)
         merge_A = 0
         for (sa, sb) in rag_contact.keys():
-            miso_meanO = float(np.asarray(seg_mean_O[sa].angle_with(seg_mean_O[sb], degrees=True)).squeeze())
-            if miso_meanO <= th_merge_deg:
+
+            # 1) mean-orientation misorientation (deg)
+            miso_meanO = float(
+                np.asarray(seg_mean_O[sa].angle_with(seg_mean_O[sb], degrees=True)).squeeze()
+            )
+
+            # 2) boundary mean misorientation (deg)
+            boundary_mean_miso = float(rag_miso_mean[(sa, sb)])
+
+            # Merge only if BOTH are small
+            if (miso_meanO <= th_merge_deg) and (boundary_mean_miso <= th_merge_deg):
                 if _uf_union(parent, rank, sa, sb):
                     merge_A += 1
+
         _p("Rule A merges performed:", merge_A)
 
         # Build root members after Rule A
@@ -2851,7 +2867,9 @@ def segment_microstructure(
         json.dump(data, f, indent=2)
     _p("Updated in-place:", json_path)
 
-def step1_extract_gid_arrays(json_path: str, t: int):
+
+def step1_extract_gid_arrays(json_path: str, t: int, verbose: bool = True) -> Tuple[
+    np.ndarray, np.ndarray, List[Tuple[int, int, int]]]:
     """
     Step 1: Build aligned grain-id arrays for snapshots t and t+1 using voxel_index.
 
@@ -2861,6 +2879,8 @@ def step1_extract_gid_arrays(json_path: str, t: int):
         Path to the microstructure JSON.
     t : int
         Snapshot index (tracks from t -> t+1).
+    verbose : bool
+        If True, prints alignment summary.
 
     Returns
     -------
@@ -2871,6 +2891,11 @@ def step1_extract_gid_arrays(json_path: str, t: int):
     idx_list : list[tuple[int,int,int]]
         The ordered voxel_index list that defines the alignment.
     """
+
+    def _p(msg):  # internal pretty printer
+        if verbose:
+            print(msg)
+
     with open(json_path, "r") as f:
         data = json.load(f)
 
@@ -2892,19 +2917,25 @@ def step1_extract_gid_arrays(json_path: str, t: int):
         missing_in_tp1 = idx_set_t - idx_set_tp1
         missing_in_t = idx_set_tp1 - idx_set_t
         raise ValueError(
-            f"Voxel index sets differ between snapshots {t} and {t+1}.\n"
+            f"Voxel index sets differ between snapshots {t} and {t + 1}.\n"
             f"Missing in t+1: {len(missing_in_tp1)}\n"
             f"Missing in t  : {len(missing_in_t)}"
         )
-
     # Define a stable order (sort by k, then j, then i OR your preferred)
     idx_list = sorted(idx_set_t)
-
     gid_t = np.array([map_t[idx] for idx in idx_list], dtype=np.int32)
     gid_tp1 = np.array([map_tp1[idx] for idx in idx_list], dtype=np.int32)
 
+    _p(f"\n=== STEP 1: GID ALIGNMENT CHECK @ snapshot {t} ===")
+    _p(f"Aligned voxel count        : {len(idx_list):,}")
+    _p(f"Unique grains @ t          : {len(set(gid_t))}")
+    _p(f"Unique grains @ t+1        : {len(set(gid_tp1))}")
+    _p("Voxel index alignment      : ✅ PASSED\n")
+
     return gid_t, gid_tp1, idx_list
-def step2_overlap_counts(gid_t: np.ndarray, gid_tp1: np.ndarray):
+
+
+def step2_overlap_counts(gid_t: np.ndarray, gid_tp1: np.ndarray, verbose: bool = True):
     """
     Step 2: Compute overlap counts C(g_t, g_tp1).
 
@@ -2912,12 +2943,13 @@ def step2_overlap_counts(gid_t: np.ndarray, gid_tp1: np.ndarray):
     ----------
     gid_t, gid_tp1 : np.ndarray, shape (N,)
         Aligned grain-id arrays for snapshots t and t+1.
+    verbose : bool
+        If True, prints overlap statistics and match summaries.
 
     Returns
     -------
     C : np.ndarray, shape (Gt+1, Gtp1+1)
         Overlap count matrix where C[i,j] = number of voxels shared.
-        Indices are grain IDs directly (so row/col 0 unused if IDs start at 1).
     row_sum : np.ndarray
         Total voxels per grain in t (row sums).
     col_sum : np.ndarray
@@ -2925,6 +2957,10 @@ def step2_overlap_counts(gid_t: np.ndarray, gid_tp1: np.ndarray):
     top_pairs : list[tuple]
         Sorted list of (count, i, j) for the largest overlaps.
     """
+
+    def _p(msg):
+        if verbose: print(msg)
+
     if gid_t.shape != gid_tp1.shape:
         raise ValueError("gid arrays must have same shape")
 
@@ -2952,24 +2988,20 @@ def step2_overlap_counts(gid_t: np.ndarray, gid_tp1: np.ndarray):
                 pairs.append((c, i, j))
     pairs.sort(reverse=True, key=lambda x: x[0])
 
-    return C, row_sum, col_sum, pairs
-def print_step2_summary(C, row_sum, col_sum, top_pairs):
-    print("\n=== STEP 2: OVERLAP MATRIX SUMMARY ===")
-    print("C shape:", C.shape, "(row 0/col 0 unused)")
-    print("Total voxels check:", int(C.sum()))
-    print("Grains t   :", int((row_sum[1:] > 0).sum()), "max id:", len(row_sum) - 1)
-    print("Grains t+1 :", int((col_sum[1:] > 0).sum()), "max id:", len(col_sum) - 1)
-    print("Overlap matrix:")
-    print(C)
+    _p("\n=== STEP 2: OVERLAP MATRIX SUMMARY ===")
+    _p(f"Overlap matrix shape         : {C.shape} (row 0 / col 0 unused)")
+    _p(f"Total overlapping voxels     : {int(C.sum()):,}")
+    _p(f"Grains @ t (nonzero rows)    : {(row_sum[1:] > 0).sum()}  | Max grain ID: {Gt}")
+    _p(f"Grains @ t+1 (nonzero cols)  : {(col_sum[1:] > 0).sum()}  | Max grain ID: {Gp}")
 
-    print(f"\n Overlaps (count, g_t -> g_t+1, frac_of_t, frac_of_t+1):")
-    for c, i, j in top_pairs:
+    _p(f"\n Overlaps (count, g_t -> g_t+1, frac_of_t, frac_of_t+1):")
+
+    for c, i, j in pairs:
         frac_t = c / row_sum[i] if row_sum[i] else 0.0
         frac_p = c / col_sum[j] if col_sum[j] else 0.0
-        print(f"  {c:4d}   {i:2d} -> {j:2d}    {frac_t:6.3f}    {frac_p:6.3f}")
+        _p(f"  {c:4d}   {i:2d} → {j:2d}    frac_t={frac_t:6.3f}    frac_tp1={frac_p:6.3f}")
 
-    # For each grain in t, print its best match in t+1
-    print("\nBest match per grain in t (by overlap count):")
+    _p("\nBest match per grain in t:")
     for i in range(1, len(row_sum)):
         if row_sum[i] == 0:
             continue
@@ -2977,11 +3009,15 @@ def print_step2_summary(C, row_sum, col_sum, top_pairs):
         c_best = int(C[i, j_best])
         frac_t = c_best / row_sum[i]
         frac_p = c_best / col_sum[j_best] if col_sum[j_best] else 0.0
-        print(f"  g_t={i:2d}: best g_t+1={j_best:2d}  count={c_best:4d}  frac_t={frac_t:6.3f}  frac_p={frac_p:6.3f}")
+        _p(f"  g_t={i:2d}: best g_t+1={j_best:2d}  count={c_best:4d}  frac_t={frac_t:6.3f}  frac_p={frac_p:6.3f}")
+
+    return C, row_sum, col_sum, pairs
+
+
 def step3_track_from_overlap(C, row_sum, col_sum, *,
-                             tau_parent=0.30,   # child must come >=30% from a parent to count as parent
-                             tau_child=0.30,    # parent must send >=30% of its mass to child to count as child
-                             allow_multi_parent=True):
+                             tau_parent=0.30,  # child must come >=30% from a parent to count as parent
+                             tau_child=0.30,  # parent must send >=30% of its mass to child to count as child
+                             allow_multi_parent=True, verbose: bool = True):
     """
     Build tracking relations from overlap matrix.
 
@@ -2996,7 +3032,12 @@ def step3_track_from_overlap(C, row_sum, col_sum, *,
     events : dict[str, list]
         merge/split/birth/death/continue records
     """
-    Gt  = C.shape[0] - 1
+
+    def _p(msg):
+        if verbose:
+            print(msg)
+
+    Gt = C.shape[0] - 1
     Gp1 = C.shape[1] - 1
 
     # Candidate parent links per child
@@ -3011,7 +3052,7 @@ def step3_track_from_overlap(C, row_sum, col_sum, *,
             if c == 0:
                 continue
             f_parent = c / row_sum[i]
-            f_child  = c / col_sum[j] if col_sum[j] else 0.0
+            f_child = c / col_sum[j] if col_sum[j] else 0.0
 
             # Keep links that are meaningful from either side
             if (f_parent >= tau_child) or (f_child >= tau_parent):
@@ -3070,593 +3111,493 @@ def step3_track_from_overlap(C, row_sum, col_sum, *,
             children = [x[0] for x in strong]
             events["split"].append((i, children, strong))
 
+    _p("\n=== STEP 3: TRACKING EVENT SUMMARY ===")
+    _p(f"Continues : {len(events['continue'])}")
+    _p(f"Merges    : {len(events['merge'])}")
+    _p(f"Splits    : {len(events['split'])}")
+    _p(f"Births    : {len(events['birth'])}")
+    _p(f"Deaths    : {len(events['death'])}")
+
     return parents_of_child, best_parent, best_child, events
 
-def step4_assign_tracked_ids(
-    row_sum: np.ndarray,
-    col_sum: np.ndarray,
-    CONTINUE,
-    MERGE,
-    SPLIT,
-    BIRTH,
-    DEATH,
-    *,
-    next_track_id_start: int | None = None,
-    prefer_merge_parent="largest_overlap",   # or "largest_parent"
-    verbose: bool = True):
+def step4_assign_tracked_ids(pairs, C, row_sum, col_sum, events, parents_of_child, verbose: bool = True):
     """
-    Step 4: Assign persistent/tracked IDs for grains at (t+1).
+    Step 4: Assign tracked grain IDs at t+1 using Hungarian matching and event logic.
 
-    Inputs are Step 3 outputs with the following formats:
-      CONTINUE: [(i, j, (j, ft, fp, c)), ...]
-      MERGE   : [([i1,i2,...], j, [(i, ft, fp, c), ...]), ...]
-      SPLIT   : [(i, [j1,j2,...], [(j, ft, fp, c), ...]), ...]
-      BIRTH   : [j, j, ...]
-      DEATH   : [i, i, ...]
+    Parameters
+    ----------
+    pairs : list of tuples
+        Each tuple is (count, grain_t, grain_t+1), sorted by overlap.
+    C : np.ndarray
+        Overlap matrix where C[i, j] is the count of voxels shared between grain i at t and grain j at t+1.
+    row_sum : np.ndarray
+        Total voxel count per grain at t.
+    col_sum : np.ndarray
+        Total voxel count per grain at t+1.
+    events : dict[str, list]
+        Event records from tracking: contains 'split', 'merge', 'birth', etc.
+    parents_of_child : dict[int, list[tuple]]
+        Mapping from child grain ID at t+1 to list of parent grain contributions from t.
+    verbose : bool, optional
+        Whether to print detailed summary and logs (default: True).
 
     Returns
     -------
-    track_of_child : dict[int,int]
-        Mapping child grain-id j (at t+1) -> tracked_id (persistent).
-    events4 : dict
-        Human-readable summary of what got assigned and why.
-    next_track_id : int
-        Next available tracked id (for the next time step).
+    final_ids : dict[int, int]
+        Mapping of grain_id at t+1 → tracked global grain ID.
     """
-
-    def _p(*a):
+    def _p(msg):
         if verbose:
-            print(*a)
+            print(msg)
 
-    # Determine ID range at time t
-    Gt = len(row_sum) - 1
-    Gp = len(col_sum) - 1
+    # Step 1: extract unique grain IDs
+    grains_t = sorted(set(i for _, i, _ in pairs))
+    grains_tp1 = sorted(set(j for _, _, j in pairs))
 
-    # Start new tracked IDs after max existing t-id unless user overrides
-    if next_track_id_start is None:
-        next_track_id = Gt + 1
-    else:
-        next_track_id = int(next_track_id_start)
+    id_to_row = {gid: idx for idx, gid in enumerate(grains_t)}
+    id_to_col = {gid: idx for idx, gid in enumerate(grains_tp1)}
 
-    # Helper: parse structures into convenient dicts
-    # cont_map: parent i -> child j
-    cont_map = {i: j for (i, j, _) in CONTINUE}
-    cont_inv = {j: i for (i, j, _) in CONTINUE}
+    # Step 2: build cost matrix for Hungarian matching
+    M = np.full((len(grains_t), len(grains_tp1)), fill_value=10.0)
+    for c, i, j in pairs:
+        M[id_to_row[i], id_to_col[j]] = -c  # maximize overlap
 
-    merge_children = {child_j: (parents, details) for (parents, child_j, details) in MERGE}
+    row_idx, col_idx = linear_sum_assignment(M)
 
-    # split_children_of_parent: parent i -> list of (child_j, c, ft, fp)
-    split_children_of_parent = {}
-    for (i, child_list, details) in SPLIT:
-        # details is [(j, ft, fp, c), ...]
-        dd = []
-        for (j, ft, fp, c) in details:
-            dd.append((j, int(c), float(ft), float(fp)))
-        # sort by overlap count desc
-        dd.sort(key=lambda x: x[1], reverse=True)
-        split_children_of_parent[i] = dd
+    # Step 3: extract assigned pairs
+    assigned_pairs = []
+    for r, c in zip(row_idx, col_idx):
+        i = grains_t[r]
+        j = grains_tp1[c]
+        cost = M[r, c]
+        if cost < 1.0:
+            assigned_pairs.append((i, j, cost))
 
-    # Track assignment output
-    track_of_child: dict[int, int] = {}
-    assigned_children = set()
+    _p("\n=== STEP 4: Hungarian Matches ===")
+    for i, j, cost in assigned_pairs:
+        _p(f"  {i}@t → {j}@t+1 | cost={cost:.3f}")
 
-    # Event summary
-    events4 = {
-        "continue": [],
-        "merge": [],
-        "split": [],
-        "birth": [],
-        "unassigned_children": [],
-    }
+    final_ids = {}
+    assigned_ids = set()
+    max_gid_t = max(grains_t)
+    next_id = max_gid_t + 1
 
-    # ------------------------------------------------------------------
-    # Priority 1: CONTINUE (1-1 stable identity) => child keeps parent id
-    # ------------------------------------------------------------------
-    for (i, j, info) in CONTINUE:
-        track_of_child[j] = int(i)
-        assigned_children.add(j)
-        events4["continue"].append((i, j, info))
+    # 1. Assign IDs from Hungarian matches
+    for i, j, _ in assigned_pairs:
+        if j not in final_ids and i not in assigned_ids:
+            final_ids[j] = i
+            assigned_ids.add(i)
 
-    # ------------------------------------------------------------------
-    # Priority 2: MERGE (many -> one)
-    # Choose ONE "dominant" parent to carry the ID.
-    # ------------------------------------------------------------------
-    for child_j, (parents, details) in merge_children.items():
-        if child_j in assigned_children:
-            continue  # already labeled by CONTINUE (rare but safe)
-
-        # details: [(i, ft, fp, c), ...]
-        # pick dominant parent
-        if prefer_merge_parent == "largest_parent":
-            # parent with largest row_sum (size at t)
-            dom = max(parents, key=lambda i: row_sum[int(i)])
-        else:
-            # parent with largest overlap c into this child
-            dom = max(details, key=lambda t: t[3])[0]  # t=(i,ft,fp,c)
-            dom = int(dom)
-
-        track_of_child[child_j] = int(dom)
-        assigned_children.add(child_j)
-        events4["merge"].append((parents, child_j, dom, details))
-
-    # ------------------------------------------------------------------
-    # Priority 3: SPLIT (one -> many)
-    # Keep parent id for the strongest child; give new IDs to other children.
-    # ------------------------------------------------------------------
-    for parent_i, child_info in split_children_of_parent.items():
-        # child_info sorted by overlap count desc: [(j, c, ft, fp), ...]
-        if len(child_info) == 0:
-            continue
-
-        # strongest child
-        j_main = int(child_info[0][0])
-
-        # if not already assigned, give it the parent id
-        if j_main not in assigned_children:
-            track_of_child[j_main] = int(parent_i)
-            assigned_children.add(j_main)
-
-        # all remaining children get new IDs if still unassigned
-        new_children = []
-        for (j, c, ft, fp) in child_info[1:]:
-            j = int(j)
-            if j in assigned_children:
+    # 2. Splits
+    for i, children, info in events.get("split", []):
+        children = sorted(children, key=lambda j: C[i, j], reverse=True)
+        for idx, j in enumerate(children):
+            if j in final_ids:
                 continue
-            track_of_child[j] = int(next_track_id)
-            new_children.append((j, next_track_id, c, ft, fp))
-            assigned_children.add(j)
-            next_track_id += 1
+            if i not in assigned_ids:
+                final_ids[j] = i
+                assigned_ids.add(i)
+            else:
+                final_ids[j] = next_id
+                assigned_ids.add(next_id)
+                next_id += 1
 
-        events4["split"].append((int(parent_i), int(j_main), child_info, new_children))
-
-    # ------------------------------------------------------------------
-    # Priority 4: BIRTH (no parent) => new tracked IDs
-    # ------------------------------------------------------------------
-    for j in BIRTH:
-        j = int(j)
-        if j in assigned_children:
+    # 3. Merges
+    for parents, j, info in events.get("merge", []):
+        if j in final_ids:
             continue
-        track_of_child[j] = int(next_track_id)
-        events4["birth"].append((j, next_track_id))
-        assigned_children.add(j)
-        next_track_id += 1
+        dominant_i = max(info, key=lambda x: x[3])[0]
+        if dominant_i not in assigned_ids:
+            final_ids[j] = dominant_i
+            assigned_ids.add(dominant_i)
+        else:
+            final_ids[j] = next_id
+            assigned_ids.add(next_id)
+            next_id += 1
 
-    # ------------------------------------------------------------------
-    # Safety: any remaining child grains (not covered by events) => new IDs
-    # ------------------------------------------------------------------
-    for j in range(1, Gp + 1):
-        if col_sum[j] == 0:
-            continue
-        if j not in assigned_children:
-            track_of_child[j] = int(next_track_id)
-            events4["unassigned_children"].append((j, next_track_id))
-            next_track_id += 1
+    # 4. Births
+    for j in events.get("birth", []):
+        if j not in final_ids:
+            final_ids[j] = next_id
+            assigned_ids.add(next_id)
+            next_id += 1
 
-    # ------------------------------------------------------------------
-    # Print summary
-    # ------------------------------------------------------------------
-    _p("\n=== STEP 4: TRACKED-ID ASSIGNMENT SUMMARY ===")
-    _p("Children (t+1) grains:", int((col_sum[1:] > 0).sum()), "max id:", Gp)
-    _p("Assigned children:", len(track_of_child))
-    _p("Next track id:", next_track_id)
+    # 5. Fallback
+    for j in grains_tp1:
+        if j not in final_ids:
+            final_ids[j] = next_id
+            assigned_ids.add(next_id)
+            next_id += 1
 
-    _p("\nCONTINUE assignments:", len(events4["continue"]))
-    for (i, j, info) in events4["continue"]:
-        _p(f"  child {j:2d} keeps parent id {i:2d}   overlap={info[3]}")
+    # === Summary Output ===
+    _p("\n=== Final Tracked IDs at t+1 ===")
+    for j in sorted(final_ids):
+        _p(f"  Grain {j}@t+1 → Tracked ID {final_ids[j]}")
 
-    _p("\nMERGE assignments:", len(events4["merge"]))
-    for (parents, child_j, dom, details) in events4["merge"]:
-        det = sorted(details, key=lambda t: t[3], reverse=True)
-        det_str = ", ".join([f"p{i}:{c}" for (i, ft, fp, c) in det])
-        _p(f"  child {child_j:2d} gets dominant parent id {dom:2d}   parents={parents}  ({det_str})")
+    _p("\n=== Parent Summary ===")
+    for j in sorted(grains_tp1):
+        parents = parents_of_child.get(j, [])
+        tracked_id = final_ids[j]
+        if not parents:
+            status = "birth"
+            parent_str = "-"
+        elif len(parents) == 1:
+            status = "1 parent"
+            parent_str = f"{parents[0][0]}"
+        else:
+            status = f"{len(parents)} parents (merge)"
+            parent_str = ", ".join(str(p[0]) for p in parents)
+        _p(f"  Grain {j}@t+1 → ID {tracked_id}, {status}, from parent(s): {parent_str}")
 
-    _p("\nSPLIT assignments:", len(events4["split"]))
-    for (pi, jmain, child_info, new_children) in events4["split"]:
-        _p(f"  parent {pi:2d} -> main child {jmain:2d} keeps id {pi:2d}")
-        for (j, new_id, c, ft, fp) in new_children:
-            _p(f"    extra child {j:2d} gets NEW id {new_id:2d}   overlap={c}")
+    # Duplicates
+    duplicates = [k for k, v in Counter(final_ids.values()).items() if v > 1]
+    if duplicates:
+        _p(f"\n⚠️  Duplicated tracked IDs at t+1: {duplicates}")
+    else:
+        _p("\n✅ No duplicated tracked IDs at t+1")
 
-    _p("\nBIRTH assignments:", len(events4["birth"]))
-    for (j, new_id) in events4["birth"]:
-        _p(f"  child {j:2d} is BIRTH -> NEW id {new_id:2d}")
+    return final_ids
 
-    if events4["unassigned_children"]:
-        _p("\nUnassigned children -> NEW ids:", len(events4["unassigned_children"]))
-        for (j, new_id) in events4["unassigned_children"]:
-            _p(f"  child {j:2d} -> NEW id {new_id:2d}")
-
-    # show final mapping (compact)
-    _p("\nFinal mapping child grain_id (t+1) -> tracked_id:")
-    for j in sorted(track_of_child):
-        _p(f"  {j:2d} -> {track_of_child[j]:2d}")
-
-    return track_of_child, events4, next_track_id
-
-def step5_apply_tracking_to_snapshot(
-    json_path: str,
-    t: int,
-    track_of_child: dict[int, int],   # child grain_id (t+1) -> tracked_grain_id
-    *,
-    events: dict,                     # events from step3_track_from_overlap
-    best_parent: dict[int, int | None],
-    C: np.ndarray,
-    row_sum: np.ndarray,
-    col_sum: np.ndarray,
-    tracked_key: str = "tracked_grain_id",
-    parent_key: str = "parent_grain_id",
-    also_update_grains: bool = True,
-    verbose: bool = True):
+def step5_update_tracked_ids_in_json(json_path, t, final_ids, parents_of_child):
     """
-    Step 5 :
-      - voxels: overwrite grain_id with tracked id
-      - grains : overwrite grain_id with tracked id + write parent_grain_id
-          * CONTINUE: parent_grain_id = parent tracked id (int)
-          * SPLIT   : parent_grain_id = parent tracked id (int) for ALL split children
-          * MERGE   : parent_grain_id = [parent tracked ids...] (list[int])
-          * BIRTH   : parent_grain_id = None
-          * UNASSIGNED: Option A -> parent_grain_id = best_parent[j] if overlap>0 else None
+    Step 5: Update JSON file with new tracked grain IDs and parent relationships.
+
+    Parameters
+    ----------
+    json_path : str
+        Path to the microstructure JSON file.
+    t : int
+        Snapshot index to update (this modifies snapshot at t+1).
+    final_ids : dict[int, int]
+        Mapping of grain_id at t+1 to globally tracked IDs.
+    parents_of_child : dict[int, list[tuple]]
+        Mapping from child grain ID to parent grain info (from t).
     """
-    with open(json_path, "r") as f:
+    with open(json_path, 'r') as f:
         data = json.load(f)
 
     micro = data["microstructure"]
-    if not (0 <= t < len(micro) - 1):
-        raise ValueError(f"t must satisfy 0 <= t < {len(micro)-1}")
+    snapshot = micro[t + 1]  # we are updating t+1
 
-    snap = micro[t + 1]
-    vox = snap["voxels"]
+    # --- Update grains ---
+    updated_grains = []
+    for grain in snapshot["grains"]:
+        old_gid = grain["grain_id"]
+        if old_gid not in final_ids:
+            continue
+        new_gid = final_ids[old_gid]
+        new_grain = grain.copy()
+        new_grain["grain_id"] = new_gid
 
-    # -----------------------------
-    # 1) Build lineage maps (child grain_id -> parent tracked id(s))
-    # Parents in events are already in the "parent space" of the overlap matrix:
-    # - for t=0: parents are snapshot0 grain_id
-    # - for t>=1: parents are snapshot t tracked_grain_id
-    # -----------------------------
-    merge_child_to_parents = {}   # child_j -> [parent_ids...]
-    for (parents, child_j, plist) in events.get("merge", []):
-        merge_child_to_parents[int(child_j)] = [int(p) for p in parents]
+        parents = parents_of_child.get(old_gid, [])
+        if len(parents) == 1:
+            new_grain["parent_grain_id"] = parents[0][0]
+        elif len(parents) > 1:
+            sorted_parents = sorted(parents, key=lambda x: x[3], reverse=True)
+            new_grain["parent_grain_id"] = [p[0] for p in sorted_parents]
 
-    split_child_to_parent = {}   # child_j -> parent_i
-    for (parent_i, child_list, strong_details) in events.get("split", []):
-        pi = int(parent_i)
-        for cj in child_list:
-            split_child_to_parent[int(cj)] = pi
+        updated_grains.append(new_grain)
 
-    continue_child_to_parent = {}  # child_j -> parent_i
-    for (parent_i, child_j, info) in events.get("continue", []):
-        continue_child_to_parent[int(child_j)] = int(parent_i)
+    snapshot["grains"] = updated_grains
 
-    birth_set = set(int(j) for j in events.get("birth", []))
+    # --- Update voxels ---
+    for voxel in snapshot["voxels"]:
+        old_gid = voxel["grain_id"]
+        if old_gid in final_ids:
+            voxel["grain_id"] = final_ids[old_gid]
 
-    # -----------------------------
-    # 2) Apply tracked IDs to voxels (identity label)
-    # -----------------------------
-    missing_gids = set()
-    tracked_ids = np.empty(len(vox), dtype=int)
-
-    for i, v in enumerate(vox):
-        gid_local = int(v["grain_id"])  # local id in snapshot t+1
-        tid = track_of_child.get(gid_local, None)
-        if tid is None:
-            missing_gids.add(gid_local)
-            tid = -1
-
-        v["grain_id"] = int(tid)  # ✅ voxel: tracked_grain_id only
-        v.pop(tracked_key, None)
-        tracked_ids[i] = int(tid)
-
-    # -----------------------------
-    # 3) Apply lineage + identity to grains[] (if present)
-    # -----------------------------
-    if also_update_grains and snap.get("grains") is not None:
-        for g in snap["grains"]:
-            child_gid_local = int(g["grain_id"])
-
-            # identity: promote tracked -> grain_id
-            child_tid = int(track_of_child.get(child_gid_local, -1))
-            g["grain_id"] = child_tid
-            g.pop(tracked_key, None)
-
-            # lineage
-            if child_gid_local  in birth_set:
-                g[parent_key] = None
-
-            elif child_gid_local  in merge_child_to_parents:
-                # MERGE: list of parents (tracked ids)
-                g[parent_key] = [int(p) for p in merge_child_to_parents[child_gid_local ]]
-
-            elif child_gid_local  in split_child_to_parent:
-                # SPLIT: scalar parent
-                g[parent_key] = int(split_child_to_parent[child_gid_local ])
-
-            elif child_gid_local  in continue_child_to_parent:
-                # CONTINUE: scalar parent
-                g[parent_key] = int(continue_child_to_parent[child_gid_local ])
-
-            else:
-                # UNASSIGNED:
-                # use best_parent if overlap exists, else None
-                p = best_parent.get(child_gid_local, None)
-                if p is None or int(p) == 0 or int(col_sum[child_gid_local ]) == 0:
-                    g[parent_key] = None
-                else:
-                    # Ensure this is a real overlap (protect against argmax on all-zeros col)
-                    if int(C[int(p), child_gid_local ]) > 0:
-                        g[parent_key] = int(p)
-                    else:
-                        g[parent_key] = None
-
-    if verbose:
-        print("=== STEP 5 (v2): APPLY TRACKING + LINEAGE ===")
-        print(f"json_path      : {json_path}")
-        print(f"applied to     : snapshot {t + 1} (t={t} -> t+1)")
-        print(f"voxel key      : grain_id (identity promoted from tracked)")  # >>> CHANGED
-        print(f"grain keys     : grain_id + {parent_key} (lineage)")  # >>> CHANGED
-        print(f"voxels updated : {len(vox)}")
-        if missing_gids:
-            print(f"WARNING: unmapped local grain_id(s) in t+1 -> wrote -1 for {len(missing_gids)} grains:",
-                  sorted(missing_gids)[:20])
-        else:
-            print("OK: all voxels mapped.")
-
-        c = Counter(tracked_ids.tolist())
-        if -1 in c:
-            c.pop(-1)
-        print("unique tracked ids:", len(c), "top5:", c.most_common(5))
-
-        # quick lineage counts (grains only)
-        if also_update_grains and snap.get("grains") is not None:
-            n_merge = sum(isinstance(g.get(parent_key, None), list) for g in snap["grains"])
-            n_scalar = sum(isinstance(g.get(parent_key, None), int) for g in snap["grains"])
-            n_none = sum(g.get(parent_key, None) is None for g in snap["grains"])
-            print(f"lineage @ grains: scalar={n_scalar}, merge(list)={n_merge}, none={n_none}")
-
-    with open(json_path, "w") as f:
+    # --- Save back to file ---
+    with open(json_path, 'w') as f:
         json.dump(data, f, indent=2)
 
-    return tracked_ids
+    print(f"✅ Snapshot {t+1} successfully updated and saved to: {json_path}")
 
 
-def track_all_grains_across_snapshots(
-        folder_path: str,
-        *,
-        json_name: str = "data_object.json",
-        tracked_key: str = None,
-        parent_key: str = "parent_grain_id",
-        tau_parent: float = 0.20,
-        tau_child: float = 0.20,
-        allow_multi_parent: bool = True,
-        prefer_merge_parent: str = "largest_overlap",
-        verbose: bool = True):
+def track_all_grains_across_snapshots(json_path: str):
     """
-    Track grains across all snapshots, leaving snapshot 0 unchanged (baseline).
+    Run the full grain tracking pipeline across all snapshot pairs in the microstructure JSON.
 
-    - Snapshot 0: grain_id is the baseline (local ids)
-    - Snapshot t>=1: grain_id is promoted to persistent tracked ids (after step5 change)
-    - For each transition t->t+1:
-        parents use tracked_key if present else grain_id
-        children use grain_id
+    Parameters
+    ----------
+    json_path : str
+        Path to the input JSON file containing microstructure data.
     """
-    def _p(*a):
-        if verbose:
-            print(*a)
-
-    def print_full_matrix(C, *, precision=0):
-        with np.printoptions(
-                threshold=np.inf,  # never summarize with "..."
-                linewidth=200,  # wider lines before wrapping
-                edgeitems=30,  # irrelevant when threshold=inf, but fine
-                suppress=True,
-                precision=precision):
-            print("Overlap Matrix:")
-            print(C)
-
-    # -----------------------------
-    # Resolve JSON path
-    # -----------------------------
-    if os.path.isfile(folder_path):
-        json_path = folder_path
-    else:
-        candidate = os.path.join(folder_path, json_name)
-        if os.path.isfile(candidate):
-            json_path = candidate
-        else:
-            hits = sorted(glob.glob(os.path.join(folder_path, "*.json")))
-            if not hits:
-                raise FileNotFoundError(f"No JSON found in: {folder_path}")
-            json_path = hits[0]
-
-    with open(json_path, "r") as f:
+    with open(json_path, 'r') as f:
         data = json.load(f)
 
-    if "microstructure" not in data:
-        raise KeyError("Top-level key 'microstructure' not found.")
-    micro = data["microstructure"]
-    n_snaps = len(micro)
-    if n_snaps < 2:
-        raise ValueError("Need at least 2 snapshots to track.")
+    num_snapshots = len(data["microstructure"])
+    print(f"📦 Starting grain tracking on {num_snapshots} snapshots...")
 
-    # ----------------------------------------------
-    # Baseline: snapshot 0 (initial microstructure)
-    # ----------------------------------------------
-    snap0 = micro[0]
-    if "voxels" not in snap0 or not snap0["voxels"]:
-        raise KeyError("Snapshot 0 missing voxels.")
+    for t in range(num_snapshots - 1):
+        print(f"\n\n🚩 Processing snapshot pair: {t} → {t+1}")
 
-    max0 = max(int(v["grain_id"]) for v in snap0["voxels"])
-    next_track_id = max0 + 1
+        # Step 1: Extract aligned GID arrays
+        gid_t, gid_tp1, idx_list = step1_extract_gid_arrays(json_path, t)
 
-    _p("=== TRACK GRAINS ACROSS ALL SNAPSHOTS ===")
-    _p("File:", json_path)
-    _p(f"Snapshots: {n_snaps} (will track 0->1->...->last)")
-    _p(f"Init snapshot 0 baseline: grain_id only, max_id={max0}, next_track_id={next_track_id}\n")
+        # Step 2: Compute overlap matrix
+        C, row_sum, col_sum, pairs = step2_overlap_counts(gid_t, gid_tp1, verbose=True)
 
-    # -----------------------------
-    # Helpers
-    # -----------------------------
-    def _aligned_array_for_snapshot(snap, idx_list, key, fallback_key):
-        # build dict: voxel_index -> value
-        m = {tuple(v["voxel_index"]): int(v.get(key, v.get(fallback_key))) for v in snap["voxels"]}
-        return np.array([m[idx] for idx in idx_list], dtype=np.int32)
-
-    def _unique_count_nonneg(arr):
-        u = np.unique(arr)
-        u = u[u >= 1]
-        return int(u.size)
-
-    tracked_counts = [0] * n_snaps
-    tracked_counts[0] = _unique_count_nonneg(
-        np.array([int(v["grain_id"]) for v in micro[0]["voxels"]], dtype=np.int32)
-    )
-
-    totals = Counter()
-    per_step_events = []
-
-    # -----------------------------
-    # Main loop
-    # -----------------------------
-    for t in range(0, n_snaps - 1):
-        _p("=" * 90)
-        _p(f"TRACK: snapshots {t} -> {t + 1}")
-        _p("=" * 90)
-
-        # Step 1 gives idx_list + validates voxel sets match
-        _p("[STEP 1] aligned arrays")
-        _, _, idx_list = step1_extract_gid_arrays(json_path, t)
-        N = len(idx_list)
-
-        # Reload to read current state (because step5 modifies json)
-        with open(json_path, "r") as f:
-            data = json.load(f)
-        micro = data["microstructure"]
-        snap_t = micro[t]
-        snap_tp1 = micro[t + 1]
-        # ------------------------------------------------------------------
-        # CHANGED: old check becomes meaningless if you no longer write tracked_key
-        # has_tracked = bool(snap_t.get("voxels")) and (tracked_key in snap_t["voxels"][0])
-        #
-        # New labeling:
-        #   - t == 0: parents are grain_id baseline
-        #   - t >= 1: parents are grain_id but already persistent (promoted by step5)
-        # ------------------------------------------------------------------
-        parent_mode = "grain_id baseline" if t == 0 else "grain_id (persistent)"
-        # ------------------------------------------------------------------
-
-        # Parents: tracked_key if exists else grain_id (baseline at t=0)
-        gid_t = _aligned_array_for_snapshot(snap_t, idx_list, tracked_key, "grain_id")
-        # Children: always local grain_id
-        gid_tp1 = _aligned_array_for_snapshot(snap_tp1, idx_list, "grain_id", "grain_id")
-
-        _p("  N voxels      :", N)
-        # ------------------------------------------------------------------
-        # CHANGED: do not probe snap_t['voxels'][0] for tracked_key
-        _p("  parents ids   :", int(gid_t.min()), "->", int(gid_t.max()), f"({parent_mode})")
-        # ------------------------------------------------------------------
-        _p("  children gids :", int(gid_tp1.min()), "->", int(gid_tp1.max()))
-
-        # Step 2
-        _p("[STEP 2] overlap")
-        C, row_sum, col_sum, _ = step2_overlap_counts(gid_t, gid_tp1)
-        _p("  C shape       :", C.shape, " total voxels:", int(C.sum()))
-        if int(C.sum()) != N:
-            raise RuntimeError(f"Overlap sum mismatch at t={t}: C.sum()={int(C.sum())} vs N={N}")
-
-        # Step 3
-        _p("[STEP 3] events")
+        # Step 3: Track from overlap
         parents_of_child, best_parent, best_child, events = step3_track_from_overlap(
-            C, row_sum, col_sum,
-            tau_parent=tau_parent,
-            tau_child=tau_child,
-            allow_multi_parent=allow_multi_parent,
+            C, row_sum, col_sum, verbose=True
         )
-        c_continue = len(events["continue"])
-        c_merge = len(events["merge"])
-        c_split = len(events["split"])
-        c_birth = len(events["birth"])
-        c_death = len(events["death"])
-        #_p("MERGE:", events["merge"])
-        #_p("SPLITS:", events["split"])
-        _p(f"  CONTINUE: {c_continue}  MERGE: {c_merge}  SPLIT: {c_split}  BIRTH: {c_birth}  DEATH: {c_death}")
 
-        # Step 4 (child grain_id -> persistent id)
-        _p("[STEP 4] assign persistent IDs")
-        track_of_child, _, next_track_id = step4_assign_tracked_ids(
-            row_sum=row_sum,
-            col_sum=col_sum,
-            CONTINUE=events["continue"],
-            MERGE=events["merge"],
-            SPLIT=events["split"],
-            BIRTH=events["birth"],
-            DEATH=events["death"],
-            next_track_id_start=next_track_id,
-            prefer_merge_parent=prefer_merge_parent,
-            verbose=False,
+        # Step 4: Assign tracked IDs
+        final_ids = step4_assign_tracked_ids(
+            pairs, C, row_sum, col_sum, events, parents_of_child, verbose=True
         )
-        _p("  children mapped:", len(track_of_child))
-        _p("  next_track_id  :", next_track_id)
 
-        # Step 5: write tracked_key into snapshot t+1 only
-        _p(f"[STEP 5] write {tracked_key} into snapshot {t + 1}")
+        # Step 5: Update JSON file in-place for snapshot t+1
+        step5_update_tracked_ids_in_json(json_path, t, final_ids, parents_of_child)
 
-        tracked_ids = step5_apply_tracking_to_snapshot(json_path=json_path, t=t,
-                                                       track_of_child=track_of_child,
-                                                       events=events,  # from step3
-                                                       best_parent=best_parent,  # from step3
-                                                       C=C, row_sum=row_sum, col_sum=col_sum,
-                                                       tracked_key=tracked_key,
-                                                       parent_key=parent_key,
-                                                       also_update_grains=True,
-                                                       verbose=False, )
+    print("\n✅ Grain tracking and ID propagation completed across all snapshots.")
 
-        ok = not np.any(tracked_ids == -1)
-        _p("  OK: all voxels mapped." if ok else "  WARNING: some voxels mapped to -1")
-        # ------------------------------------------------------------------
-        # After your change, persistent IDs live in voxel['grain_id'] for t>=1.
-        # ------------------------------------------------------------------
-        with open(json_path, "r") as f:
-            data = json.load(f)
-        micro = data["microstructure"]
+def add_ipf_color(
+    json_path: str | Path,
+    l: Sequence[float] = (1, 0, 0),
+    *,
+    out_path: str | Path | None = None,
+) -> Path:
+    """
+    Add per-voxel IPF RGB colors to every snapshot in the JSON.
 
-        if t + 1 == 0:
-            ids_tp1 = np.array([int(v.get("grain_id", -1)) for v in micro[t + 1]["voxels"]], dtype=np.int32)
-        else:
-            # persistent ids now stored in grain_id
-            ids_tp1 = np.array([int(v.get("grain_id", -1)) for v in micro[t + 1]["voxels"]], dtype=np.int32)
+    - Reads symmetry from: data["phases"][0]["orientation"]["crystal_symmetry_group"]
+    - Computes IPF color along lab direction `l` (default (1,0,0))
+    - Writes into each voxel:
+        "IPFcolor_(l0 l1 l2)": [R, G, B]   (8-bit)
 
+    Assumptions:
+    - Single phase (data["phases"] has exactly one element).
+    - Voxel orientation stored as Euler angles [phi1, Phi, phi2] in radians.
+    """
+    from orix import plot
+    from orix.quaternion import Orientation, symmetry
+    from orix.vector import Vector3d
 
-        tracked_counts[t + 1] = _unique_count_nonneg(ids_tp1)
-        top5 = [(k, v) for k, v in Counter(ids_tp1.tolist()).most_common(5) if k != -1]
-        _p(f"  unique tracked ids: {tracked_counts[t + 1]}  top5:", top5)
-        # ------------------------------------------------------------------
+    json_path = Path(json_path)
+    out_path = Path(out_path) if out_path is not None else json_path
 
-        per_step_events.append({
-            "t": t, "tp1": t + 1,
-            "continue": c_continue, "merge": c_merge, "split": c_split, "birth": c_birth, "death": c_death,
-            "tracked_count_tp1": tracked_counts[t + 1],
-        })
-        totals.update({"continue": c_continue, "merge": c_merge, "split": c_split, "birth": c_birth, "death": c_death})
+    # --- Load JSON ---
+    data: dict[str, Any] = json.loads(json_path.read_text(encoding="utf-8"))
 
-    # Summary
-    _p("\n" + "=" * 90)
-    _p("SUMMARY (totals across all transitions)")
-    _p("=" * 90)
-    _p(dict(totals))
+    # --- Extract symmetry (your JSON stores phases as a list) ---
+    phases = data["phases"]
+    if not isinstance(phases, list) or len(phases) != 1:
+        raise ValueError(f'Expected one phase in data["phases"], got {type(phases)} with len={len(phases) if isinstance(phases, list) else "?"}.')
 
-    # Plot
-    # plt.figure()
-    # plt.bar(np.arange(n_snaps), tracked_counts)
-    # plt.xlabel("Snapshot index")
-    # plt.ylabel(f"# unique {tracked_key} (snapshot 0 uses grain_id baseline)")
-    # plt.title("Tracked grain IDs across snapshots")
-    # plt.tight_layout()
-    # plt.show()
+    sym_str = phases[0]["orientation"]["crystal_symmetry_group"]
 
-    _p(f"\nDONE: updated in-place: {json_path}")
+    # Minimal mapping (extend later if needed)
+    if sym_str != "m-3m":
+        raise ValueError(f'Unsupported symmetry "{sym_str}" in this simplified function. Expected "m-3m".')
+    laue_sym = symmetry.Oh  # cubic m-3m
+
+    # --- Build IPF color key for direction `l` ---
+    l = np.asarray(l, dtype=float)
+    if l.shape != (3,) or np.allclose(l, 0.0):
+        raise ValueError("`l` must be a non-zero length-3 vector, e.g. (1,0,0).")
+
+    ckey = plot.IPFColorKeyTSL(symmetry=laue_sym, direction=Vector3d(l))
+
+    # Store using your requested label style
+    ipf_key = f"IPFcolor_({int(l[0])} {int(l[1])} {int(l[2])})"
+
+    # --- Process snapshots (vectorized per snapshot) ---
+    for snap in data["microstructure"]:
+        voxels = snap.get("voxels", [])
+        if not voxels:
+            continue
+
+        # Collect voxel Euler angles into (N,3)
+        eulers = np.asarray([v["orientation"] for v in voxels], dtype=float)
+        if eulers.ndim != 2 or eulers.shape[1] != 3:
+            raise ValueError("Each voxel['orientation'] must be a length-3 Euler list.")
+
+        # Euler -> Orientation (radians)
+        O = Orientation.from_euler(eulers, symmetry=laue_sym, degrees=False)
+
+        # Orientation -> RGB floats in [0,1] -> uint8 [0..255]
+        rgb = ckey.orientation2color(O)
+        rgb_u8 = np.clip(np.rint(rgb * 255.0), 0, 255).astype(np.uint8)
+
+        # Write back to each voxel
+        for v, c in zip(voxels, rgb_u8):
+            v[ipf_key] = c.tolist()
+
+    # --- Save JSON ---
+    out_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return out_path
+
+def extract_initial_texture_dict(
+    json_path: Union[str, Path],
+    *,
+    ebsd: object = None,
+    snap_idx_initial: int = 0,
+    pole_vector: Tuple[int, int, int] = (0, 0, 1),
+    initial_orientation_source: str = "ebsd",  # "ebsd" or "json"
+) -> Dict[str, Any]:
+    """
+    Build the texture payload for the initial microstructure snapshot.
+
+    Returns
+    -------
+    dict
+        {'O': O0, 't_all': t0_all, 'n': n0, 'phase': phase, 'pole_vector': tuple}
+    """
+    json_path = Path(json_path)
+    data = json.loads(json_path.read_text())
+
+    snaps = data.get("microstructure", [])
+    if not isinstance(snaps, list) or len(snaps) == 0:
+        raise ValueError("No snapshots found under key 'microstructure'.")
+    if not (-len(snaps) <= snap_idx_initial < len(snaps)):
+        raise ValueError(f"snap_idx_initial={snap_idx_initial} out of range for {len(snaps)} snapshots.")
+
+    snap0 = snaps[snap_idx_initial]
+    grains0 = snap0.get("grains", [])
+    if not grains0:
+        raise ValueError("No grains found in the initial snapshot.")
+
+    # --- phase mapping (EBSD) ---
+    # phase_id in your data object should correspond to ebsd.emap.phases.ids[*]
+    try:
+        phase = ebsd.emap.phases[ebsd.emap.phases.ids[0]]
+    except Exception as exc:
+        raise ValueError("Could not resolve `phase` from EBSD (`ebsd.emap.phases[...]`).") from exc
+
+    # --- initial orientations ---
+    src = str(initial_orientation_source).strip().lower()
+
+    if src == "ebsd":
+        if ebsd is None:
+            raise ValueError("`ebsd` must be provided when initial_orientation_source='ebsd'.")
+        ori_obj = ebsd.ms_data[0]["ori"]
+        if not isinstance(ori_obj, Orientation):
+            q = np.asarray(ori_obj, float).reshape(-1, 4)
+            ori_obj = Orientation.from_quaternion(q)
+        O0 = Orientation.from_euler(ori_obj.to_euler(degrees=False), degrees=False)
+        n0 = int(O0.size) if hasattr(O0, "size") else len(ori_obj)
+
+    elif src == "json":
+        E0 = np.asarray([g["orientation"] for g in grains0], dtype=float)
+        if E0.ndim != 2 or E0.shape[1] != 3:
+            raise ValueError("JSON grain orientations must be (N,3) Euler [phi1,Phi,phi2] in radians.")
+        O0 = Orientation.from_euler(E0, degrees=False)
+        n0 = int(O0.size) if hasattr(O0, "size") else len(E0)
+
+    else:
+        raise ValueError("`initial_orientation_source` must be 'ebsd' or 'json'.")
+
+    # --- pole projection set ---
+    t0 = Miller(uvw=list(pole_vector), phase=phase).symmetrise(unique=True)
+    t0_all = O0.inv().outer(t0)
 
     return {
-        "json_path": json_path,
-        "tracked_key": tracked_key,
-        "tracked_counts": tracked_counts,
-        "per_step_events": per_step_events,
-        "totals": dict(totals),
+        "O": O0,
+        "t_all": t0_all,
+        "n": n0,
+        "phase": phase,
+        "pole_vector": tuple(pole_vector),
+    }
+
+def extract_regridded_texture_dict(
+    json_path: Union[str, Path],
+    *,
+    ebsd: Any,
+    pole_vector: Tuple[int, int, int] = (0, 0, 1),
+    # selection policy:
+    # - if snap_idx_regridded is given: use it, but enforce grid.status == "undeformed"
+    # - otherwise: find the LAST snapshot with time==target_time AND status=="undeformed"
+    snap_idx_regridded: int | None = -1,
+    target_time: float | None = None,
+) -> Dict[str, Any]:
+    """
+    Build the texture payload for a regridded (undeformed grid) snapshot.
+
+    Returns
+    -------
+    dict
+        {'O': OR, 't_all': tR_all, 'n': nR, 'phase': phase, 'pole_vector': tuple}
+    """
+    json_path = Path(json_path)
+    data = json.loads(json_path.read_text())
+
+    snaps = data.get("microstructure", [])
+    if not isinstance(snaps, list) or len(snaps) == 0:
+        raise ValueError("No snapshots found under key 'microstructure'.")
+
+    # --- phase mapping (EBSD) ---
+    try:
+        phase = ebsd.emap.phases[ebsd.emap.phases.ids[0]]
+    except Exception as exc:
+        raise ValueError("Could not resolve `phase` from EBSD (`ebsd.emap.phases[...]`).") from exc
+
+    def _is_undeformed(snap: dict) -> bool:
+        grid = snap.get("grid", {})
+        status = str(grid.get("status", "")).strip().lower()
+        return status == "undeformed"
+
+    # --- choose snapshot ---
+    snapR = None
+
+    if snap_idx_regridded is not None:
+        # explicit index selection
+        idx = snap_idx_regridded
+        if not (-len(snaps) <= idx < len(snaps)):
+            raise ValueError(f"snap_idx_regridded={idx} out of range for {len(snaps)} snapshots.")
+        candidate = snaps[idx]
+        if not _is_undeformed(candidate):
+            raise RuntimeError(
+                f"Requested snapshot_index={idx} but grid.status='{candidate.get('grid', {}).get('status')}', "
+                "expected 'undeformed' for regridded texture extraction."
+            )
+        snapR = candidate
+
+    else:
+        # search policy: last snapshot matching time (if provided) and undeformed
+        if target_time is None:
+            # last undeformed snapshot
+            for s in reversed(snaps):
+                if _is_undeformed(s):
+                    snapR = s
+                    break
+        else:
+            # last undeformed snapshot at target_time (exact match with tolerance)
+            tol = 1e-12
+            for s in reversed(snaps):
+                t = s.get("time", None)
+                if t is None:
+                    continue
+                if abs(float(t) - float(target_time)) <= tol and _is_undeformed(s):
+                    snapR = s
+                    break
+
+        if snapR is None:
+            raise RuntimeError(
+                "Could not find an undeformed regridded snapshot with the requested selection policy "
+                f"(target_time={target_time})."
+            )
+
+    voxelsR = snapR.get("voxels", [])
+    if not voxelsR:
+        raise ValueError("No voxels found in the selected regridded snapshot.")
+
+    # --- orientations from voxel Euler angles ---
+    ER = np.asarray([v["orientation"] for v in voxelsR], dtype=float)
+    if ER.ndim != 2 or ER.shape[1] != 3:
+        raise ValueError("Regridded voxel orientations must be (N,3) Euler [phi1,Phi,phi2] in radians.")
+
+    OR = Orientation.from_euler(ER, degrees=False)
+    nR = int(OR.size) if hasattr(OR, "size") else len(ER)
+
+    # --- pole projection set ---
+    tR = Miller(uvw=list(pole_vector), phase=phase).symmetrise(unique=True)
+    tR_all = OR.inv().outer(tR)
+
+    return {
+        "O": OR,
+        "t_all": tR_all,
+        "n": nR,
+        "phase": phase,
+        "pole_vector": tuple(pole_vector),
     }
