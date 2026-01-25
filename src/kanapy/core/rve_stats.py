@@ -10,9 +10,7 @@ ICAMS, Ruhr University Bochum, Germany
 March 2024
 """
 import logging
-import numpy as np
 import copy
-import json
 from pathlib import Path
 from typing import Dict, List, Union, Any, Mapping, Tuple
 from scipy.optimize import minimize

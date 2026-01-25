@@ -11,7 +11,6 @@ Authors: Alexander Hartmaier, Golsa Tolooei Eshlghi, Abhishek Biswas
 Institution: ICAMS, Ruhr University Bochum
 """
 import os
-import sys
 import json
 import logging
 import platform

@@ -5,7 +5,7 @@ import numpy as np
 from collections import defaultdict
 from .entities import Ellipsoid, Cuboid
 from .initializations import NodeSets
-from typing import Dict, Any, Tuple, Optional, List, Union
+from typing import Dict, Any, Optional
 
 
 def write_dump(Ellipsoids, sim_box):

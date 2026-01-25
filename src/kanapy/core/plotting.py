@@ -6,7 +6,7 @@ Created on Mon Oct  4 07:52:55 2021
 
 @author: Alexander Hartmaier, Golsa Tolooei Eshlaghi, Ronak Shoghi
 """
-import sys
+
 import logging
 import json
 import numpy as np
@@ -17,6 +17,7 @@ from scipy.stats import lognorm
 from pathlib import Path
 from typing import Any, Dict, Sequence, Tuple, Union, Literal, Optional, Mapping
 import pyvista as pv
+
 
 ColorMode = Literal["grain_id", "ipf_rgb"]
 ColorBy = Literal["grain_id", "voxel_id", "euler_phi1"]
