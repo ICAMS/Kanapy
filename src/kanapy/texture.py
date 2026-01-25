@@ -13,7 +13,7 @@ from kanapy.core import get_grain_geom
 from scipy.stats import lognorm, vonmises
 from scipy.spatial import ConvexHull, KDTree
 from scipy.special import legendre, beta
-from scipy.optimize import fminbound
+from scipy.optimize import fminbound, linear_sum_assignment
 from scipy.integrate import quad
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
