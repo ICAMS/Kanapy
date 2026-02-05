@@ -21,6 +21,7 @@ from dataclasses import dataclass
 
 
 import json
+import re
 import numpy as np
 
 def arr2mat(mc):
@@ -1767,6 +1768,28 @@ class VoxelMesh:
         Nx, Ny, Nz = map(int, n.tolist())
         return spacing, Nx, Ny, Nz
 
+    @staticmethod
+    def _length_unit_to_scale_to_um(length_unit: Any) -> float:
+        """
+        Return scale factor to convert coordinates to micrometers (µm).
+        """
+        if length_unit is None:
+            raise KeyError("Missing data['units']['Length'] in JSON; cannot decide unit conversion.")
+
+        s = str(length_unit).strip().lower()
+        s = s.replace("µ", "u")  # normalize µm -> um
+        s = re.sub(r"\s+", "", s)
+
+        # meters
+        if s in {"m", "meter", "meters", "metre", "metres"}:
+            return 1e6
+
+        # micrometers
+        if s in {"um", "micrometer", "micrometers", "micrometre", "micrometres"}:
+            return 1.0
+
+        raise ValueError(f"Unsupported length unit in data['units']['Length']: {length_unit!r}")
+
     @classmethod
     def from_dataObject(
             cls,
@@ -1774,10 +1797,19 @@ class VoxelMesh:
             *,
             snapshot_index: int = -1,
             origin_mode: str = "centroid_min",  # "centroid_min" or "json_origin"
+            convert_to_um: bool = True,
     ) -> "VoxelMesh":
 
         json_path = Path(json_path)
         data = json.loads(json_path.read_text())
+
+        # Decide scaling from JSON units
+        scale_to_um = 1.0
+        if convert_to_um:
+            units = data.get("units", {})
+            if not isinstance(units, Mapping):
+                raise KeyError("Missing or invalid 'units' object in JSON.")
+            scale_to_um = cls._length_unit_to_scale_to_um(units.get("Length", None))
 
         snaps = data.get("microstructure", [])
         if not isinstance(snaps, list) or len(snaps) == 0:
@@ -1819,6 +1851,9 @@ class VoxelMesh:
             origin[1] + jj.ravel() * dx,
             origin[2] + kk.ravel() * dx,
         )).astype(float)
+
+        if convert_to_um and scale_to_um != 1.0:
+            nodes *= scale_to_um
 
         # --- connectivity + grain maps ---
         voxel_dict: Dict[int, List[int]] = {}

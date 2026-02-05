@@ -43,7 +43,6 @@ ColorBy = Literal["grain_id", "voxel_id", "euler_phi1"]
 #    matplotlib_dpi = 100 * dpi_scale
 #    return matplotlib_dpi
 
-
 def plot_voxels_3D(data, Ngr=None, sliced=False, dual_phase=None,
                    mask=None, cmap='prism', alpha=1.0, silent=False,
                    clist=None, asp_arr=None,
@@ -144,7 +143,6 @@ def plot_voxels_3D(data, Ngr=None, sliced=False, dual_phase=None,
     else:
         plt.show(block=True)
 
-
 def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
                      dual_phase=None, silent=False, asp_arr=None,
                      phases=False, cols=None):
@@ -226,8 +224,6 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
     else:
         plt.show(block=True)
 
-
-
 def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=None, silent=False, asp_arr=None,
                        phases=False, cols=None):
     """
@@ -299,8 +295,6 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=None, silent=False, a
         return fig
     else:
         plt.show(block=True)
-
-
 
 def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
                       silent=False, asp_arr=None):
@@ -377,7 +371,6 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
         return fig
     else:
         plt.show(block=True)
-
 
 def plot_output_stats(data_list, labels, iphase=None,
                       gs_data=None, gs_param=None,
@@ -694,7 +687,6 @@ def plot_output_stats(data_list, labels, iphase=None,
             print(f"    '{fname}' is placed in the current working directory\n")
         plt.show()
         return
-
 
 def plot_init_stats(stats_dict,
                     gs_data=None, ar_data=None,
@@ -1080,8 +1072,6 @@ def plot_stats_dict(sdict, title=None, save_files=False):
     plt.show()
     return
 
-
-
 def plot_stats(
     stats_data: Dict[str, Any],
     *,
@@ -1190,7 +1180,7 @@ def plot_stats(
     ax_ar_r.fill_between(x_ar, y_ar_r, alpha=0.3)
 
     for ax in (ax_ar_i, ax_ar_r):
-        ax.set_xlabel("Aspect ratio", fontsize=14)
+        ax.set_xlabel("Aspect ratio (μm)", fontsize=14)
         ax.set_ylabel("Density", fontsize=14)
         ax.tick_params(labelsize=12)
         ax.set_xlim(xmin_ar, xmax_ar)
@@ -1210,7 +1200,7 @@ def plot_stats(
     ax_eq_r.fill_between(x_eq, y_eq_r, alpha=0.3)
 
     for ax in (ax_eq_i, ax_eq_r):
-        ax.set_xlabel("Equivalent diameter", fontsize=14)
+        ax.set_xlabel("Equivalent diameter (μm)", fontsize=14)
         ax.set_ylabel("Density", fontsize=14)
         ax.tick_params(labelsize=12)
         ax.set_xlim(xmin_eq, xmax_eq)
@@ -1474,7 +1464,6 @@ def plot_snapshots_voxel(
 
     return plotter, resolved
 
-
 def compare_two_snapshots_voxel(
         json_path: Union[str, Path],
         snap_a: int,
@@ -1676,3 +1665,112 @@ def compare_two_snapshots_voxel(
         plotter.show()
 
     return plotter, (ia, ib)
+
+def plot_mean_ellipsoids_from_stats(
+    stats_data: Mapping[str, Any],
+    out_png: Optional[str | Path] = "figures/mean_ellipsoids_2panel.png",
+    show: bool = True,
+    nu: int = 90,
+    nv: int = 50,
+    wire_rstride: int = 3,
+    wire_cstride: int = 3,
+    axis_scale: float = 1.15,
+):
+    """
+    Plot mean ellipsoids (initial vs regridded) side-by-side from stats_data dict.
+
+    Expects:
+      stats_data["semi_axes"]["initial"]["a"|"b"|"c"] : list/array
+      stats_data["semi_axes"]["regridded"]["a"|"b"|"c"] : list/array
+    Returns:
+      matplotlib.figure.Figure
+    """
+
+    def _ellipsoid_surface(a, b, c):
+        u = np.linspace(0.0, 2.0*np.pi, nu)
+        v = np.linspace(0.0, np.pi, nv)
+        uu, vv = np.meshgrid(u, v)
+        x = a * np.sin(vv) * np.cos(uu)
+        y = b * np.sin(vv) * np.sin(uu)
+        z = c * np.cos(vv)
+        return x, y, z
+
+    def _draw_semi_axes(ax, a, b, c):
+        # a=blue, b=orange, c=green
+        col_a = "#2962FF"
+        col_b = "#FB8C00"
+        col_c = "#00C853"
+
+        ax.quiver(0, 0, 0, a, 0, 0, color=col_a, linewidth=3.0, arrow_length_ratio=0.10)
+        ax.quiver(0, 0, 0, 0, b, 0, color=col_b, linewidth=3.0, arrow_length_ratio=0.10)
+        ax.quiver(0, 0, 0, 0, 0, c, color=col_c, linewidth=3.0, arrow_length_ratio=0.10)
+
+        box = dict(facecolor="white", alpha=0.95, edgecolor="black", boxstyle="round,pad=0.25")
+        ax.text2D(0.05, 0.92, f"a = {a/axis_scale:.2f}", transform=ax.transAxes,
+                  color=col_a, fontsize=12, weight="bold", bbox=box)
+        ax.text2D(0.05, 0.85, f"b = {b/axis_scale:.2f}", transform=ax.transAxes,
+                  color=col_b, fontsize=12, weight="bold", bbox=box)
+        ax.text2D(0.05, 0.78, f"c = {c/axis_scale:.2f}", transform=ax.transAxes,
+                  color=col_c, fontsize=12, weight="bold", bbox=box)
+
+    # ------------------ Validate + extract ------------------
+    semi = stats_data["semi_axes"]
+
+    a0 = float(np.mean(semi["initial"]["a"]))
+    b0 = float(np.mean(semi["initial"]["b"]))
+    c0 = float(np.mean(semi["initial"]["c"]))
+
+    a1 = float(np.mean(semi["regridded"]["a"]))
+    b1 = float(np.mean(semi["regridded"]["b"]))
+    c1 = float(np.mean(semi["regridded"]["c"]))
+
+    X0, Y0, Z0 = _ellipsoid_surface(a0, b0, c0)
+    X1, Y1, Z1 = _ellipsoid_surface(a1, b1, c1)
+
+    # Shared limits (fair comparison)
+    max_extent = max(a0, b0, c0, a1, b1, c1)
+    lim = (-max_extent, max_extent)
+
+    # ------------------ Figure ------------------
+    fig = plt.figure(figsize=(13, 6))
+    axL = fig.add_subplot(1, 2, 1, projection="3d")
+    axR = fig.add_subplot(1, 2, 2, projection="3d")
+
+    # Ellipsoid colors (NOT blue/orange/green)
+    col_init = "#9B59B6"  # purple
+    col_regr = "#00B8D9"  # teal/cyan
+
+    # Left (initial)
+    axL.plot_surface(X0, Y0, Z0, color=col_init, alpha=0.12, linewidth=0)
+    axL.plot_wireframe(X0, Y0, Z0, color=col_init, alpha=0.90, linewidth=0.8,
+                       rstride=wire_rstride, cstride=wire_cstride)
+    _draw_semi_axes(axL, axis_scale*a0, axis_scale*b0, axis_scale*c0)
+    axL.set_title("Initial mean ellipsoid", pad=14)
+
+    # Right (regridded)
+    axR.plot_surface(X1, Y1, Z1, color=col_regr, alpha=0.12, linewidth=0)
+    axR.plot_wireframe(X1, Y1, Z1, color=col_regr, alpha=0.90, linewidth=0.8,
+                       rstride=wire_rstride, cstride=wire_cstride)
+    _draw_semi_axes(axR, axis_scale*a1, axis_scale*b1, axis_scale*c1)
+    axR.set_title("Regridded mean ellipsoid", pad=14)
+
+    # Shared formatting
+    for ax in (axL, axR):
+        ax.set_xlim(lim); ax.set_ylim(lim); ax.set_zlim(lim)
+        ax.set_xlabel("X"); ax.set_ylabel("Y"); ax.set_zlabel("Z")
+        ax.view_init(elev=25, azim=-60)
+        ax.set_box_aspect((1, 1, 1))
+
+    fig.suptitle("Mean grain ellipsoids (side-by-side)", y=0.98)
+    plt.tight_layout()
+
+    # Save (optional)
+    if out_png is not None:
+        out_png = Path(out_png)
+        out_png.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out_png, dpi=250, bbox_inches="tight")
+
+    if show:
+        plt.show()
+
+    return fig
