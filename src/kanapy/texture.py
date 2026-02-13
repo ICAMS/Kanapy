@@ -30,11 +30,6 @@ from collections import Counter, defaultdict
 from typing import Any, Sequence, Union, Dict, Tuple, List
 
 
-
-
-
-
-
 def get_distinct_colormap(N, cmap='prism'):
     """
     Generate N visually distinct colors as an RGB colormap.
