@@ -17,8 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, Tuple, Literal, Optional, Mapping
 
 
-ColorMode = Literal["grain_id", "ipf_rgb"]
-ColorBy = Literal["grain_id", "voxel_id", "euler_phi1"]
+
 
 #from PyQt5.QtWidgets import QApplication
 

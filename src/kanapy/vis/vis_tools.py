@@ -4,7 +4,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
 from pathlib import Path
-from typing import Any, Dict, Sequence, Tuple, Union, Mapping
+from typing import Any, Dict, Sequence, Tuple, Union, Mapping, Literal
+
+ColorMode = Literal["grain_id", "ipf_rgb"]
+ColorBy = Literal["grain_id", "voxel_id", "euler_phi1"]
+
 try:
     import pyvista as pv
 except ImportError as e:
