@@ -4,7 +4,7 @@
 Top-level package for kanapy.core module with core utilities.
 defines all user interfaces: API, CLI and GUI
 
- Copyright (C) 2025  by {__author__} ICAMS / Ruhr University Bochum, Germany
+ Copyright (C) 2025, 2026  by {__author__} ICAMS / Ruhr University Bochum, Germany
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Affero General Public License as published by
@@ -22,7 +22,7 @@ defines all user interfaces: API, CLI and GUI
 
 from .api import Microstructure
 from .initializations import set_stats
-from .plotting import plot_voxels_3D, plot_polygons_3D
+from .plotting import plot_voxels_3D, plot_polygons_3D, plot_mean_ellipsoids_from_stats
 from .input_output import export2abaqus, writeAbaqusMat, pickle2microstructure, import_voxels, \
     import_stats, write_stats
 from .rve_stats import find_rot_axis, bbox, get_grain_geom
@@ -36,7 +36,8 @@ except:
 
 __all__ = ["Microstructure", "set_stats", "plot_voxels_3D", "plot_polygons_3D", 
            "export2abaqus", "writeAbaqusMat", "pickle2microstructure", "import_voxels",
-           "import_stats", "write_stats", "find_rot_axis", "bbox", "get_grain_geom", "start"]
+           "import_stats", "write_stats", "find_rot_axis", "bbox", "get_grain_geom", "start",
+           "plot_mean_ellipsoids_from_stats"]
            
 if triple_surf:
     __all__.append("create_ref_ell")

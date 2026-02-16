@@ -3,7 +3,7 @@ Top-level package for kanapy with default ORIX backend
 
 use pip install kanapy-mtex for version based on MTEX library, depending on Matlab
 
- Copyright (C) 2025  by {__author__} ICAMS / Ruhr University Bochum, Germany
+ Copyright (C) 2025, 2026  by {__author__} ICAMS / Ruhr University Bochum, Germany
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU Affero General Public License as published by
@@ -23,12 +23,11 @@ from importlib.metadata import version
 
 # Re-export shared core and texture modules for convenience
 from .core import Microstructure, set_stats, pickle2microstructure, import_voxels,\
-     import_stats, write_stats, start, triple_surf, plot_voxels_3D, plot_polygons_3D
+     import_stats, write_stats, start, triple_surf, plot_voxels_3D, plot_polygons_3D,\
+     plot_mean_ellipsoids_from_stats
 
 from .texture import EBSDmap, ODF, createOriset, createOrisetRandom, \
     get_ipf_colors, plot_pole_figure, plot_pole_figure_proj
-
-from . import vis
 
 log_level = 20  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR
 logging.basicConfig(level=log_level)  # set log level
@@ -41,6 +40,6 @@ __backend__ = "orix"
 __all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxels",
            "import_stats", "write_stats", "start", "EBSDmap", "ODF",  "createOriset",
            "createOrisetRandom", "get_ipf_colors", "plot_pole_figure",
-           "plot_pole_figure_proj", "plot_voxels_3D", "plot_polygons_3D", "vis"]
+           "plot_pole_figure_proj", "plot_voxels_3D", "plot_polygons_3D", "plot_mean_ellipsoids_from_stats"]
 
 MTEX_AVAIL = __backend__  # legacy flag for downwards compatibility
