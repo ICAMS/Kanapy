@@ -1358,15 +1358,11 @@ class Microstructure(object):
 
         Examples
         --------
-        >>> # Write voxelized RVE input deck with default settings
-        >>> abq_file = rve.write_abq(nodes='voxels')
+        Write voxelized RVE input deck with default settings
+        abq_file = rve.write_abq(nodes='voxels')
 
-        >>> # Write smoothened RVE deck for dual-phase material
-        >>> abq_file = rve.write_abq(nodes='smooth', dual_phase=True, ialloy=alloy_list)
-
-        >>> # Include boundary conditions
-        >>> bc = {'ux': [0, 0.1], 'uy': [0, 0.1]}
-        >>> abq_file = rve.write_abq(nodes='voxels', boundary_conditions=bc)
+        # Write smoothened RVE deck for dual-phase material
+        abq_file = rve.write_abq(nodes='smooth', dual_phase=True, ialloy=alloy_list)
         """
         if nodes is None:
             if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
@@ -1438,6 +1434,7 @@ class Microstructure(object):
         file = os.path.join(path, file)
         periodic = self.rve.periodic
 
+        periodicBC = boundary_conditions["periodic_bc"]
         if not periodic and periodicBC:
             raise ValueError("Periodic boundary conditions cannot be applied to a non-periodic RVE.")
 
