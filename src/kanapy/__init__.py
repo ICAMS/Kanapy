@@ -40,6 +40,11 @@ __backend__ = "orix"
 __all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxels",
            "import_stats", "write_stats", "start", "EBSDmap", "ODF",  "createOriset",
            "createOrisetRandom", "get_ipf_colors", "plot_pole_figure",
-           "plot_pole_figure_proj", "plot_voxels_3D", "plot_polygons_3D", "plot_mean_ellipsoids_from_stats"]
+           "plot_pole_figure_proj", "plot_voxels_3D", "plot_polygons_3D", "plot_mean_ellipsoids_from_stats",
+           "triple_surf"]
+
+if triple_surf:
+    from .core import create_ref_ell
+    __all__.append("create_ref_ell")
 
 MTEX_AVAIL = __backend__  # legacy flag for downwards compatibility

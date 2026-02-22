@@ -302,7 +302,7 @@ def summarize_labels(label_array, rotations, wanted_labels=None):
     return nodes
 
 
-def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
+def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=8):
     """
     Build a graph representation of a microstructure from labeled pixels
 
@@ -339,12 +339,12 @@ def build_graph_from_labeled_pixels(label_array, emap, phase, connectivity=8):
     - The function preserves the shape and indices of `label_array`
     """
     # t1 = time.time()
-    nodes = summarize_labels(label_array, emap.rotations.data)
+    nodes = summarize_labels(label_array, rot)
     # t2 = time.time()
     # print(f'Time for extracting nodes: {t2 - t1}')
     # print(f'Building microstructure graph with {len(nodes)} nodes (grains).')
-    G = nx.Graph(label_map=label_array, symmetry=emap.phases.point_groups[phase],
-                 dx=emap.dx, dy=emap.dy)
+    G = nx.Graph(label_map=label_array, symmetry=sym,
+                 dx=dx, dy=dy)
     G.add_nodes_from(nodes)
     # t3 = time.time()
     # print(f'Time for building graph: {t3 - t2}')
@@ -1643,7 +1643,7 @@ class EBSDmap:
                  hist=None, plot=None):
 
 
-        def reassign(pix, ori, phid, bads):
+        def _reassign(pix, ori, phid, bads):
             """
             Reassign the orientation of a pixel based on neighboring pixels of the same phase.
 
@@ -1678,6 +1678,52 @@ class EBSDmap:
             else:
                 bads.add(pix)  # no valid neighbor found add pix again to list
 
+        def _plot_hex_rgb(xy, rgb, dx, dy=None, ax=None):
+            """
+            xy  : (N,2) array of pixel centers
+            rgb : (N,3) array, either 0..255 or 0..1
+            dx  : horizontal pixel spacing (hex width)
+            dy  : vertical row spacing (optional).
+                  If None, assumed dy = sqrt(3)/2 * dx (pointy-top hex)
+            """
+            if dy is None:
+                dy = np.sqrt(3) / 2 * dx
+
+            if ax is None:
+                fig, ax = plt.subplots(figsize=(6, 6))
+
+            # normalize rgb if needed
+            rgb = np.asarray(rgb)
+            if rgb.max() > 1.0:
+                rgb = rgb / 255.0
+
+            # hex geometry (pointy-top)
+            r = dx / 2.0
+            h = dy
+
+            # 6 vertices relative to center
+            angles = np.deg2rad([30, 90, 150, 210, 270, 330])
+            verts_unit = np.column_stack([r * np.cos(angles),
+                                          r * np.sin(angles)])
+
+            # build polygon list
+            polys = [xy[i] + verts_unit for i in range(len(xy))]
+
+            coll = PolyCollection(polys,
+                                  facecolors=rgb,
+                                  edgecolors='none',
+                                  linewidths=0)
+
+            ax.add_collection(coll)
+
+            ax.set_aspect('equal')
+            ax.autoscale_view()
+            ax.set_xlabel("x")
+            ax.set_ylabel("y")
+            plt.show()
+
+            return ax
+
         # interpret parameters
         if plot is not None:
             show_plot = plot
@@ -1694,20 +1740,36 @@ class EBSDmap:
         self.sh_x, self.sh_y = self.emap.shape  # shape of EBSD map in pixels
         self.dx, self.dy = self.emap.dx, self.emap.dy  # distance in micron b/w pixels
         self.npx = self.emap.size  # total number of pixels in EBSD map
-        if self.sh_x * self.sh_y != self.npx:
-            raise ValueError(f"Size of map ({self.npx} px) does not match its shape: {self.sh_x, self.sh_y}")
-
         # determine number of phases and generate histogram
-        Nphase = len(self.emap.phases.ids)  # number of phases
-        offs = 0 if 0 in self.emap.phases.ids else 1  # in CTX maps, there is no phase "0"
-        phist = np.histogram(self.emap.phase_id, Nphase + offs)
-        print(f'Imported EBSD map with {len(self.emap.phases.ids)} phases.')
+        phs = self.emap.phases.ids
+        Nphase = len(phs)  # number of phases
+        phist = np.histogram(self.emap.phase_id, Nphase)
+        offs = 0 if 0 in phs else 1  # in CTX maps, there is no phase "0"
+        print(f'Imported EBSD map with {Nphase} phases.')
+        if self.sh_x * self.sh_y != self.npx:
+            #if self.sh_x * self.sh_y != self.npx * 2:
+            #    raise ValueError('Shape mismatch between sh_x and sh_y!')
+            from matplotlib.collections import PolyCollection
+            from .ebsd_hex_grid import resample_ebsd_to_rect_grid
+            hex_map = True
+            self.npx = self.sh_x * self.sh_y
+            logging.warning(f"Size of map ({self.npx} px) does not match its shape: {self.sh_x, self.sh_y}"
+                            f"\nAssuming staggered hex grid of EBSD map")
+            xy = np.stack([self.emap.x, self.emap.y]).T
+        else:
+            hex_map = False
+            ori_q = None
+            xy = None
+            resample_ebsd_to_rect_grid = None
 
         # read phase names and calculate volume fractions and plots if active
-        for n_ph, ind in enumerate(self.emap.phases.ids):
+        for n_ph, ind in enumerate(phs):
             if ind == -1:
                 continue
-            vf = phist[0][n_ph + offs] / self.npx
+            ih = np.searchsorted(phist[1], ind, side='right') - 1
+            if ind == phist[1][-1]:
+                ih -= 1
+            vf = phist[0][ih] / self.emap.size
             if vf < vf_min:
                 continue
             data = dict()  # initialize data dictionary
@@ -1720,18 +1782,50 @@ class EBSDmap:
             data['delta_y'] = self.dy
 
             # generate phase-specific orientations
-            ori_e = self.emap[self.emap.phase_id == ind].orientations.in_euler_fundamental_region()
+            if hex_map:
+                if 'ci' in self.emap.prop.keys():
+                    val_ci = self.emap.prop['ci']
+                else:
+                    val_ci = np.zeros(self.npx)
+                ipf_key = ox_plot.IPFColorKeyTSL(self.emap.phases[ind].point_group.laue)
+                mask = self.emap.phase_id == ind
+                ori_e = Orientation.from_euler(self.emap[mask].orientations.in_euler_fundamental_region())
+                ori_q = np.stack([ori_e.a, ori_e.b, ori_e.c, ori_e.d]).T
+                rgb_val = ipf_key.orientation2color(ori_e)
+                ax = _plot_hex_rgb(xy, rgb_val, self.dx, self.dy)
+                xg, yg, phase_g, ci_g, quat_g = \
+                    resample_ebsd_to_rect_grid(xy[self.emap.is_indexed],
+                                               self.emap.phase_id[self.emap.is_indexed],
+                                               ori_q,
+                                               val_ci[self.emap.is_indexed],
+                                               nx=self.sh_y, ny=self.sh_x)
+                # get Euler Angles
+                q_flat = quat_g.reshape(-1, 4)
+                # remove NaNs
+                mask = ~np.isnan(q_flat[:, 0])
+                quat_g = q_flat[mask]
+                ori_e = Orientation(quat_g).in_euler_fundamental_region()
+                pid = phase_g.ravel()
+            else:
+                pid = self.emap.phase_id
+                ori_e = self.emap[pid == ind].orientations.in_euler_fundamental_region()
+                ci_g = None
+                quat_g = None
+
             data['ori'] = Orientation.from_euler(ori_e)
             data['cs'] = self.emap.phases[ind].point_group.laue
             # assign bad pixels to one neighbor
             # identify non-indexed pixels and pixels with low confidence index (CI)
             if 'ci' in self.emap.prop.keys():
-                val = self.emap.prop['ci']
+                if hex_map:
+                    val = ci_g.ravel()
+                else:
+                    val = self.emap.prop['ci']
                 if len(val) == self.npx:
                     self.ci_map = val
                 else:
                     self.ci_map = np.zeros(self.npx)
-                    self.ci_map[self.emap.phase_id == 0] = val
+                    self.ci_map[pid == 0] = val
                 bad_pix = set(np.nonzero(val < 0.1)[0])
             else:
                 bad_pix = set()
@@ -1741,7 +1835,7 @@ class EBSDmap:
                 nbad = len(bad_pix)
                 while len(bad_pix) > 0 and niter < 2 * nbad:
                     bp = bad_pix.pop()
-                    reassign(bp, data['ori'], self.emap.phase_id, bad_pix)
+                    _reassign(bp, data['ori'], pid, bad_pix)
                     niter += 1
                 print(f'After {niter} loops: number of bad pixels: {len(bad_pix)}')
 
@@ -1751,7 +1845,7 @@ class EBSDmap:
                 bmap = val
             else:
                 bmap = np.zeros(self.npx)
-                bmap[self.emap.phase_id == ind] = val
+                bmap[pid == ind] = val
             data['mo_map'] = bmap
 
             # Get IPF colors
@@ -1760,7 +1854,7 @@ class EBSDmap:
                 rgb_val = ipf_key.orientation2color(data['ori'])
             else:
                 rgb_val = np.zeros((self.npx, 3))
-                rgb_val[self.emap.phase_id == ind, :] = ipf_key.orientation2color(data['ori'])
+                rgb_val[pid == ind, :] = ipf_key.orientation2color(data['ori'])
             data['rgb_im'] = np.reshape(rgb_val, (self.sh_x, self.sh_y, 3))
 
             # generate map with grain labels
@@ -1771,7 +1865,11 @@ class EBSDmap:
 
             # build and visualize graph of unfiltered map
             print('Building microstructure graph.')
-            ms_graph = build_graph_from_labeled_pixels(labels, self.emap, n_ph)
+            if hex_map:
+                rot = quat_g
+            else:
+                rot = self.emap.rotations.data
+            ms_graph = build_graph_from_labeled_pixels(labels, rot, data['cs'], self.dx, self.dy)
             ms_graph.name = 'Graph of microstructure'
             print('Starting to simplify microstructure graph.')
 
@@ -2187,12 +2285,14 @@ class EBSDmap:
         # plot EBSD maps for all phase
         # set pixels of other phases to black
         for data in self.ms_data:
-            fig = self.emap.plot(
+            fig = plt.figure(figsize=(12, 8))
+            plt.imshow(data['rgb_im'].reshape((self.sh_x, self.sh_y, 3)))
+            """fig = self.emap.plot(
                 data['rgb_im'].reshape(self.npx, 3),
                 return_figure=True,
                 figure_kwargs={"figsize": (12, 8)},
-            )
-            fig.show()
+            )"""
+            plt.show()
 
     def plot_grains(self, N=5):
         """
