@@ -805,7 +805,7 @@ def find_orientations_fast(ori1: Orientation, ori2: Orientation, tol: float = 1e
 
 def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
                           grainsfile=None, grains=None, kernel=None, kernel_halfwidth=5,
-                          res_low=5, res_high=25, res_step=2, lim=5, verbose=False):
+                          res_low=5, res_high=25, res_step=2, lim=5, hw_init=None, verbose=False):
     """
     Reconstruct a reduced ODF from EBSD or orientation data
 
@@ -918,7 +918,7 @@ def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
 
     ero = 10.
     e_mod = []
-    hw_stored = None
+    hw_stored = hw_init
     for hw in np.arange(res_low, res_high + res_step, res_step):
         # Step 2: create equispaced grid of orientations
         S3G = get_sample_fundamental(resolution=hw, point_group=cs)  # resolution in degrees! ori.SS not considered
@@ -1002,6 +1002,8 @@ def texture_reconstruction(ns, ebsd=None, ebsdfile=None, orientations=None,
         if len(e_mod) - np.argmin(e_mod) > lim:
             break
     orired_f = orired_f.in_euler_fundamental_region()
+    if verbose:
+        print(f'Final resolution: {res}, reduced HW: {np.degrees(odfred_f.halfwidth)}°')
     return orired_f, odfred_f, ero, res
 
 
@@ -2055,7 +2057,7 @@ class EBSDmap:
         return
 
     def calcORI(self, Ng, iphase=0, shared_area=None, nbins=12,
-                res_low=5, res_high=25, res_step=2, lim=5,
+                res_low=5, res_high=25, res_step=2, lim=5, hw_init=None,
                 verbose=False, full_output=False):
         """
         Estimate optimum kernel half-width and produce reduced set of
@@ -2081,7 +2083,7 @@ class EBSDmap:
         ms = self.ms_data[iphase]
         orired, odfred, ero, res = texture_reconstruction(Ng, orientations=ms['ori'],
                                                           res_low=res_low, res_high=res_high,
-                                                          res_step=res_step, lim=lim,
+                                                          res_step=res_step, lim=lim, hw_init=hw_init,
                                                           verbose=verbose)
 
         if shared_area is None:
@@ -2465,7 +2467,7 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
     ori_red, odfred, ero, res = texture_reconstruction(num, orientations=ori,
                                                    kernel_halfwidth=omega,
                                                    res_low=res_low, res_high=res_high,
-                                                   res_step=res_step, lim=lim,
+                                                   res_step=res_step, lim=lim, hw_init=hw_init,
                                                    verbose=verbose)
     if hist is None:
         if full_output:
