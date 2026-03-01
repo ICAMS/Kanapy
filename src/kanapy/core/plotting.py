@@ -12,10 +12,11 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.gridspec import GridSpec
+from matplotlib.lines import Line2D
+from matplotlib.legend_handler import HandlerTuple
 from scipy.stats import lognorm
 from pathlib import Path
-from typing import Any, Dict, Tuple, Literal, Optional, Mapping
-
+from typing import Any, Dict, Tuple, Optional, Mapping
 
 
 
@@ -1207,6 +1208,321 @@ def plot_stats(
         plt.show()
     return fig
 
+def plot_stats_overlay(
+    stats_data: Dict[str, Any],
+    *,
+    # --- labels (user-facing) ---
+    label_initial: str = "Initial",
+    label_regridded: str = "Regridded",   # e.g. "Cold rolled"
+    # --- figure ---
+    figsize: Tuple[float, float] = (16, 11),
+    n_points_sa: int = 300,
+    n_points_other: int = 600,
+    lw: float = 3.0,
+    # --- Semi-axes appearance ---
+    fill_sa: bool = True,
+    alpha_sa_initial: float = 0.18,
+    alpha_sa_regridded: float = 0.03,
+    alpha_line_initial: float = 1.0,
+    alpha_line_regridded: float = 0.30,
+    # --- Other plots appearance ---
+    fill_other: bool = True,
+    alpha_other_initial: float = 0.12,
+    alpha_other_regridded: float = 0.05,
+    # --- Legend styling ---
+    legend_fancybox: bool = True,         # rounded corners
+    legend_handlelength: float = 4.2,     # longer samples so dashes are visible
+    legend_handletextpad: float = 0.8,
+    legend_borderpad: float = 0.6,
+    show: bool = True,
+) -> plt.Figure:
+    """
+    Plot microstructure statistics as fitted lognormal PDFs with state overlays.
+
+    The function visualizes the distributions of (i) ellipsoidal semi-axes ``a, b, c``,
+    (ii) aspect ratio, and (iii) equivalent diameter for two states (typically
+    an initial microstructure and a processed/regridded snapshot). All curves are
+    plotted as lognormal probability density functions (PDFs) using parameters
+    stored in ``stats_data``.
+
+    Semi-axes readability strategy
+    ------------------------------
+    The semi-axes subplot overlays six curves (3 axes × 2 states). To keep the plot
+    interpretable:
+
+    * Color encodes the semi-axis component (``a``, ``b``, ``c``).
+    * Line style encodes state (solid = ``label_initial``, dashed = ``label_regridded``).
+    * Optional fills under the curves provide an additional separation cue:
+      ``alpha_sa_initial`` is stronger; ``alpha_sa_regridded`` is intentionally
+      small (nearly transparent).
+    * A single legend box is placed in the top-right corner with three rows
+      (``a``, ``b``, ``c``). Each row shows a tuple handle containing both the
+      solid and dashed line samples for the same color. The legend uses rounded
+      corners when ``legend_fancybox=True``.
+
+    Parameters
+    ----------
+    stats_data : dict
+        Statistics container produced by your workflow (e.g.,
+        ``build_and_save_stats_data``). Expected structure::
+
+            stats_data["semi_axes"]["initial"|"regridded"]:
+                { "a_sig", "a_scale", "b_sig", "b_scale", "c_sig", "c_scale",
+                  "xmin_gl", "xmax_gl", ... }
+
+            stats_data["aspect"]["initial"|"regridded"]:
+                { "ar_sig", "ar_scale", "xmin_ar_i"|"xmin_ar_r",
+                  "xmax_ar_i"|"xmax_ar_r", ... }
+
+            stats_data["eq_diam"]["initial"|"regridded"]:
+                { "eqd_sig", "eqd_scale", "xmin_eq_i"|"xmin_eq_r",
+                  "xmax_eq_i"|"xmax_eq_r", ... }
+
+        Only the lognormal parameters and x-range keys are required by this
+        function.
+
+    label_initial : str, optional
+        Display name for the initial state (used in titles/legends), by default
+        ``"Initial"``.
+    label_regridded : str, optional
+        Display name for the second state (e.g. ``"Regridded"``, ``"Cold rolled"``),
+        by default ``"Regridded"``.
+
+    figsize : (float, float), optional
+        Figure size in inches, by default ``(16, 11)``.
+    n_points_sa : int, optional
+        Number of x-samples used to evaluate semi-axis PDFs, by default ``300``.
+    n_points_other : int, optional
+        Number of x-samples used to evaluate aspect ratio and equivalent diameter
+        PDFs, by default ``600``.
+    lw : float, optional
+        Line width for all curves, by default ``3.0``.
+
+    fill_sa : bool, optional
+        If True, fill under the semi-axis curves, by default True.
+    alpha_sa_initial : float, optional
+        Alpha (opacity) for the filled area under initial semi-axis curves.
+        0.0 is fully transparent and 1.0 is opaque, by default ``0.18``.
+    alpha_sa_regridded : float, optional
+        Alpha (opacity) for the filled area under regridded/processed semi-axis
+        curves. Keep small (e.g. 0.0–0.05) to avoid clutter, by default ``0.03``.
+    alpha_line_initial : float, optional
+        Alpha (opacity) for initial lines, by default ``1.0``.
+    alpha_line_regridded : float, optional
+        Alpha (opacity) for regridded/processed dashed lines, by default ``0.30``.
+
+    fill_other : bool, optional
+        If True, fill under aspect ratio and equivalent diameter curves, by default True.
+    alpha_other_initial : float, optional
+        Alpha for fills under initial aspect ratio / eq. diameter curves, by default ``0.12``.
+    alpha_other_regridded : float, optional
+        Alpha for fills under regridded/processed aspect ratio / eq. diameter curves,
+        by default ``0.05``.
+
+    legend_fancybox : bool, optional
+        If True, use rounded legend corners, by default True.
+    legend_handlelength : float, optional
+        Length of legend line samples. Increase this to make dashes more visible,
+        by default ``4.2``.
+    legend_handletextpad : float, optional
+        Spacing between handle and text in the legend, by default ``0.8``.
+    legend_borderpad : float, optional
+        Padding inside the legend frame, by default ``0.6``.
+
+    show : bool, optional
+        If True, calls ``plt.show()`` before returning, by default True.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated Matplotlib figure. The caller may further customize, save,
+        or close it.
+
+    Notes
+    -----
+    * Aspect ratio is dimensionless and is labeled as ``(-)``.
+    * The x-ranges for each metric are chosen as the global min/max across both
+      states to enable fair comparisons.
+
+    Examples
+    --------
+    Basic usage with custom label for the second state::
+
+        fig = plot_stats_overlay(
+            stats_data,
+            label_regridded="Cold rolled",
+            alpha_line_regridded=0.20,
+            alpha_sa_regridded=0.01,
+            legend_handlelength=5.0,
+            show=True,
+        )
+        fig.savefig("figures/stats_overlay.png", dpi=250, bbox_inches="tight")
+    """
+    sa_i = stats_data["semi_axes"]["initial"]
+    sa_r = stats_data["semi_axes"]["regridded"]
+    ar_i = stats_data["aspect"]["initial"]
+    ar_r = stats_data["aspect"]["regridded"]
+    eq_i = stats_data["eq_diam"]["initial"]
+    eq_r = stats_data["eq_diam"]["regridded"]
+
+    # -----------------------------
+    # Global x-ranges for fair comparisons
+    # -----------------------------
+    xmin_sa = float(min(sa_i.get("xmin_gl"), sa_r.get("xmin_gl")))
+    xmax_sa = float(max(sa_i.get("xmax_gl"), sa_r.get("xmax_gl")))
+
+    xmin_ar = float(min(ar_i.get("xmin_ar_i"), ar_r.get("xmin_ar_r")))
+    xmax_ar = float(max(ar_i.get("xmax_ar_i"), ar_r.get("xmax_ar_r")))
+
+    xmin_eq = float(min(eq_i.get("xmin_eq_i"), eq_r.get("xmin_eq_r")))
+    xmax_eq = float(max(eq_i.get("xmax_eq_i"), eq_r.get("xmax_eq_r")))
+
+    # -----------------------------
+    # Layout
+    # -----------------------------
+    fig = plt.figure(figsize=figsize, constrained_layout=True)
+    gs = GridSpec(nrows=3, ncols=1, figure=fig, hspace=0.38)
+
+    ax_sa = fig.add_subplot(gs[0, 0])
+    ax_ar = fig.add_subplot(gs[1, 0])
+    ax_eq = fig.add_subplot(gs[2, 0])
+
+    # =========================================================
+    # 1) Semi-axes (a,b,c)
+    # =========================================================
+    x_sa = np.linspace(xmin_sa, xmax_sa, n_points_sa, endpoint=True)
+
+    axis_colors: Dict[str, str] = {}
+    max_pdf_sa = 0.0
+
+    # Initial: solid + stronger fill
+    for key in ("a", "b", "c"):
+        sig = float(sa_i[f"{key}_sig"])
+        scl = float(sa_i[f"{key}_scale"])
+        y = lognorm.pdf(x_sa, sig, loc=0.0, scale=scl)
+
+        line_i, = ax_sa.plot(
+            x_sa, y,
+            linewidth=lw,
+            linestyle="-",
+            alpha=alpha_line_initial,
+        )
+        axis_colors[key] = line_i.get_color()
+
+        if fill_sa and alpha_sa_initial > 0:
+            ax_sa.fill_between(x_sa, y, alpha=alpha_sa_initial, color=axis_colors[key])
+
+        max_pdf_sa = max(max_pdf_sa, float(np.max(y)))
+
+    # Regridded-like: dashed + transparent fill + transparent line
+    for key in ("a", "b", "c"):
+        sig = float(sa_r[f"{key}_sig"])
+        scl = float(sa_r[f"{key}_scale"])
+        y = lognorm.pdf(x_sa, sig, loc=0.0, scale=scl)
+
+        ax_sa.plot(
+            x_sa, y,
+            linewidth=lw,
+            linestyle="--",
+            color=axis_colors[key],
+            alpha=alpha_line_regridded,
+        )
+
+        if fill_sa and alpha_sa_regridded > 0:
+            ax_sa.fill_between(
+                x_sa, y,
+                alpha=alpha_sa_regridded,
+                color=axis_colors[key],
+            )
+
+        max_pdf_sa = max(max_pdf_sa, float(np.max(y)))
+
+    ax_sa.set_title(f"Semi-axes (a, b, c) — {label_initial} vs {label_regridded}", fontsize=16)
+    ax_sa.set_xlabel("Length of semi-axis (μm)", fontsize=14)
+    ax_sa.set_ylabel("Density", fontsize=14)
+    ax_sa.tick_params(labelsize=12)
+    ax_sa.set_xlim(xmin_sa, xmax_sa)
+    ax_sa.set_ylim(0.0, 1.05 * max_pdf_sa)
+
+    # --- Single legend box (top-right): a/b/c each shows (solid, dashed) ---
+    handles = []
+    labels = []
+    for key in ("a", "b", "c"):
+        col = axis_colors[key]
+        h_init = Line2D([0], [0], color=col, lw=lw, linestyle="-",  alpha=alpha_line_initial)
+        h_reg  = Line2D([0], [0], color=col, lw=lw, linestyle="--", alpha=alpha_line_regridded)
+        handles.append((h_init, h_reg))
+        labels.append(key)
+
+    ax_sa.legend(
+        handles=handles,
+        labels=labels,
+        title=f"Semi-axis (solid={label_initial}, dashed={label_regridded})",
+        loc="upper right",
+        fontsize=11,
+        title_fontsize=11,
+        frameon=True,
+        fancybox=legend_fancybox,          # rounded corners
+        handlelength=legend_handlelength,  # make dashes obvious
+        handletextpad=legend_handletextpad,
+        borderpad=legend_borderpad,
+        handler_map={tuple: HandlerTuple(ndivide=None, pad=0.9)},
+    )
+
+    # =========================================================
+    # 2) Aspect ratio
+    # =========================================================
+    x_ar = np.linspace(xmin_ar, xmax_ar, n_points_other, endpoint=True)
+    y_ar_i = lognorm.pdf(x_ar, float(ar_i["ar_sig"]), loc=0.0, scale=float(ar_i["ar_scale"]))
+    y_ar_r = lognorm.pdf(x_ar, float(ar_r["ar_sig"]), loc=0.0, scale=float(ar_r["ar_scale"]))
+    max_pdf_ar = max(float(np.max(y_ar_i)), float(np.max(y_ar_r)))
+
+    ax_ar.plot(x_ar, y_ar_i, linewidth=lw, linestyle="-",  label=label_initial,  alpha=alpha_line_initial)
+    ax_ar.plot(x_ar, y_ar_r, linewidth=lw, linestyle="--", label=label_regridded, alpha=alpha_line_regridded)
+
+    if fill_other:
+        if alpha_other_initial > 0:
+            ax_ar.fill_between(x_ar, y_ar_i, alpha=alpha_other_initial)
+        if alpha_other_regridded > 0:
+            ax_ar.fill_between(x_ar, y_ar_r, alpha=alpha_other_regridded)
+
+    ax_ar.set_title(f"Aspect ratio — {label_initial} vs {label_regridded}", fontsize=16)
+    ax_ar.set_xlabel("Aspect ratio (-)", fontsize=14)
+    ax_ar.set_ylabel("Density", fontsize=14)
+    ax_ar.tick_params(labelsize=12)
+    ax_ar.set_xlim(xmin_ar, xmax_ar)
+    ax_ar.set_ylim(0.0, 1.05 * max_pdf_ar)
+    ax_ar.legend(loc="upper right", fontsize=11, frameon=True, fancybox=legend_fancybox)
+
+    # =========================================================
+    # 3) Equivalent diameter
+    # =========================================================
+    x_eq = np.linspace(xmin_eq, xmax_eq, n_points_other, endpoint=True)
+    y_eq_i = lognorm.pdf(x_eq, float(eq_i["eqd_sig"]), loc=0.0, scale=float(eq_i["eqd_scale"]))
+    y_eq_r = lognorm.pdf(x_eq, float(eq_r["eqd_sig"]), loc=0.0, scale=float(eq_r["eqd_scale"]))
+    max_pdf_eq = max(float(np.max(y_eq_i)), float(np.max(y_eq_r)))
+
+    ax_eq.plot(x_eq, y_eq_i, linewidth=lw, linestyle="-",  label=label_initial,  alpha=alpha_line_initial)
+    ax_eq.plot(x_eq, y_eq_r, linewidth=lw, linestyle="--", label=label_regridded, alpha=alpha_line_regridded)
+
+    if fill_other:
+        if alpha_other_initial > 0:
+            ax_eq.fill_between(x_eq, y_eq_i, alpha=alpha_other_initial)
+        if alpha_other_regridded > 0:
+            ax_eq.fill_between(x_eq, y_eq_r, alpha=alpha_other_regridded)
+
+    ax_eq.set_title(f"Equivalent diameter — {label_initial} vs {label_regridded}", fontsize=16)
+    ax_eq.set_xlabel("Equivalent diameter (μm)", fontsize=14)
+    ax_eq.set_ylabel("Density", fontsize=14)
+    ax_eq.tick_params(labelsize=12)
+    ax_eq.set_xlim(xmin_eq, xmax_eq)
+    ax_eq.set_ylim(0.0, 1.05 * max_pdf_eq)
+    ax_eq.legend(loc="upper right", fontsize=11, frameon=True, fancybox=legend_fancybox, borderpad=0.5)
+
+    if show:
+        plt.show()
+
+    return fig
 
 def plot_mean_ellipsoids_from_stats(
     stats_data: Mapping[str, Any],
