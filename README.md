@@ -5,7 +5,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ICAMS/Kanapy.git/HEAD?urlpath=%2Fdoc%2Ftree%2Findex.ipynb)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/kanapy/badges/downloads.svg)](https://anaconda.org/conda-forge/kanapy)
 
-# Kanapy
+![](docs/figs/kanapy_logo_web.png)
 
 ### Python tool for microstructure analysis and generation of 3D microstructure models
 
