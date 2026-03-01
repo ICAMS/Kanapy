@@ -488,7 +488,7 @@ class Microstructure(object):
             self.mesh.grain_phase_dict[0] = grain_store
 
     def generate_orientations(self, data, ang=None, omega=None, Nbase=5000,
-                              hist=None, shared_area=None, iphase=None, verbose=False):
+                              hist=None, shared_area=None, iphase=None, verbose=False, **kwargs):
         """
         Generate orientations for grains in a representative volume element (RVE)
         to achieve a desired crystallographic texture
@@ -580,10 +580,12 @@ class Microstructure(object):
             if isinstance(data, EBSDmap):
                 if iphase is None or iphase == ip:
                     if gba is not None and not MTEX:
-                        logging.warning('Shared are is currently only available in kanapy-mtex.\n'
+                        logging.warning('Shared GB area (option: gba) is currently only available in kanapy-mtex.\n'
                                         'This option will be ignored.')
                         gba = None
-                    ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba)
+                    allowed = ["res_low", "res_high", "res_step", "lim", "hw_init"]
+                    ori_kwargs = {k: v for k, v in kwargs.items() if k in allowed}
+                    ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba, verbose=verbose, **ori_kwargs)
                     self.mesh.texture = "ODF"
             elif isinstance(data, str):
                 if data.lower() in ['random', 'rnd']:
