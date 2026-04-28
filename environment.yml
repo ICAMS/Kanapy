@@ -9,7 +9,7 @@ dependencies:
   - matplotlib
   - jupyter
   - jupyterlab
-  - nb_conda_kernels
+  - notebook
   - pytest
   - pytest-mock
   - pytest-cov
@@ -23,6 +23,4 @@ dependencies:
   - scikit-image
   - networkx
   - jsonschema
-  - damask
-  - pyiron_workflow
 
