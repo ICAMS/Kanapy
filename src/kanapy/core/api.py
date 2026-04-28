@@ -1292,9 +1292,7 @@ class Microstructure(object):
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
                   dual_phase=False, thermal=False, units=None, ialloy=None, nsdv=200, crystal_plasticity=False,
-                  phase_props=None,
-                  *,
-                  boundary_conditions: Optional[Dict[str, Any]] = None):
+                  phase_props=None, boundary_conditions: Optional[Dict[str, Any]] = None):
         """
         Write the Abaqus input deck (.inp) for the generated RVE
 
@@ -1432,7 +1430,7 @@ class Microstructure(object):
                 "apply_bc": False,
                 "periodic_bc": self.rve.periodic,
                 "type_bc": "displacement",
-                "components_bc": ['', '', '', '', '', '*'],
+                "components_bc": ['*', '*', '*', '*', '*', '*'],
             }
         elif isinstance(boundary_conditions, dict):
                 # check consistency of PBC with RVE-type
@@ -1455,8 +1453,9 @@ class Microstructure(object):
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
                       thermal=thermal,
-                      crystal_plasticity = crystal_plasticity,
-                      phase_props = phase_props, boundary_conditions = boundary_conditions)
+                      crystal_plasticity=crystal_plasticity,
+                      phase_props=phase_props,
+                      boundary_conditions=boundary_conditions)
 
         # if orientations exist and ialloy is defined also write material file with Euler angles
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
@@ -2240,7 +2239,7 @@ class Microstructure(object):
                     "Description": 'Node list per voxel',
                     "Type": 'int',
                     "Shape": (len(self.mesh.voxel_dict.keys()), 8),
-                    "Values": [int(val) for val in self.mesh.voxel_dict.values()],
+                    "Values": [val for val in self.mesh.voxel_dict.values()],
                 }
             }
 
@@ -2250,13 +2249,38 @@ class Microstructure(object):
         return
 
     def write_data(self,
-                         user_metadata: Optional[Dict[str, Any]] = None,
-                         boundary_condition: Optional[Dict[str, Any]] = None,
-                         phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
-                         interactive: bool = True,
-                         structured: bool = True,
-                         ialloy: int = 1,
-                         length_unit: str = 'µm') -> dict:
+                  file: str | None = None,
+                  user_metadata: Optional[Dict[str, Any]] = None,
+                  boundary_condition: Optional[Dict[str, Any]] = None,
+                  phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
+                  interactive: bool = False,
+                  structured: bool = True,
+                  ialloy: int = 1,
+                  length_unit: str = 'µm'):
+        if file is None:
+            if self.name == 'Microstructure':
+                file = f'px_{self.Ngr}grains_voxels.json'
+            else:
+                file = self.name + '_.json'
+        data = self.generate_data(
+            user_metadata=user_metadata,
+            boundary_condition=boundary_condition,
+            phases=phases,
+            interactive=interactive,
+            structured=structured,
+            ialloy=ialloy,
+            length_unit=length_unit)
+        with open(file, 'w') as fp:
+            json.dump(data, fp)
+
+    def generate_data(self,
+                      user_metadata: Optional[Dict[str, Any]] = None,
+                      boundary_condition: Optional[Dict[str, Any]] = None,
+                      phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
+                      interactive: bool = True,
+                      structured: bool = True,
+                      ialloy: int = 1,
+                      length_unit: str = 'µm') -> dict:
 
         """
         Generate a JSON-compatible data schema containing user, system, and job-specific elements

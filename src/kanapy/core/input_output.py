@@ -151,7 +151,6 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
                   gb_area=None, dual_phase=False, thermal=False,
                   ialloy=None, grain_phase_dict=None,
                   crystal_plasticity=False, phase_props=None,
-                  *,
                   boundary_conditions: Optional[Dict[str, Any]] = None):
     """
     Create an ABAQUS input file with microstructure morphology information including nodes, elements, and element sets
@@ -427,16 +426,16 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
                 'x' : ('F1yz', 1, 'disX' ),
                 'y' : ('Fx1z', 2, 'disY' ),
                 'z':  ('Fxy1', 3, 'disZ' ),
-                'xy': ('Fx1z', 1, 'disXY'),
-                'xz': ('F1yz', 3, 'disXZ'),
-                'yz': ('Fxy1', 2, 'disYZ'),
+                'xy': ('Fx1z', 1, 'shearXY'),
+                'xz': ('F1yz', 3, 'shearXZ'),
+                'yz': ('Fxy1', 2, 'shearYZ'),
             }
             direction = loading_direction.lower()
-            if direction in displacement_bc_map:
+            if direction in displacement_bc_map.keys():
                 set_name, dof, bc_name = displacement_bc_map[direction]
                 # dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,
                 vstrain = float(mag)
-                true_strain = vstrain - 1.0  # ε = 0.2 for provided value =1.2
+                true_strain = vstrain   # ε = 0.2 for provided value =0.2
                 displacement = edge_lengths[direction] * (np.exp(true_strain) - 1.0)  # Logarithmic strain
                 print(
                     f"Applied component: {direction}, "
@@ -600,12 +599,17 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
             t = str(type_bc).strip().lower()
             if t in ("stress", "force"):
                 load_type = "stress"
+                if t == 'force':
+                    logging.warning('Argument "force" will be interpreted as stress.')
             elif t in ("strain", "displacement"):
                 load_type = "strain"
+                if t == 'displacement':
+                    logging.warning('Argument "displacement" will be interpreted as strain.')
             else:
-                raise ValueError("type_bc must be one of: 'stress'|'force'|'strain'|'displacement'.")
+                raise ValueError("type_bc must be one of: 'stress'|'strain'.")
         else:
             load_type = "strain" if any(v == '*' for v in components_bc) else "stress"
+            logging.warning(f'load_type not specified, assuming {load_type}.')
 
         # Validate + extract idx & magnitude
         if load_type == "strain":
@@ -1508,21 +1512,6 @@ def writeAbaqusMat(ialloy, angles,
     return
 
 
-""" Function not used
-def writeAbaqusPhase(grains, nsdv=200):
-    with open('Material.inp', 'w') as f:
-        f.write('** MATERIALS\n')
-        f.write('**\n')
-        for i in range(len(grains)):
-            f.write('*Material, name=GRAIN{}_mat\n'.format(i + 1))
-            f.write('*Depvar\n')
-            f.write('    {}\n'.format(nsdv))
-            f.write('*User Material, constants=1\n')
-            f.write('{}\n'.format(float(grains[i + 1]['PhaseID'])))
-    return
-"""
-
-
 def pickle2microstructure(file, path='./'):
     """
     Load a pickled microstructure object from disk.
@@ -1642,6 +1631,8 @@ def import_voxels(file, path='./'):
         phase_vf = np.zeros(nphases)
         ngrain = np.zeros(nphases, dtype=int)
         for igr in gr_numbers:
+            if igr == 0:
+                continue  # Grain 0 is reserved for matrix phase / unidentified phases
             ind = np.nonzero(gr_arr == igr)[0]
             nv = len(ind)
             ip = data['Grains'][str(igr)]['Phase']
