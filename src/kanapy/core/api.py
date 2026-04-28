@@ -1427,6 +1427,21 @@ class Microstructure(object):
             grpd = self.mesh.grain_phase_dict
         else:
             grpd = None
+        if boundary_conditions is None:
+            boundary_conditions = {
+                "apply_bc": False,
+                "periodic_bc": self.rve.periodic,
+                "type_bc": "displacement",
+                "components_bc": ['', '', '', '', '', '*'],
+            }
+        elif isinstance(boundary_conditions, dict):
+                # check consistency of PBC with RVE-type
+                periodic = self.rve.periodic
+                periodicBC = boundary_conditions["periodic_bc"]
+                if not periodic and periodicBC:
+                    raise ValueError("Periodic boundary conditions cannot be applied to a non-periodic RVE.")
+        else:
+            raise TypeError('Boundary conditions must be a dictionary.')
         if file is None:
             if self.name == 'Microstructure':
                 file = nct + ntag + '_geom.inp'
@@ -1434,11 +1449,6 @@ class Microstructure(object):
                 file = self.name + ntag + '_geom.inp'
         path = os.path.normpath(path)
         file = os.path.join(path, file)
-        periodic = self.rve.periodic
-
-        periodicBC = boundary_conditions["periodic_bc"]
-        if not periodic and periodicBC:
-            raise ValueError("Periodic boundary conditions cannot be applied to a non-periodic RVE.")
 
         export2abaqus(nodes, file, grain_dict, voxel_dict,
                       units=units, gb_area=faces,
