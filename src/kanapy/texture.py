@@ -1702,8 +1702,11 @@ class EBSDmap:
         # determine number of phases and generate histogram
         phs = self.emap.phases.ids
         Nphase = len(phs)  # number of phases
-        phist = np.histogram(self.emap.phase_id, Nphase)
         offs = 0 if 0 in phs else 1  # in CTX maps, there is no phase "0"
+        if '.ctf' in fname.lower():
+            phist = np.histogram(self.emap.phase_id, Nphase + offs)
+        else:
+            phist = np.histogram(self.emap.phase_id, Nphase)
         print(f'Imported EBSD map with {Nphase} phases.')
         if self.sh_x * self.sh_y != self.npx:
             #if self.sh_x * self.sh_y != self.npx * 2:
