@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.core.input_output &mdash; kanapy 6.5.3.post1 documentation</title>
+  <title>kanapy.core.input_output &mdash; kanapy 6.5.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=53ab5b41"></script>
+      <script src="../../../_static/documentation_options.js?v=8315fef2"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -82,7 +82,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.entities</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ellipsoid</span><span class="p">,</span> <span class="n">Cuboid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.initializations</span><span class="w"> </span><span class="kn">import</span> <span class="n">NodeSets</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 
 
 <div class="viewcode-block" id="write_dump">
@@ -236,7 +236,6 @@
                   <span class="n">gb_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">ialloy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grain_phase_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">crystal_plasticity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">phase_props</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="o">*</span><span class="p">,</span>
                   <span class="n">boundary_conditions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create an ABAQUS input file with microstructure morphology information including nodes, elements, and element sets</span>
@@ -512,16 +511,16 @@
                 <span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;F1yz&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;disX&#39;</span> <span class="p">),</span>
                 <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fx1z&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;disY&#39;</span> <span class="p">),</span>
                 <span class="s1">&#39;z&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="s1">&#39;Fxy1&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;disZ&#39;</span> <span class="p">),</span>
-                <span class="s1">&#39;xy&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fx1z&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;disXY&#39;</span><span class="p">),</span>
-                <span class="s1">&#39;xz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;F1yz&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;disXZ&#39;</span><span class="p">),</span>
-                <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fxy1&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;disYZ&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;xy&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fx1z&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;shearXY&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;xz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;F1yz&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;shearXZ&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;yz&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Fxy1&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;shearYZ&#39;</span><span class="p">),</span>
             <span class="p">}</span>
             <span class="n">direction</span> <span class="o">=</span> <span class="n">loading_direction</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">displacement_bc_map</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">displacement_bc_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="n">set_name</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">bc_name</span> <span class="o">=</span> <span class="n">displacement_bc_map</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span>
                 <span class="c1"># dof=1→X, 2→Y, 3→Z, 4→XY, 5→XZ, 6→YZ,</span>
                 <span class="n">vstrain</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">mag</span><span class="p">)</span>
-                <span class="n">true_strain</span> <span class="o">=</span> <span class="n">vstrain</span> <span class="o">-</span> <span class="mf">1.0</span>  <span class="c1"># ε = 0.2 for provided value =1.2</span>
+                <span class="n">true_strain</span> <span class="o">=</span> <span class="n">vstrain</span>   <span class="c1"># ε = 0.2 for provided value =0.2</span>
                 <span class="n">displacement</span> <span class="o">=</span> <span class="n">edge_lengths</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">true_strain</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># Logarithmic strain</span>
                 <span class="nb">print</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Applied component: </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2">, &quot;</span>
@@ -685,12 +684,17 @@
             <span class="n">t</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">type_bc</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;stress&quot;</span><span class="p">,</span> <span class="s2">&quot;force&quot;</span><span class="p">):</span>
                 <span class="n">load_type</span> <span class="o">=</span> <span class="s2">&quot;stress&quot;</span>
+                <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="s1">&#39;force&#39;</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Argument &quot;force&quot; will be interpreted as stress.&#39;</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;strain&quot;</span><span class="p">,</span> <span class="s2">&quot;displacement&quot;</span><span class="p">):</span>
                 <span class="n">load_type</span> <span class="o">=</span> <span class="s2">&quot;strain&quot;</span>
+                <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="s1">&#39;displacement&#39;</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Argument &quot;displacement&quot; will be interpreted as strain.&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;type_bc must be one of: &#39;stress&#39;|&#39;force&#39;|&#39;strain&#39;|&#39;displacement&#39;.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;type_bc must be one of: &#39;stress&#39;|&#39;strain&#39;.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">load_type</span> <span class="o">=</span> <span class="s2">&quot;strain&quot;</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">components_bc</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;stress&quot;</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;load_type not specified, assuming </span><span class="si">{</span><span class="n">load_type</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
 
         <span class="c1"># Validate + extract idx &amp; magnitude</span>
         <span class="k">if</span> <span class="n">load_type</span> <span class="o">==</span> <span class="s2">&quot;strain&quot;</span><span class="p">:</span>
@@ -1401,7 +1405,7 @@
                 <span class="c1"># no inline props → include from file</span>
                 <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
                     <span class="c1"># per‐phase file for each pid</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**Include, input=Material</span><span class="si">{}</span><span class="s1">.inp</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Include, input=Material</span><span class="si">{}</span><span class="s1">.inp</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pid</span><span class="p">))</span>
                     <span class="n">did_include</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="c1"># else: defer the single‐file include until after the loop</span>
 
@@ -1411,7 +1415,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">dual_phase</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">did_include</span><span class="p">:</span>
             <span class="c1"># strip off last 8 chars (e.g. “_mesh.inp”) and append “mat.inp”</span>
             <span class="n">base</span> <span class="o">=</span> <span class="n">file</span><span class="p">[:</span><span class="o">-</span><span class="mi">8</span><span class="p">]</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**Include, input=</span><span class="si">{}</span><span class="s1">mat.inp</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*Include, input=</span><span class="si">{}</span><span class="s1">mat.inp</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base</span><span class="p">))</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;**</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Previous Material Section</span>
@@ -1597,21 +1601,6 @@
 
 
 
-<span class="sd">&quot;&quot;&quot; Function not used</span>
-<span class="sd">def writeAbaqusPhase(grains, nsdv=200):</span>
-<span class="sd">    with open(&#39;Material.inp&#39;, &#39;w&#39;) as f:</span>
-<span class="sd">        f.write(&#39;** MATERIALS\n&#39;)</span>
-<span class="sd">        f.write(&#39;**\n&#39;)</span>
-<span class="sd">        for i in range(len(grains)):</span>
-<span class="sd">            f.write(&#39;*Material, name=GRAIN{}_mat\n&#39;.format(i + 1))</span>
-<span class="sd">            f.write(&#39;*Depvar\n&#39;)</span>
-<span class="sd">            f.write(&#39;    {}\n&#39;.format(nsdv))</span>
-<span class="sd">            f.write(&#39;*User Material, constants=1\n&#39;)</span>
-<span class="sd">            f.write(&#39;{}\n&#39;.format(float(grains[i + 1][&#39;PhaseID&#39;])))</span>
-<span class="sd">    return</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-
 <div class="viewcode-block" id="pickle2microstructure">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.input_output.pickle2microstructure">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">pickle2microstructure</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
@@ -1736,6 +1725,8 @@
         <span class="n">phase_vf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nphases</span><span class="p">)</span>
         <span class="n">ngrain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nphases</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">igr</span> <span class="ow">in</span> <span class="n">gr_numbers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">igr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>  <span class="c1"># Grain 0 is reserved for matrix phase / unidentified phases</span>
             <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">gr_arr</span> <span class="o">==</span> <span class="n">igr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">nv</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
             <span class="n">ip</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">][</span><span class="nb">str</span><span class="p">(</span><span class="n">igr</span><span class="p">)][</span><span class="s1">&#39;Phase&#39;</span><span class="p">]</span>

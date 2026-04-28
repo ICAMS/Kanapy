@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.core.api &mdash; kanapy 6.5.3.post1 documentation</title>
+  <title>kanapy.core.api &mdash; kanapy 6.5.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=53ab5b41"></script>
+      <script src="../../../_static/documentation_options.js?v=8315fef2"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -88,11 +88,11 @@
 <span class="sd">Institution: ICAMS, Ruhr University Bochum</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">orix</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
@@ -584,7 +584,7 @@
 <div class="viewcode-block" id="Microstructure.generate_orientations">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.generate_orientations">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_orientations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ang</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Nbase</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-                              <span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                              <span class="n">hist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate orientations for grains in a representative volume element (RVE)</span>
 <span class="sd">        to achieve a desired crystallographic texture</span>
@@ -676,10 +676,12 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">EBSDmap</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">iphase</span> <span class="o">==</span> <span class="n">ip</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">gba</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">MTEX</span><span class="p">:</span>
-                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Shared are is currently only available in kanapy-mtex.</span><span class="se">\n</span><span class="s1">&#39;</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Shared GB area (option: gba) is currently only available in kanapy-mtex.</span><span class="se">\n</span><span class="s1">&#39;</span>
                                         <span class="s1">&#39;This option will be ignored.&#39;</span><span class="p">)</span>
                         <span class="n">gba</span> <span class="o">=</span> <span class="kc">None</span>
-                    <span class="n">ori_rve</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">calcORI</span><span class="p">(</span><span class="n">ngr</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">ip</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="n">gba</span><span class="p">)</span>
+                    <span class="n">allowed</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;res_low&quot;</span><span class="p">,</span> <span class="s2">&quot;res_high&quot;</span><span class="p">,</span> <span class="s2">&quot;res_step&quot;</span><span class="p">,</span> <span class="s2">&quot;lim&quot;</span><span class="p">,</span> <span class="s2">&quot;hw_init&quot;</span><span class="p">]</span>
+                    <span class="n">ori_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">}</span>
+                    <span class="n">ori_rve</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">calcORI</span><span class="p">(</span><span class="n">ngr</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">ip</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="n">gba</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">ori_kwargs</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">texture</span> <span class="o">=</span> <span class="s2">&quot;ODF&quot;</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="s1">&#39;rnd&#39;</span><span class="p">]:</span>
@@ -1410,9 +1412,7 @@
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.write_abq">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_abq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">grain_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">dual_phase</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">thermal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ialloy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">crystal_plasticity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                  <span class="n">phase_props</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="o">*</span><span class="p">,</span>
-                  <span class="n">boundary_conditions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+                  <span class="n">phase_props</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write the Abaqus input deck (.inp) for the generated RVE</span>
 
@@ -1478,15 +1478,11 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; # Write voxelized RVE input deck with default settings</span>
-<span class="sd">        &gt;&gt;&gt; abq_file = rve.write_abq(nodes=&#39;voxels&#39;)</span>
+<span class="sd">        Write voxelized RVE input deck with default settings</span>
+<span class="sd">        abq_file = rve.write_abq(nodes=&#39;voxels&#39;)</span>
 
-<span class="sd">        &gt;&gt;&gt; # Write smoothened RVE deck for dual-phase material</span>
-<span class="sd">        &gt;&gt;&gt; abq_file = rve.write_abq(nodes=&#39;smooth&#39;, dual_phase=True, ialloy=alloy_list)</span>
-
-<span class="sd">        &gt;&gt;&gt; # Include boundary conditions</span>
-<span class="sd">        &gt;&gt;&gt; bc = {&#39;ux&#39;: [0, 0.1], &#39;uy&#39;: [0, 0.1]}</span>
-<span class="sd">        &gt;&gt;&gt; abq_file = rve.write_abq(nodes=&#39;voxels&#39;, boundary_conditions=bc)</span>
+<span class="sd">        # Write smoothened RVE deck for dual-phase material</span>
+<span class="sd">        abq_file = rve.write_abq(nodes=&#39;smooth&#39;, dual_phase=True, ialloy=alloy_list)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nodes_smooth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;GBarea&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -1549,6 +1545,21 @@
             <span class="n">grpd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">grpd</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">boundary_conditions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">boundary_conditions</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;apply_bc&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;periodic_bc&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">periodic</span><span class="p">,</span>
+                <span class="s2">&quot;type_bc&quot;</span><span class="p">:</span> <span class="s2">&quot;displacement&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;components_bc&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">],</span>
+            <span class="p">}</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">boundary_conditions</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="c1"># check consistency of PBC with RVE-type</span>
+                <span class="n">periodic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">periodic</span>
+                <span class="n">periodicBC</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;periodic_bc&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">periodic</span> <span class="ow">and</span> <span class="n">periodicBC</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Periodic boundary conditions cannot be applied to a non-periodic RVE.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Boundary conditions must be a dictionary.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Microstructure&#39;</span><span class="p">:</span>
                 <span class="n">file</span> <span class="o">=</span> <span class="n">nct</span> <span class="o">+</span> <span class="n">ntag</span> <span class="o">+</span> <span class="s1">&#39;_geom.inp&#39;</span>
@@ -1556,18 +1567,15 @@
                 <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="n">ntag</span> <span class="o">+</span> <span class="s1">&#39;_geom.inp&#39;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
-        <span class="n">periodic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">periodic</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">periodic</span> <span class="ow">and</span> <span class="n">periodicBC</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Periodic boundary conditions cannot be applied to a non-periodic RVE.&quot;</span><span class="p">)</span>
 
         <span class="n">export2abaqus</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">grain_dict</span><span class="p">,</span> <span class="n">voxel_dict</span><span class="p">,</span>
                       <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="n">gb_area</span><span class="o">=</span><span class="n">faces</span><span class="p">,</span>
                       <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span>
                       <span class="n">ialloy</span><span class="o">=</span><span class="n">ialloy</span><span class="p">,</span> <span class="n">grain_phase_dict</span><span class="o">=</span><span class="n">grpd</span><span class="p">,</span>
                       <span class="n">thermal</span><span class="o">=</span><span class="n">thermal</span><span class="p">,</span>
-                      <span class="n">crystal_plasticity</span> <span class="o">=</span> <span class="n">crystal_plasticity</span><span class="p">,</span>
-                      <span class="n">phase_props</span> <span class="o">=</span> <span class="n">phase_props</span><span class="p">,</span> <span class="n">boundary_conditions</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">)</span>
+                      <span class="n">crystal_plasticity</span><span class="o">=</span><span class="n">crystal_plasticity</span><span class="p">,</span>
+                      <span class="n">phase_props</span><span class="o">=</span><span class="n">phase_props</span><span class="p">,</span>
+                      <span class="n">boundary_conditions</span><span class="o">=</span><span class="n">boundary_conditions</span><span class="p">)</span>
 
         <span class="c1"># if orientations exist and ialloy is defined also write material file with Euler angles</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ialloy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
@@ -2372,7 +2380,7 @@
                     <span class="s2">&quot;Description&quot;</span><span class="p">:</span> <span class="s1">&#39;Node list per voxel&#39;</span><span class="p">,</span>
                     <span class="s2">&quot;Type&quot;</span><span class="p">:</span> <span class="s1">&#39;int&#39;</span><span class="p">,</span>
                     <span class="s2">&quot;Shape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">voxel_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="mi">8</span><span class="p">),</span>
-                    <span class="s2">&quot;Values&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">voxel_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span>
+                    <span class="s2">&quot;Values&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">voxel_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span>
                 <span class="p">}</span>
             <span class="p">}</span>
 
@@ -2382,16 +2390,44 @@
         <span class="k">return</span></div>
 
 
-<div class="viewcode-block" id="Microstructure.write_dataSchema">
-<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.write_dataSchema">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">write_dataSchema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                         <span class="n">user_metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                         <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                         <span class="n">phases</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                         <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-                         <span class="n">structured</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-                         <span class="n">ialloy</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-                         <span class="n">length_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;µm&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<div class="viewcode-block" id="Microstructure.write_data">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.write_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">user_metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">phases</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                  <span class="n">structured</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                  <span class="n">ialloy</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                  <span class="n">length_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;µm&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Microstructure&#39;</span><span class="p">:</span>
+                <span class="n">file</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;px_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Ngr</span><span class="si">}</span><span class="s1">grains_voxels.json&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_.json&#39;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_data</span><span class="p">(</span>
+            <span class="n">user_metadata</span><span class="o">=</span><span class="n">user_metadata</span><span class="p">,</span>
+            <span class="n">boundary_condition</span><span class="o">=</span><span class="n">boundary_condition</span><span class="p">,</span>
+            <span class="n">phases</span><span class="o">=</span><span class="n">phases</span><span class="p">,</span>
+            <span class="n">interactive</span><span class="o">=</span><span class="n">interactive</span><span class="p">,</span>
+            <span class="n">structured</span><span class="o">=</span><span class="n">structured</span><span class="p">,</span>
+            <span class="n">ialloy</span><span class="o">=</span><span class="n">ialloy</span><span class="p">,</span>
+            <span class="n">length_unit</span><span class="o">=</span><span class="n">length_unit</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Microstructure.generate_data">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.api.Microstructure.generate_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">user_metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                      <span class="n">boundary_condition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                      <span class="n">phases</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                      <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                      <span class="n">structured</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                      <span class="n">ialloy</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                      <span class="n">length_unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;µm&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a JSON-compatible data schema containing user, system, and job-specific elements</span>
@@ -2438,6 +2474,8 @@
             <span class="n">length_scale</span> <span class="o">=</span> <span class="mf">1.0</span>
         <span class="k">elif</span> <span class="n">length_unit</span> <span class="o">==</span> <span class="s1">&#39;mm&#39;</span><span class="p">:</span>
             <span class="n">length_scale</span> <span class="o">=</span> <span class="mf">1e-3</span>
+        <span class="k">elif</span> <span class="n">length_unit</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+            <span class="n">length_scale</span> <span class="o">=</span> <span class="mf">1e-6</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;length_unit must be &#39;µm&#39; or &#39;mm&#39;&quot;</span><span class="p">)</span>
 
@@ -2634,8 +2672,7 @@
             <span class="s1">&#39;discretization_type&#39;</span><span class="p">:</span> <span class="s1">&#39;Structured&#39;</span> <span class="k">if</span> <span class="n">structured</span> <span class="k">else</span> <span class="s1">&#39;Unstructured&#39;</span><span class="p">,</span>
             <span class="s1">&#39;discretization_unit_size&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> <span class="o">*</span> <span class="n">length_scale</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">)],</span>
             <span class="s1">&#39;discretization_count&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nvox</span><span class="p">),</span>
-            <span class="s1">&#39;global_rotation_convention&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(),</span>
-            <span class="s1">&#39;Origin&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;origin&#39;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s1">&#39;software&#39;</span><span class="p">:</span> <span class="s1">&#39;kanapy&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;software_version&#39;</span><span class="p">:</span> <span class="n">pkg_version</span><span class="p">(</span><span class="s1">&#39;kanapy&#39;</span><span class="p">),</span>
                 <span class="s1">&#39;system&#39;</span><span class="p">:</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">(),</span>
@@ -2684,7 +2721,7 @@
                     <span class="k">if</span> <span class="n">bc_choice</span> <span class="o">==</span> <span class="s1">&#39;mechanical&#39;</span><span class="p">:</span>
                         <span class="n">job_bc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;mechanical_BC&#39;</span><span class="p">:</span> <span class="p">[]}</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">job_bc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;thermal_BC&#39;</span><span class="p">:</span> <span class="p">{}}</span>
+                        <span class="n">job_bc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;thermal_BC&#39;</span><span class="p">:</span> <span class="p">[]}</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s2">&quot;boundary_condition dict must include &#39;mechanical_BC&#39; or &#39;thermal_BC&#39; key when interactive=False.&quot;</span><span class="p">)</span>
@@ -2720,7 +2757,7 @@
                     <span class="p">})</span>
                 <span class="n">job_bc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;mechanical_BC&#39;</span><span class="p">:</span> <span class="n">mech_entries</span><span class="p">}</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">job_bc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;thermal_BC&#39;</span><span class="p">:</span> <span class="p">{}}</span>
+                <span class="n">job_bc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;thermal_BC&#39;</span><span class="p">:</span> <span class="p">[]}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">job_bc</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -2745,15 +2782,15 @@
                     <span class="p">)</span>
 
             <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="p">):</span>
-                <span class="n">phase_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-                <span class="n">vf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_vf</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
                 <span class="n">mat</span> <span class="o">=</span> <span class="n">material_library</span><span class="p">[</span><span class="n">ialloy</span><span class="p">]</span>
                 <span class="n">pe</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="s1">&#39;elastic_parameters&#39;</span><span class="p">]</span>
                 <span class="n">pp</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="s1">&#39;plastic_parameters&#39;</span><span class="p">]</span>
-
+                <span class="n">cs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">ms_data</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="s2">&quot;cs&quot;</span><span class="p">]</span>
                 <span class="n">phase_entry</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">idx</span><span class="p">,</span>
-                    <span class="s2">&quot;phase_identifier&quot;</span><span class="p">:</span> <span class="n">phase_name</span><span class="p">,</span>
+                    <span class="s2">&quot;phase_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+                    <span class="s2">&quot;volume_fraction&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_vf</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+                    <span class="s2">&quot;lattice_structure&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
                     <span class="s2">&quot;constitutive_model&quot;</span><span class="p">:</span> <span class="p">{</span>
                         <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;http://json-schema.org/draft-04/schema#&quot;</span><span class="p">,</span>
                         <span class="s2">&quot;elastic_model_name&quot;</span><span class="p">:</span> <span class="n">mat</span><span class="p">[</span><span class="s1">&#39;elastic_model_name&#39;</span><span class="p">],</span>
@@ -2761,11 +2798,18 @@
                         <span class="s2">&quot;plastic_model_name&quot;</span><span class="p">:</span> <span class="n">mat</span><span class="p">[</span><span class="s1">&#39;plastic_model_name&#39;</span><span class="p">],</span>
                         <span class="s2">&quot;plastic_parameters&quot;</span><span class="p">:</span> <span class="n">pp</span>
                     <span class="p">},</span>
-                    <span class="s2">&quot;microstructural_information&quot;</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="s2">&quot;phase_volume_fraction&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">vf</span><span class="p">),</span>
-                        <span class="s2">&quot;grain_count&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
-                        <span class="s2">&quot;texture_type&quot;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="s2">&quot;texture&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
-                        <span class="s2">&quot;lattice_structure&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;orientation&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;euler_angles&quot;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s2">&quot;Phi1&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="s2">&quot;Phi&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="s2">&quot;Phi2&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="p">},</span>
+                        <span class="s2">&quot;grain_count&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">ngrains_phase</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+                        <span class="s2">&quot;orientation_identifier&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;texture_type&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">&quot;group_symmetry&quot;</span><span class="p">:</span> <span class="n">cs</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="s2">&quot;software&quot;</span><span class="p">:</span> <span class="s2">&quot;orix&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;software_version&quot;</span><span class="p">:</span> <span class="n">orix</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
                     <span class="p">}</span>
                 <span class="p">}</span>
                 <span class="n">phase_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">phase_entry</span><span class="p">)</span>
@@ -2811,6 +2855,12 @@
             <span class="n">vid</span><span class="p">:</span> <span class="n">gid</span>
             <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">vids</span> <span class="ow">in</span> <span class="n">grain_to_voxels</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">vid</span> <span class="ow">in</span> <span class="n">vids</span>
+        <span class="p">}</span>
+        <span class="c1"># ─── build time-0 grid dict  ────────────────────────────────────────────</span>
+        <span class="n">grid_t0</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;undeformed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;grid_size&quot;</span><span class="p">:</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="n">length_scale</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">],</span>
+            <span class="s2">&quot;grid_spacing&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> <span class="o">*</span> <span class="n">length_scale</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">)],</span>
         <span class="p">}</span>
         <span class="c1"># ─── build time‐0 grain dict ────────────────────────────────────────────</span>
         <span class="n">grains_t0</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2911,7 +2961,8 @@
 
         <span class="c1"># ─── wrap under the time‐step keys ────────────────────────────────────────</span>
         <span class="n">time_steps</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">{</span>   <span class="s2">&quot;time&quot;</span>  <span class="p">:</span> <span class="mi">0</span>        <span class="p">,</span>
+            <span class="p">{</span>   <span class="s2">&quot;time&quot;</span>  <span class="p">:</span> <span class="mi">0</span>               <span class="p">,</span>
+                <span class="s2">&quot;grid&quot;</span>  <span class="p">:</span> <span class="n">grid_t0</span>         <span class="p">,</span>
                 <span class="s2">&quot;grains&quot;</span><span class="p">:</span> <span class="n">grains_t0_sorted</span><span class="p">,</span>
                 <span class="s2">&quot;voxels&quot;</span><span class="p">:</span> <span class="n">voxels_t0_sorted</span><span class="p">,</span>
             <span class="p">},</span>
@@ -2923,22 +2974,21 @@
         <span class="c1"># Assemble final structure with placeholders</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="o">**</span><span class="n">use</span><span class="p">,</span>                   <span class="c1"># expand user-specific dict entries directly</span>
-            <span class="s1">&#39;software&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;software_version&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;system&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;system_version&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;processor_specifications&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;input_path&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;results_path&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;software&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;software_version&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;system&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;system_version&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;processor_specifications&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;input_path&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;results_path&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="o">**</span><span class="n">ig</span><span class="p">,</span>                    <span class="c1"># expand initial geometry dict entries directly</span>
-            <span class="s1">&#39;global_temperature&#39;</span><span class="p">:</span> <span class="mi">298</span><span class="p">,</span>
+            <span class="s2">&quot;global_temperature&quot;</span><span class="p">:</span> <span class="mi">298</span><span class="p">,</span>
             <span class="o">**</span><span class="n">job_bc</span><span class="p">,</span>                 <span class="c1"># expand boundary condition dict entries directly</span>
-            <span class="s1">&#39;phases&#39;</span><span class="p">:</span><span class="n">phase_list</span><span class="p">,</span>
-            <span class="s1">&#39;microstructure_evolution&#39;</span><span class="p">:</span>  <span class="n">time_steps</span>  <span class="c1"># Time-level storage: time-frame data of voxels and grains</span>
+            <span class="s2">&quot;phases&quot;</span><span class="p">:</span><span class="n">phase_list</span><span class="p">,</span>
+            <span class="s2">&quot;microstructure&quot;</span><span class="p">:</span>  <span class="n">time_steps</span>  <span class="c1"># Time-level storage: time-frame data of voxels and grains</span>
         <span class="p">}</span>
 
         <span class="k">return</span> <span class="n">data</span></div>
-
 
 
 

@@ -5,14 +5,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>kanapy.core.plotting &mdash; kanapy 6.5.3.post1 documentation</title>
+  <title>kanapy.core.plotting &mdash; kanapy 6.5.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=53ab5b41"></script>
+      <script src="../../../_static/documentation_options.js?v=8315fef2"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -81,14 +81,21 @@
 
 <span class="sd">Created on Mon Oct  4 07:52:55 2021</span>
 
-<span class="sd">@author: Alexander Hartmaier, Golsa Tolooei Eshlaghi, Ronak Shoghi</span>
+<span class="sd">@author: Alexander Hartmaier, Golsa Tolooei Eshlaghi, Ronak Shoghi, Yousef Rezek</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.gridspec</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridSpec</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line2D</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.legend_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">HandlerTuple</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">lognorm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Mapping</span>
+
+
 
 <span class="c1">#from PyQt5.QtWidgets import QApplication</span>
 
@@ -110,7 +117,6 @@
 <span class="c1">#    dpi_scale = 100/system_dpi</span>
 <span class="c1">#    matplotlib_dpi = 100 * dpi_scale</span>
 <span class="c1">#    return matplotlib_dpi</span>
-
 
 <div class="viewcode-block" id="plot_voxels_3D">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.plotting.plot_voxels_3D">[docs]</a>
@@ -215,7 +221,6 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
-
 <div class="viewcode-block" id="plot_polygons_3D">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.plotting.plot_polygons_3D">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_polygons_3D</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">ec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -300,8 +305,6 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
-
-
 <div class="viewcode-block" id="plot_ellipsoids_3D">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.plotting.plot_ellipsoids_3D">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">plot_ellipsoids_3D</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;prism&#39;</span><span class="p">,</span> <span class="n">dual_phase</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">asp_arr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -375,8 +378,6 @@
         <span class="k">return</span> <span class="n">fig</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
-
-
 
 
 <div class="viewcode-block" id="plot_particles_3D">
@@ -456,7 +457,6 @@
         <span class="k">return</span> <span class="n">fig</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
-
 
 
 <div class="viewcode-block" id="plot_output_stats">
@@ -776,7 +776,6 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    &#39;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">&#39; is placed in the current working directory</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
         <span class="k">return</span></div>
-
 
 
 <div class="viewcode-block" id="plot_init_stats">
@@ -1168,6 +1167,577 @@
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="k">return</span></div>
 
+
+<div class="viewcode-block" id="plot_stats">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.plotting.plot_stats">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_stats</span><span class="p">(</span>
+    <span class="n">stats_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+    <span class="n">n_points_sa</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+    <span class="n">n_points_other</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
+    <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot fitted lognormal PDFs for semi-axes (a,b,c), aspect ratio, and equivalent diameter</span>
+<span class="sd">    for initial vs regridded microstructures.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    stats_data</span>
+<span class="sd">        Dict with structure:</span>
+<span class="sd">        - stats_data[&#39;semi_axes&#39;][&#39;initial&#39;/&#39;regridded&#39;] contains:</span>
+<span class="sd">          a,b,c arrays + {a,b,c}_sig + {a,b,c}_scale + xmin_gl + xmax_gl</span>
+<span class="sd">        - stats_data[&#39;aspect&#39;][&#39;initial&#39;/&#39;regridded&#39;] contains:</span>
+<span class="sd">          ar array + ar_sig + ar_scale + xmin_ar_i/xmax_ar_i + xmin_ar_r/xmax_ar_r</span>
+<span class="sd">        - stats_data[&#39;eq_diam&#39;][&#39;initial&#39;/&#39;regridded&#39;] contains:</span>
+<span class="sd">          eqd array + eqd_sig + eqd_scale + xmin_eq_i/xmax_eq_i + xmin_eq_r/xmax_eq_r</span>
+<span class="sd">    figsize</span>
+<span class="sd">        Figure size (width, height).</span>
+<span class="sd">    n_points_sa</span>
+<span class="sd">        Number of x samples for semi-axes PDFs.</span>
+<span class="sd">    n_points_other</span>
+<span class="sd">        Number of x samples for aspect/eqd PDFs.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fig</span>
+<span class="sd">        Matplotlib Figure object. Caller can save/show/close.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sa_i</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;semi_axes&quot;</span><span class="p">][</span><span class="s2">&quot;initial&quot;</span><span class="p">]</span>
+    <span class="n">sa_r</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;semi_axes&quot;</span><span class="p">][</span><span class="s2">&quot;regridded&quot;</span><span class="p">]</span>
+    <span class="n">ar_i</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;aspect&quot;</span><span class="p">][</span><span class="s2">&quot;initial&quot;</span><span class="p">]</span>
+    <span class="n">ar_r</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;aspect&quot;</span><span class="p">][</span><span class="s2">&quot;regridded&quot;</span><span class="p">]</span>
+    <span class="n">eq_i</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;eq_diam&quot;</span><span class="p">][</span><span class="s2">&quot;initial&quot;</span><span class="p">]</span>
+    <span class="n">eq_r</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;eq_diam&quot;</span><span class="p">][</span><span class="s2">&quot;regridded&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Global x-ranges for fair comparisons</span>
+    <span class="n">xmin_sa</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">sa_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_gl&quot;</span><span class="p">),</span> <span class="n">sa_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_gl&quot;</span><span class="p">)))</span>
+    <span class="n">xmax_sa</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">sa_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_gl&quot;</span><span class="p">),</span> <span class="n">sa_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_gl&quot;</span><span class="p">)))</span>
+
+    <span class="n">xmin_ar</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">ar_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_ar_i&quot;</span><span class="p">),</span> <span class="n">ar_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_ar_r&quot;</span><span class="p">)))</span>
+    <span class="n">xmax_ar</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">ar_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_ar_i&quot;</span><span class="p">),</span> <span class="n">ar_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_ar_r&quot;</span><span class="p">)))</span>
+
+    <span class="n">xmin_eq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">eq_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_eq_i&quot;</span><span class="p">),</span> <span class="n">eq_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_eq_r&quot;</span><span class="p">)))</span>
+    <span class="n">xmax_eq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">eq_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_eq_i&quot;</span><span class="p">),</span> <span class="n">eq_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_eq_r&quot;</span><span class="p">)))</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">GridSpec</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">fig</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+
+    <span class="n">ax_sa_i</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax_sa_r</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">sharex</span><span class="o">=</span><span class="n">ax_sa_i</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="n">ax_sa_i</span><span class="p">)</span>
+
+    <span class="n">ax_ar_i</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax_ar_r</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">sharex</span><span class="o">=</span><span class="n">ax_ar_i</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="n">ax_ar_i</span><span class="p">)</span>
+
+    <span class="n">ax_eq_i</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax_eq_r</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">sharex</span><span class="o">=</span><span class="n">ax_eq_i</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="n">ax_eq_i</span><span class="p">)</span>
+
+    <span class="c1"># -----------------------------</span>
+    <span class="c1"># Semi-axes (a,b,c)</span>
+    <span class="c1"># -----------------------------</span>
+    <span class="n">x_sa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xmin_sa</span><span class="p">,</span> <span class="n">xmax_sa</span><span class="p">,</span> <span class="n">n_points_sa</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">max_pdf_sa</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">):</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sa_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_sig&quot;</span><span class="p">))</span>
+        <span class="n">scl</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sa_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_scale&quot;</span><span class="p">))</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_sa</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scl</span><span class="p">)</span>
+        <span class="n">max_pdf_sa</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_pdf_sa</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+        <span class="n">ax_sa_i</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_sa</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Semi-axis </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">ax_sa_i</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_sa</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">):</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sa_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_sig&quot;</span><span class="p">))</span>
+        <span class="n">scl</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sa_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_scale&quot;</span><span class="p">))</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_sa</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scl</span><span class="p">)</span>
+        <span class="n">max_pdf_sa</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_pdf_sa</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+        <span class="n">ax_sa_r</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_sa</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Semi-axis </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">ax_sa_r</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_sa</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="n">title</span> <span class="ow">in</span> <span class="p">((</span><span class="n">ax_sa_i</span><span class="p">,</span> <span class="s2">&quot;Initial Microstructure&quot;</span><span class="p">),</span> <span class="p">(</span><span class="n">ax_sa_r</span><span class="p">,</span> <span class="s2">&quot;Regridded Microstructure&quot;</span><span class="p">)):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Length of semi-axis (μm)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin_sa</span><span class="p">,</span> <span class="n">xmax_sa</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.05</span> <span class="o">*</span> <span class="n">max_pdf_sa</span><span class="p">)</span>
+
+    <span class="c1"># -----------------------------</span>
+    <span class="c1"># Aspect ratio</span>
+    <span class="c1"># -----------------------------</span>
+    <span class="n">x_ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xmin_ar</span><span class="p">,</span> <span class="n">xmax_ar</span><span class="p">,</span> <span class="n">n_points_other</span><span class="p">)</span>
+    <span class="n">y_ar_i</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">ar_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ar_sig&quot;</span><span class="p">)),</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ar_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ar_scale&quot;</span><span class="p">)))</span>
+    <span class="n">y_ar_r</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">ar_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ar_sig&quot;</span><span class="p">)),</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ar_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ar_scale&quot;</span><span class="p">)))</span>
+    <span class="n">max_pdf_ar</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_ar_i</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_ar_r</span><span class="p">)))</span>
+
+    <span class="n">ax_ar_i</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="n">y_ar_i</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+    <span class="n">ax_ar_i</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="n">y_ar_i</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">ax_ar_r</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="n">y_ar_r</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+    <span class="n">ax_ar_r</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="n">y_ar_r</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ax_ar_i</span><span class="p">,</span> <span class="n">ax_ar_r</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Aspect ratio (μm)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin_ar</span><span class="p">,</span> <span class="n">xmax_ar</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.05</span> <span class="o">*</span> <span class="n">max_pdf_ar</span><span class="p">)</span>
+
+    <span class="c1"># -----------------------------</span>
+    <span class="c1"># Equivalent diameter</span>
+    <span class="c1"># -----------------------------</span>
+    <span class="n">x_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xmin_eq</span><span class="p">,</span> <span class="n">xmax_eq</span><span class="p">,</span> <span class="n">n_points_other</span><span class="p">)</span>
+    <span class="n">y_eq_i</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">eq_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eqd_sig&quot;</span><span class="p">)),</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">eq_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eqd_scale&quot;</span><span class="p">)))</span>
+    <span class="n">y_eq_r</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">eq_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eqd_sig&quot;</span><span class="p">)),</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">eq_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;eqd_scale&quot;</span><span class="p">)))</span>
+    <span class="n">max_pdf_eq</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_eq_i</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_eq_r</span><span class="p">)))</span>
+
+    <span class="n">ax_eq_i</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="n">y_eq_i</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+    <span class="n">ax_eq_i</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="n">y_eq_i</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">ax_eq_r</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="n">y_eq_r</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
+    <span class="n">ax_eq_r</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="n">y_eq_r</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ax_eq_i</span><span class="p">,</span> <span class="n">ax_eq_r</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Equivalent diameter (μm)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin_eq</span><span class="p">,</span> <span class="n">xmax_eq</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.05</span> <span class="o">*</span> <span class="n">max_pdf_eq</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+<div class="viewcode-block" id="plot_stats_overlay">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.plotting.plot_stats_overlay">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_stats_overlay</span><span class="p">(</span>
+    <span class="n">stats_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="c1"># --- labels (user-facing) ---</span>
+    <span class="n">label_initial</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Initial&quot;</span><span class="p">,</span>
+    <span class="n">label_regridded</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Regridded&quot;</span><span class="p">,</span>   <span class="c1"># e.g. &quot;Cold rolled&quot;</span>
+    <span class="c1"># --- figure ---</span>
+    <span class="n">figsize</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span>
+    <span class="n">n_points_sa</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
+    <span class="n">n_points_other</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">600</span><span class="p">,</span>
+    <span class="n">lw</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span>
+    <span class="c1"># --- Semi-axes appearance ---</span>
+    <span class="n">fill_sa</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">alpha_sa_initial</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.18</span><span class="p">,</span>
+    <span class="n">alpha_sa_regridded</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.03</span><span class="p">,</span>
+    <span class="n">alpha_line_initial</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">alpha_line_regridded</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.30</span><span class="p">,</span>
+    <span class="c1"># --- Other plots appearance ---</span>
+    <span class="n">fill_other</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">alpha_other_initial</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.12</span><span class="p">,</span>
+    <span class="n">alpha_other_regridded</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="c1"># --- Legend styling ---</span>
+    <span class="n">legend_fancybox</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>         <span class="c1"># rounded corners</span>
+    <span class="n">legend_handlelength</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4.2</span><span class="p">,</span>     <span class="c1"># longer samples so dashes are visible</span>
+    <span class="n">legend_handletextpad</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+    <span class="n">legend_borderpad</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span><span class="p">,</span>
+    <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot microstructure statistics as fitted lognormal PDFs with state overlays.</span>
+
+<span class="sd">    The function visualizes the distributions of (i) ellipsoidal semi-axes ``a, b, c``,</span>
+<span class="sd">    (ii) aspect ratio, and (iii) equivalent diameter for two states (typically</span>
+<span class="sd">    an initial microstructure and a processed/regridded snapshot). All curves are</span>
+<span class="sd">    plotted as lognormal probability density functions (PDFs) using parameters</span>
+<span class="sd">    stored in ``stats_data``.</span>
+
+<span class="sd">    Semi-axes readability strategy</span>
+<span class="sd">    ------------------------------</span>
+<span class="sd">    The semi-axes subplot overlays six curves (3 axes × 2 states). To keep the plot</span>
+<span class="sd">    interpretable:</span>
+
+<span class="sd">    * Color encodes the semi-axis component (``a``, ``b``, ``c``).</span>
+<span class="sd">    * Line style encodes state (solid = ``label_initial``, dashed = ``label_regridded``).</span>
+<span class="sd">    * Optional fills under the curves provide an additional separation cue:</span>
+<span class="sd">      ``alpha_sa_initial`` is stronger; ``alpha_sa_regridded`` is intentionally</span>
+<span class="sd">      small (nearly transparent).</span>
+<span class="sd">    * A single legend box is placed in the top-right corner with three rows</span>
+<span class="sd">      (``a``, ``b``, ``c``). Each row shows a tuple handle containing both the</span>
+<span class="sd">      solid and dashed line samples for the same color. The legend uses rounded</span>
+<span class="sd">      corners when ``legend_fancybox=True``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    stats_data : dict</span>
+<span class="sd">        Statistics container produced by your workflow (e.g.,</span>
+<span class="sd">        ``build_and_save_stats_data``). Expected structure::</span>
+
+<span class="sd">            stats_data[&quot;semi_axes&quot;][&quot;initial&quot;|&quot;regridded&quot;]:</span>
+<span class="sd">                { &quot;a_sig&quot;, &quot;a_scale&quot;, &quot;b_sig&quot;, &quot;b_scale&quot;, &quot;c_sig&quot;, &quot;c_scale&quot;,</span>
+<span class="sd">                  &quot;xmin_gl&quot;, &quot;xmax_gl&quot;, ... }</span>
+
+<span class="sd">            stats_data[&quot;aspect&quot;][&quot;initial&quot;|&quot;regridded&quot;]:</span>
+<span class="sd">                { &quot;ar_sig&quot;, &quot;ar_scale&quot;, &quot;xmin_ar_i&quot;|&quot;xmin_ar_r&quot;,</span>
+<span class="sd">                  &quot;xmax_ar_i&quot;|&quot;xmax_ar_r&quot;, ... }</span>
+
+<span class="sd">            stats_data[&quot;eq_diam&quot;][&quot;initial&quot;|&quot;regridded&quot;]:</span>
+<span class="sd">                { &quot;eqd_sig&quot;, &quot;eqd_scale&quot;, &quot;xmin_eq_i&quot;|&quot;xmin_eq_r&quot;,</span>
+<span class="sd">                  &quot;xmax_eq_i&quot;|&quot;xmax_eq_r&quot;, ... }</span>
+
+<span class="sd">        Only the lognormal parameters and x-range keys are required by this</span>
+<span class="sd">        function.</span>
+
+<span class="sd">    label_initial : str, optional</span>
+<span class="sd">        Display name for the initial state (used in titles/legends), by default</span>
+<span class="sd">        ``&quot;Initial&quot;``.</span>
+<span class="sd">    label_regridded : str, optional</span>
+<span class="sd">        Display name for the second state (e.g. ``&quot;Regridded&quot;``, ``&quot;Cold rolled&quot;``),</span>
+<span class="sd">        by default ``&quot;Regridded&quot;``.</span>
+
+<span class="sd">    figsize : (float, float), optional</span>
+<span class="sd">        Figure size in inches, by default ``(16, 11)``.</span>
+<span class="sd">    n_points_sa : int, optional</span>
+<span class="sd">        Number of x-samples used to evaluate semi-axis PDFs, by default ``300``.</span>
+<span class="sd">    n_points_other : int, optional</span>
+<span class="sd">        Number of x-samples used to evaluate aspect ratio and equivalent diameter</span>
+<span class="sd">        PDFs, by default ``600``.</span>
+<span class="sd">    lw : float, optional</span>
+<span class="sd">        Line width for all curves, by default ``3.0``.</span>
+
+<span class="sd">    fill_sa : bool, optional</span>
+<span class="sd">        If True, fill under the semi-axis curves, by default True.</span>
+<span class="sd">    alpha_sa_initial : float, optional</span>
+<span class="sd">        Alpha (opacity) for the filled area under initial semi-axis curves.</span>
+<span class="sd">        0.0 is fully transparent and 1.0 is opaque, by default ``0.18``.</span>
+<span class="sd">    alpha_sa_regridded : float, optional</span>
+<span class="sd">        Alpha (opacity) for the filled area under regridded/processed semi-axis</span>
+<span class="sd">        curves. Keep small (e.g. 0.0–0.05) to avoid clutter, by default ``0.03``.</span>
+<span class="sd">    alpha_line_initial : float, optional</span>
+<span class="sd">        Alpha (opacity) for initial lines, by default ``1.0``.</span>
+<span class="sd">    alpha_line_regridded : float, optional</span>
+<span class="sd">        Alpha (opacity) for regridded/processed dashed lines, by default ``0.30``.</span>
+
+<span class="sd">    fill_other : bool, optional</span>
+<span class="sd">        If True, fill under aspect ratio and equivalent diameter curves, by default True.</span>
+<span class="sd">    alpha_other_initial : float, optional</span>
+<span class="sd">        Alpha for fills under initial aspect ratio / eq. diameter curves, by default ``0.12``.</span>
+<span class="sd">    alpha_other_regridded : float, optional</span>
+<span class="sd">        Alpha for fills under regridded/processed aspect ratio / eq. diameter curves,</span>
+<span class="sd">        by default ``0.05``.</span>
+
+<span class="sd">    legend_fancybox : bool, optional</span>
+<span class="sd">        If True, use rounded legend corners, by default True.</span>
+<span class="sd">    legend_handlelength : float, optional</span>
+<span class="sd">        Length of legend line samples. Increase this to make dashes more visible,</span>
+<span class="sd">        by default ``4.2``.</span>
+<span class="sd">    legend_handletextpad : float, optional</span>
+<span class="sd">        Spacing between handle and text in the legend, by default ``0.8``.</span>
+<span class="sd">    legend_borderpad : float, optional</span>
+<span class="sd">        Padding inside the legend frame, by default ``0.6``.</span>
+
+<span class="sd">    show : bool, optional</span>
+<span class="sd">        If True, calls ``plt.show()`` before returning, by default True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The generated Matplotlib figure. The caller may further customize, save,</span>
+<span class="sd">        or close it.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    * Aspect ratio is dimensionless and is labeled as ``(-)``.</span>
+<span class="sd">    * The x-ranges for each metric are chosen as the global min/max across both</span>
+<span class="sd">      states to enable fair comparisons.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Basic usage with custom label for the second state::</span>
+
+<span class="sd">        fig = plot_stats_overlay(</span>
+<span class="sd">            stats_data,</span>
+<span class="sd">            label_regridded=&quot;Cold rolled&quot;,</span>
+<span class="sd">            alpha_line_regridded=0.20,</span>
+<span class="sd">            alpha_sa_regridded=0.01,</span>
+<span class="sd">            legend_handlelength=5.0,</span>
+<span class="sd">            show=True,</span>
+<span class="sd">        )</span>
+<span class="sd">        fig.savefig(&quot;figures/stats_overlay.png&quot;, dpi=250, bbox_inches=&quot;tight&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sa_i</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;semi_axes&quot;</span><span class="p">][</span><span class="s2">&quot;initial&quot;</span><span class="p">]</span>
+    <span class="n">sa_r</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;semi_axes&quot;</span><span class="p">][</span><span class="s2">&quot;regridded&quot;</span><span class="p">]</span>
+    <span class="n">ar_i</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;aspect&quot;</span><span class="p">][</span><span class="s2">&quot;initial&quot;</span><span class="p">]</span>
+    <span class="n">ar_r</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;aspect&quot;</span><span class="p">][</span><span class="s2">&quot;regridded&quot;</span><span class="p">]</span>
+    <span class="n">eq_i</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;eq_diam&quot;</span><span class="p">][</span><span class="s2">&quot;initial&quot;</span><span class="p">]</span>
+    <span class="n">eq_r</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;eq_diam&quot;</span><span class="p">][</span><span class="s2">&quot;regridded&quot;</span><span class="p">]</span>
+
+    <span class="c1"># -----------------------------</span>
+    <span class="c1"># Global x-ranges for fair comparisons</span>
+    <span class="c1"># -----------------------------</span>
+    <span class="n">xmin_sa</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">sa_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_gl&quot;</span><span class="p">),</span> <span class="n">sa_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_gl&quot;</span><span class="p">)))</span>
+    <span class="n">xmax_sa</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">sa_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_gl&quot;</span><span class="p">),</span> <span class="n">sa_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_gl&quot;</span><span class="p">)))</span>
+
+    <span class="n">xmin_ar</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">ar_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_ar_i&quot;</span><span class="p">),</span> <span class="n">ar_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_ar_r&quot;</span><span class="p">)))</span>
+    <span class="n">xmax_ar</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">ar_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_ar_i&quot;</span><span class="p">),</span> <span class="n">ar_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_ar_r&quot;</span><span class="p">)))</span>
+
+    <span class="n">xmin_eq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">eq_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_eq_i&quot;</span><span class="p">),</span> <span class="n">eq_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmin_eq_r&quot;</span><span class="p">)))</span>
+    <span class="n">xmax_eq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">eq_i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_eq_i&quot;</span><span class="p">),</span> <span class="n">eq_r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xmax_eq_r&quot;</span><span class="p">)))</span>
+
+    <span class="c1"># -----------------------------</span>
+    <span class="c1"># Layout</span>
+    <span class="c1"># -----------------------------</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">gs</span> <span class="o">=</span> <span class="n">GridSpec</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">fig</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.38</span><span class="p">)</span>
+
+    <span class="n">ax_sa</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax_ar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax_eq</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># =========================================================</span>
+    <span class="c1"># 1) Semi-axes (a,b,c)</span>
+    <span class="c1"># =========================================================</span>
+    <span class="n">x_sa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xmin_sa</span><span class="p">,</span> <span class="n">xmax_sa</span><span class="p">,</span> <span class="n">n_points_sa</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">axis_colors</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">max_pdf_sa</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># Initial: solid + stronger fill</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">):</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sa_i</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_sig&quot;</span><span class="p">])</span>
+        <span class="n">scl</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sa_i</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_scale&quot;</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_sa</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scl</span><span class="p">)</span>
+
+        <span class="n">line_i</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax_sa</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">x_sa</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
+            <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_line_initial</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">axis_colors</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">line_i</span><span class="o">.</span><span class="n">get_color</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">fill_sa</span> <span class="ow">and</span> <span class="n">alpha_sa_initial</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax_sa</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_sa</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_sa_initial</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">axis_colors</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="n">max_pdf_sa</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_pdf_sa</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+
+    <span class="c1"># Regridded-like: dashed + transparent fill + transparent line</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">):</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sa_r</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_sig&quot;</span><span class="p">])</span>
+        <span class="n">scl</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sa_r</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_scale&quot;</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_sa</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scl</span><span class="p">)</span>
+
+        <span class="n">ax_sa</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">x_sa</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span>
+            <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">axis_colors</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_line_regridded</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fill_sa</span> <span class="ow">and</span> <span class="n">alpha_sa_regridded</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax_sa</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+                <span class="n">x_sa</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_sa_regridded</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">axis_colors</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="n">max_pdf_sa</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_pdf_sa</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+
+    <span class="n">ax_sa</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Semi-axes (a, b, c) — </span><span class="si">{</span><span class="n">label_initial</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">label_regridded</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">ax_sa</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Length of semi-axis (μm)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax_sa</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax_sa</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">ax_sa</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin_sa</span><span class="p">,</span> <span class="n">xmax_sa</span><span class="p">)</span>
+    <span class="n">ax_sa</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.05</span> <span class="o">*</span> <span class="n">max_pdf_sa</span><span class="p">)</span>
+
+    <span class="c1"># --- Single legend box (top-right): a/b/c each shows (solid, dashed) ---</span>
+    <span class="n">handles</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">):</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="n">axis_colors</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">h_init</span> <span class="o">=</span> <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_line_initial</span><span class="p">)</span>
+        <span class="n">h_reg</span>  <span class="o">=</span> <span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">col</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_line_regridded</span><span class="p">)</span>
+        <span class="n">handles</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">h_init</span><span class="p">,</span> <span class="n">h_reg</span><span class="p">))</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="n">ax_sa</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+        <span class="n">handles</span><span class="o">=</span><span class="n">handles</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Semi-axis (solid=</span><span class="si">{</span><span class="n">label_initial</span><span class="si">}</span><span class="s2">, dashed=</span><span class="si">{</span><span class="n">label_regridded</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+        <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span>
+        <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
+        <span class="n">title_fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
+        <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">fancybox</span><span class="o">=</span><span class="n">legend_fancybox</span><span class="p">,</span>          <span class="c1"># rounded corners</span>
+        <span class="n">handlelength</span><span class="o">=</span><span class="n">legend_handlelength</span><span class="p">,</span>  <span class="c1"># make dashes obvious</span>
+        <span class="n">handletextpad</span><span class="o">=</span><span class="n">legend_handletextpad</span><span class="p">,</span>
+        <span class="n">borderpad</span><span class="o">=</span><span class="n">legend_borderpad</span><span class="p">,</span>
+        <span class="n">handler_map</span><span class="o">=</span><span class="p">{</span><span class="nb">tuple</span><span class="p">:</span> <span class="n">HandlerTuple</span><span class="p">(</span><span class="n">ndivide</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.9</span><span class="p">)},</span>
+    <span class="p">)</span>
+
+    <span class="c1"># =========================================================</span>
+    <span class="c1"># 2) Aspect ratio</span>
+    <span class="c1"># =========================================================</span>
+    <span class="n">x_ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xmin_ar</span><span class="p">,</span> <span class="n">xmax_ar</span><span class="p">,</span> <span class="n">n_points_other</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">y_ar_i</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">ar_i</span><span class="p">[</span><span class="s2">&quot;ar_sig&quot;</span><span class="p">]),</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ar_i</span><span class="p">[</span><span class="s2">&quot;ar_scale&quot;</span><span class="p">]))</span>
+    <span class="n">y_ar_r</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">ar_r</span><span class="p">[</span><span class="s2">&quot;ar_sig&quot;</span><span class="p">]),</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ar_r</span><span class="p">[</span><span class="s2">&quot;ar_scale&quot;</span><span class="p">]))</span>
+    <span class="n">max_pdf_ar</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_ar_i</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_ar_r</span><span class="p">)))</span>
+
+    <span class="n">ax_ar</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="n">y_ar_i</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="n">label</span><span class="o">=</span><span class="n">label_initial</span><span class="p">,</span>  <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_line_initial</span><span class="p">)</span>
+    <span class="n">ax_ar</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="n">y_ar_r</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label_regridded</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_line_regridded</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fill_other</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">alpha_other_initial</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax_ar</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="n">y_ar_i</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_other_initial</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">alpha_other_regridded</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax_ar</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_ar</span><span class="p">,</span> <span class="n">y_ar_r</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_other_regridded</span><span class="p">)</span>
+
+    <span class="n">ax_ar</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Aspect ratio — </span><span class="si">{</span><span class="n">label_initial</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">label_regridded</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">ax_ar</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Aspect ratio (-)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax_ar</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax_ar</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">ax_ar</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin_ar</span><span class="p">,</span> <span class="n">xmax_ar</span><span class="p">)</span>
+    <span class="n">ax_ar</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.05</span> <span class="o">*</span> <span class="n">max_pdf_ar</span><span class="p">)</span>
+    <span class="n">ax_ar</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fancybox</span><span class="o">=</span><span class="n">legend_fancybox</span><span class="p">)</span>
+
+    <span class="c1"># =========================================================</span>
+    <span class="c1"># 3) Equivalent diameter</span>
+    <span class="c1"># =========================================================</span>
+    <span class="n">x_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">xmin_eq</span><span class="p">,</span> <span class="n">xmax_eq</span><span class="p">,</span> <span class="n">n_points_other</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">y_eq_i</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">eq_i</span><span class="p">[</span><span class="s2">&quot;eqd_sig&quot;</span><span class="p">]),</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">eq_i</span><span class="p">[</span><span class="s2">&quot;eqd_scale&quot;</span><span class="p">]))</span>
+    <span class="n">y_eq_r</span> <span class="o">=</span> <span class="n">lognorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">eq_r</span><span class="p">[</span><span class="s2">&quot;eqd_sig&quot;</span><span class="p">]),</span> <span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">eq_r</span><span class="p">[</span><span class="s2">&quot;eqd_scale&quot;</span><span class="p">]))</span>
+    <span class="n">max_pdf_eq</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_eq_i</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_eq_r</span><span class="p">)))</span>
+
+    <span class="n">ax_eq</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="n">y_eq_i</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="n">label</span><span class="o">=</span><span class="n">label_initial</span><span class="p">,</span>  <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_line_initial</span><span class="p">)</span>
+    <span class="n">ax_eq</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="n">y_eq_r</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label_regridded</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_line_regridded</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fill_other</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">alpha_other_initial</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax_eq</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="n">y_eq_i</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_other_initial</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">alpha_other_regridded</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax_eq</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_eq</span><span class="p">,</span> <span class="n">y_eq_r</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha_other_regridded</span><span class="p">)</span>
+
+    <span class="n">ax_eq</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Equivalent diameter — </span><span class="si">{</span><span class="n">label_initial</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">label_regridded</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+    <span class="n">ax_eq</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Equivalent diameter (μm)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax_eq</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">ax_eq</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="n">ax_eq</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin_eq</span><span class="p">,</span> <span class="n">xmax_eq</span><span class="p">)</span>
+    <span class="n">ax_eq</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.05</span> <span class="o">*</span> <span class="n">max_pdf_eq</span><span class="p">)</span>
+    <span class="n">ax_eq</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fancybox</span><span class="o">=</span><span class="n">legend_fancybox</span><span class="p">,</span> <span class="n">borderpad</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span></div>
+
+
+<div class="viewcode-block" id="plot_mean_ellipsoids_from_stats">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.plotting.plot_mean_ellipsoids_from_stats">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_mean_ellipsoids_from_stats</span><span class="p">(</span>
+    <span class="n">stats_data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">out_png</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;figures/mean_ellipsoids_2panel.png&quot;</span><span class="p">,</span>
+    <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">nu</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">90</span><span class="p">,</span>
+    <span class="n">nv</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="n">wire_rstride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">wire_cstride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">axis_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.15</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot mean ellipsoids (initial vs regridded) side-by-side from stats_data dict.</span>
+
+<span class="sd">    Expects:</span>
+<span class="sd">      stats_data[&quot;semi_axes&quot;][&quot;initial&quot;][&quot;a&quot;|&quot;b&quot;|&quot;c&quot;] : list/array</span>
+<span class="sd">      stats_data[&quot;semi_axes&quot;][&quot;regridded&quot;][&quot;a&quot;|&quot;b&quot;|&quot;c&quot;] : list/array</span>
+<span class="sd">    Returns:</span>
+<span class="sd">      matplotlib.figure.Figure</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ellipsoid_surface</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">nv</span><span class="p">)</span>
+        <span class="n">uu</span><span class="p">,</span> <span class="n">vv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">vv</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">uu</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">vv</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">uu</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">vv</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draw_semi_axes</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="c1"># a=blue, b=orange, c=green</span>
+        <span class="n">col_a</span> <span class="o">=</span> <span class="s2">&quot;#2962FF&quot;</span>
+        <span class="n">col_b</span> <span class="o">=</span> <span class="s2">&quot;#FB8C00&quot;</span>
+        <span class="n">col_c</span> <span class="o">=</span> <span class="s2">&quot;#00C853&quot;</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col_a</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">arrow_length_ratio</span><span class="o">=</span><span class="mf">0.10</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col_b</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">arrow_length_ratio</span><span class="o">=</span><span class="mf">0.10</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">quiver</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col_c</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">arrow_length_ratio</span><span class="o">=</span><span class="mf">0.10</span><span class="p">)</span>
+
+        <span class="n">box</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">boxstyle</span><span class="o">=</span><span class="s2">&quot;round,pad=0.25&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">text2D</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.92</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;a = </span><span class="si">{</span><span class="n">a</span><span class="o">/</span><span class="n">axis_scale</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+                  <span class="n">color</span><span class="o">=</span><span class="n">col_a</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">box</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">text2D</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;b = </span><span class="si">{</span><span class="n">b</span><span class="o">/</span><span class="n">axis_scale</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+                  <span class="n">color</span><span class="o">=</span><span class="n">col_b</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">box</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">text2D</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.78</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;c = </span><span class="si">{</span><span class="n">c</span><span class="o">/</span><span class="n">axis_scale</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+                  <span class="n">color</span><span class="o">=</span><span class="n">col_c</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">box</span><span class="p">)</span>
+
+    <span class="c1"># ------------------ Validate + extract ------------------</span>
+    <span class="n">semi</span> <span class="o">=</span> <span class="n">stats_data</span><span class="p">[</span><span class="s2">&quot;semi_axes&quot;</span><span class="p">]</span>
+
+    <span class="n">a0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">semi</span><span class="p">[</span><span class="s2">&quot;initial&quot;</span><span class="p">][</span><span class="s2">&quot;a&quot;</span><span class="p">]))</span>
+    <span class="n">b0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">semi</span><span class="p">[</span><span class="s2">&quot;initial&quot;</span><span class="p">][</span><span class="s2">&quot;b&quot;</span><span class="p">]))</span>
+    <span class="n">c0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">semi</span><span class="p">[</span><span class="s2">&quot;initial&quot;</span><span class="p">][</span><span class="s2">&quot;c&quot;</span><span class="p">]))</span>
+
+    <span class="n">a1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">semi</span><span class="p">[</span><span class="s2">&quot;regridded&quot;</span><span class="p">][</span><span class="s2">&quot;a&quot;</span><span class="p">]))</span>
+    <span class="n">b1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">semi</span><span class="p">[</span><span class="s2">&quot;regridded&quot;</span><span class="p">][</span><span class="s2">&quot;b&quot;</span><span class="p">]))</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">semi</span><span class="p">[</span><span class="s2">&quot;regridded&quot;</span><span class="p">][</span><span class="s2">&quot;c&quot;</span><span class="p">]))</span>
+
+    <span class="n">X0</span><span class="p">,</span> <span class="n">Y0</span><span class="p">,</span> <span class="n">Z0</span> <span class="o">=</span> <span class="n">_ellipsoid_surface</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="n">b0</span><span class="p">,</span> <span class="n">c0</span><span class="p">)</span>
+    <span class="n">X1</span><span class="p">,</span> <span class="n">Y1</span><span class="p">,</span> <span class="n">Z1</span> <span class="o">=</span> <span class="n">_ellipsoid_surface</span><span class="p">(</span><span class="n">a1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span>
+
+    <span class="c1"># Shared limits (fair comparison)</span>
+    <span class="n">max_extent</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="n">b0</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span>
+    <span class="n">lim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">max_extent</span><span class="p">,</span> <span class="n">max_extent</span><span class="p">)</span>
+
+    <span class="c1"># ------------------ Figure ------------------</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="n">axL</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
+    <span class="n">axR</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s2">&quot;3d&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Ellipsoid colors (NOT blue/orange/green)</span>
+    <span class="n">col_init</span> <span class="o">=</span> <span class="s2">&quot;#9B59B6&quot;</span>  <span class="c1"># purple</span>
+    <span class="n">col_regr</span> <span class="o">=</span> <span class="s2">&quot;#00B8D9&quot;</span>  <span class="c1"># teal/cyan</span>
+
+    <span class="c1"># Left (initial)</span>
+    <span class="n">axL</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">X0</span><span class="p">,</span> <span class="n">Y0</span><span class="p">,</span> <span class="n">Z0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col_init</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.12</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">axL</span><span class="o">.</span><span class="n">plot_wireframe</span><span class="p">(</span><span class="n">X0</span><span class="p">,</span> <span class="n">Y0</span><span class="p">,</span> <span class="n">Z0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col_init</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.90</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+                       <span class="n">rstride</span><span class="o">=</span><span class="n">wire_rstride</span><span class="p">,</span> <span class="n">cstride</span><span class="o">=</span><span class="n">wire_cstride</span><span class="p">)</span>
+    <span class="n">_draw_semi_axes</span><span class="p">(</span><span class="n">axL</span><span class="p">,</span> <span class="n">axis_scale</span><span class="o">*</span><span class="n">a0</span><span class="p">,</span> <span class="n">axis_scale</span><span class="o">*</span><span class="n">b0</span><span class="p">,</span> <span class="n">axis_scale</span><span class="o">*</span><span class="n">c0</span><span class="p">)</span>
+    <span class="n">axL</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Initial mean ellipsoid&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+
+    <span class="c1"># Right (regridded)</span>
+    <span class="n">axR</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span> <span class="n">Y1</span><span class="p">,</span> <span class="n">Z1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col_regr</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.12</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">axR</span><span class="o">.</span><span class="n">plot_wireframe</span><span class="p">(</span><span class="n">X1</span><span class="p">,</span> <span class="n">Y1</span><span class="p">,</span> <span class="n">Z1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">col_regr</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.90</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+                       <span class="n">rstride</span><span class="o">=</span><span class="n">wire_rstride</span><span class="p">,</span> <span class="n">cstride</span><span class="o">=</span><span class="n">wire_cstride</span><span class="p">)</span>
+    <span class="n">_draw_semi_axes</span><span class="p">(</span><span class="n">axR</span><span class="p">,</span> <span class="n">axis_scale</span><span class="o">*</span><span class="n">a1</span><span class="p">,</span> <span class="n">axis_scale</span><span class="o">*</span><span class="n">b1</span><span class="p">,</span> <span class="n">axis_scale</span><span class="o">*</span><span class="n">c1</span><span class="p">)</span>
+    <span class="n">axR</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Regridded mean ellipsoid&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+
+    <span class="c1"># Shared formatting</span>
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">(</span><span class="n">axL</span><span class="p">,</span> <span class="n">axR</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">lim</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">lim</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_zlim</span><span class="p">(</span><span class="n">lim</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Y&quot;</span><span class="p">);</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s2">&quot;Z&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">view_init</span><span class="p">(</span><span class="n">elev</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">azim</span><span class="o">=-</span><span class="mi">60</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Mean grain ellipsoids (side-by-side)&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.98</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="c1"># Save (optional)</span>
+    <span class="k">if</span> <span class="n">out_png</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out_png</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_png</span><span class="p">)</span>
+        <span class="n">out_png</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_png</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span></div>
 
 </pre></div>
 
