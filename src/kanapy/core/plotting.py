@@ -102,7 +102,7 @@ def plot_voxels_3D(data, Ngr=None, sliced=False, dual_phase=None,
         if np.min(data) == 0:
             Ngr += 1
     if clist is None:
-        cm = plt.cm.get_cmap(cmap, Ngr)
+        cm = plt.get_cmap(cmap, Ngr)
         colors = cm(data.astype(int))
     else:
         colors = np.ones((Nx, Ny, Nz, 4))
@@ -195,7 +195,7 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
     grains = geometry['Grains']
     pts = geometry['Points']
     Ng = np.amax(list(grains.keys()))
-    cm = plt.cm.get_cmap(cmap, Ng)
+    cm = plt.get_cmap(cmap, Ng)
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     for igr in grains.keys():
@@ -334,7 +334,7 @@ def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
     ax.view_init(30, 30)
 
     Npa = len(particles)
-    cm = plt.cm.get_cmap(cmap, Npa)
+    cm = plt.get_cmap(cmap, Npa)
 
     for i, pa in enumerate(particles):
         if pa.duplicate is not None:
