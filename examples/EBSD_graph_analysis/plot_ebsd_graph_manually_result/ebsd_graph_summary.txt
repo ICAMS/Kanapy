@@ -1,0 +1,8 @@
+*** EBSD graph information ***
+Phase: #1 (Fe)
+Nodes: 185
+Edges: 503
+Mean node degree: 5.44
+Median node area: 1645.0 pixels
+Initial nodes before graph cleanup: 323
+Recorded graph merges: 137

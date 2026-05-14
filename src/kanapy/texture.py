@@ -3,6 +3,8 @@ Tools for analysis of EBSD maps in form of .ang files
 
 @author: Alexander Hartmaier, Abhishek Biswas, ICAMS, Ruhr-Universität Bochum
 """
+
+import copy
 import logging
 import warnings
 import numpy as np
@@ -27,7 +29,7 @@ from orix.sampling import get_sample_fundamental
 from orix.vector import Miller
 from abc import ABC
 from pathlib import Path
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from typing import Any, Sequence, Union, Dict, Tuple, List
 
 
@@ -47,7 +49,7 @@ def get_distinct_colormap(N, cmap='prism'):
     return col_
 
 
-def neighbors(r, c, connectivity=8):
+def neighbors(r, c, connectivity=4):
     """
     Return the neighboring coordinates of a cell in a 2D grid.
 
@@ -61,7 +63,7 @@ def neighbors(r, c, connectivity=8):
         Type of connectivity. Options are:
         - 1 or 4 : 4-connected neighbors (up, down, left, right)
         - 8      : 8-connected neighbors (includes diagonals)
-        Default is 8.
+        Default is 4.
 
     Returns
     -------
@@ -83,62 +85,142 @@ def neighbors(r, c, connectivity=8):
                 if not (i == 0 and j == 0)]
 
 
+def mean_orientation_data(pixel_orientations, sym):
+    """
+    Return a normalized quaternion mean after symmetry equivalent alignment.
+
+    Parameters
+    ----------
+    pixel_orientations : array_like
+        Quaternion orientation data with quaternion components on the last axis.
+    sym : Symmetry
+        Crystal symmetry used to align symmetry equivalent orientations.
+
+    Returns
+    -------
+    ndarray
+        Normalized mean quaternion.
+    """
+    quat = np.asarray(pixel_orientations, dtype=float)
+    quat = quat.reshape((-1, quat.shape[-1]))
+
+    # normalize each pixel quaternion independently
+    # [a, b, c, d] becomes [a/norm, b/norm, c/norm, d/norm]
+    quat = quat / np.linalg.norm(quat, axis=1)[:, None]
+
+    # use the first pixel as the reference orientation
+    ref = quat[0]
+
+    if getattr(sym, 'contains_inversion', False):
+        # use only proper symmetry operators for averaging
+        proper = sym.proper_subgroup
+    else:
+        proper = sym
+    # the length of sym_ops is according to the symmetry type
+    # for example, cubic symmetry has 24 equivalent proper rotations
+    sym_ops = np.asarray(proper.data, dtype=float)
+
+    best_quat = quat.copy()
+    best_score = np.abs(best_quat @ ref)
+
+    # choose the symmetry equivalent orientation closest to the reference
+    for sym_op in sym_ops:
+        w1, x1, y1, z1 = sym_op
+        w2 = quat[:, 0]
+        x2 = quat[:, 1]
+        y2 = quat[:, 2]
+        z2 = quat[:, 3]
+
+        candidate = np.column_stack((
+            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+            w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+            w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+            w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2,
+        ))
+        candidate = candidate / np.linalg.norm(candidate, axis=1)[:, None]
+        score = np.abs(candidate @ ref)
+
+        # keep the closest symmetry equivalent for each pixel
+        update = score > best_score
+        best_quat[update] = candidate[update]
+        best_score[update] = score[update]
+
+    # put q and -q on the same branch before forming the mean
+    signs = np.sign(best_quat @ ref)
+    signs[signs == 0.0] = 1.0
+    best_quat = best_quat * signs[:, None]
+
+    # compute the quaternion mean from the dominant eigenvector
+    accumulator = best_quat.T @ best_quat
+    eigvals, eigvecs = np.linalg.eigh(accumulator)
+    mean_quat = eigvecs[:, int(np.argmax(eigvals))]
+
+    # keep the scalar component positive for a stable representation
+    if mean_quat[0] < 0.0:
+        mean_quat = -mean_quat
+
+    return mean_quat / np.linalg.norm(mean_quat)
+
+
 def merge_nodes(G, node1, node2):
     """
-    Merge the pixel and attribute data of node1 into node2 in a graph
+    Merge the pixel and attribute data of one node into another node.
 
-    This function performs the following steps:
-    1. Concatenates the pixel lists of node1 and node2 and updates node2's 'pixels' attribute
-    2. Updates the average orientation 'ori_av' and pixel count 'npix' for node2
-    3. Updates the convex hull for node2 if it exists
-    4. Adds edges from node1's neighbors to node2, avoiding duplicates
-    5. Removes node1 from the graph
-    6. Updates the graph's 'label_map' to replace all occurrences of node1 with node2
+    The function keeps node2, removes node1, and updates the pixel list,
+    average orientation, size, convex hull, edges, and label map.
 
     Parameters
     ----------
     G : networkx.Graph
-        Graph object where nodes represent grains and have attributes:
-        - 'pixels' : array of pixel indices
-        - 'ori_av' : average orientation
-        - 'npix' : number of pixels
-        - optional 'hull' : ConvexHull object
-        The graph also contains:
-        - 'label_map' : 2D array of node labels
-        - 'dx', 'dy' : pixel spacing in x and y directions
+        Graph whose nodes store ``pixels``, ``ori_av`` and ``npix``. The graph
+        stores ``label_map``, ``dx`` and ``dy``. If ``rotations`` and
+        ``symmetry`` are available, the merged average orientation is recomputed
+        from the original pixel orientations.
     node1 : int
-        Node ID to be merged and removed
+        Node ID to be merged and removed.
     node2 : int
-        Node ID to merge into and retain
+        Node ID to merge into and retain.
 
     Notes
     -----
-    - Modifies the graph `G` in place
-    - Updates 'pixels', 'ori_av', 'npix', 'hull' for node2
-    - Updates 'label_map' to replace node1 with node2
-    - Adds new edges from node1 to node2 while avoiding duplicates
+    This function modifies the graph in place.
     """
-    # merge pixel lists of node 1 into node 2, delete node 1
+    # merge pixel lists before recomputing node attributes
     G.nodes[node2]['pixels'] = np.concatenate((G.nodes[node1]['pixels'], G.nodes[node2]['pixels']))
     npix1 = G.nodes[node1]['npix']
     npix2 = G.nodes[node2]['npix']
     ntot = npix1 + npix2
-    G.nodes[node2]['ori_av'] = (G.nodes[node1]['ori_av'] * G.nodes[node1]['npix'] +
-                                G.nodes[node2]['ori_av'] * G.nodes[node2]['npix']) / ntot
-    G.nodes[node2]['npix'] = ntot  # update length
+
+    if 'rotations' in G.graph:
+        pix = G.nodes[node2]['pixels']
+        G.nodes[node2]['ori_av'] = mean_orientation_data(
+            G.graph['rotations'][pix],
+            G.graph['symmetry'],
+        )
+    else:
+        # keep old graph objects usable when original pixel orientations are missing
+        ori_av = (G.nodes[node1]['ori_av'] * G.nodes[node1]['npix'] +
+                  G.nodes[node2]['ori_av'] * G.nodes[node2]['npix']) / ntot
+        G.nodes[node2]['ori_av'] = ori_av / np.linalg.norm(ori_av)
+
+    G.nodes[node2]['npix'] = ntot
     if 'hull' in G.nodes[node2].keys():
         # update hull if it exists already
         sh = G.graph['label_map'].shape
         pts = np.array(np.unravel_index(G.nodes[node2]['pixels'], sh), dtype=float).T
-        pts[:, 0] *= G.graph['dx']  # convert pixel distances to micron
+        # convert pixel distances to micron
+        pts[:, 0] *= G.graph['dx']
         pts[:, 1] *= G.graph['dy']
         G.nodes[node2]['hull'] = ConvexHull(pts)
-    # add new edges (will ignore if edge already exists)
+
+    # add new edges and let the graph ignore existing ones
     for neigh in G.adj[node1]:
         if node2 != neigh:
             G.add_edge(node2, neigh)
-    G.remove_node(node1)  # remove grain1 and all its edges
-    # update label map
+
+    G.remove_node(node1)
+
+    # replace node1 labels with node2 labels
     ix, iy = np.nonzero(G.graph['label_map'] == node1)
     G.graph['label_map'][ix, iy] = node2
 
@@ -222,9 +304,155 @@ def find_sim_neighbor(G, nn):
     return ng[nn], on[nn]
 
 
-def summarize_labels(label_array, rotations, wanted_labels=None):
+def get_node_boundary_stats(G, node_id, connectivity=4):
     """
-    Summarize labeled pixels with average orientation and statistics
+    Compute boundary diagnostics for one graph node.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        Graph built from labeled pixels. The graph must store ``label_map``.
+    node_id : int
+        Node ID to inspect.
+    connectivity : int, optional
+        Connectivity criterion for neighbors (4 or 8). Default is 4.
+
+    Returns
+    -------
+    dict
+        Boundary statistics for the selected node.
+    """
+    label_map = G.graph['label_map']
+    rows, cols = label_map.shape
+    pix = G.nodes[node_id]['pixels']
+    rr, cc = np.unravel_index(pix, label_map.shape)
+
+    # use coordinate pairs to check local neighborhood relations
+    pixel_set = set(zip(rr.tolist(), cc.tolist()))
+    boundary_pixels = 0
+    touches_map_edge = False
+    neighbor_labels = set()
+
+    # a pixel is on the boundary if any checked neighbor has another label
+    for r0, c0 in pixel_set:
+        is_boundary = False
+        for r1, c1 in neighbors(r0, c0, connectivity=connectivity):
+            if r1 < 0 or r1 >= rows or c1 < 0 or c1 >= cols:
+                touches_map_edge = True
+                is_boundary = True
+                continue
+
+            other_label = int(label_map[r1, c1])
+            if other_label != node_id:
+                is_boundary = True
+                if other_label > 0:
+                    neighbor_labels.add(other_label)
+
+        if is_boundary:
+            boundary_pixels += 1
+
+    # bounding box fill helps identify thin or fragmented regions
+    bbox_height = int(rr.max() - rr.min() + 1)
+    bbox_width = int(cc.max() - cc.min() + 1)
+
+    return {
+        'boundary_pixels': int(boundary_pixels),
+        'boundary_fraction': float(boundary_pixels / len(pixel_set)),
+        'touches_map_edge': bool(touches_map_edge),
+        'neighbor_count': int(len(neighbor_labels)),
+        'neighbor_labels': sorted(int(lbl) for lbl in neighbor_labels),
+        'bbox_height': bbox_height,
+        'bbox_width': bbox_width,
+        'bbox_fill_fraction': float(len(pixel_set) / (bbox_height * bbox_width)),
+    }
+
+
+def merge_boundary_artifact_nodes(
+        G, gs_min, connectivity=4, npix_factor=2.0, boundary_fraction_min=0.85):
+    """
+    Merge small boundary artifact nodes into their most similar neighbor.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        Initial microstructure graph.
+    gs_min : float
+        Minimum grain size threshold from the EBSD workflow.
+    connectivity : int, optional
+        Connectivity criterion for neighbors (4 or 8). Default is 4.
+    npix_factor : float, optional
+        Candidate size threshold as ``max(npix_factor * gs_min, 40)``. Default is 2.0.
+    boundary_fraction_min : float, optional
+        Minimum boundary pixel fraction for a node to be considered. Default is 0.85.
+
+    Returns
+    -------
+    list[dict]
+        Records for all performed boundary artifact merges.
+    """
+    debug_records = []
+    npix_limit = max(int(npix_factor * gs_min), 40)
+
+    changed = True
+    while changed:
+        changed = False
+        candidate_rows = []
+
+        # collect small nodes that are mostly made of boundary pixels
+        for node_id in list(G.nodes):
+            npix = int(G.nodes[node_id]['npix'])
+            if npix > npix_limit:
+                continue
+            if G.degree[node_id] <= 0:
+                continue
+
+            stats = get_node_boundary_stats(G, node_id, connectivity=connectivity)
+            if stats['boundary_fraction'] < boundary_fraction_min:
+                continue
+
+            sim_neigh, ori_neigh = find_sim_neighbor(G, node_id)
+            candidate_rows.append((
+                -stats['boundary_fraction'],
+                npix,
+                float(ori_neigh),
+                int(node_id),
+                stats,
+                int(sim_neigh),
+            ))
+
+        candidate_rows.sort()
+
+        # merge one candidate at a time because every merge changes the graph
+        for _, _, ori_neigh, node_id, stats, sim_neigh in candidate_rows:
+            if node_id not in G.nodes or sim_neigh not in G.nodes:
+                continue
+
+            record = {
+                'node': int(node_id),
+                'reason': 'boundary_artifact_premerge',
+                'target': int(sim_neigh),
+                'angle_rad': float(ori_neigh),
+                'angle_deg': float(np.degrees(ori_neigh)),
+                'node_npix': int(G.nodes[node_id]['npix']),
+                'target_npix': int(G.nodes[sim_neigh]['npix']),
+                'boundary_pixels': int(stats['boundary_pixels']),
+                'boundary_fraction': float(stats['boundary_fraction']),
+                'neighbor_count': int(stats['neighbor_count']),
+                'bbox_fill_fraction': float(stats['bbox_fill_fraction']),
+                'npix_limit': int(npix_limit),
+                'will_merge': True,
+            }
+            debug_records.append(record)
+            merge_nodes(G, node_id, sim_neigh)
+            changed = True
+            break
+
+    return debug_records
+
+
+def summarize_labels(label_array, rotations, sym, wanted_labels=None):
+    """
+    Summarize labeled pixels with average orientation and statistics.
 
     This function computes, for each label in `label_array` (or a subset of `wanted_labels`):
     - Number of pixels
@@ -238,6 +466,8 @@ def summarize_labels(label_array, rotations, wanted_labels=None):
         2D array of integer labels.
     rotations : ndarray of shape (H*W, D)
         Orientation data corresponding to each pixel (e.g., emap.rotations.data).
+    sym : Symmetry
+        Crystal symmetry used to compute orientation means.
     wanted_labels : sequence of int, optional
         List of label IDs to summarize. If None, all labels in `label_array` are used.
 
@@ -252,7 +482,7 @@ def summarize_labels(label_array, rotations, wanted_labels=None):
 
     Notes
     -----
-    - Uses `np.add.reduceat` and sorting for efficient computation
+    - Computes average orientations using crystal symmetry.
     - The returned list preserves the order of `wanted_labels` if provided,
       otherwise follows sorted unique labels from `label_array`
     - Does not modify input arrays
@@ -272,13 +502,12 @@ def summarize_labels(label_array, rotations, wanted_labels=None):
     # Rotations in derselben Reihenfolge sortieren
     rot_sorted = rot[order]
 
-    # Mittelwerte und Standardabweichungen pro Segment (reduceat ist sehr schnell)
-    sums = np.add.reduceat(rot_sorted, starts, axis=0)
-    means = sums / counts[:, None]
-
+    # component wise standard deviation is kept as a simple diagnostic
     sq = rot_sorted * rot_sorted
     sums_sq = np.add.reduceat(sq, starts, axis=0)
-    vars_ = sums_sq / counts[:, None] - means**2
+    sums = np.add.reduceat(rot_sorted, starts, axis=0)
+    means_component = sums / counts[:, None]
+    vars_ = sums_sq / counts[:, None] - means_component**2
     stds = np.sqrt(np.maximum(vars_, 0.0))
 
     # Pixelindizes pro Label (als Listen von 1D-Indizes)
@@ -286,8 +515,9 @@ def summarize_labels(label_array, rotations, wanted_labels=None):
 
     # Auswahl / Re-Ordering auf gewünschte Labels
     if wanted_labels is None:
-        labels_out = uniq
-        idx = np.arange(len(uniq))
+        valid = uniq > 0
+        labels_out = uniq[valid]
+        idx = np.arange(len(uniq))[valid]
     else:
         labels_out = np.asarray(wanted_labels)
         pos = {int(l): i for i, l in enumerate(uniq)}
@@ -295,19 +525,20 @@ def summarize_labels(label_array, rotations, wanted_labels=None):
 
     nodes = []
     for lbl, i in zip(labels_out, idx):
+        pix = pixels_list[i]
         info = {
             "npix": int(counts[i]),
-            "pixels": pixels_list[i],              # 1D-Indices in label_array.ravel()
-            "ori_av": means[i],                   # shape (D,)
-            "ori_std": stds[i],                   # shape (D,)
+            "pixels": pix,
+            "ori_av": mean_orientation_data(rot[pix], sym),
+            "ori_std": stds[i],
         }
         nodes.append((int(lbl), info))
     return nodes
 
 
-def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=8):
+def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=4):
     """
-    Build a graph representation of a microstructure from labeled pixels
+    Build a graph representation of a microstructure from labeled pixels.
 
     Each node in the graph represents a grain (label) and stores pixel indices,
     average orientation, and orientation statistics. Edges connect neighboring grains
@@ -317,15 +548,16 @@ def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=
     ----------
     label_array : ndarray of shape (H, W)
         2D array of integer labels representing grains.
-    emap : object
-        Orientation map object containing:
-        - `rotations.data` : orientation vectors for each pixel
-        - `phases.point_groups` : symmetry information for each phase
-        - `dx`, `dy` : pixel spacing in x and y directions
-    phase : int
-        Phase index to select the corresponding symmetry from `emap.phases.point_groups`.
+    rot : ndarray
+        Quaternion orientation data for all pixels in ``label_array``.
+    sym : Symmetry
+        Crystal symmetry used to compute node average orientations.
+    dx : float
+        Pixel spacing in row direction.
+    dy : float
+        Pixel spacing in column direction.
     connectivity : int, optional
-        Connectivity criterion for neighbors (4 or 8). Default is 8.
+        Connectivity criterion for neighbors (4 or 8). Default is 4.
 
     Returns
     -------
@@ -333,7 +565,7 @@ def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=
         Graph object with:
         - Nodes representing grains, storing 'pixels', 'ori_av', 'ori_std', 'npix'
         - Edges representing neighboring grains (shared boundaries)
-        - Graph attributes: 'label_map', 'symmetry', 'dx', 'dy'
+        - Graph attributes: 'label_map', 'symmetry', 'rotations', 'dx', 'dy'
 
     Notes
     -----
@@ -342,11 +574,11 @@ def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=
     - The function preserves the shape and indices of `label_array`
     """
     # t1 = time.time()
-    nodes = summarize_labels(label_array, rot)
+    nodes = summarize_labels(label_array, rot, sym)
     # t2 = time.time()
     # print(f'Time for extracting nodes: {t2 - t1}')
     # print(f'Building microstructure graph with {len(nodes)} nodes (grains).')
-    G = nx.Graph(label_map=label_array, symmetry=sym,
+    G = nx.Graph(label_map=label_array, symmetry=sym, rotations=rot,
                  dx=dx, dy=dy)
     G.add_nodes_from(nodes)
     # t3 = time.time()
@@ -357,10 +589,12 @@ def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=
     for x in range(rows):
         for y in range(cols):
             label_here = label_array[x, y]
+            if label_here <= 0:
+                continue
             for px, py in neighbors(x, y, connectivity=connectivity):
                 if 0 <= px < rows and 0 <= py < cols:
                     neighbor_label = label_array[px, py]
-                    if neighbor_label != label_here:
+                    if neighbor_label > 0 and neighbor_label != label_here:
                         G.add_edge(label_here, neighbor_label)
     # t4 = time.time()
     # print(f'Time for adding edges: {t4 - t3}')
@@ -473,6 +707,80 @@ def find_similar_regions(array, tolerance=0.087, connectivity=1):
                             labeled_array[i, j] = current_label
                             stack.extend(neighbors(i, j, connectivity))
                 current_label += 1
+    return labeled_array, current_label - 1
+
+
+
+def find_similar_regions_by_misorientation(ori_map, phase_mask, sym, tolerance=0.174533, connectivity=4):
+    """
+    Identify connected regions using local pixel to pixel misorientation.
+
+    Parameters
+    ----------
+    ori_map : ndarray of shape (H, W, 4)
+        Quaternion map for the full 2D image.
+    phase_mask : ndarray of shape (H, W)
+        Boolean mask selecting the pixels that belong to the current phase.
+    sym : Symmetry
+        Crystal symmetry used for misorientation calculations.
+    tolerance : float, optional
+        Maximum allowed local misorientation in radians. Default is 0.174533.
+    connectivity : int, optional
+        Connectivity criterion for neighbors (4 or 8). Default is 4.
+
+    Returns
+    -------
+    labeled_array : ndarray of shape (H, W)
+        Label image of connected regions. Pixels outside the phase mask stay 0.
+    num_features : int
+        Number of connected regions inside the phase mask.
+    """
+    ori_map = np.asarray(ori_map)
+    phase_mask = np.asarray(phase_mask, dtype=bool)
+
+    if ori_map.ndim != 3 or ori_map.shape[2] != 4:
+        raise ValueError("ori_map must have shape (rows, cols, 4).")
+    if ori_map.shape[:2] != phase_mask.shape:
+        raise ValueError("ori_map and phase_mask must have matching spatial dimensions.")
+
+    rows, cols = phase_mask.shape
+    labeled_array = np.zeros((rows, cols), dtype=int)
+    visited = np.zeros((rows, cols), dtype=bool)
+    current_label = 1
+
+    for i in range(rows):
+        for j in range(cols):
+            if visited[i, j] or not phase_mask[i, j]:
+                continue
+
+            # grow one region from this seed pixel
+            queue = deque([(i, j)])
+            visited[i, j] = True
+            labeled_array[i, j] = current_label
+
+            while queue:
+                x, y = queue.popleft()
+                ori_xy = Orientation(ori_map[x, y][None, :], sym)
+
+                for xx, yy in neighbors(x, y, connectivity=connectivity):
+                    if xx < 0 or xx >= rows or yy < 0 or yy >= cols:
+                        continue
+                    if visited[xx, yy] or not phase_mask[xx, yy]:
+                        continue
+
+                    ori_nb = Orientation(ori_map[xx, yy][None, :], sym)
+                    misorientation = ori_xy.angle_with(ori_nb)[0]
+
+                    # only connect locally similar neighboring pixels
+                    if misorientation > tolerance:
+                        continue
+
+                    queue.append((xx, yy))
+                    visited[xx, yy] = True
+                    labeled_array[xx, yy] = current_label
+
+            current_label += 1
+
     return labeled_array, current_label - 1
 
 
@@ -1599,7 +1907,7 @@ class EBSDmap:
         Maximum misorientation angle (degrees) used for grain merging.
         Default is 5.0.
     connectivity : int, optional
-        Connectivity for grain identification. Default is 8.
+        Connectivity for grain identification. Default is 4.
     show_plot : bool, optional
         If True, plots microstructure maps. Default is True.
     show_hist : bool, optional
@@ -1608,6 +1916,8 @@ class EBSDmap:
         If True, applies Felzenszwalb segmentation. Default is False.
     show_grains : bool, optional
         If True, plots grain labeling. Default is False.
+    show_graph : bool, optional
+        If True, plots graph nodes and edges on the EBSD IPF map. Default is False.
     hist : bool, optional
         Deprecated. Use `show_hist` instead.
     plot : bool, optional
@@ -1643,9 +1953,9 @@ class EBSDmap:
         Total number of grains after merging/pruning.
     """
 
-    def __init__(self, fname, gs_min=10.0, vf_min=0.03, max_angle=5.0, connectivity=8,
+    def __init__(self, fname, gs_min=10.0, vf_min=0.03, max_angle=5.0, connectivity=4,
                  show_plot=True, show_hist=None, felzenszwalb=False, show_grains=False,
-                 hist=None, plot=None):
+                 show_graph=False, hist=None, plot=None):
 
 
         def _reassign(pix, ori, phid, bads):
@@ -1761,6 +2071,7 @@ class EBSDmap:
                                                val_ci[mask],
                                                nx=self.sh_y, ny=self.sh_x)
                 # get Euler Angles
+                quat_map_full = quat_g.copy()
                 q_flat = quat_g.reshape(-1, 4)
                 # remove NaNs
                 mask = ~np.isnan(q_flat[:, 0])
@@ -1820,8 +2131,23 @@ class EBSDmap:
 
             # generate map with grain labels
             print('Identifying regions of homogeneous misorientations and assigning them to grains.')
-            labels, n_regions = find_similar_regions(bmap.reshape((self.sh_x, self.sh_y)),
-                                                     tolerance=max_angle, connectivity=connectivity)
+            if hex_map:
+                full_quat = quat_map_full
+                phase_mask = ~np.isnan(full_quat[:, :, 0])
+            else:
+                full_quat = np.full((self.npx, 4), np.nan, dtype=float)
+                phase_mask_flat = pid == ind
+                full_quat[phase_mask_flat] = np.asarray(data['ori'].data)
+                full_quat = full_quat.reshape((self.sh_x, self.sh_y, 4))
+                phase_mask = phase_mask_flat.reshape((self.sh_x, self.sh_y))
+
+            labels, n_regions = find_similar_regions_by_misorientation(
+                full_quat,
+                phase_mask,
+                data['cs'],
+                tolerance=max_angle,
+                connectivity=connectivity,
+            )
             print(f"Phase #{data['index']} ({data['name']}): Identified Grains: {n_regions}")
 
             # build and visualize graph of unfiltered map
@@ -1830,33 +2156,73 @@ class EBSDmap:
                 rot = quat_g
             else:
                 rot = self.emap.rotations.data
-            ms_graph = build_graph_from_labeled_pixels(labels, rot, data['cs'], self.dx, self.dy)
+
+            ms_graph = build_graph_from_labeled_pixels(
+                labels, rot, data['cs'], self.dx, self.dy, connectivity=connectivity)
             ms_graph.name = 'Graph of microstructure'
+
+            data["initial_labels"] = labels.copy()
+            data["ori_map_debug"] = full_quat.copy()
+            data["phase_mask_debug"] = phase_mask.copy()
+            data["graph_initial"] = copy.deepcopy(ms_graph)
+            data["merge_debug"] = []
+
+            # remove thin boundary artifacts before the standard graph cleanup
+            boundary_merge_records = merge_boundary_artifact_nodes(
+                ms_graph,
+                gs_min,
+                connectivity=connectivity,
+            )
+            data["merge_debug"].extend(boundary_merge_records)
+            print(f'After boundary-artifact pre-merge, {len(ms_graph.nodes)} grains left.')
+            data["graph_boundary_merged"] = copy.deepcopy(ms_graph)
+
             print('Starting to simplify microstructure graph.')
 
-            # graph pruning step 1: remove grains that have no convex hull
-            # and merge regions with similar misorientation
             grain_set = set(ms_graph.nodes)
             rem_grains = len(grain_set)
             while rem_grains > 0:
-                num = grain_set.pop()  # get random ID of grain and remove it from the list
-                nd = ms_graph.nodes[num]  # node to be considered
+                num = grain_set.pop()
+                nd = ms_graph.nodes[num]
                 rem_grains = len(grain_set)
+
                 pts = np.array(np.unravel_index(nd['pixels'], (self.sh_x, self.sh_y)), dtype=float).T
-                pts[:, 0] *= self.dx  # convert pixel distances to micron
+                pts[:, 0] *= self.dx
                 pts[:, 1] *= self.dy
+
                 try:
                     hull = ConvexHull(pts)
                     ms_graph.nodes[num]['hull'] = hull
-                except Exception as e:
-                    # grain has no convex hull
+                except Exception:
                     num_ln = find_largest_neighbor(ms_graph, num)
+                    data["merge_debug"].append({
+                        "node": int(num),
+                        "reason": "no_hull",
+                        "target": int(num_ln),
+                        "node_npix": int(ms_graph.nodes[num]["npix"]),
+                        "target_npix": int(ms_graph.nodes[num_ln]["npix"]),
+                        "will_merge": True,
+                    })
                     merge_nodes(ms_graph, num, num_ln)
                     continue
-                # search for neighbors with similar orientation
+
                 sim_neigh, ori_neigh = find_sim_neighbor(ms_graph, num)
+
+                data["merge_debug"].append({
+                    "node": int(num),
+                    "reason": "similar_neighbor_check",
+                    "target": int(sim_neigh),
+                    "angle_rad": float(ori_neigh),
+                    "angle_deg": float(np.degrees(ori_neigh)),
+                    "threshold_deg": float(np.degrees(max_angle)),
+                    "node_npix": int(ms_graph.nodes[num]["npix"]),
+                    "target_npix": int(ms_graph.nodes[sim_neigh]["npix"]),
+                    "will_merge": bool(ori_neigh <= max_angle),
+                })
+
                 if ori_neigh <= max_angle:
                     merge_nodes(ms_graph, num, sim_neigh)
+
             self.ngrains = len(ms_graph.nodes)
             print(f'After merging of similar regions, {self.ngrains} grains left.')
 
@@ -2007,6 +2373,9 @@ class EBSDmap:
             self.plot_ipf_map()
             self.plot_segmentation()
             self.plot_pf()
+        if show_graph:
+            for iphase in range(len(self.ms_data)):
+                self.plot_graph_overlay(iphase=iphase)
 
         if show_grains:
             self.plot_grains()
@@ -2164,6 +2533,115 @@ class EBSDmap:
             plt.title(f"Phase #{data['index']} ({data['name']}): Grain labels and axes: {ngr}")
             plt.colorbar(label='Grain Number')
             plt.show()
+
+    def plot_graph_overlay(
+            self, iphase=0, show_ids=False, marker_size=3.0, line_width=1.0,
+            save_path=None, show=True):
+        """
+        Plot the microstructure graph on top of the EBSD IPF map.
+
+        Parameters
+        ----------
+        iphase : int, optional
+            Phase index in ``self.ms_data``. Default is 0.
+        show_ids : bool, optional
+            If True, draw node IDs next to the node centers. Default is False.
+        marker_size : float, optional
+            Marker size for node centers. Default is 3.0.
+        line_width : float, optional
+            Line width for graph edges. Default is 1.0.
+        save_path : str or pathlib.Path, optional
+            Path where the figure is saved. If None, the figure is not saved.
+            Default is None.
+        show : bool, optional
+            If True, show the figure with Matplotlib. Default is True.
+
+        Returns
+        -------
+        tuple
+            Matplotlib figure and axes.
+        """
+        data = self.ms_data[iphase]
+        G = data["graph"]
+
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.imshow(data["rgb_im"].reshape((self.sh_x, self.sh_y, 3)))
+
+        for u, v in G.edges():
+            cu = G.nodes[u].get("center", None)
+            cv = G.nodes[v].get("center", None)
+            if cu is None or cv is None:
+                continue
+
+            xu = cu[1] / self.dy
+            yu = cu[0] / self.dx
+            xv = cv[1] / self.dy
+            yv = cv[0] / self.dx
+
+            ax.plot([xu, xv], [yu, yv], color="black", linewidth=line_width)
+
+        for node_id, node in G.nodes.items():
+            ctr = node.get("center", None)
+            if ctr is None:
+                continue
+
+            x = ctr[1] / self.dy
+            y = ctr[0] / self.dx
+            ax.plot(x, y, "ko", markersize=marker_size)
+
+            if show_ids:
+                ax.text(
+                    x,
+                    y,
+                    str(node_id),
+                    color="white",
+                    fontsize=8,
+                    ha="center",
+                    va="center",
+                )
+
+        ax.set_title(f"Phase #{data['index']} ({data['name']}): Microstructure graph")
+        ax.set_axis_off()
+        fig.tight_layout()
+
+        if save_path is not None:
+            save_path = Path(save_path)
+            save_path.parent.mkdir(parents=True, exist_ok=True)
+            fig.savefig(save_path, dpi=300)
+
+        if show:
+            plt.show()
+        else:
+            plt.close(fig)
+
+        return fig, ax
+
+    def plot_graph_with_black_marker(self, iphase=0, show_ids=False, marker_size=12, line_width=1.0):
+        """
+        Plot the microstructure graph on top of the EBSD IPF map.
+
+        Parameters
+        ----------
+        iphase : int, optional
+            Phase index in ``self.ms_data``. Default is 0.
+        show_ids : bool, optional
+            If True, draw node IDs next to the node centers. Default is False.
+        marker_size : float, optional
+            Legacy marker size. Default is 12.
+        line_width : float, optional
+            Line width for graph edges. Default is 1.0.
+
+        Returns
+        -------
+        tuple
+            Matplotlib figure and axes.
+        """
+        return self.plot_graph_overlay(
+            iphase=iphase,
+            show_ids=show_ids,
+            marker_size=marker_size / 4,
+            line_width=line_width,
+        )
 
     def plot_mo_map(self):
         """
