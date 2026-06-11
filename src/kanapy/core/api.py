@@ -2248,32 +2248,9 @@ class Microstructure(object):
             json.dump(structure, fp)
         return
 
-    def write_data(self,
-                  file: str | None = None,
-                  user_metadata: Optional[Dict[str, Any]] = None,
-                  boundary_condition: Optional[Dict[str, Any]] = None,
-                  phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
-                  interactive: bool = False,
-                  structured: bool = True,
-                  ialloy: int = 1,
-                  length_unit: str = 'µm'):
-        if file is None:
-            if self.name == 'Microstructure':
-                file = f'px_{self.Ngr}grains_voxels.json'
-            else:
-                file = self.name + '_.json'
-        data = self.generate_data(
-            user_metadata=user_metadata,
-            boundary_condition=boundary_condition,
-            phases=phases,
-            interactive=interactive,
-            structured=structured,
-            ialloy=ialloy,
-            length_unit=length_unit)
-        with open(file, 'w') as fp:
-            json.dump(data, fp)
+    
 
-    def generate_data(self,
+    def write_data(self,
                       user_metadata: Optional[Dict[str, Any]] = None,
                       boundary_condition: Optional[Dict[str, Any]] = None,
                       phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
