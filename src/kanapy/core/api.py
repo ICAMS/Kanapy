@@ -20,7 +20,7 @@ import orix
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import Delaunay
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional, Union, Mapping
 from importlib.metadata import version as pkg_version
 from datetime import datetime
 
@@ -2248,22 +2248,190 @@ class Microstructure(object):
             json.dump(structure, fp)
         return
 
-    
+    def create_microstructure_identifier(
+            self,
+            microstructure_step: Mapping[str, Any],
+            hash_length: int = 8,
+            decimals: int = 6,
+    ) -> str:
+        """
+        Create a deterministic short identifier for one microstructure snapshot.
+
+        The identifier is based on the microstructure content:
+        grid, grains, voxels, phase IDs, orientations, voxel-grain mapping,
+        voxel indices, voxel coordinates, and voxel volumes.
+        """
+
+        if not isinstance(microstructure_step, Mapping):
+            raise TypeError("microstructure_step must be a dictionary-like mapping.")
+
+        if hash_length <= 0:
+            raise ValueError("hash_length must be a positive integer.")
+
+        def _is_numpy_array(value: Any) -> bool:
+            return hasattr(value, "shape") and hasattr(value, "tolist")
+
+        def _is_numpy_scalar(value: Any) -> bool:
+            return hasattr(value, "item") and not _is_numpy_array(value)
+
+        def _is_empty(value: Any) -> bool:
+            """
+            NumPy-safe emptiness check.
+            Do not compare arrays using value == [] or value == ''.
+            """
+            if value is None:
+                return True
+
+            if isinstance(value, str):
+                return value == ""
+
+            if _is_numpy_array(value):
+                return value.size == 0
+
+            if isinstance(value, Mapping):
+                return len(value) == 0
+
+            if isinstance(value, (list, tuple, set)):
+                return len(value) == 0
+
+            return False
+
+        def _make_json_safe(value: Any) -> Any:
+            """
+            Convert NumPy/Python objects into deterministic JSON-safe values.
+            """
+
+            # NumPy arrays first
+            if _is_numpy_array(value):
+                return _make_json_safe(value.tolist())
+
+            # NumPy scalars
+            if _is_numpy_scalar(value):
+                try:
+                    return _make_json_safe(value.item())
+                except Exception:
+                    pass
+
+            if isinstance(value, float):
+                return round(value, decimals)
+
+            if isinstance(value, bool):
+                return value
+
+            if isinstance(value, int):
+                return value
+
+            if isinstance(value, str):
+                return value
+
+            if isinstance(value, Mapping):
+                cleaned = {}
+
+                for key, item in value.items():
+                    if key == "id":
+                        continue
+
+                    safe_item = _make_json_safe(item)
+
+                    if not _is_empty(safe_item):
+                        cleaned[str(key)] = safe_item
+
+                return cleaned
+
+            if isinstance(value, (list, tuple, set)):
+                cleaned = []
+
+                for item in value:
+                    safe_item = _make_json_safe(item)
+
+                    if not _is_empty(safe_item):
+                        cleaned.append(safe_item)
+
+                return cleaned
+
+            return value
+
+        def _safe_int(value: Any) -> int:
+            try:
+                return int(value)
+            except (TypeError, ValueError):
+                return 0
+
+        grains = microstructure_step.get("grains", [])
+        voxels = microstructure_step.get("voxels", [])
+
+        phase_ids = sorted(
+            {
+                grain.get("phase_id")
+                for grain in grains
+                if isinstance(grain, Mapping) and grain.get("phase_id") is not None
+            }
+        )
+
+        grain_payload = [
+            {
+                "grain_id": grain.get("grain_id"),
+                "phase_id": grain.get("phase_id"),
+                "grain_volume": grain.get("grain_volume"),
+                "orientation": grain.get("orientation"),
+            }
+            for grain in grains
+            if isinstance(grain, Mapping)
+        ]
+
+        voxel_payload = [
+            {
+                "voxel_id": voxel.get("voxel_id"),
+                "grain_id": voxel.get("grain_id"),
+                "centroid_coordinates": voxel.get("centroid_coordinates"),
+                "voxel_index": voxel.get("voxel_index"),
+                "voxel_volume": voxel.get("voxel_volume"),
+                "orientation": voxel.get("orientation"),
+            }
+            for voxel in voxels
+            if isinstance(voxel, Mapping)
+        ]
+
+        payload = {
+            "grid": microstructure_step.get("grid"),
+            "grain_count": len(grain_payload),
+            "voxel_count": len(voxel_payload),
+            "phase_count": len(phase_ids),
+            "phase_ids": phase_ids,
+            "grains": sorted(
+                grain_payload,
+                key=lambda item: _safe_int(item.get("grain_id")),
+            ),
+            "voxels": sorted(
+                voxel_payload,
+                key=lambda item: _safe_int(item.get("voxel_id")),
+            ),
+        }
+
+        canonical_payload = json.dumps(
+            _make_json_safe(payload),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        )
+
+        return hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()[:hash_length]
 
     def write_data(self,
-                      user_metadata: Optional[Dict[str, Any]] = None,
-                      boundary_condition: Optional[Dict[str, Any]] = None,
-                      phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
-                      interactive: bool = True,
-                      structured: bool = True,
-                      ialloy: int = 1,
-                      length_unit: str = 'µm') -> dict:
+                   user_metadata: Optional[Dict[str, Any]] = None,
+                   boundary_condition: Optional[Dict[str, Any]] = None,
+                   phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
+                   interactive: bool = True,
+                   structured: bool = True,
+                   ialloy: int = 1,
+                   length_unit: str = 'µm') -> dict:
 
         """
         Generate a JSON-compatible data schema containing user, system, and job-specific elements
 
         This function builds a comprehensive data dictionary for a microstructure simulation,
-        including metadata, boundary conditions, phase information, voxel and grain data.
+        including metadata, boundary conditions, phase information, voxel data, and grain data. The exported initial voxel records include both grain_id and phase_id.
         It supports interactive prompts for missing information, structured/unstructured meshes,
         and unit scaling.
 
@@ -2297,7 +2465,6 @@ class Microstructure(object):
         TypeError
             If `phases` is not a dict or a list of dicts when provided
         """
-
 
         # interpret length_unit argument
         if length_unit == 'µm':
@@ -2417,10 +2584,10 @@ class Microstructure(object):
 
         # Define required fields
         required_fields = [
-            'identifier', 'title',
+            'title',
             'creator', 'creator_ORCID', 'creator_affiliation', 'creator_institute', 'creator_group',
             'contributor', 'contributor_ORCID', 'contributor_affiliation', 'contributor_institute', 'contributor_group',
-            'date', 'shared_with', 'description', 'rights', 'rights_holder','funder_name', 'fund_identifier',
+            'date', 'shared_with', 'description', 'rights', 'rights_holder', 'funder_name', 'fund_identifier',
             'publisher', 'relation', 'keywords'
         ]
 
@@ -2453,7 +2620,7 @@ class Microstructure(object):
             if not ident:
                 now = datetime.utcnow().isoformat()
                 ident = hashlib.sha256(now.encode()).hexdigest()[:8]
-            use['identifier'] = ident
+            # use['identifier'] = ident
             use['title'] = input("Title: ").strip()
             # creator fields
             use['creator'] = prompt_list('creator names (e.g. Last, First)')
@@ -2488,7 +2655,7 @@ class Microstructure(object):
             use['relation'] = prompt_list('relation (DOI or URL)')
             use['keywords'] = prompt_list('keywords')
         else:
-            if not user_metadata:
+            if user_metadata is None or len(user_metadata) == 0:
                 raise ValueError("user_metadata must be provided when interactive is False.")
             use = user_metadata.copy()
             # Validate presence of required fields
@@ -2500,7 +2667,8 @@ class Microstructure(object):
             'RVE_size': [float(v) * length_scale for v in self.rve.size],
             'RVE_continuity': self.rve.periodic,
             'discretization_type': 'Structured' if structured else 'Unstructured',
-            'discretization_unit_size': [(float(s) / float(d)) * length_scale for s, d in zip(self.rve.size, self.rve.dim)],
+            'discretization_unit_size': [(float(s) / float(d)) * length_scale for s, d in
+                                         zip(self.rve.size, self.rve.dim)],
             'discretization_count': int(self.mesh.nvox),
             'origin': {
                 'software': 'kanapy',
@@ -2529,7 +2697,7 @@ class Microstructure(object):
             logging.warning(f"[Warning] Unable to open Vertices.png: {e}")
 
         # Boundary conditions
-        if boundary_condition:
+        if boundary_condition is not None and len(boundary_condition) > 0:
             # Ensure 'type' is present
             if 'mechanical_BC' in boundary_condition:
                 # Determine mechanical vs thermal by key presence
@@ -2556,7 +2724,7 @@ class Microstructure(object):
                     raise ValueError(
                         "boundary_condition dict must include 'mechanical_BC' or 'thermal_BC' key when interactive=False.")
 
-        elif interactive: # Interactive entry of multiple mechanical BCs
+        elif interactive:  # Interactive entry of multiple mechanical BCs
             mech_entries: List[Dict[str, Any]] = []
             bc_type = input("Boundary condition type ('mechanical' or 'thermal'): ").strip()
             if bc_type == 'mechanical':
@@ -2591,10 +2759,9 @@ class Microstructure(object):
         else:
             job_bc = {}
 
-
         # Phase data
         phase_list = []
-        if phases:  # user provided a dict or list of dicts
+        if phases is not None and len(phases) > 0:  # user provided a dict or list of dicts
             if isinstance(phases, dict):
                 phase_list = [phases]
             elif isinstance(phases, list):
@@ -2645,12 +2812,33 @@ class Microstructure(object):
                 phase_list.append(phase_entry)
 
         # ─── pull Mesh + RVE into locals ─────────────────────────────────────────
-        grain_phase_dict = getattr(self.mesh, 'grain_phase_dict', {}) or {} # {gid: phase_id}
-        grain_ori_dict = getattr(self.mesh, 'grain_ori_dict', None)  # can be None ({gid: [euler…]})
-        vox_center_dict = getattr(self.mesh, 'vox_center_dict', {}) or {} # {vid: (x,y,z)}
-        grain_to_voxels = getattr(self.mesh, 'grain_dict', {}) or {} # {gid: [vid,…]}
-        rve_size = getattr(self.rve, 'size', [0, 0, 0]) or [0, 0, 0] # e.g. [20.0,20.0,20.0]
-        rve_dim = getattr(self.rve, 'dim', [1, 1, 1]) or [1, 1, 1]  # # e.g. [10,10,10] (avoid /0)
+        # ─── pull Mesh + RVE into locals ─────────────────────────────────────────
+
+        grain_phase_dict = getattr(self.mesh, "grain_phase_dict", None)
+        if grain_phase_dict is None:
+            grain_phase_dict = {}
+
+        grain_ori_dict = getattr(self.mesh, "grain_ori_dict", None)
+
+        vox_center_dict = getattr(self.mesh, "vox_center_dict", None)
+        if vox_center_dict is None:
+            vox_center_dict = {}
+
+        grain_to_voxels = getattr(self.mesh, "grain_dict", None)
+        if grain_to_voxels is None:
+            grain_to_voxels = {}
+
+        rve_size = getattr(self.rve, "size", None)
+        if rve_size is None:
+            rve_size = [0, 0, 0]
+        else:
+            rve_size = list(rve_size)
+
+        rve_dim = getattr(self.rve, "dim", None)
+        if rve_dim is None:
+            rve_dim = [1, 1, 1]
+        else:
+            rve_dim = list(rve_dim)
 
         # Is orientation available?
         include_orientation = isinstance(grain_ori_dict, dict) and len(grain_ori_dict) > 0
@@ -2670,9 +2858,9 @@ class Microstructure(object):
         Nx, Ny, Nz = int(rve_dim[0]), int(rve_dim[1]), int(rve_dim[2])
         # infer origin from centers if available: origin = min(center) - 0.5*unit
         if len(vox_center_dict) > 0:
-            xs = [float(c[0])* length_scale for c in vox_center_dict.values()]
-            ys = [float(c[1])* length_scale for c in vox_center_dict.values()]
-            zs = [float(c[2])* length_scale for c in vox_center_dict.values()]
+            xs = [float(c[0]) * length_scale for c in vox_center_dict.values()]
+            ys = [float(c[1]) * length_scale for c in vox_center_dict.values()]
+            zs = [float(c[2]) * length_scale for c in vox_center_dict.values()]
             ox = (min(xs) if xs else 0.0) - 0.5 * unit_sizes[0]
             oy = (min(ys) if ys else 0.0) - 0.5 * unit_sizes[1]
             oz = (min(zs) if zs else 0.0) - 0.5 * unit_sizes[2]
@@ -2774,13 +2962,20 @@ class Microstructure(object):
             iy = _clamp(iy, 1, Ny)
             iz = _clamp(iz, 1, Nz)
 
+            # Phase is stored at grain level in grain_phase_dict.
+            # Since each voxel belongs to one grain, the voxel phase is inherited
+            # directly from its parent grain. This keeps phase_id available at both
+            # grain and voxel level in the exported MiMeDat object.
+            phase_id = grain_phase_dict.get(gid)
+            phase_id = int(phase_id) if phase_id is not None else None
 
             entry = {
-                "voxel_id": vid,
-                "grain_id": gid,
-                "centroid_coordinates": centroid, # scaled for output
-                "voxel_index": [ix, iy, iz], # 1-based indices
-                "voxel_volume": voxel_volume,
+                "voxel_id": int(vid),
+                "grain_id": int(gid),
+                "phase_id": phase_id,
+                "centroid_coordinates": centroid,  # scaled for output
+                "voxel_index": [int(ix), int(iy), int(iz)],  # 1-based indices
+                "voxel_volume": float(voxel_volume),
             }
             if include_orientation:
                 ori = grain_ori_dict.get(gid)
@@ -2790,20 +2985,23 @@ class Microstructure(object):
         voxels_t0_sorted = sorted(voxels_t0, key=lambda d: int(d["voxel_id"]))
 
         # ─── wrap under the time‐step keys ────────────────────────────────────────
+        microstructure_t0 = {
+            "time": 0,
+            "grid": grid_t0,
+            "grains": grains_t0_sorted,
+            "voxels": voxels_t0_sorted,
+        }
+
+        microstructure_t0["id"] = self.create_microstructure_identifier(microstructure_t0)
+
         time_steps = [
-            {   "time"  : 0               ,
-                "grid"  : grid_t0         ,
-                "grains": grains_t0_sorted,
-                "voxels": voxels_t0_sorted,
-            },
+            microstructure_t0,
             # …etc…
         ]
 
-
-
         # Assemble final structure with placeholders
         data = {
-            **use,                   # expand user-specific dict entries directly
+            **use,  # expand user-specific dict entries directly
             "software": "",
             "software_version": "",
             "system": "",
@@ -2811,11 +3009,11 @@ class Microstructure(object):
             "processor_specifications": "",
             "input_path": "",
             "results_path": "",
-            **ig,                    # expand initial geometry dict entries directly
+            **ig,  # expand initial geometry dict entries directly
             "global_temperature": 298,
-            **job_bc,                 # expand boundary condition dict entries directly
-            "phases":phase_list,
-            "microstructure":  time_steps  # Time-level storage: time-frame data of voxels and grains
+            **job_bc,  # expand boundary condition dict entries directly
+            "phase": phase_list,
+            "microstructure": time_steps  # Time-level storage: time-frame data of voxels and grains
         }
 
         return data
