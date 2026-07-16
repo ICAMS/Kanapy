@@ -33,6 +33,47 @@ from collections import Counter, defaultdict, deque
 from typing import Any, Sequence, Union, Dict, Tuple, List
 
 
+MIN_GRAIN_SIZE_PIXELS = 10.0
+"""
+Minimum number of pixels for a grain to be considered valid.
+"""
+
+DEFAULT_MAX_MISORIENTATION_DEGREES = 5.0
+"""
+Default maximum misorientation angle in degrees for grain segmentation.
+"""
+
+DEFAULT_SIMILAR_ORIENTATION_MERGE_DEGREES = DEFAULT_MAX_MISORIENTATION_DEGREES
+"""
+Default maximum orientation difference for merging neighboring graph nodes.
+"""
+
+DEFAULT_MIN_VOLUME_FRACTION = 0.03
+"""
+Default minimum phase volume fraction for EBSD analysis.
+"""
+
+DEFAULT_CONNECTIVITY = 4
+"""
+Default pixel connectivity for graph construction.
+"""
+
+DEFAULT_BOUNDARY_ARTIFACT_SIZE_FACTOR = 2.0
+"""
+Default size factor for boundary artifact candidates.
+"""
+
+DEFAULT_BOUNDARY_ARTIFACT_FRACTION_MIN = 0.85
+"""
+Default minimum boundary pixel fraction for artifact candidates.
+"""
+
+CONVEX_HULL_MIN_POINTS = 3
+"""
+Minimum number of points required to compute a convex hull.
+"""
+
+
 def get_distinct_colormap(N, cmap='prism'):
     """
     Generate N visually distinct colors as an RGB colormap.
@@ -162,7 +203,163 @@ def mean_orientation_data(pixel_orientations, sym):
     return mean_quat / np.linalg.norm(mean_quat)
 
 
-def merge_nodes(G, node1, node2):
+def get_proper_symmetry_quaternions(sym):
+    """
+    Return proper symmetry operators as scalar first quaternions.
+
+    Graph misorientation helpers use this compact array for vectorized
+    symmetry reduction.
+
+    Parameters
+    ----------
+    sym : object or numpy.ndarray
+        ORIX symmetry object or an existing quaternion array.
+
+    Returns
+    -------
+    numpy.ndarray
+        Proper symmetry operators with shape ``(n_ops, 4)``.
+    """
+    if isinstance(sym, np.ndarray):
+        return np.asarray(sym, dtype=float)
+
+    if getattr(sym, "contains_inversion", False):
+        sym = sym.proper_subgroup
+
+    return np.asarray(sym.data, dtype=float)
+
+
+def _quat_left_mul_batch(q, Q):
+    """
+    Left multiply one quaternion with a batch of quaternions.
+
+    Parameters
+    ----------
+    q : numpy.ndarray
+        Single scalar first quaternion with shape ``(4,)``.
+    Q : numpy.ndarray
+        Batch of scalar first quaternions with shape ``(n, 4)``.
+
+    Returns
+    -------
+    numpy.ndarray
+        Quaternion products with shape ``(n, 4)``.
+    """
+    w1, x1, y1, z1 = q[0], q[1], q[2], q[3]
+    w2, x2, y2, z2 = Q[:, 0], Q[:, 1], Q[:, 2], Q[:, 3]
+    return np.column_stack([
+        w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+        w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+        w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+        w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2,
+    ])
+
+
+def _batch_misorientation_angle(q_a, q_b, sym_ops):
+    """
+    Return symmetry reduced misorientation angles for quaternion pairs.
+
+    The implementation keeps memory bounded by looping over the first symmetry
+    side and vectorizing over the second.
+
+    Parameters
+    ----------
+    q_a : numpy.ndarray
+        First quaternion batch with shape ``(n, 4)``.
+    q_b : numpy.ndarray
+        Second quaternion batch with shape ``(n, 4)``.
+    sym_ops : numpy.ndarray
+        Proper symmetry operators with shape ``(n_ops, 4)``.
+
+    Returns
+    -------
+    numpy.ndarray
+        Misorientation angles in radians.
+    """
+    q_a = np.asarray(q_a, dtype=float)
+    q_b = np.asarray(q_b, dtype=float)
+    sym_ops = np.asarray(sym_ops, dtype=float)
+
+    norms_a = np.linalg.norm(q_a, axis=1, keepdims=True)
+    norms_b = np.linalg.norm(q_b, axis=1, keepdims=True)
+    q_a = q_a / np.where(norms_a > 0, norms_a, 1.0)
+    q_b = q_b / np.where(norms_b > 0, norms_b, 1.0)
+
+    w1, x1, y1, z1 = q_b[:, 0], q_b[:, 1], q_b[:, 2], q_b[:, 3]
+    w2, x2, y2, z2 = q_a[:, 0], -q_a[:, 1], -q_a[:, 2], -q_a[:, 3]
+    raw = np.column_stack([
+        w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+        w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+        w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+        w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2,
+    ])
+
+    sign = np.array([1.0, -1.0, -1.0, -1.0])
+    max_abs_w = np.zeros(len(q_a), dtype=np.float64)
+    for sym_left in sym_ops:
+        left = _quat_left_mul_batch(sym_left, raw)
+        candidate_w = (left * sign) @ sym_ops.T
+        np.maximum(max_abs_w, np.abs(candidate_w).max(axis=1), out=max_abs_w)
+
+    np.clip(max_abs_w, 0.0, 1.0, out=max_abs_w)
+    return 2.0 * np.arccos(max_abs_w)
+
+
+def _compute_all_edge_misorientations(G, sym_ops):
+    """
+    Compute and cache misorientation values for every graph edge.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        Microstructure graph with average orientations on nodes.
+    sym_ops : numpy.ndarray
+        Proper symmetry operators used for misorientation reduction.
+    """
+    edges = list(G.edges())
+    if not edges:
+        return
+
+    q_a = np.array([G.nodes[node_a]["ori_av"] for node_a, _node_b in edges])
+    q_b = np.array([G.nodes[node_b]["ori_av"] for _node_a, node_b in edges])
+    angles = _batch_misorientation_angle(q_a, q_b, sym_ops)
+    for (node_a, node_b), angle in zip(edges, angles):
+        G[node_a][node_b]["misorientation"] = float(angle)
+
+
+def _refresh_node_misorientation_cache(G, node, sym_ops=None):
+    """
+    Refresh cached misorientation values for one node's incident edges.
+
+    Merging changes the surviving grain orientation, so cached values around
+    that node must be recomputed before later neighbor searches reuse them.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        Microstructure graph with average orientations on nodes.
+    node : int
+        Grain node whose incident edge cache values should be refreshed.
+    sym_ops : numpy.ndarray, optional
+        Proper symmetry operators. If omitted, they are built from graph
+        symmetry metadata.
+    """
+    neighbors_sorted = sorted(G.adj[node])
+    if not neighbors_sorted:
+        return
+
+    if sym_ops is None:
+        sym_ops = get_proper_symmetry_quaternions(G.graph["symmetry"])
+
+    q_a = np.tile(G.nodes[node]["ori_av"], (len(neighbors_sorted), 1))
+    q_b = np.array([G.nodes[neigh]["ori_av"] for neigh in neighbors_sorted])
+    angles = _batch_misorientation_angle(q_a, q_b, sym_ops)
+
+    for neigh, angle in zip(neighbors_sorted, angles):
+        G[node][neigh]["misorientation"] = float(angle)
+
+
+def merge_nodes(G, node1, node2, preserve_target_orientation=False):
     """
     Merge the pixel and attribute data of one node into another node.
 
@@ -180,24 +377,32 @@ def merge_nodes(G, node1, node2):
         Node ID to be merged and removed.
     node2 : int
         Node ID to merge into and retain.
+    preserve_target_orientation : bool, optional
+        Keep the retained node orientation unchanged. Cleanup passes use this
+        when a small geometric artifact should not affect the larger node.
 
     Notes
     -----
     This function modifies the graph in place.
     """
+    has_misorientation_cache = any(
+        "misorientation" in data
+        for _node_a, _node_b, data in G.edges([node1, node2], data=True)
+    )
+
     # merge pixel lists before recomputing node attributes
     G.nodes[node2]['pixels'] = np.concatenate((G.nodes[node1]['pixels'], G.nodes[node2]['pixels']))
     npix1 = G.nodes[node1]['npix']
     npix2 = G.nodes[node2]['npix']
     ntot = npix1 + npix2
 
-    if 'rotations' in G.graph:
+    if not preserve_target_orientation and 'rotations' in G.graph:
         pix = G.nodes[node2]['pixels']
         G.nodes[node2]['ori_av'] = mean_orientation_data(
             G.graph['rotations'][pix],
             G.graph['symmetry'],
         )
-    else:
+    elif not preserve_target_orientation:
         # keep old graph objects usable when original pixel orientations are missing
         ori_av = (G.nodes[node1]['ori_av'] * G.nodes[node1]['npix'] +
                   G.nodes[node2]['ori_av'] * G.nodes[node2]['npix']) / ntot
@@ -211,10 +416,13 @@ def merge_nodes(G, node1, node2):
         # convert pixel distances to micron
         pts[:, 0] *= G.graph['dx']
         pts[:, 1] *= G.graph['dy']
-        G.nodes[node2]['hull'] = ConvexHull(pts)
+        if pts.shape[0] >= CONVEX_HULL_MIN_POINTS:
+            G.nodes[node2]['hull'] = ConvexHull(pts)
+        else:
+            G.nodes[node2].pop('hull', None)
 
     # add new edges and let the graph ignore existing ones
-    for neigh in G.adj[node1]:
+    for neigh in sorted(G.adj[node1]):
         if node2 != neigh:
             G.add_edge(node2, neigh)
 
@@ -223,6 +431,9 @@ def merge_nodes(G, node1, node2):
     # replace node1 labels with node2 labels
     ix, iy = np.nonzero(G.graph['label_map'] == node1)
     G.graph['label_map'][ix, iy] = node2
+
+    if has_misorientation_cache:
+        _refresh_node_misorientation_cache(G, node2)
 
 
 def find_largest_neighbor(G, node):
@@ -264,12 +475,12 @@ def find_largest_neighbor(G, node):
     return num_ln
 
 
-def find_sim_neighbor(G, nn):
+def find_sim_neighbor(G, nn, sym_ops=None):
     """
-    Find the neighboring node most similar in orientation to the given node
+    Find the neighboring node most similar in orientation to the given node.
 
     This function computes the misorientation angles between the given node and
-    all its neighbors, and returns the neighbor with the smallest misorientation.
+    all its neighbors, or reads cached edge values when they are available.
 
     Parameters
     ----------
@@ -278,6 +489,9 @@ def find_sim_neighbor(G, nn):
         The graph also contains a 'symmetry' key in G.graph used for orientation calculations.
     nn : int
         Node ID for which the most similar neighbor is to be found.
+    sym_ops : numpy.ndarray, optional
+        Proper symmetry operators. Pass this when calling in a loop to avoid
+        rebuilding symmetry data.
 
     Returns
     -------
@@ -286,22 +500,31 @@ def find_sim_neighbor(G, nn):
         - neighbor_id : int, ID of the neighbor with smallest misorientation
         - angle : float, misorientation angle with the given node
 
-    Notes
-    -----
-    - Uses the `Orientation` class for misorientation calculations
-    - Assumes all neighbors have a valid 'ori_av' attribute
-    - Does not modify the graph
+    Raises
+    ------
+    ValueError
+        If the node has no neighbors.
     """
-    sym = G.graph['symmetry']
-    ori0 = Orientation(G.nodes[nn]['ori_av'], sym)
-    on = []
-    ng = []
-    for neigh in G.adj[nn]:
-        ang = ori0.angle_with(Orientation(G.nodes[neigh]['ori_av'], sym))[0]
-        on.append(ang)
-        ng.append(neigh)
-    nn = np.argmin(on)
-    return ng[nn], on[nn]
+    neighbors_sorted = sorted(G.adj[nn])
+    if not neighbors_sorted:
+        raise ValueError(f"Grain {nn} has no neighbors.")
+
+    if all("misorientation" in G[nn][neigh] for neigh in neighbors_sorted):
+        angles = [G[nn][neigh]["misorientation"] for neigh in neighbors_sorted]
+    else:
+        if sym_ops is None:
+            sym_ops = get_proper_symmetry_quaternions(G.graph["symmetry"])
+
+        q_a = np.tile(G.nodes[nn]["ori_av"], (len(neighbors_sorted), 1))
+        q_b = np.array([G.nodes[neigh]["ori_av"] for neigh in neighbors_sorted])
+        angles = _batch_misorientation_angle(q_a, q_b, sym_ops)
+
+    rows = []
+    for neigh, angle in zip(neighbors_sorted, angles):
+        rows.append((float(angle), int(neigh)))
+
+    angle, neighbor = min(rows, key=lambda row: (row[0], row[1]))
+    return neighbor, angle
 
 
 def get_node_boundary_stats(G, node_id, connectivity=4):
@@ -392,10 +615,12 @@ def merge_boundary_artifact_nodes(
     """
     debug_records = []
     npix_limit = max(int(npix_factor * gs_min), 40)
+    sym_ops = get_proper_symmetry_quaternions(G.graph['symmetry'])
 
     changed = True
     while changed:
         changed = False
+        _compute_all_edge_misorientations(G, sym_ops)
         candidate_rows = []
 
         # collect small nodes that are mostly made of boundary pixels
@@ -410,7 +635,7 @@ def merge_boundary_artifact_nodes(
             if stats['boundary_fraction'] < boundary_fraction_min:
                 continue
 
-            sim_neigh, ori_neigh = find_sim_neighbor(G, node_id)
+            sim_neigh, ori_neigh = find_sim_neighbor(G, node_id, sym_ops=sym_ops)
             candidate_rows.append((
                 -stats['boundary_fraction'],
                 npix,
@@ -443,7 +668,7 @@ def merge_boundary_artifact_nodes(
                 'will_merge': True,
             }
             debug_records.append(record)
-            merge_nodes(G, node_id, sim_neigh)
+            merge_nodes(G, node_id, sim_neigh, preserve_target_orientation=True)
             changed = True
             break
 
@@ -1908,6 +2133,15 @@ class EBSDmap:
         Default is 5.0.
     connectivity : int, optional
         Connectivity for grain identification. Default is 4.
+    boundary_artifact_size_factor : float, optional
+        Size factor used to identify small boundary artifact nodes.
+    boundary_artifact_fraction_min : float, optional
+        Minimum boundary pixel fraction for boundary artifact nodes.
+    convex_hull_min_points : int, optional
+        Minimum number of node points required for convex hull calculation.
+    similar_orientation_merge_degrees : float, optional
+        Maximum orientation difference in degrees for merging neighboring
+        graph nodes after invalid regions have been absorbed.
     show_plot : bool, optional
         If True, plots microstructure maps. Default is True.
     show_hist : bool, optional
@@ -1953,7 +2187,14 @@ class EBSDmap:
         Total number of grains after merging/pruning.
     """
 
-    def __init__(self, fname, gs_min=10.0, vf_min=0.03, max_angle=5.0, connectivity=4,
+    def __init__(self, fname, gs_min=MIN_GRAIN_SIZE_PIXELS,
+                 vf_min=DEFAULT_MIN_VOLUME_FRACTION,
+                 max_angle=DEFAULT_MAX_MISORIENTATION_DEGREES,
+                 connectivity=DEFAULT_CONNECTIVITY,
+                 boundary_artifact_size_factor=DEFAULT_BOUNDARY_ARTIFACT_SIZE_FACTOR,
+                 boundary_artifact_fraction_min=DEFAULT_BOUNDARY_ARTIFACT_FRACTION_MIN,
+                 convex_hull_min_points=CONVEX_HULL_MIN_POINTS,
+                 similar_orientation_merge_degrees=DEFAULT_SIMILAR_ORIENTATION_MERGE_DEGREES,
                  show_plot=True, show_hist=None, felzenszwalb=False, show_grains=False,
                  show_graph=False, hist=None, plot=None):
 
@@ -2002,7 +2243,22 @@ class EBSDmap:
             logging.warning('Use of "hist" is depracted, use argument "show_plot" instead.')
         if show_hist is None:
             show_hist = show_plot
-        max_angle *= np.pi / 180
+        if convex_hull_min_points < CONVEX_HULL_MIN_POINTS:
+            raise ValueError(
+                f"convex_hull_min_points must be at least {CONVEX_HULL_MIN_POINTS}"
+            )
+        segmentation_angle = max_angle * np.pi / 180
+        similar_orientation_merge_angle = (
+            similar_orientation_merge_degrees * np.pi / 180
+        )
+        self.gs_min = gs_min
+        self.vf_min = vf_min
+        self.max_angle = segmentation_angle
+        self.connectivity = connectivity
+        self.boundary_artifact_size_factor = boundary_artifact_size_factor
+        self.boundary_artifact_fraction_min = boundary_artifact_fraction_min
+        self.convex_hull_min_points = int(convex_hull_min_points)
+        self.similar_orientation_merge_angle = similar_orientation_merge_angle
         self.ms_data = []
         # read EBSD map and return the orix object
         self.emap = io.load(fname)
@@ -2145,7 +2401,7 @@ class EBSDmap:
                 full_quat,
                 phase_mask,
                 data['cs'],
-                tolerance=max_angle,
+                tolerance=segmentation_angle,
                 connectivity=connectivity,
             )
             print(f"Phase #{data['index']} ({data['name']}): Identified Grains: {n_regions}")
@@ -2172,6 +2428,8 @@ class EBSDmap:
                 ms_graph,
                 gs_min,
                 connectivity=connectivity,
+                npix_factor=boundary_artifact_size_factor,
+                boundary_fraction_min=boundary_artifact_fraction_min,
             )
             data["merge_debug"].extend(boundary_merge_records)
             print(f'After boundary-artifact pre-merge, {len(ms_graph.nodes)} grains left.')
@@ -2179,6 +2437,8 @@ class EBSDmap:
 
             print('Starting to simplify microstructure graph.')
 
+            sym_ops = get_proper_symmetry_quaternions(ms_graph.graph['symmetry'])
+            _compute_all_edge_misorientations(ms_graph, sym_ops)
             grain_set = set(ms_graph.nodes)
             rem_grains = len(grain_set)
             while rem_grains > 0:
@@ -2189,6 +2449,24 @@ class EBSDmap:
                 pts = np.array(np.unravel_index(nd['pixels'], (self.sh_x, self.sh_y)), dtype=float).T
                 pts[:, 0] *= self.dx
                 pts[:, 1] *= self.dy
+
+                if pts.shape[0] < convex_hull_min_points:
+                    num_ln = find_largest_neighbor(ms_graph, num)
+                    data["merge_debug"].append({
+                        "node": int(num),
+                        "reason": "no_hull",
+                        "target": int(num_ln),
+                        "node_npix": int(ms_graph.nodes[num]["npix"]),
+                        "target_npix": int(ms_graph.nodes[num_ln]["npix"]),
+                        "will_merge": True,
+                    })
+                    merge_nodes(
+                        ms_graph,
+                        num,
+                        num_ln,
+                        preserve_target_orientation=True,
+                    )
+                    continue
 
                 try:
                     hull = ConvexHull(pts)
@@ -2203,10 +2481,19 @@ class EBSDmap:
                         "target_npix": int(ms_graph.nodes[num_ln]["npix"]),
                         "will_merge": True,
                     })
-                    merge_nodes(ms_graph, num, num_ln)
+                    merge_nodes(
+                        ms_graph,
+                        num,
+                        num_ln,
+                        preserve_target_orientation=True,
+                    )
                     continue
 
-                sim_neigh, ori_neigh = find_sim_neighbor(ms_graph, num)
+                sim_neigh, ori_neigh = find_sim_neighbor(
+                    ms_graph,
+                    num,
+                    sym_ops=sym_ops,
+                )
 
                 data["merge_debug"].append({
                     "node": int(num),
@@ -2214,13 +2501,13 @@ class EBSDmap:
                     "target": int(sim_neigh),
                     "angle_rad": float(ori_neigh),
                     "angle_deg": float(np.degrees(ori_neigh)),
-                    "threshold_deg": float(np.degrees(max_angle)),
+                    "threshold_deg": float(np.degrees(similar_orientation_merge_angle)),
                     "node_npix": int(ms_graph.nodes[num]["npix"]),
                     "target_npix": int(ms_graph.nodes[sim_neigh]["npix"]),
-                    "will_merge": bool(ori_neigh <= max_angle),
+                    "will_merge": bool(ori_neigh <= similar_orientation_merge_angle),
                 })
 
-                if ori_neigh <= max_angle:
+                if ori_neigh <= similar_orientation_merge_angle:
                     merge_nodes(ms_graph, num, sim_neigh)
 
             self.ngrains = len(ms_graph.nodes)
@@ -2234,7 +2521,12 @@ class EBSDmap:
                 rem_grains = len(grain_set)
                 if ms_graph.nodes[num]['npix'] < gs_min:
                     num_ln = find_largest_neighbor(ms_graph, num)
-                    merge_nodes(ms_graph, num, num_ln)
+                    merge_nodes(
+                        ms_graph,
+                        num,
+                        num_ln,
+                        preserve_target_orientation=True,
+                    )
             self.ngrains = len(ms_graph.nodes)
             data['ngrains'] = self.ngrains
             print(f'After elimination of small grains, {self.ngrains} grains left.')

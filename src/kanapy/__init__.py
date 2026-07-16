@@ -28,6 +28,14 @@ from .core import Microstructure, set_stats, pickle2microstructure, import_voxel
 
 from .texture import EBSDmap, ODF, createOriset, createOrisetRandom, \
     get_ipf_colors, plot_pole_figure, plot_pole_figure_proj
+from .graph_workflow import (
+    EBSDGraphConfig,
+    EBSDGraphOutputOptions,
+    EBSDGraphResult,
+    build_ebsd_graph,
+    load_ebsd_graph,
+    write_graph_result_outputs,
+)
 
 log_level = 20  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR
 logging.basicConfig(level=log_level)  # set log level
@@ -41,7 +49,9 @@ __all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxel
            "import_stats", "write_stats", "start", "EBSDmap", "ODF",  "createOriset",
            "createOrisetRandom", "get_ipf_colors", "plot_pole_figure",
            "plot_pole_figure_proj", "plot_voxels_3D", "plot_polygons_3D", "plot_mean_ellipsoids_from_stats",
-           "triple_surf"]
+           "triple_surf", "EBSDGraphConfig", "EBSDGraphOutputOptions",
+           "EBSDGraphResult", "build_ebsd_graph", "load_ebsd_graph",
+           "write_graph_result_outputs"]
 
 if triple_surf:
     from .core import create_ref_ell
