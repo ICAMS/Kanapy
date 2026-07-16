@@ -2,7 +2,9 @@
 Build a reusable EBSD graph handoff from an EBSD map.
 
 This example returns an ``EBSDGraphResult`` instance and writes only the graph
-handoff files explicitly enabled below.
+handoff files explicitly enabled below. It does not show the legacy interactive
+Kanapy plots by default; users who want those plots can call the usual
+``result.ebsd.plot_*`` methods after the graph result is built.
 """
 
 from pathlib import Path
