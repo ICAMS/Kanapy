@@ -133,6 +133,7 @@ def test_graph_outputs_are_explicit_and_exclude_step_figures(tmp_path):
     assert written_files["summary_json"].name == GRAPH_SUMMARY_FILENAME
     assert written_files["graph_overlay"].name == GRAPH_OVERLAY_FILENAME
     assert written_files["ipf_map"].name == GRAPH_IPF_MAP_FILENAME
+    assert "step0" not in GRAPH_IPF_MAP_FILENAME
     assert not list(tmp_path.glob("graph_step1*.png"))
 
     with written_files["summary_json"].open(encoding="utf-8") as file_handle:

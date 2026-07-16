@@ -34,7 +34,7 @@ from .texture import (
 EBSD_GRAPH_FILENAME = "ebsd_graph.pkl"
 GRAPH_SUMMARY_FILENAME = "ebsd_graph_summary.json"
 GRAPH_OVERLAY_FILENAME = "graph_overlay.png"
-GRAPH_IPF_MAP_FILENAME = "graph_step0_ipf_map.png"
+GRAPH_IPF_MAP_FILENAME = "graph_ipf_map.png"
 
 
 @dataclass

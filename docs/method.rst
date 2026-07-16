@@ -188,7 +188,7 @@ The graph workflow example produces:
     2D_graph_result/ebsd_graph.pkl
     2D_graph_result/ebsd_graph_summary.json
     2D_graph_result/graph_overlay.png
-    2D_graph_result/graph_step0_ipf_map.png
+    2D_graph_result/graph_ipf_map.png
 
 The overlay image shows the final graph node centers and graph edges on the EBSD inverse pole figure map.
          
