@@ -664,6 +664,7 @@ def build_ebsd_graph(
         show_grains=False,
         show_hist=False,
         show_graph=False,
+        graph_only=True,
     )
 
     _, selected_phase_data = select_major_phase(ebsd)

@@ -2,9 +2,11 @@
 Build a reusable EBSD graph handoff from an EBSD map.
 
 This example returns an ``EBSDGraphResult`` instance and writes only the graph
-handoff files explicitly enabled below. It does not show the legacy interactive
-Kanapy plots by default; users who want those plots can call the usual
-``result.ebsd.plot_*`` methods after the graph result is built.
+handoff files explicitly enabled below. It uses Kanapy's graph only path and
+skips the grain statistics and legacy interactive plotting workflow. Users who
+need the classic interactive Kanapy analysis plots should create an
+``EBSDmap`` object directly with the usual plotting flags. Routine graph users
+usually need only the four handoff files written by this example.
 """
 
 from pathlib import Path
@@ -53,9 +55,9 @@ def main():
     """
     Build the EBSD graph handoff for downstream analysis.
 
-    The API returns an in memory ``EBSDGraphResult``. PKL, JSON, overlay PNG,
-    and IPF map PNG files are written here only because the example explicitly
-    enables them.
+    The API returns an in memory ``EBSDGraphResult`` and skips grain statistics
+    extraction. PKL, JSON, overlay PNG, and IPF map PNG files are written here
+    only because the example explicitly enables them.
     """
     base_dir = Path(__file__).resolve().parent
     input_file = base_dir / "p558_250x_1.ang"

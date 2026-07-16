@@ -175,9 +175,11 @@ Example script
 The graph workflow example is provided in ``examples/EBSD_graph_analysis``.
 
 ``run_ebsd_analysis_with_graph.py``
-    Builds an in memory :class:`kanapy.graph_workflow.EBSDGraphResult` object and writes only the explicitly enabled graph handoff files. The output is written to ``2D_graph_result``.
+    Builds an in memory :class:`kanapy.graph_workflow.EBSDGraphResult` object and writes only the explicitly enabled graph handoff files. This example uses the graph only path and does not run grain statistics extraction or the legacy interactive plotting workflow. The output is written to ``2D_graph_result``.
 
-The graph workflow can be called directly from Python by using :func:`kanapy.graph_workflow.build_ebsd_graph`. The main data transfer object is :class:`kanapy.graph_workflow.EBSDGraphResult`; PKL, JSON, and PNG files are written only when enabled through :class:`kanapy.graph_workflow.EBSDGraphOutputOptions`.
+The graph workflow can be called directly from Python by using :func:`kanapy.graph_workflow.build_ebsd_graph`. The main data transfer object is :class:`kanapy.graph_workflow.EBSDGraphResult`; PKL, JSON, and PNG files are written only when enabled through :class:`kanapy.graph_workflow.EBSDGraphOutputOptions`. Users who need the classic EBSD statistics and interactive Kanapy plots can still create :class:`kanapy.texture.EBSDmap` directly with the usual plotting flags.
+
+The example keeps graph step figures and local zoom diagnostics disabled by default. These outputs are mainly useful for debugging or preparing publication figures, while routine workflows usually need only the final graph handoff files.
 
 The graph workflow example produces:
 

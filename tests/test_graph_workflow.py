@@ -17,8 +17,10 @@ from kanapy.graph_workflow import (
     EBSDGraphConfig,
     EBSDGraphOutputOptions,
     EBSDGraphResult,
+    build_ebsd_graph,
     write_graph_result_outputs,
 )
+import kanapy.graph_workflow as graph_workflow
 
 
 def make_phase_data():
@@ -140,3 +142,48 @@ def test_graph_outputs_are_explicit_and_exclude_step_figures(tmp_path):
     assert summary["graph_edge_count"] == 1
     assert summary["graph_overlay"] == GRAPH_OVERLAY_FILENAME
     assert summary["ipf_map"] == GRAPH_IPF_MAP_FILENAME
+
+
+def test_build_ebsd_graph_uses_graph_only_map_analysis(tmp_path, monkeypatch):
+    """
+    Graph workflow requests graph only EBSD analysis.
+
+    This keeps the example focused on the graph handoff instead of running the
+    full statistical EBSD analysis path.
+    """
+    calls = []
+
+    class FakeEBSDMap:
+        """
+        Minimal EBSD map replacement for workflow tests.
+        """
+
+        def __init__(self, *_args, **kwargs):
+            """
+            Record constructor options and expose one phase row.
+
+            Parameters
+            ----------
+            *_args : tuple
+                Positional arguments passed by the workflow.
+            **kwargs : dict
+                Keyword arguments passed by the workflow.
+            """
+            calls.append(kwargs)
+            self.npx = 4
+            self.sh_x = 2
+            self.sh_y = 2
+            self.ms_data = [make_phase_data()]
+
+    input_file = tmp_path / "source.ang"
+    input_file.write_text("", encoding="utf-8")
+    monkeypatch.setattr(graph_workflow, "EBSDmap", FakeEBSDMap)
+
+    result = build_ebsd_graph(
+        input_file=input_file,
+        config=EBSDGraphConfig(),
+        output_options=EBSDGraphOutputOptions(),
+    )
+
+    assert calls[0]["graph_only"] is True
+    assert result.graph.number_of_nodes() == 2

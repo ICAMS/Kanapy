@@ -12,6 +12,7 @@ from orix.crystal_map import Phase
 from kanapy.texture import (
     _batch_misorientation_angle,
     _compute_all_edge_misorientations,
+    build_graph_from_labeled_pixels,
     find_sim_neighbor,
     get_proper_symmetry_quaternions,
     merge_nodes,
@@ -137,3 +138,36 @@ def test_merge_nodes_refreshes_surviving_node_misorientation_cache():
 
     assert "misorientation" in graph[2][3]
     assert np.isclose(graph[2][3]["misorientation"], expected_angle, atol=1e-12)
+
+
+def test_build_graph_stores_independent_label_map_copy():
+    """
+    Graph metadata keeps its own label map copy.
+
+    Downstream cleanup mutates graph labels during node merges, so callers must
+    not see their original label array modified through shared storage.
+    """
+    label_map = np.array(
+        [
+            [1, 1, 0],
+            [1, 2, 2],
+            [0, 2, 3],
+        ],
+        dtype=int,
+    )
+    rotations = np.tile(np.array([[1.0, 0.0, 0.0, 0.0]]), (label_map.size, 1))
+    symmetry = Phase(point_group="m-3m").point_group
+
+    graph = build_graph_from_labeled_pixels(
+        label_map,
+        rotations,
+        symmetry,
+        dx=1.0,
+        dy=1.0,
+        connectivity=4,
+    )
+    graph.graph["label_map"][0, 0] = 99
+
+    assert label_map[0, 0] == 1
+    assert set(graph.nodes) == {1, 2, 3}
+    assert set(graph.edges) == {(1, 2), (2, 3)}

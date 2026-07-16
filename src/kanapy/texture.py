@@ -20,6 +20,7 @@ from scipy.optimize import fminbound, linear_sum_assignment
 from scipy.integrate import quad
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import connected_components
+from scipy.sparse.csgraph import connected_components as connected_components_csgraph
 from skimage.segmentation import mark_boundaries
 from orix import io
 from orix import plot as ox_plot
@@ -798,31 +799,55 @@ def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=
     - Loops over all pixels to add edges between neighboring grains
     - The function preserves the shape and indices of `label_array`
     """
-    # t1 = time.time()
     nodes = summarize_labels(label_array, rot, sym)
-    # t2 = time.time()
-    # print(f'Time for extracting nodes: {t2 - t1}')
-    # print(f'Building microstructure graph with {len(nodes)} nodes (grains).')
-    G = nx.Graph(label_map=label_array, symmetry=sym, rotations=rot,
+    G = nx.Graph(label_map=label_array.copy(), symmetry=sym, rotations=rot,
                  dx=dx, dy=dy)
     G.add_nodes_from(nodes)
-    # t3 = time.time()
-    # print(f'Time for building graph: {t3 - t2}')
 
-    # print('Adding edges (grain boundaries) to microstructure graph.')
-    rows, cols = label_array.shape
-    for x in range(rows):
-        for y in range(cols):
-            label_here = label_array[x, y]
-            if label_here <= 0:
-                continue
-            for px, py in neighbors(x, y, connectivity=connectivity):
-                if 0 <= px < rows and 0 <= py < cols:
-                    neighbor_label = label_array[px, py]
-                    if neighbor_label > 0 and neighbor_label != label_here:
-                        G.add_edge(label_here, neighbor_label)
-    # t4 = time.time()
-    # print(f'Time for adding edges: {t4 - t3}')
+    edges = set()
+
+    left = label_array[:, :-1].ravel()
+    right = label_array[:, 1:].ravel()
+    mask = left != right
+    if mask.any():
+        pairs = np.stack((left[mask], right[mask]), axis=1)
+        for label_a, label_b in pairs:
+            if label_a > 0 and label_b > 0 and label_a != label_b:
+                edge = tuple(sorted((int(label_a), int(label_b))))
+                edges.add(edge)
+
+    top = label_array[:-1, :].ravel()
+    bottom = label_array[1:, :].ravel()
+    mask = top != bottom
+    if mask.any():
+        pairs = np.stack((top[mask], bottom[mask]), axis=1)
+        for label_a, label_b in pairs:
+            if label_a > 0 and label_b > 0 and label_a != label_b:
+                edge = tuple(sorted((int(label_a), int(label_b))))
+                edges.add(edge)
+
+    if connectivity == 8:
+        top_left = label_array[:-1, :-1].ravel()
+        bottom_right = label_array[1:, 1:].ravel()
+        mask = top_left != bottom_right
+        if mask.any():
+            pairs = np.stack((top_left[mask], bottom_right[mask]), axis=1)
+            for label_a, label_b in pairs:
+                if label_a > 0 and label_b > 0 and label_a != label_b:
+                    edge = tuple(sorted((int(label_a), int(label_b))))
+                    edges.add(edge)
+
+        top_right = label_array[:-1, 1:].ravel()
+        bottom_left = label_array[1:, :-1].ravel()
+        mask = top_right != bottom_left
+        if mask.any():
+            pairs = np.stack((top_right[mask], bottom_left[mask]), axis=1)
+            for label_a, label_b in pairs:
+                if label_a > 0 and label_b > 0 and label_a != label_b:
+                    edge = tuple(sorted((int(label_a), int(label_b))))
+                    edges.add(edge)
+
+    G.add_edges_from(sorted(edges))
     return G
 
 
@@ -969,44 +994,61 @@ def find_similar_regions_by_misorientation(ori_map, phase_mask, sym, tolerance=0
         raise ValueError("ori_map and phase_mask must have matching spatial dimensions.")
 
     rows, cols = phase_mask.shape
-    labeled_array = np.zeros((rows, cols), dtype=int)
-    visited = np.zeros((rows, cols), dtype=bool)
-    current_label = 1
+    sym_ops = get_proper_symmetry_quaternions(sym)
+    flat_index = np.arange(rows * cols, dtype=np.int32).reshape(rows, cols)
 
-    for i in range(rows):
-        for j in range(cols):
-            if visited[i, j] or not phase_mask[i, j]:
-                continue
+    directions = [
+        (np.s_[:, :-1], np.s_[:, 1:]),
+        (np.s_[:-1, :], np.s_[1:, :]),
+    ]
+    if connectivity == 8:
+        directions += [
+            (np.s_[:-1, :-1], np.s_[1:, 1:]),
+            (np.s_[:-1, 1:], np.s_[1:, :-1]),
+        ]
 
-            # grow one region from this seed pixel
-            queue = deque([(i, j)])
-            visited[i, j] = True
-            labeled_array[i, j] = current_label
+    source_rows = []
+    target_rows = []
+    for slice_a, slice_b in directions:
+        valid = phase_mask[slice_a] & phase_mask[slice_b]
+        if not np.any(valid):
+            continue
 
-            while queue:
-                x, y = queue.popleft()
-                ori_xy = Orientation(ori_map[x, y][None, :], sym)
+        q_a = ori_map[slice_a][valid]
+        q_b = ori_map[slice_b][valid]
+        same_region = _batch_misorientation_angle(q_a, q_b, sym_ops) <= tolerance
+        if not np.any(same_region):
+            continue
 
-                for xx, yy in neighbors(x, y, connectivity=connectivity):
-                    if xx < 0 or xx >= rows or yy < 0 or yy >= cols:
-                        continue
-                    if visited[xx, yy] or not phase_mask[xx, yy]:
-                        continue
+        source_rows.append(flat_index[slice_a][valid][same_region])
+        target_rows.append(flat_index[slice_b][valid][same_region])
 
-                    ori_nb = Orientation(ori_map[xx, yy][None, :], sym)
-                    misorientation = ori_xy.angle_with(ori_nb)[0]
+    pixel_count = rows * cols
+    if source_rows:
+        source = np.concatenate(source_rows)
+        target = np.concatenate(target_rows)
+        adjacency = coo_matrix(
+            (np.ones(len(source), dtype=np.float32), (source, target)),
+            shape=(pixel_count, pixel_count),
+        )
+        adjacency = adjacency + adjacency.T
+    else:
+        adjacency = coo_matrix((pixel_count, pixel_count), dtype=np.float32)
 
-                    # only connect locally similar neighboring pixels
-                    if misorientation > tolerance:
-                        continue
+    _, labels_flat = connected_components_csgraph(
+        adjacency.tocsr(),
+        directed=False,
+    )
 
-                    queue.append((xx, yy))
-                    visited[xx, yy] = True
-                    labeled_array[xx, yy] = current_label
+    labeled_array = np.zeros(pixel_count, dtype=int)
+    phase_flat = phase_mask.ravel()
+    phase_labels = labels_flat[phase_flat]
+    unique_components = np.unique(phase_labels)
+    remap = np.zeros(int(labels_flat.max()) + 1, dtype=int)
+    remap[unique_components] = np.arange(1, len(unique_components) + 1)
+    labeled_array[phase_flat] = remap[phase_labels]
 
-            current_label += 1
-
-    return labeled_array, current_label - 1
+    return labeled_array.reshape(rows, cols), len(unique_components)
 
 
 def calc_error(odf_ref, odf_test, res=10.):
@@ -2152,6 +2194,9 @@ class EBSDmap:
         If True, plots grain labeling. Default is False.
     show_graph : bool, optional
         If True, plots graph nodes and edges on the EBSD IPF map. Default is False.
+    graph_only : bool, optional
+        If True, build the EBSD graph and skip grain statistics extraction.
+        Default is False.
     hist : bool, optional
         Deprecated. Use `show_hist` instead.
     plot : bool, optional
@@ -2196,7 +2241,7 @@ class EBSDmap:
                  convex_hull_min_points=CONVEX_HULL_MIN_POINTS,
                  similar_orientation_merge_degrees=DEFAULT_SIMILAR_ORIENTATION_MERGE_DEGREES,
                  show_plot=True, show_hist=None, felzenszwalb=False, show_grains=False,
-                 show_graph=False, hist=None, plot=None):
+                 show_graph=False, graph_only=False, hist=None, plot=None):
 
 
         def _reassign(pix, ori, phid, bads):
@@ -2243,6 +2288,11 @@ class EBSDmap:
             logging.warning('Use of "hist" is depracted, use argument "show_plot" instead.')
         if show_hist is None:
             show_hist = show_plot
+        if graph_only:
+            show_plot = False
+            show_hist = False
+            show_grains = False
+            show_graph = False
         if convex_hull_min_points < CONVEX_HULL_MIN_POINTS:
             raise ValueError(
                 f"convex_hull_min_points must be at least {CONVEX_HULL_MIN_POINTS}"
@@ -2530,6 +2580,15 @@ class EBSDmap:
             self.ngrains = len(ms_graph.nodes)
             data['ngrains'] = self.ngrains
             print(f'After elimination of small grains, {self.ngrains} grains left.')
+
+            if graph_only:
+                data['graph'] = ms_graph
+                self.ms_data.append(data)
+                print(
+                    f"Built graph of phase #{data['index']} ({data['name']}) "
+                    f"with {self.ngrains} grains."
+                )
+                continue
 
             # Extract grain statistics and axes
             arr_a = []
