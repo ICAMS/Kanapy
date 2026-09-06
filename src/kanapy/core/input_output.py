@@ -1454,7 +1454,7 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
 def writeAbaqusMat(ialloy, angles,
                    file=None, path='./',
                    grain_phase_dict=None,
-                   nsdv=200):
+                   nsdv=360, props_file=None):
     """
     Export Euler angles to Abaqus input deck that can be included in the _geom.inp file. If
     parameter "grain_phase_dict" is given, the phase number for each grain will be used to select
@@ -1474,9 +1474,17 @@ def writeAbaqusMat(ialloy, angles,
         Path to save file, option (default: './')
     grain_phase_dict: dict
         Dict with phase for each grain, optional (default: None)
+    props_file : str, path-like or list, optional
+        Shared numeric constants include, or one include per alloy/phase.
+        Relative paths are resolved against the output material file directory.
+        Enables the eight-value CP-UMAT header and automatically counts constants.
+        Files must have eight values per line except the last; comments are allowed.
+        Files are referenced without modification. None preserves legacy output.
     nsdv : int
-        Number of state dependant variables, optional (default: 200)
+        Number of state dependant variables, optional (default: 360)
     """
+    if props_file is not None and ialloy is None:
+        ialloy = 0
     if type(ialloy) is not list:
         ialloy = [ialloy]
     nall = len(ialloy)
@@ -1492,6 +1500,35 @@ def writeAbaqusMat(ialloy, angles,
         file = f'abq_px_{nitem}_mat.inp'
     path = os.path.normpath(path)
     file = os.path.join(path, file)
+    includes = None
+    if props_file is not None:
+        files = list(props_file) if isinstance(props_file, (list, tuple)) else [props_file] * nall
+        if len(files) != nall:
+            raise ValueError('props_file must contain one include file per selector.')
+        includes = []
+        for include in files:
+            include = os.fspath(include)
+            if any(char in include for char in ('\n', '\r', '"')):
+                raise ValueError('Invalid include filename.')
+            source = os.path.join(os.path.dirname(file), include)
+            rows = []
+            with open(source, encoding='utf-8-sig') as stream:
+                for line in stream:
+                    line = line.strip()
+                    if not line or line.startswith('**'):
+                        continue
+                    values = line.rstrip(',').split(',')
+                    try:
+                        numbers = [float(value.strip().replace('D', 'E').replace('d', 'e'))
+                                   for value in values]
+                    except ValueError as exc:
+                        raise ValueError(f'{source}: expected numeric constants only.') from exc
+                    if not all(np.isfinite(numbers)) or not 1 <= len(numbers) <= 8:
+                        raise ValueError(f'{source}: expected 1 to 8 finite constants per line.')
+                    rows.append(numbers)
+            if not rows or any(len(row) != 8 for row in rows[:-1]):
+                raise ValueError(f'{source}: use eight constants per line except the final line.')
+            includes.append((include, 8 + sum(map(len, rows))))
     with open(file, 'w') as f:
         f.write('**\n')
         f.write('** MATERIALS\n')
@@ -1506,6 +1543,12 @@ def writeAbaqusMat(ialloy, angles,
             f.write('*Material, name=GRAIN{}_MAT\n'.format(igr))
             f.write('*Depvar\n')
             f.write('    {}\n'.format(nsdv))
+            if includes is not None:
+                include, count = includes[ip]
+                f.write(f'*User Material, constants={count}\n')
+                f.write(f'{float(ialloy[ip])}, {ori[0]}, {ori[1]}, {ori[2]}, 0., 0., 0., 0.\n')
+                f.write(f'*Include, input="{include}"\n')
+                continue
             f.write('*User Material, constants=4\n')
             f.write('{}, {}, {}, {}\n'.format(float(ialloy[ip]),
                                               ori[0], ori[1], ori[2]))
