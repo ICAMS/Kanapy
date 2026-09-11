@@ -1528,7 +1528,7 @@ def append_regridded_snapshot(
         "grain_id",
         "orientation",
         "deformation_gradient",
-        "first_piola_kirchhoff_stress",
+        "stress",
         "strain",
     )
 

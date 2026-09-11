@@ -4040,9 +4040,9 @@ def add_ipf_color(
     data: dict[str, Any] = json.loads(json_path.read_text(encoding="utf-8"))
 
     # --- Extract symmetry (your JSON stores phases as a list) ---
-    phases = data["phases"]
+    phases = data["phase"]
     if not isinstance(phases, list) or len(phases) != 1:
-        raise ValueError(f'Expected one phase in data["phases"], got {type(phases)} with len={len(phases) if isinstance(phases, list) else "?"}.')
+        raise ValueError(f'Expected one phase in data["phase"], got {type(phases)} with len={len(phases) if isinstance(phases, list) else "?"}.')
 
     sym_str = phases[0]["orientation"]["crystal_symmetry_group"]
 

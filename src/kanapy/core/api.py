@@ -2248,20 +2248,61 @@ class Microstructure(object):
             json.dump(structure, fp)
         return
 
+
+
     def create_microstructure_identifier(
             self,
             microstructure_step: Mapping[str, Any],
             hash_length: int = 8,
-            decimals: int = 6,
+            sig_figs: int = 6,
     ) -> str:
         """
-        Create a deterministic short identifier for one microstructure snapshot.
+        Create a deterministic identifier for one microstructure snapshot.
 
-        The identifier is based on the microstructure content:
-        grid, grains, voxels, phase IDs, orientations, voxel-grain mapping,
-        voxel indices, voxel coordinates, and voxel volumes.
+        The identifier is based on the microstructure content: grid, grains,
+        voxels, phase IDs, orientations, voxel-grain mapping, voxel indices,
+        voxel coordinates, and voxel volumes. It is written as the prefix
+        ``"S_"`` followed by the leading ``hash_length`` hexadecimal characters
+        of a SHA-256 digest, per the microstructure_state_id convention.
+
+        Only undeformed, simulation-ready snapshots should be given an
+        identifier -- this function itself is content-only and does not inspect
+        ``microstructure_step["grid"]["status"]``; the caller is responsible for
+        only calling it on undeformed/regridded snapshots, never on intermediate
+        deformed states.
+
+        Parameters
+        ----------
+        microstructure_step
+            One microstructure snapshot dictionary.
+        hash_length
+            Number of hexadecimal characters taken from the SHA-256 digest
+            (after the ``"S_"`` prefix). Default is 8.
+        sig_figs
+            Number of significant figures each float is rounded to before
+            hashing. Default is 6.
+
+        Returns
+        -------
+        str
+            Deterministic identifier, for example ``"S_bb1f711a"``.
+
+        Notes
+        -----
+        Rounding is done to `sig_figs` **significant figures**, not decimal
+        places. This schema stores lengths/volumes in SI base units (meters,
+        cubic meters), where grain/voxel volumes are ~1e-17-1e-19 and voxel
+        centroid coordinates are ~1e-7-1e-5. A fixed-decimal-places round (e.g.
+        ``round(value, 6)``) collapses all such values to exactly ``0.0``,
+        making the hash blind to grain volume entirely and aliasing many
+        distinct voxel positions onto the same rounded value -- confirmed
+        empirically against a real MiMeDO snapshot (all 24 distinct grain
+        volumes and many of 8000 distinct voxel centroids collapsed together).
+        Rounding to significant figures instead keeps every field distinguishable
+        regardless of its physical unit scale, so the hash reproduces the same
+        value from the same content every time, and only from that content, as
+        required by a content-derived identifier.
         """
-
         if not isinstance(microstructure_step, Mapping):
             raise TypeError("microstructure_step must be a dictionary-like mapping.")
 
@@ -2296,6 +2337,12 @@ class Microstructure(object):
 
             return False
 
+        def _round_sig(value: float, sig: int) -> float:
+            """Round to `sig` significant figures, magnitude-independent."""
+            if value == 0.0:
+                return 0.0
+            return float(f"{value:.{sig}g}")
+
         def _make_json_safe(value: Any) -> Any:
             """
             Convert NumPy/Python objects into deterministic JSON-safe values.
@@ -2313,7 +2360,7 @@ class Microstructure(object):
                     pass
 
             if isinstance(value, float):
-                return round(value, decimals)
+                return _round_sig(value, sig_figs)
 
             if isinstance(value, bool):
                 return value
@@ -2328,7 +2375,7 @@ class Microstructure(object):
                 cleaned = {}
 
                 for key, item in value.items():
-                    if key == "id":
+                    if key in ("id", "microstructure_state_id"):
                         continue
 
                     safe_item = _make_json_safe(item)
@@ -2416,7 +2463,8 @@ class Microstructure(object):
             allow_nan=False,
         )
 
-        return hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()[:hash_length]
+        digest = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()[:hash_length]
+        return f"S_{digest}"
 
     def write_data(self,
                    user_metadata: Optional[Dict[str, Any]] = None,
@@ -2986,13 +3034,13 @@ class Microstructure(object):
 
         # ─── wrap under the time‐step keys ────────────────────────────────────────
         microstructure_t0 = {
-            "time": 0,
+            "time_point": 0,
             "grid": grid_t0,
             "grains": grains_t0_sorted,
             "voxels": voxels_t0_sorted,
         }
 
-        microstructure_t0["id"] = self.create_microstructure_identifier(microstructure_t0)
+        microstructure_t0["microstructure_state_id"] = self.create_microstructure_identifier(microstructure_t0)
 
         time_steps = [
             microstructure_t0,
