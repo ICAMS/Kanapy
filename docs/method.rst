@@ -127,75 +127,37 @@ The assignment algorithm begins by randomly assigning orientations obtained from
 EBSD reading
 ------------
 
-Kanapy can read two dimensional EBSD maps and convert the measured pixel
-orientations into a graph representation of the microstructure. The graph is
-intended to describe the grain structure on the EBSD map after region
-segmentation, graph cleanup, and node merging. It can also be plotted directly
-on the EBSD inverse pole figure map for visual inspection.
+Kanapy can read two dimensional EBSD maps and convert the measured pixel orientations into a graph representation of the microstructure. The graph is intended to describe the grain structure on the EBSD map after region segmentation, graph cleanup, and node merging. It can also be plotted directly on the EBSD inverse pole figure map for visual inspection.
 
-The EBSD workflow is handled by :class:`kanapy.texture.EBSDmap`. During map
-reading, Kanapy stores the EBSD pixel orientations, separates the retained
-phases, and builds graph data for the selected phase. For each phase, the graph
-data contains the final graph, diagnostic information from the initial graph,
-and merge information from the cleanup procedure.
+The EBSD workflow is handled by :class:`kanapy.texture.EBSDmap`. During map reading, Kanapy stores the EBSD pixel orientations, separates the retained phases, and builds graph data for the selected phase. For each phase, the graph data contains the final graph, diagnostic information from the initial graph, and merge information from the cleanup procedure.
 
 Initial region construction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Initial EBSD regions are identified by local pixel to pixel misorientation. The
-procedure is implemented in :func:`kanapy.texture.find_similar_regions_by_misorientation`.
-Starting from each unassigned pixel, a breadth first search grows a region by
-adding neighboring pixels whose local misorientation is below the selected
-threshold. The misorientation calculation uses the crystal symmetry of the
-current phase.
+Initial EBSD regions are identified by local pixel to pixel misorientation. The procedure is implemented in :func:`kanapy.texture.find_similar_regions_by_misorientation`. Starting from each unassigned pixel, a breadth first search grows a region by adding neighboring pixels whose local misorientation is below the selected threshold. The misorientation calculation uses the crystal symmetry of the current phase.
 
-For the two dimensional EBSD graph path, neighboring pixels are evaluated with
-4-neighbor connectivity. This gives each pixel direct horizontal and vertical
-neighbors on the EBSD map. The resulting labeled regions form the initial graph
-nodes.
+For the two dimensional EBSD graph path, neighboring pixels are evaluated with 4-neighbor connectivity. This gives each pixel direct horizontal and vertical neighbors on the EBSD map. The resulting labeled regions form the initial graph nodes.
 
 Graph construction and node data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The labeled EBSD regions are converted into graph nodes by
-:func:`kanapy.texture.build_graph_from_labeled_pixels`. Each graph node
-represents one connected labeled region. Node attributes include the pixel list,
-the node center, the number of pixels, the original pixel rotations, and the
-mean node orientation.
+The labeled EBSD regions are converted into graph nodes by :func:`kanapy.texture.build_graph_from_labeled_pixels`. Each graph node represents one connected labeled region. Node attributes include the pixel list, the node center, the number of pixels, the original pixel rotations, and the mean node orientation.
 
-The mean orientation of a node is computed by
-:func:`kanapy.texture.mean_orientation_data`. Pixel quaternions are normalized,
-symmetry equivalent orientations are aligned to a reference orientation, and the
-``q`` versus ``-q`` quaternion ambiguity is handled before averaging. The final
-mean quaternion is obtained from the dominant eigenvector of the quaternion
-accumulator matrix.
+The mean orientation of a node is computed by :func:`kanapy.texture.mean_orientation_data`. Pixel quaternions are normalized, symmetry equivalent orientations are aligned to a reference orientation, and the ``q`` versus ``-q`` quaternion ambiguity is handled before averaging. The final mean quaternion is obtained from the dominant eigenvector of the quaternion accumulator matrix.
 
-Graph edges are added between neighboring labeled regions. Label ``0`` is
-treated as background and is not used as a graph node.
+Graph edges are added between neighboring labeled regions. Label ``0`` is treated as background and is not used as a graph node.
 
 Boundary artifact cleanup
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Some small regions can appear mainly along grain boundaries. Kanapy computes
-node boundary information with :func:`kanapy.texture.get_node_boundary_stats`.
-For each node, the function checks local neighboring pixels and reports
-boundary pixel fraction, neighboring labels, map edge contact, bounding box
-size, and bounding box fill fraction.
+Some small regions can appear mainly along grain boundaries. Kanapy computes node boundary information with :func:`kanapy.texture.get_node_boundary_stats`. For each node, the function checks local neighboring pixels and reports boundary pixel fraction, neighboring labels, map edge contact, bounding box size, and bounding box fill fraction.
 
-Small boundary artifact nodes can be merged with
-:func:`kanapy.texture.merge_boundary_artifact_nodes`. The merge target is chosen
-from neighboring nodes by comparing the node orientations. After node merging,
-the mean orientation of the merged node is recomputed from the original pixel
-orientations.
+Small boundary artifact nodes can be merged with :func:`kanapy.texture.merge_boundary_artifact_nodes`. The merge target is chosen from neighboring nodes by comparing the node orientations. After node merging, the mean orientation of the merged node is recomputed from the original pixel orientations.
 
 Graph plotting
 ^^^^^^^^^^^^^^
 
-The final EBSD graph can be plotted on the EBSD inverse pole figure map by
-setting ``show_graph=True`` when creating an :class:`kanapy.texture.EBSDmap`
-object. The graph overlay is produced by
-:meth:`kanapy.texture.EBSDmap.plot_graph_overlay`. Node centers are shown as
-black points and graph edges are shown as black lines.
+The final EBSD graph can be plotted on the EBSD inverse pole figure map by setting ``show_graph=True`` when creating an :class:`kanapy.texture.EBSDmap` object. The graph overlay is produced by :meth:`kanapy.texture.EBSDmap.plot_graph_overlay`. Node centers are shown as black points and graph edges are shown as black lines.
 
 Example usage:
 
@@ -205,30 +167,28 @@ Example usage:
 
     ebsd = knpy.EBSDmap("p558_250x_1.ang", show_graph=True)
 
-The same plotting method can also save the graph image to file when an output
-path is provided.
+The same plotting method can also save the graph image to file when an output path is provided.
 
-Example scripts
-^^^^^^^^^^^^^^^
+Example script
+^^^^^^^^^^^^^^
 
-Two example scripts are provided in ``examples/EBSD_graph_analysis``.
-
-``plot_ebsd_graph_manually.py``
-    Runs EBSD graph construction, saves the final graph overlay image, and
-    writes a short text summary of the graph. The output is written to
-    ``plot_ebsd_graph_manually_result``.
+The graph workflow example is provided in ``examples/EBSD_graph_analysis``.
 
 ``run_ebsd_analysis_with_graph.py``
-    Runs the standard EBSD analysis workflow and adds the final graph overlay
-    by using ``show_graph=True``.
+    Builds an in memory :class:`kanapy.graph_workflow.EBSDGraphResult` object and writes only the explicitly enabled graph handoff files. This example uses the graph only path and does not run grain statistics extraction or the legacy interactive plotting workflow. The output is written to ``2D_graph_result``.
 
-The manual plotting example produces:
+The graph workflow can be called directly from Python by using :func:`kanapy.graph_workflow.build_ebsd_graph`. The main data transfer object is :class:`kanapy.graph_workflow.EBSDGraphResult`; PKL, JSON, and PNG files are written only when enabled through :class:`kanapy.graph_workflow.EBSDGraphOutputOptions`. Users who need the classic EBSD statistics and interactive Kanapy plots can still create :class:`kanapy.texture.EBSDmap` directly with the usual plotting flags.
+
+The example keeps graph step figures and local zoom diagnostics disabled by default. These outputs are mainly useful for debugging or preparing publication figures, while routine workflows usually need only the final graph handoff files.
+
+The graph workflow example produces:
 
 .. code-block:: text
 
-    plot_ebsd_graph_manually_result/ebsd_graph_overlay.png
-    plot_ebsd_graph_manually_result/ebsd_graph_summary.txt
+    2D_graph_result/ebsd_graph.pkl
+    2D_graph_result/ebsd_graph_summary.json
+    2D_graph_result/graph_overlay.png
+    2D_graph_result/graph_ipf_map.png
 
-The overlay image shows the final graph node centers and graph edges on the
-EBSD inverse pole figure map.
+The overlay image shows the final graph node centers and graph edges on the EBSD inverse pole figure map.
          

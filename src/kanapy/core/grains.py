@@ -9,7 +9,7 @@ March 2024
 import itertools
 import logging
 import numpy as np
-from scipy.spatial import ConvexHull, Delaunay
+from scipy.spatial import Delaunay
 from tqdm import tqdm
 
 
@@ -37,6 +37,11 @@ def calc_polygons(rve, mesh, tol=1.e-3):
 
     Notes
     -----
+    ``geometry['GBarea']`` contains shared voxel-interface areas, whereas
+    ``geometry['Grains'][gid]['Area']`` measures the reconstructed triangular
+    shell. Grain simplices are oriented outward; global facets retain one
+    incident grain's orientation for each shared interface.
+
     For periodic structures, large grains spanning both halves of the simulation
     box and touching a boundary may be incorrectly split, which can affect
     geometry calculations.
@@ -330,13 +335,15 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             key = 'f{}_{}'.format(cb[0], cb[1])
             gbDict[key] = ind
             if cb[0] <= Ng_max and cb[1] <= Ng_max:
-                # grain facet is not on boundary
-                try:
-                    hull = ConvexHull(mesh.nodes[list(ind), :])
-                    shared_area.append([cb[0], cb[1], hull.area])
-                except:
-                    sh_area = len(finter) * (voxel_size ** 2)
-                    shared_area.append([cb[0], cb[1], sh_area])
+                # Actual voxel-interface area, including nonplanar patches and
+                # anisotropic voxels. Connectivity contains one-based node IDs.
+                sh_area = 0.
+                for fid in finter:
+                    pts = mesh.nodes[np.asarray(grain_facesDict[cb[0]][fid]) - 1]
+                    sh_area += 0.5 * (
+                        np.linalg.norm(np.cross(pts[1] - pts[0], pts[2] - pts[0])) +
+                        np.linalg.norm(np.cross(pts[2] - pts[0], pts[3] - pts[0])))
+                shared_area.append([cb[0], cb[1], sh_area])
 
     # analyse gbDict to find intersection lines of GB's
     # (triple or quadruple lines) -> edges
@@ -514,7 +521,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         grains[igr]['Volume'] += np.abs(np.linalg.det(vmat)) / 6.
 
     # Keep only facets at boundary or between different grains
-    facet_keys = set()
+    facets_by_key = dict()
     for i, tet in enumerate(tetra.simplices):
         igr = tet_to_grain[i]
         if (igr == 0) and (0 not in grains.keys()):
@@ -525,21 +532,21 @@ def calc_polygons(rve, mesh, tol=1.e-3):
                 for k in range(4):
                     if k != j:
                         ft.append(tet[k])
-                ft = sorted(ft)
-                facet_keys.add(f'{ft[0]}_{ft[1]}_{ft[2]}')
-                grains[igr]['Simplices'].append(ft)
-                # Update grain surface area
+                # Orient away from the opposite tetrahedron vertex, hence
+                # outward from this grain. Shared grain faces have opposite winding.
                 cv = tetra.points[ft[2]]
                 avec = np.cross(tetra.points[ft[0]] - cv,
                                 tetra.points[ft[1]] - cv)
-                grains[igr]['Area'] += np.linalg.norm(avec)
+                if np.dot(avec, tetra.points[tet[j]] - cv) > 0.:
+                    ft[1], ft[2] = ft[2], ft[1]
+                # Sort only the identity key; retain the first owner's winding
+                # in the global interface mesh (outward on the external hull).
+                facets_by_key.setdefault(tuple(sorted(ft)), ft)
+                grains[igr]['Simplices'].append(ft)
+                grains[igr]['Area'] += 0.5 * np.linalg.norm(avec)
 
     # perform geometrical analysis of grain structure
-    facets = []
-    for key in facet_keys:
-        hh = key.split('_')
-        facets.append([int(hh[0]), int(hh[1]), int(hh[2])])
-    geometry['Facets'] = np.array(facets)
+    geometry['Facets'] = np.asarray(list(facets_by_key.values()), dtype=int).reshape(-1, 3)
 
     for igr in mesh.grain_dict.keys():
         if grains[igr]['Volume'] < 1.e-5:

@@ -1291,8 +1291,9 @@ class Microstructure(object):
     """
 
     def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
-                  dual_phase=False, thermal=False, units=None, ialloy=None, nsdv=200, crystal_plasticity=False,
-                  phase_props=None, boundary_conditions: Optional[Dict[str, Any]] = None):
+                  dual_phase=False, thermal=False, units=None, ialloy=None, nsdv=360, crystal_plasticity=False,
+                  phase_props=None, boundary_conditions: Optional[Dict[str, Any]] = None,
+                  props_file=None):
         """
         Write the Abaqus input deck (.inp) for the generated RVE
 
@@ -1326,8 +1327,14 @@ class Microstructure(object):
             Units for the model, 'mm' or 'um'. Default is `self.rve.units`.
         ialloy : list or object, optional
             Material definitions for each phase. Default is `self.rve.ialloy`.
+        props_file : str, path-like or list, optional
+            Numeric Abaqus include file, or one file per phase. Relative paths are
+            resolved against `path`. Enables the new CP-UMAT format: selector,
+            three Euler angles, four zeros, then the included shared constants.
+            Uses ialloy (or the RVE default) as selector, falling back to 0.
+            Include files are validated but never modified. Omit for legacy format.
         nsdv : int, optional
-            Number of state variables per integration point for crystal plasticity. Default is 200.
+            Number of state variables per integration point for crystal plasticity. Default is 360.
         crystal_plasticity : bool, optional
             If True, enable crystal plasticity material definitions. Default is False.
         phase_props : dict, optional
@@ -1418,6 +1425,20 @@ class Microstructure(object):
             nct = f'abq_px_{len(grain_dict)}'
         if ialloy is None:
             ialloy = self.rve.ialloy
+        if props_file is not None:
+            if dual_phase:
+                raise ValueError('props_file requires grain-wise materials (dual_phase=False).')
+            if self.mesh.grain_ori_dict is None:
+                raise ValueError('props_file requires grain orientations. Run generate_orientations first.')
+            if isinstance(props_file, (list, tuple)):
+                if len(props_file) != self.nphases:
+                    raise ValueError('props_file must contain one include file per phase.')
+            if ialloy is None:
+                ialloy = 0
+            if not isinstance(ialloy, list):
+                ialloy = [ialloy] * self.nphases
+            if len(ialloy) != self.nphases:
+                raise ValueError('ialloy must contain one selector per phase with props_file.')
         if type(ialloy) is list and len(ialloy) > self.nphases:
             raise ValueError('List of values in ialloy is larger than number of phases in RVE.' +
                              f'({len(ialloy)} > {self.nphases})')
@@ -1461,10 +1482,11 @@ class Microstructure(object):
         if not (self.mesh.grain_ori_dict is None or ialloy is None):
             writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
                            file=file[0:-8] + 'mat.inp',
-                           grain_phase_dict=grpd, nsdv=nsdv)
+                           grain_phase_dict=grpd, nsdv=nsdv, props_file=props_file)
         return file
 
-    def write_abq_ori(self, ialloy=None, ori=None, file=None, path='./', nsdv=200):
+    def write_abq_ori(self, ialloy=None, props_file=None, ori=None,
+                      file=None, path='./', nsdv=360):
         """
         Write Abaqus material input file using grain orientations for crystal plasticity
 
@@ -1483,7 +1505,7 @@ class Microstructure(object):
         path : str, optional
             Directory path where the file will be saved. Default is './'.
         nsdv : int, optional
-            Number of state variables per integration point for crystal plasticity. Default is 200.
+            Number of state variables per integration point for crystal plasticity. Default is 360.
 
         Returns
         -------
@@ -1524,7 +1546,7 @@ class Microstructure(object):
                 file = self.name + '_mat.inp'
         path = os.path.normpath(path)
         file = os.path.join(path, file)
-        writeAbaqusMat(ialloy, ori, file=file, nsdv=nsdv)
+        writeAbaqusMat(ialloy, ori, props_file=props_file, file=file, nsdv=nsdv)
 
     def output_neper(self):
         """

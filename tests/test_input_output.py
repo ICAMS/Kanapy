@@ -96,3 +96,60 @@ def test_export_abaqus():
     export2abaqus(nodes, cwd+name, esd, ed, units='um')
     assert os.path.isfile(cwd + name)
     os.remove(cwd + name)
+
+
+@pytest.mark.parametrize('selector', [None, 4])
+def test_cp_material_include(tmp_path, selector):
+    props = tmp_path / 'shared.inc'
+    content = '** shared properties\n1, 2, 3, 4, 5, 6, 7, 8\n9\n'
+    props.write_text(content)
+    writeAbaqusMat(selector, {1: [10, 20, 30], 2: [40, 50, 60]},
+                   file='test_mat.inp', path=tmp_path, props_file='shared.inc')
+    result = (tmp_path / 'test_mat.inp').read_text()
+    assert result.count('*User Material, constants=17') == 2
+    assert result.count('*Include, input="shared.inc"') == 2
+    assert f'{float(selector or 0)}, 10, 20, 30, 0., 0., 0., 0.' in result
+    assert props.read_text() == content
+
+
+def test_cp_material_legacy(tmp_path):
+    writeAbaqusMat(4, {1: [10, 20, 30]}, file='legacy.inp', path=tmp_path)
+    assert (tmp_path / 'legacy.inp').read_text().endswith(
+        '*User Material, constants=4\n4.0, 10, 20, 30\n')
+
+
+def test_cp_material_bad_include(tmp_path):
+    (tmp_path / 'bad.inc').write_text('1, 2\n3, 4\n')
+    with pytest.raises(ValueError, match='eight constants'):
+        writeAbaqusMat(4, {1: [0, 0, 0]}, file='bad_mat.inp',
+                       path=tmp_path, props_file='bad.inc')
+    assert not (tmp_path / 'bad_mat.inp').exists()
+
+
+@pytest.mark.parametrize('selector', [None, 4])
+def test_write_abq_include_api(tmp_path, monkeypatch, selector):
+    from types import SimpleNamespace
+    from kanapy.core import api
+
+    (tmp_path / 'shared.inc').write_text('1, 2, 3\n')
+    mesh = SimpleNamespace(nodes=np.zeros((8, 3)), voxel_dict={}, grain_dict={1: [1]},
+                           grain_ori_dict={1: [10, 20, 30]})
+    ms = SimpleNamespace(mesh=mesh, nphases=1,
+                         rve=SimpleNamespace(ialloy=None, units='um', periodic=False))
+    captured = {}
+    monkeypatch.setattr(api, 'export2abaqus', lambda *args, **kwargs: captured.update(kwargs))
+    api.Microstructure.write_abq(ms, nodes='v', file='test_geom.inp', path=tmp_path,
+                                 ialloy=selector, props_file='shared.inc')
+    assert captured['ialloy'] == [selector or 0]
+    assert '*User Material, constants=11' in (tmp_path / 'test_mat.inp').read_text()
+
+
+def test_cp_material_phase_includes(tmp_path):
+    (tmp_path / 'a.inc').write_text('1\n')
+    (tmp_path / 'b.inc').write_text('2, 3\n')
+    writeAbaqusMat([4, 5], {1: [0, 0, 0], 2: [1, 2, 3]},
+                   file='phases.inp', path=tmp_path, grain_phase_dict={1: 0, 2: 1},
+                   props_file=['a.inc', 'b.inc'])
+    result = (tmp_path / 'phases.inp').read_text()
+    assert '*User Material, constants=9\n4.0' in result
+    assert '*User Material, constants=10\n5.0' in result
