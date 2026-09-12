@@ -13,8 +13,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=8315fef2"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -78,25 +78,28 @@
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">click</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">webbrowser</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
     
 <span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
-<span class="nd">@click</span><span class="o">.</span><span class="n">version_option</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;kanapy&#39;</span><span class="p">))</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">version_option</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">(</span><span class="s1">'kanapy'</span><span class="p">))</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>    
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">pass</span>
 
-<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;gui&#39;</span><span class="p">)</span>
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'gui'</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">gui</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Start Kanapy&#39;s graphical user interface (experimental alpha version)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">gui</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Start Kanapy's graphical user interface (experimental alpha version)</span>
 
 <span class="sd">    This function initializes and launches the Kanapy GUI using Tkinter.</span>
 <span class="sd">    It creates a main application window with multiple tabs for different</span>
@@ -111,7 +114,7 @@
 <span class="sd">    -----</span>
 <span class="sd">    - This GUI version is experimental and intended for testing only</span>
 <span class="sd">    - Requires `matplotlib` and `tkinter` libraries</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tk</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tkinter.font</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tkFont</span>
@@ -119,73 +122,62 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">.gui</span><span class="w"> </span><span class="kn">import</span> <span class="n">particle_rve</span><span class="p">,</span> <span class="n">cuboid_rve</span>
 
     <span class="n">app</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">()</span>
-    <span class="n">app</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;RVE_Generation&quot;</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">"RVE_Generation"</span><span class="p">)</span>
     <span class="n">screen_width</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">winfo_screenwidth</span><span class="p">()</span>
     <span class="n">screen_height</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">winfo_screenheight</span><span class="p">()</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.dpi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">screen_height</span> <span class="o">/</span> <span class="mi">19</span>  <span class="c1"># height stats_plot: 9, height voxel_plot: 6, margin: 4</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">'figure.dpi'</span><span class="p">]</span> <span class="o">=</span> <span class="n">screen_height</span> <span class="o">/</span> <span class="mi">19</span>  <span class="c1"># height stats_plot: 9, height voxel_plot: 6, margin: 4</span>
     <span class="n">window_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">screen_width</span> <span class="o">*</span> <span class="mf">0.6</span><span class="p">)</span>
     <span class="n">window_height</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">screen_height</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">)</span>
     <span class="n">x_coordinate</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">screen_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">window_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
     <span class="n">y_coordinate</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># int((screen_height / 2) - (window_height / 2))</span>
-    <span class="n">app</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">window_width</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">window_height</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="n">x_coordinate</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="n">y_coordinate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">window_width</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">window_height</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="n">x_coordinate</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="n">y_coordinate</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="n">notebook</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Notebook</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
-    <span class="n">notebook</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">fill</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">notebook</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">fill</span><span class="o">=</span><span class="s1">'both'</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">style</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Style</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
-    <span class="n">default_font</span> <span class="o">=</span> <span class="n">tkFont</span><span class="o">.</span><span class="n">Font</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">)</span>
-    <span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;TNotebook.Tab&#39;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;12&#39;</span><span class="p">,</span> <span class="s2">&quot;bold&quot;</span><span class="p">))</span>
-    <span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;TButton&#39;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">default_font</span><span class="p">)</span>
+    <span class="n">default_font</span> <span class="o">=</span> <span class="n">tkFont</span><span class="o">.</span><span class="n">Font</span><span class="p">(</span><span class="n">family</span><span class="o">=</span><span class="s2">"Helvetica"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">)</span>
+    <span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">'TNotebook.Tab'</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s1">'Helvetica'</span><span class="p">,</span> <span class="s1">'12'</span><span class="p">,</span> <span class="s2">"bold"</span><span class="p">))</span>
+    <span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">'TButton'</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">default_font</span><span class="p">)</span>
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Start main loop &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">""" Start main loop """</span>
     <span class="n">prve</span> <span class="o">=</span> <span class="n">particle_rve</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">notebook</span><span class="p">)</span>  <span class="c1"># First tab: Particle-based grains</span>
     <span class="n">crve</span> <span class="o">=</span> <span class="n">cuboid_rve</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">notebook</span><span class="p">)</span>  <span class="c1"># Second tab: Cuboid grains</span>
     <span class="c1">#erve = ebsd_rve()  # Third tab: EBSDbased RVE</span>
     <span class="n">app</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
 
 
-<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;runTests&#39;</span><span class="p">)</span>
-<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;--no_texture&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'runTests'</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">tests</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">no_texture</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Run Kanapy&#39;s internal unittests</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">tests</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Run Kanapy's internal unittests</span>
 
 <span class="sd">    Executes the built-in test suite for Kanapy using pytest.</span>
-<span class="sd">    Depending on the `no_texture` flag, it either runs a subset of tests</span>
-<span class="sd">    or all available tests in the `tests` directory.</span>
+<span class="sd">    Runs all available tests in the `tests` directory.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    ctx : object</span>
 <span class="sd">        Execution context (reserved for CLI or internal use)</span>
-<span class="sd">    no_texture : bool</span>
-<span class="sd">        If True, run tests excluding texture-related modules;</span>
-<span class="sd">        if False, run the full test suite</span>
-
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    - Must be executed from the root directory of the Kanapy installation</span>
 <span class="sd">    - Temporary dump files generated during testing are automatically removed</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Will only work in root directory of kanapy installation.&#39;</span><span class="p">)</span>
+<span class="sd">    """</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">'Will only work in root directory of kanapy installation.'</span><span class="p">)</span>
     <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">no_texture</span><span class="p">:</span>
-        <span class="c1">#t1 = &quot;{0}/tests/test_collide_detect_react.py&quot;.format(cwd)</span>
-        <span class="n">t2</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/tests/test_entities.py&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
-        <span class="n">t3</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/tests/test_input_output.py&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
-        <span class="n">t4</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/tests/test_packing.py&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
-        <span class="n">t5</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/tests/test_voxelization.py&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cwd</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;pytest </span><span class="si">{</span><span class="n">t2</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t3</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t4</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">t5</span><span class="si">}</span><span class="s2"> -v&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;pytest </span><span class="si">{0}</span><span class="s2">/tests/ -v&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cwd</span><span class="p">))</span>
-    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="s2">&quot;dump_files&quot;</span><span class="p">))</span>
-    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="s1">'-m'</span><span class="p">,</span> <span class="s1">'pytest'</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="s1">'tests'</span><span class="p">),</span> <span class="s1">'-v'</span><span class="p">],</span>
+        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cwd</span><span class="p">,</span> <span class="s2">"dump_files"</span><span class="p">))</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">''</span><span class="p">)</span>
         
     
-<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;readDocs&#39;</span><span class="p">)</span>
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'readDocs'</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">docs</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">docs</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Open the Kanapy documentation webpage</span>
 
 <span class="sd">    Launches the default web browser and navigates to the official</span>
@@ -195,15 +187,15 @@
 <span class="sd">    ----------</span>
 <span class="sd">    ctx : object</span>
 <span class="sd">        Execution context (reserved for CLI or internal use)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;https://icams.github.io/Kanapy/&quot;</span><span class="p">)</span>
+<span class="sd">    """</span>
+    <span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"https://icams.github.io/Kanapy/"</span><span class="p">)</span>
 
 
-<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;copyExamples&#39;</span><span class="p">)</span>
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'copyExamples'</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">download_subdir</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Download example files from Kanapy&#39;s GitHub repository</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">download_subdir</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Download example files from Kanapy's GitHub repository</span>
 
 <span class="sd">    Fetches the latest Kanapy repository archive from GitHub,</span>
 <span class="sd">    extracts the `examples` subdirectory, and saves it to the local</span>
@@ -219,37 +211,37 @@
 <span class="sd">    - Requires an active internet connection</span>
 <span class="sd">    - Downloads from the `master` branch of the Kanapy repository</span>
 <span class="sd">    - Automatically creates the output directory if it does not exist</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">zip_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://github.com/ICAMS/kanapy/archive/refs/heads/master.zip&quot;</span>
-    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;kanapy_examples&#39;</span><span class="p">)</span>
-    <span class="n">subdir_prefix</span> <span class="o">=</span> <span class="s2">&quot;Kanapy-master/examples/&quot;</span>
+<span class="sd">    """</span>
+    <span class="n">zip_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"https://github.com/ICAMS/kanapy/archive/refs/heads/master.zip"</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">'kanapy_examples'</span><span class="p">)</span>
+    <span class="n">subdir_prefix</span> <span class="o">=</span> <span class="s2">"Kanapy-master/examples/"</span>
 
-    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading ZIP from: </span><span class="si">{</span><span class="n">zip_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Downloading ZIP from: </span><span class="si">{</span><span class="n">zip_url</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">zip_url</span><span class="p">)</span>
     <span class="n">r</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
 
     <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">))</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
         <span class="n">members</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">subdir_prefix</span><span class="p">)]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">members</span><span class="p">:</span>
-            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: Subdirectory &#39;examples&#39; not found in branch &#39;master&#39;.&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error: Subdirectory 'examples' not found in branch 'master'."</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">return</span>
 
         <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
             <span class="n">rel_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">subdir_prefix</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">rel_path</span> <span class="ow">or</span> <span class="n">member</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">rel_path</span> <span class="ow">or</span> <span class="n">member</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
                 <span class="k">continue</span>
             <span class="n">target_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">rel_path</span><span class="p">)</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">target_path</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_path</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
                 <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">member</span><span class="p">))</span>
 
-    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Extracted &#39;examples&#39; from ICAMS/kanapy to &#39;</span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2">/&#39;&quot;</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Extracted 'examples' from ICAMS/kanapy to '</span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2">/'"</span><span class="p">)</span>
     
 
-<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;setupMTEX&#39;</span><span class="p">)</span>
+<span class="nd">@main</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'setupMTEX'</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">pass_context</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">setup_mtex</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_mtex</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Start the MATLAB engine and initialize MTEX</span>
 
 <span class="sd">    Launches the MATLAB engine from Python and sets up the</span>
@@ -264,18 +256,18 @@
 <span class="sd">    -----</span>
 <span class="sd">    - Requires MATLAB and the MTEX toolbox to be installed</span>
 <span class="sd">    - Calls `setPaths()` to configure MATLAB path settings</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">setPaths</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="chkVersion">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.cli.chkVersion">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">chkVersion</span><span class="p">(</span><span class="n">matlab</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chkVersion</span><span class="p">(</span><span class="n">matlab</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Read the installed MATLAB version from a version string</span>
 
 <span class="sd">    Parses the given MATLAB version string to extract the release year</span>
-<span class="sd">    (e.g., &#39;R2023a&#39; → 2023). If the version cannot be determined, returns None.</span>
+<span class="sd">    (e.g., 'R2023a' → 2023). If the version cannot be determined, returns None.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -286,14 +278,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    int or None</span>
 <span class="sd">        MATLAB release year if successfully parsed, otherwise None</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ind</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;R20&#39;</span><span class="p">)</span>
+<span class="sd">    """</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">matlab</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">'R20'</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ind</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span> 
     <span class="k">else</span><span class="p">:</span>                 <span class="c1"># Find the matlab version available in the system</span>
         <span class="k">try</span><span class="p">:</span> 
             <span class="n">version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">matlab</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">ind</span><span class="o">+</span><span class="mi">5</span><span class="p">])</span>
-            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Detected Matlab version R</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Detected Matlab version R</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="n">version</span></div>
@@ -302,8 +294,8 @@
         
 <div class="viewcode-block" id="setPaths">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.cli.setPaths">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">setPaths</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">setPaths</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Start the MATLAB engine and initialize the MTEX environment</span>
 
 <span class="sd">    Checks if the MATLAB engine for Python is installed and installs it if missing.</span>
@@ -320,40 +312,40 @@
 <span class="sd">    - Requires MATLAB 2025a or later</span>
 <span class="sd">    - Automatically installs the `matlabengine` package if not found</span>
 <span class="sd">    - Configures Kanapy for texture analysis by running `init_engine.py`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">kanapy_mtex</span><span class="w"> </span><span class="kn">import</span> <span class="n">ROOT_DIR</span>
     <span class="k">except</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;This function in only evailable if kanapy-mtex and Matlab are installed.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">'This function in only evailable if kanapy-mtex and Matlab are installed.'</span><span class="p">)</span>
     <span class="c1"># check if Matlab Engine library is already installed</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">matlab.engine</span>
-        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Using existing matlab.engine. Please update if required.&#39;</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">'Using existing matlab.engine. Please update if required.'</span><span class="p">)</span>
     <span class="k">except</span><span class="p">:</span>
         <span class="c1"># if not, install matlab engine</span>
-        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Installing matlab.engine...&#39;</span><span class="p">)</span>
-        <span class="c1"># ind = userpath1.find(&#39;bin&#39;)  # remove bin/matlab from matlab path</span>
-        <span class="c1"># path = os.path.join(userpath1[0:ind], &#39;extern&#39;, &#39;engines&#39;, &#39;python&#39;)  # complete path to matlab engine</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">'Installing matlab.engine...'</span><span class="p">)</span>
+        <span class="c1"># ind = userpath1.find('bin')  # remove bin/matlab from matlab path</span>
+        <span class="c1"># path = os.path.join(userpath1[0:ind], 'extern', 'engines', 'python')  # complete path to matlab engine</span>
         <span class="c1"># os.chdir(path)</span>
-        <span class="n">res</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python -m pip install matlabengine==25.1.2&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">'python -m pip install matlabengine==25.1.2'</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">&#39;Error in installing matlab.engine. This feature requires Matlab 2025a or above.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s1">'Error in installing matlab.engine. This feature requires Matlab 2025a or above.'</span><span class="p">)</span>
         
     <span class="c1"># initalize matlab engine and MTEX for kanapy</span>
     <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">ROOT_DIR</span><span class="p">)</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;python init_engine.py&#39;</span><span class="p">)</span>
-    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">&#39;Kanapy is now configured for texture analysis!</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">'python init_engine.py'</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">''</span><span class="p">)</span>
+    <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s1">'Kanapy is now configured for texture analysis!</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="start">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.cli.start">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">main</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="p">{})</span></div>
 
 
     
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
     <span class="n">start</span><span class="p">()</span>
 </pre></div>
 

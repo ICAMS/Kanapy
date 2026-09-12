@@ -14,9 +14,9 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=8315fef2"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -61,6 +61,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#texture">Texture</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#odf-reconstruction-with-discrete-orientations">ODF reconstruction with discrete orientations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#orientation-assignment-process">Orientation assignment process</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ebsd-reading">EBSD reading</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#initial-region-construction">Initial region construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#graph-construction-and-node-data">Graph construction and node data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#boundary-artifact-cleanup">Boundary artifact cleanup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#graph-plotting">Graph plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-script">Example script</a></li>
 </ul>
 </li>
 </ul>
@@ -183,6 +191,56 @@ angular velocity vector <span class="math notranslate nohighlight">\((\mathbf{w}
 <p>Other than the crystallographic orientation of the grains, the dimension of the grain boundary is also a key aspect. Therefore, to incorporate the effect of the grain boundary dimension, <span class="math notranslate nohighlight">\(\Delta g\)</span> at each segment is weighted as per the segment dimension, as suggested in <a class="reference external" href="https://www.cambridge.org/de/academic/subjects/engineering/materials-science/texture-and-anisotropy-preferred-orientations-polycrystals-and-their-effect-materials-properties?format=PB&amp;isbn=9780521794206">Kocks (2000)</a>. Since the EBSD data is a 2D image this weighting factor is estimated as <span class="math notranslate nohighlight">\(w_i = s_i/S\)</span>, where <span class="math notranslate nohighlight">\(s_i\)</span> is corresponding segment length and <span class="math notranslate nohighlight">\(S = \sum_i^{N_g} s_i\)</span>.</p>
 <p>The disorientation <span class="math notranslate nohighlight">\(\Delta g\)</span> can be represented in axis-angle notation. And within Kanapy’s algorithms we focus on the angle (<span class="math notranslate nohighlight">\(\omega\)</span>) part of <span class="math notranslate nohighlight">\(\Delta g\)</span>, commonly referred to as the disorientation angle. To imitate the statistical distribution from experiments, a Monte-Carlo scheme is suggested in <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S1359645499001378">Miodownik (1999)</a>. This is used here in a <span class="math notranslate nohighlight">\(L_1\)</span> minimization framework similar to the ODF reconstruction discussed earlier.</p>
 <p>The assignment algorithm begins by randomly assigning orientations obtained from ODF reconstruction to the grains in the RVE. The disorientation angle distribution is estimated in the present configuration including the weights (due to the corresponding grain boundaries) and the <span class="math notranslate nohighlight">\(L_1\)</span> error is estimated. The orientations are then exchanged between two grains modifying the configuration. The <span class="math notranslate nohighlight">\(L_1\)</span> error is estimated for the modified configuration, and compared with that of the previous configuration. If the error is minimized between the two configurations, then the orientations are retained, else the orientations are flipped to revert back to the previous configuration.</p>
+</section>
+</section>
+<section id="ebsd-reading">
+<h2>EBSD reading<a class="headerlink" href="#ebsd-reading" title="Link to this heading"></a></h2>
+<p>Kanapy can read two dimensional EBSD maps and convert the measured pixel orientations into a graph representation of the microstructure. The graph is intended to describe the grain structure on the EBSD map after region segmentation, graph cleanup, and node merging. It can also be plotted directly on the EBSD inverse pole figure map for visual inspection.</p>
+<p>The EBSD workflow is handled by <a class="reference internal" href="kanapy.html#kanapy.texture.EBSDmap" title="kanapy.texture.EBSDmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">kanapy.texture.EBSDmap</span></code></a>. During map reading, Kanapy stores the EBSD pixel orientations, separates the retained phases, and builds graph data for the selected phase. For each phase, the graph data contains the final graph, diagnostic information from the initial graph, and merge information from the cleanup procedure.</p>
+<section id="initial-region-construction">
+<h3>Initial region construction<a class="headerlink" href="#initial-region-construction" title="Link to this heading"></a></h3>
+<p>Initial EBSD regions are identified by local pixel to pixel misorientation. The procedure is implemented in <a class="reference internal" href="kanapy.html#kanapy.texture.find_similar_regions_by_misorientation" title="kanapy.texture.find_similar_regions_by_misorientation"><code class="xref py py-func docutils literal notranslate"><span class="pre">kanapy.texture.find_similar_regions_by_misorientation()</span></code></a>. Starting from each unassigned pixel, a breadth first search grows a region by adding neighboring pixels whose local misorientation is below the selected threshold. The misorientation calculation uses the crystal symmetry of the current phase.</p>
+<p>For the two dimensional EBSD graph path, neighboring pixels are evaluated with 4-neighbor connectivity. This gives each pixel direct horizontal and vertical neighbors on the EBSD map. The resulting labeled regions form the initial graph nodes.</p>
+</section>
+<section id="graph-construction-and-node-data">
+<h3>Graph construction and node data<a class="headerlink" href="#graph-construction-and-node-data" title="Link to this heading"></a></h3>
+<p>The labeled EBSD regions are converted into graph nodes by <a class="reference internal" href="kanapy.html#kanapy.texture.build_graph_from_labeled_pixels" title="kanapy.texture.build_graph_from_labeled_pixels"><code class="xref py py-func docutils literal notranslate"><span class="pre">kanapy.texture.build_graph_from_labeled_pixels()</span></code></a>. Each graph node represents one connected labeled region. Node attributes include the pixel list, the node center, the number of pixels, the original pixel rotations, and the mean node orientation.</p>
+<p>The mean orientation of a node is computed by <a class="reference internal" href="kanapy.html#kanapy.texture.mean_orientation_data" title="kanapy.texture.mean_orientation_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">kanapy.texture.mean_orientation_data()</span></code></a>. Pixel quaternions are normalized, symmetry equivalent orientations are aligned to a reference orientation, and the <code class="docutils literal notranslate"><span class="pre">q</span></code> versus <code class="docutils literal notranslate"><span class="pre">-q</span></code> quaternion ambiguity is handled before averaging. The final mean quaternion is obtained from the dominant eigenvector of the quaternion accumulator matrix.</p>
+<p>Graph edges are added between neighboring labeled regions. Label <code class="docutils literal notranslate"><span class="pre">0</span></code> is treated as background and is not used as a graph node.</p>
+</section>
+<section id="boundary-artifact-cleanup">
+<h3>Boundary artifact cleanup<a class="headerlink" href="#boundary-artifact-cleanup" title="Link to this heading"></a></h3>
+<p>Some small regions can appear mainly along grain boundaries. Kanapy computes node boundary information with <a class="reference internal" href="kanapy.html#kanapy.texture.get_node_boundary_stats" title="kanapy.texture.get_node_boundary_stats"><code class="xref py py-func docutils literal notranslate"><span class="pre">kanapy.texture.get_node_boundary_stats()</span></code></a>. For each node, the function checks local neighboring pixels and reports boundary pixel fraction, neighboring labels, map edge contact, bounding box size, and bounding box fill fraction.</p>
+<p>Small boundary artifact nodes can be merged with <a class="reference internal" href="kanapy.html#kanapy.texture.merge_boundary_artifact_nodes" title="kanapy.texture.merge_boundary_artifact_nodes"><code class="xref py py-func docutils literal notranslate"><span class="pre">kanapy.texture.merge_boundary_artifact_nodes()</span></code></a>. The merge target is chosen from neighboring nodes by comparing the node orientations. After node merging, the mean orientation of the merged node is recomputed from the original pixel orientations.</p>
+</section>
+<section id="graph-plotting">
+<h3>Graph plotting<a class="headerlink" href="#graph-plotting" title="Link to this heading"></a></h3>
+<p>The final EBSD graph can be plotted on the EBSD inverse pole figure map by setting <code class="docutils literal notranslate"><span class="pre">show_graph=True</span></code> when creating an <a class="reference internal" href="kanapy.html#kanapy.texture.EBSDmap" title="kanapy.texture.EBSDmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">kanapy.texture.EBSDmap</span></code></a> object. The graph overlay is produced by <a class="reference internal" href="kanapy.html#kanapy.texture.EBSDmap.plot_graph_overlay" title="kanapy.texture.EBSDmap.plot_graph_overlay"><code class="xref py py-meth docutils literal notranslate"><span class="pre">kanapy.texture.EBSDmap.plot_graph_overlay()</span></code></a>. Node centers are shown as black points and graph edges are shown as black lines.</p>
+<p>Example usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kanapy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">knpy</span>
+
+<span class="n">ebsd</span> <span class="o">=</span> <span class="n">knpy</span><span class="o">.</span><span class="n">EBSDmap</span><span class="p">(</span><span class="s2">"p558_250x_1.ang"</span><span class="p">,</span> <span class="n">show_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The same plotting method can also save the graph image to file when an output path is provided.</p>
+</section>
+<section id="example-script">
+<h3>Example script<a class="headerlink" href="#example-script" title="Link to this heading"></a></h3>
+<p>The graph workflow example is provided in <code class="docutils literal notranslate"><span class="pre">examples/EBSD_graph_analysis</span></code>.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">run_ebsd_analysis_with_graph.py</span></code></dt><dd><p>Builds an in memory <code class="xref py py-class docutils literal notranslate"><span class="pre">kanapy.graph_workflow.EBSDGraphResult</span></code> object and writes only the explicitly enabled graph handoff files. This example uses the graph only path and does not run grain statistics extraction or the legacy interactive plotting workflow. The output is written to <code class="docutils literal notranslate"><span class="pre">2D_graph_result</span></code>.</p>
+</dd>
+</dl>
+<p>The graph workflow can be called directly from Python by using <code class="xref py py-func docutils literal notranslate"><span class="pre">kanapy.graph_workflow.build_ebsd_graph()</span></code>. The main data transfer object is <code class="xref py py-class docutils literal notranslate"><span class="pre">kanapy.graph_workflow.EBSDGraphResult</span></code>; PKL, JSON, and PNG files are written only when enabled through <code class="xref py py-class docutils literal notranslate"><span class="pre">kanapy.graph_workflow.EBSDGraphOutputOptions</span></code>. Users who need the classic EBSD statistics and interactive Kanapy plots can still create <a class="reference internal" href="kanapy.html#kanapy.texture.EBSDmap" title="kanapy.texture.EBSDmap"><code class="xref py py-class docutils literal notranslate"><span class="pre">kanapy.texture.EBSDmap</span></code></a> directly with the usual plotting flags.</p>
+<p>The example keeps graph step figures and local zoom diagnostics disabled by default. These outputs are mainly useful for debugging or preparing publication figures, while routine workflows usually need only the final graph handoff files.</p>
+<p>The graph workflow example produces:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2D_graph_result/ebsd_graph.pkl
+2D_graph_result/ebsd_graph_summary.json
+2D_graph_result/graph_overlay.png
+2D_graph_result/graph_ipf_map.png
+</pre></div>
+</div>
+<p>The overlay image shows the final graph node centers and graph edges on the EBSD inverse pole figure map.</p>
 </section>
 </section>
 </section>

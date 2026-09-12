@@ -131,6 +131,7 @@ Kanapy can read two dimensional EBSD maps and convert the measured pixel orienta
 
 The EBSD workflow is handled by :class:`kanapy.texture.EBSDmap`. During map reading, Kanapy stores the EBSD pixel orientations, separates the retained phases, and builds graph data for the selected phase. For each phase, the graph data contains the final graph, diagnostic information from the initial graph, and merge information from the cleanup procedure.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Initial region construction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -138,6 +139,7 @@ Initial EBSD regions are identified by local pixel to pixel misorientation. The 
 
 For the two dimensional EBSD graph path, neighboring pixels are evaluated with 4-neighbor connectivity. This gives each pixel direct horizontal and vertical neighbors on the EBSD map. The resulting labeled regions form the initial graph nodes.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Graph construction and node data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -147,6 +149,7 @@ The mean orientation of a node is computed by :func:`kanapy.texture.mean_orienta
 
 Graph edges are added between neighboring labeled regions. Label ``0`` is treated as background and is not used as a graph node.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^
 Boundary artifact cleanup
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -154,6 +157,7 @@ Some small regions can appear mainly along grain boundaries. Kanapy computes nod
 
 Small boundary artifact nodes can be merged with :func:`kanapy.texture.merge_boundary_artifact_nodes`. The merge target is chosen from neighboring nodes by comparing the node orientations. After node merging, the mean orientation of the merged node is recomputed from the original pixel orientations.
 
+^^^^^^^^^^^^^^
 Graph plotting
 ^^^^^^^^^^^^^^
 
@@ -169,6 +173,7 @@ Example usage:
 
 The same plotting method can also save the graph image to file when an output path is provided.
 
+^^^^^^^^^^^^^^
 Example script
 ^^^^^^^^^^^^^^
 

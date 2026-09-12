@@ -14,9 +14,9 @@
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=8315fef2"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -121,9 +121,9 @@ this environment contains the kanapy instalation and its required dependencies.<
 <span class="go">          --help  Show this message and exit.</span>
 
 <span class="go">        Commands:</span>
-<span class="go">          copyExamples  Creates local copy of Kanapy&#39;s example directory.</span>
+<span class="go">          copyExamples  Creates local copy of Kanapy's example directory.</span>
 <span class="go">          genDocs       Generates a HTML-based reference documentation.</span>
-<span class="go">          gui           Start Kanapy&#39;s GUI</span>
+<span class="go">          gui           Start Kanapy's GUI</span>
 <span class="go">          runTests      Runs unittests built-in to Kanapy.</span>
 <span class="go">          setupTexture  Stores the user provided MATLAB &amp; MTEX paths for texture.</span>
 </pre></div>
@@ -140,50 +140,50 @@ respective dictionaries and combined to a list.</p>
 <h3>Microstructure descriptors<a class="headerlink" href="#microstructure-descriptors" title="Link to this heading"></a></h3>
 <p>An exemplary structure of the descriptor dictionary is shown below:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">{</span>
-<span class="w">  </span><span class="s2">&quot;Grain type&quot;</span>:
-<span class="w">    </span><span class="s2">&quot;Elongated&quot;</span>,
-<span class="w">  </span><span class="s2">&quot;Equivalent diameter&quot;</span>:
+<span class="w">  </span><span class="s2">"Grain type"</span>:
+<span class="w">    </span><span class="s2">"Elongated"</span>,
+<span class="w">  </span><span class="s2">"Equivalent diameter"</span>:
 <span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">&quot;sig&quot;</span>:<span class="w"> </span><span class="m">0</span>.39,
-<span class="w">      </span><span class="s2">&quot;scale&quot;</span>:<span class="w"> </span><span class="m">2</span>.418,
-<span class="w">      </span><span class="s2">&quot;loc&quot;</span>:<span class="w"> </span><span class="m">0</span>.0,
-<span class="w">      </span><span class="s2">&quot;cutoff_min&quot;</span>:<span class="w"> </span><span class="m">8</span>.0,
-<span class="w">      </span><span class="s2">&quot;cutoff_max&quot;</span>:<span class="w"> </span><span class="m">25</span>.0
+<span class="w">      </span><span class="s2">"sig"</span>:<span class="w"> </span><span class="m">0</span>.39,
+<span class="w">      </span><span class="s2">"scale"</span>:<span class="w"> </span><span class="m">2</span>.418,
+<span class="w">      </span><span class="s2">"loc"</span>:<span class="w"> </span><span class="m">0</span>.0,
+<span class="w">      </span><span class="s2">"cutoff_min"</span>:<span class="w"> </span><span class="m">8</span>.0,
+<span class="w">      </span><span class="s2">"cutoff_max"</span>:<span class="w"> </span><span class="m">25</span>.0
 <span class="w">    </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;Aspect ratio&quot;</span>:
+<span class="w">  </span><span class="s2">"Aspect ratio"</span>:
 <span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">&quot;sig&quot;</span>:<span class="w"> </span><span class="m">0</span>.3,
-<span class="w">      </span><span class="s2">&quot;scale&quot;</span>:<span class="w"> </span><span class="m">0</span>.918,
-<span class="w">      </span><span class="s2">&quot;loc&quot;</span>:<span class="w"> </span><span class="m">0</span>.0
-<span class="w">      </span><span class="s2">&quot;cutoff_min&quot;</span>:<span class="w"> </span><span class="m">1</span>.0,
-<span class="w">      </span><span class="s2">&quot;cutoff_max&quot;</span>:<span class="w"> </span><span class="m">4</span>.0
+<span class="w">      </span><span class="s2">"sig"</span>:<span class="w"> </span><span class="m">0</span>.3,
+<span class="w">      </span><span class="s2">"scale"</span>:<span class="w"> </span><span class="m">0</span>.918,
+<span class="w">      </span><span class="s2">"loc"</span>:<span class="w"> </span><span class="m">0</span>.0
+<span class="w">      </span><span class="s2">"cutoff_min"</span>:<span class="w"> </span><span class="m">1</span>.0,
+<span class="w">      </span><span class="s2">"cutoff_max"</span>:<span class="w"> </span><span class="m">4</span>.0
 <span class="w">    </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;Tilt angle&quot;</span>:
+<span class="w">  </span><span class="s2">"Tilt angle"</span>:
 <span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">&quot;kappa&quot;</span>:<span class="w"> </span><span class="m">15</span>.8774,
-<span class="w">      </span><span class="s2">&quot;loc&quot;</span>:<span class="w"> </span><span class="m">87</span>.4178,
-<span class="w">      </span><span class="s2">&quot;cutoff_min&quot;</span>:<span class="w"> </span><span class="m">75</span>.0,
-<span class="w">      </span><span class="s2">&quot;cutoff_max&quot;</span>:<span class="w"> </span><span class="m">105</span>.0
+<span class="w">      </span><span class="s2">"kappa"</span>:<span class="w"> </span><span class="m">15</span>.8774,
+<span class="w">      </span><span class="s2">"loc"</span>:<span class="w"> </span><span class="m">87</span>.4178,
+<span class="w">      </span><span class="s2">"cutoff_min"</span>:<span class="w"> </span><span class="m">75</span>.0,
+<span class="w">      </span><span class="s2">"cutoff_max"</span>:<span class="w"> </span><span class="m">105</span>.0
 <span class="w">    </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;RVE&quot;</span>:
+<span class="w">  </span><span class="s2">"RVE"</span>:
 <span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">&quot;sideX&quot;</span>:<span class="w"> </span><span class="m">85</span>.9,
-<span class="w">      </span><span class="s2">&quot;sideY&quot;</span>:<span class="w"> </span><span class="m">112</span>.33076,
-<span class="w">      </span><span class="s2">&quot;sideZ&quot;</span>:<span class="w"> </span><span class="m">85</span>.9,
-<span class="w">      </span><span class="s2">&quot;Nx&quot;</span>:<span class="w"> </span><span class="m">65</span>,
-<span class="w">      </span><span class="s2">&quot;Ny&quot;</span>:<span class="w"> </span><span class="m">85</span>,
-<span class="w">      </span><span class="s2">&quot;Nz&quot;</span>:<span class="w"> </span><span class="m">65</span>
+<span class="w">      </span><span class="s2">"sideX"</span>:<span class="w"> </span><span class="m">85</span>.9,
+<span class="w">      </span><span class="s2">"sideY"</span>:<span class="w"> </span><span class="m">112</span>.33076,
+<span class="w">      </span><span class="s2">"sideZ"</span>:<span class="w"> </span><span class="m">85</span>.9,
+<span class="w">      </span><span class="s2">"Nx"</span>:<span class="w"> </span><span class="m">65</span>,
+<span class="w">      </span><span class="s2">"Ny"</span>:<span class="w"> </span><span class="m">85</span>,
+<span class="w">      </span><span class="s2">"Nz"</span>:<span class="w"> </span><span class="m">65</span>
 <span class="w">    </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;Simulation&quot;</span>:
+<span class="w">  </span><span class="s2">"Simulation"</span>:
 <span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">&quot;periodicity&quot;</span>:<span class="w"> </span><span class="s2">&quot;True&quot;</span>,
-<span class="w">      </span><span class="s2">&quot;output_units&quot;</span>:<span class="w"> </span><span class="s2">&quot;mm&quot;</span>
+<span class="w">      </span><span class="s2">"periodicity"</span>:<span class="w"> </span><span class="s2">"True"</span>,
+<span class="w">      </span><span class="s2">"output_units"</span>:<span class="w"> </span><span class="s2">"mm"</span>
 <span class="w">    </span><span class="o">}</span>,
-<span class="w">  </span><span class="s2">&quot;Phase&quot;</span>:
+<span class="w">  </span><span class="s2">"Phase"</span>:
 <span class="w">    </span><span class="o">{</span>
-<span class="w">      </span><span class="s2">&quot;Name&quot;</span>:<span class="w"> </span><span class="s2">&quot;Simulanium&quot;</span>,
-<span class="w">      </span><span class="s2">&quot;Number&quot;</span>:<span class="w"> </span><span class="m">1</span>,
-<span class="w">      </span><span class="s2">&quot;Volume fraction&quot;</span>:<span class="w"> </span><span class="m">1</span>.0
+<span class="w">      </span><span class="s2">"Name"</span>:<span class="w"> </span><span class="s2">"Simulanium"</span>,
+<span class="w">      </span><span class="s2">"Number"</span>:<span class="w"> </span><span class="m">1</span>,
+<span class="w">      </span><span class="s2">"Volume fraction"</span>:<span class="w"> </span><span class="m">1</span>.0
 <span class="w">    </span><span class="o">}</span>
 <span class="o">}</span>
 </pre></div>
@@ -299,7 +299,7 @@ and meshing software <a class="reference external" href="http://neper.sourceforg
 <p>If the in-built voxelization routine is prefered, then kanapy will generate
 hexahedral element (C3D8) mesh that can be read by the commercial FEM software <a class="reference external" href="https://www.3ds.com/products-services/simulia/products/abaqus/">Abaqus</a>. The Abaqus .inp
 file will be written out in either <span class="math notranslate nohighlight">\(mm\)</span> or <span class="math notranslate nohighlight">\(\mu m\)</span> scale.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">ms</span> <span class="o">=</span> <span class="n">knpy</span><span class="o">.</span><span class="n">Microstructure</span><span class="p">(</span><span class="n">descriptor</span><span class="o">=</span><span class="n">ms_elong</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">matname</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">texture</span> <span class="o">+</span> <span class="s1">&#39;_texture&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">ms</span> <span class="o">=</span> <span class="n">knpy</span><span class="o">.</span><span class="n">Microstructure</span><span class="p">(</span><span class="n">descriptor</span><span class="o">=</span><span class="n">ms_elong</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">matname</span> <span class="o">+</span> <span class="s1">'_'</span> <span class="o">+</span> <span class="n">texture</span> <span class="o">+</span> <span class="s1">'_texture'</span><span class="p">)</span>
 <span class="o">&gt;</span> <span class="n">ms</span><span class="o">.</span><span class="n">init_RVE</span><span class="p">()</span>  <span class="c1"># initialize RVE including particle distribution and structured mesh</span>
 <span class="o">&gt;</span> <span class="n">ms</span><span class="o">.</span><span class="n">plot_stats_init</span><span class="p">()</span>  <span class="c1"># plot initial statistics of equivalent grain diameter and aspect ratio</span>
 <span class="o">&gt;</span> <span class="n">ms</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>  <span class="c1"># perform particle simulation to distribute grain nuclei in RVE volume</span>

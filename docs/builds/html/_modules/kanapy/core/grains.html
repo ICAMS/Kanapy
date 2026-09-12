@@ -13,8 +13,8 @@
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../../../_static/documentation_options.js?v=8315fef2"></script>
-      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -76,24 +76,25 @@
              
   <h1>Source code for kanapy.core.grains</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 <span class="sd">Subroutines for analysis of grains in microstructure</span>
 
 <span class="sd">@author: Alexander Hartmaier</span>
 <span class="sd">ICAMS, Ruhr University Bochum, Germany</span>
 <span class="sd">March 2024</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvexHull</span><span class="p">,</span> <span class="n">Delaunay</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delaunay</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 
 
 <div class="viewcode-block" id="calc_polygons">
 <a class="viewcode-back" href="../../../kanapy.html#kanapy.core.grains.calc_polygons">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">calc_polygons</span><span class="p">(</span><span class="n">rve</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1.e-3</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_polygons</span><span class="p">(</span><span class="n">rve</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">mesh</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.e-3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Evaluates grain volumes and the shared surface area of grain boundaries</span>
 <span class="sd">    between neighboring grains in a voxelized microstructure. Generates</span>
 <span class="sd">    vertices at contact points where three or more grains meet and constructs</span>
@@ -105,7 +106,7 @@
 <span class="sd">        Object containing information about the RVE geometry.</span>
 <span class="sd">    mesh : kanapy object</span>
 <span class="sd">        Object containing voxel mesh details and grain assignments for each voxel.</span>
-<span class="sd">    tol : float, optional</span>
+<span class="sd">    tol : float, optional, default=1.e-3</span>
 <span class="sd">        Tolerance for numerical operations. Default is 1.e-3.</span>
 
 <span class="sd">    Returns</span>
@@ -116,13 +117,18 @@
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
+<span class="sd">    ``geometry['GBarea']`` contains shared voxel-interface areas, whereas</span>
+<span class="sd">    ``geometry['Grains'][gid]['Area']`` measures the reconstructed triangular</span>
+<span class="sd">    shell. Grain simplices are oriented outward; global facets retain one</span>
+<span class="sd">    incident grain's orientation for each shared interface.</span>
+
 <span class="sd">    For periodic structures, large grains spanning both halves of the simulation</span>
 <span class="sd">    box and touching a boundary may be incorrectly split, which can affect</span>
 <span class="sd">    geometry calculations.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">facet_on_boundary</span><span class="p">(</span><span class="n">conn</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Check if given voxel facet lies on any RVE boundary</span>
 
 <span class="sd">        Parameters</span>
@@ -132,7 +138,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        face : (3,2)-array of bool</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">n1</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
         <span class="n">n2</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
         <span class="n">n3</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">conn</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
@@ -152,7 +158,7 @@
         <span class="k">return</span> <span class="n">face</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">check_neigh</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">grains</span><span class="p">,</span> <span class="n">margin</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Checks if new vertices are close to existing vertices in neighboring grains</span>
 <span class="sd">        and merges them if within a given margin</span>
 
@@ -175,7 +181,7 @@
 <span class="sd">        For each new vertex, the function computes distances to all vertices of the specified grains.</span>
 <span class="sd">        If a vertex lies within the specified margin, it is merged with the existing vertex.</span>
 <span class="sd">        Special treatment is applied for vertices on the RVE boundaries using the `RVE_min` and `RVE_max` values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="c1"># create set of all vertices of all involved grains</span>
         <span class="n">vset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -206,7 +212,7 @@
         <span class="k">return</span> <span class="n">nodes</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_voxel</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Determines the voxel indices corresponding to a given position vector</span>
 
 <span class="sd">        Parameters</span>
@@ -222,20 +228,20 @@
 <span class="sd">            Voxel index along the y-axis.</span>
 <span class="sd">        v2 : int</span>
 <span class="sd">            Voxel index along the z-axis.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">v0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">voxel_res</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">v1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">voxel_res</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">v2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">voxel_res</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">tet_in_grain</span><span class="p">(</span><span class="n">tet</span><span class="p">,</span> <span class="n">vertices</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Checks whether all vertices of a given tetrahedron belong to a specified set of vertices</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        tet : list or array-like</span>
-<span class="sd">            Indices of the tetrahedron&#39;s vertices</span>
+<span class="sd">            Indices of the tetrahedron's vertices</span>
 <span class="sd">        vertices : set or list</span>
 <span class="sd">            Set of vertices to check against</span>
 
@@ -243,14 +249,16 @@
 <span class="sd">        -------</span>
 <span class="sd">        bool</span>
 <span class="sd">            True if all tetrahedron vertices are in the specified set, False otherwise</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Vertices&#39;</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span> <span class="ow">and</span> \
-            <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Vertices&#39;</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span> <span class="ow">and</span> \
-            <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Vertices&#39;</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span> <span class="ow">and</span> \
-            <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Vertices&#39;</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">geometry</span><span class="p">[</span><span class="s1">'Vertices'</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span> <span class="ow">and</span> \
+            <span class="n">geometry</span><span class="p">[</span><span class="s1">'Vertices'</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span> <span class="ow">and</span> \
+            <span class="n">geometry</span><span class="p">[</span><span class="s1">'Vertices'</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span> <span class="ow">and</span> \
+            <span class="n">geometry</span><span class="p">[</span><span class="s1">'Vertices'</span><span class="p">][</span><span class="n">tet</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span> <span class="ow">in</span> <span class="n">vertices</span>
+
+    <span class="n">tet_face_cache</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">vox_in_tet</span><span class="p">(</span><span class="n">vox_</span><span class="p">,</span> <span class="n">tet_</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Determine whether the center of a voxel lies within a given tetrahedron</span>
 
 <span class="sd">        Parameters</span>
@@ -258,29 +266,35 @@
 <span class="sd">        vox_ : int or tuple</span>
 <span class="sd">            Index or identifier of the voxel</span>
 <span class="sd">        tet_ : list or array-like</span>
-<span class="sd">            Indices of the tetrahedron&#39;s vertices</span>
+<span class="sd">            Indices of the tetrahedron's vertices</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        contained : bool</span>
 <span class="sd">            True if the voxel center lies inside the tetrahedron, False otherwise</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
 
         <span class="n">v_pos</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vox_center_dict</span><span class="p">[</span><span class="n">vox_</span><span class="p">]</span>
+        <span class="n">tet_key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tet_</span><span class="p">)</span>
+        <span class="n">face_data</span> <span class="o">=</span> <span class="n">tet_face_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tet_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">face_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">face_data</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tet_</span><span class="p">:</span>
+                <span class="n">n_pos</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s1">'Points'</span><span class="p">][</span><span class="n">node</span><span class="p">]</span>
+                <span class="n">ind_</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">tet_</span> <span class="k">if</span> <span class="n">index</span> <span class="o">!=</span> <span class="n">node</span><span class="p">]</span>
+                <span class="n">f_pos</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s1">'Points'</span><span class="p">][</span><span class="n">ind_</span><span class="p">]</span>
+                <span class="n">ctr_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">f_pos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">f_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">f_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">f_pos</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">f_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span>
+                <span class="n">hn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">normal</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">hn</span> <span class="o">&gt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
+                    <span class="n">normal</span> <span class="o">/=</span> <span class="n">hn</span>
+                <span class="n">dist_to_node</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">n_pos</span> <span class="o">-</span> <span class="n">ctr_</span><span class="p">,</span> <span class="n">normal</span><span class="p">)</span>
+                <span class="n">face_data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ctr_</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">dist_to_node</span><span class="p">))</span>
+            <span class="n">tet_face_cache</span><span class="p">[</span><span class="n">tet_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">face_data</span>
+
         <span class="n">contained</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tet_</span><span class="p">:</span>
-            <span class="n">n_pos</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Points&#39;</span><span class="p">][</span><span class="n">node</span><span class="p">]</span>
-            <span class="n">hh</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">tet_</span><span class="p">)</span>
-            <span class="n">hh</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-            <span class="n">ind_</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">hh</span><span class="p">)</span>
-            <span class="n">f_pos</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Points&#39;</span><span class="p">][</span><span class="n">ind_</span><span class="p">]</span>
-            <span class="n">ctr_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">f_pos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-            <span class="n">normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">f_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">f_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">f_pos</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">f_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:])</span>
-            <span class="n">hn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">normal</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">hn</span> <span class="o">&gt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
-                <span class="n">normal</span> <span class="o">/=</span> <span class="n">hn</span>
+        <span class="k">for</span> <span class="n">ctr_</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">dist_to_node</span> <span class="ow">in</span> <span class="n">face_data</span><span class="p">:</span>
             <span class="n">dist_to_vox</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v_pos</span> <span class="o">-</span> <span class="n">ctr_</span><span class="p">,</span> <span class="n">normal</span><span class="p">)</span>
-            <span class="n">dist_to_node</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">n_pos</span> <span class="o">-</span> <span class="n">ctr_</span><span class="p">,</span> <span class="n">normal</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">dist_to_vox</span> <span class="o">*</span> <span class="n">dist_to_node</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.</span> <span class="ow">or</span> \
                     <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dist_to_vox</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dist_to_node</span><span class="p">):</span>
                 <span class="n">contained</span> <span class="o">=</span> <span class="kc">False</span>
@@ -288,7 +302,7 @@
         <span class="k">return</span> <span class="n">contained</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_diameter</span><span class="p">(</span><span class="n">pts</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Get estimate of the largest diameter of a set of points</span>
 
 <span class="sd">        Parameters</span>
@@ -300,7 +314,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        diameter : (dim,) ndarray</span>
 <span class="sd">            Vector representing the largest extent of the point set along any Cartesian axis</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">ind0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with lowest coordinate for each Cartesian axis</span>
         <span class="n">ind1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># index of point with highest coordinate for each Cartesian axis</span>
         <span class="n">v_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ind0</span><span class="p">)])</span>  <span class="c1"># min. value for each Cartesian axis</span>
@@ -309,7 +323,7 @@
         <span class="k">return</span> <span class="n">pts</span><span class="p">[</span><span class="n">ind1</span><span class="p">[</span><span class="n">ind_d</span><span class="p">],</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="n">ind0</span><span class="p">[</span><span class="n">ind_d</span><span class="p">],</span> <span class="p">:]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">project_pts</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">ctr</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Project points (pts) to plane defined via center (ctr) and normal vector (axis)</span>
 
 <span class="sd">        Parameters</span>
@@ -325,7 +339,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        ppt : (N, dim) ndarray</span>
 <span class="sd">            Points projected to plane with normal axis</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">dvec</span> <span class="o">=</span> <span class="n">pts</span> <span class="o">-</span> <span class="n">ctr</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># distance vector b/w points and center point</span>
         <span class="n">pdist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dvec</span><span class="p">])</span>
         <span class="n">ppt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">pts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -338,7 +352,7 @@
     <span class="n">voxel_size</span> <span class="o">=</span> <span class="n">voxel_res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">RVE_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">RVE_min</span> <span class="o">&gt;</span> <span class="mf">1.e-3</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">RVE_min</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1.e-3</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Irregular RVE geometry: RVE_min = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">RVE_min</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Irregular RVE geometry: RVE_min = </span><span class="si">{}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">RVE_min</span><span class="p">))</span>
     <span class="n">RVE_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">Ng_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>  <span class="c1"># highest grain number</span>
     <span class="n">Ngr</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># number of grains</span>
@@ -351,7 +365,7 @@
         <span class="n">grain_facesDict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
     <span class="c1"># generate following objects:</span>
-    <span class="c1"># outer_faces: {face_id&#39;s of outer voxel faces}  (potential GB facets)</span>
+    <span class="c1"># outer_faces: {face_id's of outer voxel faces}  (potential GB facets)</span>
     <span class="c1"># face_nodes: {face_id: list with 4 nodes}</span>
     <span class="c1"># grain_facesDict: {grain_id: {face_id: list with 4 nodes}}</span>
     <span class="c1"># gb_vox_dict: {face_id: list with voxels}</span>
@@ -368,8 +382,8 @@
                      <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span> <span class="p">[</span><span class="n">nc</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">nc</span><span class="p">[</span><span class="mi">2</span><span class="p">]]]</span>
             <span class="c1"># Sort in ascending order</span>
             <span class="n">sorted_faces</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sorted</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span> <span class="k">for</span> <span class="n">fc</span> <span class="ow">in</span> <span class="n">faces</span><span class="p">]</span>
-            <span class="c1"># create unique face ids by joining node id&#39;s</span>
-            <span class="n">face_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">fc</span><span class="p">))</span> <span class="k">for</span> <span class="n">fc</span> <span class="ow">in</span> <span class="n">sorted_faces</span><span class="p">]</span>
+            <span class="c1"># create unique face ids by joining node id's</span>
+            <span class="n">face_ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">fc</span><span class="p">))</span> <span class="k">for</span> <span class="n">fc</span> <span class="ow">in</span> <span class="n">sorted_faces</span><span class="p">]</span>
             <span class="c1"># Create face_nodes = {face_id: nodal connectivity} dictionary</span>
             <span class="k">for</span> <span class="n">enum</span><span class="p">,</span> <span class="n">fid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">face_ids</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">fid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">face_nodes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -406,24 +420,26 @@
         <span class="k">if</span> <span class="n">finter</span><span class="p">:</span>
             <span class="n">ind</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="p">[</span><span class="n">ind</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grain_facesDict</span><span class="p">[</span><span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">finter</span><span class="p">]</span>
-            <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;f</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cb</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="s1">'f</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cb</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">gbDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind</span>
             <span class="k">if</span> <span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">Ng_max</span> <span class="ow">and</span> <span class="n">cb</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">Ng_max</span><span class="p">:</span>
-                <span class="c1"># grain facet is not on boundary</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">hull</span> <span class="o">=</span> <span class="n">ConvexHull</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">ind</span><span class="p">),</span> <span class="p">:])</span>
-                    <span class="n">shared_area</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cb</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">hull</span><span class="o">.</span><span class="n">area</span><span class="p">])</span>
-                <span class="k">except</span><span class="p">:</span>
-                    <span class="n">sh_area</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">finter</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">voxel_size</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
-                    <span class="n">shared_area</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cb</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sh_area</span><span class="p">])</span>
+                <span class="c1"># Actual voxel-interface area, including nonplanar patches and</span>
+                <span class="c1"># anisotropic voxels. Connectivity contains one-based node IDs.</span>
+                <span class="n">sh_area</span> <span class="o">=</span> <span class="mf">0.</span>
+                <span class="k">for</span> <span class="n">fid</span> <span class="ow">in</span> <span class="n">finter</span><span class="p">:</span>
+                    <span class="n">pts</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">grain_facesDict</span><span class="p">[</span><span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">fid</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="n">sh_area</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">+</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">pts</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+                <span class="n">shared_area</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">cb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cb</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sh_area</span><span class="p">])</span>
 
-    <span class="c1"># analyse gbDict to find intersection lines of GB&#39;s</span>
+    <span class="c1"># analyse gbDict to find intersection lines of GB's</span>
     <span class="c1"># (triple or quadruple lines) -&gt; edges</span>
     <span class="c1"># vertices are end points of edges, represented by</span>
     <span class="c1"># nodes in voxelized microstructure</span>
     <span class="c1"># created objects:</span>
     <span class="c1"># vert: {grain_id: [node_numbers of vertices]}</span>
-    <span class="c1"># grains_of_vert: {node_number: [grain_id&#39;s connected to vertex]}</span>
+    <span class="c1"># grains_of_vert: {node_number: [grain_id's connected to vertex]}</span>
 
     <span class="c1"># for periodic structures vertices at surfaces should be mirrored!!!</span>
     <span class="n">vert</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -455,14 +471,14 @@
                                 <span class="n">dmax</span> <span class="o">=</span> <span class="n">d</span>
                 <span class="c1"># select all involved grains</span>
                 <span class="n">gr_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-                <span class="n">j</span> <span class="o">=</span> <span class="n">key0</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">key0</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span>
                 <span class="n">igr</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key0</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">j</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">igr</span> <span class="o">&lt;=</span> <span class="n">Ng_max</span><span class="p">:</span>
                     <span class="n">gr_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">igr</span><span class="p">)</span>
                 <span class="n">igr</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key0</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
                 <span class="k">if</span> <span class="n">igr</span> <span class="o">&lt;=</span> <span class="n">Ng_max</span><span class="p">:</span>
                     <span class="n">gr_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">igr</span><span class="p">)</span>
-                <span class="n">j</span> <span class="o">=</span> <span class="n">key1</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">key1</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span>
                 <span class="n">igr</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key1</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">j</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">igr</span> <span class="o">&lt;=</span> <span class="n">Ng_max</span><span class="p">:</span>
                     <span class="n">gr_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">igr</span><span class="p">)</span>
@@ -511,7 +527,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">grain_sequence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">glist</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">ind</span><span class="p">)))</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">grain_sequence</span><span class="p">)</span> <span class="o">!=</span> <span class="n">Ngr</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">glist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Grain list incomplete: </span><span class="si">{</span><span class="n">grain_sequence</span><span class="si">}</span><span class="s1">, remaining elements: </span><span class="si">{</span><span class="n">glist</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Grain list incomplete: </span><span class="si">{</span><span class="n">grain_sequence</span><span class="si">}</span><span class="s1">, remaining elements: </span><span class="si">{</span><span class="n">glist</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 
     <span class="c1"># initialize dictionary for grain information</span>
     <span class="n">grains</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -519,15 +535,15 @@
     <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">igr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">grain_sequence</span><span class="p">):</span>
         <span class="n">add_vert</span> <span class="o">=</span> <span class="n">vert</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">vertices</span><span class="p">))</span>
         <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Vertices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">vert</span><span class="p">[</span><span class="n">igr</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># indices of voxels at grain vertices</span>
-        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Vertices&#39;</span><span class="p">]]</span>  <span class="c1"># positions of vertices</span>
-        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Points&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">center</span>  <span class="c1"># position of grain center</span>
+        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Vertices'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">vert</span><span class="p">[</span><span class="n">igr</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># indices of voxels at grain vertices</span>
+        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Points'</span><span class="p">]</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Vertices'</span><span class="p">]]</span>  <span class="c1"># positions of vertices</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Points'</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Center'</span><span class="p">]</span> <span class="o">=</span> <span class="n">center</span>  <span class="c1"># position of grain center</span>
         <span class="c1"># initialize values to be incrementally updated later</span>
-        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Simplices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Volume&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
-        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Area&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
-        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Phase&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span>  <span class="c1"># phase number to which grain belongs</span>
+        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Simplices'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Volume'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Area'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Phase'</span><span class="p">]</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span>  <span class="c1"># phase number to which grain belongs</span>
 
         <span class="c1"># Construct incremental Delaunay tesselation of</span>
         <span class="c1"># structure given by vertices</span>
@@ -544,14 +560,14 @@
 
     <span class="n">tetra</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="c1"># store global result of tesselation</span>
-    <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Vertices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-    <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Points&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tetra</span><span class="o">.</span><span class="n">points</span>
-    <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Simplices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tetra</span><span class="o">.</span><span class="n">simplices</span>
+    <span class="n">geometry</span><span class="p">[</span><span class="s1">'Vertices'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">geometry</span><span class="p">[</span><span class="s1">'Points'</span><span class="p">]</span> <span class="o">=</span> <span class="n">tetra</span><span class="o">.</span><span class="n">points</span>
+    <span class="n">geometry</span><span class="p">[</span><span class="s1">'Simplices'</span><span class="p">]</span> <span class="o">=</span> <span class="n">tetra</span><span class="o">.</span><span class="n">simplices</span>
 
     <span class="c1"># assign simplices (tetrahedra) to grains</span>
     <span class="n">Ntet</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tetra</span><span class="o">.</span><span class="n">simplices</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Generated Delaunay tesselation of grain vertices.&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Assigning </span><span class="si">{</span><span class="n">Ntet</span><span class="si">}</span><span class="s1"> tetrahedra to grains ...&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">Generated Delaunay tesselation of grain vertices.'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Assigning </span><span class="si">{</span><span class="n">Ntet</span><span class="si">}</span><span class="s1"> tetrahedra to grains ...'</span><span class="p">)</span>
     <span class="n">tet_to_grain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Ntet</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tet</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">tetra</span><span class="o">.</span><span class="n">simplices</span><span class="p">)):</span>
         <span class="n">ctr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">tetra</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">tet</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -559,14 +575,14 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">igr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="mi">0</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grains</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="k">continue</span>  <span class="c1"># special case of precipit, where grain 0 is assigned to pores</span>
         <span class="c1"># test if all vertices of tet belong to that grain</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">tet_in_grain</span><span class="p">(</span><span class="n">tet</span><span class="p">,</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Vertices&#39;</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tet_in_grain</span><span class="p">(</span><span class="n">tet</span><span class="p">,</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Vertices'</span><span class="p">]):</span>
             <span class="c1"># try to find a neighboring grain with all vertices of tet</span>
             <span class="n">neigh_list</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">hv</span> <span class="ow">in</span> <span class="n">tet</span><span class="p">:</span>
                 <span class="n">neigh_list</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">grains_of_vert</span><span class="p">[</span><span class="n">vertices</span><span class="p">[</span><span class="n">hv</span><span class="p">]])</span>
             <span class="n">match_found</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">for</span> <span class="n">jgr</span> <span class="ow">in</span> <span class="n">neigh_list</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">tet_in_grain</span><span class="p">(</span><span class="n">tet</span><span class="p">,</span> <span class="n">grains</span><span class="p">[</span><span class="n">jgr</span><span class="p">][</span><span class="s1">&#39;Vertices&#39;</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">tet_in_grain</span><span class="p">(</span><span class="n">tet</span><span class="p">,</span> <span class="n">grains</span><span class="p">[</span><span class="n">jgr</span><span class="p">][</span><span class="s1">'Vertices'</span><span class="p">]):</span>
                     <span class="n">igr</span> <span class="o">=</span> <span class="n">jgr</span>
                     <span class="n">match_found</span> <span class="o">=</span> <span class="kc">True</span>
                     <span class="k">break</span>
@@ -590,10 +606,10 @@
         <span class="n">vmat</span> <span class="o">=</span> <span class="p">[</span><span class="n">tetra</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">tet</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">-</span> <span class="n">dv</span><span class="p">,</span>
                 <span class="n">tetra</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">tet</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">dv</span><span class="p">,</span>
                 <span class="n">tetra</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">tet</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">-</span> <span class="n">dv</span><span class="p">]</span>
-        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Volume&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">vmat</span><span class="p">))</span> <span class="o">/</span> <span class="mf">6.</span>
+        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Volume'</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">vmat</span><span class="p">))</span> <span class="o">/</span> <span class="mf">6.</span>
 
     <span class="c1"># Keep only facets at boundary or between different grains</span>
-    <span class="n">facet_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">facets_by_key</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tet</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tetra</span><span class="o">.</span><span class="n">simplices</span><span class="p">):</span>
         <span class="n">igr</span> <span class="o">=</span> <span class="n">tet_to_grain</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">igr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="mi">0</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">grains</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
@@ -604,45 +620,45 @@
                 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
                         <span class="n">ft</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tet</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
-                <span class="n">ft</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ft</span><span class="p">)</span>
-                <span class="n">facet_keys</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">ft</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">ft</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">ft</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Simplices&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ft</span><span class="p">)</span>
-                <span class="c1"># Update grain surface area</span>
+                <span class="c1"># Orient away from the opposite tetrahedron vertex, hence</span>
+                <span class="c1"># outward from this grain. Shared grain faces have opposite winding.</span>
                 <span class="n">cv</span> <span class="o">=</span> <span class="n">tetra</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">ft</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
                 <span class="n">avec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">tetra</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">ft</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">-</span> <span class="n">cv</span><span class="p">,</span>
                                 <span class="n">tetra</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">ft</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">cv</span><span class="p">)</span>
-                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Area&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">avec</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">avec</span><span class="p">,</span> <span class="n">tetra</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">tet</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">-</span> <span class="n">cv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
+                    <span class="n">ft</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ft</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ft</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ft</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="c1"># Sort only the identity key; retain the first owner's winding</span>
+                <span class="c1"># in the global interface mesh (outward on the external hull).</span>
+                <span class="n">facets_by_key</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">ft</span><span class="p">)),</span> <span class="n">ft</span><span class="p">)</span>
+                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Simplices'</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ft</span><span class="p">)</span>
+                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Area'</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">avec</span><span class="p">)</span>
 
     <span class="c1"># perform geometrical analysis of grain structure</span>
-    <span class="n">facets</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">facet_keys</span><span class="p">:</span>
-        <span class="n">hh</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
-        <span class="n">facets</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">hh</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">hh</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">hh</span><span class="p">[</span><span class="mi">2</span><span class="p">])])</span>
-    <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Facets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">facets</span><span class="p">)</span>
+    <span class="n">geometry</span><span class="p">[</span><span class="s1">'Facets'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">facets_by_key</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">igr</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Volume&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No tet assigned to grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Simplices&#39;</span><span class="p">]:</span>
-                <span class="n">nf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Simplices&#39;</span><span class="p">])</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1"> contains </span><span class="si">{</span><span class="n">nf</span><span class="si">}</span><span class="s1"> tets, but no volume&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Volume'</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'No tet assigned to grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Simplices'</span><span class="p">]:</span>
+                <span class="n">nf</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Simplices'</span><span class="p">])</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1"> contains </span><span class="si">{</span><span class="n">nf</span><span class="si">}</span><span class="s1"> tets, but no volume'</span><span class="p">)</span>
             <span class="n">grains</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">igr</span><span class="p">)</span>
             <span class="k">continue</span>
-        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;eqDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Volume&#39;</span><span class="p">]</span>
+        <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'eqDia'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Volume'</span><span class="p">]</span>
                                       <span class="o">/</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span>
         <span class="c1"># Approximate smallest rectangular cuboid around points of grains</span>
         <span class="c1"># to analyse prolate (aspect ratio &gt; 1) and oblate (a.r. &lt; 1) particles correctly</span>
-        <span class="n">pts</span> <span class="o">=</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Points&#39;</span><span class="p">]</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Points'</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Removing grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1"> with few vertices: </span><span class="si">{</span><span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s2">&quot;Vertices&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Removing grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1"> with few vertices: </span><span class="si">{</span><span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s2">"Vertices"</span><span class="p">]</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
             <span class="n">grains</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">igr</span><span class="p">)</span>
             <span class="k">continue</span>
         <span class="n">dia</span> <span class="o">=</span> <span class="n">get_diameter</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>  <span class="c1"># approx. of largest diameter of grain</span>
         <span class="n">len_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dia</span><span class="p">)</span>  <span class="c1"># length of largest side</span>
         <span class="k">if</span> <span class="n">len_a</span> <span class="o">&lt;</span> <span class="mf">1.e-5</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Very small grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1"> with max. diameter = </span><span class="si">{</span><span class="n">len_a</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Very small grain </span><span class="si">{</span><span class="n">igr</span><span class="si">}</span><span class="s1"> with max. diameter = </span><span class="si">{</span><span class="n">len_a</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
         <span class="n">ax_a</span> <span class="o">=</span> <span class="n">dia</span> <span class="o">/</span> <span class="n">len_a</span>  <span class="c1"># unit vector along longest side</span>
-        <span class="n">ppt</span> <span class="o">=</span> <span class="n">project_pts</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;Center&#39;</span><span class="p">],</span> <span class="n">ax_a</span><span class="p">)</span>  <span class="c1"># project points onto central plane normal to diameter</span>
+        <span class="n">ppt</span> <span class="o">=</span> <span class="n">project_pts</span><span class="p">(</span><span class="n">pts</span><span class="p">,</span> <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'Center'</span><span class="p">],</span> <span class="n">ax_a</span><span class="p">)</span>  <span class="c1"># project points onto central plane normal to diameter</span>
         <span class="n">trans1</span> <span class="o">=</span> <span class="n">get_diameter</span><span class="p">(</span><span class="n">ppt</span><span class="p">)</span>  <span class="c1"># largest side transversal to long axis</span>
         <span class="n">len_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">trans1</span><span class="p">)</span>  <span class="c1"># length of second-largest side</span>
         <span class="n">ax_b</span> <span class="o">=</span> <span class="n">trans1</span> <span class="o">/</span> <span class="n">len_b</span>  <span class="c1"># unit vector of second axis (normal to diameter)</span>
@@ -657,25 +673,25 @@
         <span class="n">minval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ar_list</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">minval</span> <span class="o">&gt;</span> <span class="mf">0.15</span><span class="p">:</span>
             <span class="c1"># no clear rotational symmetry, choose longest axis as major diameter</span>
-            <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;majDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">len_a</span>
-            <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;minDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_b</span> <span class="o">+</span> <span class="n">len_c</span><span class="p">)</span>
+            <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'majDia'</span><span class="p">]</span> <span class="o">=</span> <span class="n">len_a</span>
+            <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'minDia'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_b</span> <span class="o">+</span> <span class="n">len_c</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">ar_list</span><span class="p">)</span>  <span class="c1"># identify two axes with aspect ratio closest to 1</span>
             <span class="k">if</span> <span class="n">ind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
-                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;majDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">len_c</span>  <span class="c1"># major diameter along the rotational axis of grain</span>
-                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;minDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_a</span> <span class="o">+</span> <span class="n">len_b</span><span class="p">)</span>  <span class="c1"># minor diameter is average of transversal axes</span>
+                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'majDia'</span><span class="p">]</span> <span class="o">=</span> <span class="n">len_c</span>  <span class="c1"># major diameter along the rotational axis of grain</span>
+                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'minDia'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_a</span> <span class="o">+</span> <span class="n">len_b</span><span class="p">)</span>  <span class="c1"># minor diameter is average of transversal axes</span>
             <span class="k">elif</span> <span class="n">ind</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
-                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;majDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">len_a</span>
-                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;minDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_c</span> <span class="o">+</span> <span class="n">len_b</span><span class="p">)</span>
+                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'majDia'</span><span class="p">]</span> <span class="o">=</span> <span class="n">len_a</span>
+                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'minDia'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_c</span> <span class="o">+</span> <span class="n">len_b</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;majDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">len_b</span>
-                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">&#39;minDia&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_a</span> <span class="o">+</span> <span class="n">len_c</span><span class="p">)</span>
+                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'majDia'</span><span class="p">]</span> <span class="o">=</span> <span class="n">len_b</span>
+                <span class="n">grains</span><span class="p">[</span><span class="n">igr</span><span class="p">][</span><span class="s1">'minDia'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">len_a</span> <span class="o">+</span> <span class="n">len_c</span><span class="p">)</span>
 
-    <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grains</span>
-    <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;GBnodes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gbDict</span>
-    <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;GBarea&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">shared_area</span>
-    <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;GBfaces&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_facesDict</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Finished generating polyhedral hulls for grains.&#39;</span><span class="p">)</span>
+    <span class="n">geometry</span><span class="p">[</span><span class="s1">'Grains'</span><span class="p">]</span> <span class="o">=</span> <span class="n">grains</span>
+    <span class="n">geometry</span><span class="p">[</span><span class="s1">'GBnodes'</span><span class="p">]</span> <span class="o">=</span> <span class="n">gbDict</span>
+    <span class="n">geometry</span><span class="p">[</span><span class="s1">'GBarea'</span><span class="p">]</span> <span class="o">=</span> <span class="n">shared_area</span>
+    <span class="n">geometry</span><span class="p">[</span><span class="s1">'GBfaces'</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_facesDict</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'Finished generating polyhedral hulls for grains.'</span><span class="p">)</span>
 
     <span class="c1"># Analyse error in polyhedral grain volume</span>
     <span class="n">vref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
@@ -683,27 +699,27 @@
     <span class="n">vtot_vox</span> <span class="o">=</span> <span class="mf">0.</span>
     <span class="n">vunit</span> <span class="o">=</span> <span class="n">vref</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">rve</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
     <span class="n">vol_mae</span> <span class="o">=</span> <span class="mf">0.</span>
-    <span class="k">for</span> <span class="n">igr</span><span class="p">,</span> <span class="n">grain</span> <span class="ow">in</span> <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Grains&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">vg</span> <span class="o">=</span> <span class="n">grain</span><span class="p">[</span><span class="s1">&#39;Volume&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">igr</span><span class="p">,</span> <span class="n">grain</span> <span class="ow">in</span> <span class="n">geometry</span><span class="p">[</span><span class="s1">'Grains'</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">vg</span> <span class="o">=</span> <span class="n">grain</span><span class="p">[</span><span class="s1">'Volume'</span><span class="p">]</span>
         <span class="n">vtot</span> <span class="o">+=</span> <span class="n">vg</span>
         <span class="n">vvox</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">grains</span> <span class="o">==</span> <span class="n">igr</span><span class="p">)</span> <span class="o">*</span> <span class="n">vunit</span>
         <span class="n">vtot_vox</span> <span class="o">+=</span> <span class="n">vvox</span>
         <span class="n">vol_mae</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">vg</span> <span class="o">/</span> <span class="n">vvox</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vtot_vox</span> <span class="o">-</span> <span class="n">vref</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.e-5</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">prec_vf_voxels</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Inconsistent volume of voxelized grains: </span><span class="si">{</span><span class="n">vtot_vox</span><span class="si">}</span><span class="s1">, &#39;</span> <span class="o">+</span>
-                        <span class="sa">f</span><span class="s1">&#39;Reference volume: </span><span class="si">{</span><span class="n">vref</span><span class="si">}</span><span class="s1">. Grians missing in polyhedral structure.&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Inconsistent volume of voxelized grains: </span><span class="si">{</span><span class="n">vtot_vox</span><span class="si">}</span><span class="s1">, '</span> <span class="o">+</span>
+                        <span class="sa">f</span><span class="s1">'Reference volume: </span><span class="si">{</span><span class="n">vref</span><span class="si">}</span><span class="s1">. Grians missing in polyhedral structure.'</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vtot</span> <span class="o">-</span> <span class="n">vref</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.e-5</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">prec_vf_voxels</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Inconsistent volume of polyhedral grains: </span><span class="si">{</span><span class="n">vtot</span><span class="si">}</span><span class="s1">, &#39;</span> <span class="o">+</span>
-                        <span class="sa">f</span><span class="s1">&#39;Reference volume: </span><span class="si">{</span><span class="n">vref</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Total volume of RVE: </span><span class="si">{</span><span class="n">vref</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">rve</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">^3&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Total volume of polyhedral grains: </span><span class="si">{</span><span class="n">vtot</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">rve</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">^3&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Inconsistent volume of polyhedral grains: </span><span class="si">{</span><span class="n">vtot</span><span class="si">}</span><span class="s1">, '</span> <span class="o">+</span>
+                        <span class="sa">f</span><span class="s1">'Reference volume: </span><span class="si">{</span><span class="n">vref</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Total volume of RVE: </span><span class="si">{</span><span class="n">vref</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">rve</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">^3'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Total volume of polyhedral grains: </span><span class="si">{</span><span class="n">vtot</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">rve</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">^3'</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">prec_vf_voxels</span><span class="p">):</span>
-        <span class="n">geometry</span><span class="p">[</span><span class="s1">&#39;Porosity_grains&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">vtot</span> <span class="o">/</span> <span class="n">vref</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Porosity in voxel structure: </span><span class="si">{</span><span class="n">mesh</span><span class="o">.</span><span class="n">prec_vf_voxels</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Porosity in polyhedral grains: </span><span class="si">{</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;Porosity_grains&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Mean relative error of polyhedral vs. voxel volume of individual &#39;</span> <span class="o">+</span>
-          <span class="sa">f</span><span class="s1">&#39;grains: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">vol_mae</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">Ngr</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;for mean volume of grains: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">vref</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">Ngr</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">rve</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">^3.&#39;</span><span class="p">)</span>
+        <span class="n">geometry</span><span class="p">[</span><span class="s1">'Porosity_grains'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">vtot</span> <span class="o">/</span> <span class="n">vref</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Porosity in voxel structure: </span><span class="si">{</span><span class="n">mesh</span><span class="o">.</span><span class="n">prec_vf_voxels</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Porosity in polyhedral grains: </span><span class="si">{</span><span class="n">geometry</span><span class="p">[</span><span class="s2">"Porosity_grains"</span><span class="p">]</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Mean relative error of polyhedral vs. voxel volume of individual '</span> <span class="o">+</span>
+          <span class="sa">f</span><span class="s1">'grains: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">vol_mae</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">Ngr</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'for mean volume of grains: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">vref</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">Ngr</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">rve</span><span class="o">.</span><span class="n">units</span><span class="si">}</span><span class="s1">^3.'</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">geometry</span></div>
 
 </pre></div>
