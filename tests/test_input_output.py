@@ -149,7 +149,69 @@ def test_cp_material_phase_includes(tmp_path):
     (tmp_path / 'b.inc').write_text('2, 3\n')
     writeAbaqusMat([4, 5], {1: [0, 0, 0], 2: [1, 2, 3]},
                    file='phases.inp', path=tmp_path, grain_phase_dict={1: 0, 2: 1},
-                   props_file=['a.inc', 'b.inc'])
+                   props_file=['a.inc', 'b.inc'], crystal_plasticity=[True, True])
     result = (tmp_path / 'phases.inp').read_text()
     assert '*User Material, constants=9\n4.0' in result
     assert '*User Material, constants=10\n5.0' in result
+
+
+@pytest.mark.parametrize('flags,includes,grain_ids', [
+    ([True, True], ['cp.inc', 'cp.inc'], [1, 2]),
+    ([False, False], ['j2.inc', 'j2.inc'], [1, 2]),
+    ([True, False], ['cp.inc', 'j2.inc'], [1, 0]),
+    ([True, False], ['cp.inc', None], [1, 0]),
+])
+@pytest.mark.parametrize('dual_phase', [False, True])
+def test_multiphase_abq_deck(tmp_path, flags, includes, grain_ids, dual_phase):
+    from types import SimpleNamespace
+    from kanapy.core.api import Microstructure
+
+    (tmp_path / 'cp.inc').write_text('1, 2, 3\n')
+    (tmp_path / 'j2.inc').write_text('*Elastic\n210000, 0.3\n*Plastic\n200, 0\n')
+    mesh = mesh_creator((2, 2, 2))
+    mesh.create_voxels(Simulation_Box((2, 2, 2)))
+    elements = list(mesh.voxel_dict)
+    mesh.grain_dict = {grain_ids[0]: elements[:4], grain_ids[1]: elements[4:]}
+    mesh.grain_phase_dict = dict(zip(grain_ids, [0, 1]))
+    mesh.grain_ori_dict = {g: [10, 20, 30] for g in grain_ids if g > 0} if any(flags) else None
+    ms = SimpleNamespace(mesh=mesh, nphases=2,
+                         rve=SimpleNamespace(ialloy=None, units='um', periodic=False))
+    if dual_phase and any(flags):
+        with pytest.raises(ValueError, match='grain-wise'):
+            Microstructure.write_abq(ms, nodes='v', file='test_geom.inp', path=tmp_path,
+                                     props_file=includes, crystal_plasticity=flags, dual_phase=True)
+        return
+    Microstructure.write_abq(ms, nodes='v', file='test_geom.inp', path=tmp_path,
+                             props_file=includes, crystal_plasticity=flags, dual_phase=dual_phase)
+    geom = (tmp_path / 'test_geom.inp').read_text()
+    matfile = tmp_path / 'test_mat.inp'
+    mat = matfile.read_text() if matfile.exists() else ''
+    assert ('unsymm=YES' in geom) == any(flags)
+    assert ('*Include, input=' in geom and 'test_mat.inp' in geom) == any(flags)
+    assert matfile.exists() == any(flags)
+    for pid, gid in enumerate(grain_ids):
+        name = f'GRAIN{gid}_MAT' if flags[pid] else f'PHASE{pid}_MAT'
+        elset = f'PHASE{pid}_SET' if dual_phase else f'GRAIN{gid}_SET'
+        assert f'*Solid Section, elset={elset}, material={name}' in geom
+        assert (f'*Material, name=GRAIN{gid}_MAT' in mat) == flags[pid]
+        assert (f'*Material, name=PHASE{pid}_MAT' in geom) == (not flags[pid] and (includes[pid] is not None or gid == 0))
+    if 0 in grain_ids and includes[1] is None:
+        assert '*Material, name=PHASE1_MAT\n**\n' in geom
+    assert mat.count('*Include, input="cp.inc"') == sum(flags)
+    assert geom.count('*Include, input="j2.inc"') == includes.count('j2.inc')
+
+
+@pytest.mark.parametrize('includes,flags', [
+    ('cp.inc', [True, True]),
+    (['cp.inc', 'cp.inc'], True),
+    (['cp.inc'], [True, True]),
+    (['cp.inc', None], [True, True]),
+    (['cp.inc', 'cp.inc'], [True]),
+])
+def test_multiphase_abq_validation(tmp_path, includes, flags):
+    with pytest.raises(ValueError):
+        writeAbaqusMat([0, 0], {1: [0, 0, 0], 2: [0, 0, 0]},
+                       file='invalid_mat.inp', path=tmp_path,
+                       grain_phase_dict={1: 0, 2: 1},
+                       props_file=includes, crystal_plasticity=flags)
+    assert not (tmp_path / 'invalid_mat.inp').exists()

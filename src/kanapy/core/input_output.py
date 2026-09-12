@@ -147,16 +147,37 @@ def read_dump(file: Union[str, os.PathLike[str]]) -> tuple[Any, list[Any]]:
     return sim_box, Ellipsoids
 
 
+def _abaqus_phase_options(props_file, crystal_plasticity, nphases):
+    """Validate explicit phase options; None retains legacy material selection."""
+    if props_file is None and not isinstance(crystal_plasticity, list):
+        return None, None
+    if nphases > 1:
+        if props_file is not None and not isinstance(props_file, list):
+            raise ValueError('props_file must be a list with one entry per phase.')
+        if not isinstance(crystal_plasticity, list):
+            raise ValueError('crystal_plasticity must be a list with one entry per phase.')
+    files = props_file if isinstance(props_file, list) else [props_file] * nphases
+    cp = crystal_plasticity if isinstance(crystal_plasticity, list) else [
+        props_file is not None if crystal_plasticity is None else crystal_plasticity] * nphases
+    if len(files) != nphases or len(cp) != nphases:
+        raise ValueError('props_file and crystal_plasticity must contain one entry per phase.')
+    if any(not isinstance(value, (bool, np.bool_)) for value in cp):
+        raise ValueError('crystal_plasticity entries must be booleans.')
+    if props_file is not None and any(flag and inc is None for flag, inc in zip(cp, files)):
+        raise ValueError('Each crystal_plasticity phase requires a props_file; None requires False.')
+    return files, cp
+
+
 def export2abaqus(
     nodes: Any,
     file: Union[str, os.PathLike[str]],
     grain_dict: Mapping[Any, Any],
     voxel_dict: Mapping[Any, Any],
-    units: str = 'um',
-                  gb_area=None, dual_phase=False, thermal=False,
-                  ialloy=None, grain_phase_dict=None,
-                  crystal_plasticity=False, phase_props=None,
-                  boundary_conditions: Optional[Dict[str, Any]] = None):
+    units: str = 'mm',
+    gb_area=None, dual_phase=False, thermal=False,
+    ialloy=None, grain_phase_dict=None,
+    crystal_plasticity=False, phase_props=None,
+    boundary_conditions: Optional[Dict[str, Any]] = None, props_file=None):
     """
     Create an ABAQUS input file with microstructure morphology information including nodes, elements, and element sets
 
@@ -171,7 +192,7 @@ def export2abaqus(
     voxel_dict : dict
         Dictionary containing voxel-to-grain mapping
     units : str, optional
-        Units used in the input file (default is 'um')
+        Units used in the input file (default is 'mm')
     gb_area : optional
         Grain boundary area information
     dual_phase : bool, optional
@@ -183,8 +204,16 @@ def export2abaqus(
         Alloy information for grains, used if dual_phase is False
     grain_phase_dict : dict, optional
         Mapping from grain ID to phase ID
-    crystal_plasticity : bool, optional
-        If True, crystal plasticity data is included
+    crystal_plasticity : bool or list of bool, optional
+        Per-phase CP selection. With multiphase props_file, a list of the same
+        length is required. CP uses grain materials and requires dual_phase=False.
+    props_file : str, path-like, list, or None, optional
+        One include per phase: CP constants belong in _mat.inp; standard J2
+        property includes are written under PHASE{id}_MAT in this geometry file.
+        None entries require crystal_plasticity=False and produce only section
+        references, leaving material definitions to the user in CAE or _geom.inp.
+        Grain 0 always references PHASE1_MAT, which receives an empty material
+        definition when its include is None so it remains visible in CAE.
     phase_props : optional
         Phase properties for crystal plasticity
     boundary_conditions : dict, optional
@@ -197,6 +226,21 @@ def export2abaqus(
     The function handles nodes, elements, sets, and optionally boundary conditions for ABAQUS simulations.
     """
 
+    from kanapy import __version__
+    phase_map = dict(grain_phase_dict or {})
+    if not dual_phase and 0 in grain_dict:
+        phase_map[0] = 1
+    nphases = max(phase_map.values(), default=0) + 1
+    if dual_phase:
+        nphases = max(grain_dict, default=0) + 1
+    if isinstance(props_file, list):
+        nphases = max(nphases, len(props_file))
+    files, cp = _abaqus_phase_options(props_file, crystal_plasticity, nphases)
+    if dual_phase and cp is not None and any(cp):
+        raise ValueError('Crystal plasticity requires grain-wise sets (dual_phase=False).')
+    if not dual_phase and 0 in grain_dict and cp is not None and cp[1]:
+        raise ValueError('Grain 0 requires standard plasticity in phase 1.')
+    grain_phase_dict = phase_map or None
     def write_node_set(name, nset):
         """
         Write a node set to a file with formatting compatible with ABAQUS input
@@ -243,15 +287,17 @@ def export2abaqus(
                     f.write('%d\n' % el)
             f.write('%d\n' % v[-1])
         for k in grain_dict.keys():
-            if grain_phase_dict is None or grain_phase_dict[k] < nall:
+            pid = phase_map.get(k, 0)
+            use_cp = cp[pid] if cp is not None else (grain_phase_dict is None or pid < nall)
+            if k != 0 and use_cp:
                 f.write(
                     '*Solid Section, elset=GRAIN{0}_SET, material=GRAIN{1}_MAT\n'
                     .format(k, k))
             else:
                 f.write(
                     '*Solid Section, elset=GRAIN{0}_SET, material=PHASE{1}_MAT\n'
-                    .format(k, grain_phase_dict[k]))
-                ph_set.add(grain_phase_dict[k])
+                    .format(k, pid))
+                ph_set.add(pid)
         return
 
     def write_phase_sets():
@@ -728,7 +774,7 @@ def export2abaqus(
     #####################################
 
     with open(file, 'w') as f:
-        f.write('** Input file generated by kanapy\n')
+        f.write(f'** Input file generated by kanapy version {__version__}\n')
         f.write('** Nodal coordinates scale in mm\n')
         f.write('*HEADING\n')
         f.write('*PREPRINT,ECHO=NO,HISTORY=NO,MODEL=NO,CONTACT=NO\n')
@@ -1297,11 +1343,21 @@ def export2abaqus(
         # track whether we ever did an include-file inside the loop
         did_include = False
 
-        for pid in ph_set:
+        for pid in sorted(ph_set):
+            if files is not None and props_file is not None and files[pid] is None:
+                if pid == 1 and grain_phase_dict and grain_phase_dict.get(0) == 1:
+                    # Keep the legacy matrix material visible in Abaqus/CAE.
+                    f.write('*Material, name=PHASE1_MAT\n**\n')
+                continue
             f.write('*Material, name=PHASE{}_MAT\n'.format(pid))
 
-            if phase_props:
-                props = phase_props.get(pid)
+            if props_file is not None:
+                include = os.fspath(files[pid])
+                if any(char in include for char in ('\n', '\r', '"')):
+                    raise ValueError('Invalid include filename.')
+                f.write(f'*Include, input="{include}"\n')
+            elif phase_props:
+                props = phase_props.get(pid, {})
                 # inline properties as before
                 if 'damage_init' in props:
                     di = props['damage_init']
@@ -1333,7 +1389,7 @@ def export2abaqus(
             f.write('**\n')
 
         # if this wasn’t a dual‐phase run, do one global include once:
-        if not dual_phase and not did_include:
+        if not dual_phase and not did_include and (cp is None or any(cp)):
             # strip off last 8 chars (e.g. “_mesh.inp”) and append “mat.inp”
             base = file[:-8]
             f.write('*Include, input={}mat.inp\n'.format(base))
@@ -1393,7 +1449,7 @@ def export2abaqus(
         ############################
         ### Creating Step
         ############################
-        if crystal_plasticity:  # Using crystal plasticity Umat
+        if (any(cp) if cp is not None else crystal_plasticity):  # Using crystal plasticity Umat
             f.write('**\n')
             f.write('** STEP: Loading\n')
             f.write('**\n')
@@ -1460,9 +1516,9 @@ def export2abaqus(
 def writeAbaqusMat(
     ialloy: Any,
     angles: Any,
-                   file=None, path='./',
-                   grain_phase_dict=None,
-                   nsdv=360, props_file=None):
+    file=None, path='./',
+    grain_phase_dict=None,
+    nsdv=360, props_file=None, crystal_plasticity=None):
     """
     Export Euler angles to Abaqus input deck that can be included in the _geom.inp file. If
     parameter "grain_phase_dict" is given, the phase number for each grain will be used to select
@@ -1488,14 +1544,29 @@ def writeAbaqusMat(
         Enables the eight-value CP-UMAT header and automatically counts constants.
         Files must have eight values per line except the last; comments are allowed.
         Files are referenced without modification. None preserves legacy output.
+    crystal_plasticity : bool, list of bool, or None, optional
+        Write only grains in CP phases. With multiphase props_file, both options
+        must be lists with one entry per phase; each True requires an include.
+        False phases (including None includes) are handled by export2abaqus in
+        _geom.inp. Grain 0 is reserved for standard plasticity in phase 1.
+        Omit both options to retain the legacy alloy-based selection.
     nsdv : int
         Number of state dependant variables, optional (default: 360)
     """
     if props_file is not None and ialloy is None:
         ialloy = 0
-    if type(ialloy) is not list:
+    scalar_alloy = not isinstance(ialloy, list)
+    if scalar_alloy:
         ialloy = [ialloy]
     nall = len(ialloy)
+    nphases = max((grain_phase_dict or {}).values(), default=0) + 1
+    nphases = max(nphases, nall, 2 if grain_phase_dict and 0 in grain_phase_dict else 1)
+    files, cp = _abaqus_phase_options(props_file, crystal_plasticity, nphases)
+    if props_file is not None and scalar_alloy:
+        ialloy *= nphases
+        nall = nphases
+    if grain_phase_dict and 0 in grain_phase_dict and cp is not None and cp[1]:
+        raise ValueError('Grain 0 requires standard plasticity in phase 1.')
     if type(angles) is not dict:
         # converting (N, 3) ndarray to dict
         gr_ori_dict = dict()
@@ -1514,7 +1585,10 @@ def writeAbaqusMat(
         if len(files) != nall:
             raise ValueError('props_file must contain one include file per selector.')
         includes = []
-        for include in files:
+        for pid, include in enumerate(files):
+            if cp is not None and not cp[pid]:
+                includes.append(None)
+                continue
             include = os.fspath(include)
             if any(char in include for char in ('\n', '\r', '"')):
                 raise ValueError('Invalid include filename.')
@@ -1542,12 +1616,16 @@ def writeAbaqusMat(
         f.write('** MATERIALS\n')
         f.write('**\n')
         for igr, ori in gr_ori_dict.items():
+            if igr==0:
+                continue  # Grain 0 is reserved for matrix phase / unidentified phases
             if grain_phase_dict is None:
                 ip = 0
             else:
                 ip = grain_phase_dict[igr]
                 if ip > nall - 1:
                     continue
+            if cp is not None and not cp[ip]:
+                continue
             f.write('*Material, name=GRAIN{}_MAT\n'.format(igr))
             f.write('*Depvar\n')
             f.write('    {}\n'.format(nsdv))
@@ -1686,8 +1764,8 @@ def import_voxels(
         phase_vf = np.zeros(nphases)
         ngrain = np.zeros(nphases, dtype=int)
         for igr in gr_numbers:
-            if igr == 0:
-                continue  # Grain 0 is reserved for matrix phase / unidentified phases
+            #if igr == 0:
+            #    continue  # Grain 0 is reserved for matrix phase / unidentified phases
             ind = np.nonzero(gr_arr == igr)[0]
             nv = len(ind)
             ip = data['Grains'][str(igr)]['Phase']

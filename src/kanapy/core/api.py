@@ -26,7 +26,7 @@ from datetime import datetime
 
 from .grains import calc_polygons
 from .entities import Simulation_Box
-from .input_output import export2abaqus, writeAbaqusMat, read_dump
+from .input_output import export2abaqus, writeAbaqusMat, read_dump, _abaqus_phase_options
 from .initializations import RVE_creator, mesh_creator
 from .packing import packingRoutine
 from .voxelization import voxelizationRoutine
@@ -1373,7 +1373,7 @@ class Microstructure(object):
             units: Optional[str] = None,
             ialloy: Any = None,
             nsdv: int = 360,
-            crystal_plasticity: bool = False,
+            crystal_plasticity: Any = None,
             phase_props: Optional[Mapping[str, Any]] = None,
             boundary_conditions: Optional[Dict[str, Any]] = None,
             props_file: Any = None) -> str:
@@ -1403,23 +1403,34 @@ class Microstructure(object):
         grain_dict : dict or None, optional, default=None
             Dictionary mapping grain IDs to nodes. Default is `self.mesh.grain_dict`.
         dual_phase : bool, optional, default=False
-            If True, generate input for dual-phase materials. Default is False.
+            If True, group elements into phase sets for standard plasticity.
+            Keep False for grain-wise CP materials, including multiphase RVEs.
         thermal : bool, optional, default=False
             If True, include thermal material definitions. Default is False.
         units : str or None, optional, default=None
             Units for the model, 'mm' or 'um'. Default is `self.rve.units`.
         ialloy : list, object, or None, optional, default=None
             Material definitions for each phase. Default is `self.rve.ialloy`.
-        props_file : str, path-like, list, or None, optional, default=None
-            Numeric Abaqus include file, or one file per phase. Relative paths are
-            resolved against `path`. Enables the new CP-UMAT format: selector,
-            three Euler angles, four zeros, then the included shared constants.
-            Uses ialloy (or the RVE default) as selector, falling back to 0.
-            Include files are validated but never modified. Omit for legacy format.
+        props_file : str, path-like, list, or None, optional
+            For multiple phases, both props_file and crystal_plasticity must be
+            lists of length nphases, indexed by zero-based phase ID. For CP phases,
+            supply numeric shared constants; each grain's definition in _mat.inp
+            includes them after the selector, Euler angles and four zeros.
+            For standard J2 phases, supply an Abaqus material-property include,
+            written under PHASE{id}_MAT in _geom.inp. A None entry requires False
+            for crystal_plasticity and writes only the solid-section reference;
+            define that material yourself in CAE or by editing _geom.inp.
+            For grain 0, an empty PHASE1_MAT definition is also written so the
+            assigned material is visible in CAE.
+            Relative include paths are resolved against path. Omit for legacy output.
         nsdv : int, optional
-            Number of state variables per integration point for crystal plasticity. Default is 360.
-        crystal_plasticity : bool, optional, default=False
-            If True, enable crystal plasticity material definitions. Default is False.
+            Number of state variables per integration point (default: 360).
+        crystal_plasticity : bool, list of bool, or None, optional
+            Select CP per phase. Multiple phases with props_file require a list.
+            CP requires grain-wise sets (dual_phase=False) and grain orientations.
+            Grain 0 is reserved for standard plasticity in phase 1. With a
+            single-phase props_file, None retains the historical CP default;
+            pass False explicitly for standard plasticity.
         phase_props : dict or None, optional, default=None
             Additional phase-specific material properties.
         boundary_conditions : dict or None, optional, default=None
@@ -1500,6 +1511,8 @@ class Microstructure(object):
                 for i in range(self.nphases):
                     grain_dict[i] = list()
                 for igr, ip in self.mesh.grain_phase_dict.items():
+                    if igr == 0:
+                        ip = 1
                     grain_dict[ip] = np.concatenate(
                         [grain_dict[ip], self.mesh.grain_dict[igr]])
         else:
@@ -1508,14 +1521,15 @@ class Microstructure(object):
             nct = f'abq_px_{len(grain_dict)}'
         if ialloy is None:
             ialloy = self.rve.ialloy
+        files, cp = _abaqus_phase_options(props_file, crystal_plasticity, self.nphases)
+        if cp is not None:
+            if dual_phase and any(cp):
+                raise ValueError('Crystal plasticity requires grain-wise sets (dual_phase=False).')
+            if 0 in self.mesh.grain_dict and (len(cp) < 2 or cp[1]):
+                raise ValueError('Grain 0 requires standard plasticity in phase 1.')
+            if any(cp) and self.mesh.grain_ori_dict is None:
+                raise ValueError('Crystal plasticity requires grain orientations. Run generate_orientations first.')
         if props_file is not None:
-            if dual_phase:
-                raise ValueError('props_file requires grain-wise materials (dual_phase=False).')
-            if self.mesh.grain_ori_dict is None:
-                raise ValueError('props_file requires grain orientations. Run generate_orientations first.')
-            if isinstance(props_file, (list, tuple)):
-                if len(props_file) != self.nphases:
-                    raise ValueError('props_file must contain one include file per phase.')
             if ialloy is None:
                 ialloy = 0
             if not isinstance(ialloy, list):
@@ -1526,9 +1540,17 @@ class Microstructure(object):
             raise ValueError('List of values in ialloy is larger than number of phases in RVE.' +
                              f'({len(ialloy)} > {self.nphases})')
         if self.nphases > 1:
-            grpd = self.mesh.grain_phase_dict
+            grpd = dict(self.mesh.grain_phase_dict)
+            if 0 in self.mesh.grain_dict:
+                grpd[0] = 1
         else:
             grpd = None
+        if cp is not None and any(cp):
+            missing = [gid for gid in grain_dict if gid != 0
+                       and cp[(grpd or {}).get(gid, 0)]
+                       and gid not in self.mesh.grain_ori_dict]
+            if missing:
+                raise ValueError(f'Missing orientations for CP grains: {missing}')
         if boundary_conditions is None:
             boundary_conditions = {
                 "apply_bc": False,
@@ -1557,15 +1579,17 @@ class Microstructure(object):
                       dual_phase=dual_phase,
                       ialloy=ialloy, grain_phase_dict=grpd,
                       thermal=thermal,
-                      crystal_plasticity=crystal_plasticity,
+                      crystal_plasticity=cp if cp is not None else crystal_plasticity,
+                      props_file=props_file,
                       phase_props=phase_props,
                       boundary_conditions=boundary_conditions)
 
         # if orientations exist and ialloy is defined also write material file with Euler angles
-        if not (self.mesh.grain_ori_dict is None or ialloy is None):
+        if (cp is None or any(cp)) and not (self.mesh.grain_ori_dict is None or ialloy is None):
             writeAbaqusMat(ialloy, self.mesh.grain_ori_dict,
                            file=file[0:-8] + 'mat.inp',
-                           grain_phase_dict=grpd, nsdv=nsdv, props_file=props_file)
+                           grain_phase_dict=grpd, nsdv=nsdv, props_file=props_file,
+                           crystal_plasticity=cp)
         return file
 
     def write_abq_ori(
