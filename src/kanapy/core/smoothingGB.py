@@ -2,6 +2,7 @@
 import os
 import json
 from collections import defaultdict
+from typing import Any, Mapping
 from tqdm import tqdm
 
 import numpy as np
@@ -44,7 +45,7 @@ class Node(object):
     """
 
 
-    def __init__(self,iden,px,py,pz):
+    def __init__(self, iden: int, px: float, py: float, pz: float) -> None:
         self.id = iden
         self.px = px
         self.py = py
@@ -68,7 +69,7 @@ class Node(object):
         # List anchors connected to the node
         self.anchors = []    
 
-    def get_pos(self):
+    def get_pos(self) -> np.ndarray:
         """
         Return the current position of the node as a NumPy array
 
@@ -79,7 +80,7 @@ class Node(object):
         """
         return np.array([self.px, self.py, self.pz])
 
-    def get_Oripos(self):
+    def get_Oripos(self) -> np.ndarray:
         """
         Return the original position of the node as a NumPy array
 
@@ -90,7 +91,7 @@ class Node(object):
         """
         return np.array([self.oripx, self.oripy, self.oripz])                 
     
-    def get_vel(self):
+    def get_vel(self) -> np.ndarray:
         """
         Return the current velocity of the node as a NumPy array
 
@@ -101,7 +102,7 @@ class Node(object):
         """
         return np.array([self.vx, self.vy, self.vz])
         
-    def update_pos(self,dt):
+    def update_pos(self, dt: float) -> None:
         """
         Update the position of the node based on its velocity and time step
 
@@ -114,7 +115,7 @@ class Node(object):
         self.py += self.vy * dt
         self.pz += self.vz * dt   
         
-    def update_vel(self,dt):
+    def update_vel(self, dt: float) -> None:
         """
         Update the velocity of the node based on its acceleration and time step
 
@@ -127,7 +128,7 @@ class Node(object):
         self.vy += self.ay * dt
         self.vz += self.az * dt   
 
-    def compute_acc(self,fx,fy,fz,mass):
+    def compute_acc(self, fx: float, fy: float, fz: float, mass: float) -> None:
         """
         Compute the acceleration of the node given applied forces and mass
 
@@ -152,7 +153,10 @@ kanapy/input_output/extract_volume_sharedGBarea which is only used in
 kanapy CLI and 
 kanapy/api/calcPolygons which offers more functionality, e.g. polygonization
 """
-def readGrainFaces(nodes_v,elmtDict,elmtSetDict):
+def readGrainFaces(
+    nodes_v: Any,
+    elmtDict: Mapping[Any, Any],
+    elmtSetDict: Mapping[Any, Any]) -> dict[Any, Any]:
     """
     Extract outer faces of polyhedral grains from voxel connectivity
 
@@ -240,7 +244,9 @@ def readGrainFaces(nodes_v,elmtDict,elmtSetDict):
         
 
 
-def initalizeSystem(nodes_v,grain_facesDict):
+def initalizeSystem(
+    nodes_v: Any,
+    grain_facesDict: Mapping[Any, Any]) -> tuple[list[Node], dict[Any, Any]]:
     """
     Initialize a spring-mass system from nodes and grain faces
 
@@ -298,8 +304,19 @@ def initalizeSystem(nodes_v,grain_facesDict):
     return allNodes,anchDict
 
 
-def relaxSystem(allNodes,anchDict,dt,N,k,c,RVE_xmin,RVE_xmax,
-                         RVE_ymin,RVE_ymax,RVE_zmin,RVE_zmax):
+def relaxSystem(
+    allNodes: list[Node],
+    anchDict: Mapping[Any, Any],
+    dt: float,
+    N: int,
+    k: float,
+    c: float,
+    RVE_xmin: float,
+    RVE_xmax: float,
+    RVE_ymin: float,
+    RVE_ymax: float,
+    RVE_zmin: float,
+    RVE_zmax: float) -> list[Node]:
     """
     Relax the spring-mass system to reach equilibrium
 
@@ -371,7 +388,10 @@ def relaxSystem(allNodes,anchDict,dt,N,k,c,RVE_xmin,RVE_xmax,
     return allNodes
     
     
-def smoothingRoutine(nodes_v, elmtDict, elmtSetDict):
+def smoothingRoutine(
+    nodes_v: Any,
+    elmtDict: Mapping[Any, Any],
+    elmtSetDict: Mapping[Any, Any]) -> tuple[Any, dict[Any, Any]]:
     """
     Smooth a voxel-based microstructure by relaxing a spring-mass-anchor system
 

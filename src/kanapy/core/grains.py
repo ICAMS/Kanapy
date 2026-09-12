@@ -9,11 +9,12 @@ March 2024
 import itertools
 import logging
 import numpy as np
+from typing import Any, Mapping
 from scipy.spatial import Delaunay
 from tqdm import tqdm
 
 
-def calc_polygons(rve, mesh, tol=1.e-3):
+def calc_polygons(rve: Any, mesh: Any, tol: float = 1.e-3) -> Mapping[str, Any]:
     """
     Evaluates grain volumes and the shared surface area of grain boundaries
     between neighboring grains in a voxelized microstructure. Generates
@@ -26,7 +27,7 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         Object containing information about the RVE geometry.
     mesh : kanapy object
         Object containing voxel mesh details and grain assignments for each voxel.
-    tol : float, optional
+    tol : float, optional, default=1.e-3
         Tolerance for numerical operations. Default is 1.e-3.
 
     Returns
@@ -175,6 +176,8 @@ def calc_polygons(rve, mesh, tol=1.e-3):
             geometry['Vertices'][tet[2]] in vertices and \
             geometry['Vertices'][tet[3]] in vertices
 
+    tet_face_cache = {}
+
     def vox_in_tet(vox_, tet_):
         """
         Determine whether the center of a voxel lies within a given tetrahedron
@@ -193,20 +196,26 @@ def calc_polygons(rve, mesh, tol=1.e-3):
         """
 
         v_pos = mesh.vox_center_dict[vox_]
+        tet_key = tuple(tet_)
+        face_data = tet_face_cache.get(tet_key)
+        if face_data is None:
+            face_data = []
+            for node in tet_:
+                n_pos = geometry['Points'][node]
+                ind_ = [index for index in tet_ if index != node]
+                f_pos = geometry['Points'][ind_]
+                ctr_ = np.mean(f_pos, axis=0)
+                normal = np.cross(f_pos[1, :] - f_pos[0, :], f_pos[2, :] - f_pos[0, :])
+                hn = np.linalg.norm(normal)
+                if hn > 1.e-5:
+                    normal /= hn
+                dist_to_node = np.dot(n_pos - ctr_, normal)
+                face_data.append((ctr_, normal, dist_to_node))
+            tet_face_cache[tet_key] = face_data
+
         contained = True
-        for node in tet_:
-            n_pos = geometry['Points'][node]
-            hh = set(tet_)
-            hh.remove(node)
-            ind_ = list(hh)
-            f_pos = geometry['Points'][ind_]
-            ctr_ = np.mean(f_pos, axis=0)
-            normal = np.cross(f_pos[1, :] - f_pos[0, :], f_pos[2, :] - f_pos[0, :])
-            hn = np.linalg.norm(normal)
-            if hn > 1.e-5:
-                normal /= hn
+        for ctr_, normal, dist_to_node in face_data:
             dist_to_vox = np.dot(v_pos - ctr_, normal)
-            dist_to_node = np.dot(n_pos - ctr_, normal)
             if np.sign(dist_to_vox * dist_to_node) < 0. or \
                     np.abs(dist_to_vox) > np.abs(dist_to_node):
                 contained = False

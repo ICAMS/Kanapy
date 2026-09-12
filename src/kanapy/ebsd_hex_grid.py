@@ -1,11 +1,34 @@
 import numpy as np
 from scipy.spatial import cKDTree
+from typing import Any, Optional
 
-def make_regular_grid(xy, dx_out=None, dy_out=None, nx=None, ny=None, bounds=None):
+def make_regular_grid(
+    xy: np.ndarray,
+    dx_out: Optional[float] = None,
+    dy_out: Optional[float] = None,
+    nx: Optional[int] = None,
+    ny: Optional[int] = None,
+    bounds: Optional[tuple[float, float, float, float]] = None) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Create a regular Cartesian grid and return:
       Xg, Yg : (ny, nx) meshgrid
       pts_g  : (ny*nx, 2) flattened query points
+
+    Parameters
+    ----------
+    xy : numpy.ndarray
+        Source x-y coordinates with shape ``(N, 2)``.
+    dx_out, dy_out : float or None, optional
+        Output grid spacing. Used when ``nx`` and ``ny`` are not both given.
+    nx, ny : int or None, optional
+        Number of output points along x and y.
+    bounds : tuple of float or None, optional
+        Explicit ``(x_min, x_max, y_min, y_max)`` bounds.
+
+    Returns
+    -------
+    tuple of numpy.ndarray
+        The x/y mesh grids and flattened query points.
     """
     if bounds is None:
         x_min, y_min = np.min(xy, axis=0)
@@ -27,7 +50,7 @@ def make_regular_grid(xy, dx_out=None, dy_out=None, nx=None, ny=None, bounds=Non
     return Xg, Yg, pts_g
 
 
-def _idw_weights(dist, p=2.0, eps=1e-12):
+def _idw_weights(dist: np.ndarray, p: float = 2.0, eps: float = 1e-12) -> np.ndarray:
     # dist: (M, k)
     # If a query point coincides with a source, handle separately outside.
     w = 1.0 / np.maximum(dist, eps) ** p
@@ -35,7 +58,7 @@ def _idw_weights(dist, p=2.0, eps=1e-12):
     return w / w_sum
 
 
-def resample_phase_majority(phase_src, idx):
+def resample_phase_majority(phase_src: np.ndarray, idx: np.ndarray) -> np.ndarray:
     """
     phase_src: (N,)
     idx: (M, k) neighbor indices for each grid point
@@ -56,7 +79,12 @@ def resample_phase_majority(phase_src, idx):
     return winner.astype(phase_src.dtype, copy=False)
 
 
-def resample_scalar_idw(values_src, idx, dist, p=2.0, fill_value=np.nan):
+def resample_scalar_idw(
+    values_src: np.ndarray,
+    idx: np.ndarray,
+    dist: np.ndarray,
+    p: float = 2.0,
+    fill_value: float = np.nan) -> np.ndarray:
     """
     IDW resampling for scalars (IQ etc.)
     values_src: (N,)
@@ -80,12 +108,12 @@ def resample_scalar_idw(values_src, idx, dist, p=2.0, fill_value=np.nan):
     return out
 
 
-def _normalize_quat(q, eps=1e-15):
+def _normalize_quat(q: np.ndarray, eps: float = 1e-15) -> np.ndarray:
     n = np.linalg.norm(q, axis=-1, keepdims=True)
     return q / np.maximum(n, eps)
 
 
-def quat_markley_mean(quats, weights=None):
+def quat_markley_mean(quats: np.ndarray, weights: Optional[np.ndarray] = None) -> np.ndarray:
     """
     Markley mean for unit quaternions.
     quats: (k, 4) array, assumed roughly aligned in sign already.
@@ -109,7 +137,11 @@ def quat_markley_mean(quats, weights=None):
     return q_mean
 
 
-def resample_quat_knn_markley(quat_src, idx, dist, p=2.0):
+def resample_quat_knn_markley(
+    quat_src: np.ndarray,
+    idx: np.ndarray,
+    dist: np.ndarray,
+    p: float = 2.0) -> np.ndarray:
     """
     Quaternion resampling using k-NN, IDW weights, and Markley mean.
 
@@ -160,17 +192,38 @@ def resample_quat_knn_markley(quat_src, idx, dist, p=2.0):
 
 
 def resample_ebsd_to_rect_grid(
-    xy, phase, quat, iq,
-    dx_out=None, dy_out=None, nx=None, ny=None, bounds=None,
-    k_phase=1, k_iq=1, k_quat=1,
-    p_iq=2.0, p_quat=2.0
-):
+    xy: np.ndarray,
+    phase: np.ndarray,
+    quat: np.ndarray,
+    iq: np.ndarray,
+    dx_out: Optional[float] = None,
+    dy_out: Optional[float] = None,
+    nx: Optional[int] = None,
+    ny: Optional[int] = None,
+    bounds: Optional[tuple[float, float, float, float]] = None,
+    k_phase: int = 1,
+    k_iq: int = 1,
+    k_quat: int = 1,
+    p_iq: float = 2.0,
+    p_quat: float = 2.0
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Returns:
       Xg, Yg: (ny, nx)
       phase_g: (ny, nx)
       iq_g: (ny, nx)
       quat_g: (ny, nx, 4)
+
+    Parameters
+    ----------
+    xy, phase, quat, iq : numpy.ndarray
+        Source coordinates, phase labels, quaternions, and scalar quality values.
+    dx_out, dy_out, nx, ny, bounds : optional
+        Output-grid configuration passed to :func:`make_regular_grid`.
+    k_phase, k_iq, k_quat : int, optional, default=1
+        Number of nearest neighbours used for each resampling operation.
+    p_iq, p_quat : float, optional, default=2.0
+        Inverse-distance weighting exponents.
     """
     Xg, Yg, pts_g = make_regular_grid(xy, dx_out=dx_out, dy_out=dy_out, nx=nx, ny=ny, bounds=bounds)
 

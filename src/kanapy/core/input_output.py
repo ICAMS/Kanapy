@@ -5,10 +5,10 @@ import numpy as np
 from collections import defaultdict
 from .entities import Ellipsoid, Cuboid
 from .initializations import NodeSets
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Mapping, Union
 
 
-def write_dump(Ellipsoids, sim_box):
+def write_dump(Ellipsoids: list[Any], sim_box: Any) -> None:
     """
     Write .dump files into a sub-directory "dump_files" for visualization or reuse in Kanapy
 
@@ -56,7 +56,7 @@ def write_dump(Ellipsoids, sim_box):
                 ell.id, ell.x, ell.y, ell.z, ell.a, ell.b, ell.c, qx, qy, qz, qw, ell.phasenum))
 
 
-def read_dump(file):
+def read_dump(file: Union[str, os.PathLike[str]]) -> tuple[Any, list[Any]]:
     """
     Read a .dump file to extract simulation box and ellipsoid information for voxelization
 
@@ -147,7 +147,12 @@ def read_dump(file):
     return sim_box, Ellipsoids
 
 
-def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
+def export2abaqus(
+    nodes: Any,
+    file: Union[str, os.PathLike[str]],
+    grain_dict: Mapping[Any, Any],
+    voxel_dict: Mapping[Any, Any],
+    units: str = 'um',
                   gb_area=None, dual_phase=False, thermal=False,
                   ialloy=None, grain_phase_dict=None,
                   crystal_plasticity=False, phase_props=None,
@@ -1451,7 +1456,9 @@ def export2abaqus(nodes, file, grain_dict, voxel_dict, units: str ='um',
     return
 
 
-def writeAbaqusMat(ialloy, angles,
+def writeAbaqusMat(
+    ialloy: Any,
+    angles: Any,
                    file=None, path='./',
                    grain_phase_dict=None,
                    nsdv=360, props_file=None):
@@ -1555,7 +1562,9 @@ def writeAbaqusMat(ialloy, angles,
     return
 
 
-def pickle2microstructure(file, path='./'):
+def pickle2microstructure(
+    file: Union[str, os.PathLike[str]],
+    path: Union[str, os.PathLike[str]] = './') -> Any:
     """
     Load a pickled microstructure object from disk.
 
@@ -1590,7 +1599,9 @@ def pickle2microstructure(file, path='./'):
     return pcl
 
 
-def import_voxels(file, path='./'):
+def import_voxels(
+    file: Union[str, os.PathLike[str]],
+    path: Union[str, os.PathLike[str]] = './') -> Any:
     """
     Import a voxelized microstructure from a JSON file and reconstruct
     a `Microstructure` object for further analysis or simulation.
@@ -1761,7 +1772,10 @@ def import_voxels(file, path='./'):
     return ms
 
 
-def write_stats(stats, file, path='./'):
+def write_stats(
+    stats: Mapping[str, Any],
+    file: Union[str, os.PathLike[str]],
+    path: Union[str, os.PathLike[str]] = './') -> None:
     """
     Write microstructure statistical descriptors to a JSON file.
 
@@ -1812,7 +1826,9 @@ def write_stats(stats, file, path='./'):
         json.dump(stats, fp)
 
 
-def import_stats(file, path='./'):
+def import_stats(
+    file: Union[str, os.PathLike[str]],
+    path: Union[str, os.PathLike[str]] = './') -> Any:
     """
     Read microstructure statistical descriptors from a JSON file.
 

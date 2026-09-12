@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 import random
 import numpy as np
+from typing import Any, Mapping, Optional
 from tqdm import tqdm
 from .input_output import write_dump
 from .entities import Ellipsoid, Cuboid, Octree
 from .collisions import collision_routine
 
 
-def particle_generator(particle_data, sim_box, poly):
+def particle_generator(
+    particle_data: list[Mapping[str, Any]],
+    sim_box: Any,
+    poly: Optional[np.ndarray]) -> list[Any]:
     """
     Initialize a list of ellipsoids by assigning random positions, orientations,
     and sizes within the given simulation box.
@@ -92,9 +96,16 @@ def particle_generator(particle_data, sim_box, poly):
     return Ellipsoids
 
 
-def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
-                  k_rep=0.0, k_att=0.0, fill_factor=None,
-                  dump=False, verbose=False):
+def particle_grow(
+    sim_box: Any,
+    Ellipsoids: list[Any],
+    periodicity: bool,
+    nsteps: int,
+    k_rep: float = 0.0,
+    k_att: float = 0.0,
+    fill_factor: Optional[float] = None,
+    dump: bool = False,
+    verbose: bool = False) -> tuple[list[Any], Any]:
     """
     Perform recursive particle growth and collision detection within the
     simulation box. Initializes an :class:`entities.Octree` instance and
@@ -111,15 +122,15 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
         Whether periodic boundary conditions are applied.
     nsteps : int
         Total number of simulation steps for filling the box with particles.
-    k_rep : float, optional
+    k_rep : float, optional, default=0.0
         Repulsion factor for particle interactions (default: 0.0).
-    k_att : float, optional
+    k_att : float, optional, default=0.0
         Attraction factor for particle interactions (default: 0.0).
-    fill_factor : float, optional
+    fill_factor : float or None, optional, default=None
         Target volume fraction for particle filling (default: 0.65).
-    dump : bool, optional
+    dump : bool, optional, default=False
         If True, dump files for particles are written at intervals (default: False).
-    verbose : bool, optional
+    verbose : bool, optional, default=False
         If True, print detailed information at iteration steps (default: False).
 
     Returns
@@ -136,7 +147,7 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
     disabled inside that function.
     """
 
-    def t_step(N):
+    def t_step(N: int) -> float:
         """
         Compute the adaptive time step based on the current iteration number
 
@@ -162,7 +173,7 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
         """
         return K * N ** m
 
-    def stop_part(ell):
+    def stop_part(ell: Any) -> None:
         """
         Stop the motion of a given ellipsoid and slightly shrink its position
 
@@ -306,7 +317,12 @@ def particle_grow(sim_box, Ellipsoids, periodicity, nsteps,
     return Ellipsoids, sim_box
 
 
-def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
+def calculateForce(
+    Ellipsoids: list[Any],
+    sim_box: Any,
+    periodicity: bool,
+    k_rep: float = 0.0,
+    k_att: float = 0.0) -> None:
     """
     Calculate the interaction forces between ellipsoids within the simulation box
 
@@ -321,9 +337,9 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
         Simulation box representing the RVE dimensions
     periodicity : bool
         If True, applies periodic boundary conditions
-    k_rep : float, optional
+    k_rep : float, optional, default=0.0
         Repulsion factor for particles of the same phase (default is 0.0)
-    k_att : float, optional
+    k_att : float, optional, default=0.0
         Attraction factor for particles of different phases (default is 0.0)
     """
 
@@ -370,9 +386,17 @@ def calculateForce(Ellipsoids, sim_box, periodicity, k_rep=0.0, k_att=0.0):
     return
 
 
-def packingRoutine(particle_data, periodic, nsteps, sim_box,
-                   k_rep=0.0, k_att=0.0, fill_factor=None, poly=None,
-                   save_files=False, verbose=False):
+def packingRoutine(
+    particle_data: list[Mapping[str, Any]],
+    periodic: bool,
+    nsteps: int,
+    sim_box: Any,
+    k_rep: float = 0.0,
+    k_att: float = 0.0,
+    fill_factor: Optional[float] = None,
+    poly: Optional[np.ndarray] = None,
+    save_files: bool = False,
+    verbose: bool = False) -> tuple[list[Any], Any]:
     """
     Perform particle packing routine using particle generation and growth simulation
 
@@ -395,13 +419,13 @@ def packingRoutine(particle_data, periodic, nsteps, sim_box,
         Repulsion factor for same-phase particles (default 0.0)
     k_att : float, optional
         Attraction factor for different-phase particles (default 0.0)
-    fill_factor : float, optional
+    fill_factor : float or None, optional, default=None
         Target volume fraction for particle filling (default None, uses 0.65)
-    poly : ndarray, optional
+    poly : numpy.ndarray or None, optional, default=None
         Points defining a primitive polygon inside ellipsoids (default None)
-    save_files : bool, optional
+    save_files : bool, optional, default=False
         Whether to save dump files during simulation (default False)
-    verbose : bool, optional
+    verbose : bool, optional, default=False
         If True, prints detailed simulation output (default False)
 
     Returns

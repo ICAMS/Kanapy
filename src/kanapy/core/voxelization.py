@@ -6,9 +6,10 @@ from copy import deepcopy
 from tqdm import tqdm
 from collections import defaultdict
 from scipy.spatial import ConvexHull
+from typing import Any, Mapping, Optional
 
 
-def points_in_convexHull(Points, hull):
+def points_in_convexHull(Points: np.ndarray, hull: ConvexHull) -> np.ndarray:
     """
     Determine whether the given array of points lie inside the convex hull
 
@@ -36,7 +37,11 @@ def points_in_convexHull(Points, hull):
     return np.all((A @ np.transpose(Points)) <= np.tile(-b, (1, len(Points))), axis=0)
 
 
-def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
+def assign_voxels_to_ellipsoid(
+    cooDict: Mapping[Any, Any],
+    Ellipsoids: list[Any],
+    voxel_dict: Mapping[Any, Any],
+    vf_target: Optional[float] = None) -> None:
     """
     Assign voxels to each ellipsoid based on spatial position and shared nodes
 
@@ -56,7 +61,7 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
     voxel_dict : dict
         Element dictionary containing voxel IDs as keys and lists of nodal
         connectivity as values
-    vf_target : float, optional
+    vf_target : float or None, optional, default=None
         Target volume fraction of particles to be assigned (default is 1.0)
     """
     print('    Assigning voxels to grains')
@@ -213,7 +218,10 @@ def assign_voxels_to_ellipsoid(cooDict, Ellipsoids, voxel_dict, vf_target=None):
     return
 
 
-def reassign_shared_voxels(cooDict, Ellipsoids, voxel_dict):
+def reassign_shared_voxels(
+    cooDict: Mapping[Any, Any],
+    Ellipsoids: list[Any],
+    voxel_dict: Mapping[Any, Any]) -> None:
     """
     Reassign shared voxels among ellipsoids to the most appropriate ellipsoid based on node overlap
     and proximity to ellipsoid centers
@@ -328,7 +336,11 @@ def reassign_shared_voxels(cooDict, Ellipsoids, voxel_dict):
     return
 
 
-def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None):
+def voxelizationRoutine(
+    Ellipsoids: list[Any],
+    mesh: Any,
+    nphases: int,
+    prec_vf: Optional[float] = None) -> Any:
     """
     Perform voxelization of a microstructure defined by ellipsoids and mesh.
 

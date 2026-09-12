@@ -43,6 +43,7 @@ dependencies = [
     "orix>=0.13",
     "networkx",
     "scikit-image",
+    "tomli; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]

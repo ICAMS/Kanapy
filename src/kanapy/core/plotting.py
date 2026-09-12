@@ -41,10 +41,19 @@ from typing import Any, Dict, Tuple, Optional, Mapping
 #    matplotlib_dpi = 100 * dpi_scale
 #    return matplotlib_dpi
 
-def plot_voxels_3D(data, Ngr=None, sliced=False, dual_phase=None,
-                   mask=None, cmap='prism', alpha=1.0, silent=False,
-                   clist=None, asp_arr=None,
-                   phases=False, cols=None):
+def plot_voxels_3D(
+    data: np.ndarray,
+    Ngr: Optional[int] = None,
+    sliced: bool = False,
+    dual_phase: Optional[bool] = None,
+    mask: Optional[np.ndarray] = None,
+    cmap: str = 'prism',
+    alpha: float = 1.0,
+    silent: bool = False,
+    clist: Any = None,
+    asp_arr: Any = None,
+    phases: bool = False,
+    cols: Optional[list[str]] = None) -> Optional[Any]:
     """
     Plot voxels in microstructure, each grain with a different color. Sliced
     indicates whether one eighth of the box should be removed to see internal
@@ -141,9 +150,16 @@ def plot_voxels_3D(data, Ngr=None, sliced=False, dual_phase=None,
     else:
         plt.show(block=True)
 
-def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
-                     dual_phase=None, silent=False, asp_arr=None,
-                     phases=False, cols=None):
+def plot_polygons_3D(
+    geometry: Mapping[str, Any],
+    cmap: str = 'prism',
+    alpha: float = 0.4,
+    ec: Any = None,
+    dual_phase: Optional[bool] = None,
+    silent: bool = False,
+    asp_arr: Any = None,
+    phases: bool = False,
+    cols: Optional[list[str]] = None) -> Optional[Any]:
     """
     Plot triangularized convex hulls of grains based on vertices and simplices
 
@@ -222,8 +238,14 @@ def plot_polygons_3D(geometry, cmap='prism', alpha=0.4, ec=None,
     else:
         plt.show(block=True)
 
-def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=None, silent=False, asp_arr=None,
-                       phases=False, cols=None):
+def plot_ellipsoids_3D(
+    particles: list[Any],
+    cmap: str = 'prism',
+    dual_phase: Optional[bool] = None,
+    silent: bool = False,
+    asp_arr: Any = None,
+    phases: bool = False,
+    cols: Optional[list[str]] = None) -> Optional[Any]:
     """
     Display ellipsoids after the packing procedure
 
@@ -294,8 +316,13 @@ def plot_ellipsoids_3D(particles, cmap='prism', dual_phase=None, silent=False, a
     else:
         plt.show(block=True)
 
-def plot_particles_3D(particles, cmap='prism', dual_phase=False, plot_hull=True,
-                      silent=False, asp_arr=None):
+def plot_particles_3D(
+    particles: list[Any],
+    cmap: str = 'prism',
+    dual_phase: bool = False,
+    plot_hull: bool = True,
+    silent: bool = False,
+    asp_arr: Any = None) -> Optional[Any]:
     """
     Display inner polyhedra and optional hulls of ellipsoids after packing procedure
 

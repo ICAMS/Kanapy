@@ -24,7 +24,7 @@ import json
 import re
 import numpy as np
 
-def arr2mat(mc):
+def arr2mat(mc: Any) -> np.ndarray:
     """
     Convert a 6-element numpy array into a 3x3 symmetric matrix
 
@@ -44,7 +44,7 @@ def arr2mat(mc):
                      [mc[4], mc[3], mc[2]]])
 
 
-def con_fun(mc):
+def con_fun(mc: Any) -> float:
     """
     Constraint function: penalizes non-positive-definite matrices
 
@@ -66,7 +66,7 @@ def con_fun(mc):
     return np.min(eigval) * 1000
 
 
-def find_rot_axis(len_a, len_b, len_c):
+def find_rot_axis(len_a: float, len_b: float, len_c: float) -> int:
     """
     Determine the rotation axis of an ellipsoid based on its three semi-axes
 
@@ -105,7 +105,7 @@ def find_rot_axis(len_a, len_b, len_c):
     return irot
 
 
-def get_ln_param(data):
+def get_ln_param(data: np.ndarray) -> tuple[float, float, float]:
     """
     Compute log-normal parameters (sigma and scale) from a dataset
 
@@ -133,7 +133,7 @@ def get_ln_param(data):
     return sig, scale
 
 
-def pts_in_ellips(Mcomp, pts):
+def pts_in_ellips(Mcomp: Any, pts: np.ndarray) -> np.ndarray:
     """
     Check how well a set of points satisfy the equation of an ellipsoid
     (pts - ctr)^T M (pts - ctr) = 1
@@ -162,7 +162,7 @@ def pts_in_ellips(Mcomp, pts):
     return score / len(pts)
 
 
-def get_diameter(pts):
+def get_diameter(pts: np.ndarray) -> np.ndarray:
     """
     Estimate the largest diameter of a set of points along Cartesian axes
 
@@ -184,7 +184,7 @@ def get_diameter(pts):
     ind_d = np.argmax(v_max - v_min)  # Cartesian axis along which largest distance occurs
     return pts[ind1[ind_d], :] - pts[ind0[ind_d], :]
 
-def project_pts(pts, ctr, axis):
+def project_pts(pts: np.ndarray, ctr: np.ndarray, axis: np.ndarray) -> np.ndarray:
     """
     Project points to a plane defined by a center point and a normal vector
 
@@ -392,7 +392,10 @@ def _conic3_to_geometric(K):
     return a, b, u_major, u_minor
 
 
-def get_grain_geom(points, method='raw', two_dim=False):
+def get_grain_geom(
+    points: np.ndarray,
+    method: str = 'raw',
+    two_dim: bool = False) -> dict[str, Any]:
     """
     Fit an ellipse to the 2D convex hull of grain pixels
 
@@ -466,7 +469,10 @@ def get_grain_geom(points, method='raw', two_dim=False):
     return ea, eb, va, vb
 
 
-def bbox(pts, return_vector=False, two_dim=False):
+def bbox(
+    pts: np.ndarray,
+    return_vector: bool = False,
+    two_dim: bool = False) -> Any:
     """
     Approximate the smallest rectangular cuboid around points of a grain
 
@@ -537,7 +543,7 @@ def bbox(pts, return_vector=False, two_dim=False):
         return 0.5*len_a, 0.5*len_b, 0.5*len_c
 
 
-def calc_stats_dict(a, b, c, eqd):
+def calc_stats_dict(a: Any, b: Any, c: Any, eqd: Any) -> dict[str, Any]:
     """
     Calculate statistical descriptors of grain semi-axes and equivalent diameters
 

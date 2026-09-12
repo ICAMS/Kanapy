@@ -47,11 +47,11 @@ class Microstructure(object):
 
     Parameters
     ----------
-    descriptor : list of dict, optional
+    descriptor : dict, list of dict, str, or None, optional
         List of dictionaries describing the microstructure of each phase.
         Dictionary keys typically include "Grains type", "Equivalent diameter",
         "Aspect ratio", "Tilt Angle", "RVE", and "Simulation".
-    file : str, optional
+    file : str or os.PathLike or None, optional
         Path to a JSON or other input file to initialize the microstructure.
     name : str, default='Microstructure'
         Name of the microstructure
@@ -105,7 +105,11 @@ class Microstructure(object):
     - Kanapy is tested for up to two phases; using more may yield unpredictable results
     """
 
-    def __init__(self, descriptor=None, file=None, name='Microstructure'):
+    def __init__(
+            self,
+            descriptor: Optional[Union[Mapping[str, Any], List[Mapping[str, Any]], str]] = None,
+            file: Optional[Union[str, os.PathLike[str]]] = None,
+            name: str = 'Microstructure') -> None:
         self.name = name
         self.nphases = None
         self.ngrains = None
@@ -164,7 +168,10 @@ class Microstructure(object):
     """
 
 
-    def init_RVE(self, descriptor=None, nsteps=1000):
+    def init_RVE(
+            self,
+            descriptor: Optional[Union[Mapping[str, Any], List[Mapping[str, Any]]]] = None,
+            nsteps: int = 1000) -> None:
         """
         Initialize the Representative Volume Element (RVE) of the microstructure
 
@@ -176,11 +183,11 @@ class Microstructure(object):
 
         Parameters
         ----------
-        descriptor : list of dict, dict, or None, optional
+        descriptor : dict, list of dict, or None, optional, default=None
             Description of the microstructure phases. Each dictionary specifies
             parameters such as grain type, equivalent diameter, aspect ratio,
             and tilt angle. If `None`, the class attribute `self.descriptor` is used.
-        nsteps : int, optional
+        nsteps : int, optional, default=1000
             Number of optimization or relaxation steps for RVE generation.
             Default is 1000.
 
@@ -222,35 +229,40 @@ class Microstructure(object):
         # store geometry in simbox object
         self.simbox = Simulation_Box(self.rve.size)
 
-    def pack(self, particle_data=None,
-             k_rep=0.0, k_att=0.0, fill_factor=None,
-             poly=None, save_files=False, verbose=False):
+    def pack(
+            self,
+            particle_data: Any = None,
+            k_rep: float = 0.0,
+            k_att: float = 0.0,
+            fill_factor: Optional[float] = None,
+            poly: Any = None,
+            save_files: bool = False,
+            verbose: bool = False) -> None:
         """
         Pack particles into the simulation box according to the RVE settings.
 
         Parameters
         ----------
-        particle_data : array-like or None, optional
-            Particle information. If None, uses self.rve.particle_data.
-        k_rep : float, optional
+        particle_data : array-like or None, optional, default=None
+            Particle information. If None, uses ``self.rve.particle_data``.
+        k_rep : float, optional, default=0.0
             Repulsion coefficient between particles. Default is 0.0.
-        k_att : float, optional
+        k_att : float, optional, default=0.0
             Attraction coefficient between particles. Default is 0.0.
-        fill_factor : float or None, optional
-            Fraction of simulation box to fill. Defaults to 1.0 if self.precipit is set.
-        poly : optional
+        fill_factor : float or None, optional, default=None
+            Fraction of simulation box to fill. If None and ``self.precipit`` is
+            set, the effective value is 1.0.
+        poly : object or None, optional, default=None
             Additional packing options for polyhedral particles.
-        save_files : bool, optional
+        save_files : bool, optional, default=False
             If True, saves packed particle data to files.
-        verbose : bool, optional
+        verbose : bool, optional, default=False
             If True, prints progress and warnings during packing.
 
         Returns
         -------
-        particles : list
-            List of packed particle objects with positions and geometrical information.
-        simbox : Simulation_Box
-            Updated simulation box reflecting particle packing.
+        None
+            Updates ``self.particles`` and ``self.simbox`` in place.
 
         Raises
         ------
@@ -280,15 +292,18 @@ class Microstructure(object):
                            k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
                            poly=poly, save_files=save_files, verbose=verbose)
 
-    def voxelize(self, particles=None, dim=None):
+    def voxelize(
+            self,
+            particles: Optional[List[Any]] = None,
+            dim: Optional[tuple[int, int, int]] = None) -> None:
         """
         Generate the RVE by assigning voxels to grains.
 
         Parameters
         ----------
-        particles : list or None, optional
-            List of particle objects to voxelize. If None, uses `self.particles`.
-        dim : tuple of int, optional
+        particles : list of object or None, optional, default=None
+            List of particle objects to voxelize. If None, uses ``self.particles``.
+        dim : tuple of int or None, optional, default=None
             3-tuple specifying the number of voxels in each spatial direction.
             If None, uses `self.rve.dim`.
 
@@ -359,17 +374,21 @@ class Microstructure(object):
             logging.info('Removing polyhedral grain geometries and statistical data after re-meshing.')
             self.geometry = None
 
-    def smoothen(self, nodes_v=None, voxel_dict=None, grain_dict=None):
+    def smoothen(
+            self,
+            nodes_v: Any = None,
+            voxel_dict: Optional[Mapping[Any, Any]] = None,
+            grain_dict: Optional[Mapping[Any, Any]] = None) -> None:
         """
         Generate smoothed grain boundaries from a voxelated mesh.
 
         Parameters
         ----------
-        nodes_v : array-like or None, optional
+        nodes_v : array-like or None, optional, default=None
             Mesh node coordinates. If None, uses `self.mesh.nodes`.
-        voxel_dict : dict or None, optional
+        voxel_dict : dict or None, optional, default=None
             Dictionary of voxels in the mesh. If None, uses `self.mesh.voxel_dict`.
-        grain_dict : dict or None, optional
+        grain_dict : dict or None, optional, default=None
             Dictionary mapping grains to their voxels. If None, uses `self.mesh.grain_dict`.
 
         Returns
@@ -404,7 +423,7 @@ class Microstructure(object):
         if isinstance(self.geometry, dict):
             self.geometry['GBfaces'] = grain_facesDict
 
-    def generate_grains(self):
+    def generate_grains(self) -> None:
         """
         Calculate and store polyhedral grain geometry, including particle- and grain-diameter attributes,
         for statistical comparison
@@ -487,8 +506,17 @@ class Microstructure(object):
             self.mesh.grain_dict[0] = empty_vox
             self.mesh.grain_phase_dict[0] = grain_store
 
-    def generate_orientations(self, data, ang=None, omega=None, Nbase=5000,
-                              hist=None, shared_area=None, iphase=None, verbose=False, **kwargs):
+    def generate_orientations(
+            self,
+            data: Any,
+            ang: Optional[float] = None,
+            omega: Optional[float] = None,
+            Nbase: int = 5000,
+            hist: Any = None,
+            shared_area: Any = None,
+            iphase: Optional[int] = None,
+            verbose: bool = False,
+            **kwargs: Any) -> None:
         """
         Generate orientations for grains in a representative volume element (RVE)
         to achieve a desired crystallographic texture
@@ -506,17 +534,17 @@ class Microstructure(object):
             specifying the type of orientation set:
             - 'random' or 'rnd' : generate a random orientation set
             - 'unimodal', 'uni_mod', or 'uni_modal' : generate a unimodal orientation set
-        ang : float, optional
+        ang : float or None, optional, default=None
             Orientation angle for unimodal texture (required if `data` is unimodal).
-        omega : float, optional
+        omega : float or None, optional, default=None
             Kernel halfwidth for unimodal texture (required if `data` is unimodal).
         Nbase : int, default=5000
             Number of base orientations used in random or unimodal generation.
-        hist : array_like, optional
+        hist : array_like or None, optional, default=None
             Histogram for the grain orientations, used to weight orientations.
-        shared_area : array_like or float, optional
+        shared_area : array_like, float, or None, optional, default=None
             Shared grain boundary area for weighted orientation generation.
-        iphase : int, optional
+        iphase : int or None, optional, default=None
             Phase index for which orientations are generated. If None, all phases are processed.
         verbose : bool, default=False
             If True, prints additional information during orientation generation.
@@ -614,7 +642,11 @@ class Microstructure(object):
     --------     Plotting methods          --------
     """
 
-    def plot_ellipsoids(self, cmap='prism', dual_phase=None, phases=False):
+    def plot_ellipsoids(
+            self,
+            cmap: str = 'prism',
+            dual_phase: Optional[bool] = None,
+            phases: bool = False) -> None:
         """
         Generate a 3D plot of particles in the RVE
 
@@ -624,12 +656,12 @@ class Microstructure(object):
 
         Parameters
         ----------
-        cmap : str, optional
+        cmap : str, optional, default='prism'
             Colormap used for plotting particles. Default is 'prism'.
-        dual_phase : bool or None, optional
+        dual_phase : bool or None, optional, default=None
             Deprecated parameter for indicating dual-phase visualization.
             Use `phases` instead. Default is None.
-        phases : bool, optional
+        phases : bool, optional, default=False
             If True, color particles according to their phase. Default is False.
 
         Notes
@@ -670,7 +702,12 @@ class Microstructure(object):
                    int(self.rve.size[2] / hmin)]
         plot_ellipsoids_3D(self.particles, cmap=cmap, phases=phases, asp_arr=asp_arr)
 
-    def plot_particles(self, cmap='prism', dual_phase=None, phases=False, plot_hull=True):
+    def plot_particles(
+            self,
+            cmap: str = 'prism',
+            dual_phase: Optional[bool] = None,
+            phases: bool = False,
+            plot_hull: bool = True) -> None:
         """
         Generate a 3D plot of particles in the RVE.
 
@@ -680,14 +717,14 @@ class Microstructure(object):
 
         Parameters
         ----------
-        cmap : str, optional
+        cmap : str, optional, default='prism'
             Colormap used for plotting particles. Default is 'prism'.
-        dual_phase : bool or None, optional
+        dual_phase : bool or None, optional, default=None
             Deprecated parameter for indicating dual-phase visualization.
             Use `phases` instead. Default is None.
-        phases : bool, optional
+        phases : bool, optional, default=False
             If True, color particles according to their phase. Default is False.
-        plot_hull : bool, optional
+        plot_hull : bool, optional, default=True
             If True, plot the convex hull (inner polygon) of each particle. Default is True.
 
         Notes
@@ -732,8 +769,15 @@ class Microstructure(object):
         plot_particles_3D(self.particles, cmap=cmap,
                           phases=phases, plot_hull=plot_hull, asp_arr=asp_arr)
 
-    def plot_voxels(self, sliced=False, dual_phase=None, phases=False, cmap='prism', ori=None,
-                    color_key=0, silent=False):
+    def plot_voxels(
+            self,
+            sliced: bool = False,
+            dual_phase: Optional[bool] = None,
+            phases: bool = False,
+            cmap: str = 'prism',
+            ori: Any = None,
+            color_key: int = 0,
+            silent: bool = False) -> Optional[Any]:
         """
         Generate a 3D visualization of the voxelized RVE structure
 
@@ -743,26 +787,26 @@ class Microstructure(object):
 
         Parameters
         ----------
-        sliced : bool, optional
+        sliced : bool, optional, default=False
             If True, generates a sliced view of the voxel mesh to visualize the internal structure.
             Default is False.
-        dual_phase : bool or None, optional
+        dual_phase : bool or None, optional, default=None
             Deprecated parameter for dual-phase visualization. Use `phases` instead.
             Default is None.
-        phases : bool, optional
+        phases : bool, optional, default=False
             If True, color voxels by phase instead of grain ID. Default is False.
-        cmap : str, optional
+        cmap : str, optional, default='prism'
             Name of the matplotlib colormap used for rendering. Default is 'prism'.
-        ori : array-like, bool, or None, optional
+        ori : array-like, bool, or None, optional, default=None
             Array of grain orientations, or True to use `self.mesh.grain_ori_dict` for coloring
             via inverse pole figure (IPF) mapping. Default is None.
-        color_key : int, optional
+        color_key : int, optional, default=0
             Selects the color mapping for orientations:
             - 0: iphHSVKey
             - 1: BungeColorKey
             - 2: ipfHKLKey
             Default is 0.
-        silent : bool, optional
+        silent : bool, optional, default=False
             If True, suppresses figure display and returns the matplotlib figure object instead.
             Default is False.
 
@@ -830,8 +874,14 @@ class Microstructure(object):
         if silent:
             return fig
 
-    def plot_grains(self, geometry=None, cmap='prism', alpha=0.4,
-                    ec=None, dual_phase=None, phases=False):
+    def plot_grains(
+            self,
+            geometry: Optional[Mapping[str, Any]] = None,
+            cmap: str = 'prism',
+            alpha: float = 0.4,
+            ec: Optional[List[float]] = None,
+            dual_phase: Optional[bool] = None,
+            phases: bool = False) -> None:
         """
         Plot the polygonalized microstructure of the RVE in 3D.
 
@@ -842,21 +892,21 @@ class Microstructure(object):
 
         Parameters
         ----------
-        geometry : dict or None, optional
+        geometry : dict or None, optional, default=None
             Dictionary containing the polygonal grain geometries. If None, uses
             `self.geometry`.
-        cmap : str, optional
+        cmap : str, optional, default='prism'
             Matplotlib colormap name for rendering grain colors. Default is 'prism'.
-        alpha : float, optional
+        alpha : float, optional, default=0.4
             Transparency level of the grain surfaces (0 = fully transparent,
             1 = fully opaque). Default is 0.4.
-        ec : list or None, optional
+        ec : list of float or None, optional, default=None
             Edge color specified as an RGBA list, e.g. `[0.5, 0.5, 0.5, 0.1]`.
             Default is `[0.5, 0.5, 0.5, 0.1]`.
-        dual_phase : bool or None, optional
+        dual_phase : bool or None, optional, default=None
             Deprecated parameter for dual-phase coloring. Use `phases` instead.
             Default is None.
-        phases : bool, optional
+        phases : bool, optional, default=False
             If True, color grains by phase rather than by grain ID. Default is False.
 
         Notes
@@ -906,13 +956,20 @@ class Microstructure(object):
         plot_polygons_3D(geometry, cmap=cmap, alpha=alpha, ec=ec,
                          phases=phases, asp_arr=asp_arr)
 
-    def plot_stats(self, data=None,
-                   gs_data=None, gs_param=None,
-                   ar_data=None, ar_param=None,
-                   dual_phase=None, phases=False,
-                   save_files=False,
-                   show_all=False, verbose=False,
-                   silent=False, enhanced_plot=False):
+    def plot_stats(
+            self,
+            data: Optional[str] = None,
+            gs_data: Any = None,
+            gs_param: Any = None,
+            ar_data: Any = None,
+            ar_param: Any = None,
+            dual_phase: Optional[bool] = None,
+            phases: bool = False,
+            save_files: bool = False,
+            show_all: bool = False,
+            verbose: bool = False,
+            silent: bool = False,
+            enhanced_plot: bool = False) -> Optional[List[Any]]:
         """
         Plot particle, voxel, and grain diameter statistics for comparison
 
@@ -923,33 +980,33 @@ class Microstructure(object):
 
         Parameters
         ----------
-        data : str or None, optional
+        data : str or None, optional, default=None
             Specifies which type of data to analyze and plot:
             - 'p' : particles
             - 'v' : voxels
             - 'g' : grains
             If None, all available data types are analyzed.
-        gs_data : list or array-like, optional
+        gs_data : list or array-like or None, optional, default=None
             Grain size data for comparison with simulation results.
-        gs_param : list or array-like, optional
+        gs_param : list or array-like or None, optional, default=None
             Parameters for fitting grain size distributions.
-        ar_data : list or array-like, optional
+        ar_data : list or array-like or None, optional, default=None
             Aspect ratio data for comparison with simulation results.
-        ar_param : list or array-like, optional
+        ar_param : list or array-like or None, optional, default=None
             Parameters for fitting aspect ratio distributions.
-        dual_phase : bool or None, optional
+        dual_phase : bool or None, optional, default=None
             Deprecated. Use `phases` instead.
-        phases : bool, optional
+        phases : bool, optional, default=False
             If True, perform separate statistical analysis for each phase.
-        save_files : bool, optional
+        save_files : bool, optional, default=False
             If True, save generated plots and statistical results to files.
-        show_all : bool, optional
+        show_all : bool, optional, default=False
             If True, display all generated plots interactively.
-        verbose : bool, optional
+        verbose : bool, optional, default=False
             If True, print detailed numerical results during analysis.
-        silent : bool, optional
+        silent : bool, optional, default=False
             If True, suppresses console output and returns figures directly.
-        enhanced_plot : bool, optional
+        enhanced_plot : bool, optional, default=False
             If True, use enhanced plot styling (automatically enabled when `silent=True`).
 
         Returns
@@ -1086,10 +1143,17 @@ class Microstructure(object):
         if silent:
             return flist
 
-    def plot_stats_init(self, descriptor=None, gs_data=None, ar_data=None,
-                        porous=False,
-                        get_res=False, show_res=False,
-                        save_files=False, silent=False, return_descriptors=False):
+    def plot_stats_init(
+            self,
+            descriptor: Optional[Union[Mapping[str, Any], List[Mapping[str, Any]]]] = None,
+            gs_data: Any = None,
+            ar_data: Any = None,
+            porous: bool = False,
+            get_res: bool = False,
+            show_res: bool = False,
+            save_files: bool = False,
+            silent: bool = False,
+            return_descriptors: bool = False) -> Optional[tuple[List[Any], List[Dict[str, Any]]]]:
         """
         Plot initial statistical microstructure descriptors of RVE and optionally return computed descriptors
 
@@ -1101,31 +1165,30 @@ class Microstructure(object):
 
         Parameters
         ----------
-        descriptor : list of dict, dict, or None, optional
+        descriptor : dict, list of dict, or None, optional, default=None
             Microstructure phase descriptor(s). If None, uses `self.descriptor`.
-        gs_data : list or array-like, optional
+        gs_data : list or array-like or None, optional, default=None
             Grain size data for comparison with initial statistics.
-        ar_data : list or array-like, optional
+        ar_data : list or array-like or None, optional, default=None
             Aspect ratio data for comparison with initial statistics.
-        porous : bool, optional
+        porous : bool, optional, default=False
             If True, only the first phase is considered (e.g., for porous structures).
-        get_res : bool, optional
+        get_res : bool, optional, default=False
             If True, computes statistical descriptors from the voxelized structure.
-        show_res : bool, optional
+        show_res : bool, optional, default=False
             If True, prints detailed statistical results to the console.
-        save_files : bool, optional
+        save_files : bool, optional, default=False
             If True, saves generated plots to files.
-        silent : bool, optional
+        silent : bool, optional, default=False
             If True, suppresses console output and returns figures directly.
-        return_descriptors : bool, optional
+        return_descriptors : bool, optional, default=False
             If True, returns computed statistical descriptors along with figures.
 
         Returns
         -------
-        flist : list of matplotlib.figure.Figure
-            List of generated figure objects.
-        descs : list of dict
-            Optional list of computed statistical descriptors if `return_descriptors=True`.
+        tuple of (list, list) or None
+            Returns ``(figures, descriptors)`` when ``silent`` or
+            ``return_descriptors`` is True; otherwise returns None.
 
         Notes
         -----
@@ -1148,7 +1211,9 @@ class Microstructure(object):
         >>> # Suppress console output and return figure objects
         >>> figs = rve.plot_stats_init(silent=True)
         """
-        def analyze_voxels(ip, des):
+        def analyze_voxels(
+            ip: int,
+            des: Mapping[str, Any]) -> tuple[List[float], List[float], Dict[str, Any]]:
             """
             Compute voxel-based statistical descriptors for a given phase of the RVE
 
@@ -1247,8 +1312,14 @@ class Microstructure(object):
 
         if return_descriptors or silent: return flist, descs
 
-    def plot_slice(self, cut='xy', data=None, pos=None, fname=None,
-                   dual_phase=False, save_files=False):
+    def plot_slice(
+            self,
+            cut: str = 'xy',
+            data: Optional[str] = None,
+            pos: Optional[Union[str, float, int]] = None,
+            fname: Optional[Union[str, os.PathLike[str]]] = None,
+            dual_phase: bool = False,
+            save_files: bool = False) -> None:
         """
         Plot a 2D slice through the microstructure.
 
@@ -1259,19 +1330,19 @@ class Microstructure(object):
 
         Parameters
         ----------
-        cut : str, optional
+        cut : str, optional, default='xy'
             The cutting plane of the slice. Options are 'xy', 'xz', or 'yz'.
             Default is 'xy'.
-        data : str, optional
+        data : str or None, optional, default=None
             Data basis for plotting. Options are 'voxels' or 'poly'. Default is None.
-        pos : str or float, optional
+        pos : str, float, int, or None, optional, default=None
             Position of the slice, either as an absolute value or as one of
             'top', 'bottom', 'left', 'right'. Default is None.
-        fname : str, optional
+        fname : str or os.PathLike or None, optional, default=None
             Filename to save the figure as a PDF. Default is None.
-        dual_phase : bool, optional
+        dual_phase : bool, optional, default=False
             If True, enable dual-phase visualization. Default is False.
-        save_files : bool, optional
+        save_files : bool, optional, default=False
             If True, the figure will be saved to disk. Default is False.
 
         Returns
@@ -1290,10 +1361,22 @@ class Microstructure(object):
     --------        Import/Export methods        --------
     """
 
-    def write_abq(self, nodes=None, file=None, path='./', voxel_dict=None, grain_dict=None,
-                  dual_phase=False, thermal=False, units=None, ialloy=None, nsdv=360, crystal_plasticity=False,
-                  phase_props=None, boundary_conditions: Optional[Dict[str, Any]] = None,
-                  props_file=None):
+    def write_abq(
+            self,
+            nodes: Any = None,
+            file: Optional[Union[str, os.PathLike[str]]] = None,
+            path: Union[str, os.PathLike[str]] = './',
+            voxel_dict: Optional[Mapping[Any, Any]] = None,
+            grain_dict: Optional[Mapping[Any, Any]] = None,
+            dual_phase: bool = False,
+            thermal: bool = False,
+            units: Optional[str] = None,
+            ialloy: Any = None,
+            nsdv: int = 360,
+            crystal_plasticity: bool = False,
+            phase_props: Optional[Mapping[str, Any]] = None,
+            boundary_conditions: Optional[Dict[str, Any]] = None,
+            props_file: Any = None) -> str:
         """
         Write the Abaqus input deck (.inp) for the generated RVE
 
@@ -1305,29 +1388,29 @@ class Microstructure(object):
 
         Parameters
         ----------
-        nodes : str or array-like, optional
+        nodes : str, array-like, or None, optional, default=None
             Defines the mesh to write:
             - 'voxels', 'v' : use voxelized mesh
             - 'smooth', 's' : use smoothened mesh
             - array-like : explicit nodal coordinates
             Default is None, automatically selecting available mesh.
-        file : str, optional
+        file : str or os.PathLike or None, optional, default=None
             Filename for the Abaqus input deck. Default is auto-generated.
-        path : str, optional
+        path : str or os.PathLike, optional, default='./'
             Directory path to save the input deck. Default is './'.
-        voxel_dict : dict, optional
+        voxel_dict : dict or None, optional, default=None
             Dictionary with voxel information. Default is `self.mesh.voxel_dict`.
-        grain_dict : dict, optional
+        grain_dict : dict or None, optional, default=None
             Dictionary mapping grain IDs to nodes. Default is `self.mesh.grain_dict`.
-        dual_phase : bool, optional
+        dual_phase : bool, optional, default=False
             If True, generate input for dual-phase materials. Default is False.
-        thermal : bool, optional
+        thermal : bool, optional, default=False
             If True, include thermal material definitions. Default is False.
-        units : str, optional
+        units : str or None, optional, default=None
             Units for the model, 'mm' or 'um'. Default is `self.rve.units`.
-        ialloy : list or object, optional
+        ialloy : list, object, or None, optional, default=None
             Material definitions for each phase. Default is `self.rve.ialloy`.
-        props_file : str, path-like or list, optional
+        props_file : str, path-like, list, or None, optional, default=None
             Numeric Abaqus include file, or one file per phase. Relative paths are
             resolved against `path`. Enables the new CP-UMAT format: selector,
             three Euler angles, four zeros, then the included shared constants.
@@ -1335,11 +1418,11 @@ class Microstructure(object):
             Include files are validated but never modified. Omit for legacy format.
         nsdv : int, optional
             Number of state variables per integration point for crystal plasticity. Default is 360.
-        crystal_plasticity : bool, optional
+        crystal_plasticity : bool, optional, default=False
             If True, enable crystal plasticity material definitions. Default is False.
-        phase_props : dict, optional
+        phase_props : dict or None, optional, default=None
             Additional phase-specific material properties.
-        boundary_conditions : dict, optional
+        boundary_conditions : dict or None, optional, default=None
             Dictionary specifying boundary conditions to write. Default is None.
 
         Returns
@@ -1485,8 +1568,14 @@ class Microstructure(object):
                            grain_phase_dict=grpd, nsdv=nsdv, props_file=props_file)
         return file
 
-    def write_abq_ori(self, ialloy=None, props_file=None, ori=None,
-                      file=None, path='./', nsdv=360):
+    def write_abq_ori(
+            self,
+            ialloy: Any = None,
+            props_file: Any = None,
+            ori: Any = None,
+            file: Optional[Union[str, os.PathLike[str]]] = None,
+            path: Union[str, os.PathLike[str]] = './',
+            nsdv: int = 360) -> None:
         """
         Write Abaqus material input file using grain orientations for crystal plasticity
 
@@ -1496,21 +1585,23 @@ class Microstructure(object):
 
         Parameters
         ----------
-        ialloy : list or object, optional
+        ialloy : list, object, or None, optional, default=None
             Material identifiers for each phase. Default is `self.rve.ialloy`.
-        ori : dict or array-like, optional
+        props_file : str, path-like, list, or None, optional, default=None
+            Optional CP-UMAT include file or one include file per phase.
+        ori : dict, array-like, or None, optional, default=None
             Dictionary or array of grain orientations. Default is `self.mesh.grain_ori_dict`.
-        file : str, optional
+        file : str or os.PathLike or None, optional, default=None
             Name of the output Abaqus material file. Default is auto-generated based on RVE name.
-        path : str, optional
+        path : str or os.PathLike, optional, default='./'
             Directory path where the file will be saved. Default is './'.
-        nsdv : int, optional
+        nsdv : int, optional, default=360
             Number of state variables per integration point for crystal plasticity. Default is 360.
 
         Returns
         -------
-        file : str
-            Full path to the generated Abaqus material input file.
+        None
+            Writes the Abaqus material input file and does not return its path.
 
         Raises
         ------
@@ -1526,10 +1617,10 @@ class Microstructure(object):
         Examples
         --------
         >>> # Write material file using default RVE orientations and material numbers
-        >>> abq_file = rve.write_abq_ori()
+        >>> rve.write_abq_ori()
 
         >>> # Specify custom material IDs and orientations
-        >>> abq_file = rve.write_abq_ori(ialloy=alloy_list, ori=ori_dict, file='custom_mat.inp')
+        >>> rve.write_abq_ori(ialloy=alloy_list, ori=ori_dict, file='custom_mat.inp')
         """
         if ialloy is None:
             ialloy = self.rve.ialloy
@@ -1548,7 +1639,7 @@ class Microstructure(object):
         file = os.path.join(path, file)
         writeAbaqusMat(ialloy, ori, props_file=props_file, file=file, nsdv=nsdv)
 
-    def output_neper(self):
+    def output_neper(self) -> None:
         """
         Write particle position and weight files for Neper tessellation
 
@@ -1595,9 +1686,19 @@ class Microstructure(object):
                 fd.write('{0}\n'.format(value[3]))
         print('---->DONE!\n')
 
-    def output_ang(self, ori=None, cut='xy', data=None, plot=True, cs=None,
-                   pos=None, fname=None, matname='XXXX', save_files=True,
-                   dual_phase=False, save_plot=False):
+    def output_ang(
+            self,
+            ori: Any = None,
+            cut: str = 'xy',
+            data: Optional[str] = None,
+            plot: bool = True,
+            cs: Optional[str] = None,
+            pos: Optional[Union[str, float, int]] = None,
+            fname: Optional[Union[str, os.PathLike[str]]] = None,
+            matname: str = 'XXXX',
+            save_files: bool = True,
+            dual_phase: bool = False,
+            save_plot: bool = False) -> Optional[str]:
         """
         Convert microstructure orientations into a .ang file, optionally plotting a slice
 
@@ -1609,34 +1710,36 @@ class Microstructure(object):
 
         Parameters
         ----------
-        ori : array-like of shape (self.Ngr, 3), optional
+        ori : array-like of shape (self.Ngr, 3), dict, or None, optional, default=None
             Euler angles of grains. If None, random angles are generated.
-        cut : {'xy', 'xz', 'yz'}, optional
+        cut : {'xy', 'xz', 'yz'}, optional, default='xy'
             Plane along which to take a slice. Default is 'xy'.
-        data : {'voxels', 'poly'}, optional
+        data : {'voxels', 'poly'}, or None, optional, default=None
             Basis for generating the ANG file. Default is None, automatically selected.
-        plot : bool, optional
+        plot : bool, optional, default=True
             Whether to display a plot of the slice. Default is True.
-        cs : str, optional
-            Crystal symmetry. Default is None.
-        pos : float or str, optional
+        cs : str or None, optional, default=None
+            Crystal symmetry. Default is None. Currently inactive.
+        pos : float, int, str, or None, optional, default=None
             Slice position as a numerical value or one of 'top', 'bottom', 'left', 'right'.
             Default is None (uses top/right edge).
-        fname : str, optional
-            Filename for the output ANG file. Default is generated automatically.
-        matname : str, optional
+        fname : str or os.PathLike or None, optional, default=None
+            Filename for the output ANG file. The value is replaced by an
+            automatically generated filename when ``save_files=True``.
+        matname : str, optional, default='XXXX'
             Material name to write in the ANG file. Default is 'XXXX'.
-        save_files : bool, optional
+        save_files : bool, optional, default=True
             Whether to save the ANG file. Default is True.
-        dual_phase : bool, optional
+        dual_phase : bool, optional, default=False
             Whether to output dual-phase information. Default is False.
-        save_plot : bool, optional
+        save_plot : bool, optional, default=False
             Whether to save the plot as a PDF. Default is False.
 
         Returns
         -------
-        fname : str
-            Name of the generated ANG file.
+        str or None
+            Name of the generated ANG file when ``save_files=True``; otherwise
+            returns the input ``fname`` value.
 
         Raises
         ------
@@ -1871,8 +1974,13 @@ class Microstructure(object):
                 plt.show()
         return fname
 
-    def write_stl(self, data='grains', file=None, path='./',
-                  phases=False, phase_num=None):
+    def write_stl(
+            self,
+            data: str = 'grains',
+            file: Optional[Union[str, os.PathLike[str]]] = None,
+            path: Union[str, os.PathLike[str]] = './',
+            phases: bool = False,
+            phase_num: Optional[int] = None) -> None:
         """
         Export grains or particles as STL files representing convex polyhedra
 
@@ -1893,15 +2001,15 @@ class Microstructure(object):
 
         Parameters
         ----------
-        data : {'grains', 'particles'}, optional
+        data : {'grains', 'particles'}, str, optional, default='grains'
             Determines whether to export grains or particles. Default is 'grains'.
-        file : str, optional
+        file : str or os.PathLike or None, optional, default=None
             Filename for the STL file. Default is generated from `self.name`.
-        path : str, optional
+        path : str or os.PathLike, optional, default='./'
             Directory to save the STL file. Default is './'.
-        phases : bool, optional
+        phases : bool, optional, default=False
             If True, export only grains of a specific phase. Default is False.
-        phase_num : int, optional
+        phase_num : int or None, optional, default=None
             Phase number to export if `phases=True`. Required in that case.
 
         Returns
@@ -1931,7 +2039,7 @@ class Microstructure(object):
         >>> rve.write_stl(phases=True, phase_num=1)
         """
 
-        def write_facet(nv, pts, ft):
+        def write_facet(nv: Any, pts: Any, ft: int) -> None:
             """
             Write a single triangular facet to the STL file with a normalized normal vector
 
@@ -1965,7 +2073,7 @@ class Microstructure(object):
             f.write("  endloop\n")
             f.write(" endfacet\n")
 
-        def write_grains():
+        def write_grains() -> None:
             """
             Write all grain facets of the microstructure to the STL file
 
@@ -1977,7 +2085,7 @@ class Microstructure(object):
                 nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
                 write_facet(nv, pts, ft)
 
-        def write_phases(ip):
+        def write_phases(ip: int) -> None:
             """
             Write facets of grains belonging to a specific phase to the STL file
 
@@ -1999,7 +2107,7 @@ class Microstructure(object):
                         nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
                         write_facet(nv, pts, ft)
 
-        def write_particles():
+        def write_particles() -> None:
             """
             Write facets of all particle convex hulls to the STL file
 
@@ -2030,27 +2138,33 @@ class Microstructure(object):
                     for pa in self.particles:
                         pa.sync_poly()
                     write_particles()
-            else:
+            elif data in ['grains', 'gr', 'g']:
                 if phases:
                     if phase_num is None:
                         raise ValueError('Phase-specific output requested, but no phase number specified.')
                     write_phases(phase_num)
                 else:
                     write_grains()
+            else:
+                raise ValueError(f"Invalid data type specified for STL export, must be either 'particles' or 'grains', not {data}.")
             f.write("endsolid\n")
         return
 
-    def write_centers(self, file=None, path='./', grains=None):
+    def write_centers(
+            self,
+            file: Optional[Union[str, os.PathLike[str]]] = None,
+            path: Union[str, os.PathLike[str]] = './',
+            grains: Optional[Mapping[Any, Any]] = None) -> None:
         """
         Write the center positions of grains to a CSV file
 
         Parameters
         ----------
-        file : str, optional
+        file : str or os.PathLike or None, optional, default=None
             Filename for the CSV file. Default is auto-generated based on `self.name`.
-        path : str, optional
+        path : str or os.PathLike, optional, default='./'
             Directory path to save the CSV file. Default is './'.
-        grains : dict, optional
+        grains : dict or None, optional, default=None
             Dictionary of grain data. Default is `self.geometry['Grains']`.
 
         Returns
@@ -2078,7 +2192,11 @@ class Microstructure(object):
                 f.write('{}, {}, {}\n'.format(ctr[0], ctr[1], ctr[2]))
         return
 
-    def write_ori(self, angles=None, file=None, path='./'):
+    def write_ori(
+            self,
+            angles: Any = None,
+            file: Optional[Union[str, os.PathLike[str]]] = None,
+            path: Union[str, os.PathLike[str]] = './') -> None:
         """
         Write grain orientations (Euler angles) to a CSV file
 
@@ -2089,18 +2207,18 @@ class Microstructure(object):
 
         Parameters
         ----------
-        angles : array-like of shape (N, 3), optional
+        angles : array-like of shape (N, 3) or None, optional, default=None
             Euler angles for each grain. If None, the stored orientations are used.
-        file : str, optional
+        file : str or os.PathLike or None, optional, default=None
             Name of the output CSV file. If None, a default name based on the microstructure
             name and number of grains is used.
-        path : str, optional
+        path : str or os.PathLike, optional, default='./'
             Directory path where the CSV file will be saved. Default is './'.
 
         Returns
         -------
-        str
-            Full path to the generated CSV file.
+        None
+            Writes the CSV file and does not return its path.
 
         Raises
         ------
@@ -2137,8 +2255,15 @@ class Microstructure(object):
                 f.write('{}, {}, {}\n'.format(ori[0], ori[1], ori[2]))
         return
 
-    def write_voxels(self, angles=None, script_name=None, file=None, path='./',
-                     mesh=True, source=None, system=False):
+    def write_voxels(
+            self,
+            angles: Any = None,
+            script_name: Optional[str] = None,
+            file: Optional[Union[str, os.PathLike[str]]] = None,
+            path: Union[str, os.PathLike[str]] = './',
+            mesh: bool = True,
+            source: Any = None,
+            system: bool = False) -> None:
         """
         Write voxel structure of the microstructure to a JSON file
 
@@ -2148,23 +2273,23 @@ class Microstructure(object):
 
         Parameters
         ----------
-        angles : np.ndarray, optional
+        angles : np.ndarray or None, optional, default=None
             Array of Euler angles for grain orientations. If None, stored orientations
             are used if available. Default is None.
-        script_name : str, optional
+        script_name : str or None, optional, default=None
             Name of the script used to generate the microstructure. Default is the
             current script file.
-        file : str, optional
+        file : str or os.PathLike or None, optional, default=None
             Name of the output JSON file. Default is based on microstructure name and
             number of grains.
-        path : str, optional
+        path : str or os.PathLike, optional, default='./'
             Directory path to save the JSON file. Default is current directory './'.
-        mesh : bool, optional
+        mesh : bool, optional, default=True
             Whether to include mesh nodes and voxel connectivity in the output. Default
             is True.
-        source : Any, optional
+        source : Any, optional, default=None
             Optional input or source information to include in the JSON metadata.
-        system : bool, optional
+        system : bool, optional, default=False
             Whether to include system information in the JSON metadata. Default is False.
 
         Returns
@@ -2275,9 +2400,9 @@ class Microstructure(object):
     def create_microstructure_identifier(
             self,
             microstructure_step: Mapping[str, Any],
-            hash_length: int = 8,
-            sig_figs: int = 6,
-    ) -> str:
+                hash_length: int = 8,
+                sig_figs: int = 6,
+            ) -> str:
         """
         Create a deterministic identifier for one microstructure snapshot.
 
@@ -2295,12 +2420,12 @@ class Microstructure(object):
 
         Parameters
         ----------
-        microstructure_step
+        microstructure_step : Mapping[str, Any]
             One microstructure snapshot dictionary.
-        hash_length
+        hash_length : int, optional, default=8
             Number of hexadecimal characters taken from the SHA-256 digest
             (after the ``"S_"`` prefix). Default is 8.
-        sig_figs
+        sig_figs : int, optional, default=6
             Number of significant figures each float is rounded to before
             hashing. Default is 6.
 
@@ -2488,14 +2613,15 @@ class Microstructure(object):
         digest = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()[:hash_length]
         return f"S_{digest}"
 
-    def write_data(self,
-                   user_metadata: Optional[Dict[str, Any]] = None,
-                   boundary_condition: Optional[Dict[str, Any]] = None,
-                   phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
-                   interactive: bool = True,
-                   structured: bool = True,
-                   ialloy: int = 1,
-                   length_unit: str = 'µm') -> dict:
+    def write_data(
+            self,
+            user_metadata: Optional[Dict[str, Any]] = None,
+            boundary_condition: Optional[Dict[str, Any]] = None,
+            phases: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
+            interactive: bool = True,
+            structured: bool = True,
+            ialloy: int = 0,
+            length_unit: str = 'µm') -> Dict[str, Any]:
 
         """
         Generate a JSON-compatible data schema containing user, system, and job-specific elements
@@ -2507,20 +2633,20 @@ class Microstructure(object):
 
         Parameters
         ----------
-        user_metadata : dict, optional
+        user_metadata : dict or None, optional, default=None
             Prefilled metadata fields; required if interactive=False. Default is None.
-        boundary_condition : dict, optional
+        boundary_condition : dict or None, optional, default=None
             Dictionary specifying mechanical or thermal boundary conditions. Default is None.
-        phases : dict or list of dicts, optional
+        phases : dict, list of dicts, or None, optional, default=None
             Phase-specific information; if None, default material library and ialloy are used.
-        interactive : bool, optional
+        interactive : bool, optional, default=True
             If True, prompt user for missing information. Default is True.
-        structured : bool, optional
+        structured : bool, optional, default=True
             Whether the mesh is structured. Default is True.
-        ialloy : int, optional
-            Alloy index for selecting material properties from the built-in library. Default is 1.
-        length_unit : str, optional
-            Unit for length scaling; either 'µm' or 'mm'. Default is 'µm'.
+        ialloy : int, optional, default=0
+            Alloy index for selecting material properties from the built-in library. Default is 0.
+        length_unit : {'µm', 'mm', 'm'}, optional, default='µm'
+            Unit for length scaling.
 
         Returns
         -------
@@ -2544,7 +2670,7 @@ class Microstructure(object):
         elif length_unit == 'm':
             length_scale = 1e-6
         else:
-            raise ValueError("length_unit must be 'µm' or 'mm'")
+            raise ValueError("length_unit must be 'µm', 'mm', or 'm'")
 
         # Material library definitions (pulled from mod_alloys.f)
         material_library = {
@@ -2966,7 +3092,7 @@ class Microstructure(object):
         grains_t0_sorted = sorted(grains_t0, key=lambda d: int(d["grain_id"]))
 
         # ─── Build time‐0 voxel dictionary ────────────────────────────────────────
-        def _coord_to_index_1based(c, o, d):
+        def _coord_to_index_1based(c: float, o: float, d: float) -> int:
             """
             Convert a coordinate to a 1-based voxel index
 
@@ -2991,7 +3117,7 @@ class Microstructure(object):
             # i = round((c - o)/d + 0.5), robust to tiny float noise
             return int(round((float(c) - float(o)) / float(d) + 0.5))
 
-        def _clamp(v, lo, hi):
+        def _clamp(v: float, lo: float, hi: float) -> float:
             """
             Clamp a value between a lower and upper bound
 
@@ -3091,7 +3217,10 @@ class Microstructure(object):
 
 
 
-    def pckl(self, file=None, path='./'):
+    def pckl(
+            self,
+            file: Optional[Union[str, os.PathLike[str]]] = None,
+            path: Union[str, os.PathLike[str]] = './') -> None:
         """
         Write the microstructure into a pickle file
 
@@ -3100,10 +3229,10 @@ class Microstructure(object):
 
         Parameters
         ----------
-        file : str, optional
+        file : str or os.PathLike or None, optional, default=None
             File name for the pickled microstructure. If None, the filename defaults
             to the microstructure name plus '.pckl'.
-        path : str, optional
+        path : str or os.PathLike, optional, default='./'
             Directory path to save the pickle file. Default is current directory './'.
 
         Returns
@@ -3123,7 +3252,10 @@ class Microstructure(object):
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
         return
 
-    def import_particles(self, file, path='./'):
+    def import_particles(
+            self,
+            file: Union[str, os.PathLike[str]],
+            path: Union[str, os.PathLike[str]] = './') -> None:
         """
         Import particle data from a dump file
 
@@ -3133,9 +3265,9 @@ class Microstructure(object):
 
         Parameters
         ----------
-        file : str
+        file : str or os.PathLike
             Name of the input dump file containing particle data
-        path : str, optional
+        path : str or os.PathLike, optional, default='./'
             Directory path where the dump file is located. Default is current directory './'
 
         Returns
@@ -3151,7 +3283,13 @@ class Microstructure(object):
     --------        legacy methods        --------
     """
 
-    def init_stats(self, descriptor=None, gs_data=None, ar_data=None, porous=False, save_files=False):
+    def init_stats(
+            self,
+            descriptor: Any = None,
+            gs_data: Any = None,
+            ar_data: Any = None,
+            porous: bool = False,
+            save_files: bool = False) -> None:
         """
         Legacy function that redirects to plot_stats_init
 
@@ -3160,15 +3298,15 @@ class Microstructure(object):
 
         Parameters
         ----------
-        descriptor : Any, optional
+        descriptor : Any, optional, default=None
             Descriptor data passed to `plot_stats_init`. Default is None.
-        gs_data : Any, optional
+        gs_data : Any, optional, default=None
             Grain size data passed to `plot_stats_init`. Default is None.
-        ar_data : Any, optional
+        ar_data : Any, optional, default=None
             Aspect ratio data passed to `plot_stats_init`. Default is None.
-        porous : bool, optional
+        porous : bool, optional, default=False
             Deprecated parameter, ignored. Default is False.
-        save_files : bool, optional
+        save_files : bool, optional, default=False
             Whether to save generated statistics files. Default is False.
 
         Returns
@@ -3179,9 +3317,16 @@ class Microstructure(object):
         logging.warning('"init_stats" is a legacy function and will be depracted, please use "plot_stats_init()".')
         self.plot_stats_init(descriptor, gs_data=gs_data, ar_data=ar_data, save_files=save_files)
 
-    def output_abq(self, nodes=None, name=None,
-                   voxel_dict=None, grain_dict=None, faces=None,
-                   dual_phase=False, thermal=False, units=None):
+    def output_abq(
+            self,
+            nodes: Any = None,
+            name: Optional[Union[str, os.PathLike[str]]] = None,
+            voxel_dict: Optional[Mapping[Any, Any]] = None,
+            grain_dict: Optional[Mapping[Any, Any]] = None,
+            faces: Any = None,
+            dual_phase: bool = False,
+            thermal: bool = False,
+            units: Optional[str] = None) -> None:
         """
         Legacy function that redirects to write_abq
 
@@ -3191,22 +3336,22 @@ class Microstructure(object):
 
         Parameters
         ----------
-        nodes : array-like, optional
+        nodes : array-like or None, optional, default=None
             Nodal coordinates to include in the output. Default is None.
-        name : str, optional
+        name : str or os.PathLike or None, optional, default=None
             File name for the Abaqus input file. Default is None.
-        voxel_dict : dict, optional
+        voxel_dict : dict or None, optional, default=None
             Voxel connectivity information. Default is None.
-        grain_dict : dict, optional
+        grain_dict : dict or None, optional, default=None
             Grain-to-voxel mapping. Default is None.
-        faces : Any, optional
+        faces : Any, optional, default=None
             Deprecated parameter, automatically determined. Default is None.
-        dual_phase : bool, optional
+        dual_phase : bool, optional, default=False
             Whether to include dual-phase data. Default is False.
-        thermal : bool, optional
+        thermal : bool, optional, default=False
             Whether to include thermal data. Default is False.
-        units : dict, optional
-            Dictionary of units for the Abaqus model. Default is None.
+        units : str or None, optional, default=None
+            Units for the Abaqus model.
 
         Returns
         -------

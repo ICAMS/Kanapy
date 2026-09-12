@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+import subprocess
+import sys
 import click
 import zipfile
 import requests
 import webbrowser
 from io import BytesIO
 from importlib.metadata import version
+from typing import Any
 
     
 @click.group()
 @click.version_option(version=version('kanapy'))
 @click.pass_context
-def main(ctx):    
+def main(ctx: Any) -> None:
     pass
 
 @main.command(name='gui')
 @click.pass_context
-def gui(ctx):
+def gui(ctx: Any) -> None:
     """
     Start Kanapy's graphical user interface (experimental alpha version)
 
@@ -67,24 +70,18 @@ def gui(ctx):
 
 
 @main.command(name='runTests')
-@click.option('--no_texture', default=False)
 @click.pass_context
-def tests(ctx, no_texture: bool):
+def tests(ctx: Any) -> None:
     """
     Run Kanapy's internal unittests
 
     Executes the built-in test suite for Kanapy using pytest.
-    Depending on the `no_texture` flag, it either runs a subset of tests
-    or all available tests in the `tests` directory.
+    Runs all available tests in the `tests` directory.
 
     Parameters
     ----------
     ctx : object
         Execution context (reserved for CLI or internal use)
-    no_texture : bool
-        If True, run tests excluding texture-related modules;
-        if False, run the full test suite
-
     Notes
     -----
     - Must be executed from the root directory of the Kanapy installation
@@ -92,22 +89,17 @@ def tests(ctx, no_texture: bool):
     """
     click.echo('Will only work in root directory of kanapy installation.')
     cwd = os.getcwd()
-    if no_texture:
-        #t1 = "{0}/tests/test_collide_detect_react.py".format(cwd)
-        t2 = "{0}/tests/test_entities.py".format(cwd)
-        t3 = "{0}/tests/test_input_output.py".format(cwd)
-        t4 = "{0}/tests/test_packing.py".format(cwd)
-        t5 = "{0}/tests/test_voxelization.py".format(cwd)
-        os.system(f"pytest {t2} {t3} {t4} {t5} -v")
-    else:
-        os.system("pytest {0}/tests/ -v".format(cwd))
+    subprocess.run(
+        [sys.executable, '-m', 'pytest', os.path.join(cwd, 'tests'), '-v'],
+        check=False,
+    )
     shutil.rmtree(os.path.join(cwd, "dump_files"))
     click.echo('')
         
     
 @main.command(name='readDocs')
 @click.pass_context
-def docs(ctx):
+def docs(ctx: Any) -> None:
     """
     Open the Kanapy documentation webpage
 
@@ -124,7 +116,7 @@ def docs(ctx):
 
 @main.command(name='copyExamples')
 @click.pass_context
-def download_subdir(ctx):
+def download_subdir(ctx: Any) -> None:
     """
     Download example files from Kanapy's GitHub repository
 
@@ -171,7 +163,7 @@ def download_subdir(ctx):
 
 @main.command(name='setupMTEX')
 @click.pass_context
-def setup_mtex(ctx):
+def setup_mtex(ctx: Any) -> None:
     """
     Start the MATLAB engine and initialize MTEX
 
@@ -191,7 +183,7 @@ def setup_mtex(ctx):
     setPaths()
 
 
-def chkVersion(matlab):
+def chkVersion(matlab: Any) -> Any:
     """
     Read the installed MATLAB version from a version string
 
@@ -220,7 +212,7 @@ def chkVersion(matlab):
     return version
     
         
-def setPaths():
+def setPaths() -> None:
     """
     Start the MATLAB engine and initialize the MTEX environment
 
@@ -263,7 +255,7 @@ def setPaths():
     click.echo('')
     click.echo('Kanapy is now configured for texture analysis!\n')
 
-def start():
+def start() -> None:
     main(obj={})
 
     

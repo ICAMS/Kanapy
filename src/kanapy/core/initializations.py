@@ -13,9 +13,10 @@ import logging
 import itertools
 from scipy.stats import lognorm, vonmises
 from collections import defaultdict
+from typing import Any, Mapping, Optional, Sequence, Union
 
 
-def stat_names(legacy=False):
+def stat_names(legacy: bool = False) -> tuple[str, str, str, str]:
     """
     Return standardized names for statistical descriptors
 
@@ -108,7 +109,12 @@ class RVE_creator(object):
        - Simulation attributes: periodicity and output unit scale (mm or μm) for ABAQUS .inp file
     """
 
-    def __init__(self, stats_dicts, nsteps=1000, from_voxels=False, poly=None):
+    def __init__(
+            self,
+            stats_dicts: Union[Mapping[str, Any], Sequence[Mapping[str, Any]]],
+            nsteps: int = 1000,
+            from_voxels: bool = False,
+            poly: Optional[Any] = None) -> None:
 
         def init_particles(ip):
             """
@@ -521,7 +527,7 @@ class mesh_creator(object):
     - Initializes data structures to store mesh, grains, phases, and nodes
     - voxel_dict is initialized as defaultdict(list) to store node lists per voxel
     """
-    def __init__(self, dim):
+    def __init__(self, dim: Sequence[int]) -> None:
 
         if not (type(dim) is tuple and len(dim) == 3):
             raise ValueError(f"Dimension dim must be a 3-tuple, not {type(dim)}, {dim}")
@@ -539,7 +545,7 @@ class mesh_creator(object):
         self.prec_vf_voxels = None  # actual volume fraction of precipitates in voxelated structure
         return
 
-    def get_ind(self, addr):
+    def get_ind(self, addr: Sequence[int]) -> int:
         """
         Convert a voxel address to a flat array index
 
@@ -570,7 +576,7 @@ class mesh_creator(object):
             raise ValueError(f"Address must be a single int or a 3-tuple, not {type(addr)}, {addr}.")
         return ind
 
-    def create_voxels(self, sim_box):
+    def create_voxels(self, sim_box: Any) -> None:
         """
         Generate voxels and nodes inside the defined RVE (simulation box)
 
@@ -643,11 +649,25 @@ class mesh_creator(object):
         return
 
 
-def set_stats(grains, ar=None, omega=None, deq_min=None, deq_max=None,
-              asp_min=None, asp_max=None, omega_min=None, omega_max=None,
-              size=100, voxels=60, gtype='Elongated', rveunit='um',
-              periodicity=False, VF=None, phasename=None, phasenum=None,
-              save_file=False):
+def set_stats(
+              grains: Sequence[float],
+              ar: Optional[Sequence[float]] = None,
+              omega: Optional[Sequence[float]] = None,
+              deq_min: Optional[float] = None,
+              deq_max: Optional[float] = None,
+              asp_min: Optional[float] = None,
+              asp_max: Optional[float] = None,
+              omega_min: Optional[float] = None,
+              omega_max: Optional[float] = None,
+              size: int = 100,
+              voxels: int = 60,
+              gtype: str = 'Elongated',
+              rveunit: str = 'um',
+              periodicity: Union[bool, str] = False,
+              VF: Optional[float] = None,
+              phasename: Optional[str] = None,
+              phasenum: Optional[int] = None,
+              save_file: bool = False) -> dict[str, Any]:
     """
     Create a dictionary containing statistical grain and RVE information
 

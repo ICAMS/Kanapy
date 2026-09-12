@@ -31,7 +31,7 @@ from orix.vector import Miller
 from abc import ABC
 from pathlib import Path
 from collections import Counter, defaultdict, deque
-from typing import Any, Sequence, Union, Dict, Tuple, List
+from typing import Any, Sequence, Union, Dict, Tuple, List, Optional
 
 
 MIN_GRAIN_SIZE_PIXELS = 10.0
@@ -75,7 +75,7 @@ Minimum number of points required to compute a convex hull.
 """
 
 
-def get_distinct_colormap(N, cmap='prism'):
+def get_distinct_colormap(N: int, cmap: str = 'prism') -> Any:
     """
     Generate N visually distinct colors as an RGB colormap.
 
@@ -91,7 +91,7 @@ def get_distinct_colormap(N, cmap='prism'):
     return col_
 
 
-def neighbors(r, c, connectivity=4):
+def neighbors(r: int, c: int, connectivity: int = 4) -> list[tuple[int, int]]:
     """
     Return the neighboring coordinates of a cell in a 2D grid.
 
@@ -127,7 +127,7 @@ def neighbors(r, c, connectivity=4):
                 if not (i == 0 and j == 0)]
 
 
-def mean_orientation_data(pixel_orientations, sym):
+def mean_orientation_data(pixel_orientations: Any, sym: Any) -> Any:
     """
     Return a normalized quaternion mean after symmetry equivalent alignment.
 
@@ -204,7 +204,7 @@ def mean_orientation_data(pixel_orientations, sym):
     return mean_quat / np.linalg.norm(mean_quat)
 
 
-def get_proper_symmetry_quaternions(sym):
+def get_proper_symmetry_quaternions(sym: Any) -> Any:
     """
     Return proper symmetry operators as scalar first quaternions.
 
@@ -360,7 +360,7 @@ def _refresh_node_misorientation_cache(G, node, sym_ops=None):
         G[node][neigh]["misorientation"] = float(angle)
 
 
-def merge_nodes(G, node1, node2, preserve_target_orientation=False):
+def merge_nodes(G: nx.Graph, node1: Any, node2: Any, preserve_target_orientation: bool = False) -> None:
     """
     Merge the pixel and attribute data of one node into another node.
 
@@ -437,7 +437,7 @@ def merge_nodes(G, node1, node2, preserve_target_orientation=False):
         _refresh_node_misorientation_cache(G, node2)
 
 
-def find_largest_neighbor(G, node):
+def find_largest_neighbor(G: nx.Graph, node: Any) -> Any:
     """
     Find the largest neighboring node of a given node in a graph
 
@@ -476,7 +476,7 @@ def find_largest_neighbor(G, node):
     return num_ln
 
 
-def find_sim_neighbor(G, nn, sym_ops=None):
+def find_sim_neighbor(G: nx.Graph, nn: Any, sym_ops: Any = None) -> Any:
     """
     Find the neighboring node most similar in orientation to the given node.
 
@@ -528,7 +528,7 @@ def find_sim_neighbor(G, nn, sym_ops=None):
     return neighbor, angle
 
 
-def get_node_boundary_stats(G, node_id, connectivity=4):
+def get_node_boundary_stats(G: nx.Graph, node_id: Any, connectivity: int = 4) -> dict[str, Any]:
     """
     Compute boundary diagnostics for one graph node.
 
@@ -676,7 +676,11 @@ def merge_boundary_artifact_nodes(
     return debug_records
 
 
-def summarize_labels(label_array, rotations, sym, wanted_labels=None):
+def summarize_labels(
+    label_array: np.ndarray,
+    rotations: Any,
+    sym: Any,
+    wanted_labels: Any = None) -> dict[str, Any]:
     """
     Summarize labeled pixels with average orientation and statistics.
 
@@ -762,7 +766,13 @@ def summarize_labels(label_array, rotations, sym, wanted_labels=None):
     return nodes
 
 
-def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=4):
+def build_graph_from_labeled_pixels(
+    label_array: np.ndarray,
+    rot: Any,
+    sym: Any,
+    dx: float,
+    dy: float,
+    connectivity: int = 4) -> nx.Graph:
     """
     Build a graph representation of a microstructure from labeled pixels.
 
@@ -851,7 +861,7 @@ def build_graph_from_labeled_pixels(label_array, rot, sym, dx, dy, connectivity=
     return G
 
 
-def visualize_graph(G, node_size=100, fs=12):
+def visualize_graph(G: nx.Graph, node_size: int = 100, fs: int = 12) -> Any:
     """
     Visualize a microstructure graph using a spring layout
 
@@ -881,7 +891,7 @@ def visualize_graph(G, node_size=100, fs=12):
     plt.show()
 
 
-def export_graph(G, filename, format="graphml"):
+def export_graph(G: nx.Graph, filename: Union[str, Path], format: str = "graphml") -> None:
     """
     Export a microstructure graph to a file in the specified format
 
@@ -909,7 +919,7 @@ def export_graph(G, filename, format="graphml"):
         raise ValueError("Only 'graphml' or 'gexf' formats are supported.")
 
 
-def find_similar_regions(array, tolerance=0.087, connectivity=1):
+def find_similar_regions(array: np.ndarray, tolerance: float = 0.087, connectivity: int = 1) -> Any:
     """
     Identify connected regions of similar values in a 2D array
 
@@ -1051,7 +1061,7 @@ def find_similar_regions_by_misorientation(ori_map, phase_mask, sym, tolerance=0
     return labeled_array.reshape(rows, cols), len(unique_components)
 
 
-def calc_error(odf_ref, odf_test, res=10.):
+def calc_error(odf_ref: Any, odf_test: Any, res: float = 10.) -> float:
     """
     Compute the normalized difference between two orientation distribution functions (ODFs)
 
@@ -1089,7 +1099,7 @@ def calc_error(odf_ref, odf_test, res=10.):
     return err
 
 
-def calc_orientations(odf, nori, res=None):
+def calc_orientations(odf: Any, nori: int, res: Any = None) -> Any:
     """
     Generate a set of orientations sampled from an orientation distribution function (ODF)
 
@@ -1149,7 +1159,13 @@ def calc_orientations(odf, nori, res=None):
     return Orientation(oq, symmetry=cs)
 
 
-def odf_est(ori, odf, nstep=50, step=0.5, halfwidth=None, verbose=False):
+def odf_est(
+    ori: Any,
+    odf: Any,
+    nstep: int = 50,
+    step: float = 0.5,
+    halfwidth: Any = None,
+    verbose: bool = False) -> Any:
     """
     Estimate an ODF from a set of orientations using iterative half-width adjustment
 
@@ -3142,7 +3158,7 @@ class EBSDmap:
                 plt.show()
 
 
-def get_ipf_colors(ori_list, color_key=0):
+def get_ipf_colors(ori_list: Any, color_key: int = 0) -> np.ndarray:
     """
     Get RGB colors for a list of orientations in radians
 
@@ -3172,10 +3188,23 @@ def get_ipf_colors(ori_list, color_key=0):
     return ocol
 
 
-def createOriset(num, ang, omega, hist=None, shared_area=None,
-                 cs=None, degree=True, Nbase=10000, resolution=None,
-                 res_low=5, res_high=25, res_step=2, lim=5, hw_init=None,
-                 verbose=False, full_output=False):
+def createOriset(
+    num: int,
+    ang: Any,
+    omega: float,
+    hist: Any = None,
+    shared_area: Any = None,
+    cs: Any = None,
+    degree: bool = True,
+    Nbase: int = 10000,
+    resolution: Optional[float] = None,
+    res_low: int = 5,
+    res_high: int = 25,
+    res_step: int = 2,
+    lim: int = 5,
+    hw_init: Any = None,
+    verbose: bool = False,
+    full_output: bool = False) -> Any:
     """
     Create a set of Euler angles according to an ODF defined by input orientations and kernel half-width
 
@@ -3187,24 +3216,24 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         Input set of Euler angles (in degrees or radians) defining the ODF
     omega : float
         Kernel half-width (in degrees or radians)
-    hist : array, optional
-        Histogram of MDF. Default is None
-    shared_area : array, optional
-        Shared area between pairs of grains. Default is None
+    hist : array or None, optional, default=None
+        Histogram of MDF.
+    shared_area : array or None, optional, default=None
+        Shared area between pairs of grains.
     cs : Symmetry, optional
         Crystal symmetry group. Default is 'm3m'
-    degree : bool, optional
-        If True, input angles and omega are in degrees. Default is True
-    Nbase : int, optional
-        Base number of orientations for artificial ODF. Default is 10000
-    resolution : float, optional
+    degree : bool, optional, default=True
+        If True, input angles and omega are in degrees.
+    Nbase : int, optional, default=10000
+        Base number of orientations for artificial ODF.
+    resolution : float or None, optional, default=None
         Resolution for orientation generation. If None, derived from omega
     res_low, res_high, res_step, lim : int, optional
         Parameters for texture reconstruction
-    verbose : bool, optional
-        If True, prints progress messages. Default is False
-    full_output : bool, optional
-        If True, returns additional reconstruction outputs. Default is False
+    verbose : bool, optional, default=False
+        If True, prints progress messages.
+    full_output : bool, optional, default=False
+        If True, returns additional reconstruction outputs.
 
     Returns
     -------
@@ -3272,7 +3301,13 @@ def createOriset(num, ang, omega, hist=None, shared_area=None,
         #return np.array(eng.Euler(orilist))
 
 
-def createOrisetRandom(num, omega=None, hist=None, shared_area=None, cs=None, Nbase=None):
+def createOrisetRandom(
+    num: int,
+    omega: Optional[float] = None,
+    hist: Any = None,
+    shared_area: Any = None,
+    cs: Any = None,
+    Nbase: Optional[int] = None) -> Any:
     """
     Create a set of Euler angles for a random texture
 

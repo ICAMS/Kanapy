@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+from typing import Any
 
 
-def collision_routine(E1, E2):
+def collision_routine(E1: Any, E2: Any) -> bool:
     """
     Detect and handle collision between two ellipsoid objects
 
@@ -39,7 +40,7 @@ def collision_routine(E1, E2):
     return overlap_status
 
 
-def collision_react(ell1, ell2):
+def collision_react(ell1: Any, ell2: Any) -> None:
     """
     Evaluates and modifies the magnitude and direction of the ellipsoid's velocity after collision
 
@@ -96,7 +97,13 @@ def collision_react(ell1, ell2):
     return
 
 
-def collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j):
+def collide_detect(
+    coef_i: np.ndarray,
+    coef_j: np.ndarray,
+    r_i: np.ndarray,
+    r_j: np.ndarray,
+    A_i: np.ndarray,
+    A_j: np.ndarray) -> bool:
     """
     Determines overlap between two static ellipsoids using the Algebraic Separation Condition
     developed by W. Wang et al., 2001. This function implements the method for two ellipsoids
@@ -104,17 +111,17 @@ def collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j):
 
     Parameters
     ----------
-    coef_i : numpy array
+    coef_i : numpy.ndarray
         Coefficients of ellipsoid i
-    coef_j : numpy array
+    coef_j : numpy.ndarray
         Coefficients of ellipsoid j
-    r_i : numpy array
+    r_i : numpy.ndarray
         Position vector of ellipsoid i
-    r_j : numpy array
+    r_j : numpy.ndarray
         Position vector of ellipsoid j
-    A_i : numpy array
+    A_i : numpy.ndarray
         Rotation matrix of ellipsoid i
-    A_j : numpy array
+    A_j : numpy.ndarray
         Rotation matrix of ellipsoid j
 
     Returns

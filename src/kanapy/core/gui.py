@@ -17,6 +17,7 @@ from .api import Microstructure
 from .initializations import RVE_creator, mesh_creator
 from .input_output import import_stats, write_stats
 from .entities import Simulation_Box
+from typing import Any, Optional
 
 if 'kanapy_mtex' in sys.modules:
     from kanapy_mtex.texture import EBSDmap
@@ -24,7 +25,7 @@ else:
     from kanapy.texture import EBSDmap
 
 
-def self_closing_message(message, duration=4000):
+def self_closing_message(message: str, duration: int = 4000) -> None:
     """
     Display a temporary popup message box that closes automatically after a given duration
 
@@ -59,8 +60,15 @@ def self_closing_message(message, duration=4000):
     return
 
 
-def add_label_and_entry(frame, row, label_text, entry_var, entry_type="entry", bold=False,
-                        options=None, col=0):
+def add_label_and_entry(
+    frame: Any,
+    row: int,
+    label_text: Optional[str],
+    entry_var: Any,
+    entry_type: str = "entry",
+    bold: bool = False,
+    options: Optional[list[Any]] = None,
+    col: int = 0) -> None:
     """
     Add a label and an input widget (entry, checkbox, or combobox) to a given frame
 
@@ -108,7 +116,7 @@ def add_label_and_entry(frame, row, label_text, entry_var, entry_type="entry", b
     return
 
 
-def parse_entry(entry):
+def parse_entry(entry: Any) -> Any:
     """
     Convert a comma-separated string into a list of integers
 

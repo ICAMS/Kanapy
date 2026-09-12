@@ -1,18 +1,19 @@
 import itertools
 import numpy as np
 import random
+from typing import Any, Optional, Sequence
 from .collisions import collision_routine
 from scipy.spatial import Delaunay
 
 
-def cub_oct_split(cub):
-    """ 
-    Splits cuboid object of the class :class:`~Cuboid` into eight smaller cuboid objects   
+def cub_oct_split(cub: Any) -> list[Any]:
+    """
+    Splits cuboid object of the class :class:`~Cuboid` into eight smaller cuboid objects
 
-    :param cub: Branch cuboid object containing ellipsoids 
+    :param cub: Branch cuboid object containing ellipsoids
     :type cub: object of the class :class:`~Cuboid`
     :returns: Eight new sub-branch cuboid objects in a list
-    :rtype: List 
+    :rtype: List
     """
     w = cub.width / 2.0
     h = cub.height / 2.0
@@ -72,7 +73,7 @@ class Simulation_Box(object):
         Position of the back boundary, initialized to depth.
     """
 
-    def __init__(self, size):
+    def __init__(self, size: Sequence[float]) -> None:
         self.w = size[0]  # Width
         self.h = size[1]  # Height
         self.d = size[2]  # Depth
@@ -160,7 +161,19 @@ class Ellipsoid(object):
     3. An empty list for storing voxels belonging to the ellipsoid is initialized.
     """
 
-    def __init__(self, iden, x, y, z, a, b, c, quat, phasenum=0, dup=None, points=None):
+    def __init__(
+            self,
+            iden: int,
+            x: float,
+            y: float,
+            z: float,
+            a: float,
+            b: float,
+            c: float,
+            quat: Any,
+            phasenum: int = 0,
+            dup: Any = None,
+            points: Optional[Any] = None) -> None:
         self.id = iden
         self.x = x
         self.y = y
@@ -193,7 +206,7 @@ class Ellipsoid(object):
         else:
             self.inner = self.create_poly(points)  # create a Delaunay tesselation of points
 
-    def get_pos(self):
+    def get_pos(self) -> np.ndarray:
         """
         Return the current position of the ellipsoid
 
@@ -204,7 +217,7 @@ class Ellipsoid(object):
         """
         return np.array([self.x, self.y, self.z])
 
-    def get_coeffs(self):
+    def get_coeffs(self) -> np.ndarray:
         """
         Return the semi-axes coefficients of the ellipsoid
 
@@ -215,7 +228,7 @@ class Ellipsoid(object):
         """
         return np.array([self.a, self.b, self.c])
 
-    def get_volume(self):
+    def get_volume(self) -> float:
         """
         Return the volume of the ellipsoid
 
@@ -226,7 +239,7 @@ class Ellipsoid(object):
         """
         return (4 / 3) * np.pi * self.a * self.b * self.c
 
-    def rotationMatrixGen(self):
+    def rotationMatrixGen(self) -> np.ndarray:
         """
         Compute the rotation matrix of the ellipsoid from its quaternion
 
@@ -261,7 +274,7 @@ class Ellipsoid(object):
                          [xY + wZ, 1.0 - (xX + zZ), yZ - wX],
                          [xZ - wY, yZ + wX, 1.0 - (xX + yY)]])
 
-    def surfacePointsGen(self, nang=20):
+    def surfacePointsGen(self, nang: int = 20) -> np.ndarray:
         """
         Generate points on the outer surface of the ellipsoid using its rotation matrix
 
@@ -291,7 +304,7 @@ class Ellipsoid(object):
         # Do the dot product with rotation matrix
         return stacked_xyz.dot(self.rotation_matrix)
 
-    def growth(self, fac):
+    def growth(self, fac: float) -> None:
         """
         Increase the size of the ellipsoid along its axes by a scaling factor
 
@@ -305,7 +318,7 @@ class Ellipsoid(object):
         self.c = self.oric * fac
         self.set_cub()
 
-    def Bbox(self):
+    def Bbox(self) -> Any:
         """
         Compute the axis-aligned bounding box of the ellipsoid using its surface points
 
@@ -325,7 +338,7 @@ class Ellipsoid(object):
         self.bbox_zmin, self.bbox_zmax = np.amin(
             new_surfPts[:, 2]), np.amax(new_surfPts[:, 2])
 
-    def get_cub(self):
+    def get_cub(self) -> Any:
         """
         Return the cuboid object of the ellipsoid
 
@@ -336,7 +349,7 @@ class Ellipsoid(object):
         """
         return self.cub
 
-    def set_cub(self):
+    def set_cub(self) -> None:
         """
         Initialize an object of the class Cuboid using the bounding box limits from Bbox
 
@@ -347,7 +360,7 @@ class Ellipsoid(object):
         self.cub = Cuboid(self.bbox_xmin, self.bbox_ymin, self.bbox_xmax,
                           self.bbox_ymax, self.bbox_zmin, self.bbox_zmax)
 
-    def create_poly(self, points):
+    def create_poly(self, points: Any) -> Any:
         """
         Create a polygon inside the ellipsoid
 
@@ -366,7 +379,7 @@ class Ellipsoid(object):
         """
         return Delaunay(points.dot(self.rotation_matrix))
 
-    def sync_poly(self, scale=None):
+    def sync_poly(self, scale: Optional[float] = None) -> None:
         """
         Move the center of the polygon to the center of the ellipsoid and scale the hull to fit inside the ellipsoid
 
@@ -409,7 +422,7 @@ class Ellipsoid(object):
         if any(self.inner.find_simplex(self.surface_points) >= 0):
             logging.error(f'Polyhedron too large for ellipsoid {self.id}. Reduce scale.')"""
 
-    def move(self, dt):
+    def move(self, dt: float) -> None:
         """
         Move the ellipsoid by updating its position vector using the Verlet integration method
 
@@ -439,7 +452,7 @@ class Ellipsoid(object):
         self.z = zz
         self.set_cub()
 
-    def gravity_effect(self, value):
+    def gravity_effect(self, value: float) -> None:
         """
         Move the ellipsoid downwards to mimic the effect of gravity acting on it
 
@@ -457,7 +470,7 @@ class Ellipsoid(object):
         self.z += 0
         self.set_cub()
 
-    def wallCollision(self, sim_box, periodicity):
+    def wallCollision(self, sim_box: Any, periodicity: bool) -> list[Any]:
         """
         Evaluate whether the ellipsoid collides with the boundaries of the simulation box
 
@@ -920,7 +933,14 @@ class Cuboid(object):
         Bounding box maximum along z
     """
 
-    def __init__(self, left, top, right, bottom, front, back):
+    def __init__(
+            self,
+            left: float,
+            top: float,
+            right: float,
+            bottom: float,
+            front: float,
+            back: float) -> None:
         self.left = left
         self.top = top
         self.right = right
@@ -932,7 +952,7 @@ class Cuboid(object):
         self.height = abs(self.bottom - self.top)
         self.depth = abs(self.back - self.front)
 
-    def intersect(self, other):
+    def intersect(self, other: Any) -> bool:
         """
         Evaluate whether the Cuboid object of the ellipsoid intersects with the Cuboid object of the Octree sub-branch
 
@@ -978,7 +998,7 @@ class Octree(object):
     3. particles list contains all the ellipsoids in the simulation domain for the tree trunk
     """
 
-    def __init__(self, level, cub, particles=[]):
+    def __init__(self, level: int, cub: Any, particles: list[Any] = []) -> None:
 
         self.maxlevel = 3  # max number of subdivisions
         self.level = level  # current level of subdivision
@@ -987,7 +1007,7 @@ class Octree(object):
         self.particles = particles  # list of particles
         self.branches = []  # empty list that is filled with 8 branches if subdivided
 
-    def get_cub(self):
+    def get_cub(self) -> Any:
         """
         Return the cuboid object of the octree sub-branch
 
@@ -998,7 +1018,7 @@ class Octree(object):
         """
         return self.cub
 
-    def subdivide(self):
+    def subdivide(self) -> None:
         """
         Divide the Octree sub-branch into eight further sub-branches and initialize each as an Octree object
 
@@ -1010,7 +1030,7 @@ class Octree(object):
             branch = Octree(self.level + 1, cub, [])
             self.branches.append(branch)
 
-    def add_particle(self, particle):
+    def add_particle(self, particle: Any) -> None:
         """
         Update the particle list of the Octree sub-branch
 
@@ -1021,7 +1041,7 @@ class Octree(object):
         """
         self.particles.append(particle)
 
-    def subdivide_particles(self):
+    def subdivide_particles(self) -> None:
         """
         Evaluate which ellipsoids belong to each Octree sub-branch by checking intersections
 
@@ -1034,7 +1054,7 @@ class Octree(object):
             if branch.get_cub().intersect(particle.get_cub()):
                 branch.add_particle(particle)
 
-    def make_neighborlist(self):
+    def make_neighborlist(self) -> None:
         """
         Find the neighbor list for each particle in the Octree sub-branch
 
@@ -1048,7 +1068,7 @@ class Octree(object):
             for branch in particle.branches:
                 particle.neighborlist.update(branch.particles)
 
-    def collisionsTest(self):
+    def collisionsTest(self) -> None:
         """
         Test for collisions between all ellipsoids in the Octree sub-branch
 
@@ -1095,7 +1115,7 @@ class Octree(object):
         # print(f'Collisions:', colp)
         return ncoll
 
-    def update(self):
+    def update(self) -> None:
         """
         Update the Octree and begin recursive subdivision or particle assignment
 

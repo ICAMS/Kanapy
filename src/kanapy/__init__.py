@@ -19,7 +19,22 @@ use pip install kanapy-mtex for version based on MTEX library, depending on Matl
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 import logging
-from importlib.metadata import version
+from importlib.metadata import version as distribution_version
+from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 compatibility
+    import tomli as tomllib
+
+
+def _get_version() -> str:
+    """Read the project version from pyproject.toml when running from source."""
+    pyproject = Path(__file__).resolve().parents[2] / 'pyproject.toml'
+    if pyproject.is_file():
+        with pyproject.open('rb') as file:
+            return tomllib.load(file)['project']['version']
+    return distribution_version('kanapy')
 
 # Re-export shared core and texture modules for convenience
 from .core import Microstructure, set_stats, pickle2microstructure, import_voxels,\
@@ -37,13 +52,12 @@ from .graph_workflow import (
     write_graph_result_outputs,
 )
 
-log_level = 20  # Levels for logging: 10: DEBUG, 20: INFO, 30: WARNING, 40: ERROR
-logging.basicConfig(level=log_level)  # set log level
+logger = logging.getLogger(__name__)
 poly_scale = 1.6
 __author__ = ('Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, '
               'Napat Vajragupta, Yousef Rezek, Hrushikesh Uday Bhimavarapu, Alexander Hartmaier')
 __email__ = 'alexander.hartmaier@rub.de'
-__version__ = version('kanapy')
+__version__ = _get_version()
 __backend__ = "orix"
 __all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxels",
            "import_stats", "write_stats", "start", "EBSDmap", "ODF",  "createOriset",
@@ -57,4 +71,4 @@ if triple_surf:
     from .core import create_ref_ell
     __all__.append("create_ref_ell")
 
-MTEX_AVAIL = __backend__  # legacy flag for downwards compatibility
+MTEX_AVAIL = False  # legacy flag for downwards compatibility
