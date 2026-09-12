@@ -3,8 +3,8 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python <3.13
-  - numpy <=2.2.6
+  - python <3.14
+  - numpy
   - scipy
   - matplotlib
   - jupyter
