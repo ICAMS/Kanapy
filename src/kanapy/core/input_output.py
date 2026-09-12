@@ -542,8 +542,9 @@ def export2abaqus(
                 raise ValueError(f"Unsupported loading_direction for strain: {loading_direction!r}")
 
             node, dof = strain_map[d]
-            v_lambda = float(mag)  # stretch ratio λ (e.g., 1.2 for +20%)
-            eps_true = v_lambda - 1.0  # your convention
+            #v_lambda = float(mag)  # stretch ratio λ (e.g., 1.2 for +20%)
+            #eps_true = v_lambda - 1.0  # your convention
+            eps_true = float(mag)  # true strain (e.g., 0.2 for +20%)
             disp = edge_lengths[d] * (np.exp(eps_true) - 1.0)
 
             f.write(f'{node}, {dof}, {dof}, {disp:.6f}\n')
