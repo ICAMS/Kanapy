@@ -6,7 +6,7 @@ Create porous microstructure
 Author: Alexander Hartmaier
 ICAMS, Ruhr University Bochum, Germany
 
-January 2024
+September 2026
 """
 import kanapy as knpy
 import numpy as np
@@ -32,7 +32,7 @@ ms_stats = {  # statistical data for dense phase
     "Simulation": {
         "periodicity": periodic, "output_units": "mm"},
     "Phase": {
-        "Name": name, "Number": 0, "Volume fraction": vf_pores}
+        "Name": name, "Number": 1, "Volume fraction": vf_pores}
 }
 
 # Generate microstructure object
@@ -43,13 +43,13 @@ ms.plot_stats_init()  # plot initial microstructure statistics and cut-offs for 
 ms.init_RVE()  # setup RVE geometry
 ms.pack(k_rep=0.01, k_att=0.01)  # packing will be stopped when desired volume fraction is reached
 ms.plot_ellipsoids()  # plot particles at the end of growth phase
-ms.voxelize()  # assigning particles to voxels, empty voxels will be considered as phase 1 (matrix)
+ms.voxelize()  # assigning particles to voxels, empty voxels will be considered as phase 0 (matrix)
 ms.plot_voxels(sliced=True, phases=False)  # plot voxel structure, phases=True will plot green/red contrast
 
 # plot voxels of porous phase
 mask = np.full(ms.mesh.dim, False, dtype=bool)
 for igr, ip in ms.mesh.grain_phase_dict.items():
-    if ip == 0:
+    if ip == 1:
         for nv in ms.mesh.grain_dict[igr]:
             i, j, k = np.unravel_index(nv-1, ms.mesh.dim, order='F')
             mask[i, j, k] = True

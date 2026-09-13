@@ -5,14 +5,15 @@ texture will be preserved in a statistical sense.
 
 Author: Alexander Hartmaier
 ICAMS, Ruhr University Bochum, Germany
-November 2023
+
+September 2026
 """
 
 import kanapy as knpy
 import numpy as np
 from orix.quaternion import Orientation
 
-fname = 'ebsd_316L_500x500.ang'  # name of ang file to be imported
+fname = '../fixtures/ebsd_316L_500x500.ang'  # name of ang file to be imported
 nvox = 30         # number of voxels per side
 box_length = 50   # side length of generated RVE in micron
 periodic = False  # create RVE with periodic structure
@@ -68,7 +69,7 @@ ms.plot_voxels(sliced=False)  # plot voxels colored according to grain number
 ms.plot_stats_init(show_res=True, gs_data=ms_data['gs_data'], ar_data=ms_data['ar_data'])
 
 # generate and assign grains orientations
-ms.generate_orientations(ebsd)
+ms.generate_orientations(ebsd, verbose=True, res_low=7, res_high=7, lim=0, hw_init=np.radians(7))
 ms.plot_voxels(ori=True)
 
 # plot pole figures from EBSD map and RVE in comparison

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Create 2-phase microstructure
+Create 2-phase microstructure with a dense packing of grains.
 
 Authors: Golsa Tolooei Eshlaghi, Alexander Hartmaier
 ICAMS, Ruhr University Bochum, Germany
 
-December 2023
+September 2026
 """
 import kanapy as knpy
 from math import pi
@@ -36,7 +36,7 @@ ms_stats_0 = {  # statistical data for dense phase
         "Name": name0, "Number": 0, "Volume fraction": vf0}
 }
 
-ms_stats_1 = {  # statistical data for porosity (will not be considered explicitly)
+ms_stats_1 = {  # statistical data for the second grain-bearing phase
     "Grain type": "Elongated",
     "Equivalent diameter": {
         "sig": 0.8, "scale": 9.0, "cutoff_min": 5.0, "cutoff_max": 11.0},
@@ -61,7 +61,7 @@ ms.plot_stats_init()  # plot initial microstructure statistics and cut-offs for 
 ms.init_RVE()  # initialize RVE and generate particle distribution according to statistical data
 ms.pack(k_rep=0.01, k_att=0.01)  # packing will be stopped when desired volume fraction is reached
 ms.plot_ellipsoids(phases=True)  # plot particles at the end of growth phase (phases=False plots colored ellips)
-ms.voxelize()  # assigning particles to voxels, empty voxels will be considered as phase 1 (porosity)
+ms.voxelize()  # assigning particles to voxels, both grain-bearing phases fill the RVE; no matrix is defined
 ms.plot_voxels(sliced=True, phases=True)  # plot voxels, phases=False will plot colored voxels for phase 0
 # plot phase-specific statistical information of RVE (for phases=False: entire RVE) and compare to initial stats
 ms.plot_stats_init(show_res=True)

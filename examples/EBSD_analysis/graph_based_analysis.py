@@ -7,6 +7,11 @@ skips the grain statistics and legacy interactive plotting workflow. Users who
 need the classic interactive Kanapy analysis plots should create an
 ``EBSDmap`` object directly with the usual plotting flags. Routine graph users
 usually need only the four handoff files written by this example.
+
+Authors: Jun Xue, Alexander Hartmaier
+ICAMS, Ruhr University Bochum, Germany
+
+September 2026 
 """
 
 from pathlib import Path
@@ -60,7 +65,7 @@ def main():
     only because the example explicitly enables them.
     """
     base_dir = Path(__file__).resolve().parent
-    input_file = base_dir / "p558_250x_1.ang"
+    input_file = base_dir / ".." / "fixtures" / "ebsd_316L_500x500.ang"
     output_dir = base_dir / "2D_graph_result"
 
     graph_config = knpy.EBSDGraphConfig(

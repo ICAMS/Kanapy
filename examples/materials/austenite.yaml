@@ -1,0 +1,43 @@
+"phase_identifier": "Austenite"
+"material_id": 4
+"bravais_lattice": "fcc"
+"space_group": "Fm-3m"
+"space_group_number": 225
+"constitutive_model":
+  "$schema": "https://raw.githubusercontent.com/Ronakshoghi/MiMeDat/main/crystal_plasticity_constitutive_model_metadata_schema.json"
+  "elastic_model_name": "Anisotropic Elasticity"
+  "elastic_parameters":
+    "C11": 256500.0
+    "C12": 111100.0
+    "C44": 77200.0
+  "plastic_model_name": "ICAMS CP-UMAT"
+  "plastic_parameters":
+    "number_slip_systems": 12
+    "reference_shear_rate": 0.001
+    "stress_exponent": 1250.0
+    "hardening_exponent": 0.0
+    "initial_critical_resolved_shear_stress": 170.0
+    "saturated_slip_resistance": 500.0
+    "reference_hardening_rate": 0.0
+    "self_hardening": 1.0
+    "cross_hardening": 1.4
+    "kinematic_hardening_a1": 5000.0
+    "kinematic_hardening_b1": 100.0
+    "chaboche_parameter_a2": 650000.0
+    "chaboche_parameter_b2": 49900.0
+    "chaboche_parameter_a3": 0.0
+    "chaboche_parameter_b3": 0.0
+    "ohno_wang_exponent": 10.0
+    "nslip_kinematic_hardening": 48
+    "flag_trip": 0
+    "flag_gradient_plasticity": 0
+    "flag_int": 0
+    "flag_super_alloy": 0
+    "flag_back_stress": 3
+    "flag_isotropic_hardening": 1
+    "flag_octree": 0
+    "flag_thermal": 0
+  "units":
+    "Stress": "MPa"
+    "Stiffness": "MPa"
+    "Time": "s"

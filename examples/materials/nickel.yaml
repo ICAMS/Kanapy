@@ -1,0 +1,36 @@
+"phase_identifier": "Nickel"
+"material_id": 6
+"bravais_lattice": "fcc"
+"space_group": "Fm-3m"
+"space_group_number": 225
+"constitutive_model":
+  "$schema": "https://raw.githubusercontent.com/Ronakshoghi/MiMeDat/main/crystal_plasticity_constitutive_model_metadata_schema.json"
+  "elastic_model_name": "Anisotropic Elasticity"
+  "elastic_parameters":
+    "C11": 176000.0
+    "C12": 112000.0
+    "C44": 64000.0
+  "plastic_model_name": "ICAMS CP-UMAT"
+  "plastic_parameters":
+    "number_slip_systems": 12
+    "reference_shear_rate": 50.0
+    "stress_exponent": 3.0
+    "hardening_exponent": 0.05
+    "initial_critical_resolved_shear_stress": 50.0
+    "saturated_slip_resistance": 1500.0
+    "reference_hardening_rate": 950.0
+    "self_hardening": 1.0
+    "cross_hardening": 1.4
+    "flag_trip": 0
+    "flag_gradient_plasticity": 0
+    "flag_int": 0
+    "flag_super_alloy": 0
+    "flag_back_stress": 0
+    "flag_isotropic_hardening": 1
+    "flag_octree": 0
+    "flag_thermal": 0
+    "super_flag": 1
+  "units":
+    "Stress": "MPa"
+    "Stiffness": "MPa"
+    "Time": "s"

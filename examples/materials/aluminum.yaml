@@ -1,0 +1,35 @@
+"phase_identifier": "Aluminum"
+"material_id": 1
+"bravais_lattice": "fcc"
+"space_group": "Fm-3m"
+"space_group_number": 225
+"constitutive_model":
+  "$schema": "https://raw.githubusercontent.com/Ronakshoghi/MiMeDat/main/crystal_plasticity_constitutive_model_metadata_schema.json"
+  "elastic_model_name": "Anisotropic Elasticity"
+  "elastic_parameters":
+    "C11": 247000.0
+    "C12": 147000.0
+    "C44": 125000.0
+  "plastic_model_name": "ICAMS CP-UMAT"
+  "plastic_parameters":
+    "number_slip_systems": 12
+    "reference_shear_rate": 1.0e-06
+    "stress_exponent": 20.0
+    "hardening_exponent": 2.25
+    "initial_critical_resolved_shear_stress": 20.0
+    "saturated_slip_resistance": 1500.0
+    "reference_hardening_rate": 60.0
+    "self_hardening": 1.0
+    "cross_hardening": 1.4
+    "flag_trip": 0
+    "flag_gradient_plasticity": 0
+    "flag_int": 0
+    "flag_super_alloy": 0
+    "flag_back_stress": 0
+    "flag_isotropic_hardening": 1
+    "flag_octree": 0
+    "flag_thermal": 0
+  "units":
+    "Stress": "MPa"
+    "Stiffness": "MPa"
+    "Time": "s"
