@@ -11,7 +11,7 @@ from kanapy.core.input_output import import_voxels
 
 @pytest.fixture(scope="module")
 def reconstructed_grains():
-    path = Path(__file__).resolve().parents[1] / "examples" / "notebooks"
+    path = Path(__file__).resolve().parents[1] / "examples" / "fixtures"
     ms = import_voxels("demo_voxels.json", path=str(path))
     # Exercise unequal face areas as well as nonplanar shared interfaces.
     scale = np.array([1., 1.4, 1.8])
