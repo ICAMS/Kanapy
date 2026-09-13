@@ -101,10 +101,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">version</span> <span class="k">as</span> <span class="n">pkg_version</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_length_unit</span><span class="p">,</span> <span class="n">length_scale_from_um</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.grains</span><span class="w"> </span><span class="kn">import</span> <span class="n">calc_polygons</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.entities</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulation_Box</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.input_output</span><span class="w"> </span><span class="kn">import</span> <span class="n">export2abaqus</span><span class="p">,</span> <span class="n">writeAbaqusMat</span><span class="p">,</span> <span class="n">read_dump</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.initializations</span><span class="w"> </span><span class="kn">import</span> <span class="n">RVE_creator</span><span class="p">,</span> <span class="n">mesh_creator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.input_output</span><span class="w"> </span><span class="kn">import</span> <span class="n">export2abaqus</span><span class="p">,</span> <span class="n">writeAbaqusMat</span><span class="p">,</span> <span class="n">read_dump</span><span class="p">,</span> <span class="n">_abaqus_phase_options</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.initializations</span><span class="w"> </span><span class="kn">import</span> <span class="n">RVE_creator</span><span class="p">,</span> <span class="n">mesh_creator</span><span class="p">,</span> <span class="n">normalize_phase_descriptors</span><span class="p">,</span> <span class="n">validate_matrix_mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.packing</span><span class="w"> </span><span class="kn">import</span> <span class="n">packingRoutine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.voxelization</span><span class="w"> </span><span class="kn">import</span> <span class="n">voxelizationRoutine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.smoothingGB</span><span class="w"> </span><span class="kn">import</span> <span class="n">smoothingRoutine</span>
@@ -218,28 +219,15 @@
                 <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">"File: '</span><span class="si">{}</span><span class="s2">' does not exist in the current working directory!</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
         <span class="k">elif</span> <span class="n">descriptor</span> <span class="o">==</span> <span class="s1">'from_voxels'</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">from_voxels</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">descriptor</span><span class="p">]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">=</span> <span class="mi">1</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="n">descriptor</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Kanapy is only tested for 2 phases, use at own risk for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="si">}</span><span class="s1"> phases'</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="n">descriptor</span>
             <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s1">'WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.'</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s1">'Phase'</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">vf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'Phase'</span><span class="p">][</span><span class="s1">'Volume fraction'</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">vf</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
-                <span class="c1"># consider precipitates/pores/particles with volume fraction fill_factor in a matrix</span>
-                <span class="c1"># precipitates will be phase 0, matrix phase will get number 1 and be assigned to grain with ID 0</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="o">=</span> <span class="n">vf</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">=</span> <span class="mi">2</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Only one phase with volume fraction </span><span class="si">{</span><span class="n">vf</span><span class="si">}</span><span class="s1"> is given.'</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Will consider a sparse distribution in a matrix phase with phase number 1, '</span> <span class="o">+</span>
-                             <span class="s1">'which will be assigned to grain with ID 0.'</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Input descriptor and file are given. Only descriptor will be used.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="n">normalize_phase_descriptors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Grain type'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'Matrix'</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'Phase'</span><span class="p">][</span><span class="s1">'Volume fraction'</span><span class="p">]</span>
         <span class="k">return</span>
 
 <span class="w">    </span><span class="sd">"""</span>
@@ -275,8 +263,8 @@
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 <span class="sd">        - Assumes that `RVE_creator` and `Simulation_Box` are available and correctly configured.</span>
-<span class="sd">        - If `self.precipit` is defined, an additional 'Matrix' phase is automatically</span>
-<span class="sd">          added to preserve total volume fraction normalization.</span>
+<span class="sd">        - A ``Grain type: Matrix`` descriptor reserves phase 0 for GRAIN0.</span>
+<span class="sd">          A single grain phase with fraction below one adds an implicit matrix.</span>
 
 <span class="sd">        Attributes Updated</span>
 <span class="sd">        ------------------</span>
@@ -288,8 +276,8 @@
 <span class="sd">        simbox : Simulation_Box</span>
 <span class="sd">            Object containing the geometric boundaries of the RVE domain.</span>
 <span class="sd">        precipit : float or None</span>
-<span class="sd">            If not None, a 'Matrix' phase is appended to `rve.phase_names` and its</span>
-<span class="sd">            volume fraction is adjusted as (1.0 - precipit).</span>
+<span class="sd">            Total fraction of grain-bearing phases when a matrix is present.</span>
+<span class="sd">            The matrix fraction is ``1.0 - precipit``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -298,14 +286,12 @@
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">descriptor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="n">descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">descriptor</span><span class="p">]</span>
-
-        <span class="c1"># initialize RVE, including mesh dimensions and particle distribution</span>
+        <span class="n">descriptor</span> <span class="o">=</span> <span class="n">normalize_phase_descriptors</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rve</span> <span class="o">=</span> <span class="n">RVE_creator</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="n">nsteps</span><span class="o">=</span><span class="n">nsteps</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'Matrix'</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_vf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span> <span class="o">=</span> <span class="n">descriptor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_vf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">matrix_phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nparticles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">nparticles</span>
         <span class="c1"># store geometry in simbox object</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">simbox</span> <span class="o">=</span> <span class="n">Simulation_Box</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span></div>
@@ -555,8 +541,12 @@
             <span class="n">empty_vox</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">grain_store</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> \
-            <span class="n">calc_polygons</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>  <span class="c1"># updates RVE_data</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">calc_polygons</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">empty_vox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">empty_vox</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_store</span>
         <span class="c1"># verify that geometry['Grains'] and mesh.grain_dict are consistent</span>
 <span class="w">        </span><span class="sd">"""if np.any(self.geometry['Ngrains'] != self.ngrains):</span>
 <span class="sd">            logging.warning(f'Only facets for {self.geometry["Ngrains"]} created, but {self.Ngr} grains in voxels.')</span>
@@ -592,12 +582,10 @@
                 <span class="n">ph_vol</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">+=</span> <span class="n">grd</span><span class="p">[</span><span class="s1">'Volume'</span><span class="p">]</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">'Volume fractions of phases in polyhedral geometry:'</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>  <span class="c1"># Matrix GRAIN0 has no reconstructed grain geometry.</span>
                 <span class="n">vf</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">ph_vol</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">vf</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s1">%)'</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">empty_vox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># add removed grain again</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">empty_vox</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">grain_store</span></div>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">phase_names</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">vf</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s1">%)'</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.generate_orientations">
@@ -641,9 +629,14 @@
 <span class="sd">        shared_area : array_like, float, or None, optional, default=None</span>
 <span class="sd">            Shared grain boundary area for weighted orientation generation.</span>
 <span class="sd">        iphase : int or None, optional, default=None</span>
-<span class="sd">            Phase index for which orientations are generated. If None, all phases are processed.</span>
+<span class="sd">            Phase index to update, preserving orientations in other phases. If None,</span>
+<span class="sd">            all grain-bearing phases are processed. Matrix GRAIN0 is always excluded.</span>
 <span class="sd">        verbose : bool, default=False</span>
 <span class="sd">            If True, prints additional information during orientation generation.</span>
+<span class="sd">        ebsd_phase_map : dict, optional</span>
+<span class="sd">            Passed through kwargs; maps canonical Kanapy phase IDs to EBSD phase</span>
+<span class="sd">            indices. By default, a matrix occupies phase 0 and grain phase i</span>
+<span class="sd">            uses EBSD phase i-1; without a matrix, indices are unchanged.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -699,8 +692,18 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">gba</span> <span class="o">=</span> <span class="n">shared_area</span>
 
-        <span class="n">ori_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">ngr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">iphase</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'iphase must identify an existing phase.'</span><span class="p">)</span>
+        <span class="n">ori_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="ow">or</span> <span class="p">{})</span> <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">ori_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># GRAIN0 is the unoriented matrix, never a CP grain.</span>
+        <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">iphase</span> <span class="o">!=</span> <span class="n">ip</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">phase_grains</span> <span class="o">=</span> <span class="p">[</span><span class="n">gid</span> <span class="k">for</span> <span class="n">gid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span>
+                            <span class="k">if</span> <span class="n">gid</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span> <span class="o">==</span> <span class="n">ip</span><span class="p">]</span>
+            <span class="n">ngr</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">phase_grains</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ngr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">EBSDmap</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">iphase</span> <span class="o">==</span> <span class="n">ip</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">gba</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">MTEX</span><span class="p">:</span>
@@ -709,7 +712,9 @@
                         <span class="n">gba</span> <span class="o">=</span> <span class="kc">None</span>
                     <span class="n">allowed</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"res_low"</span><span class="p">,</span> <span class="s2">"res_high"</span><span class="p">,</span> <span class="s2">"res_step"</span><span class="p">,</span> <span class="s2">"lim"</span><span class="p">,</span> <span class="s2">"hw_init"</span><span class="p">]</span>
                     <span class="n">ori_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">}</span>
-                    <span class="n">ori_rve</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">calcORI</span><span class="p">(</span><span class="n">ngr</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">ip</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="n">gba</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">ori_kwargs</span><span class="p">)</span>
+                    <span class="n">source_phase</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ebsd_phase_map"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                        <span class="n">ip</span><span class="p">,</span> <span class="n">ip</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"precipit"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ip</span><span class="p">)</span>
+                    <span class="n">ori_rve</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">calcORI</span><span class="p">(</span><span class="n">ngr</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">source_phase</span><span class="p">,</span> <span class="n">shared_area</span><span class="o">=</span><span class="n">gba</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="o">**</span><span class="n">ori_kwargs</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">texture</span> <span class="o">=</span> <span class="s2">"ODF"</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'random'</span><span class="p">,</span> <span class="s1">'rnd'</span><span class="p">]:</span>
@@ -726,11 +731,8 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Argument to generate grain orientation must be either of type EBSDmap or '</span> <span class="o">+</span>
                                  <span class="s1">'"random" or "unimodal"'</span><span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">igr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">==</span> <span class="n">ip</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">iphase</span> <span class="o">==</span> <span class="n">ip</span><span class="p">:</span>
-                        <span class="n">ind</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="n">ip</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ngrains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                        <span class="n">ori_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ori_rve</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">igr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">phase_grains</span><span class="p">):</span>
+                <span class="n">ori_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]</span> <span class="o">=</span> <span class="n">ori_rve</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">:]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="o">=</span> <span class="n">ori_dict</span>
         <span class="k">return</span></div>
 
@@ -1162,12 +1164,20 @@
             <span class="n">enhanced_plot</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">ax_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">phases</span><span class="p">:</span>
-            <span class="n">nphases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="ow">and</span> <span class="mi">0</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="c1"># in case of precipit, remove irregular grain 0 from analysis</span>
-                <span class="n">nphases</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">phase_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">ip</span> <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="p">)</span>
+                         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precipit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">present</span> <span class="o">=</span> <span class="p">{</span><span class="n">pid</span> <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">pid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">gid</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">}</span>
+                <span class="n">phase_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">ip</span> <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="n">phase_ids</span> <span class="k">if</span> <span class="n">ip</span> <span class="ow">in</span> <span class="n">present</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">nphases</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">phase_ids</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="n">nphases</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">phase_ids</span><span class="p">)</span>
+        <span class="c1"># Comparison lists may include a matrix slot; retain canonical phase IDs.</span>
+        <span class="n">gs_data</span><span class="p">,</span> <span class="n">gs_param</span><span class="p">,</span> <span class="n">ar_data</span><span class="p">,</span> <span class="n">ar_param</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="n">values</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="n">phase_ids</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">phases</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="k">else</span> <span class="n">values</span>
+            <span class="k">for</span> <span class="n">values</span> <span class="ow">in</span> <span class="p">(</span><span class="n">gs_data</span><span class="p">,</span> <span class="n">gs_param</span><span class="p">,</span> <span class="n">ar_data</span><span class="p">,</span> <span class="n">ar_param</span><span class="p">)</span>
+        <span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">gs_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">gs_data</span><span class="p">)</span> <span class="o">==</span> <span class="n">nphases</span><span class="p">):</span>
             <span class="n">gs_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">gs_data</span><span class="p">]</span> <span class="o">*</span> <span class="n">nphases</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">gs_param</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">gs_param</span><span class="p">)</span> <span class="o">==</span> <span class="n">nphases</span><span class="p">):</span>
@@ -1184,7 +1194,7 @@
 <span class="sd">        """</span>
         <span class="n">iphase</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">flist</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nphases</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">slot</span><span class="p">,</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">phase_ids</span><span class="p">):</span>
             <span class="n">stats_list</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="n">phases</span><span class="p">:</span>
@@ -1246,8 +1256,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">rve_stats</span> <span class="o">=</span> <span class="n">stats_list</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rve_stats_labels</span> <span class="o">=</span> <span class="n">labels</span>
             <span class="n">fig</span> <span class="o">=</span> <span class="n">plot_output_stats</span><span class="p">(</span><span class="n">stats_list</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">iphase</span><span class="o">=</span><span class="n">iphase</span><span class="p">,</span>
-                                    <span class="n">gs_data</span><span class="o">=</span><span class="n">gs_data</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span> <span class="n">gs_param</span><span class="o">=</span><span class="n">gs_param</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span>
-                                    <span class="n">ar_data</span><span class="o">=</span><span class="n">ar_data</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span> <span class="n">ar_param</span><span class="o">=</span><span class="n">ar_param</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span>
+                                    <span class="n">gs_data</span><span class="o">=</span><span class="n">gs_data</span><span class="p">[</span><span class="n">slot</span><span class="p">],</span> <span class="n">gs_param</span><span class="o">=</span><span class="n">gs_param</span><span class="p">[</span><span class="n">slot</span><span class="p">],</span>
+                                    <span class="n">ar_data</span><span class="o">=</span><span class="n">ar_data</span><span class="p">[</span><span class="n">slot</span><span class="p">],</span> <span class="n">ar_param</span><span class="o">=</span><span class="n">ar_param</span><span class="p">[</span><span class="n">slot</span><span class="p">],</span>
                                     <span class="n">save_files</span><span class="o">=</span><span class="n">save_files</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span>
                                     <span class="n">enhanced_plot</span><span class="o">=</span><span class="n">enhanced_plot</span><span class="p">)</span>
             <span class="n">flist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
@@ -1404,7 +1414,7 @@
         <span class="k">if</span> <span class="n">show_res</span><span class="p">:</span> <span class="n">get_res</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="n">silent</span><span class="p">:</span> <span class="n">show_res</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">descriptor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">descriptor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">descriptor</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span> <span class="n">descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">descriptor</span><span class="p">]</span>
+        <span class="n">descriptor</span> <span class="o">=</span> <span class="n">normalize_phase_descriptors</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">porous</span><span class="p">:</span> <span class="n">descriptor</span> <span class="o">=</span> <span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">nel</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
 
@@ -1413,6 +1423,8 @@
 
         <span class="n">flist</span><span class="p">,</span> <span class="n">descs</span> <span class="o">=</span> <span class="p">[]</span> <span class="p">,</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">des</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">descriptor</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">des</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Grain type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"Matrix"</span><span class="p">:</span>
+                <span class="k">continue</span>
             <span class="n">gsp</span> <span class="o">=</span> <span class="n">arp</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">statistical_descriptors</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">get_res</span><span class="p">:</span>
@@ -1493,7 +1505,7 @@
             <span class="n">units</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">ialloy</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">nsdv</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">360</span><span class="p">,</span>
-            <span class="n">crystal_plasticity</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">crystal_plasticity</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">phase_props</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">boundary_conditions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">props_file</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1523,23 +1535,34 @@
 <span class="sd">        grain_dict : dict or None, optional, default=None</span>
 <span class="sd">            Dictionary mapping grain IDs to nodes. Default is `self.mesh.grain_dict`.</span>
 <span class="sd">        dual_phase : bool, optional, default=False</span>
-<span class="sd">            If True, generate input for dual-phase materials. Default is False.</span>
+<span class="sd">            If True, group elements into phase sets for standard plasticity.</span>
+<span class="sd">            Keep False for grain-wise CP materials, including multiphase RVEs.</span>
 <span class="sd">        thermal : bool, optional, default=False</span>
 <span class="sd">            If True, include thermal material definitions. Default is False.</span>
 <span class="sd">        units : str or None, optional, default=None</span>
-<span class="sd">            Units for the model, 'mm' or 'um'. Default is `self.rve.units`.</span>
+<span class="sd">            Output length units: 'µm', 'um', 'mm', or 'm'. Default is `self.rve.units`.</span>
 <span class="sd">        ialloy : list, object, or None, optional, default=None</span>
 <span class="sd">            Material definitions for each phase. Default is `self.rve.ialloy`.</span>
-<span class="sd">        props_file : str, path-like, list, or None, optional, default=None</span>
-<span class="sd">            Numeric Abaqus include file, or one file per phase. Relative paths are</span>
-<span class="sd">            resolved against `path`. Enables the new CP-UMAT format: selector,</span>
-<span class="sd">            three Euler angles, four zeros, then the included shared constants.</span>
-<span class="sd">            Uses ialloy (or the RVE default) as selector, falling back to 0.</span>
-<span class="sd">            Include files are validated but never modified. Omit for legacy format.</span>
+<span class="sd">        props_file : str, path-like, list, or None, optional</span>
+<span class="sd">            For multiple phases, both props_file and crystal_plasticity must be</span>
+<span class="sd">            lists of length nphases, indexed by zero-based phase ID. For CP phases,</span>
+<span class="sd">            supply numeric shared constants; each grain's definition in _mat.inp</span>
+<span class="sd">            includes them after the selector, Euler angles and four zeros.</span>
+<span class="sd">            For standard J2 phases, supply an Abaqus material-property include,</span>
+<span class="sd">            written under PHASE{id}_MAT in _geom.inp. A None entry requires False</span>
+<span class="sd">            for crystal_plasticity and writes only the solid-section reference;</span>
+<span class="sd">            define that material yourself in CAE or by editing _geom.inp.</span>
+<span class="sd">            For grain 0, an empty PHASE0_MAT definition is also written so the</span>
+<span class="sd">            assigned material is visible in CAE.</span>
+<span class="sd">            Relative include paths are resolved against path. Omit for legacy output.</span>
 <span class="sd">        nsdv : int, optional</span>
-<span class="sd">            Number of state variables per integration point for crystal plasticity. Default is 360.</span>
-<span class="sd">        crystal_plasticity : bool, optional, default=False</span>
-<span class="sd">            If True, enable crystal plasticity material definitions. Default is False.</span>
+<span class="sd">            Number of state variables per integration point (default: 360).</span>
+<span class="sd">        crystal_plasticity : bool, list of bool, or None, optional</span>
+<span class="sd">            Select CP per phase. Multiple phases with props_file require a list.</span>
+<span class="sd">            CP requires grain-wise sets (dual_phase=False) and grain orientations.</span>
+<span class="sd">            Grain 0 is reserved for standard plasticity in phase 0. With a</span>
+<span class="sd">            single-phase props_file, None retains the historical CP default;</span>
+<span class="sd">            pass False explicitly for standard plasticity.</span>
 <span class="sd">        phase_props : dict or None, optional, default=None</span>
 <span class="sd">            Additional phase-specific material properties.</span>
 <span class="sd">        boundary_conditions : dict or None, optional, default=None</span>
@@ -1555,7 +1578,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            - If no voxelized or smoothened mesh is available when required.</span>
 <span class="sd">            - If invalid `nodes` argument is provided.</span>
-<span class="sd">            - If units are not 'mm' or 'um'.</span>
+<span class="sd">            - If units are not 'µm', 'um', 'mm', or 'm'.</span>
 <span class="sd">            - If the list `ialloy` is longer than the number of phases in the RVE.</span>
 <span class="sd">            - If periodic boundary conditions are requested but the RVE is non-periodic.</span>
 
@@ -1611,8 +1634,8 @@
             <span class="n">voxel_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">voxel_dict</span>
         <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">units</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">units</span>
-        <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">units</span> <span class="o">==</span> <span class="s1">'mm'</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">units</span> <span class="o">==</span> <span class="s1">'um'</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Units must be either "mm" or "um", not </span><span class="si">{</span><span class="n">units</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">normalize_length_unit</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+        <span class="n">validate_matrix_mapping</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="s2">"grain_phase_dict"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
             <span class="n">nct</span> <span class="o">=</span> <span class="s1">'abq_dual_phase'</span>
             <span class="k">if</span> <span class="n">grain_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1628,14 +1651,15 @@
             <span class="n">nct</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'abq_px_</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">grain_dict</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span>
         <span class="k">if</span> <span class="n">ialloy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ialloy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rve</span><span class="o">.</span><span class="n">ialloy</span>
+        <span class="n">files</span><span class="p">,</span> <span class="n">cp</span> <span class="o">=</span> <span class="n">_abaqus_phase_options</span><span class="p">(</span><span class="n">props_file</span><span class="p">,</span> <span class="n">crystal_plasticity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dual_phase</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">cp</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Crystal plasticity requires grain-wise sets (dual_phase=False).'</span><span class="p">)</span>
+            <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span> <span class="ow">and</span> <span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Grain 0 requires standard plasticity in phase 0.'</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Crystal plasticity requires grain orientations. Run generate_orientations first.'</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">props_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">dual_phase</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'props_file requires grain-wise materials (dual_phase=False).'</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'props_file requires grain orientations. Run generate_orientations first.'</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">props_file</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">props_file</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'props_file must contain one include file per phase.'</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">ialloy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">ialloy</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ialloy</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -1646,9 +1670,16 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'List of values in ialloy is larger than number of phases in RVE.'</span> <span class="o">+</span>
                              <span class="sa">f</span><span class="s1">'(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ialloy</span><span class="p">)</span><span class="si">}</span><span class="s1"> &gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nphases</span><span class="si">}</span><span class="s1">)'</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nphases</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">grpd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span>
+            <span class="n">grpd</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">grpd</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">cp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">cp</span><span class="p">):</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">gid</span> <span class="k">for</span> <span class="n">gid</span> <span class="ow">in</span> <span class="n">grain_dict</span> <span class="k">if</span> <span class="n">gid</span> <span class="o">!=</span> <span class="mi">0</span>
+                       <span class="ow">and</span> <span class="n">cp</span><span class="p">[(</span><span class="n">grpd</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+                       <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+                            <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span><span class="p">[</span><span class="n">gid</span><span class="p">])</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,))]</span>
+            <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Missing orientations for CP grains: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">boundary_conditions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">boundary_conditions</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">"apply_bc"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
@@ -1677,15 +1708,17 @@
                       <span class="n">dual_phase</span><span class="o">=</span><span class="n">dual_phase</span><span class="p">,</span>
                       <span class="n">ialloy</span><span class="o">=</span><span class="n">ialloy</span><span class="p">,</span> <span class="n">grain_phase_dict</span><span class="o">=</span><span class="n">grpd</span><span class="p">,</span>
                       <span class="n">thermal</span><span class="o">=</span><span class="n">thermal</span><span class="p">,</span>
-                      <span class="n">crystal_plasticity</span><span class="o">=</span><span class="n">crystal_plasticity</span><span class="p">,</span>
+                      <span class="n">crystal_plasticity</span><span class="o">=</span><span class="n">cp</span> <span class="k">if</span> <span class="n">cp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">crystal_plasticity</span><span class="p">,</span>
+                      <span class="n">props_file</span><span class="o">=</span><span class="n">props_file</span><span class="p">,</span>
                       <span class="n">phase_props</span><span class="o">=</span><span class="n">phase_props</span><span class="p">,</span>
                       <span class="n">boundary_conditions</span><span class="o">=</span><span class="n">boundary_conditions</span><span class="p">)</span>
 
         <span class="c1"># if orientations exist and ialloy is defined also write material file with Euler angles</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ialloy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">cp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">cp</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ialloy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
             <span class="n">writeAbaqusMat</span><span class="p">(</span><span class="n">ialloy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_ori_dict</span><span class="p">,</span>
                            <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">8</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'mat.inp'</span><span class="p">,</span>
-                           <span class="n">grain_phase_dict</span><span class="o">=</span><span class="n">grpd</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="n">nsdv</span><span class="p">,</span> <span class="n">props_file</span><span class="o">=</span><span class="n">props_file</span><span class="p">)</span>
+                           <span class="n">grain_phase_dict</span><span class="o">=</span><span class="n">grpd</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="n">nsdv</span><span class="p">,</span> <span class="n">props_file</span><span class="o">=</span><span class="n">props_file</span><span class="p">,</span>
+                           <span class="n">crystal_plasticity</span><span class="o">=</span><span class="n">cp</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">file</span></div>
 
 
@@ -1698,7 +1731,8 @@
             <span class="n">ori</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="s1">'./'</span><span class="p">,</span>
-            <span class="n">nsdv</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">360</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nsdv</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">360</span><span class="p">,</span>
+            <span class="n">crystal_plasticity</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Write Abaqus material input file using grain orientations for crystal plasticity</span>
 
@@ -1712,6 +1746,9 @@
 <span class="sd">            Material identifiers for each phase. Default is `self.rve.ialloy`.</span>
 <span class="sd">        props_file : str, path-like, list, or None, optional, default=None</span>
 <span class="sd">            Optional CP-UMAT include file or one include file per phase.</span>
+<span class="sd">        crystal_plasticity : list of bool or None, optional</span>
+<span class="sd">            Per-phase CP flags when using include files; PHASE0 must be False</span>
+<span class="sd">            when GRAIN0 is present. Lists use canonical phase IDs.</span>
 <span class="sd">        ori : dict, array-like, or None, optional, default=None</span>
 <span class="sd">            Dictionary or array of grain orientations. Default is `self.mesh.grain_ori_dict`.</span>
 <span class="sd">        file : str or os.PathLike or None, optional, default=None</span>
@@ -1760,7 +1797,9 @@
                 <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">'_mat.inp'</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
-        <span class="n">writeAbaqusMat</span><span class="p">(</span><span class="n">ialloy</span><span class="p">,</span> <span class="n">ori</span><span class="p">,</span> <span class="n">props_file</span><span class="o">=</span><span class="n">props_file</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="n">nsdv</span><span class="p">)</span></div>
+        <span class="n">writeAbaqusMat</span><span class="p">(</span><span class="n">ialloy</span><span class="p">,</span> <span class="n">ori</span><span class="p">,</span> <span class="n">props_file</span><span class="o">=</span><span class="n">props_file</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">file</span><span class="p">,</span> <span class="n">nsdv</span><span class="o">=</span><span class="n">nsdv</span><span class="p">,</span>
+                       <span class="n">grain_phase_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">,</span>
+                       <span class="n">crystal_plasticity</span><span class="o">=</span><span class="n">crystal_plasticity</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Microstructure.output_neper">
@@ -2792,7 +2831,7 @@
 <span class="sd">            Whether the mesh is structured. Default is True.</span>
 <span class="sd">        ialloy : int, optional, default=0</span>
 <span class="sd">            Alloy index for selecting material properties from the built-in library. Default is 0.</span>
-<span class="sd">        length_unit : {'µm', 'mm', 'm'}, optional, default='µm'</span>
+<span class="sd">        length_unit : {'µm', 'um', 'mm', 'm'}, optional, default='µm'</span>
 <span class="sd">            Unit for length scaling.</span>
 
 <span class="sd">        Returns</span>
@@ -2809,15 +2848,7 @@
 <span class="sd">            If `phases` is not a dict or a list of dicts when provided</span>
 <span class="sd">        """</span>
 
-        <span class="c1"># interpret length_unit argument</span>
-        <span class="k">if</span> <span class="n">length_unit</span> <span class="o">==</span> <span class="s1">'µm'</span><span class="p">:</span>
-            <span class="n">length_scale</span> <span class="o">=</span> <span class="mf">1.0</span>
-        <span class="k">elif</span> <span class="n">length_unit</span> <span class="o">==</span> <span class="s1">'mm'</span><span class="p">:</span>
-            <span class="n">length_scale</span> <span class="o">=</span> <span class="mf">1e-3</span>
-        <span class="k">elif</span> <span class="n">length_unit</span> <span class="o">==</span> <span class="s1">'m'</span><span class="p">:</span>
-            <span class="n">length_scale</span> <span class="o">=</span> <span class="mf">1e-6</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"length_unit must be 'µm', 'mm', or 'm'"</span><span class="p">)</span>
+        <span class="n">length_scale</span> <span class="o">=</span> <span class="n">length_scale_from_um</span><span class="p">(</span><span class="n">length_unit</span><span class="p">)</span>
 
         <span class="c1"># Material library definitions (pulled from mod_alloys.f)</span>
         <span class="n">material_library</span> <span class="o">=</span> <span class="p">{</span>

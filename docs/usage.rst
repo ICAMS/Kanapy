@@ -117,7 +117,7 @@ be stored and read from JSON files. In the following the essentail keywords:
   - ``RVE`` takes two types of input: the side lengths of the final RVE 
     required and the number of voxels per RVE side length. 
   - ``Simulation``  takes in two inputs: A boolean value for periodicity (True/False) 
-    and the required unit scale ('mm' or 'um' = :math:`\mu m`) for the output 
+    and the required unit scale ('mm', 'm', or 'µm'/'um' = :math:`\mu m`) for the output
     ABAQUS .inp file.
   - ``Phase`` (optional) Information about phase name, number and volume fraction.
 
@@ -135,7 +135,7 @@ be stored and read from JSON files. In the following the essentail keywords:
              value: diameter/1000. Since the maximum packing density of ellipsoides is 
              about 65%, the full space filling structure is achieved during voxelization.
           5. The input unit scale should be in :math:`\mu m` and the user can choose between 
-             'mm' or 'um' (= :math:`\mu m`) as the unit scale in which output to the 
+             'mm', 'm', or 'µm'/'um' (= :math:`\mu m`) as the unit scale in which output to the
              ABAQUS .inp file will be written. 
 
 .. _Normal distribution's: https://en.wikipedia.org/wiki/Normal_distribution   
@@ -458,3 +458,87 @@ and components are shown here:
 For further viewing customizations refer to OVITO's documentation_.
 
 .. _documentation: https://ovito.org/manual/           
+
+
+Multiphase structures with a matrix or dispersed phase
+------------------------------------------------------
+
+A phase descriptor with ``'Grain type': 'Matrix'`` defines material occupying
+voxels left between the grain-bearing phases. It has a phase name and volume
+fraction, but no grain-size distribution and no generated particles. For example::
+
+    matrix = {
+        'Grain type': 'Matrix',
+        'Phase': {'Name': 'Matrix', 'Volume fraction': 0.5},
+    }
+    # grain_a and grain_b have normal grain descriptors with fractions 0.2 and 0.3.
+    ms = kanapy.Microstructure([grain_a, grain_b, matrix])
+    ms.init_RVE()
+    ms.pack()
+    ms.voxelize()
+
+Kanapy moves the matrix descriptor to index 0, preserving the relative order of
+all grain-bearing phases. In this example the canonical phase IDs are:
+
+* ``PHASE0``: matrix; represented by ``GRAIN0``.
+  It may be continuous or discontinuous, embedding grains or being embedded in grains as dispersed phase (precipitate or porosity).
+* ``PHASE1``: grains A; grain numbers start from 1.
+* ``PHASE2``: grains B; grain numbers start from 1.
+
+All per-phase arrays and Abaqus material lists use this canonical order,
+including ``ialloy``, ``props_file``, and ``crystal_plasticity``. Descriptor
+``Phase.Number`` values are updated to match these indices. Without an explicit
+matrix, the descriptor order is retained and phase 0 can contain ordinary grains
+(including a single-phase polycrystal).
+The existing single-descriptor convention (fraction below one implies a matrix)
+remains supported, including when descriptors are loaded from JSON.
+
+The matrix has zero generated particles. If matrix voxels exist, they form one
+aggregate entry in ``mesh.grain_dict`` under key 0, mapped to phase 0 in
+``mesh.grain_phase_dict``. Consequently ``mesh.ngrains_phase[0]`` counts one
+aggregate region, not a generated crystallographic grain. No orientation is
+assigned to ``GRAIN0``; its Abaqus section uses ``PHASE0_MAT`` and requires a
+standard material rather than crystal plasticity. Grain-bearing phases may use
+CP independently::
+
+    ms.generate_orientations('random', iphase=1)
+    ms.generate_orientations('random', iphase=2)  # preserves phase 1 orientations
+    ms.write_abq(
+        ialloy=[0, 4, 5],
+        props_file=['matrix_j2.inc', 'phase1_cp.inc', 'phase2_cp.inc'],
+        crystal_plasticity=[False, True, True],
+    )
+
+``write_abq_ori`` accepts the same per-phase material lists and CP flags.
+Partially oriented structures preserve their available orientations when written
+to and imported from voxel JSON. Missing orientations for a CP grain must be
+provided before exporting a complete CP deck.
+
+Phase fractions must be finite and nonnegative and sum to one (within numerical
+tolerance). Only one matrix is supported, with a fraction strictly between zero
+and one. Target fractions describe the particle population; packing and voxel
+resolution affect the realized fractions, available as ``ms.vf_vox``. Grain
+statistics omit the matrix while preserving the actual phase IDs of the other
+phases. A phase that loses all grains during voxelization retains its phase ID
+and a zero grain count.
+
+A runnable example is provided in
+``examples/dual_phase_microstructures/three_phase_matrix.py``.
+
+""""""""""""""""""""""""""""
+Migration from matrix PHASE1
+""""""""""""""""""""""""""""
+
+The matrix convention is now ``GRAIN0`` / ``PHASE0``. This is a breaking change:
+legacy voxel files mapping grain 0 to phase 1 are rejected. For structures using
+the former convention, swap phase IDs 0 and 1 in grain-to-phase mappings, voxel
+phase arrays, phase names, fractions, counts, and material lists. Grain IDs,
+voxel grain labels, and mesh connectivity do not change. Rename matrix material
+references from ``PHASE1_MAT`` to ``PHASE0_MAT`` and update grain-bearing phase
+selectors accordingly. Explicit matrix descriptors are reordered automatically;
+external material lists and saved voxel metadata must be migrated by the caller.
+Structures without ``GRAIN0`` or a matrix descriptor keep their existing IDs.
+
+For EBSD orientation generation with a matrix, grain phase 1 uses EBSD phase 0,
+phase 2 uses EBSD phase 1, and so on. Override this correspondence with
+``ebsd_phase_map={kanapy_phase_id: ebsd_phase_index}`` when needed.

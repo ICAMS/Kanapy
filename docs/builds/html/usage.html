@@ -67,6 +67,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#visualize-the-packing-simulation">Visualize the packing simulation</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#multiphase-structures-with-a-matrix-or-dispersed-phase">Multiphase structures with a matrix or dispersed phase</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#migration-from-matrix-phase1">Migration from matrix PHASE1</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="method.html">Modeling</a></li>
@@ -207,7 +211,7 @@ microstructure contains equiaxed grains then this field is also not necessary.</
 <li><p><code class="docutils literal notranslate"><span class="pre">RVE</span></code> takes two types of input: the side lengths of the final RVE
 required and the number of voxels per RVE side length.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Simulation</span></code>  takes in two inputs: A boolean value for periodicity (True/False)
-and the required unit scale (‘mm’ or ‘um’ = <span class="math notranslate nohighlight">\(\mu m\)</span>) for the output
+and the required unit scale (‘mm’, ‘m’, or ‘µm’/’um’ = <span class="math notranslate nohighlight">\(\mu m\)</span>) for the output
 ABAQUS .inp file.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Phase</span></code> (optional) Information about phase name, number and volume fraction.</p></li>
 </ul>
@@ -229,7 +233,7 @@ are initialized with null volume. At each time step, they grow in size by the
 value: diameter/1000. Since the maximum packing density of ellipsoides is
 about 65%, the full space filling structure is achieved during voxelization.</p></li>
 <li><p>The input unit scale should be in <span class="math notranslate nohighlight">\(\mu m\)</span> and the user can choose between
-‘mm’ or ‘um’ (= <span class="math notranslate nohighlight">\(\mu m\)</span>) as the unit scale in which output to the
+‘mm’, ‘m’, or ‘µm’/’um’ (= <span class="math notranslate nohighlight">\(\mu m\)</span>) as the unit scale in which output to the
 ABAQUS .inp file will be written.</p></li>
 </ol>
 </div>
@@ -547,6 +551,82 @@ and components are shown here:</p>
 <a class="reference internal image-reference" href="_images/UI_options.png"><img alt="_images/UI_options.png" src="_images/UI_options.png" style="width: 750px;" />
 </a>
 <p>For further viewing customizations refer to OVITO’s <a class="reference external" href="https://ovito.org/manual/">documentation</a>.</p>
+</section>
+</section>
+<section id="multiphase-structures-with-a-matrix-or-dispersed-phase">
+<h2>Multiphase structures with a matrix or dispersed phase<a class="headerlink" href="#multiphase-structures-with-a-matrix-or-dispersed-phase" title="Link to this heading"></a></h2>
+<p>A phase descriptor with <code class="docutils literal notranslate"><span class="pre">'Grain</span> <span class="pre">type':</span> <span class="pre">'Matrix'</span></code> defines material occupying
+voxels left between the grain-bearing phases. It has a phase name and volume
+fraction, but no grain-size distribution and no generated particles. For example:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">matrix</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="s1">'Grain type'</span>:<span class="w"> </span><span class="s1">'Matrix'</span>,
+<span class="w">    </span><span class="s1">'Phase'</span>:<span class="w"> </span><span class="o">{</span><span class="s1">'Name'</span>:<span class="w"> </span><span class="s1">'Matrix'</span>,<span class="w"> </span><span class="s1">'Volume fraction'</span>:<span class="w"> </span><span class="m">0</span>.5<span class="o">}</span>,
+<span class="o">}</span>
+<span class="c1"># grain_a and grain_b have normal grain descriptors with fractions 0.2 and 0.3.</span>
+<span class="nv">ms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>kanapy.Microstructure<span class="o">([</span>grain_a,<span class="w"> </span>grain_b,<span class="w"> </span>matrix<span class="o">])</span>
+ms.init_RVE<span class="o">()</span>
+ms.pack<span class="o">()</span>
+ms.voxelize<span class="o">()</span>
+</pre></div>
+</div>
+<p>Kanapy moves the matrix descriptor to index 0, preserving the relative order of
+all grain-bearing phases. In this example the canonical phase IDs are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PHASE0</span></code>: matrix; represented by <code class="docutils literal notranslate"><span class="pre">GRAIN0</span></code>.
+It may be continuous or discontinuous, embedding grains or being embedded in grains as dispersed phase (precipitate or porosity).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PHASE1</span></code>: grains A; grain numbers start from 1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PHASE2</span></code>: grains B; grain numbers start from 1.</p></li>
+</ul>
+<p>All per-phase arrays and Abaqus material lists use this canonical order,
+including <code class="docutils literal notranslate"><span class="pre">ialloy</span></code>, <code class="docutils literal notranslate"><span class="pre">props_file</span></code>, and <code class="docutils literal notranslate"><span class="pre">crystal_plasticity</span></code>. Descriptor
+<code class="docutils literal notranslate"><span class="pre">Phase.Number</span></code> values are updated to match these indices. Without an explicit
+matrix, the descriptor order is retained and phase 0 can contain ordinary grains
+(including a single-phase polycrystal).
+The existing single-descriptor convention (fraction below one implies a matrix)
+remains supported, including when descriptors are loaded from JSON.</p>
+<p>The matrix has zero generated particles. If matrix voxels exist, they form one
+aggregate entry in <code class="docutils literal notranslate"><span class="pre">mesh.grain_dict</span></code> under key 0, mapped to phase 0 in
+<code class="docutils literal notranslate"><span class="pre">mesh.grain_phase_dict</span></code>. Consequently <code class="docutils literal notranslate"><span class="pre">mesh.ngrains_phase[0]</span></code> counts one
+aggregate region, not a generated crystallographic grain. No orientation is
+assigned to <code class="docutils literal notranslate"><span class="pre">GRAIN0</span></code>; its Abaqus section uses <code class="docutils literal notranslate"><span class="pre">PHASE0_MAT</span></code> and requires a
+standard material rather than crystal plasticity. Grain-bearing phases may use
+CP independently:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ms.generate_orientations<span class="o">(</span><span class="s1">'random'</span>,<span class="w"> </span><span class="nv">iphase</span><span class="o">=</span><span class="m">1</span><span class="o">)</span>
+ms.generate_orientations<span class="o">(</span><span class="s1">'random'</span>,<span class="w"> </span><span class="nv">iphase</span><span class="o">=</span><span class="m">2</span><span class="o">)</span><span class="w">  </span><span class="c1"># preserves phase 1 orientations</span>
+ms.write_abq<span class="o">(</span>
+<span class="w">    </span><span class="nv">ialloy</span><span class="o">=[</span><span class="m">0</span>,<span class="w"> </span><span class="m">4</span>,<span class="w"> </span><span class="m">5</span><span class="o">]</span>,
+<span class="w">    </span><span class="nv">props_file</span><span class="o">=[</span><span class="s1">'matrix_j2.inc'</span>,<span class="w"> </span><span class="s1">'phase1_cp.inc'</span>,<span class="w"> </span><span class="s1">'phase2_cp.inc'</span><span class="o">]</span>,
+<span class="w">    </span><span class="nv">crystal_plasticity</span><span class="o">=[</span>False,<span class="w"> </span>True,<span class="w"> </span>True<span class="o">]</span>,
+<span class="o">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">write_abq_ori</span></code> accepts the same per-phase material lists and CP flags.
+Partially oriented structures preserve their available orientations when written
+to and imported from voxel JSON. Missing orientations for a CP grain must be
+provided before exporting a complete CP deck.</p>
+<p>Phase fractions must be finite and nonnegative and sum to one (within numerical
+tolerance). Only one matrix is supported, with a fraction strictly between zero
+and one. Target fractions describe the particle population; packing and voxel
+resolution affect the realized fractions, available as <code class="docutils literal notranslate"><span class="pre">ms.vf_vox</span></code>. Grain
+statistics omit the matrix while preserving the actual phase IDs of the other
+phases. A phase that loses all grains during voxelization retains its phase ID
+and a zero grain count.</p>
+<p>A runnable example is provided in
+<code class="docutils literal notranslate"><span class="pre">examples/dual_phase_microstructures/three_phase_matrix.py</span></code>.</p>
+<section id="migration-from-matrix-phase1">
+<h3>Migration from matrix PHASE1<a class="headerlink" href="#migration-from-matrix-phase1" title="Link to this heading"></a></h3>
+<p>The matrix convention is now <code class="docutils literal notranslate"><span class="pre">GRAIN0</span></code> / <code class="docutils literal notranslate"><span class="pre">PHASE0</span></code>. This is a breaking change:
+legacy voxel files mapping grain 0 to phase 1 are rejected. For structures using
+the former convention, swap phase IDs 0 and 1 in grain-to-phase mappings, voxel
+phase arrays, phase names, fractions, counts, and material lists. Grain IDs,
+voxel grain labels, and mesh connectivity do not change. Rename matrix material
+references from <code class="docutils literal notranslate"><span class="pre">PHASE1_MAT</span></code> to <code class="docutils literal notranslate"><span class="pre">PHASE0_MAT</span></code> and update grain-bearing phase
+selectors accordingly. Explicit matrix descriptors are reordered automatically;
+external material lists and saved voxel metadata must be migrated by the caller.
+Structures without <code class="docutils literal notranslate"><span class="pre">GRAIN0</span></code> or a matrix descriptor keep their existing IDs.</p>
+<p>For EBSD orientation generation with a matrix, grain phase 1 uses EBSD phase 0,
+phase 2 uses EBSD phase 1, and so on. Override this correspondence with
+<code class="docutils literal notranslate"><span class="pre">ebsd_phase_map={kanapy_phase_id:</span> <span class="pre">ebsd_phase_index}</span></code> when needed.</p>
 </section>
 </section>
 </section>

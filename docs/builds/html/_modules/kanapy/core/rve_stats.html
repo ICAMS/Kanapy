@@ -871,6 +871,8 @@
     <span class="n">arr_c</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">arr_eqd</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">igr</span><span class="p">,</span> <span class="n">vlist</span> <span class="ow">in</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">igr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># The matrix region is not a crystallographic grain.</span>
         <span class="c1"># decide if phase-specific analysis is performed</span>
         <span class="k">if</span> <span class="n">iphase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">iphase</span> <span class="o">!=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">grain_phase_dict</span><span class="p">[</span><span class="n">igr</span><span class="p">]:</span>
             <span class="k">continue</span>

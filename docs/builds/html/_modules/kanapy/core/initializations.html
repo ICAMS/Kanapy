@@ -88,9 +88,80 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_length_unit</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">lognorm</span><span class="p">,</span> <span class="n">vonmises</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+
+
+<div class="viewcode-block" id="validate_matrix_mapping">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.validate_matrix_mapping">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_matrix_mapping</span><span class="p">(</span><span class="n">mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Reject obsolete or conflicting GRAIN0 mappings without renumbering data."""</span>
+    <span class="k">if</span> <span class="n">mapping</span> <span class="ow">and</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mapping</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'GRAIN0 must belong to matrix PHASE0; migrate legacy phase IDs and material lists.'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">gid</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">gid</span><span class="p">,</span> <span class="n">pid</span> <span class="ow">in</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Matrix PHASE0 may only contain GRAIN0.'</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="normalize_phase_descriptors">
+<a class="viewcode-back" href="../../../kanapy.html#kanapy.core.initializations.normalize_phase_descriptors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_phase_descriptors</span><span class="p">(</span><span class="n">descriptors</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Copy descriptors and reserve phase 0 for an optional grain-free matrix.</span>
+
+<span class="sd">    ``Grain type: Matrix`` marks an explicit matrix descriptor, which is moved</span>
+<span class="sd">    to index 0. Other phases retain their relative order. A single grain phase</span>
+<span class="sd">    with fraction below one retains the legacy implicit matrix convention.</span>
+<span class="sd">    Phase numbers are the resulting zero-based list indices.</span>
+<span class="sd">    """</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">([</span><span class="n">descriptors</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">descriptors</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">descriptors</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">stats</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'At least one phase descriptor is required.'</span><span class="p">)</span>
+    <span class="n">matrices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Grain type'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'Matrix'</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="p">(</span><span class="n">matrices</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Define at most one matrix and at least one grain-bearing phase.'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">matrices</span><span class="p">:</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">stats</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">matrix</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">vf</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Phase'</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Volume fraction'</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vf</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">vf</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">stats</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s1">'Grain type'</span><span class="p">:</span> <span class="s1">'Matrix'</span><span class="p">,</span>
+                          <span class="s1">'Phase'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'Name'</span><span class="p">:</span> <span class="s1">'Matrix'</span><span class="p">,</span> <span class="s1">'Volume fraction'</span><span class="p">:</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">vf</span><span class="p">}})</span>
+    <span class="c1"># The matrix has no grain-size descriptor, but the first descriptor must</span>
+    <span class="c1"># carry global geometry and simulation settings. Do not copy alloy selectors.</span>
+    <span class="k">if</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Grain type'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'Matrix'</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'RVE'</span><span class="p">,</span> <span class="s1">'Simulation'</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">provider</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">d</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">provider</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">provider</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">'RVE'</span><span class="p">:</span>
+                        <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ialloy'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">fractions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">desc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stats</span><span class="p">):</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="n">desc</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">'Phase'</span><span class="p">,</span> <span class="p">{</span><span class="s1">'Name'</span><span class="p">:</span> <span class="sa">f</span><span class="s1">'Phase_</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">'</span><span class="p">})</span>
+        <span class="n">phase</span><span class="p">[</span><span class="s1">'Number'</span><span class="p">]</span> <span class="o">=</span> <span class="n">ip</span>
+        <span class="n">vf</span> <span class="o">=</span> <span class="n">phase</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Volume fraction'</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">fractions</span><span class="p">))</span>
+        <span class="n">phase</span><span class="p">[</span><span class="s1">'Volume fraction'</span><span class="p">]</span> <span class="o">=</span> <span class="n">vf</span>
+        <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vf</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">vf</span><span class="p">)</span> <span class="ow">or</span> <span class="n">vf</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Phase volume fractions must be finite and nonnegative.'</span><span class="p">)</span>
+        <span class="n">fractions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vf</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">fractions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">total</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">total</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Sum of all phase fractions exceeds 1: </span><span class="si">{</span><span class="n">fractions</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">total</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Phase volume fractions must sum to 1.'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Grain type'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'Matrix'</span> <span class="ow">and</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">fractions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span>
+               <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">stats</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Matrix volume fraction must be between 0 and 1.'</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stats</span></div>
+
 
 
 <div class="viewcode-block" id="stat_names">
@@ -162,7 +233,7 @@
 <span class="sd">    periodic : bool</span>
 <span class="sd">        Whether the RVE is periodic</span>
 <span class="sd">    units : str</span>
-<span class="sd">        Units of RVE dimensions, either "mm" or "um"</span>
+<span class="sd">        Output length units: "µm", "um", "mm", or "m"</span>
 <span class="sd">    nparticles : list of int</span>
 <span class="sd">        Number of particles for each phase</span>
 <span class="sd">    particle_data : list of dict</span>
@@ -188,7 +259,7 @@
 <span class="sd">    2. Data written in output files include:</span>
 <span class="sd">       - Ellipsoid attributes: Major, Minor, Equivalent diameters and tilt angle</span>
 <span class="sd">       - RVE attributes: size, number of voxels, voxel resolution</span>
-<span class="sd">       - Simulation attributes: periodicity and output unit scale (mm or μm) for ABAQUS .inp file</span>
+<span class="sd">       - Simulation attributes: periodicity and output length units (µm, um, mm, or m) for ABAQUS .inp file</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -458,6 +529,9 @@
                 <span class="k">return</span> <span class="n">pdict</span>
             <span class="k">return</span> <span class="n">pdict</span>
 
+        <span class="n">stats_dicts</span> <span class="o">=</span> <span class="n">normalize_phase_descriptors</span><span class="p">(</span><span class="n">stats_dicts</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix_phase</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Grain type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"Matrix"</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">stats_dicts</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
         <span class="c1"># Start RVE generation</span>
         <span class="k">if</span> <span class="n">from_voxels</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">'Creating an RVE from voxel input'</span><span class="p">)</span>
@@ -468,7 +542,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># tuple of lengths along Cartesian axes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># tuple of number of voxels along Cartesian axes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Boolean for periodicity of RVE</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Units of RVE dimensions, either "mm" or "um" (micron)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Output length units: "µm", "um", "mm", or "m"</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ialloy</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Number of alloy in ICAMS CP-UMAT</span>
         <span class="n">phase_names</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of names of phases</span>
         <span class="n">phase_vf</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of volume fractions of phases</span>
@@ -502,11 +576,10 @@
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">!=</span> <span class="n">nvox</span><span class="p">:</span>
                         <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Conflicting RVE voxel dimensions in descriptors: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">nvox</span><span class="si">}</span><span class="s1">.'</span> <span class="o">+</span>
                                         <span class="s1">'Using first value.'</span><span class="p">)</span>
-                <span class="c1"># Extract Alloy number for ICAMS CP-UMAT</span>
-                <span class="k">if</span> <span class="s2">"ialloy"</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">[</span><span class="s1">'RVE'</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">ialloy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s1">'RVE'</span><span class="p">][</span><span class="s1">'ialloy'</span><span class="p">])</span>
             <span class="k">elif</span> <span class="n">ip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'RVE properties must be specified in descriptors for first phase.'</span><span class="p">)</span>
+
+            <span class="n">ialloy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'RVE'</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'ialloy'</span><span class="p">))</span>
 
             <span class="c1"># Extract other simulation attributes, must be specified for phase 0</span>
             <span class="k">if</span> <span class="s2">"Simulation"</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -519,10 +592,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span> <span class="o">=</span> <span class="n">periodic</span>
                 <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodic</span> <span class="o">!=</span> <span class="n">periodic</span><span class="p">:</span>
                     <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Inconsistent values for periodicity. Using periodicity: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">periodic</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
-                <span class="n">units</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"Simulation"</span><span class="p">][</span><span class="s2">"output_units"</span><span class="p">])</span>
-                <span class="c1"># Raise ValueError if units are not specified as 'mm' or 'um'</span>
-                <span class="k">if</span> <span class="n">units</span> <span class="o">!=</span> <span class="s1">'mm'</span> <span class="ow">and</span> <span class="n">units</span> <span class="o">!=</span> <span class="s1">'um'</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Output units can only be "mm" or "um"!'</span><span class="p">)</span>
+                <span class="n">units</span> <span class="o">=</span> <span class="n">normalize_length_unit</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"Simulation"</span><span class="p">][</span><span class="s2">"output_units"</span><span class="p">])</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span>
                 <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">!=</span> <span class="n">units</span><span class="p">:</span>
@@ -537,11 +607,14 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">phase_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Phase_</span><span class="si">{</span><span class="n">ip</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
                 <span class="n">phase_vf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">))</span>  <span class="c1"># volume fraction can only be unspecified for last phase</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">),</span> <span class="mf">1.</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Sum of all phase fractions exceeds 1: </span><span class="si">{</span><span class="n">phase_vf</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
             <span class="c1"># Extract grains shape attributes to initialize particles</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">from_voxels</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Grain type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"Matrix"</span> <span class="ow">or</span> <span class="n">phase_vf</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">nparticles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">continue</span>
                 <span class="k">if</span> <span class="n">stats</span><span class="p">[</span><span class="s2">"Grain type"</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"Elongated"</span><span class="p">,</span> <span class="s2">"Equiaxed"</span><span class="p">,</span> <span class="s2">"Free"</span><span class="p">]:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'The value for "Grain type" must be either "Equiaxed" or "Elongated".'</span><span class="p">)</span>
                 <span class="n">part_dict</span> <span class="o">=</span> <span class="n">init_particles</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span>
@@ -559,10 +632,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">phase_names</span> <span class="o">=</span> <span class="n">phase_names</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">phase_vf</span> <span class="o">=</span> <span class="n">phase_vf</span>
-        <span class="n">nall</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ialloy</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">nall</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">nall</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">):</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">nall</span><span class="si">}</span><span class="s1"> values of "ialloy" provided, but only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">phase_vf</span><span class="p">)</span><span class="si">}</span><span class="s1"> phases defined.'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ialloy</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ialloy</span> <span class="o">=</span> <span class="n">ialloy</span>
         <span class="k">return</span></div>
 
@@ -786,7 +856,7 @@
 <span class="sd">    gtype : str, optional</span>
 <span class="sd">        Grain type, either 'Elongated' or 'Equiaxed'</span>
 <span class="sd">    rveunit : str, optional</span>
-<span class="sd">        Unit of RVE dimensions ('um' or 'mm')</span>
+<span class="sd">        Output length units ('µm', 'um', 'mm', or 'm'); RVE dimensions are in micrometers</span>
 <span class="sd">    periodicity : bool or str, optional</span>
 <span class="sd">        Whether RVE is periodic</span>
 <span class="sd">    VF : float, optional</span>
@@ -809,6 +879,8 @@
 <span class="sd">    - Sets default cutoff values if not provided</span>
 <span class="sd">    - Supports saving statistical info to JSON</span>
 <span class="sd">    """</span>
+
+    <span class="n">rveunit</span> <span class="o">=</span> <span class="n">normalize_length_unit</span><span class="p">(</span><span class="n">rveunit</span><span class="p">)</span>
 
     <span class="c1"># type of grains either 'Elongated' or 'Equiaxed'</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">gtype</span> <span class="o">==</span> <span class="s1">'Elongated'</span> <span class="ow">or</span> <span class="n">gtype</span> <span class="o">==</span> <span class="s1">'Equiaxed'</span><span class="p">):</span>

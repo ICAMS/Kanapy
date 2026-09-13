@@ -189,6 +189,7 @@ The preferred way to cite Kanapy is:
  - v6.3: Implementation of velocity-Verlet algorithm to integrate particle trajectories during packing
  - v6.4: Support of the [modular materials data schema](https://github.com/Ronakshoghi/MetadataSchema.git) for import and export of microstructures 
  - v6.5: Switched to orix library for EBSD import and analysis and generation of textures to have a pure Python code. The MTEX backend is still available with [Kanapy-mtex](https://github.com/ICAMS/kanapy-mtex.git).
+ - v6.5.4: Modified support for multiphase structures without downwards comaptibility: Matrix or dispersed phases are now introduced explicitly. EBSD map analysis based on microstructure graphs.
 
 ## Licenses
 
@@ -196,11 +197,11 @@ The preferred way to cite Kanapy is:
 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
    <img alt="Creative Commons License" style="border-width:0;max-height:30px;height:100%;" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a>
 
-Kanapy is made available under the GNU Affero General Public License (AGPL) v3
+Kanapy, including all examples and notebooks, is made available under the GNU Affero General Public License (AGPL) v3
 [license](https://www.gnu.org/licenses/agpl-3.0.html).    
-The additional materials under examples and in the documentation are published under the Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) [license](https://creativecommons.org/licenses/by-nc-sa/4.0/). 
+The additional material, texts and artwork contained in examples, notebooks and documentation are published under the Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA 4.0) [license](https://creativecommons.org/licenses/by-nc-sa/4.0/). 
 
-&copy; 2025 by Authors, ICAMS/Ruhr University Bochum, Germany
+&copy; 2025, 2026 by Authors, ICAMS/Ruhr University Bochum, Germany
 
 ## About
 

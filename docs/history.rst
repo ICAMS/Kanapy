@@ -106,3 +106,9 @@ History
 
  * Pure Python version for reading and analyzing EBSD maps based on Orix. The MTEX backend is still available with Kanapy-mtex.
  
+6.5.4 (2025-09-13)
+------------------
+
+ * Modified support for multiphase structures without downwards comaptibility: Matrix or dispersed phases are now introduced explicitly.
+ * EBSD segmentation based on microstructure graph.
+ 
