@@ -6,6 +6,7 @@ from copy import deepcopy
 from tqdm import tqdm
 from collections import defaultdict
 from scipy.spatial import ConvexHull
+from scipy.ndimage import distance_transform_edt
 from typing import Any, Mapping, Optional
 
 
@@ -384,8 +385,9 @@ def voxelizationRoutine(
     Notes
     -----
     - Voxels shared by multiple ellipsoids are resolved using `reassign_shared_voxels`.
-    - Voxels not assigned to any grain are either assigned to neighbors or set to phase 1.
-    - If `prec_vf` < 1.0, empty voxels are treated as dispersed phase (precipitates/porosity).
+    - Voxels not assigned to any grain are either assigned to neighbors or set to phase 0.
+    - If `prec_vf` < 1.0, empty voxels form matrix PHASE0 / GRAIN0.
+      Grain-bearing particles must then use other phase IDs (e.g. 1 and 2).
     - The function modifies the `mesh` object in place.
 
     Returns
@@ -459,7 +461,7 @@ def voxelizationRoutine(
         for pa in Ellipsoids:
             if pa.duplicate is not None:
                 gid = pa.duplicate
-                pa.inner = pa.create_poly(Ellipsoids[gid].inner.points)
+                pa.inner = pa.create_poly(originals[int(gid)].inner.points)
             else:
                 gid = pa.id
             pa.sync_poly()
@@ -473,24 +475,37 @@ def voxelizationRoutine(
                         dst1 = np.linalg.norm(ctr - pa.get_pos())
                         for igr, vlist in mesh.grain_dict.items():
                             if iv in vlist:
-                                dst2 = np.linalg.norm(ctr - Ellipsoids[igr-1].get_pos())
+                                dst2 = np.linalg.norm(ctr - originals[igr].get_pos())
                                 if dst1 < dst2:
                                     vox.append(iv)
                                     pa.inside_voxels.append(iv)
                                     mesh.grain_dict[igr].remove(iv)
-                                    Ellipsoids[igr-1].inside_voxels.remove(iv)
+                                    originals[igr].inside_voxels.remove(iv)
                                 break
                     else:
                         assigned_vox.add(iv)
                         vox.append(iv)
                         pa.inside_voxels.append(iv)
             if gid in mesh.grain_dict.keys():
-                mesh.grain_dict[gid].extend(iv)
+                mesh.grain_dict[gid].extend(vox)
             else:
                 mesh.grain_dict[gid] = vox
 
     print('')
     print('Starting RVE voxelization')
+
+    originals = {int(ell.id): ell for ell in Ellipsoids if ell.duplicate is None}
+    if not originals:
+        raise ValueError('Voxelization requires at least one grain-bearing particle.')
+    if any(gid <= 0 for gid in originals):
+        raise ValueError('Particle IDs must be positive; GRAIN0 is reserved for the matrix.')
+    if any(not 0 <= ell.phasenum < nphases for ell in originals.values()):
+        raise ValueError('Particle phase IDs must be in range(nphases).')
+    if prec_vf is not None and prec_vf < 1:
+        if not 0 < prec_vf < 1 or nphases < 2:
+            raise ValueError('A matrix requires at least two phases and a particle fraction between 0 and 1.')
+        if any(ell.phasenum == 0 for ell in originals.values()):
+            raise ValueError('Matrix PHASE0 cannot contain grain-bearing particles.')
 
     # Find the voxels belonging to each grain by growing ellipsoid each time
     if prec_vf is None:
@@ -502,36 +517,46 @@ def voxelizationRoutine(
     else:
         poly2vox()
 
+    mesh.grain_dict = {gid: vox for gid, vox in mesh.grain_dict.items() if len(vox)}
+
     # generate array of voxelized structure with grain IDs
     # if fill_factor < 1.0, empty voxels will have grain ID 0
     gr_arr = np.zeros(mesh.nvox, dtype=int)
     for igr, vlist in mesh.grain_dict.items():
-        vlist = np.array(vlist) - 1
+        vlist = np.array(vlist, dtype=int) - 1
         gr_arr[vlist] = igr
     ind = np.nonzero(gr_arr == 0)[0]
-    if len(ind) > 0:
-        # some voxels have not been assigned to grains, check is assignment is required
-        if prec_vf is None:
-            for iv in ind:
-                gr_arr[iv] = gr_arr[iv-1]  # assign voxel to neighbor grain
-                print(f'Warning: Assigned voxel {iv} to grain {gr_arr[iv-1]}.')
+    if len(ind) > 0 and prec_vf == 1.0:
+        # Shared-voxel resolution can leave holes after the growth target was
+        # reached. Complete a fully filled RVE using the nearest assigned voxel;
+        # with a matrix, these same holes intentionally remain GRAIN0 instead.
+        if not np.any(gr_arr):
+            raise ValueError('No grains received voxels; cannot fill the RVE.')
+        labels = gr_arr.reshape(mesh.dim)
+        nearest = distance_transform_edt(labels == 0, return_distances=False,
+                                         return_indices=True)
+        filled = labels[tuple(nearest)].ravel()
+        for index in ind:
+            gid = int(filled[index])
+            mesh.grain_dict[gid].append(int(index + 1))
+            gr_arr[index] = gid
     mesh.grains = np.reshape(gr_arr, mesh.dim, order='C')
 
 
     # generate array of voxelized structure with phase numbers
     # and dict of phase numbers for each grain
-    # empty voxels will get phase number 1 and be assigned to grain with key 0
+    # empty voxels will get phase number 0 and be assigned to grain with key 0
     ph_arr = -np.ones(mesh.nvox, dtype=int)
     mesh.grain_phase_dict = dict()
     mesh.ngrains_phase = np.zeros(nphases, dtype=int)
     for igr, vlist in mesh.grain_dict.items():
-        vlist = np.array(vlist) - 1
-        ip = Ellipsoids[igr - 1].phasenum
+        vlist = np.array(vlist, dtype=int) - 1
+        ip = originals[igr].phasenum
         ph_arr[vlist] = ip
         mesh.grain_phase_dict[igr] = ip
         mesh.ngrains_phase[ip] += 1
     ind = np.nonzero(ph_arr < 0.0)[0]
-    ph_arr[ind] = 1  # assign phase 1 to empty voxels
+    ph_arr[ind] = 0  # assign phase 0 to empty voxels
     mesh.phases = np.reshape(ph_arr, mesh.dim, order='C')
     vf_cur = 1.0 - len(ind) / mesh.nvox
 
@@ -544,9 +569,10 @@ def voxelizationRoutine(
         if 0 in mesh.grain_dict.keys():
             raise ValueError('Grain with key "0" already exists. Should be reserved for matrix phase in structures ' +
                              'with precipitates or porosity. Cannot continue with precipitate simulation.')
-        mesh.grain_dict[0] = ind + 1
-        mesh.grain_phase_dict[0] = 1
-        mesh.ngrains_phase[1] += 1
+        if len(ind):
+            mesh.grain_dict[0] = ind + 1
+            mesh.grain_phase_dict[0] = 0
+            mesh.ngrains_phase[0] += 1
     elif vf_cur < 1.0:
         logging.warning(f'WARNING: {len(ind)} voxels have not been assigned to grains.')
         """Try to assign empty voxels to neighbor grain"""

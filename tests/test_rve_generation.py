@@ -172,13 +172,13 @@ def test_create_rve_workflow_rejects_too_coarse_voxel_grid():
         ),
         (
             "unsupported_output_units",
-            # Edge case descriptor: output units must be "mm" or "um".
+            # Edge case descriptor: unsupported output length unit.
             lambda: _with_nested_value(
                 equiaxed_descriptor(8, 8, 4.0, 3.0, 5.0),
                 ["Simulation", "output_units"],
                 "cm",
             ),
-            'Output units can only be "mm" or "um"',
+            'Output units must be',
         ),
         (
             "non_cubic_voxels",

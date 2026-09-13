@@ -759,6 +759,8 @@ def get_stats_vox(mesh, iphase=None, ax_max=None,
     arr_c = []
     arr_eqd = []
     for igr, vlist in mesh.grain_dict.items():
+        if igr == 0:
+            continue  # The matrix region is not a crystallographic grain.
         # decide if phase-specific analysis is performed
         if iphase is not None and iphase != mesh.grain_phase_dict[igr]:
             continue

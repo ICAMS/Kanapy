@@ -24,10 +24,11 @@ from typing import Dict, Any, List, Optional, Union, Mapping
 from importlib.metadata import version as pkg_version
 from datetime import datetime
 
+from .units import normalize_length_unit, length_scale_from_um
 from .grains import calc_polygons
 from .entities import Simulation_Box
 from .input_output import export2abaqus, writeAbaqusMat, read_dump, _abaqus_phase_options
-from .initializations import RVE_creator, mesh_creator
+from .initializations import RVE_creator, mesh_creator, normalize_phase_descriptors, validate_matrix_mapping
 from .packing import packingRoutine
 from .voxelization import voxelizationRoutine
 from .smoothingGB import smoothingRoutine
@@ -139,28 +140,15 @@ class Microstructure(object):
                 raise FileNotFoundError("File: '{}' does not exist in the current working directory!\n".format(file))
         elif descriptor == 'from_voxels':
             self.from_voxels = True
+            return
         else:
-            if type(descriptor) is not list:
-                self.descriptor = [descriptor]
-                self.nphases = 1
-            else:
-                self.descriptor = descriptor
-                self.nphases = len(self.descriptor)
-                if self.nphases > 2:
-                    logging.warning(f'Kanapy is only tested for 2 phases, use at own risk for {self.nphases} phases')
+            self.descriptor = descriptor
             if file is not None:
-                logging.warning(
-                    'WARNING: Input parameter (descriptor) and file are given. Only descriptor will be used.')
-        if self.nphases == 1 and 'Phase' in self.descriptor[0].keys():
-            vf = self.descriptor[0]['Phase']['Volume fraction']
-            if vf < 1.0:
-                # consider precipitates/pores/particles with volume fraction fill_factor in a matrix
-                # precipitates will be phase 0, matrix phase will get number 1 and be assigned to grain with ID 0
-                self.precipit = vf
-                self.nphases = 2
-                logging.info(f'Only one phase with volume fraction {vf} is given.')
-                logging.info('Will consider a sparse distribution in a matrix phase with phase number 1, ' +
-                             'which will be assigned to grain with ID 0.')
+                logging.warning('Input descriptor and file are given. Only descriptor will be used.')
+        self.descriptor = normalize_phase_descriptors(self.descriptor)
+        self.nphases = len(self.descriptor)
+        if any(d.get('Grain type') == 'Matrix' for d in self.descriptor):
+            self.precipit = 1.0 - self.descriptor[0]['Phase']['Volume fraction']
         return
 
     """
@@ -194,8 +182,8 @@ class Microstructure(object):
         Notes
         -----
         - Assumes that `RVE_creator` and `Simulation_Box` are available and correctly configured.
-        - If `self.precipit` is defined, an additional 'Matrix' phase is automatically
-          added to preserve total volume fraction normalization.
+        - A ``Grain type: Matrix`` descriptor reserves phase 0 for GRAIN0.
+          A single grain phase with fraction below one adds an implicit matrix.
 
         Attributes Updated
         ------------------
@@ -207,8 +195,8 @@ class Microstructure(object):
         simbox : Simulation_Box
             Object containing the geometric boundaries of the RVE domain.
         precipit : float or None
-            If not None, a 'Matrix' phase is appended to `rve.phase_names` and its
-            volume fraction is adjusted as (1.0 - precipit).
+            Total fraction of grain-bearing phases when a matrix is present.
+            The matrix fraction is ``1.0 - precipit``.
 
         Returns
         -------
@@ -217,14 +205,12 @@ class Microstructure(object):
         """
         if descriptor is None:
             descriptor = self.descriptor
-        if type(descriptor) is not list:
-            descriptor = [descriptor]
-
-        # initialize RVE, including mesh dimensions and particle distribution
+        descriptor = normalize_phase_descriptors(descriptor, validate=True)
         self.rve = RVE_creator(descriptor, nsteps=nsteps)
-        if self.precipit is not None:
-            self.rve.phase_names.append('Matrix')
-            self.rve.phase_vf.append(1.0 - self.precipit)
+        self.descriptor = descriptor
+        self.nphases = len(descriptor)
+        self.precipit = (1.0 - self.rve.phase_vf[0]
+                         if self.rve.matrix_phase is not None else None)
         self.nparticles = self.rve.nparticles
         # store geometry in simbox object
         self.simbox = Simulation_Box(self.rve.size)
@@ -462,8 +448,12 @@ class Microstructure(object):
             empty_vox = None
             grain_store = None
 
-        self.geometry: dict = \
-            calc_polygons(self.rve, self.mesh)  # updates RVE_data
+        try:
+            self.geometry = calc_polygons(self.rve, self.mesh)
+        finally:
+            if empty_vox is not None:
+                self.mesh.grain_dict[0] = empty_vox
+                self.mesh.grain_phase_dict[0] = grain_store
         # verify that geometry['Grains'] and mesh.grain_dict are consistent
         """if np.any(self.geometry['Ngrains'] != self.ngrains):
             logging.warning(f'Only facets for {self.geometry["Ngrains"]} created, but {self.Ngr} grains in voxels.')
@@ -499,12 +489,10 @@ class Microstructure(object):
                 ph_vol[ip] += grd['Volume']
             print('Volume fractions of phases in polyhedral geometry:')
             for ip in range(self.nphases):
+                if self.precipit is not None and ip == 0:
+                    continue  # Matrix GRAIN0 has no reconstructed grain geometry.
                 vf = 100.0 * ph_vol[ip] / np.prod(self.rve.size)
                 print(f'{ip}: {self.rve.phase_names[ip]} ({vf.round(1)}%)')
-        if empty_vox is not None:
-            # add removed grain again
-            self.mesh.grain_dict[0] = empty_vox
-            self.mesh.grain_phase_dict[0] = grain_store
 
     def generate_orientations(
             self,
@@ -545,9 +533,14 @@ class Microstructure(object):
         shared_area : array_like, float, or None, optional, default=None
             Shared grain boundary area for weighted orientation generation.
         iphase : int or None, optional, default=None
-            Phase index for which orientations are generated. If None, all phases are processed.
+            Phase index to update, preserving orientations in other phases. If None,
+            all grain-bearing phases are processed. Matrix GRAIN0 is always excluded.
         verbose : bool, default=False
             If True, prints additional information during orientation generation.
+        ebsd_phase_map : dict, optional
+            Passed through kwargs; maps canonical Kanapy phase IDs to EBSD phase
+            indices. By default, a matrix occupies phase 0 and grain phase i
+            uses EBSD phase i-1; without a matrix, indices are unchanged.
 
         Returns
         -------
@@ -603,8 +596,18 @@ class Microstructure(object):
             else:
                 gba = shared_area
 
-        ori_dict = dict()
-        for ip, ngr in enumerate(self.ngrains):
+        if iphase is not None and not 0 <= iphase < len(self.ngrains):
+            raise ValueError('iphase must identify an existing phase.')
+        ori_dict = dict(self.mesh.grain_ori_dict or {}) if iphase is not None else {}
+        ori_dict.pop(0, None)  # GRAIN0 is the unoriented matrix, never a CP grain.
+        for ip in range(len(self.ngrains)):
+            if iphase is not None and iphase != ip:
+                continue
+            phase_grains = [gid for gid in self.mesh.grain_dict
+                            if gid != 0 and self.mesh.grain_phase_dict[gid] == ip]
+            ngr = len(phase_grains)
+            if ngr == 0:
+                continue
             if isinstance(data, EBSDmap):
                 if iphase is None or iphase == ip:
                     if gba is not None and not MTEX:
@@ -613,7 +616,9 @@ class Microstructure(object):
                         gba = None
                     allowed = ["res_low", "res_high", "res_step", "lim", "hw_init"]
                     ori_kwargs = {k: v for k, v in kwargs.items() if k in allowed}
-                    ori_rve = data.calcORI(ngr, iphase=ip, shared_area=gba, verbose=verbose, **ori_kwargs)
+                    source_phase = kwargs.get("ebsd_phase_map", {}).get(
+                        ip, ip - 1 if getattr(self, "precipit", None) is not None else ip)
+                    ori_rve = data.calcORI(ngr, iphase=source_phase, shared_area=gba, verbose=verbose, **ori_kwargs)
                     self.mesh.texture = "ODF"
             elif isinstance(data, str):
                 if data.lower() in ['random', 'rnd']:
@@ -630,11 +635,8 @@ class Microstructure(object):
                 raise ValueError('Argument to generate grain orientation must be either of type EBSDmap or ' +
                                  '"random" or "unimodal"')
 
-            for i, igr in enumerate(self.mesh.grain_dict.keys()):
-                if self.mesh.grain_phase_dict[igr] == ip:
-                    if iphase is None or iphase == ip:
-                        ind = i - ip * self.ngrains[0]
-                        ori_dict[igr] = ori_rve[ind, :]
+            for ind, igr in enumerate(phase_grains):
+                ori_dict[igr] = ori_rve[ind, :]
         self.mesh.grain_ori_dict = ori_dict
         return
 
@@ -1051,12 +1053,20 @@ class Microstructure(object):
             enhanced_plot = True
         ax_max = np.prod(self.rve.size) ** (1 / 3)
         if phases:
-            nphases = self.nphases
-            if self.precipit and 0 in self.mesh.grain_dict.keys():
-                # in case of precipit, remove irregular grain 0 from analysis
-                nphases -= 1
+            phase_ids = [ip for ip in range(self.nphases)
+                         if not (self.precipit is not None and ip == 0)]
+            if self.mesh is not None:
+                present = {pid for gid, pid in self.mesh.grain_phase_dict.items() if gid != 0}
+                phase_ids = [ip for ip in phase_ids if ip in present]
         else:
-            nphases = 1
+            phase_ids = [None]
+        nphases = len(phase_ids)
+        # Comparison lists may include a matrix slot; retain canonical phase IDs.
+        gs_data, gs_param, ar_data, ar_param = [
+            [values[ip] for ip in phase_ids]
+            if phases and isinstance(values, list) and len(values) == self.nphases else values
+            for values in (gs_data, gs_param, ar_data, ar_param)
+        ]
         if not (isinstance(gs_data, list) and len(gs_data) == nphases):
             gs_data = [gs_data] * nphases
         if not (isinstance(gs_param, list) and len(gs_param) == nphases):
@@ -1073,7 +1083,7 @@ class Microstructure(object):
         """
         iphase = None
         flist = []
-        for ip in range(nphases):
+        for slot, ip in enumerate(phase_ids):
             stats_list = []
             labels = []
             if phases:
@@ -1135,8 +1145,8 @@ class Microstructure(object):
             self.rve_stats = stats_list
             self.rve_stats_labels = labels
             fig = plot_output_stats(stats_list, labels, iphase=iphase,
-                                    gs_data=gs_data[ip], gs_param=gs_param[ip],
-                                    ar_data=ar_data[ip], ar_param=ar_param[ip],
+                                    gs_data=gs_data[slot], gs_param=gs_param[slot],
+                                    ar_data=ar_data[slot], ar_param=ar_param[slot],
                                     save_files=save_files, silent=silent,
                                     enhanced_plot=enhanced_plot)
             flist.append(fig)
@@ -1290,7 +1300,7 @@ class Microstructure(object):
         if show_res: get_res = True
         if silent: show_res = False
         if descriptor is None: descriptor = self.descriptor
-        if not isinstance(descriptor, list): descriptor = [descriptor]
+        descriptor = normalize_phase_descriptors(descriptor)
         if porous: descriptor = descriptor[0:1]
         nel = len(descriptor)
 
@@ -1299,6 +1309,8 @@ class Microstructure(object):
 
         flist, descs = [] , []
         for ip, des in enumerate(descriptor):
+            if des.get("Grain type") == "Matrix":
+                continue
             gsp = arp = None
             statistical_descriptors = None
             if get_res:
@@ -1408,7 +1420,7 @@ class Microstructure(object):
         thermal : bool, optional, default=False
             If True, include thermal material definitions. Default is False.
         units : str or None, optional, default=None
-            Units for the model, 'mm' or 'um'. Default is `self.rve.units`.
+            Output length units: 'µm', 'um', 'mm', or 'm'. Default is `self.rve.units`.
         ialloy : list, object, or None, optional, default=None
             Material definitions for each phase. Default is `self.rve.ialloy`.
         props_file : str, path-like, list, or None, optional
@@ -1420,7 +1432,7 @@ class Microstructure(object):
             written under PHASE{id}_MAT in _geom.inp. A None entry requires False
             for crystal_plasticity and writes only the solid-section reference;
             define that material yourself in CAE or by editing _geom.inp.
-            For grain 0, an empty PHASE1_MAT definition is also written so the
+            For grain 0, an empty PHASE0_MAT definition is also written so the
             assigned material is visible in CAE.
             Relative include paths are resolved against path. Omit for legacy output.
         nsdv : int, optional
@@ -1428,7 +1440,7 @@ class Microstructure(object):
         crystal_plasticity : bool, list of bool, or None, optional
             Select CP per phase. Multiple phases with props_file require a list.
             CP requires grain-wise sets (dual_phase=False) and grain orientations.
-            Grain 0 is reserved for standard plasticity in phase 1. With a
+            Grain 0 is reserved for standard plasticity in phase 0. With a
             single-phase props_file, None retains the historical CP default;
             pass False explicitly for standard plasticity.
         phase_props : dict or None, optional, default=None
@@ -1446,7 +1458,7 @@ class Microstructure(object):
         ValueError
             - If no voxelized or smoothened mesh is available when required.
             - If invalid `nodes` argument is provided.
-            - If units are not 'mm' or 'um'.
+            - If units are not 'µm', 'um', 'mm', or 'm'.
             - If the list `ialloy` is longer than the number of phases in the RVE.
             - If periodic boundary conditions are requested but the RVE is non-periodic.
 
@@ -1502,8 +1514,8 @@ class Microstructure(object):
             voxel_dict = self.mesh.voxel_dict
         if units is None:
             units = self.rve.units
-        elif (not units == 'mm') and (not units == 'um'):
-            raise ValueError(f'Units must be either "mm" or "um", not {units}.')
+        units = normalize_length_unit(units)
+        validate_matrix_mapping(getattr(self.mesh, "grain_phase_dict", None))
         if dual_phase:
             nct = 'abq_dual_phase'
             if grain_dict is None:
@@ -1511,8 +1523,6 @@ class Microstructure(object):
                 for i in range(self.nphases):
                     grain_dict[i] = list()
                 for igr, ip in self.mesh.grain_phase_dict.items():
-                    if igr == 0:
-                        ip = 1
                     grain_dict[ip] = np.concatenate(
                         [grain_dict[ip], self.mesh.grain_dict[igr]])
         else:
@@ -1525,8 +1535,8 @@ class Microstructure(object):
         if cp is not None:
             if dual_phase and any(cp):
                 raise ValueError('Crystal plasticity requires grain-wise sets (dual_phase=False).')
-            if 0 in self.mesh.grain_dict and (len(cp) < 2 or cp[1]):
-                raise ValueError('Grain 0 requires standard plasticity in phase 1.')
+            if 0 in self.mesh.grain_dict and (cp[0]):
+                raise ValueError('Grain 0 requires standard plasticity in phase 0.')
             if any(cp) and self.mesh.grain_ori_dict is None:
                 raise ValueError('Crystal plasticity requires grain orientations. Run generate_orientations first.')
         if props_file is not None:
@@ -1541,14 +1551,13 @@ class Microstructure(object):
                              f'({len(ialloy)} > {self.nphases})')
         if self.nphases > 1:
             grpd = dict(self.mesh.grain_phase_dict)
-            if 0 in self.mesh.grain_dict:
-                grpd[0] = 1
         else:
             grpd = None
         if cp is not None and any(cp):
             missing = [gid for gid in grain_dict if gid != 0
                        and cp[(grpd or {}).get(gid, 0)]
-                       and gid not in self.mesh.grain_ori_dict]
+                       and (self.mesh.grain_ori_dict.get(gid) is None
+                            or np.asarray(self.mesh.grain_ori_dict[gid]).shape != (3,))]
             if missing:
                 raise ValueError(f'Missing orientations for CP grains: {missing}')
         if boundary_conditions is None:
@@ -1599,7 +1608,8 @@ class Microstructure(object):
             ori: Any = None,
             file: Optional[Union[str, os.PathLike[str]]] = None,
             path: Union[str, os.PathLike[str]] = './',
-            nsdv: int = 360) -> None:
+            nsdv: int = 360,
+            crystal_plasticity=None) -> None:
         """
         Write Abaqus material input file using grain orientations for crystal plasticity
 
@@ -1613,6 +1623,9 @@ class Microstructure(object):
             Material identifiers for each phase. Default is `self.rve.ialloy`.
         props_file : str, path-like, list, or None, optional, default=None
             Optional CP-UMAT include file or one include file per phase.
+        crystal_plasticity : list of bool or None, optional
+            Per-phase CP flags when using include files; PHASE0 must be False
+            when GRAIN0 is present. Lists use canonical phase IDs.
         ori : dict, array-like, or None, optional, default=None
             Dictionary or array of grain orientations. Default is `self.mesh.grain_ori_dict`.
         file : str or os.PathLike or None, optional, default=None
@@ -1661,7 +1674,9 @@ class Microstructure(object):
                 file = self.name + '_mat.inp'
         path = os.path.normpath(path)
         file = os.path.join(path, file)
-        writeAbaqusMat(ialloy, ori, props_file=props_file, file=file, nsdv=nsdv)
+        writeAbaqusMat(ialloy, ori, props_file=props_file, file=file, nsdv=nsdv,
+                       grain_phase_dict=self.mesh.grain_phase_dict,
+                       crystal_plasticity=crystal_plasticity)
 
     def output_neper(self) -> None:
         """
@@ -2669,7 +2684,7 @@ class Microstructure(object):
             Whether the mesh is structured. Default is True.
         ialloy : int, optional, default=0
             Alloy index for selecting material properties from the built-in library. Default is 0.
-        length_unit : {'µm', 'mm', 'm'}, optional, default='µm'
+        length_unit : {'µm', 'um', 'mm', 'm'}, optional, default='µm'
             Unit for length scaling.
 
         Returns
@@ -2686,15 +2701,7 @@ class Microstructure(object):
             If `phases` is not a dict or a list of dicts when provided
         """
 
-        # interpret length_unit argument
-        if length_unit == 'µm':
-            length_scale = 1.0
-        elif length_unit == 'mm':
-            length_scale = 1e-3
-        elif length_unit == 'm':
-            length_scale = 1e-6
-        else:
-            raise ValueError("length_unit must be 'µm', 'mm', or 'm'")
+        length_scale = length_scale_from_um(length_unit)
 
         # Material library definitions (pulled from mod_alloys.f)
         material_library = {

@@ -83,3 +83,20 @@ def test_collide_detect(ell1_params, ell2_params):
 
     overlap = collide_detect(coef_i, coef_j, r_i, r_j, A_i, A_j)
     assert isinstance(overlap, bool)
+
+
+@pytest.mark.parametrize('phases', [(0, 0), (0, 2)])
+def test_coincident_particles_have_finite_opposite_forces(phases):
+    first = Ellipsoid(1, 1, 1, 1, 1, 1, 1, np.array([1., 0, 0, 0]), phasenum=phases[0])
+    second = Ellipsoid(2, 1, 1, 1, 1, 1, 1, np.array([1., 0, 0, 0]), phasenum=phases[1])
+    with np.errstate(divide='raise', invalid='raise'):
+        collision_react(first, second)
+    force = np.array([first.force_x, first.force_y, first.force_z])
+    reaction = np.array([second.force_x, second.force_y, second.force_z])
+    assert np.all(np.isfinite(force))
+    assert np.linalg.norm(force) == pytest.approx(5)
+    np.testing.assert_allclose(force, -reaction)
+    first.force_x = first.force_y = first.force_z = 0.
+    second.force_x = second.force_y = second.force_z = 0.
+    collision_react(second, first)
+    np.testing.assert_allclose(force, [first.force_x, first.force_y, first.force_z])

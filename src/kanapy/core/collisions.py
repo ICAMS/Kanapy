@@ -85,8 +85,14 @@ def collision_react(ell1: Any, ell2: Any) -> None:
     dst = np.linalg.norm(cdir)
     eqd1 = ell1.get_volume()**(1/3)
     eqd2 = ell2.get_volume()**(1/3)
-    val = (0.5*(eqd1 + eqd2) / dst)**3
-    val = np.minimum(5.0, val)
+    if dst == 0:
+        # Exact coincidence has no geometric normal. Choose a deterministic
+        # separating normal, reversed when particle order is reversed.
+        cdir = np.full(3, 1.0 if ell1.id < ell2.id else -1.0) / np.sqrt(3.0)
+        dst = 1.0
+        val = 5.0
+    else:
+        val = min(5.0, (0.5 * (eqd1 + eqd2) / dst) ** 3)
 
     ell1.force_x += val * cdir[0] / dst
     ell1.force_y += val * cdir[1] / dst

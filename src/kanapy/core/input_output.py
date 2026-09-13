@@ -3,8 +3,9 @@ import re
 import logging
 import numpy as np
 from collections import defaultdict
+from .units import length_scale_from_um
 from .entities import Ellipsoid, Cuboid
-from .initializations import NodeSets
+from .initializations import NodeSets, validate_matrix_mapping
 from typing import Dict, Any, Optional, Mapping, Union
 
 
@@ -192,7 +193,8 @@ def export2abaqus(
     voxel_dict : dict
         Dictionary containing voxel-to-grain mapping
     units : str, optional
-        Units used in the input file (default is 'mm')
+        Output length units: 'µm', 'um', 'mm', or 'm' (default is 'mm').
+        Input node coordinates are always in micrometers.
     gb_area : optional
         Grain boundary area information
     dual_phase : bool, optional
@@ -212,7 +214,7 @@ def export2abaqus(
         property includes are written under PHASE{id}_MAT in this geometry file.
         None entries require crystal_plasticity=False and produce only section
         references, leaving material definitions to the user in CAE or _geom.inp.
-        Grain 0 always references PHASE1_MAT, which receives an empty material
+        Grain 0 always references PHASE0_MAT, which receives an empty material
         definition when its include is None so it remains visible in CAE.
     phase_props : optional
         Phase properties for crystal plasticity
@@ -227,19 +229,26 @@ def export2abaqus(
     """
 
     from kanapy import __version__
+    scale_fact = length_scale_from_um(units)
     phase_map = dict(grain_phase_dict or {})
+    validate_matrix_mapping(phase_map)
     if not dual_phase and 0 in grain_dict:
-        phase_map[0] = 1
+        if any(gid != 0 and gid not in phase_map for gid in grain_dict):
+            raise ValueError('Matrix exports require an explicit phase ID for every grain.')
+        phase_map[0] = 0
+        validate_matrix_mapping(phase_map)
     nphases = max(phase_map.values(), default=0) + 1
     if dual_phase:
         nphases = max(grain_dict, default=0) + 1
     if isinstance(props_file, list):
         nphases = max(nphases, len(props_file))
+    if isinstance(crystal_plasticity, list):
+        nphases = max(nphases, len(crystal_plasticity))
     files, cp = _abaqus_phase_options(props_file, crystal_plasticity, nphases)
     if dual_phase and cp is not None and any(cp):
         raise ValueError('Crystal plasticity requires grain-wise sets (dual_phase=False).')
-    if not dual_phase and 0 in grain_dict and cp is not None and cp[1]:
-        raise ValueError('Grain 0 requires standard plasticity in phase 1.')
+    if not dual_phase and 0 in grain_dict and cp is not None and cp[0]:
+        raise ValueError('Grain 0 requires standard plasticity in phase 0.')
     grain_phase_dict = phase_map or None
     def write_node_set(name, nset):
         """
@@ -311,6 +320,8 @@ def export2abaqus(
         "PHASE{phase_id}_MAT". The function updates ph_set with all phase IDs used.
         """
         for k, v in grain_dict.items():
+            if len(v) == 0:
+                continue
             f.write('*ELSET, ELSET=PHASE{0}_SET\n'.format(k))
             for enum, el in enumerate(v, start=1):
                 if enum % 16 != 0:
@@ -321,6 +332,8 @@ def export2abaqus(
                 else:
                     f.write('%d\n' % el)
         for k in grain_dict.keys():
+            if len(grain_dict[k]) == 0:
+                continue
             f.write(
                 '*Solid Section, elset=PHASE{0}_SET, material=PHASE{1}_MAT\n'
                 .format(k, k))
@@ -743,13 +756,7 @@ def export2abaqus(
 
     nsets = NodeSets(nodes)
 
-    # Convert input units from µm to mm for Abaqus output
-    if units == 'mm':
-        scale_fact = 0.001  # conversion from µm to mm
-    else:
-        scale_fact = 1  # keep µm
-
-    # Calculate RVE edge lengths and face areas in mm
+    # Calculate RVE edge lengths and face areas in the selected output units
     edge_lengths = {
         'x':  (max(nodes[:, 0]) - min(nodes[:, 0])) * scale_fact,
         'y':  (max(nodes[:, 1]) - min(nodes[:, 1])) * scale_fact,
@@ -1345,9 +1352,9 @@ def export2abaqus(
 
         for pid in sorted(ph_set):
             if files is not None and props_file is not None and files[pid] is None:
-                if pid == 1 and grain_phase_dict and grain_phase_dict.get(0) == 1:
+                if pid == 0 and grain_phase_dict and grain_phase_dict.get(0) == 0:
                     # Keep the legacy matrix material visible in Abaqus/CAE.
-                    f.write('*Material, name=PHASE1_MAT\n**\n')
+                    f.write('*Material, name=PHASE0_MAT\n**\n')
                 continue
             f.write('*Material, name=PHASE{}_MAT\n'.format(pid))
 
@@ -1548,11 +1555,12 @@ def writeAbaqusMat(
         Write only grains in CP phases. With multiphase props_file, both options
         must be lists with one entry per phase; each True requires an include.
         False phases (including None includes) are handled by export2abaqus in
-        _geom.inp. Grain 0 is reserved for standard plasticity in phase 1.
+        _geom.inp. Grain 0 is reserved for standard plasticity in phase 0.
         Omit both options to retain the legacy alloy-based selection.
     nsdv : int
         Number of state dependant variables, optional (default: 360)
     """
+    validate_matrix_mapping(grain_phase_dict)
     if props_file is not None and ialloy is None:
         ialloy = 0
     scalar_alloy = not isinstance(ialloy, list)
@@ -1560,13 +1568,15 @@ def writeAbaqusMat(
         ialloy = [ialloy]
     nall = len(ialloy)
     nphases = max((grain_phase_dict or {}).values(), default=0) + 1
-    nphases = max(nphases, nall, 2 if grain_phase_dict and 0 in grain_phase_dict else 1)
+    nphases = max(nphases, nall)
+    if isinstance(crystal_plasticity, list):
+        nphases = max(nphases, len(crystal_plasticity))
     files, cp = _abaqus_phase_options(props_file, crystal_plasticity, nphases)
     if props_file is not None and scalar_alloy:
         ialloy *= nphases
         nall = nphases
-    if grain_phase_dict and 0 in grain_phase_dict and cp is not None and cp[1]:
-        raise ValueError('Grain 0 requires standard plasticity in phase 1.')
+    if grain_phase_dict and 0 in grain_phase_dict and cp is not None and cp[0]:
+        raise ValueError('Grain 0 requires standard plasticity in phase 0.')
     if type(angles) is not dict:
         # converting (N, 3) ndarray to dict
         gr_ori_dict = dict()
@@ -1611,6 +1621,14 @@ def writeAbaqusMat(
             if not rows or any(len(row) != 8 for row in rows[:-1]):
                 raise ValueError(f'{source}: use eight constants per line except the final line.')
             includes.append((include, 8 + sum(map(len, rows))))
+    for gid, orientation in gr_ori_dict.items():
+        pid = (grain_phase_dict or {}).get(gid, 0)
+        if gid == 0 or pid >= nall or (cp is not None and not cp[pid]):
+            continue
+        if orientation is None or np.asarray(orientation).shape != (3,):
+            raise ValueError(f'Missing or invalid orientation for CP grain {gid}.')
+        if ialloy[pid] is None:
+            raise ValueError(f'Missing alloy selector for CP phase {pid}.')
     with open(file, 'w') as f:
         f.write('**\n')
         f.write('** MATERIALS\n')
@@ -1757,10 +1775,7 @@ def import_voxels(
     grain_phase_dict = dict()
     gr_arr = grains.flatten(order='C')
     if 'Grains' in data.keys():
-        if 'Orientation' in data['Grains'][grain_keys[-1]].keys():
-            grain_ori_dict = dict()
-        else:
-            grain_ori_dict = None
+        grain_ori_dict = {}
         phase_vf = np.zeros(nphases)
         ngrain = np.zeros(nphases, dtype=int)
         for igr in gr_numbers:
@@ -1769,16 +1784,19 @@ def import_voxels(
             ind = np.nonzero(gr_arr == igr)[0]
             nv = len(ind)
             ip = data['Grains'][str(igr)]['Phase']
+            if not isinstance(ip, int) or not 0 <= ip < nphases:
+                raise ValueError(f'Invalid phase ID {ip!r} for grain {igr}.')
+            if igr == 0 and ip != 0:
+                raise ValueError('GRAIN0 must belong to matrix PHASE0.')
             phase_vf[ip] += nv
             grain_dict[int(igr)] = ind + 1
             grain_phase_dict[int(igr)] = ip
             ngrain[ip] += 1
             phases[ind] = ip
-            if grain_ori_dict is not None:
-                if 'Orientation' in data['Grains'][str(igr)].keys():
-                    grain_ori_dict[igr] = data['Grains'][str(igr)]['Orientation']
-                else:
-                    grain_ori_dict[igr] = None
+            orientation = data['Grains'][str(igr)].get('Orientation')
+            if igr != 0 and orientation is not None:
+                grain_ori_dict[int(igr)] = orientation
+        grain_ori_dict = grain_ori_dict or None
         phase_vf /= nvox
         if not np.isclose(np.sum(phase_vf), 1.):
             logging.warning(f'Volume fractions do not add up to 1: {phase_vf}')
@@ -1797,6 +1815,9 @@ def import_voxels(
         ngrain = [len(grain_keys)]
         phase_vf = [1.]
 
+    if 0 in grain_dict and any(gid != 0 and pid == 0 for gid, pid in grain_phase_dict.items()):
+        raise ValueError('Matrix PHASE0 may only contain GRAIN0.')
+
     # reconstructing microstructure information for RVE
     stats_dict = {
         'RVE': {'sideX': size[0], 'sideY': size[1], 'sideZ': size[2],
@@ -1810,7 +1831,10 @@ def import_voxels(
     for i in range(nphases):
         stats_dict['Phase']['Name'] = ph_names[i]
         stats_dict['Phase']['Volume fraction'] = phase_vf[i]
-        stats_list.append(copy.deepcopy(stats_dict))
+        phase_stats = copy.deepcopy(stats_dict)
+        if 0 in grain_dict and i == 0:
+            phase_stats['Grain type'] = 'Matrix'
+        stats_list.append(phase_stats)
     # Create microstructure object
     ms = Microstructure('from_voxels')
     ms.name = data['Model']['Material']
@@ -1828,10 +1852,12 @@ def import_voxels(
     ms.mesh.phases = phases.reshape(sh, order='C')
     ms.mesh.grain_phase_dict = grain_phase_dict
     ms.mesh.ngrains_phase = ngrain
+    ms.mesh.nphases = nphases
+    ms.vf_vox = np.asarray(phase_vf)
     if 0 in ms.mesh.grain_dict.keys():
         porosity = len(ms.mesh.grain_dict[0]) / nvox
-        ms.precipit = porosity
-        ms.mesh.prec_vf_voxels = porosity
+        ms.precipit = 1.0 - porosity
+        ms.mesh.prec_vf_voxels = ms.precipit
     # import or create mesh
     voxel_dict = dict()
     vox_centerDict = dict()

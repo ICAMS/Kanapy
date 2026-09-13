@@ -6,13 +6,14 @@ from kanapy.core.input_output import *
 from kanapy.core.entities import Ellipsoid, Simulation_Box, Cuboid
 
 
-def test_particleStatGenerator():
+@pytest.mark.parametrize('unit', ['µm', 'um', 'mm', 'm'])
+def test_particleStatGenerator(unit):
     st_dict = {'Grain type': 'Elongated',
                'Equivalent diameter': {'sig': 0.531055, 'loc': 0.0, 'scale': 2.76736, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
                'Aspect ratio': {'sig': 0.3, 'loc': 0.0, 'scale': 2.5, 'cutoff_min': 2.0, 'cutoff_max': 4.0},
                'Tilt angle': {'kappa': 2.1, 'loc': 1.6, 'cutoff_min': 1.0, 'cutoff_max': 2.0},
                'RVE': {'sideX': 8, 'sideY': 8, 'sideZ': 8, 'Nx': 15, 'Ny': 15, 'Nz': 15},
-               'Simulation': {'periodicity': 'True', 'output_units': 'um'},
+               'Simulation': {'periodicity': 'True', 'output_units': unit},
                'Phase': {'Name': 'XXXX', 'Number': 0, 'Volume fraction': 1.0}}
 
     rve = RVE_creator([st_dict])
@@ -63,7 +64,8 @@ def test_read_dump(temp_dump):
         assert isinstance(gel, Ellipsoid)
     return
 
-def test_export_abaqus():
+@pytest.mark.parametrize('unit,scale', [('µm', 1), ('um', 1), ('mm', 1e-3), ('m', 1e-6)])
+def test_export_abaqus(unit, scale):
 
     nodes = np.array(
              [[1., 0., 1.], [1., 0., 0.], [0., 0., 0.], [0., 0., 1.], [1., 1., 1.], [1., 1., 0.], [0., 1., 0.],
@@ -93,7 +95,13 @@ def test_export_abaqus():
     
     name ='/kanapy_{0}grains.inp'.format(len(esd))
     cwd = os.getcwd()
-    export2abaqus(nodes, cwd+name, esd, ed, units='um')
+    export2abaqus(nodes, cwd+name, esd, ed, units=unit)
+    from pathlib import Path
+    lines = Path(cwd + name).read_text(encoding='ascii').splitlines()
+    start = lines.index('*Node') + 1
+    written = np.array([[float(v) for v in line.split(',')[1:]]
+                        for line in lines[start:start + len(nodes)]])
+    np.testing.assert_allclose(written, nodes * scale, atol=0)
     assert os.path.isfile(cwd + name)
     os.remove(cwd + name)
 
@@ -127,7 +135,8 @@ def test_cp_material_bad_include(tmp_path):
 
 
 @pytest.mark.parametrize('selector', [None, 4])
-def test_write_abq_include_api(tmp_path, monkeypatch, selector):
+@pytest.mark.parametrize('unit', [None, 'µm', 'um', 'mm', 'm'])
+def test_write_abq_include_api(tmp_path, monkeypatch, selector, unit):
     from types import SimpleNamespace
     from kanapy.core import api
 
@@ -139,7 +148,8 @@ def test_write_abq_include_api(tmp_path, monkeypatch, selector):
     captured = {}
     monkeypatch.setattr(api, 'export2abaqus', lambda *args, **kwargs: captured.update(kwargs))
     api.Microstructure.write_abq(ms, nodes='v', file='test_geom.inp', path=tmp_path,
-                                 ialloy=selector, props_file='shared.inc')
+                                 ialloy=selector, props_file='shared.inc', units=unit)
+    assert captured['units'] == ('um' if unit in (None, 'µm') else unit)
     assert captured['ialloy'] == [selector or 0]
     assert '*User Material, constants=11' in (tmp_path / 'test_mat.inp').read_text()
 
@@ -158,8 +168,8 @@ def test_cp_material_phase_includes(tmp_path):
 @pytest.mark.parametrize('flags,includes,grain_ids', [
     ([True, True], ['cp.inc', 'cp.inc'], [1, 2]),
     ([False, False], ['j2.inc', 'j2.inc'], [1, 2]),
-    ([True, False], ['cp.inc', 'j2.inc'], [1, 0]),
-    ([True, False], ['cp.inc', None], [1, 0]),
+    ([False, True], ['j2.inc', 'cp.inc'], [0, 1]),
+    ([False, True], [None, 'cp.inc'], [0, 1]),
 ])
 @pytest.mark.parametrize('dual_phase', [False, True])
 def test_multiphase_abq_deck(tmp_path, flags, includes, grain_ids, dual_phase):
@@ -195,8 +205,8 @@ def test_multiphase_abq_deck(tmp_path, flags, includes, grain_ids, dual_phase):
         assert f'*Solid Section, elset={elset}, material={name}' in geom
         assert (f'*Material, name=GRAIN{gid}_MAT' in mat) == flags[pid]
         assert (f'*Material, name=PHASE{pid}_MAT' in geom) == (not flags[pid] and (includes[pid] is not None or gid == 0))
-    if 0 in grain_ids and includes[1] is None:
-        assert '*Material, name=PHASE1_MAT\n**\n' in geom
+    if 0 in grain_ids and includes[0] is None:
+        assert '*Material, name=PHASE0_MAT\n**\n' in geom
     assert mat.count('*Include, input="cp.inc"') == sum(flags)
     assert geom.count('*Include, input="j2.inc"') == includes.count('j2.inc')
 
@@ -215,3 +225,33 @@ def test_multiphase_abq_validation(tmp_path, includes, flags):
                        grain_phase_dict={1: 0, 2: 1},
                        props_file=includes, crystal_plasticity=flags)
     assert not (tmp_path / 'invalid_mat.inp').exists()
+
+
+@pytest.mark.parametrize('unit,scale', [('µm', 1), ('um', 1), ('mm', 1e-3), ('m', 1e-6)])
+def test_write_data_units(unit, scale, monkeypatch):
+    from types import SimpleNamespace
+    from kanapy.core import api
+    fields = ('title creator creator_ORCID creator_affiliation creator_institute creator_group '
+              'contributor contributor_ORCID contributor_affiliation contributor_institute contributor_group '
+              'date shared_with description rights rights_holder funder_name fund_identifier publisher relation keywords')
+    ms = SimpleNamespace(
+        rve=SimpleNamespace(size=(2, 2, 2), dim=(1, 1, 1), periodic=False),
+        mesh=SimpleNamespace(nvox=1, grain_phase_dict={1: 0}, grain_dict={1: [1]},
+                             vox_center_dict={1: (1, 1, 1)}),
+        create_microstructure_identifier=api.Microstructure.create_microstructure_identifier)
+    ms.create_microstructure_identifier = api.Microstructure.create_microstructure_identifier.__get__(ms)
+    monkeypatch.setattr(api.os.path, 'exists', lambda path: False)
+    data = api.Microstructure.write_data(
+        ms, user_metadata=dict.fromkeys(fields.split(), ''), interactive=False,
+        phases={'name': 'test'}, boundary_condition={'mechanical_BC': []}, length_unit=unit)
+    np.testing.assert_allclose(data['RVE_size'], np.full(3, 2 * scale), atol=0)
+    state = data['microstructure'][0]
+    np.testing.assert_allclose(state['voxels'][0]['centroid_coordinates'], np.full(3, scale), atol=0)
+    assert state['voxels'][0]['voxel_volume'] == pytest.approx((2 * scale) ** 3, abs=0)
+
+
+def test_export_abaqus_invalid_units(tmp_path):
+    file = tmp_path / 'invalid.inp'
+    with pytest.raises(ValueError, match='Output units must be'):
+        export2abaqus(None, file, {}, {}, units='cm')
+    assert not file.exists()

@@ -11,9 +11,74 @@ import os
 import numpy as np
 import logging
 import itertools
+from copy import deepcopy
+from .units import normalize_length_unit
 from scipy.stats import lognorm, vonmises
 from collections import defaultdict
 from typing import Any, Mapping, Optional, Sequence, Union
+
+
+def validate_matrix_mapping(mapping):
+    """Reject obsolete or conflicting GRAIN0 mappings without renumbering data."""
+    if mapping and 0 in mapping:
+        if mapping[0] != 0:
+            raise ValueError('GRAIN0 must belong to matrix PHASE0; migrate legacy phase IDs and material lists.')
+        if any(gid != 0 and pid == 0 for gid, pid in mapping.items()):
+            raise ValueError('Matrix PHASE0 may only contain GRAIN0.')
+
+
+def normalize_phase_descriptors(descriptors, *, validate=False):
+    """Copy descriptors and reserve phase 0 for an optional grain-free matrix.
+
+    ``Grain type: Matrix`` marks an explicit matrix descriptor, which is moved
+    to index 0. Other phases retain their relative order. A single grain phase
+    with fraction below one retains the legacy implicit matrix convention.
+    Phase numbers are the resulting zero-based list indices.
+    """
+    stats = deepcopy([descriptors] if isinstance(descriptors, Mapping) else list(descriptors))
+    if not stats:
+        raise ValueError('At least one phase descriptor is required.')
+    matrices = [i for i, d in enumerate(stats) if d.get('Grain type') == 'Matrix']
+    if len(matrices) > 1 or (matrices and len(stats) == 1):
+        raise ValueError('Define at most one matrix and at least one grain-bearing phase.')
+    if matrices:
+        matrix = stats.pop(matrices[0])
+        stats.insert(0, matrix)
+    elif len(stats) == 1:
+        vf = stats[0].get('Phase', {}).get('Volume fraction', 1.0)
+        if isinstance(vf, (int, float)) and 0 < vf < 1:
+            stats.insert(0, {'Grain type': 'Matrix',
+                          'Phase': {'Name': 'Matrix', 'Volume fraction': 1.0 - vf}})
+    # The matrix has no grain-size descriptor, but the first descriptor must
+    # carry global geometry and simulation settings. Do not copy alloy selectors.
+    if stats[0].get('Grain type') == 'Matrix':
+        for key in ('RVE', 'Simulation'):
+            if key not in stats[0]:
+                provider = next((d[key] for d in stats[1:] if key in d), None)
+                if provider is not None:
+                    stats[0][key] = deepcopy(provider)
+                    if key == 'RVE':
+                        stats[0][key].pop('ialloy', None)
+    fractions = []
+    for ip, desc in enumerate(stats):
+        phase = desc.setdefault('Phase', {'Name': f'Phase_{ip}'})
+        phase['Number'] = ip
+        vf = phase.get('Volume fraction', 1.0 - sum(fractions))
+        phase['Volume fraction'] = vf
+        if validate:
+            if not isinstance(vf, (int, float)) or not np.isfinite(vf) or vf < 0:
+                raise ValueError('Phase volume fractions must be finite and nonnegative.')
+        fractions.append(vf)
+    if validate:
+        total = sum(fractions)
+        if total > 1 and not np.isclose(total, 1):
+            raise ValueError(f'Sum of all phase fractions exceeds 1: {fractions}')
+        if not np.isclose(total, 1):
+            raise ValueError('Phase volume fractions must sum to 1.')
+        if any(d.get('Grain type') == 'Matrix' and not 0 < fractions[i] < 1
+               for i, d in enumerate(stats)):
+            raise ValueError('Matrix volume fraction must be between 0 and 1.')
+    return stats
 
 
 def stat_names(legacy: bool = False) -> tuple[str, str, str, str]:
@@ -80,7 +145,7 @@ class RVE_creator(object):
     periodic : bool
         Whether the RVE is periodic
     units : str
-        Units of RVE dimensions, either "mm" or "um"
+        Output length units: "µm", "um", "mm", or "m"
     nparticles : list of int
         Number of particles for each phase
     particle_data : list of dict
@@ -106,7 +171,7 @@ class RVE_creator(object):
     2. Data written in output files include:
        - Ellipsoid attributes: Major, Minor, Equivalent diameters and tilt angle
        - RVE attributes: size, number of voxels, voxel resolution
-       - Simulation attributes: periodicity and output unit scale (mm or μm) for ABAQUS .inp file
+       - Simulation attributes: periodicity and output length units (µm, um, mm, or m) for ABAQUS .inp file
     """
 
     def __init__(
@@ -376,6 +441,9 @@ class RVE_creator(object):
                 return pdict
             return pdict
 
+        stats_dicts = normalize_phase_descriptors(stats_dicts, validate=True)
+        self.matrix_phase = 0 if any(d.get("Grain type") == "Matrix" for d in stats_dicts) else None
+
         # Start RVE generation
         if from_voxels:
             print('Creating an RVE from voxel input')
@@ -386,7 +454,7 @@ class RVE_creator(object):
         self.size = None  # tuple of lengths along Cartesian axes
         self.dim = None  # tuple of number of voxels along Cartesian axes
         self.periodic = None  # Boolean for periodicity of RVE
-        self.units = None  # Units of RVE dimensions, either "mm" or "um" (micron)
+        self.units = None  # Output length units: "µm", "um", "mm", or "m"
         self.ialloy = None  # Number of alloy in ICAMS CP-UMAT
         phase_names = []  # list of names of phases
         phase_vf = []  # list of volume fractions of phases
@@ -420,11 +488,10 @@ class RVE_creator(object):
                     if self.dim != nvox:
                         logging.warning(f'Conflicting RVE voxel dimensions in descriptors: {self.dim}, {nvox}.' +
                                         'Using first value.')
-                # Extract Alloy number for ICAMS CP-UMAT
-                if "ialloy" in stats['RVE'].keys():
-                    ialloy.append(stats['RVE']['ialloy'])
             elif ip == 0:
                 raise ValueError('RVE properties must be specified in descriptors for first phase.')
+
+            ialloy.append(stats.get('RVE', {}).get('ialloy'))
 
             # Extract other simulation attributes, must be specified for phase 0
             if "Simulation" in stats.keys():
@@ -437,10 +504,7 @@ class RVE_creator(object):
                     self.periodic = periodic
                 elif self.periodic != periodic:
                     logging.warning(f'Inconsistent values for periodicity. Using periodicity: {self.periodic}.')
-                units = str(stats["Simulation"]["output_units"])
-                # Raise ValueError if units are not specified as 'mm' or 'um'
-                if units != 'mm' and units != 'um':
-                    raise ValueError('Output units can only be "mm" or "um"!')
+                units = normalize_length_unit(stats["Simulation"]["output_units"])
                 if self.units is None:
                     self.units = units
                 elif self.units != units:
@@ -455,11 +519,14 @@ class RVE_creator(object):
             else:
                 phase_names.append(f'Phase_{ip}')
                 phase_vf.append(1. - np.sum(phase_vf))  # volume fraction can only be unspecified for last phase
-            if np.sum(phase_vf) > 1.:
+            if np.sum(phase_vf) > 1. and not np.isclose(np.sum(phase_vf), 1.):
                 raise ValueError(f"Sum of all phase fractions exceeds 1: {phase_vf}")
 
             # Extract grains shape attributes to initialize particles
             if not from_voxels:
+                if stats.get("Grain type") == "Matrix" or phase_vf[ip] == 0:
+                    self.nparticles.append(0)
+                    continue
                 if stats["Grain type"] not in ["Elongated", "Equiaxed", "Free"]:
                     raise ValueError('The value for "Grain type" must be either "Equiaxed" or "Elongated".')
                 part_dict = init_particles(ip)
@@ -477,10 +544,7 @@ class RVE_creator(object):
         print('\n')
         self.phase_names = phase_names
         self.phase_vf = phase_vf
-        nall = len(ialloy)
-        if nall > 0:
-            if nall != len(phase_vf):
-                logging.warning(f'{nall} values of "ialloy" provided, but only {len(phase_vf)} phases defined.')
+        if any(value is not None for value in ialloy):
             self.ialloy = ialloy
         return
 
@@ -692,7 +756,7 @@ def set_stats(
     gtype : str, optional
         Grain type, either 'Elongated' or 'Equiaxed'
     rveunit : str, optional
-        Unit of RVE dimensions ('um' or 'mm')
+        Output length units ('µm', 'um', 'mm', or 'm'); RVE dimensions are in micrometers
     periodicity : bool or str, optional
         Whether RVE is periodic
     VF : float, optional
@@ -715,6 +779,8 @@ def set_stats(
     - Sets default cutoff values if not provided
     - Supports saving statistical info to JSON
     """
+
+    rveunit = normalize_length_unit(rveunit)
 
     # type of grains either 'Elongated' or 'Equiaxed'
     if not (gtype == 'Elongated' or gtype == 'Equiaxed'):
