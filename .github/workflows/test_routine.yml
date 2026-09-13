@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -13,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     name: Test kanapy
     steps:
     - uses: actions/checkout@v4
@@ -21,14 +23,13 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
     - name: Install dependencies
       run: |
-        conda --version
-        which python
-        python -m pip install . 
-        python -m pip install pytest pytest-mock pytest-cov
+        python -m pip install --upgrade pip
+        python -m pip install ".[dev]"
         
     - name: run tests
       run: |
-        pytest tests/test_entities.py tests/test_input_output.py tests/test_packing.py tests/test_voxelization.py -v
+        python -m pytest tests -v
  

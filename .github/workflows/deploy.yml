@@ -6,6 +6,9 @@ on:
       - "v*.*.*"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build package
@@ -27,6 +30,13 @@ jobs:
         
       - name: Check distribution metadata
         run: twine check dist/*
+
+      - name: Smoke test wheel
+        working-directory: /tmp
+        run: |
+          python -m venv kanapy-wheel-test
+          ./kanapy-wheel-test/bin/python -m pip install "$GITHUB_WORKSPACE"/dist/*.whl
+          ./kanapy-wheel-test/bin/python -c "import kanapy; print(kanapy.__version__)"
   
       - name: Upload to PyPI
         env:

@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python <3.14
+  - python >=3.10,<3.14
   - numpy
   - scipy
   - matplotlib
@@ -24,4 +24,5 @@ dependencies:
   - scikit-image
   - networkx
   - jsonschema
+  - requests
 
