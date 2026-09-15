@@ -482,7 +482,7 @@ def export2abaqus(
         is calculated using logarithmic strain based on the edge length and stretch ratio.
         For stress loading, a pressure load is applied to the corresponding surface set.
         The function uses mappings from loading_direction to node or surface sets and
-        writes appropriate *Boundary or *Dload blocks in the ABAQUS input file.
+        writes appropriate *Boundary or *Dsload blocks in the ABAQUS input file.
         """
 
         if load_type == 'strain':
@@ -529,7 +529,7 @@ def export2abaqus(
                 f.write('** LOADS\n')
                 f.write('**\n')
                 f.write(f'** Name: {bc_name} Type: Pressure\n')
-                f.write('*Dload\n')
+                f.write('*Dsload\n')
                 f.write(f'{set_name}, P, {-vstress:.6f}\n')
 
 
