@@ -1,11 +1,14 @@
 """Focused tests for the standard ORIX texture helpers."""
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 from orix.crystal_map import Phase
 from orix.quaternion import Orientation
 
 from kanapy.texture import (
+    EBSDmap,
     createOrisetRandom,
     find_similar_regions,
     find_similar_regions_by_misorientation,
@@ -15,6 +18,41 @@ from kanapy.texture import (
     mean_orientation_data,
     neighbors,
 )
+
+
+def test_read_ang_with_orix_backend(tmp_path, monkeypatch):
+    """Import the real ANG fixture and reconstruct grains without MATLAB or plots."""
+    fixture = (Path(__file__).resolve().parents[1] / 'examples' / 'fixtures'
+               / 'ebsd_316L_500x500.ang')
+    # Fixture lookup must also work outside the repository working directory.
+    monkeypatch.chdir(tmp_path)
+    ebsd = EBSDmap(str(fixture), show_plot=False, show_hist=False)
+
+    assert ebsd.emap.shape == (169, 169)
+    assert ebsd.npx == 169 * 169
+    np.testing.assert_allclose([ebsd.dx, ebsd.dy], [2.961, 2.961], atol=1e-3)
+    assert len(ebsd.ms_data) == 1
+    phase = ebsd.ms_data[0]
+    assert phase['name'] == 'Iron fcc'
+    assert phase['index'] == 0
+    assert phase['vf'] == pytest.approx(1.)
+    assert phase['cs'].name == 'm-3m'
+    assert phase['ori'].size == ebsd.npx
+    assert np.all(np.isfinite(phase['ori'].data))
+    np.testing.assert_allclose(np.linalg.norm(phase['ori'].data, axis=-1), 1.)
+
+    graph = phase['graph']
+    assert phase['ngrains'] == ebsd.ngrains == len(graph)
+    assert 1 < phase['ngrains'] < ebsd.npx
+    pixels = np.concatenate([node['pixels'] for _, node in graph.nodes.items()])
+    np.testing.assert_array_equal(np.sort(pixels), np.arange(ebsd.npx))
+    diameters = phase['gs_data']
+    assert len(diameters) == phase['ngrains']
+    assert np.all(np.isfinite(diameters)) and np.all(diameters > 0)
+    sigma, location, scale = phase['gs_param']
+    assert np.isfinite(sigma) and sigma > 0
+    assert location == 0
+    assert np.isfinite(scale) and scale > 0
 
 
 def test_neighbors_supports_four_and_eight_connectivity():

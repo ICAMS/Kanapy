@@ -25,6 +25,7 @@ from datetime import datetime
 
 from .units import normalize_length_unit, length_scale_from_um
 from .apd_geometry import build_grain_geometry, label_geometry_points
+from .particle_geometry import build_particle_geometry
 from .entities import Simulation_Box
 from .input_output import export2abaqus, writeAbaqusMat, read_dump, _abaqus_phase_options
 from .initializations import RVE_creator, mesh_creator, normalize_phase_descriptors, validate_matrix_mapping
@@ -299,8 +300,11 @@ class Microstructure(object):
             If None, uses `self.rve.dim`.
         method : {"apd", "legacy"}
             APD center-cost assignment (default) or historical growth assignment.
+            Matrix/inclusion RVEs and particles with inner geometry automatically
+            use legacy assignment, with a warning if APD was selected.
         **voxelization_options
             Keyword options forwarded to the selected voxelization routine.
+            APD-specific options are ignored when automatically switching to legacy.
 
         Returns
         -------
@@ -336,6 +340,18 @@ class Microstructure(object):
 
         if method not in ("apd", "legacy"):
             raise ValueError("method must be apd or legacy")
+
+        if method == "apd" and (
+                self.precipit is not None
+                or getattr(self.rve, "matrix_phase", None) is not None
+                or any(getattr(particle, "inner", None) is not None for particle in particles)):
+            logging.warning(
+                "APD voxelization does not support matrix/inclusion phases or particle "
+                "inner structures; switching to legacy voxelization. "
+                "APD-specific options are ignored.")
+            method = "legacy"
+            for option in ("periodic", "fit_volumes", "fit_options", "weights", "chunk_size"):
+                voxelization_options.pop(option, None)
 
         # initialize voxel structure (= mesh)
         self.mesh = mesh_creator(dim)
@@ -426,12 +442,13 @@ class Microstructure(object):
 
     def generate_grains(self, resolution=10, *, batch_size=8192,
                         optimize=True, tolerance=1e-10) -> None:
-        """Generate shared polyhedral grain geometry from an APD or packed ellipsoids.
+        """Generate grain boundaries or particle surfaces for matrix RVEs.
 
         Parameters
         ----------
         resolution : int or tuple of three ints, default=10
-            Background cell counts, independent of voxel resolution.
+            Background cell counts, independent of voxel resolution. For matrix RVEs,
+            controls particle angular sampling (2*max(resolution)+1, minimum 8).
         batch_size : int, default=8192
             Number of vertices per APD cost evaluation batch.
         optimize : bool, default=True
@@ -446,6 +463,8 @@ class Microstructure(object):
             self.geometry, alongside Grains, Points, Facets and shared GBarea.
             Per-grain data contains integrated Volume, Center, Covariance,
             moment-equivalent SemiAxes, volume-equivalent eqDia and Phase.
+            Matrix RVEs store particle Grains and a triangulated Boundary/Surface
+            without APD, Background or Partition; matrix volume is in PhaseVolumes.
 
         Notes
         -----
@@ -453,11 +472,13 @@ class Microstructure(object):
         APD exists, builds one from packed ellipsoids and fits relative particle
         volumes with the default APD fitting settings. Voxelization is optional;
         no voxel mesh is created or modified. The diagram is stored in
-        self.geometry['APD']. A newly built APD fills the entire RVE, including
-        for legacy precipitate/porosity inputs; it does not preserve a matrix
-        volume fraction.
+        self.geometry['APD']. Matrix/inclusion or porosity RVEs instead mesh
+        particle surfaces directly, retaining an implicit matrix (phase 0).
+        Periodic fragments share their original particle ID. Surface meshes
+        approximate the packed ellipsoids; overlaps are not Boolean-unioned.
+        Particle inner structures are unsupported and raise ValueError.
         Interfaces are stored once. Disconnected components are preserved.
-        Geometry approximates linearly interpolated costs; no FE volume mesh is
+        APD geometry approximates linearly interpolated costs; no FE volume mesh is
         produced. Periodic shape moments describe fragments within the box,
         not an unwrapped grain. Geometry replaces the prior result only after
         successful construction. Statistics cached for prior geometry are cleared.
@@ -466,10 +487,29 @@ class Microstructure(object):
         ------
         ValueError
             If neither an APD nor original ellipsoids are available (run pack
-            first), phase metadata is missing, or geometry verification fails.
+            first), particles have inner structure, phase metadata is missing,
+            or geometry verification fails.
         """
-        diagram = getattr(self.mesh, 'apd', None)
         particles = getattr(self, 'particles', None) or []
+        if any(getattr(p, 'inner', None) is not None for p in particles):
+            raise ValueError('generate_grains does not support particles with inner structure.')
+        if (getattr(self, 'precipit', None) is not None
+                or getattr(getattr(self, 'rve', None), 'matrix_phase', None) is not None):
+            simbox = getattr(self, 'simbox', None)
+            origin = None if simbox is None else [simbox.left, simbox.top, simbox.front]
+            geometry = build_particle_geometry(
+                particles, self.rve.size, resolution, periodic=self.rve.periodic,
+                origin=origin, tolerance=tolerance)
+            self.geometry = geometry
+            self.rve_stats = None
+            self.rve_stats_labels = None
+            if self.nphases > 1:
+                print('Volume fractions of phases in particle surface geometry:')
+                for ip in range(self.nphases):
+                    fraction = geometry['PhaseVolumes'].get(ip, 0.) / np.prod(self.rve.size)
+                    print(f'{ip}: {self.rve.phase_names[ip]} ({100*fraction:.3f}%)')
+            return
+        diagram = getattr(self.mesh, 'apd', None)
         if diagram is None:
             from copy import copy
             from .power_diagram import AnisotropicPowerDiagram
@@ -2018,7 +2058,7 @@ class Microstructure(object):
         return fname
 
     def write_stl(self, file=None, path='./', *, boundary=None, include_exterior=False) -> None:
-        """Export the shared triangulated APD grain boundaries as ASCII STL.
+        """Export shared grain boundaries or particle–matrix interfaces as ASCII STL.
 
         Parameters
         ----------
@@ -2042,8 +2082,8 @@ class Microstructure(object):
         Notes
         -----
         Each shared interface triangle is written once, with its normal pointing
-        out of the first grain in its grain pair. No particle or legacy geometry
-        export is performed. STL discards grain IDs and adjacency; the internal
+        out of the first grain in its grain pair. Particle–matrix interfaces use
+        outward particle normals. STL discards grain IDs and adjacency; the internal
         interface network is not generally a closed manifold solid. Coordinates
         remain in the supplied APD mesh frame and units.
 

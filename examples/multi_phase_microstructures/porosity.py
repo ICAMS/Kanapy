@@ -57,3 +57,7 @@ knpy.plot_voxels_3D(ms.mesh.grains, mask=mask)
 
 # Write voxel structure to JSON file
 ms.write_voxels(script_name=__file__, mesh=False, system=False)
+
+ms.generate_grains()
+ms.plot_grains()
+ms.write_stl()

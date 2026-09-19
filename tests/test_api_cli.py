@@ -34,6 +34,50 @@ def test_voxelize_rejects_non_tuple_dimensions():
         api.Microstructure.voxelize(microstructure, particles=[], dim=[2, 2, 2])
 
 
+@pytest.mark.parametrize('feature', ['matrix', 'inclusions', 'inner', 'ordinary'])
+@pytest.mark.parametrize('method', [None, 'apd', 'legacy'])
+def test_voxelize_automatic_legacy_dispatch(monkeypatch, caplog, feature, method):
+    from kanapy.core.entities import Simulation_Box
+
+    particles = [SimpleNamespace(inner=None),
+                 SimpleNamespace(inner=object() if feature == 'inner' else None)]
+    ms = SimpleNamespace(
+        particles=[], rve=SimpleNamespace(dim=(2, 2, 2), periodic=False,
+                                         matrix_phase=0 if feature == 'matrix' else None),
+        simbox=Simulation_Box((1, 1, 1)), nphases=1,
+        precipit=0.4 if feature == 'inclusions' else None,
+        nparticles=[1], geometry=None,
+    )
+    calls = []
+
+    def legacy(actual_particles, mesh, nphases, prec_vf=None):
+        calls.append(('legacy', actual_particles, prec_vf, {}))
+        mesh.ngrains_phase = [1]
+        return mesh
+
+    def apd(actual_particles, mesh, nphases, prec_vf=None, **options):
+        calls.append(('apd', actual_particles, prec_vf, options))
+        mesh.ngrains_phase = [1]
+        return mesh
+
+    monkeypatch.setattr(api, 'voxelizationRoutine', apd)
+    monkeypatch.setattr(api, 'voxelizationRoutine_legacy', legacy)
+    options = {} if method == 'legacy' else dict(
+        fit_volumes=False, fit_options={}, weights=None, chunk_size=16, periodic=True)
+    if method is not None:
+        options['method'] = method
+    api.Microstructure.voxelize(ms, particles=particles, **options)
+
+    expected = 'legacy' if method == 'legacy' or feature != 'ordinary' else 'apd'
+    assert len(calls) == 1
+    assert calls[0][:3] == (expected, particles, ms.precipit)
+    if expected == 'apd':
+        assert calls[0][3]['periodic'] is True
+        assert calls[0][3]['fit_volumes'] is False
+    assert ('switching to legacy' in caplog.text) == (
+        method != 'legacy' and feature != 'ordinary')
+
+
 def test_identifier_is_deterministic_and_content_sensitive():
     microstructure = kanapy.Microstructure(descriptor="from_voxels")
     snapshot = {

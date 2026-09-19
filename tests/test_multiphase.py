@@ -249,13 +249,13 @@ def test_stats_skip_matrix_without_renumbering(three_phases, monkeypatch):
     assert comparisons == ['phase1', 'phase2']
 
 
-def test_legacy_matrix_unchanged_when_apd_geometry_fails(voxelized_three_phases_legacy, monkeypatch):
+def test_legacy_matrix_unchanged_when_particle_geometry_fails(voxelized_three_phases_legacy, monkeypatch):
     ms = voxelized_three_phases_legacy
     original = deepcopy(ms.mesh.grain_dict)
     from kanapy.core import api
     def fail(*args, **kwargs):
         raise ValueError('geometry failure')
-    monkeypatch.setattr(api, 'build_grain_geometry', fail)
+    monkeypatch.setattr(api, 'build_particle_geometry', fail)
     with pytest.raises(ValueError, match='geometry failure'):
         ms.generate_grains()
     for gid in original:
