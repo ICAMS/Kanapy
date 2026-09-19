@@ -19,18 +19,18 @@ import orix
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import Delaunay
 from typing import Dict, Any, List, Optional, Union, Mapping
 from importlib.metadata import version as pkg_version
 from datetime import datetime
 
 from .units import normalize_length_unit, length_scale_from_um
-from .grains import calc_polygons
+from .apd_geometry import build_grain_geometry, label_geometry_points
 from .entities import Simulation_Box
 from .input_output import export2abaqus, writeAbaqusMat, read_dump, _abaqus_phase_options
 from .initializations import RVE_creator, mesh_creator, normalize_phase_descriptors, validate_matrix_mapping
 from .packing import packingRoutine
 from .voxelization import voxelizationRoutine
+from .voxelization_legacy import voxelizationRoutine_legacy
 from .smoothingGB import smoothingRoutine
 from .rve_stats import get_stats_vox, get_stats_part, get_stats_poly
 from .plotting import plot_init_stats, plot_voxels_3D, plot_ellipsoids_3D, \
@@ -278,10 +278,15 @@ class Microstructure(object):
                            k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
                            poly=poly, save_files=save_files, verbose=verbose)
 
+    def voxelize_legacy(self, particles=None, dim=None):
+        """Voxelize using the historical growth/polygon implementation."""
+        return self.voxelize(particles, dim, method="legacy")
+
     def voxelize(
             self,
             particles: Optional[List[Any]] = None,
-            dim: Optional[tuple[int, int, int]] = None) -> None:
+            dim: Optional[tuple[int, int, int]] = None, *,
+            method: str = "apd", **voxelization_options) -> None:
         """
         Generate the RVE by assigning voxels to grains.
 
@@ -292,6 +297,10 @@ class Microstructure(object):
         dim : tuple of int or None, optional, default=None
             3-tuple specifying the number of voxels in each spatial direction.
             If None, uses `self.rve.dim`.
+        method : {"apd", "legacy"}
+            APD center-cost assignment (default) or historical growth assignment.
+        **voxelization_options
+            Keyword options forwarded to the selected voxelization routine.
 
         Returns
         -------
@@ -325,13 +334,19 @@ class Microstructure(object):
                 raise ValueError(f'"dim" must be a 3-tuple of the voxel numbers in each direction, not {dim}.')
             self.rve.dim = dim
 
+        if method not in ("apd", "legacy"):
+            raise ValueError("method must be apd or legacy")
+
         # initialize voxel structure (= mesh)
         self.mesh = mesh_creator(dim)
         self.mesh.nphases = self.nphases
         self.mesh.create_voxels(self.simbox)
 
-        self.mesh = \
-            voxelizationRoutine(particles, self.mesh, self.nphases, prec_vf=self.precipit)
+        routine = voxelizationRoutine if method == "apd" else voxelizationRoutine_legacy
+        if method == "apd":
+            voxelization_options.setdefault("periodic", self.rve.periodic)
+        self.mesh = routine(particles, self.mesh, self.nphases,
+                            prec_vf=self.precipit, **voxelization_options)
         if np.any(self.nparticles != self.mesh.ngrains_phase):
             logging.info(f'Number of grains per phase changed from {self.nparticles} to ' +
                          f'{list(self.mesh.ngrains_phase)} during voxelization.')
@@ -409,90 +424,82 @@ class Microstructure(object):
         if isinstance(self.geometry, dict):
             self.geometry['GBfaces'] = grain_facesDict
 
-    def generate_grains(self) -> None:
-        """
-        Calculate and store polyhedral grain geometry, including particle- and grain-diameter attributes,
-        for statistical comparison
-
-        Notes
-        -----
-        - Requires `self.mesh` to be initialized by `voxelize`.
-        - Updates `self.geometry` with polyhedral grain volumes and shared grain boundary (GB) areas.
-        - If `self.precipit` is True, irregular grain 0 is temporarily removed from analysis.
-        - Logs warnings if grains are not represented in the polyhedral geometry.
-        - Prints volume fractions of each phase in the polyhedral geometry.
+    def generate_grains(self, resolution=10, *, batch_size=8192,
+                        optimize=True, tolerance=1e-10) -> None:
+        """Generate shared polyhedral grain geometry from an APD or packed ellipsoids.
 
         Parameters
         ----------
-        None
+        resolution : int or tuple of three ints, default=10
+            Background cell counts, independent of voxel resolution.
+        batch_size : int, default=8192
+            Number of vertices per APD cost evaluation batch.
+        optimize : bool, default=True
+            Prune dominated local grains and shortcut uncut tetrahedra.
+        tolerance : float, default=1e-10
+            Numerical tolerance for local clipping and global assembly.
 
         Returns
         -------
         None
-            The calculated grain geometry is stored in `self.geometry`. Phase volume fractions
-            are printed to the console.
+            Stores APD, Background, Partition, Boundary and Surface objects in
+            self.geometry, alongside Grains, Points, Facets and shared GBarea.
+            Per-grain data contains integrated Volume, Center, Covariance,
+            moment-equivalent SemiAxes, volume-equivalent eqDia and Phase.
+
+        Notes
+        -----
+        Reuses an attached voxelization APD without changing its weights. If no
+        APD exists, builds one from packed ellipsoids and fits relative particle
+        volumes with the default APD fitting settings. Voxelization is optional;
+        no voxel mesh is created or modified. The diagram is stored in
+        self.geometry['APD']. A newly built APD fills the entire RVE, including
+        for legacy precipitate/porosity inputs; it does not preserve a matrix
+        volume fraction.
+        Interfaces are stored once. Disconnected components are preserved.
+        Geometry approximates linearly interpolated costs; no FE volume mesh is
+        produced. Periodic shape moments describe fragments within the box,
+        not an unwrapped grain. Geometry replaces the prior result only after
+        successful construction. Statistics cached for prior geometry are cleared.
 
         Raises
         ------
         ValueError
-            - If `self.mesh` or `self.mesh.grains` is None (i.e., voxelized microstructure not available).
+            If neither an APD nor original ellipsoids are available (run pack
+            first), phase metadata is missing, or geometry verification fails.
         """
-
-        if self.mesh is None or self.mesh.grains is None:
-            raise ValueError('No information about voxelized microstructure. Run voxelize first.')
-        if self.precipit and 0 in self.mesh.grain_dict.keys():
-            # in case of precipit, remove irregular grain 0 from analysis
-            empty_vox = self.mesh.grain_dict.pop(0)
-            grain_store = self.mesh.grain_phase_dict.pop(0)
-        else:
-            empty_vox = None
-            grain_store = None
-
-        try:
-            self.geometry = calc_polygons(self.rve, self.mesh)
-        finally:
-            if empty_vox is not None:
-                self.mesh.grain_dict[0] = empty_vox
-                self.mesh.grain_phase_dict[0] = grain_store
-        # verify that geometry['Grains'] and mesh.grain_dict are consistent
-        """if np.any(self.geometry['Ngrains'] != self.ngrains):
-            logging.warning(f'Only facets for {self.geometry["Ngrains"]} created, but {self.Ngr} grains in voxels.')
-            for igr in self.mesh.grain_dict.keys():
-                if igr not in self.geometry['Grains'].keys():
-                    logging.warning(f'Grain: {igr} not in geometry. Be aware when creating GB textures.')"""
-        # verify that geometry['GBarea'] is consistent with geometry['Grains']
-        gba = self.geometry['GBarea']
-        ind = []
-        igr = []
-        for i, gblist in enumerate(gba):
-            if not gblist[0] in self.geometry['Grains'].keys():
-                ind.append(i)
-                igr.append(gblist[0])
-                continue
-            if not gblist[1] in self.geometry['Grains'].keys():
-                ind.append(i)
-                igr.append(gblist[1])
-        if len(ind) > 0:
-            logging.warning(f'{len(ind)} grains are not represented in polyhedral geometry.')
-            # logging.warning('Consider increasing the number of voxels, as grains appear to be very irregular.')
-            """ind.reverse()
-            igr.reverse()
-            for j, i in enumerate(ind):
-                logging.warning(f'Removing {gba[i]} from GBarea as grain {igr[j]} does not exist.')
-                gba.pop(i)
-            self.geometry['GBarea'] = gba"""
-        # extract volume fractions from polyhedral grains
+        diagram = getattr(self.mesh, 'apd', None)
+        particles = getattr(self, 'particles', None) or []
+        if diagram is None:
+            from copy import copy
+            from .power_diagram import AnisotropicPowerDiagram
+            originals = [p for p in particles if p.duplicate is None]
+            if not originals:
+                raise ValueError('No ellipsoids available. Run pack() before generate_grains.')
+            simbox = getattr(self, 'simbox', None)
+            origin = np.zeros(3) if simbox is None else np.array(
+                [simbox.left, simbox.top, simbox.front])
+            local = [copy(p) for p in originals]
+            for particle, original in zip(local, originals):
+                particle.x, particle.y, particle.z = original.get_pos() - origin
+            diagram = AnisotropicPowerDiagram.from_particles(
+                local, self.rve.size, periodic=self.rve.periodic)
+            diagram.fit_volumes()
+        phases = dict(getattr(self.mesh, 'grain_phase_dict', None) or {})
+        for particle in particles:
+            if particle.duplicate is None:
+                phases[particle.id] = particle.phasenum
+        geometry = build_grain_geometry(diagram, phases, resolution,
+                                       batch_size=batch_size, optimize=optimize,
+                                       tolerance=tolerance)
+        self.geometry = geometry
+        self.rve_stats = None
+        self.rve_stats_labels = None
         if self.nphases > 1:
-            ph_vol = np.zeros(self.nphases)
-            for igr, grd in self.geometry['Grains'].items():
-                ip = grd['Phase']
-                ph_vol[ip] += grd['Volume']
-            print('Volume fractions of phases in polyhedral geometry:')
+            print('Volume fractions of phases in APD polyhedral geometry:')
             for ip in range(self.nphases):
-                if self.precipit is not None and ip == 0:
-                    continue  # Matrix GRAIN0 has no reconstructed grain geometry.
-                vf = 100.0 * ph_vol[ip] / np.prod(self.rve.size)
-                print(f'{ip}: {self.rve.phase_names[ip]} ({vf.round(1)}%)')
+                fraction = geometry['PhaseVolumes'].get(ip, 0.) / diagram.volume
+                print(f'{ip}: {self.rve.phase_names[ip]} ({100*fraction:.3f}%)')
 
     def generate_orientations(
             self,
@@ -861,9 +868,13 @@ class Microstructure(object):
                 from kanapy_mtex.texture import get_ipf_colors
             else:
                 from kanapy.texture import get_ipf_colors
-            if isinstance(ori, bool) and ori:
-                ori = np.array([val for val in self.mesh.grain_ori_dict.values()])
-            clist = get_ipf_colors(ori, color_key)
+            if isinstance(ori, bool):
+                if ori:
+                    clist = get_ipf_colors(np.array([val for val in self.mesh.grain_ori_dict.values()]), color_key)
+                else:
+                    clist = None
+            else:
+                clist = get_ipf_colors(ori, color_key)
         else:
             clist = None
         hmin = min(self.rve.size)
@@ -885,7 +896,7 @@ class Microstructure(object):
             dual_phase: Optional[bool] = None,
             phases: bool = False) -> None:
         """
-        Plot the polygonalized microstructure of the RVE in 3D.
+        Plot APD polyhedral grains in 3D, drawing shared interfaces once.
 
         This function visualizes the polygonal (polyhedral) grain geometry of the
         microstructure, typically after `generate_grains()` has been executed.
@@ -1124,7 +1135,7 @@ class Microstructure(object):
                                   'Run "generate_grains()" first.')
                     return
                 grain_stats = get_stats_poly(self.geometry['Grains'], iphase=iphase, ax_max=ax_max,
-                                             show_plot=show_all, phase_dict=self.mesh.grain_phase_dict,
+                                             show_plot=show_all, phase_dict={gid: g['Phase'] for gid, g in self.geometry['Grains'].items()},
                                              verbose=verbose, save_files=save_files)
                 stats_list.append(grain_stats)
                 labels.append('Grains')
@@ -1478,7 +1489,7 @@ class Microstructure(object):
         abq_file = rve.write_abq(nodes='smooth', dual_phase=True, ialloy=alloy_list)
         """
         if nodes is None:
-            if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
+            if self.mesh.nodes_smooth is not None and 'GBarea' in (self.geometry or {}):
                 logging.warning('\nWarning: No argument "nodes" is given, will write smoothened structure')
                 nodes = self.mesh.nodes_smooth
                 faces = self.geometry['GBarea']
@@ -1494,7 +1505,7 @@ class Microstructure(object):
             faces = None
             ntag = '_voxels'
         elif nodes.lower() in ['smooth', 's']:
-            if self.mesh.nodes_smooth is not None and 'GBarea' in self.geometry.keys():
+            if self.mesh.nodes_smooth is not None and 'GBarea' in (self.geometry or {}):
                 nodes = self.mesh.nodes_smooth
                 faces = self.geometry['GBarea']  # use tet elements for smoothened structure
                 ntag = '_smooth'
@@ -1789,8 +1800,9 @@ class Microstructure(object):
 
         Notes
         -----
-        - Uses Delaunay triangulation to determine which grain each pixel belongs to
-          when exporting polygons.
+        - APD polygon slices use interpolated background costs, preserving
+          nonconvex and disconnected grains. Orientation dictionaries use grain IDs.
+          Orientation arrays retain the row = grain ID minus one convention.
         - Slice plotting uses a colormap (default 'prism') and includes optional
           dual-phase coloring.
 
@@ -1805,8 +1817,6 @@ class Microstructure(object):
         >>> # Plot and save the slice as PDF
         >>> fname = rve.output_ang(save_plot=True)
         """
-        if type(ori) is dict:
-            ori = np.array([val for val in ori.values()])
         cut = cut.lower()
         if type(pos) is str:
             pos = pos.lower()
@@ -1916,9 +1926,9 @@ class Microstructure(object):
 
         # determine whether polygons or voxels shall be exported
         if data is None:
-            if 'Grains' in self.geometry.keys():
+            if self.geometry is not None and 'Grains' in self.geometry:
                 data = 'poly'
-            elif self.mesh.voxels is None:
+            elif self.mesh is None or self.mesh.grains is None:
                 raise ValueError('Neither polygons nor voxels for grains are present.\
                                  \nRun voxelize and generate_grains first.')
             else:
@@ -1943,26 +1953,17 @@ class Microstructure(object):
                     g_slice_phase = np.array(self.mesh.phases[iz, :, :], dtype=int)
         else:
             title += ' (Polygons)'
-            xv, yv = np.meshgrid(ix * sx, iy * sy, indexing='ij')
-            grain_slice = np.ones(len(ix) * len(iy), dtype=int)
-            if cut == 'xy':
-                mesh_slice = np.array([xv.flatten(), yv.flatten(), grain_slice * iz * sz]).T
-            elif cut == 'xz':
-                mesh_slice = np.array([xv.flatten(), grain_slice * iz * sz, yv.flatten()]).T
-            else:
-                mesh_slice = np.array([grain_slice * iz * sz, xv.flatten(), yv.flatten()]).T
-            grain_slice = np.zeros(len(ix) * len(iy), dtype=int)
-            for igr in self.geometry['Grains'].keys():
-                pts = self.geometry['Grains'][igr]['Points']
-                try:
-                    tri = Delaunay(pts)
-                    i = tri.find_simplex(mesh_slice)
-                    ind = np.nonzero(i >= 0)[0]
-                    grain_slice[ind] = igr
-                except Exception as e:
-                    logging.error(f'An unexpected exception occurred: {e}')
-                    logging.error('Grain #{} has no convex hull (Nvertices: {})'
-                                  .format(igr, len(pts)))
+            spacing = np.asarray(self.rve.size)/np.asarray(self.rve.dim)
+            horizontal, vertical, normal = {'xy': (0,1,2), 'xz': (0,2,1), 'yz': (1,2,0)}[cut]
+            xv, yv = np.meshgrid(ix * spacing[horizontal], iy * spacing[vertical], indexing='ij')
+            mesh_slice = np.empty((xv.size,3))
+            mesh_slice[:, horizontal] = xv.ravel()
+            mesh_slice[:, vertical] = yv.ravel()
+            mesh_slice[:, normal] = iz * spacing[normal]
+            grain_slice = label_geometry_points(self.geometry, mesh_slice)
+            if dual_phase:
+                g_slice_phase = np.array([self.geometry['Grains'][gid]['Phase']
+                                          for gid in grain_slice]).reshape(xv.shape)
             if np.any(grain_slice == 0):
                 ind = np.nonzero(grain_slice == 0)[0]
                 logging.error('Incomplete slicing for {} pixels in {} slice at {}.'
@@ -1971,19 +1972,22 @@ class Microstructure(object):
 
         if save_files:
             if ori is None:
-                ori = np.zeros((self.Ngr, 3))
-                ori[:, 0] = np.random.rand(self.Ngr) * 2 * np.pi
-                ori[:, 1] = np.random.rand(self.Ngr) * 0.5 * np.pi
-                ori[:, 2] = np.random.rand(self.Ngr) * 0.5 * np.pi
+                ori = {gid: np.random.rand(3)*[2*np.pi,.5*np.pi,.5*np.pi]
+                       for gid in np.unique(g_slice)}
+            elif not isinstance(ori, dict):
+                ori = {gid: row for gid, row in enumerate(np.asarray(ori), start=1)}
+            missing = set(np.unique(g_slice))-set(ori)
+            if missing:
+                raise ValueError(f'Missing slice orientations for grains: {sorted(missing)}')
             # write data to ang file
             fname = '{0}_slice_{1}_{2}.ang'.format(cut.upper(), pos, data)
             with open(fname, 'w') as f:
                 f.writelines(head)
                 for j in iy:
                     for i in ix:
-                        p1 = ori[g_slice[j, i] - 1, 0]
-                        P = ori[g_slice[j, i] - 1, 1]
-                        p2 = ori[g_slice[j, i] - 1, 2]
+                        p1 = ori[g_slice[i, j]][0]
+                        P = ori[g_slice[i, j]][1]
+                        p2 = ori[g_slice[i, j]][2]
                         f.write('  {0}  {1}  {2}  {3}  {4}   0.0  0.000  0   1  0.000\n'
                                 .format(round(p1, 5), round(P, 5), round(p2, 5),
                                         round(sizeX - i * sx, 5), round(sizeY - j * sy, 5)))
@@ -2013,181 +2017,69 @@ class Microstructure(object):
                 plt.show()
         return fname
 
-    def write_stl(
-            self,
-            data: str = 'grains',
-            file: Optional[Union[str, os.PathLike[str]]] = None,
-            path: Union[str, os.PathLike[str]] = './',
-            phases: bool = False,
-            phase_num: Optional[int] = None) -> None:
-        """
-        Export grains or particles as STL files representing convex polyhedra
-
-        This function writes STL files with triangular facets for grains or particles.
-        Each facet is written in standard STL ASCII format:
-
-        ```
-        solid name
-          facet normal n1 n2 n3
-            outer loop
-              vertex p1x p1y p1z
-              vertex p2x p2y p2z
-              vertex p3x p3y p3z
-            endloop
-          endfacet
-        endsolid name
-        ```
+    def write_stl(self, file=None, path='./', *, boundary=None, include_exterior=False) -> None:
+        """Export the shared triangulated APD grain boundaries as ASCII STL.
 
         Parameters
         ----------
-        data : {'grains', 'particles'}, str, optional, default='grains'
-            Determines whether to export grains or particles. Default is 'grains'.
-        file : str or os.PathLike or None, optional, default=None
-            Filename for the STL file. Default is generated from `self.name`.
-        path : str or os.PathLike, optional, default='./'
-            Directory to save the STL file. Default is './'.
-        phases : bool, optional, default=False
-            If True, export only grains of a specific phase. Default is False.
-        phase_num : int or None, optional, default=None
-            Phase number to export if `phases=True`. Required in that case.
+        file : str or os.PathLike, optional
+            Output filename; defaults to ``self.name + '.stl'``.
+        path : str or os.PathLike, optional
+            Output directory, default current directory. Must already exist.
+        boundary : APDBoundaryComplex or APDBoundaryTriangles
+            Result of ``partition.boundary_complex()`` or its ``triangulate()``
+            method. Defaults to geometry from generate_grains(). No APD fitting
+            or assembly is triggered.
+        include_exterior : bool, optional
+            Include box faces as well as internal interfaces, default False.
+            For a pretriangulated input, True retains all available triangles;
+            it cannot add exterior faces omitted during triangulation.
 
         Returns
         -------
         None
 
-        Raises
-        ------
-        ValueError
-            - If `phases=True` but `phase_num` is not provided.
-
         Notes
         -----
-        - Facet normals are automatically computed using cross products of vertices.
-        - Acute or irregular facets trigger warnings.
-        - For particle export, each particle must have a valid inner polyhedron.
+        Each shared interface triangle is written once, with its normal pointing
+        out of the first grain in its grain pair. No particle or legacy geometry
+        export is performed. STL discards grain IDs and adjacency; the internal
+        interface network is not generally a closed manifold solid. Coordinates
+        remain in the supplied APD mesh frame and units.
+
+        Raises
+        ------
+        TypeError
+            If boundary is not an APD boundary complex or triangulation.
+        ValueError
+            If no APD boundary is available, or triangles are degenerate,
+            nonfinite or duplicated.
 
         Examples
         --------
-        >>> # Export all grains to STL
-        >>> rve.write_stl()
-
-        >>> # Export particles to STL
-        >>> rve.write_stl(data='particles')
-
-        >>> # Export only phase 1 grains
-        >>> rve.write_stl(phases=True, phase_num=1)
+        >>> boundary = partition.boundary_complex()
+        >>> ms.write_stl('grain_boundaries.stl', boundary=boundary)
+        >>> ms.write_stl('closed_shells.stl', boundary=boundary, include_exterior=True)
         """
-
-        def write_facet(nv: Any, pts: Any, ft: int) -> None:
-            """
-            Write a single triangular facet to the STL file with a normalized normal vector
-
-            Checks for degenerate or nearly zero-length normals and issues warnings
-            if the facet is acute or irregular. Writes the facet in ASCII STL format.
-
-            Parameters
-            ----------
-            nv : ndarray
-                Initial normal vector of the facet.
-            pts : ndarray
-                3x3 array of vertex coordinates defining the facet.
-            ft : int
-                Facet index, used for logging warnings.
-            """
-            if np.linalg.norm(nv) < 1.e-5:
-                logging.warning(f'Acute facet detected. Facet: {ft}')
-                nv = np.cross(pts[1] - pts[0], pts[2] - pts[1])
-                if np.linalg.norm(nv) < 1.e-5:
-                    logging.warning(f'Irregular facet detected. Facet: {ft}')
-            nv /= np.linalg.norm(nv)
-            f.write(" facet normal {} {} {}\n"
-                    .format(nv[0], nv[1], nv[2]))
-            f.write(" outer loop\n")
-            f.write("   vertex {} {} {}\n"
-                    .format(pts[0, 0], pts[0, 1], pts[0, 2]))
-            f.write("   vertex {} {} {}\n"
-                    .format(pts[1, 0], pts[1, 1], pts[1, 2]))
-            f.write("   vertex {} {} {}\n"
-                    .format(pts[2, 0], pts[2, 1], pts[2, 2]))
-            f.write("  endloop\n")
-            f.write(" endfacet\n")
-
-        def write_grains() -> None:
-            """
-            Write all grain facets of the microstructure to the STL file
-
-            Iterates over all facets defined in `self.geometry['Facets']`, computes
-            the facet normal, and calls `write_facet` to output each triangular facet.
-            """
-            for ft in self.geometry['Facets']:
-                pts = self.geometry['Points'][ft]
-                nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
-                write_facet(nv, pts, ft)
-
-        def write_phases(ip: int) -> None:
-            """
-            Write facets of grains belonging to a specific phase to the STL file
-
-            Parameters
-            ----------
-            ip : int
-                Phase number for which the grain facets should be exported.
-
-            Notes
-            -----
-            Iterates over all grains in `self.geometry['Grains']` and writes only
-            the facets of grains whose 'Phase' matches `ip`. Each facet is output
-            using the `write_facet` function.
-            """
-            for grain in self.geometry['Grains'].values():
-                if grain['Phase'] == ip:
-                    for ft in grain['Simplices']:
-                        pts = self.geometry['Points'][ft]
-                        nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
-                        write_facet(nv, pts, ft)
-
-        def write_particles() -> None:
-            """
-            Write facets of all particle convex hulls to the STL file
-
-            Notes
-            -----
-            Iterates over all particles in `self.particles` and exports each facet
-            from the particle's inner convex hull using the `write_facet` function.
-            """
-            for pa in self.particles:
-                for ft in pa.inner.convex_hull:
-                    pts = pa.inner.points[ft]
-                    nv = np.cross(pts[1] - pts[0], pts[2] - pts[0])  # facet normal
-                    write_facet(nv, pts, ft)
-
-        if file is None:
-            if self.name == 'Microstructure':
-                file = 'px_{}grains.stl'.format(self.Ngr)
+        from .apd_boundary import APDBoundaryComplex, APDBoundaryTriangles
+        if boundary is None:
+            if getattr(self, 'geometry', None) is None or 'Boundary' not in self.geometry:
+                raise ValueError('Run generate_grains() or supply an APD boundary for STL export')
+            boundary = self.geometry['Boundary']
+        if isinstance(boundary, APDBoundaryComplex):
+            surface = boundary.triangulate(include_exterior=include_exterior)
+        elif isinstance(boundary, APDBoundaryTriangles):
+            if include_exterior:
+                surface = boundary
             else:
-                file = self.name + '.stl'
-        path = os.path.normpath(path)
-        file = os.path.join(path, file)
-        with open(file, 'w') as f:
-            f.write("solid {}\n".format(self.name))
-            if data in ['particles', 'pa', 'p']:
-                if self.particles[0].inner is None:
-                    logging.error("Particles don't contain inner polyhedron, cannot write STL file.")
-                else:
-                    for pa in self.particles:
-                        pa.sync_poly()
-                    write_particles()
-            elif data in ['grains', 'gr', 'g']:
-                if phases:
-                    if phase_num is None:
-                        raise ValueError('Phase-specific output requested, but no phase number specified.')
-                    write_phases(phase_num)
-                else:
-                    write_grains()
-            else:
-                raise ValueError(f"Invalid data type specified for STL export, must be either 'particles' or 'grains', not {data}.")
-            f.write("endsolid\n")
-        return
+                keep = np.flatnonzero(boundary.boundary_ids == 0)
+                surface = APDBoundaryTriangles(boundary.points, boundary.triangles[keep],
+                    boundary.source_faces[keep], tuple(boundary.face_grains[i] for i in keep),
+                    boundary.boundary_ids[keep])
+        else:
+            raise TypeError('boundary must be an APD boundary complex or triangulation')
+        filename = self.name + '.stl' if file is None else file
+        surface.write_stl(os.path.join(path, filename), name=self.name)
 
     def write_centers(
             self,

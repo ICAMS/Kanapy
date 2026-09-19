@@ -868,13 +868,15 @@ def get_stats_poly(grains, iphase=None, ax_max=None,
     """
     Extract statistics about the microstructure from polyhedral grains
 
-    Fits a 3D ellipsoid to each polyhedron to compute semi-axes, equivalent diameters,
-    and other statistical descriptors.
+    APD grains use volume-integrated moment-equivalent semi-axes and actual
+    volume-equivalent diameters, independent of boundary point sampling. Older
+    point-only inputs use an ellipsoid fit. Periodic APD moments describe the
+    fragments in the fundamental box, without unwrapping.
 
     Parameters
     ----------
     grains : dict
-        Dictionary of polyhedral grains with 'Points' for each grain
+        Grain records with APD 'SemiAxes', 'eqDia', and 'Phase', or legacy 'Points'.
     iphase : int, optional
         Phase number to restrict analysis to, default is None (all phases)
     phase_dict : dict, optional
@@ -896,8 +898,6 @@ def get_stats_poly(grains, iphase=None, ax_max=None,
         Dictionary containing semi-axes, equivalent diameters, log-normal parameters,
         rotation axis index, aspect ratios, and related statistics
     """
-    if iphase is not None and phase_dict is None:
-        logging.error('Error in get_stats_poly: phase number provided, but no phase_dict present.')
     if ax_max is not None:
         minval = max(minval, 1. / ax_max ** 2)
     cons = ({'type': 'ineq', 'fun': con_fun})  # constraints for minimization
@@ -909,7 +909,15 @@ def get_stats_poly(grains, iphase=None, ax_max=None,
     arr_eqd = []
     for gid, pc in grains.items():
         # decide if phase-specific analysis is performed
-        if iphase is not None and iphase != phase_dict[gid]:
+        phase = pc.get('Phase') if phase_dict is None else phase_dict[gid]
+        if iphase is not None and iphase != phase:
+            continue
+        if 'SemiAxes' in pc:
+            ea, eb, ec = pc['SemiAxes']
+            arr_a.append(ea)
+            arr_b.append(eb)
+            arr_c.append(ec)
+            arr_eqd.append(pc['eqDia'])
             continue
         pts = pc['Points']
         rdict = minimize(pts_in_ellips, x0=mc, args=(pts,), method='SLSQP',

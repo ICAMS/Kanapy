@@ -11,7 +11,7 @@ from kanapy.core.api import Microstructure
 from kanapy.core.entities import Ellipsoid, Simulation_Box
 from kanapy.core.initializations import RVE_creator, mesh_creator
 from kanapy.core.input_output import import_voxels
-from kanapy.core.voxelization import voxelizationRoutine
+from kanapy.core.voxelization_legacy import voxelizationRoutine_legacy
 
 
 @pytest.fixture
@@ -52,18 +52,18 @@ def assert_phase_consistency(ms):
 
 
 @pytest.fixture
-def voxelized_three_phases(three_phases):
+def voxelized_three_phases_legacy(three_phases):
     random.seed(12)
     np.random.seed(12)
     ms = Microstructure(three_phases, name='three_phases')
     ms.init_RVE(nsteps=20)
     ms.pack(save_files=False, verbose=False)
-    ms.voxelize()
+    ms.voxelize_legacy()
     return ms
 
 
-def test_three_phase_workflow(voxelized_three_phases, tmp_path):
-    ms = voxelized_three_phases
+def test_three_phase_workflow(voxelized_three_phases_legacy, tmp_path):
+    ms = voxelized_three_phases_legacy
     assert ms.nphases == 3
     assert ms.rve.phase_names == ['Matrix', 'Grains A', 'Grains B']
     assert ms.rve.phase_vf == [0.5, 0.2, 0.3]
@@ -82,10 +82,9 @@ def test_three_phase_workflow(voxelized_three_phases, tmp_path):
     for gid, orientation in saved.items():
         np.testing.assert_array_equal(ms.mesh.grain_ori_dict[gid], orientation)
     assert set(ms.mesh.grain_ori_dict) == set(ms.mesh.grain_dict) - {0}
-    ms.generate_grains()
+    ms.generate_grains(resolution=2)
+    assert set(ms.geometry['Grains']) <= {p.id for p in ms.particles}
     assert_phase_consistency(ms)
-    assert 0 not in ms.geometry['Grains']
-    assert {g['Phase'] for g in ms.geometry['Grains'].values()} == {1, 2}
     from kanapy.core.rve_stats import get_stats_vox
     assert len(get_stats_vox(ms.mesh)['eqd']) == len(ms.mesh.grain_dict) - 1
 
@@ -178,8 +177,8 @@ def test_orientations_unequal_interleaved_and_empty_phases(phase_ids, monkeypatc
             np.testing.assert_array_equal(mesh.grain_ori_dict[gid], np.arange(3) + i * 3)
 
 
-def test_partial_orientation_roundtrip(voxelized_three_phases, tmp_path):
-    ms = voxelized_three_phases
+def test_partial_orientation_roundtrip(voxelized_three_phases_legacy, tmp_path):
+    ms = voxelized_three_phases_legacy
     # Highest grain ID (phase 2) has no orientation; phase 1 must survive import.
     ms.generate_orientations('random', iphase=1, Nbase=50)
     ms.write_voxels(file='partial.json', path=tmp_path)
@@ -190,17 +189,17 @@ def test_partial_orientation_roundtrip(voxelized_three_phases, tmp_path):
     assert second.mesh.grain_ori_dict == loaded.mesh.grain_ori_dict
 
 
-def test_phase_lost_during_voxelization(monkeypatch):
-    import kanapy.core.voxelization as voxelization
+def test_phase_lost_during_voxelization_legacy(monkeypatch):
+    import kanapy.core.voxelization_legacy as voxelization
     particles = [Ellipsoid(7, 1, 1, 1, .5, .5, .5, np.array([1., 0, 0, 0]), phasenum=1),
                  Ellipsoid(20, 1, 1, 1, .5, .5, .5, np.array([1., 0, 0, 0]), phasenum=2)]
     def assign(*args, **kwargs):
         particles[0].inside_voxels = [1, 2, 3]
         particles[1].inside_voxels = []
-    monkeypatch.setattr(voxelization, 'assign_voxels_to_ellipsoid', assign)
+    monkeypatch.setattr(voxelization, 'assign_voxels_to_ellipsoid_legacy', assign)
     mesh = mesh_creator((2, 2, 2))
     mesh.create_voxels(Simulation_Box((2, 2, 2)))
-    voxelizationRoutine(particles, mesh, 3, prec_vf=0.4)
+    voxelizationRoutine_legacy(particles, mesh, 3, prec_vf=0.4)
     np.testing.assert_array_equal(mesh.ngrains_phase, [1, 1, 0])
     assert mesh.grain_phase_dict == {7: 1, 0: 0}
     assert set(mesh.grain_dict[0]) == {4, 5, 6, 7, 8}
@@ -250,14 +249,13 @@ def test_stats_skip_matrix_without_renumbering(three_phases, monkeypatch):
     assert comparisons == ['phase1', 'phase2']
 
 
-def test_matrix_restored_after_geometry_failure(voxelized_three_phases, monkeypatch):
-    from kanapy.core import api
-    ms = voxelized_three_phases
+def test_legacy_matrix_unchanged_when_apd_geometry_fails(voxelized_three_phases_legacy, monkeypatch):
+    ms = voxelized_three_phases_legacy
     original = deepcopy(ms.mesh.grain_dict)
-    def fail(*args):
-        assert 0 not in ms.mesh.grain_dict
+    from kanapy.core import api
+    def fail(*args, **kwargs):
         raise ValueError('geometry failure')
-    monkeypatch.setattr(api, 'calc_polygons', fail)
+    monkeypatch.setattr(api, 'build_grain_geometry', fail)
     with pytest.raises(ValueError, match='geometry failure'):
         ms.generate_grains()
     for gid in original:
@@ -265,8 +263,8 @@ def test_matrix_restored_after_geometry_failure(voxelized_three_phases, monkeypa
     assert_phase_consistency(ms)
 
 
-def test_missing_cp_orientation_rejected_before_export(voxelized_three_phases, tmp_path):
-    ms = voxelized_three_phases
+def test_missing_cp_orientation_rejected_before_export(voxelized_three_phases_legacy, tmp_path):
+    ms = voxelized_three_phases_legacy
     ms.generate_orientations('random', iphase=1)
     with pytest.raises(ValueError, match='Missing orientations'):
         ms.write_abq(file='missing_geom.inp', path=tmp_path, ialloy=[0, 4, 5],
@@ -274,8 +272,8 @@ def test_missing_cp_orientation_rejected_before_export(voxelized_three_phases, t
     assert not (tmp_path / 'missing_geom.inp').exists()
 
 
-def test_matrix_rejects_cp(voxelized_three_phases, tmp_path):
-    ms = voxelized_three_phases
+def test_matrix_rejects_cp(voxelized_three_phases_legacy, tmp_path):
+    ms = voxelized_three_phases_legacy
     with pytest.raises(ValueError, match='Grain 0 requires standard plasticity'):
         ms.write_abq(file='invalid_geom.inp', path=tmp_path,
                      crystal_plasticity=[True, True, True])
@@ -299,17 +297,17 @@ def test_three_phase_export_with_empty_phase(tmp_path):
     assert 'PHASE2_SET' not in text
 
 
-def test_full_rve_fills_residual_voxels_without_creating_matrix(monkeypatch):
-    import kanapy.core.voxelization as voxelization
+def test_legacy_full_rve_fills_residual_voxels_without_creating_matrix(monkeypatch):
+    import kanapy.core.voxelization_legacy as voxelization
     particles = [Ellipsoid(1, .5, .5, .5, .5, .5, .5, np.array([1., 0, 0, 0]), phasenum=0),
                  Ellipsoid(2, 1.5, 1.5, 1.5, .5, .5, .5, np.array([1., 0, 0, 0]), phasenum=1)]
     def assign(*args, **kwargs):
         particles[0].inside_voxels = [1, 2, 3]
         particles[1].inside_voxels = [5, 6, 7, 8]
-    monkeypatch.setattr(voxelization, 'assign_voxels_to_ellipsoid', assign)
+    monkeypatch.setattr(voxelization, 'assign_voxels_to_ellipsoid_legacy', assign)
     mesh = mesh_creator((2, 2, 2))
     mesh.create_voxels(Simulation_Box((2, 2, 2)))
-    voxelizationRoutine(particles, mesh, 2)
+    voxelizationRoutine_legacy(particles, mesh, 2)
     assert 0 not in mesh.grain_dict
     assert sorted(v for vox in mesh.grain_dict.values() for v in vox) == list(range(1, 9))
     for gid, vox in mesh.grain_dict.items():

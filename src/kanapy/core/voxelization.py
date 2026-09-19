@@ -1,581 +1,87 @@
-# -*- coding: utf-8 -*-
+"""Voxelization by the anisotropic power diagram evaluated at voxel centers."""
+import warnings
+
 import numpy as np
-import itertools
-import logging
-from copy import deepcopy
-from tqdm import tqdm
-from collections import defaultdict
-from scipy.spatial import ConvexHull
-from scipy.ndimage import distance_transform_edt
-from typing import Any, Mapping, Optional
+
+from .power_diagram import AnisotropicPowerDiagram
 
 
-def points_in_convexHull(Points: np.ndarray, hull: ConvexHull) -> np.ndarray:
+def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None, *,
+                        periodic=None, fit_volumes=True, fit_options=None,
+                        weights=None, chunk_size=8192):
+    """Assign each voxel to the minimum APD cost at its center, in place.
+
+    The original four positional arguments are retained. ``prec_vf`` is
+    deprecated and ignored: APD partitions the entire domain. Use
+    ``voxelization_legacy.voxelizationRoutine_legacy`` for a matrix/porosity
+    fraction or the historical polygon/growth algorithm.
+
+    ``periodic=None`` infers periodicity from particle duplicates; explicit
+    booleans override this. Duplicate particles never form separate grains.
+    By default additive weights are fitted to relative particle volumes using
+    continuous Sobol quadrature (``fit_options`` forwards options to
+    ``AnisotropicPowerDiagram.fit_volumes``). Voxel fractions are quantized and
+    need not match these continuous targets exactly. Explicit finite ``weights``
+    in original-particle order bypass fitting; ``fit_volumes=False`` uses zero
+    weights. Costs are evaluated in batches of ``chunk_size`` voxel centers.
+    Exact ties use original-particle order. Connectivity is not enforced.
+
+    Returns the input mesh with grains, phases, grain_dict, grain_phase_dict,
+    ngrains_phase and prec_vf_voxels populated. ``mesh.apd`` stores the diagram,
+    whose coordinates are relative to the minimum mesh node coordinates.
     """
-    Determine whether the given array of points lie inside the convex hull
-
-    Checks if each point in `Points` is inside or outside the convex hull defined
-    by `hull`. Returns a boolean array with True for points inside the hull and False otherwise.
-
-    Parameters
-    ----------
-    Points : ndarray, shape (N_points, dim)
-        Array of points to be tested
-    hull : scipy.spatial.ConvexHull
-        Convex hull object representing an ellipsoid or other shape
-
-    Returns
-    -------
-    ndarray, shape (N_points,)
-        Boolean array indicating whether each point is inside the convex hull
-
-    See Also
-    --------
-    https://stackoverflow.com/questions/21698630/how-can-i-find-if-a-point-lies-inside-or-outside-of-convexhull
-    """
-    A = hull.equations[:, 0:-1]
-    b = np.transpose(np.array([hull.equations[:, -1]]))
-    return np.all((A @ np.transpose(Points)) <= np.tile(-b, (1, len(Points))), axis=0)
-
-
-def assign_voxels_to_ellipsoid(
-    cooDict: Mapping[Any, Any],
-    Ellipsoids: list[Any],
-    voxel_dict: Mapping[Any, Any],
-    vf_target: Optional[float] = None) -> None:
-    """
-    Assign voxels to each ellipsoid based on spatial position and shared nodes
-
-    Iteratively grows each ellipsoid and assigns voxels whose centers lie
-    within the ellipsoid's convex hull. Voxels are additionally checked
-    to share at least 4 nodes with existing voxels of the ellipsoid to
-    ensure connectivity.
-
-    Parameters
-    ----------
-    cooDict : dict
-        Voxel dictionary containing voxel IDs as keys and center coordinates
-        as values
-    Ellipsoids : list
-        List of ellipsoid objects from the packing routine. Each object must
-        support `.a`, `.b`, `.c` attributes and `.surfacePointsGen()` and `.get_pos()` methods
-    voxel_dict : dict
-        Element dictionary containing voxel IDs as keys and lists of nodal
-        connectivity as values
-    vf_target : float or None, optional, default=None
-        Target volume fraction of particles to be assigned (default is 1.0)
-    """
-    print('    Assigning voxels to grains')
-    if vf_target is None or vf_target > 1.0:
-        vf_target = 1.0
-
-    # All the voxel centers as numpy 2D array and voxel ids
-    test_ids = np.array(list(cooDict.keys()))
-    Nvox = len(test_ids)
-    test_points = np.array(list(cooDict.values()))
-
-    # scale factor for defining ellipsoid growth for each stage of while loop
-    scale = 1.0
-    remaining_voxels = set(list(cooDict.keys()))
-    assigned_voxels = set()
-    vf_cur = 0.
-
-    # Initialize a tqdm progress bar to the Number of voxels in the domain
-    pbar = tqdm(total=len(remaining_voxels))
-    for ellipsoid in Ellipsoids:
-        ellipsoid.inside_voxels = []
-
-    while vf_cur < vf_target:
-        # call the growth value for the ellipsoids
-        scale += 0.1
-        for ellipsoid in Ellipsoids:
-            # scale ellipsoid dimensions by the growth factor and generate surface points
-            ellipsoid.a, ellipsoid.b, ellipsoid.c = scale * ellipsoid.a, scale * ellipsoid.b, scale * ellipsoid.c
-            surface_points = ellipsoid.surfacePointsGen()
-            # Find the new surface points of the ellipsoid at their final position
-            new_surfPts = surface_points + ellipsoid.get_pos()
-
-            # create a convex hull from the surface points
-            hull = ConvexHull(new_surfPts, incremental=False)
-            # Find the bounding box extrema along x, y, and z
-            bbox_xmin, bbox_xmax = np.amin(new_surfPts[:, 0]), np.amax(new_surfPts[:, 0])
-            bbox_ymin, bbox_ymax = np.amin(new_surfPts[:, 1]), np.amax(new_surfPts[:, 1])
-            bbox_zmin, bbox_zmax = np.amin(new_surfPts[:, 2]), np.amax(new_surfPts[:, 2])
-
-            # Find the numpy indices of all voxels within the bounding box
-            in_bbox_idx = np.where((test_points[:, 0] >= bbox_xmin) & (test_points[:, 0] <= bbox_xmax)
-                                   & (test_points[:, 1] >= bbox_ymin) & (test_points[:, 1] <= bbox_ymax)
-                                   & (test_points[:, 2] >= bbox_zmin) & (test_points[:, 2] <= bbox_zmax))[0]
-
-            # extract the actual voxel ids and coordinates from the reduced numpy indices
-            bbox_testids = test_ids[in_bbox_idx]  # voxels ids
-            bbox_testPts = test_points[in_bbox_idx]  # coordinates
-
-            # check if the extracted points are within the hull
-            results = points_in_convexHull(bbox_testPts, hull)
-
-            # Extract the voxel ids inside the hull
-            inside_ids = list(bbox_testids[results])
-
-            # Check if the newly found voxels share at least 4 nodes with
-            # ellipsoid nodes
-            if not np.isclose(scale, 1.0):
-                # Extract single instance of all nodes currently belonging
-                # to the ellipsoid
-                all_nodes = [voxel_dict[i] for i in ellipsoid.inside_voxels]
-                merged_nodes = list(itertools.chain(*all_nodes))
-                ell_nodes = set(merged_nodes)
-
-                # Extract single instance of all nodes currently to be tested
-                nids = [voxel_dict[vid] for vid in inside_ids]
-                m_nids = list(itertools.chain(*nids))
-                e_nids = set(m_nids)
-
-                while True:
-                    # Find the common nodes
-                    common_nodes = ell_nodes.intersection(e_nids)
-
-                    # If there are no nodes in the ellipsoid
-                    if len(common_nodes) == 0 and len(ell_nodes) == 0:
-                        ellipsoid.inside_voxels.extend(inside_ids)
-                        assigned_voxels.update(set(inside_ids))
-                        break
-
-                    # If there are more than 4 common nodes
-                    elif len(common_nodes) >= 4:
-
-                        # Find the voxels that have these common nodes
-                        int_assigned = set()
-                        for vid in inside_ids:
-                            nds = voxel_dict[vid]
-
-                            if len(ell_nodes.intersection(nds)) >= 4:
-                                int_assigned.add(vid)
-                            else:
-                                continue
-
-                        if len(int_assigned) != 0:
-                            # update the ellipsoid instance and assigned set
-                            ellipsoid.inside_voxels.extend(list(int_assigned))
-                            assigned_voxels.update(int_assigned)
-
-                            # Remove them and test again
-                            for i in int_assigned:
-                                inside_ids.remove(
-                                    i)  # Remove the assigned voxel from the list
-
-                                nds = set(voxel_dict[i])
-                                ell_nodes.update(nds)  # Update the actual ellipsoid node list
-                                e_nids -= nds  # update the current node list (testing)
-                        else:
-                            break
-
-                    # If there are no common nodes
-                    else:
-                        break
-
-                # scale ellipsoid dimensions back to original by the growth factor
-                ellipsoid.a, ellipsoid.b, ellipsoid.c = \
-                    ellipsoid.a / scale, ellipsoid.b / scale, ellipsoid.c / scale
-
-                continue
-
-                # If scale == 1.0
-            else:
-                # Each voxel should share at least 4 nodes with the remaining voxels
-                for vid in inside_ids:
-                    nds = voxel_dict[vid]
-
-                    rem_ids = [i for i in inside_ids if i != vid]
-                    all_nodes = [voxel_dict[i] for i in rem_ids]
-                    merged_nodes = list(itertools.chain(*all_nodes))
-                    rem_nodes = set(merged_nodes)
-
-                    common_nodes = rem_nodes.intersection(nds)
-                    if len(common_nodes) >= 4:
-                        # update the ellipsoid instance and assigned set
-                        ellipsoid.inside_voxels.append(vid)
-                        assigned_voxels.add(vid)
-
-        # find the remaining voxels
-        remaining_voxels = set(list(cooDict.keys())) - assigned_voxels
-
-        # Reassign at the end of each growth cycle
-        reassign_shared_voxels(cooDict, Ellipsoids, voxel_dict)
-
-        # Update the test_points and ids to remaining voxels
-        test_ids = np.array(list(remaining_voxels))
-        test_points = np.array([cooDict[pt_id] for pt_id in test_ids])
-
-        # Reset the progress bar to '0' and update it and then refresh the view again
-        pbar.reset()
-        pbar.update(len(assigned_voxels))
-        pbar.refresh()
-
-        # Calculate volume fraction of assigned voxels
-        vf_cur = len(assigned_voxels) / Nvox
-
-    pbar.close()  # Close the progress bar
-    return
-
-
-def reassign_shared_voxels(
-    cooDict: Mapping[Any, Any],
-    Ellipsoids: list[Any],
-    voxel_dict: Mapping[Any, Any]) -> None:
-    """
-    Reassign shared voxels among ellipsoids to the most appropriate ellipsoid based on node overlap
-    and proximity to ellipsoid centers
-
-    This function identifies voxels that are contained within multiple ellipsoids and resolves
-    conflicts by:
-    1. Removing the shared voxel from all ellipsoids initially.
-    2. Assigning the voxel to the ellipsoid with the largest number of shared nodes.
-    3. If multiple ellipsoids have the same node overlap, assigning the voxel to the closest
-       ellipsoid based on center distance.
-    4. If still tied, assigning to the ellipsoid with the smallest volume.
-
-    Parameters
-    ----------
-    cooDict : dict
-        Dictionary mapping voxel IDs to their coordinates in 3D space.
-        Example: {voxel_id: [x, y, z], ...}
-    Ellipsoids : list
-        List of ellipsoid objects from the packing routine. Each ellipsoid must have attributes:
-        - `inside_voxels` (list of voxel IDs contained in the ellipsoid)
-        - `id` (unique identifier)
-        - `get_pos()` method returning the ellipsoid center coordinates as [x, y, z]
-        - `get_volume()` method returning the ellipsoid volume
-    voxel_dict : dict
-        Dictionary mapping voxel IDs to the node IDs that define the voxel.
-        Example: {voxel_id: [node1, node2, ...], ...}
-
-    Notes
-    -----
-    - The reassignment loop has a maximum of 5 cycles to avoid infinite loops in edge cases.
-    - A voxel is assigned to an ellipsoid only if it has at least 4 nodes in common with it.
-    - Distance calculations assume Cartesian coordinates.
-    - The function can handle ties in node overlap by considering proximity and volume.
-    - Modifies `inside_voxels` lists of ellipsoids in place.
-    """
-    # Find all combination of ellipsoids to check for shared voxels
-    combis = list(itertools.combinations(Ellipsoids, 2))
-
-    # Create a dictionary for linking voxels and their containing ellipsoids
-    vox_ellDict = defaultdict(set)
-    for cb in combis:
-        shared_voxels = set(cb[0].inside_voxels).intersection(cb[1].inside_voxels)
-
-        if shared_voxels:
-            for vox in shared_voxels:
-                vox_ellDict[vox].update(cb)
-
-    assigned_voxel = []
-    if len(list(vox_ellDict.keys())) != 0:
-        for vox, ells in vox_ellDict.items():
-            # Remove the shared voxel for all the ellipsoids containing it
-            for el in ells:
-                el.inside_voxels.remove(vox)
-
-    shared_voxels = set(vox_ellDict.keys())
-    ncyc = 0
-    while len(shared_voxels) > 0 and ncyc < 5:
-        for vox, ells in vox_ellDict.items():
-            if vox in shared_voxels:
-                ells = list(ells)
-                nids = set(voxel_dict[vox])
-                common_nodes = dict()
-                len_common_nodes = list()
-
-                for ellipsoid in ells:
-                    all_nodes = [voxel_dict[i] for i in ellipsoid.inside_voxels]
-                    merged_nodes = list(itertools.chain(*all_nodes))
-                    ell_nodes = set(merged_nodes)
-                    common_nodes[ellipsoid.id] = ell_nodes.intersection(nids)
-                    len_common_nodes.append(len(common_nodes[ellipsoid.id]))
-
-                loc_common_nodes_max = \
-                    [i for i, x in enumerate(len_common_nodes)
-                     if x == max(len_common_nodes)]
-
-                if np.any(len_common_nodes) and max(len_common_nodes) >= 4:
-                    if len(loc_common_nodes_max) == 1:
-                        assigned_voxel.append(vox)
-                        shared_voxels.remove(vox)
-                        ells[loc_common_nodes_max[0]].inside_voxels.append(vox)
-                    else:
-                        ells = [ells[i] for i in loc_common_nodes_max]
-                        vox_coord = cooDict[vox]  # Get the voxel position
-                        ells_pos = np.array([el.get_pos() for el in ells])  # Get the ellipsoids positions
-
-                        # Distance b/w points along three axes
-                        XDiff = vox_coord[0] - ells_pos[:, 0]  # 'x'-axis
-                        YDiff = vox_coord[1] - ells_pos[:, 1]  # 'y'-axis
-                        ZDiff = vox_coord[2] - ells_pos[:, 2]  # 'z'-axis
-
-                        # Find the distance from the 1st ellipsoid
-                        dist = np.sqrt((XDiff ** 2) + (YDiff ** 2) + (ZDiff ** 2))
-
-                        clo_loc = np.where(dist == dist.min())[0]  # closest ellipsoid index
-                        clo_ells = [ells[loc] for loc in clo_loc]  # closest ellipsoids
-
-                        # If '1' closest ellipsoid: assign voxel to it        
-                        if len(clo_ells) == 1:
-                            clo_ells[0].inside_voxels.append(vox)
-                        # Else: Determine the smallest and assign to it
-                        else:
-                            clo_vol = np.array([ce.get_volume() for ce in clo_ells])  # Determine the volumes
-                            small_loc = np.where(clo_vol == clo_vol.min())[0]  # Smallest ellipsoid index
-                            # small_ells = [ells[loc] for loc in clo_loc]           # Smallest ellipsoids
-
-                            # assign to the smallest one regardless how many are of the same volume
-                            # small_ells[0].inside_voxels.append(vox)
-                            clo_ells[small_loc].inside_voxels.append(vox)
-                        assigned_voxel.append(vox)
-                        shared_voxels.remove(vox)
-        ncyc += 1
-    return
-
-
-def voxelizationRoutine(
-    Ellipsoids: list[Any],
-    mesh: Any,
-    nphases: int,
-    prec_vf: Optional[float] = None) -> Any:
-    """
-    Perform voxelization of a microstructure defined by ellipsoids and mesh.
-
-    This function controls the voxelization process by calling several subroutines:
-    - :meth:`kanapy.input_output.read_dump`
-    - :meth:`create_voxels`
-    - :meth:`assign_voxels_to_ellipsoid`
-    - :meth:`reassign_shared_voxels`
-
-    Depending on whether ellipsoids have inner polygons, it either assigns voxels
-    directly to ellipsoids or uses polygon-based voxel assignment.
-
-    The function also generates:
-    - `mesh.grains`: array of voxelized structure with grain IDs
-    - `mesh.phases`: array of voxelized structure with phase numbers
-    - `mesh.grain_dict`: dictionary mapping grain IDs to voxel IDs
-    - `mesh.grain_phase_dict`: dictionary mapping grain IDs to phase numbers
-    - `mesh.ngrains_phase`: count of grains per phase
-    - `mesh.prec_vf_voxels`: current volume fraction if `prec_vf` is provided
-
-    Parameters
-    ----------
-    Ellipsoids : list
-        List of ellipsoid objects representing grains. Each ellipsoid should have:
-        - `inside_voxels` (list of voxel IDs)
-        - `duplicate` (ID of original ellipsoid if duplicated, else None)
-        - `inner` (optional polygon object)
-        - `phasenum` (phase number)
-        - `get_pos()` and `create_poly()` methods.
-    mesh : object
-        Mesh object containing voxel information, including:
-        - `vox_center_dict` (voxel centers)
-        - `voxel_dict` (voxel-to-node mapping)
-        - `nvox` (number of voxels)
-        - `dim` (mesh dimensions)
-    nphases : int
-        Number of phases in the RVE.
-    prec_vf : float, optional
-        Target volume fraction for precipitates/porosity. Defaults to `None` (fully filled RVE).
-
-    Notes
-    -----
-    - Voxels shared by multiple ellipsoids are resolved using `reassign_shared_voxels`.
-    - Voxels not assigned to any grain are either assigned to neighbors or set to phase 0.
-    - If `prec_vf` < 1.0, empty voxels form matrix PHASE0 / GRAIN0.
-      Grain-bearing particles must then use other phase IDs (e.g. 1 and 2).
-    - The function modifies the `mesh` object in place.
-
-    Returns
-    -------
-    mesh
-        The input mesh object with updated voxelized grain and phase information.
-    """
-
-    def ell2vox():
-        """
-        Assign voxels to ellipsoids and update the mesh's grain dictionary
-
-        This helper function performs the following steps:
-        1. Calls `assign_voxels_to_ellipsoid` to assign voxels based on ellipsoid positions and target volume fraction
-        2. For each ellipsoid:
-           - If it contains voxels:
-               - If the ellipsoid is a duplicate, its voxels are added to the original ellipsoid's entry in `mesh.grain_dict`
-               - Otherwise, the ellipsoid is added as a new entry in `mesh.grain_dict`
-           - If it contains no voxels, logs a debug message indicating the grain could not be voxelized
-
-        Notes
-        -----
-        - Modifies `mesh.grain_dict` in place
-        - Assumes `Ellipsoids` and `mesh` are accessible in the enclosing scope
-        """
-        assign_voxels_to_ellipsoid(mesh.vox_center_dict, Ellipsoids, mesh.voxel_dict, vf_target=prec_vf)
-        # Create element sets
-        for ellipsoid in Ellipsoids:
-            if ellipsoid.inside_voxels:
-                # If the ellipsoid is a duplicate add the voxels to the original ellipsoid
-                if ellipsoid.duplicate is not None:
-                    iel = int(ellipsoid.duplicate)
-                    if iel not in mesh.grain_dict:
-                        mesh.grain_dict[iel] = \
-                            [int(iv) for iv in ellipsoid.inside_voxels]
-                    else:
-                        mesh.grain_dict[iel].extend(
-                            [int(iv) for iv in ellipsoid.inside_voxels])
-                # Else it is the original ellipsoid
-                else:
-                    mesh.grain_dict[int(ellipsoid.id)] = \
-                        [int(iv) for iv in ellipsoid.inside_voxels]
-            else:
-                # If ellipsoid doesn't contain any voxel inside
-                # grain should be removed from list!!!
-                logging.debug('        Grain {0} is not voxelized, as particle {0} overlap condition is inadmissible'
-                              .format(ellipsoid.id))
-                # sys.exit(0)
-
-    def poly2vox():
-        """
-        Assign voxels to ellipsoids based on inner polygon geometry
-
-        This helper function performs the following steps:
-        1. For each ellipsoid:
-           - If it is a duplicate, create its polygon from the original ellipsoid
-           - Synchronize the polygon using `sync_poly`
-           - Search for voxel centers inside the polygon
-               - If the voxel is already assigned to another grain, compare distances to the centers
-                 and reassign if the current ellipsoid is closer
-               - Otherwise, assign the voxel to the current ellipsoid
-        2. Update `mesh.grain_dict` with assigned voxels for each grain
-
-        Notes
-        -----
-        - Modifies `mesh.grain_dict` and `inside_voxels` of ellipsoids in place
-        - Assumes `Ellipsoids` and `mesh` are accessible in the enclosing scope
-        - Keeps track of assigned voxels to avoid duplicate assignments
-        """
-        assigned_vox = set()
-        for pa in Ellipsoids:
-            if pa.duplicate is not None:
-                gid = pa.duplicate
-                pa.inner = pa.create_poly(originals[int(gid)].inner.points)
-            else:
-                gid = pa.id
-            pa.sync_poly()
-            vox = []
-            # search for voxel centers inside the polygon
-            for iv, ctr in mesh.vox_center_dict.items():
-                if pa.inner.find_simplex(ctr) >= 0:
-                    if iv in assigned_vox:
-                        # voxel has already been assigned to different grain.
-                        # check nearest center and re-assign if necessary
-                        dst1 = np.linalg.norm(ctr - pa.get_pos())
-                        for igr, vlist in mesh.grain_dict.items():
-                            if iv in vlist:
-                                dst2 = np.linalg.norm(ctr - originals[igr].get_pos())
-                                if dst1 < dst2:
-                                    vox.append(iv)
-                                    pa.inside_voxels.append(iv)
-                                    mesh.grain_dict[igr].remove(iv)
-                                    originals[igr].inside_voxels.remove(iv)
-                                break
-                    else:
-                        assigned_vox.add(iv)
-                        vox.append(iv)
-                        pa.inside_voxels.append(iv)
-            if gid in mesh.grain_dict.keys():
-                mesh.grain_dict[gid].extend(vox)
-            else:
-                mesh.grain_dict[gid] = vox
-
-    print('')
-    print('Starting RVE voxelization')
-
-    originals = {int(ell.id): ell for ell in Ellipsoids if ell.duplicate is None}
+    if prec_vf is not None:
+        warnings.warn('prec_vf is deprecated and ignored by APD voxelization; '
+                      'use voxelizationRoutine_legacy for partial filling.',
+                      DeprecationWarning, stacklevel=2)
+    if not isinstance(nphases, (int, np.integer)) or nphases < 1:
+        raise ValueError('nphases must be a positive integer')
+    if not isinstance(chunk_size, (int, np.integer)) or chunk_size < 1:
+        raise ValueError('chunk_size must be a positive integer')
+    particles = list(Ellipsoids)
+    originals = [p for p in particles if p.duplicate is None]
     if not originals:
-        raise ValueError('Voxelization requires at least one grain-bearing particle.')
-    if any(gid <= 0 for gid in originals):
-        raise ValueError('Particle IDs must be positive; GRAIN0 is reserved for the matrix.')
-    if any(not 0 <= ell.phasenum < nphases for ell in originals.values()):
-        raise ValueError('Particle phase IDs must be in range(nphases).')
-    if prec_vf is not None and prec_vf < 1:
-        if not 0 < prec_vf < 1 or nphases < 2:
-            raise ValueError('A matrix requires at least two phases and a particle fraction between 0 and 1.')
-        if any(ell.phasenum == 0 for ell in originals.values()):
-            raise ValueError('Matrix PHASE0 cannot contain grain-bearing particles.')
-
-    # Find the voxels belonging to each grain by growing ellipsoid each time
-    if prec_vf is None:
-        prec_vf = 1.
-
-    # decide if voxels shall be assigned to ellipsoids or inner polygons
-    if Ellipsoids[0].inner is None:
-        ell2vox()
-    else:
-        poly2vox()
-
-    mesh.grain_dict = {gid: vox for gid, vox in mesh.grain_dict.items() if len(vox)}
-
-    # generate array of voxelized structure with grain IDs
-    # if fill_factor < 1.0, empty voxels will have grain ID 0
-    gr_arr = np.zeros(mesh.nvox, dtype=int)
-    for igr, vlist in mesh.grain_dict.items():
-        vlist = np.array(vlist, dtype=int) - 1
-        gr_arr[vlist] = igr
-    ind = np.nonzero(gr_arr == 0)[0]
-    if len(ind) > 0 and prec_vf == 1.0:
-        # Shared-voxel resolution can leave holes after the growth target was
-        # reached. Complete a fully filled RVE using the nearest assigned voxel;
-        # with a matrix, these same holes intentionally remain GRAIN0 instead.
-        if not np.any(gr_arr):
-            raise ValueError('No grains received voxels; cannot fill the RVE.')
-        labels = gr_arr.reshape(mesh.dim)
-        nearest = distance_transform_edt(labels == 0, return_distances=False,
-                                         return_indices=True)
-        filled = labels[tuple(nearest)].ravel()
-        for index in ind:
-            gid = int(filled[index])
-            mesh.grain_dict[gid].append(int(index + 1))
-            gr_arr[index] = gid
-    mesh.grains = np.reshape(gr_arr, mesh.dim, order='C')
-
-
-    # generate array of voxelized structure with phase numbers
-    # and dict of phase numbers for each grain
-    # empty voxels will get phase number 0 and be assigned to grain with key 0
-    ph_arr = -np.ones(mesh.nvox, dtype=int)
-    mesh.grain_phase_dict = dict()
-    mesh.ngrains_phase = np.zeros(nphases, dtype=int)
-    for igr, vlist in mesh.grain_dict.items():
-        vlist = np.array(vlist, dtype=int) - 1
-        ip = originals[igr].phasenum
-        ph_arr[vlist] = ip
-        mesh.grain_phase_dict[igr] = ip
-        mesh.ngrains_phase[ip] += 1
-    ind = np.nonzero(ph_arr < 0.0)[0]
-    ph_arr[ind] = 0  # assign phase 0 to empty voxels
-    mesh.phases = np.reshape(ph_arr, mesh.dim, order='C')
-    vf_cur = 1.0 - len(ind) / mesh.nvox
-
-    print('Completed RVE voxelization')
-    if prec_vf is not None and prec_vf < 1.0:
-        print('Dispersed phase (precipitates/porosity):')
-        print(f'Volume fraction in voxelized grains: {vf_cur:.4f}')
-        print(f'Target volume fraction = {prec_vf}')
-        mesh.prec_vf_voxels = vf_cur
-        if 0 in mesh.grain_dict.keys():
-            raise ValueError('Grain with key "0" already exists. Should be reserved for matrix phase in structures ' +
-                             'with precipitates or porosity. Cannot continue with precipitate simulation.')
-        if len(ind):
-            mesh.grain_dict[0] = ind + 1
-            mesh.grain_phase_dict[0] = 0
-            mesh.ngrains_phase[0] += 1
-    elif vf_cur < 1.0:
-        logging.warning(f'WARNING: {len(ind)} voxels have not been assigned to grains.')
-        """Try to assign empty voxels to neighbor grain"""
-    print('')
-
+        raise ValueError('No original particles; run pack first')
+    for p in originals:
+        if not isinstance(p.id, (int, np.integer)) or p.id <= 0:
+            raise ValueError('Original grain IDs must be positive integers')
+        if not isinstance(p.phasenum, (int, np.integer)) or not 0 <= p.phasenum < nphases:
+            raise ValueError('Particle phase numbers must be in [0, nphases)')
+    ids = np.array(sorted(mesh.vox_center_dict))
+    if (mesh.nvox < 1 or np.prod(mesh.dim) != mesh.nvox
+            or not np.array_equal(ids, np.arange(1, mesh.nvox + 1))):
+        raise ValueError('Mesh must have consecutive voxel IDs 1 through nvox')
+    nodes = np.asarray(mesh.nodes, dtype=float)
+    origin = nodes.min(axis=0)
+    box_size = nodes.max(axis=0) - origin
+    if periodic is None:
+        periodic = any(p.duplicate is not None for p in particles)
+    # Copies keep particle positions, dimensions and orientations untouched.
+    from copy import copy
+    local = [copy(p) for p in originals]
+    for p, original in zip(local, originals):
+        p.x, p.y, p.z = np.asarray(original.get_pos()) - origin
+    diagram = AnisotropicPowerDiagram.from_particles(local, box_size, periodic=periodic)
+    if weights is not None:
+        weights = np.asarray(weights, dtype=float)
+        if weights.shape != diagram.weights.shape or not np.all(np.isfinite(weights)):
+            raise ValueError('weights must contain one finite value per original particle')
+        diagram.weights[:] = weights
+    elif fit_volumes:
+        diagram.fit_volumes(**({} if fit_options is None else fit_options))
+    centers = np.asarray([mesh.vox_center_dict[i] for i in ids], dtype=float) - origin
+    labels = np.empty(mesh.nvox, dtype=int)
+    for start in range(0, mesh.nvox, chunk_size):
+        labels[start:start + chunk_size] = diagram.labels(centers[start:start + chunk_size])
+    phase_by_id = {p.id: p.phasenum for p in originals}
+    mesh.grain_dict = {p.id: ids[labels == p.id].tolist() for p in originals
+                       if np.any(labels == p.id)}
+    mesh.grain_phase_dict = {gid: phase_by_id[gid] for gid in mesh.grain_dict}
+    mesh.ngrains_phase = np.bincount(list(mesh.grain_phase_dict.values()), minlength=nphases)
+    mesh.grains = labels.reshape(mesh.dim, order='C')
+    mesh.phases = np.array([phase_by_id[i] for i in labels]).reshape(mesh.dim, order='C')
+    mesh.prec_vf_voxels = 1.0
+    mesh.apd = diagram
+    for p in particles:
+        p.inside_voxels = list(mesh.grain_dict.get(p.id, [])) if p.duplicate is None else []
     return mesh

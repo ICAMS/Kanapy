@@ -197,7 +197,8 @@ def plot_polygons_3D(
     - The `dual_phase` parameter is deprecated. Use `phases` to control
       coloring by phase.
     - Each grain is plotted using its convex hull triangles defined in
-      `geometry['Grains'][igr]['Simplices']`.
+      `geometry['Grains'][igr]['Simplices']`. APD geometry uses shared Surface
+      triangles once, colored by the first adjacent grain or its phase.
     """
     if dual_phase is not None:
         print('Use of "dual_phase" is depracted. Use parameter "phases" instead.')
@@ -215,7 +216,13 @@ def plot_polygons_3D(
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     for igr in grains.keys():
-        if not grains[igr]['Simplices']:
+        if geometry.get('Representation') == 'APD':
+            surface = geometry['Surface']
+            triangles = surface.triangles[[i for i, pair in enumerate(surface.face_grains)
+                                           if pair[0] == igr]]
+        else:
+            triangles = grains[igr]['Simplices']
+        if len(triangles) == 0:
             continue
         if phases:
             icol = grains[igr]['Phase']
@@ -227,7 +234,7 @@ def plot_polygons_3D(
             col = list(cm(igr))
             col[-1] = alpha  # change alpha channel to create semi-transparency
         ax.plot_trisurf(pts[:, 0], pts[:, 1], pts[:, 2],
-                        triangles=grains[igr]['Simplices'], color=col,
+                        triangles=triangles, color=col,
                         edgecolor=ec, linewidth=1)
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.set_title('Polygonized microstructure')
