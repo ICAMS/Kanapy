@@ -1090,7 +1090,6 @@ class Octree(object):
         ppar = []
         timecd = 0.
         timecr = 0.
-        third = 1.0 / 3.0
         for E1 in self.particles:
             for E2 in E1.neighborlist:
                 id1 = E1.id if E1.duplicate is None else (E1.duplicate + len(self.particles))
@@ -1098,7 +1097,9 @@ class Octree(object):
                 if id2 > id1:
                     # Distance between the centers of ellipsoids
                     dist = np.linalg.norm(np.subtract(E1.get_pos(), E2.get_pos()))
-                    psize = 0.5 * (E1.get_volume() ** third + E2.get_volume() ** third)
+                    # true bounding-sphere radii (max semi-axis), not volume-equivalent radius,
+                    # so elongated ellipsoids are not under-filtered
+                    psize = max(E1.a, E1.b, E1.c) + max(E2.a, E2.b, E2.c)
                     # If the bounding spheres collide then check for collision
                     if dist <= psize:
                         # Check if ellipsoids overlap and update their speeds accordingly
