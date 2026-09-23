@@ -216,7 +216,7 @@ def plot_polygons_3D(
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     for igr in grains.keys():
-        if geometry.get('Representation') == 'APD':
+        if geometry.get('Representation') in ('APD', 'PeriodicWholeGrains'):
             surface = geometry['Surface']
             triangles = surface.triangles[[i for i, pair in enumerate(surface.face_grains)
                                            if pair[0] == igr]]

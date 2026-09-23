@@ -158,6 +158,37 @@ class AnisotropicPowerDiagram:
         from .apd_mesh import build_background_mesh
         return build_background_mesh(self, resolution, batch_size=batch_size)
 
+    def periodic_image_diagram(self):
+        """Explicit image competitors for whole-grain surface reconstruction.
+
+        Includes the surrounding 26 copies of every seed, plus farther images
+        required by the anisotropic search bound. Image weights and metrics are
+        inherited unchanged. Returned costs do not wrap coordinates or minimize
+        images before interpolation. ``image_parents`` and ``image_shifts`` map
+        the temporary image IDs back to the original seeds and lattice vectors.
+        Sampling uses the fundamental tile; translating its image-owned pieces
+        reconstructs central cells without imposing physical box caps.
+        """
+        if not self.periodic:
+            raise ValueError('Image-layer construction requires a periodic APD')
+        centers, matrices, parents, shifts, weights = [], [], [], [], []
+        layer = set(product((-1, 0, 1), repeat=3))
+        for i, (tree, transform) in enumerate(self._image_trees):
+            bounded = np.rint((tree.data @ np.linalg.inv(transform)-self.centers[i]) /
+                              self.box_size).astype(int)
+            required = layer | set(map(tuple, bounded))
+            for shift in sorted(required):
+                centers.append(self.centers[i]+np.array(shift)*self.box_size)
+                matrices.append(self.matrices[i])
+                parents.append(int(self.grain_ids[i]))
+                shifts.append(shift)
+                weights.append(self.weights[i])
+        images = AnisotropicPowerDiagram(centers, matrices, self.box_size)
+        images.weights = np.array(weights)
+        images.image_parents = dict(zip(map(int, images.grain_ids), parents))
+        images.image_shifts = dict(zip(map(int, images.grain_ids), map(np.array, shifts)))
+        return images
+
     def check_topology(self, **kwargs):
         """Run practical continuous contact diagnostics (not a global certificate).
 

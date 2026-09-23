@@ -510,27 +510,18 @@ class Ellipsoid(object):
                 back = self.bbox_zmax > sim_box.back
 
             else:
-                # It is outside: Move the particle to the opposite side
-                if self.x > sim_box.right:
-                    diff = self.x - sim_box.right
-                    self.x = sim_box.left + diff
-                elif self.x < sim_box.left:
-                    diff = abs(sim_box.left - self.x)
-                    self.x = sim_box.right - diff
-
-                if self.y > sim_box.bottom:
-                    diff = self.y - sim_box.bottom
-                    self.y = sim_box.top + diff
-                elif self.y < sim_box.top:
-                    diff = abs(sim_box.top - self.y)
-                    self.y = sim_box.bottom - diff
-
-                if self.z > sim_box.back:
-                    diff = self.z - sim_box.back
-                    self.z = sim_box.front + diff
-                elif self.z < sim_box.front:
-                    diff = abs(sim_box.front - self.z)
-                    self.z = sim_box.back - diff
+                # Wrap into the half-open box, including multi-box crossings.
+                # Translate the Verlet history by the same lattice vector to
+                # preserve displacement, velocity and the next integration step.
+                for axis, lower, length in (
+                    ('x', sim_box.left, sim_box.w),
+                    ('y', sim_box.top, sim_box.h),
+                    ('z', sim_box.front, sim_box.d),
+                ):
+                    position = getattr(self, axis)
+                    shift = np.floor((position - lower) / length) * length
+                    setattr(self, axis, position - shift)
+                    setattr(self, axis + 'old', getattr(self, axis + 'old') - shift)
 
                 self.set_cub()  # update the bounding box due to its movement
 

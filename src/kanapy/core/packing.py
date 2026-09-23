@@ -5,7 +5,8 @@ from typing import Any, Mapping, Optional
 from tqdm import tqdm
 from .input_output import write_dump
 from .entities import Ellipsoid, Cuboid, Octree
-from .collisions import collision_routine
+from .collisions import collide_detect
+from ._packing_relaxation import relax_particles, validate_relaxation_steps
 
 
 def particle_generator(
@@ -105,7 +106,8 @@ def particle_grow(
     k_att: float = 0.0,
     fill_factor: Optional[float] = None,
     dump: bool = False,
-    verbose: bool = False) -> tuple[list[Any], Any]:
+    verbose: bool = False,
+    relaxation_steps: int = 2000) -> tuple[list[Any], Any]:
     """
     Perform recursive particle growth and collision detection within the
     simulation box. Initializes an :class:`entities.Octree` instance and
@@ -127,11 +129,15 @@ def particle_grow(
     k_att : float, optional, default=0.0
         Attraction factor for particle interactions (default: 0.0).
     fill_factor : float or None, optional, default=None
-        Target volume fraction for particle filling (default: 0.65).
+        Fraction of the original summed particle volume to grow (default: 0.5).
     dump : bool, optional, default=False
         If True, dump files for particles are written at intervals (default: False).
     verbose : bool, optional, default=False
         If True, print detailed information at iteration steps (default: False).
+
+    relaxation_steps : int, optional, default=2000
+        Maximum fixed-size relaxation steps after growth; 0 disables relaxation.
+        The convergence report is stored in ``sim_box.packing_relaxation``.
 
     Returns
     -------
@@ -210,8 +216,9 @@ def particle_grow(
         ell.oldz = ell.z
         return
 
+    validate_relaxation_steps(relaxation_steps)
     if fill_factor is None:
-        fill_factor = 0.65  # 65% should be largest packing density of ellipsoids
+        fill_factor = 0.55  # 65% should be largest packing density of ellipsoids
     # Reduce the volume of the particles to (1/nsteps)th of its original value
     end_step = int(fill_factor * nsteps) - 1  # grow particles only to given volume fraction
     m = -1 / 2.5
@@ -314,6 +321,10 @@ def particle_grow(
         if type(ell.id) is int:
             ve += ell.get_volume()
     print(f'Actual final volume of ellipsoids: {ve}')
+    Ellipsoids, sim_box.packing_relaxation = relax_particles(
+        Ellipsoids, sim_box, periodicity, max_steps=relaxation_steps, verbose=verbose)
+    if dump:
+        write_dump(Ellipsoids, sim_box)
     return Ellipsoids, sim_box
 
 
@@ -396,7 +407,8 @@ def packingRoutine(
     fill_factor: Optional[float] = None,
     poly: Optional[np.ndarray] = None,
     save_files: bool = False,
-    verbose: bool = False) -> tuple[list[Any], Any]:
+    verbose: bool = False,
+    relaxation_steps: int = 2000) -> tuple[list[Any], Any]:
     """
     Perform particle packing routine using particle generation and growth simulation
 
@@ -420,13 +432,17 @@ def packingRoutine(
     k_att : float, optional
         Attraction factor for different-phase particles (default 0.0)
     fill_factor : float or None, optional, default=None
-        Target volume fraction for particle filling (default None, uses 0.65)
+        Fraction of original summed particle volume (default None, uses 0.5)
     poly : numpy.ndarray or None, optional, default=None
         Points defining a primitive polygon inside ellipsoids (default None)
     save_files : bool, optional, default=False
         Whether to save dump files during simulation (default False)
     verbose : bool, optional, default=False
         If True, prints detailed simulation output (default False)
+
+    relaxation_steps : int, optional, default=2000
+        Maximum fixed-size relaxation steps after growth; 0 disables relaxation.
+        Nonconvergence is reported in ``simbox.packing_relaxation`` and warned.
 
     Returns
     -------
@@ -444,6 +460,7 @@ def packingRoutine(
     * RVE attributes such as simulation domain size, number of voxels, and voxel resolution
     * Simulation attributes such as total number of timesteps and periodicity
     """
+    validate_relaxation_steps(relaxation_steps)
     print('Starting particle simulation')
 
     print('    Creating particles from distribution statistics')
@@ -456,7 +473,8 @@ def packingRoutine(
     particles, simbox = particle_grow(sim_box, Particles, periodic,
                                             nsteps,
                                             k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
-                                            dump=save_files, verbose=verbose)
+                                            dump=save_files, verbose=verbose,
+                                            relaxation_steps=relaxation_steps)
 
     # statistical evaluation of collisions
     if particles is not None:
@@ -475,9 +493,10 @@ def packingRoutine(
                                                       E2.get_pos()))
                     # If the bounding spheres collide then check for collision
                     if dist <= np.max([E1.a, E1.b, E1.c]) + np.max([E2.a, E2.b, E2.c]):
-                        # Check if ellipsoids overlap and update their speeds
-                        # accordingly
-                        if collision_routine(E1, E2):
+                        # Read-only final contact check; retain the relaxed zero-force state.
+                        if collide_detect(E1.get_coeffs(), E2.get_coeffs(),
+                                          E1.get_pos(), E2.get_pos(),
+                                          E1.rotation_matrix, E2.rotation_matrix):
                             E1.ncollision += 1
                             E2.ncollision += 1
                             ncoll += 1

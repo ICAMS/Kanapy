@@ -29,6 +29,8 @@ class APDBackgroundMesh:
 
     @property
     def labels(self):
+        if not self.costs.shape[1]:
+            raise ValueError('Element-growth backgrounds have no nodal costs; use ElementGrainIDs')
         return self.grain_ids[np.argmin(self.costs, axis=1)]
 
     @property

@@ -158,15 +158,16 @@ def collide_detect(
     B[2, 2] = 1 / (coef_j[2] ** 2)
     B[3, 3] = -1
 
-    # Rigid body transformations
+    # Particle surfaces use row vectors: local @ R + center. The homogeneous
+    # transformations below act on column vectors, so their rotations are R.T.
     T_i = np.zeros((4, 4), dtype=float)
     T_j = np.zeros((4, 4), dtype=float)
 
-    T_i[:3, :3] = A_i
+    T_i[:3, :3] = A_i.T
     T_i[:3, 3] = r_i
     T_i[3, 3] = 1.0
 
-    T_j[:3, :3] = A_j
+    T_j[:3, :3] = A_j.T
     T_j[:3, 3] = r_j
     T_j[3, 3] = 1.0
 

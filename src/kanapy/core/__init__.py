@@ -28,16 +28,14 @@ from .input_output import export2abaqus, writeAbaqusMat, pickle2microstructure, 
 from .rve_stats import find_rot_axis, bbox, get_grain_geom
 from .cli import start
 
-try:
-    from .triple_surface import create_ref_ell
-    triple_surf = True
-except:
-    triple_surf = False
-
 __all__ = ["Microstructure", "set_stats", "plot_voxels_3D", "plot_polygons_3D", 
            "export2abaqus", "writeAbaqusMat", "pickle2microstructure", "import_voxels",
            "import_stats", "write_stats", "find_rot_axis", "bbox", "get_grain_geom", "start",
            "plot_mean_ellipsoids_from_stats", "triple_surf"]
-           
-if triple_surf:
+
+try:
+    from .triple_surface import create_ref_ell
+    triple_surf = True
     __all__.append("create_ref_ell")
+except:
+    triple_surf = False 

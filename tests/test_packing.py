@@ -109,6 +109,8 @@ def test_particle_grow(rot_surf):
     assert np.isclose(ell1.oria, 2.0)
     assert np.isclose(ell2.get_volume(), 9.424777960769381)
     assert particles[0] == ell1
+    assert simbox.packing_relaxation['enabled']
+    assert simbox.packing_relaxation['converged']
 
     
 def test_packingRoutine():

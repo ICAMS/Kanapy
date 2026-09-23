@@ -224,7 +224,8 @@ class Microstructure(object):
             fill_factor: Optional[float] = None,
             poly: Any = None,
             save_files: bool = False,
-            verbose: bool = False) -> None:
+            verbose: bool = False,
+            relaxation_steps: int = 500) -> None:
         """
         Pack particles into the simulation box according to the RVE settings.
 
@@ -245,6 +246,10 @@ class Microstructure(object):
             If True, saves packed particle data to files.
         verbose : bool, optional, default=False
             If True, prints progress and warnings during packing.
+        relaxation_steps : int, optional, default=500
+            Maximum fixed-size overlap-relaxation steps after growth. Set to 0
+            to disable. Convergence is recorded in ``self.simbox.packing_relaxation``;
+            remaining overlaps produce a warning without shrinking particles.
 
         Returns
         -------
@@ -267,6 +272,12 @@ class Microstructure(object):
             particle_data = self.rve.particle_data
             if particle_data is None:
                 raise ValueError('No particle_data in pack. Run create_RVE first.')
+        if fill_factor is not None:
+            assert isinstance(fill_factor, (float, int)), "fill_factor must be a float or int"
+            assert 0.0 < fill_factor <= 1.0, "fill_factor must be between 0 and 1"
+            fill_factor = float(fill_factor)  # Ensure fill_factor is a float
+            if fill_factor > 0.55:
+                print('Warning: High fill factor may lead to particle overlaps.')
         if fill_factor is None and self.precipit is not None:
             fill_factor = 1.0  # pack to full volume fraction defined in particles
             print(f'Sparse particles (precipitates/pores): '
@@ -277,7 +288,8 @@ class Microstructure(object):
             packingRoutine(particle_data, self.rve.periodic,
                            self.rve.packing_steps, self.simbox,
                            k_rep=k_rep, k_att=k_att, fill_factor=fill_factor,
-                           poly=poly, save_files=save_files, verbose=verbose)
+                           poly=poly, save_files=save_files, verbose=verbose,
+                           relaxation_steps=relaxation_steps)
 
     def voxelize_legacy(self, particles=None, dim=None):
         """Voxelize using the historical growth/polygon implementation."""
@@ -441,7 +453,8 @@ class Microstructure(object):
             self.geometry['GBfaces'] = grain_facesDict
 
     def generate_grains(self, resolution=10, *, batch_size=8192,
-                        optimize=True, tolerance=1e-10) -> None:
+                        optimize=True, tolerance=1e-10, regularization=None,
+                        periodic_images=None) -> None:
         """Generate grain boundaries or particle surfaces for matrix RVEs.
 
         Parameters
@@ -455,6 +468,16 @@ class Microstructure(object):
             Prune dominated local grains and shortcut uncut tetrahedra.
         tolerance : float, default=1e-10
             Numerical tolerance for local clipping and global assembly.
+        regularization : dict, optional
+            APD surface regularization options; stores a separate Regularized
+            result without changing the reference geometry. See regularize_grains.
+            Unsupported for particle/matrix geometry.
+        periodic_images : bool or None, default=None
+            For periodic APDs, reconstruct whole cells using explicit surrounding
+            seed images before cost interpolation. None enables this for periodic
+            APDs. False retains the legacy box-clipped reconstruction. Image
+            geometry requires at least two background cells per direction.
+
 
         Returns
         -------
@@ -479,8 +502,11 @@ class Microstructure(object):
         Particle inner structures are unsupported and raise ValueError.
         Interfaces are stored once. Disconnected components are preserved.
         APD geometry approximates linearly interpolated costs; no FE volume mesh is
-        produced. Periodic shape moments describe fragments within the box,
-        not an unwrapped grain. Geometry replaces the prior result only after
+        produced. Periodic APDs use separate image competitors and return whole
+        central seed cells with periodic face pairing. Their shape moments
+        describe those cells; periodic_images=False instead measures clipped
+        parent fragments. Anisotropic image cells can still be disconnected.
+        Geometry replaces the prior result only after
         successful construction. Statistics cached for prior geometry are cleared.
 
         Raises
@@ -495,6 +521,8 @@ class Microstructure(object):
             raise ValueError('generate_grains does not support particles with inner structure.')
         if (getattr(self, 'precipit', None) is not None
                 or getattr(getattr(self, 'rve', None), 'matrix_phase', None) is not None):
+            if regularization is not None:
+                raise ValueError('Surface regularization currently requires APD geometry')
             simbox = getattr(self, 'simbox', None)
             origin = None if simbox is None else [simbox.left, simbox.top, simbox.front]
             geometry = build_particle_geometry(
@@ -531,7 +559,17 @@ class Microstructure(object):
                 phases[particle.id] = particle.phasenum
         geometry = build_grain_geometry(diagram, phases, resolution,
                                        batch_size=batch_size, optimize=optimize,
-                                       tolerance=tolerance)
+                                       tolerance=tolerance, regularization=regularization,
+                                       periodic_images=periodic_images)
+        if geometry.get('PeriodicImageGeometry'):
+            from copy import deepcopy
+            orientations = getattr(self.mesh, 'grain_ori_dict', None) or {}
+            geometry['WholeGrains'].grain_orientations = {
+                g: deepcopy(orientations[g]) for g in geometry['Grains'] if g in orientations}
+            result = geometry.get('Regularized')
+            if result is not None and result.periodic_geometry is not None:
+                result.periodic_geometry.grain_orientations = deepcopy(
+                    geometry['WholeGrains'].grain_orientations)
         self.geometry = geometry
         self.rve_stats = None
         self.rve_stats_labels = None
@@ -541,6 +579,55 @@ class Microstructure(object):
                 fraction = geometry['PhaseVolumes'].get(ip, 0.) / diagram.volume
                 print(f'{ip}: {self.rve.phase_names[ip]} ({100*fraction:.3f}%)')
 
+    def unwrap_grains(self, *, tolerance=1e-10, split_winding=True):
+        """Join periodic fragments into closed whole grains without box cuts.
+
+        Stores and returns ``geometry['WholeGrains']``. For plotting use
+        ``plot_grains(geometry=result.as_geometry())``; for STL use
+        ``write_stl(boundary=result.surface)``. Reference box geometry is unchanged.
+        Winding grains are split into compact entities by default; parent IDs,
+        phases and existing orientations are retained. split_winding=False raises
+        on such grains instead. Splitting requires at least 3 cells per axis.
+        """
+        from .periodic_grains import unwrap_periodic_grains
+        if self.geometry is None:
+            raise ValueError('Run generate_grains before unwrap_grains')
+        result = unwrap_periodic_grains(self.geometry, tolerance=tolerance, split_winding=split_winding)
+        from copy import deepcopy
+        orientations = getattr(getattr(self, 'mesh', None), 'grain_ori_dict', None) or {}
+        result.grain_orientations = {g: deepcopy(orientations[parent])
+                                    for g, parent in result.grain_parent_ids.items() if parent in orientations}
+        self.geometry['WholeGrains'] = result
+        return result
+
+
+    def regularize_grains(self, **options):
+        """Prepare a separate shared APD surface for volume meshing.
+
+        Run ``generate_grains`` first. Options are those of
+        :func:`kanapy.core.surface_regularization.regularize_grain_surface`.
+        Stores and returns ``geometry['Regularized']`` only after successful
+        validation. Reference geometry/statistics and the voxel mesh are unchanged.
+        Export with ``write_stl(boundary=result.surface, include_exterior=True)``.
+        Periodic APDs automatically use whole grains with synchronized periodic
+        copies; pass periodic=False to retain the box-clipped path. Access the
+        lifted plotting/moment view with result.periodic_geometry.as_geometry().
+        This is a surface candidate, not an FEM volume mesh or a global
+        self-intersection certificate; inspect ``result.report``.
+        """
+        from .surface_regularization import regularize_grain_surface
+        if self.geometry is None:
+            raise ValueError('Run generate_grains before regularize_grains')
+        result = regularize_grain_surface(self.geometry, **options)
+        if result.periodic_geometry is not None:
+            from copy import deepcopy
+            orientations = getattr(getattr(self, 'mesh', None), 'grain_ori_dict', None) or {}
+            result.periodic_geometry.grain_orientations = {g: deepcopy(orientations[parent])
+                for g, parent in result.periodic_geometry.grain_parent_ids.items() if parent in orientations}
+        self.geometry['Regularized'] = result
+        return result
+
+    
     def generate_orientations(
             self,
             data: Any,
@@ -573,7 +660,7 @@ class Microstructure(object):
             Orientation angle for unimodal texture (required if `data` is unimodal).
         omega : float or None, optional, default=None
             Kernel halfwidth for unimodal texture (required if `data` is unimodal).
-        Nbase : int, default=5000
+        Nbase : int, default=20000
             Number of base orientations used in random or unimodal generation.
         hist : array_like or None, optional, default=None
             Histogram for the grain orientations, used to weight orientations.
@@ -947,7 +1034,8 @@ class Microstructure(object):
         ----------
         geometry : dict or None, optional, default=None
             Dictionary containing the polygonal grain geometries. If None, uses
-            `self.geometry`.
+            `self.geometry`, preferring a stored periodic whole-grain result.
+            Pass `self.geometry` explicitly to display the clipped reference.
         cmap : str, optional, default='prism'
             Matplotlib colormap name for rendering grain colors. Default is 'prism'.
         alpha : float, optional, default=0.4
@@ -1000,6 +1088,12 @@ class Microstructure(object):
             phases = dual_phase
         if geometry is None:
             geometry = self.geometry
+            if geometry is not None:
+                regularized = geometry.get('Regularized')
+                whole = (getattr(regularized, 'periodic_geometry', None) if regularized is not None
+                         else geometry.get('WholeGrains'))
+                if whole is not None:
+                    geometry = whole.as_geometry()
         if geometry is None:
             raise ValueError('No polygons for grains defined. Run generate_grains() first')
         hmin = min(self.rve.size)
@@ -2068,8 +2162,10 @@ class Microstructure(object):
             Output directory, default current directory. Must already exist.
         boundary : APDBoundaryComplex or APDBoundaryTriangles
             Result of ``partition.boundary_complex()`` or its ``triangulate()``
-            method. Defaults to geometry from generate_grains(). No APD fitting
-            or assembly is triggered.
+            method. Defaults to a stored periodic whole-grain result when
+            available, otherwise geometry from generate_grains(). No APD fitting
+            or assembly is triggered. Explicit boundary selects the reference
+            or another desired surface.
         include_exterior : bool, optional
             Include box faces as well as internal interfaces, default False.
             For a pretriangulated input, True retains all available triangles;
@@ -2105,7 +2201,10 @@ class Microstructure(object):
         if boundary is None:
             if getattr(self, 'geometry', None) is None or 'Boundary' not in self.geometry:
                 raise ValueError('Run generate_grains() or supply an APD boundary for STL export')
-            boundary = self.geometry['Boundary']
+            regularized = self.geometry.get('Regularized')
+            whole = (getattr(regularized, 'periodic_geometry', None) if regularized is not None
+                     else self.geometry.get('WholeGrains'))
+            boundary = whole.surface if whole is not None else self.geometry['Boundary']
         if isinstance(boundary, APDBoundaryComplex):
             surface = boundary.triangulate(include_exterior=include_exterior)
         elif isinstance(boundary, APDBoundaryTriangles):

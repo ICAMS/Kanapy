@@ -7,6 +7,34 @@ import kanapy as kanapy
 from kanapy.core.entities import *
 
 
+@pytest.mark.parametrize('axis', range(3))
+@pytest.mark.parametrize('start, displacement', [
+    (11.9, .2), (.1, -.2),       # cross either face
+    (11., 1.), (1., -1.),       # land exactly on a face
+    (6., 30.2), (6., -30.2),    # cross multiple box lengths
+])
+def test_periodic_wrap_preserves_verlet_motion(axis, start, displacement):
+    box = Simulation_Box((12., 12., 12.))
+    position = np.full(3, 6.)
+    position[axis] = start
+    particle = Ellipsoid(1, *position, .2, .2, .2, np.array([1., 0., 0., 0.]))
+    step = np.zeros(3)
+    step[axis] = displacement
+    particle.xold, particle.yold, particle.zold = position - step
+    particle.move(1.)
+    velocity = np.array([particle.speedx, particle.speedy, particle.speedz])
+    particle.wallCollision(box, True)
+    wrapped = np.mod(position + step, 12.)
+    np.testing.assert_allclose(particle.get_pos(), wrapped, atol=1e-12)
+    np.testing.assert_allclose([particle.xold, particle.yold, particle.zold],
+                               wrapped - step, atol=1e-12)
+    np.testing.assert_allclose([particle.speedx, particle.speedy, particle.speedz], velocity)
+    particle.move(1.)
+    np.testing.assert_allclose(particle.get_pos(), wrapped + step, atol=1e-12)
+    np.testing.assert_allclose([particle.speedx, particle.speedy, particle.speedz],
+                               step, atol=1e-12)
+
+
 @pytest.fixture
 def CuboidBox(mocker):
     cb = mocker.MagicMock()
@@ -392,5 +420,4 @@ class TestOctree():
         self.tree.update()
         self.tree.collisionsTest()
         assert self.tree.collisionsTest.call_count == 1
-
 

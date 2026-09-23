@@ -3,6 +3,22 @@ import numpy as np
 from kanapy.core.entities import Ellipsoid
 from kanapy.core.collisions import collision_routine, collision_react, collide_detect
 
+
+@pytest.mark.parametrize('local_center, expected', [([2.5, 0., 0.], True),
+                                                  ([0., 2.5, 0.], False)])
+@pytest.mark.parametrize('reverse', [False, True])
+def test_rotated_ellipsoid_contact_matches_particle_surface(local_center, expected, reverse):
+    # A sphere centred inside the long axis overlaps; the same distance along
+    # the short axis is separated (2.5 > 1 + 0.2). Use the particle's row-vector
+    # convention to place it, so an inverted rotation tests different geometry.
+    angle = np.pi / 4
+    ellipsoid = Ellipsoid(1, 4., 5., 6., 3., 1., 1.,
+                          np.array([np.cos(angle / 2), 0., 0., np.sin(angle / 2)]))
+    center = np.asarray(local_center) @ ellipsoid.rotation_matrix + ellipsoid.get_pos()
+    sphere = Ellipsoid(2, *center, .2, .2, .2, np.array([1., 0., 0., 0.]))
+    first, second = (sphere, ellipsoid) if reverse else (ellipsoid, sphere)
+    assert collision_routine(first, second) is expected
+
 # ------------------------------
 # Test different ellipsoid scenarios
 # ------------------------------
