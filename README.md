@@ -191,6 +191,14 @@ The preferred way to cite Kanapy is:
  - v6.5: Switched to orix library for EBSD import and analysis and generation of textures to have a pure Python code. The MTEX backend is still available with [Kanapy-mtex](https://github.com/ICAMS/kanapy-mtex.git).
  - v6.5.4: Modified support for multiphase structures without downwards comaptibility: Matrix or dispersed phases are now introduced explicitly. EBSD map analysis based on microstructure graphs.
 
+## Surface remeshing
+
+Gmsh can regenerate shared APD grain surfaces with retained interface labels and
+conforming junctions. Install `kanapy[gmsh]` and call
+`ms.remesh_grains(mesh_size=...)` after generating the boundary geometry.
+See the [Gmsh remeshing guide](docs/gmsh_remeshing.md) for periodic boundaries,
+export, and geometry-preserving options.
+
 ## Licenses
 
 <a rel="license" href="https://www.gnu.org/licenses/agpl-3.0.html"><img alt="AGPLv3" style="border-width:0;max-height:30px;height:50%;" src="https://www.gnu.org/graphics/agplv3-155x51.png" /></a>

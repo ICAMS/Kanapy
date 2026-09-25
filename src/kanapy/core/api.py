@@ -601,6 +601,24 @@ class Microstructure(object):
         return result
 
 
+    def remesh_grains(self, mesh_size, **options):
+        """Remesh shared APD boundary surfaces with the optional Gmsh backend.
+
+        ``mesh_size`` is the target edge length in geometry coordinate units.
+        Additional options are documented in
+        :func:`kanapy.core.gmsh_remeshing.remesh_grain_surface`.
+        Stores and returns ``geometry['Remeshed']`` after validation; the
+        reference geometry and voxel mesh remain unchanged. Export with
+        ``write_stl(boundary=result.surface, include_exterior=True)``.
+        Install the backend with ``pip install 'kanapy[gmsh]'``.
+        """
+        from .gmsh_remeshing import remesh_grain_surface
+        if self.geometry is None:
+            raise ValueError('Run generate_grains before remesh_grains')
+        result = remesh_grain_surface(self.geometry, mesh_size, **options)
+        self.geometry['Remeshed'] = result
+        return result
+
     def regularize_grains(self, **options):
         """Prepare a separate shared APD surface for volume meshing.
 

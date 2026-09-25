@@ -23,12 +23,10 @@ def build_grain_geometry(diagram, phase_by_grain, resolution=10, *, batch_size=8
     missing = set(diagram.grain_ids) - set(phase_by_grain)
     if missing:
         raise ValueError(f'Missing phase numbers for APD grains: {sorted(missing)}')
-    # Removed conditioning, star_shaped, and growth handling as per recent edits
     if periodic_images is None:
         periodic_images = diagram.periodic
     if not isinstance(periodic_images, (bool, np.bool_)):
         raise ValueError('periodic_images must be None or a boolean')
-    # Removed growth and star_shaped handling as per recent edits
     if periodic_images:
         from .periodic_images import build_periodic_image_geometry
         geometry = build_periodic_image_geometry(diagram, phase_by_grain, resolution,
@@ -36,10 +34,8 @@ def build_grain_geometry(diagram, phase_by_grain, resolution=10, *, batch_size=8
         if regularization is not None:
             from .surface_regularization import regularize_grain_surface
             geometry['Regularized'] = regularize_grain_surface(geometry, **regularization)
-        # Removed star_shaped handling as per recent edits
         return geometry
     background = diagram.background_mesh(resolution, batch_size=batch_size)
-    # Removed star_shaped handling as per recent edits
     partition = background.assemble(tolerance=tolerance, optimize=optimize)
     boundary = partition.boundary_complex()
     surface = boundary.triangulate(include_exterior=True)

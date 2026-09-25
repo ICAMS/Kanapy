@@ -285,7 +285,10 @@ class APDBoundaryTriangles:
     """Shared oriented surface triangles; source_faces indexes boundary polygons.
 
     Grain pairs are metadata, not separate copies of an interface. Points retain
-    original global IDs and append polygon centroids where needed. Exterior
+    original global IDs and append polygon centroids when produced by
+    ``APDBoundaryComplex.triangulate``. Gmsh remeshing instead creates compact new
+    point IDs and uses source_faces for polygon classification (a remeshed
+    triangle can cross its source polygon's edges). Exterior
     triangles have a second grain of None. STL cannot retain this metadata.
     """
     points: np.ndarray
