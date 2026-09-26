@@ -1,9 +1,145 @@
 """Voxelization by the anisotropic power diagram evaluated at voxel centers."""
 import warnings
+from functools import lru_cache
+from itertools import product
 
 import numpy as np
 
 from .power_diagram import AnisotropicPowerDiagram
+
+
+def grain_boundary_voxels(grains, *, periodic=False):
+    """Return a boolean mask of voxels with a differently labelled face neighbour.
+
+    ``grains`` is a 3D array of grain IDs, e.g. ``mesh.grains``. Both sides
+    of every interface are marked. Edge/corner contacts are not neighbours,
+    and the exterior is not another grain. All labels (including zero) are
+    treated as grain IDs. ``periodic`` enables wrapping on all three axes.
+
+    Uses O(N) time and O(N) boolean storage, without copying the label array
+    or looping over voxels. Obtain array coordinates with ``np.argwhere(mask)``
+    or Kanapy's one-based voxel IDs with ``np.flatnonzero(mask) + 1``.
+    """
+    grains = np.asarray(grains)
+    if grains.ndim != 3:
+        raise ValueError('grains must be a 3D array of grain IDs')
+    if not isinstance(periodic, (bool, np.bool_)):
+        raise ValueError('periodic must be a boolean')
+    boundary = np.zeros(grains.shape, dtype=bool)
+    for axis in range(3):
+        if grains.shape[axis] < 2:
+            continue
+        left = [slice(None)] * 3
+        right = [slice(None)] * 3
+        left[axis] = slice(None, -1)
+        right[axis] = slice(1, None)
+        left, right = tuple(left), tuple(right)
+        different = grains[left] != grains[right]
+        boundary[left] |= different
+        boundary[right] |= different
+        if periodic:
+            first = [slice(None)] * 3
+            last = [slice(None)] * 3
+            first[axis], last[axis] = 0, -1
+            first, last = tuple(first), tuple(last)
+            different = grains[first] != grains[last]
+            boundary[first] |= different
+            boundary[last] |= different
+    return boundary
+
+
+@lru_cache(maxsize=1)
+def _nonmanifold_vertex_patterns():
+    """Classify the boundary link on an octahedron around a grid vertex."""
+    bad = np.zeros(256, dtype=bool)
+    triangles = [tuple(2 * axis + bit for axis, bit in enumerate(bits))
+                 for bits in product((0, 1), repeat=3)]
+    for pattern in range(1, 255):
+        edges = set()
+        for octant, triangle in enumerate(triangles):
+            if pattern & (1 << octant):
+                for i, j in ((0, 1), (0, 2), (1, 2)):
+                    edge = (triangle[i], triangle[j])
+                    edges.symmetric_difference_update((edge,))
+        graph = {}
+        for a, b in edges:
+            graph.setdefault(a, set()).add(b)
+            graph.setdefault(b, set()).add(a)
+        # A manifold surface has one simple closed curve as its vertex link.
+        seen, pending = set(), [next(iter(graph))]
+        while pending:
+            node = pending.pop()
+            if node not in seen:
+                seen.add(node)
+                pending.extend(graph[node] - seen)
+        bad[pattern] = (len(seen) != len(graph) or
+                        any(len(neighbours) != 2 for neighbours in graph.values()))
+    bad.setflags(write=False)
+    return bad
+
+
+def nonmanifold_grain_boundary_voxels(grains, *, periodic=False, chunk_size=65536):
+    """Mark boundary voxels incident to a non-manifold vertex of their grain.
+
+    Each grain is treated as a union of closed voxel cubes. At each grid
+    vertex, its surface must have a link consisting of one simple cycle.
+    This detects edge and vertex self-contacts, including disconnected local
+    surface sheets. Ordinary triple lines and junctions between distinct
+    grains are valid when each individual grain surface is manifold.
+
+    Input and output conventions match ``grain_boundary_voxels``. The result
+    marks incident voxels belonging to the offending grain, not all neighbours.
+    Nonperiodic grain shells are closed against the exterior for the topology
+    check, but only grain-boundary voxels are returned. All labels, including
+    zero, count as grains. Periodic mode identifies opposite domain faces.
+
+    A 256-entry occupancy lookup table tests local 2x2x2 neighbourhoods.
+    Work is O(N) after label encoding; temporary neighbourhood arrays are
+    bounded by ``chunk_size`` vertices. Label encoding uses ``np.unique``.
+    """
+    grains = np.asarray(grains)
+    boundary = grain_boundary_voxels(grains, periodic=periodic)
+    if (isinstance(chunk_size, (bool, np.bool_)) or
+            not isinstance(chunk_size, (int, np.integer)) or chunk_size < 1):
+        raise ValueError('chunk_size must be a positive integer')
+    if grains.size == 0:
+        return boundary
+    _, labels = np.unique(grains, return_inverse=True)
+    labels = labels.reshape(grains.shape)
+    if periodic:
+        labels = np.pad(labels, ((1, 0),) * 3, mode='wrap')
+        vertex_shape = grains.shape
+    else:
+        labels = np.pad(labels, 1, constant_values=-1)
+        vertex_shape = tuple(n + 1 for n in grains.shape)
+    flagged = np.zeros(labels.size, dtype=bool)
+    strides = np.array([labels.shape[1] * labels.shape[2], labels.shape[2], 1])
+    offsets = np.array(list(product((0, 1), repeat=3))) @ strides
+    flat_labels = labels.ravel()
+    lookup = _nonmanifold_vertex_patterns()
+    weights = (1 << np.arange(8)).astype(np.uint8)
+    for start in range(0, int(np.prod(vertex_shape)), chunk_size):
+        vertices = np.arange(start, min(start + chunk_size, np.prod(vertex_shape)))
+        base = np.array(np.unravel_index(vertices, vertex_shape)).T @ strides
+        indices = base[:, None] + offsets
+        local = flat_labels[indices]
+        for octant in range(8):
+            same = local == local[:, octant, None]
+            pattern = np.sum(same * weights, axis=1)
+            bad = lookup[pattern] & (local[:, octant] >= 0)
+            flagged[indices[bad, octant]] = True
+    flagged = flagged.reshape(labels.shape)
+    if periodic:
+        # Fold ghost voxels on the low sides back onto their physical copies.
+        for axis in range(3):
+            first = [slice(None)] * 3
+            last = [slice(None)] * 3
+            first[axis], last[axis] = 0, -1
+            flagged[tuple(last)] |= flagged[tuple(first)]
+        result = flagged[1:, 1:, 1:]
+    else:
+        result = flagged[1:-1, 1:-1, 1:-1]
+    return result & boundary
 
 
 def voxelizationRoutine(Ellipsoids, mesh, nphases, prec_vf=None, *,

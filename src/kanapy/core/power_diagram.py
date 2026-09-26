@@ -149,6 +149,17 @@ class AnisotropicPowerDiagram:
         """Return original grain IDs; exact ties use the first grain."""
         return self.grain_ids[np.argmin(self.costs(points), axis=1)]
 
+    def background_octree(self, resolution=2, *, max_depth=3, batch_size=8192,
+                          max_cells=1_000_000):
+        """Prepare and inspect adaptive APD boxes before tetrahedralization.
+
+        Returns an APDBackgroundOctree with plot_slice() and summary(). This
+        preview does not replace the uniform background used by grain geometry.
+        """
+        from .apd_octree import build_background_octree
+        return build_background_octree(self, resolution, max_depth=max_depth,
+                                       batch_size=batch_size, max_cells=max_cells)
+
     def background_mesh(self, resolution=10, *, batch_size=8192):
         """Sample fixed APD costs on a conforming background tetrahedral mesh.
 

@@ -1,5 +1,36 @@
 # APD voxelization
 
+## Grain-boundary voxel diagnostics
+
+```python
+import numpy as np
+from kanapy.core.voxelization import (
+    grain_boundary_voxels, nonmanifold_grain_boundary_voxels,
+)
+
+boundary = grain_boundary_voxels(ms.mesh.grains, periodic=ms.rve.periodic)
+nonmanifold = nonmanifold_grain_boundary_voxels(
+    ms.mesh.grains, periodic=ms.rve.periodic,
+)
+voxel_ids = np.flatnonzero(nonmanifold) + 1
+indices = np.argwhere(nonmanifold)
+```
+
+The boundary mask uses six face-sharing neighbours. The non-manifold mask
+marks boundary voxels of grains whose cubical surfaces have edge or vertex
+self-contacts. It checks whether each grain's surface around each grid vertex
+forms one simple closed curve. This is a per-grain test: ordinary triple lines
+and junctions of distinct grains are valid if each grain is locally manifold.
+It does not test whether an entire grain is connected.
+
+Zero is treated as a grain label. Nonperiodic shells are closed against the
+outside of the box during the topology check; exterior-only boundary voxels
+are excluded from the returned mask. Periodic mode wraps all three axes.
+The optional `chunk_size` bounds the number of grid vertices processed at once
+(default 65536).
+
+## Voxelization
+
 `Microstructure.voxelize(particles=None, dim=None)` now uses the anisotropic
 power diagram (APD). Its original positional arguments remain valid.
 

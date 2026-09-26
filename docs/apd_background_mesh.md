@@ -1,5 +1,9 @@
 # Step 1: APD background mesh
 
+For adaptive octree sampling before tetrahedralization, see
+[the octree preparation stage](apd_octree.md). The tetrahedral workflow below
+continues to use a uniform background.
+
 Given an existing, optionally volume-fitted `AnisotropicPowerDiagram`:
 
 ```python

@@ -18,6 +18,9 @@ def build_grain_geometry(diagram, phase_by_grain, resolution=10, *, batch_size=8
     ``regularize_grain_surface``; its separate result is stored as ``Regularized``.
     Reference Surface, moments and point labeling remain consistent and unchanged.
     No volume FE mesh is generated. Image geometry retains periodic face pairing.
+    For the adaptive pre-tetrahedral sampling stage, inspect
+    ``diagram.background_octree(...)`` separately. Its leaf boxes are not yet
+    a conforming tetrahedral background and are not consumed by this builder.
  
     """
     missing = set(diagram.grain_ids) - set(phase_by_grain)
