@@ -403,6 +403,63 @@ class Microstructure(object):
             logging.info('Removing polyhedral grain geometries and statistical data after re-meshing.')
             self.geometry = None
 
+    def anneal(self, *, periodic=None, **options):
+        """Anneal a single-phase voxel mesh using optional FiPy grain growth.
+
+        Defaults: dimensionless mobility=10, kappa=2, dt=0.002,
+        max_steps=2000, volume_change=0.1. Stop when ANY grain changes
+        volume by at least 10% relative to its volume at this call's start.
+        The first crossing is retained; voxel quantization can overshoot.
+        Return diagnostics including reason, steps and initial/final volumes.
+        Periodicity defaults to the voxelization APD or RVE setting.
+        This changes voxel labels; APD geometry is invalidated. Use smoothen()
+        for the annealed boundaries, not generate_grains().
+        """
+        from .annealing import grain_growth
+        mesh = self.mesh
+        if mesh is None or mesh.grains is None:
+            raise ValueError('Run voxelize() before anneal().')
+        phase_map = mesh.grain_phase_dict
+        ids = np.unique(mesh.grains)
+        if phase_map is None or any(g not in phase_map for g in ids):
+            raise ValueError('Missing grain phase assignments')
+        if (len({phase_map[g] for g in ids}) != 1 or self.precipit is not None
+                or getattr(self.rve, 'matrix_phase', None) is not None):
+            raise ValueError('anneal currently supports fully dense single-phase structures')
+        if periodic is None:
+            periodic = getattr(getattr(mesh, 'apd', None), 'periodic',
+                               getattr(self.rve, 'periodic', False))
+        spacing = np.ptp(mesh.nodes, axis=0) / np.asarray(mesh.dim)
+        labels, report = grain_growth(mesh.grains, spacing=spacing,
+                                      periodic=periodic, **options)
+        flat = labels.ravel(order='C')
+        surviving = np.unique(flat)
+        mesh.grains = labels
+        mesh.grain_dict = {int(g): (np.flatnonzero(flat == g) + 1).tolist()
+                           for g in surviving}
+        mesh.grain_phase_dict = {int(g): phase_map[g] for g in surviving}
+        mesh.phases = np.full(labels.shape, phase_map[ids[0]], dtype=int)
+        mesh.ngrains_phase = np.bincount(list(mesh.grain_phase_dict.values()),
+                                       minlength=self.nphases)
+        if mesh.grain_ori_dict is not None:
+            mesh.grain_ori_dict = {g: v for g, v in mesh.grain_ori_dict.items()
+                                   if g in mesh.grain_dict}
+        mesh.nodes_smooth = None
+        mesh.apd = None
+        mesh.annealing = report
+        for particle in self.particles or []:
+            particle.inside_voxels = (mesh.grain_dict.get(particle.id, []).copy()
+                                     if particle.duplicate is None else [])
+        self.ngrains = mesh.ngrains_phase
+        self.Ngr = int(sum(self.ngrains))
+        self.vf_vox = np.bincount(mesh.phases.ravel(), minlength=self.nphases) / labels.size
+        self.geometry = None
+        self.rve_stats = None
+        self.rve_stats_labels = None
+        if report['reason'] == 'max_steps':
+            logging.warning('Annealing reached max_steps before the volume-change threshold.')
+        return report
+
     def smoothen(
             self,
             nodes_v: Any = None,
@@ -516,6 +573,9 @@ class Microstructure(object):
             first), particles have inner structure, phase metadata is missing,
             or geometry verification fails.
         """
+        if getattr(self.mesh, 'annealing', None) is not None:
+            raise ValueError('generate_grains uses APD geometry, not annealed voxels; '
+                             'use smoothen() for annealed boundaries.')
         particles = getattr(self, 'particles', None) or []
         if any(getattr(p, 'inner', None) is not None for p in particles):
             raise ValueError('generate_grains does not support particles with inner structure.')

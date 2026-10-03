@@ -96,6 +96,8 @@ def nonmanifold_grain_boundary_voxels(grains, *, periodic=False, chunk_size=6553
     A 256-entry occupancy lookup table tests local 2x2x2 neighbourhoods.
     Work is O(N) after label encoding; temporary neighbourhood arrays are
     bounded by ``chunk_size`` vertices. Label encoding uses ``np.unique``.
+    For adaptive leaves, use ``octree.nonmanifold_grain_boundary_cells()``;
+    it shares this surface-link criterion and handles hanging nodes.
     """
     grains = np.asarray(grains)
     boundary = grain_boundary_voxels(grains, periodic=periodic)

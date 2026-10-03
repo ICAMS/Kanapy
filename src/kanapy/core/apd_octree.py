@@ -14,8 +14,9 @@ class APDBackgroundOctree:
     """Leaf boxes of an octree forest covering the APD box without overlap.
 
     ``indices`` are integer cell indices at each leaf's ``levels``; physical
-    bounds are derived from these dyadic coordinates. ``labels`` are centre
-    labels, not a piecewise-constant replacement for the APD. ``boundary_cells``
+    bounds are derived from these dyadic coordinates. ``labels`` initially hold
+    centre winners; clean_thin_grains() can edit these assignments independently
+    of the continuous APD. ``boundary_cells``
     means a boundary cannot be excluded by cost bounds; ``sampled_boundary``
     means the 27 corner/edge/face/centre samples have different grain labels.
     These flags are sampling diagnostics, not non-manifold classifications.
@@ -33,6 +34,114 @@ class APDBackgroundOctree:
     max_depth: int
     box_size: np.ndarray
     periodic: bool
+
+    def nonmanifold_grain_boundary_cells(self, *, chunk_size=65536, return_report=False):
+        """Check current leaf labels, including coarse/fine and periodic contacts.
+
+        Returns a boolean leaf mask, or a report with physical contact locations
+        and offending grain IDs when return_report=True. See
+        nonmanifold_octree_grain_boundary_cells for the topology definition.
+        """
+        return nonmanifold_octree_grain_boundary_cells(
+            self, chunk_size=chunk_size, return_report=return_report)
+
+    def thin_grain_cells(self, *, max_width=2):
+        """Mask axial grain runs of <= max_width finest GB cells (1 or 2).
+
+        Both ends must touch other grains; the box exterior does not count.
+        Every cell in the run must be at max_depth and boundary_cells=True.
+        This axis-based thickness diagnostic is not a manifoldness test.
+        """
+        _validate_width(max_width)
+        neighbours = _finest_face_neighbours(self)
+        eligible = self.boundary_cells & (self.levels == self.max_depth)
+        return _thin_cells(self.labels, eligible, neighbours, max_width)
+
+    def clean_thin_grains(self, diagram, *, max_width=2, max_passes=3,
+                          batch_size=8192):
+        """Reassign thin GB leaf labels in place, returning a cleanup report.
+
+        Only initially detected thin cells can change, and each changes at most
+        once. Revalidate thickness before each sequential change; choose the
+        minimum centre APD cost among current face-neighbour grains other than
+        the donor. Ties follow diagram grain order. Process lower cost penalties
+        first, with geometric index tie-breaking. Coarse cells never change.
+
+        Changes may remove small grains or shift junctions; they do not guarantee
+        manifoldness or grain connectivity. APD functions and leaf geometry are
+        unchanged. boundary_cells/sampled_boundary remain original APD diagnostics,
+        not boundaries of the cleaned labels. All calculations complete before
+        committing labels, so errors leave this octree unchanged.
+        """
+        _validate_width(max_width)
+        for name, value in [('max_passes', max_passes), ('batch_size', batch_size)]:
+            if isinstance(value, (bool, np.bool_)) or not isinstance(value, (int, np.integer)) or value < 1:
+                raise ValueError(f'{name} must be a positive integer')
+        if (bool(diagram.periodic) != self.periodic or
+                not np.array_equal(diagram.box_size, self.box_size)):
+            raise ValueError('diagram box and periodicity must match the octree')
+        grain_ids = np.asarray(diagram.grain_ids)
+        if not np.all(np.isin(self.labels, grain_ids)):
+            raise ValueError('All octree labels must occur in diagram.grain_ids')
+        neighbours = _finest_face_neighbours(self)
+        eligible = self.boundary_cells & (self.levels == self.max_depth)
+        original = self.labels.copy()
+        labels = original.copy()
+        initial = _thin_cells(labels, eligible, neighbours, max_width)
+        selected = np.flatnonzero(initial)
+        costs = np.empty((len(selected), len(grain_ids)))
+        centers = self.centers
+        for start in range(0, len(selected), batch_size):
+            costs[start:start + batch_size] = diagram.costs(centers[selected[start:start + batch_size]])
+        if not np.all(np.isfinite(costs)):
+            raise ValueError('APD costs must be finite')
+        cost_rows = {int(cell): row for row, cell in enumerate(selected)}
+        columns = {gid: column for column, gid in enumerate(grain_ids)}
+        changed = np.zeros(len(labels), dtype=bool)
+
+        def replacement(cell):
+            adjacent = neighbours[cell]
+            ids = set(labels[adjacent[adjacent >= 0]]) - {labels[cell]}
+            choices = sorted(columns[gid] for gid in ids)
+            if not choices:
+                return None
+            values = costs[cost_rows[cell]]
+            column = min(choices, key=lambda c: (values[c], c))
+            return grain_ids[column], float(values[column] - values[columns[labels[cell]]])
+
+        changes, passes = [], 0
+        for _ in range(max_passes):
+            current = _thin_cells(labels, eligible, neighbours, max_width)
+            queue = []
+            for cell in np.flatnonzero(initial & current & ~changed):
+                target = replacement(cell)
+                if target is not None:
+                    queue.append((target[1], tuple(self.indices[cell]), int(cell)))
+            if not queue:
+                break
+            passes += 1
+            for _, _, cell in sorted(queue):
+                if not _is_thin(cell, labels, eligible, neighbours, max_width):
+                    continue
+                target = replacement(cell)
+                if target is None:
+                    continue
+                new, penalty = target
+                changes.append(dict(cell=cell, old_label=labels[cell].item(),
+                                    new_label=new.item(), cost_increase=penalty))
+                labels[cell] = new
+                changed[cell] = True
+        remaining = _thin_cells(labels, eligible, neighbours, max_width)
+        volumes = np.prod(self.sizes, axis=1)
+        before = {gid.item(): float(volumes[original == gid].sum()) for gid in grain_ids}
+        after = {gid.item(): float(volumes[labels == gid].sum()) for gid in grain_ids}
+        self.labels = labels
+        return dict(initial_thin_mask=initial, changed_mask=changed,
+                    remaining_thin_mask=remaining, changes=changes, passes=passes,
+                    initial_thin_cells=int(initial.sum()), changed_cells=int(changed.sum()),
+                    remaining_thin_cells=int(remaining.sum()),
+                    volumes_before=before, volumes_after=after,
+                    eliminated_grains=[g for g in before if before[g] > 0 and after[g] == 0])
 
     @property
     def sizes(self):
@@ -66,7 +175,8 @@ class APDBackgroundOctree:
     def plot_slice(self, axis='z', position=None, *, color_by='level', ax=None):
         """Plot exact leaf rectangles intersecting a coordinate plane.
 
-        Colour by ``level``, centre ``grain`` label, or ``boundary`` status
+        Colour by ``level``, assigned ``grain`` label, ``nonmanifold`` mask,
+        or original APD ``boundary`` status
         (0: bounded interior, 1: candidate, 2: sampled boundary). Half-open
         selection avoids drawing both cells at a coincident cell face.
         Returns the Matplotlib Axes; does not call show().
@@ -76,8 +186,8 @@ class APDBackgroundOctree:
         from matplotlib.colors import BoundaryNorm
         if axis not in ('x', 'y', 'z'):
             raise ValueError("axis must be 'x', 'y', or 'z'")
-        if color_by not in ('level', 'grain', 'boundary'):
-            raise ValueError("color_by must be 'level', 'grain', or 'boundary'")
+        if color_by not in ('level', 'grain', 'boundary', 'nonmanifold'):
+            raise ValueError("color_by must be 'level', 'grain', 'boundary', or 'nonmanifold'")
         normal = 'xyz'.index(axis)
         position = self.box_size[normal] / 2 if position is None else float(position)
         if not np.isfinite(position) or not 0 <= position <= self.box_size[normal]:
@@ -99,6 +209,9 @@ class APDBackgroundOctree:
         elif color_by == 'boundary':
             values = self.boundary_cells.astype(int) + self.sampled_boundary.astype(int)
             ticklabels = ['interior', 'candidate', 'sampled GB']
+        elif color_by == 'nonmanifold':
+            values = self.nonmanifold_grain_boundary_cells().astype(int)
+            ticklabels = ['unflagged', 'non-manifold']
         else:
             values = self.levels
             ticklabels = [str(i) for i in range(self.max_depth + 1)]
@@ -109,12 +222,198 @@ class APDBackgroundOctree:
         ax.add_collection(collection)
         colorbar = ax.figure.colorbar(collection, ax=ax, ticks=np.arange(len(ticklabels)))
         colorbar.ax.set_yticklabels(ticklabels)
-        colorbar.set_label('centre grain ID' if color_by == 'grain' else color_by)
+        colorbar.set_label('assigned grain ID' if color_by == 'grain' else color_by)
         ax.set(xlim=(0, self.box_size[axes[0]]), ylim=(0, self.box_size[axes[1]]),
                xlabel='xyz'[axes[0]], ylabel='xyz'[axes[1]],
                title=f'APD octree: {axis} = {position:g}')
         ax.set_aspect('equal')
         return ax
+
+
+def nonmanifold_octree_grain_boundary_cells(octree, *, chunk_size=65536,
+                                           return_report=False):
+    """Identify non-manifold per-grain surfaces in the current labelled octree.
+
+    Treat leaves as closed boxes and test the eight local octants around every
+    leaf corner, including hanging vertices. Coarse leaves can occupy multiple
+    octants. Each grain's surface link must be a single simple cycle; edge and
+    vertex self-contacts fail, while ordinary multi-grain junctions are valid.
+    The returned boolean mask marks incident leaves of offending grains that
+    also have a face neighbour of another grain. Thus it refers to the current
+    GB zone, not the stored boundary_cells or sampled_boundary APD flags.
+
+    Coordinates use the finest integer lattice only for queries. Ancestor
+    lookup finds containing leaves without allocating a dense voxel grid.
+    Nonperiodic exterior closes the shells but is not a grain. Periodic seams
+    are identified, and report locations use [0, box_size) coordinates.
+
+    ``return_report=True`` returns cell_mask, cell_indices (zero-based leaf
+    indices), nonmanifold_cells, nonmanifold_vertices, and contacts. Each contact
+    records a finest-lattice vertex_index, physical point, grain_id and incident
+    offending cell_indices. Contacts are local observations, not connected
+    components; an edge contact may be reported at both endpoints.
+
+    Requires a valid, nonoverlapping octree forest covering the box. The lookup
+    needs O(leaves) storage; neighbourhood arrays are bounded by chunk_size
+    source corners, and detailed report storage scales with detected contacts.
+    Nothing is modified. This tests the piecewise-constant leaf assignments,
+    not the continuous APD, and does not test global grain connectivity.
+    """
+    from .voxelization import _nonmanifold_vertex_patterns
+
+    if (isinstance(chunk_size, (bool, np.bool_)) or
+            not isinstance(chunk_size, (int, np.integer)) or chunk_size < 1):
+        raise ValueError('chunk_size must be a positive integer')
+    if not isinstance(return_report, (bool, np.bool_)):
+        raise ValueError('return_report must be a boolean')
+    n = len(octree.labels)
+    lookup = {(int(level), *map(int, index)): cell
+              for cell, (level, index) in enumerate(zip(octree.levels, octree.indices))}
+    levels = sorted(set(map(int, octree.levels)), reverse=True)
+    shape = np.asarray(octree.resolution, dtype=np.int64) * 2**octree.max_depth
+    strides = np.left_shift(np.int64(1), octree.max_depth - octree.levels)
+    grain_ids, encoded = np.unique(octree.labels, return_inverse=True)
+    # A spare exterior slot makes -1 leaf indices safe in vectorized lookups.
+    encoded = np.append(encoded, -1)
+    flagged, boundary = np.zeros(n, dtype=bool), np.zeros(n, dtype=bool)
+    bad_patterns = _nonmanifold_vertex_patterns()
+    weights = (1 << np.arange(8)).astype(np.uint8)
+    contacts = {}
+
+    for start in range(0, 8 * n, chunk_size):
+        source = np.arange(start, min(start + chunk_size, 8 * n))
+        cell = source // 8
+        vertices = (octree.indices[cell] + _CHILDREN[source % 8]) * strides[cell, None]
+        if octree.periodic:
+            vertices %= shape
+        vertices = np.unique(vertices, axis=0)
+        # An infinitesimal displacement into each octant occupies the same leaf
+        # as this finest voxel. Alignment makes the integer lookup exact.
+        queries = vertices[:, None] + _CHILDREN - 1
+        if octree.periodic:
+            queries %= shape
+        points, inverse = np.unique(queries.reshape(-1, 3), axis=0, return_inverse=True)
+        owner = np.full(len(points), -1, dtype=np.int64)
+        inside = np.all((points >= 0) & (points < shape), axis=1)
+        for level in levels:
+            pending = np.flatnonzero(inside & (owner < 0))
+            if not len(pending):
+                break
+            indices = points[pending] // 2**(octree.max_depth - level)
+            owner[pending] = [lookup.get((level, *map(int, index)), -1) for index in indices]
+        if np.any(inside & (owner < 0)):
+            raise ValueError('Octree leaves do not cover a vertex neighbourhood')
+        incident = owner[inverse].reshape(-1, 8)
+        local = encoded[incident]
+        # Octants differing in one bit share a face. Mark actual GB leaves,
+        # independently of the original APD sampling flags and refinement level.
+        for bit in (1, 2, 4):
+            for a in range(8):
+                if a & bit:
+                    continue
+                b = a | bit
+                different = (local[:, a] >= 0) & (local[:, b] >= 0) & (local[:, a] != local[:, b])
+                boundary[incident[different, a]] = True
+                boundary[incident[different, b]] = True
+        for octant in range(8):
+            pattern = np.sum((local == local[:, octant, None]) * weights, axis=1)
+            bad = bad_patterns[pattern] & (local[:, octant] >= 0)
+            flagged[incident[bad, octant]] = True
+            if return_report:
+                for row in np.flatnonzero(bad):
+                    key = (*map(int, vertices[row]), int(local[row, octant]))
+                    contacts.setdefault(key, set()).add(int(incident[row, octant]))
+    flagged &= boundary
+    if not return_report:
+        return flagged
+    records = []
+    for key, cells in sorted(contacts.items()):
+        cells = sorted(c for c in cells if flagged[c])
+        if cells:
+            vertex = np.array(key[:3], dtype=np.int64)
+            records.append(dict(vertex_index=vertex,
+                point=vertex / shape * octree.box_size,
+                grain_id=grain_ids[key[3]].item(), cell_indices=np.array(cells, dtype=int)))
+    return dict(cell_mask=flagged, cell_indices=np.flatnonzero(flagged),
+                nonmanifold_cells=int(flagged.sum()),
+                nonmanifold_vertices=len({tuple(c['vertex_index']) for c in records}),
+                contacts=records)
+
+
+def _validate_width(max_width):
+    if isinstance(max_width, (bool, np.bool_)) or not isinstance(max_width, (int, np.integer)) or max_width not in (1, 2):
+        raise ValueError('max_width must be 1 or 2')
+
+
+def _finest_face_neighbours(tree):
+    """Six neighbours of finest leaves, using ancestor lookup (no dense grid).
+
+    A finest cell face touches exactly one same-size or coarser leaf. Coarse
+    rows are unused, because they cannot participate in a short finest run.
+    """
+    lookup = {(int(level), *map(int, index)): cell
+              for cell, (level, index) in enumerate(zip(tree.levels, tree.indices))}
+    shape = np.asarray(tree.resolution, dtype=np.int64) * 2**tree.max_depth
+    levels = sorted(set(map(int, tree.levels)), reverse=True)
+    neighbours = np.full((len(tree.labels), 6), -1, dtype=np.int64)
+    for cell in np.flatnonzero(tree.levels == tree.max_depth):
+        for axis in range(3):
+            for side, step in enumerate((-1, 1)):
+                point = tree.indices[cell].copy()
+                point[axis] += step
+                if tree.periodic:
+                    point %= shape
+                elif np.any(point < 0) or np.any(point >= shape):
+                    continue
+                for level in levels:
+                    index = point // 2**(tree.max_depth - level)
+                    match = lookup.get((level, *map(int, index)))
+                    if match is not None:
+                        neighbours[cell, 2 * axis + side] = match
+                        break
+                else:
+                    raise ValueError('Octree leaves do not cover a neighbour location')
+    return neighbours
+
+
+def _is_thin(cell, labels, eligible, neighbours, max_width):
+    if not eligible[cell]:
+        return False
+    grain = labels[cell]
+    for axis in range(3):
+        count = 1
+        bounded = True
+        visited = {cell}
+        for side in (0, 1):
+            current = cell
+            while True:
+                other = int(neighbours[current, 2 * axis + side])
+                if other < 0:
+                    bounded = False
+                    break
+                if labels[other] != grain:
+                    break
+                if other in visited or not eligible[other]:
+                    bounded = False
+                    break
+                count += 1
+                if count > max_width:
+                    bounded = False
+                    break
+                visited.add(other)
+                current = other
+            if not bounded:
+                break
+        if bounded:
+            return True
+    return False
+
+
+def _thin_cells(labels, eligible, neighbours, max_width):
+    result = np.zeros(len(labels), dtype=bool)
+    for cell in np.flatnonzero(eligible):
+        result[cell] = _is_thin(int(cell), labels, eligible, neighbours, max_width)
+    return result
 
 
 def _classify(diagram, centers, half_sizes):

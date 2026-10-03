@@ -82,7 +82,7 @@ def test_validation_and_budget(kwargs):
 
 
 @pytest.mark.parametrize('axis', ['x', 'y', 'z'])
-@pytest.mark.parametrize('color_by', ['level', 'grain', 'boundary'])
+@pytest.mark.parametrize('color_by', ['level', 'grain', 'boundary', 'nonmanifold'])
 def test_plot_slice(axis, color_by):
     tree = planar().background_octree(2, max_depth=1)
     ax = tree.plot_slice(axis, position=1., color_by=color_by)
