@@ -47,6 +47,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+annealing = ["fipy>=4.0,<5"]
 mtex = ["kanapy-mtex>=6.5.0"]
 dev = ["pytest", "pytest-mock", "pytest-cov", "black", "build", "twine"]
 vis = ["pyvista>=0.43"]
