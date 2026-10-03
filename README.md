@@ -27,19 +27,13 @@ basic implementation of Kanapy is done in form of a Python Appplication Programm
 -   Possibility to analyze experimental microstructures based on [orix](https://orix.readthedocs.io/en/stable/#) functions.
 -   Support of multiphase microstructures.
 -   Generation of 3D microstructure morphology based on statistical features as size distributions and aspect ratio distributions of grains and phase regions.
--   Crystallographic texture reconstruction using orientations from
-    experimental data in form of Orientation Distribution Function (ODF).
+-   Crystallographic texture reconstruction using orientations from experimental data in form of Orientation Distribution Function (ODF).
 -   Optimal orientation assignment based on measured Misorientation Distribution Function (MDF) that maintains correct statistical description of high-angle or low-angle grain boundary characteristics.
--   Independent execution of individual modules through easy data
-    storage and handling.
+-   Independent execution of individual modules through easy data storage and handling.
 -   In-built hexahedral mesh generator for representation of complex polycrystalline microstructures in form of voxels.
--   Efficient generation of space filling structures by particle dynamics method.
--   Collision handling of particles through a two-layer
-    collision detection method employing the Octree spatial data
-    structure and the bounding sphere hierarchy.
--   Option to generate spherical particle position and radius files
-    that can be read by the Voronoi tessellation software
-    [Neper](http://neper.sourceforge.net/).
+-   Efficient generation of space filling structures for elongated grains by particle dynamics method and voxel-assignment based on anisotropic power diagrams (APD).
+-   Collision handling of particles through a two-layer collision detection method employing the Octree spatial data structure and the bounding sphere hierarchy.
+-   Option to generate spherical particle position and radius files that can be read by the Voronoi tessellation software [Neper](http://neper.sourceforge.net/).
 -   Option to generate input files for finite-element packages.
 -   Import and export of voxel structures according to following the modular materials data schema published on [GitHub](https://github.com/Ronakshoghi/MetadataSchema.git) for data transfer between different tools.
 
@@ -190,14 +184,12 @@ The preferred way to cite Kanapy is:
  - v6.4: Support of the [modular materials data schema](https://github.com/Ronakshoghi/MetadataSchema.git) for import and export of microstructures 
  - v6.5: Switched to orix library for EBSD import and analysis and generation of textures to have a pure Python code. The MTEX backend is still available with [Kanapy-mtex](https://github.com/ICAMS/kanapy-mtex.git).
  - v6.5.4: Modified support for multiphase structures without downwards comaptibility: Matrix or dispersed phases are now introduced explicitly. EBSD map analysis based on microstructure graphs.
+ - v6.5.5: APD voxelization and `generate_grains()` use anisotropic power diagrams. Grain
+reconstruction uses a uniform tetrahedral background with a resolution independent
+of the voxel mesh. See the [background mesh guide](docs/apd_background_mesh.md).
+Periodic reconstruction retains whole grains, phase metadata, and shared surfaces.
 
-## Surface remeshing
 
-Gmsh can regenerate shared APD grain surfaces with retained interface labels and
-conforming junctions. Install `kanapy[gmsh]` and call
-`ms.remesh_grains(mesh_size=...)` after generating the boundary geometry.
-See the [Gmsh remeshing guide](docs/gmsh_remeshing.md) for periodic boundaries,
-export, and geometry-preserving options.
 
 ## Licenses
 
