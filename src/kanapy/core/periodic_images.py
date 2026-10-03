@@ -15,7 +15,6 @@ from .periodic_grains import PeriodicGrainGeometry
 
 def build_periodic_image_geometry(diagram, phases, resolution, *, batch_size,
                                   optimize, tolerance):
-    from .surface_regularization import _validate
     images = diagram.periodic_image_diagram()
     background = images.background_mesh(resolution, batch_size=batch_size)
     if min(background.resolution) < 2:
@@ -29,7 +28,7 @@ def build_periodic_image_geometry(diagram, phases, resolution, *, batch_size,
 def periodic_geometry_from_partition(diagram, phases, images, background, partition,
                                      *, tolerance=1e-10):
     """Lift an already assembled, image-labeled tile partition."""
-    from .surface_regularization import _validate
+    from .surface_validation import validate_surface
     boundary = partition.boundary_complex()
     source = boundary.triangulate(include_exterior=True)
     box = diagram.box_size
@@ -107,7 +106,7 @@ def periodic_geometry_from_partition(diagram, phases, images, background, partit
     points = canonical[keys[:, 0]]+keys[:, 1:]*box
     surface = APDBoundaryTriangles(points, np.array(triangles, dtype=int),
         np.full(len(triangles), -1, dtype=int), tuple(pairs), np.zeros(len(triangles), dtype=np.int8))
-    stats = _validate(points, surface.triangles, pairs)
+    stats = validate_surface(points, surface.triangles, pairs)
     expected = defaultdict(float)
     for image, volume in partition.grain_volumes.items():
         expected[images.image_parents[image]] += volume

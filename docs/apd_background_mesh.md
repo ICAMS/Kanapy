@@ -1,8 +1,8 @@
 # Step 1: APD background mesh
 
-For adaptive octree sampling before tetrahedralization, see
-[the octree preparation stage](apd_octree.md). The tetrahedral workflow below
-continues to use a uniform background.
+Grain reconstruction uses a uniform, conforming tetrahedral background.
+Its resolution is independent of the voxel mesh; it is an intermediate
+geometry sampling mesh, not a grain-conforming FE volume mesh.
 
 Given an existing, optionally volume-fitted `AnisotropicPowerDiagram`:
 
@@ -292,10 +292,11 @@ No APD argument is required to inspect just the interfaces and junctions.
 Verification covers closed single-grain and two-grain shells, shared face
 orientation, an analytical triple line, a four-grain vertex compared with the
 existing junction extractor, disconnected grain/interface components, and
-residual reduction under refinement of a curved interface. Periodic topology
-pairing, geometric projection, adaptive refinement and volume meshing remain
-later steps. Point-/edge-touching nonmanifold grain configurations may be
-rejected by shell validation rather than repaired.
+residual reduction under refinement of a curved interface. The high-level
+periodic reconstruction described below provides lattice face pairing.
+Geometric projection and volume meshing remain later steps. Point-/edge-touching
+nonmanifold grain configurations may be rejected by shell validation rather
+than repaired.
 
 ## Shared boundary triangulation and STL export
 
@@ -329,7 +330,8 @@ is counted once, not doubled, and that triangle coordinates are unique.
 `Microstructure.write_stl(file=None, path='./', *, boundary=None,
 include_exterior=False)` now exports this shared APD surface in ASCII STL.
 `boundary` can supply a boundary complex or triangulated surface; when omitted,
-the boundary from `generate_grains()` is used. Export never refits or rebuilds
+a stored whole-grain surface is used when available, otherwise the boundary
+from `generate_grains()` is used. Export never refits or rebuilds
 the APD. The default filename is
 `self.name + '.stl'`; the output directory must already exist. Exterior box faces
 are excluded by default. For a pretriangulated surface, `include_exterior=True`
@@ -366,9 +368,9 @@ diagram is accessible as `ms.geometry['APD']`; no voxel mesh is created.
 Geometry is committed only after verification succeeds. Missing ellipsoids
 raise a clear error when there is no existing APD to use. Imported voxel-only
 structures therefore require ellipsoids or an attached APD. Voxel assignments,
-orientation sets and voxel grain counts remain unchanged. For legacy matrix or
-porosity inputs the new APD fills the entire box; it does not reproduce the
-legacy matrix volume fraction.
+orientation sets and voxel grain counts remain unchanged. Matrix/inclusion and
+porosity inputs instead reconstruct particle surfaces with an implicit matrix,
+retaining their phase volumes without an APD background.
 
 `ms.geometry` retains a dictionary interface for downstream consumers. Its
 `APD`, `Background`, `Partition`, `Boundary` and `Surface` entries expose all
@@ -391,11 +393,26 @@ Plotting draws shared triangles once, colored by the first adjacent grain or its
 phase. Polygon ANG slices evaluate the same piecewise-affine background costs,
 so disconnected/nonconvex grains are not filled by a convex hull. Orientation
 dictionaries use original grain IDs, including sparse IDs. STL defaults to
-`geometry['Boundary']` when no explicit boundary is supplied; explicit inputs
-remain supported. Centroid CSV export uses volume-integrated grain centers.
+`geometry['WholeGrains'].surface` when available, otherwise `geometry['Boundary']`;
+explicit inputs remain supported. Centroid CSV export uses volume-integrated
+grain centers.
 
 APD and voxel grain populations can differ at finite resolutions. Geometry
 phase filtering uses geometry's own metadata. These geometry operations do not
-create an FE volume mesh. Periodic moments describe all grain fragments within
-the fundamental box without unwrapping; they should not be interpreted as the
-shape of a reconstructed periodic grain. Periodic face pairing remains deferred.
+create an FE volume mesh. Periodic APDs default to explicit seed-image competitors
+on the uniform background and reconstruct whole central seed cells. Their moments
+describe these whole cells; coordinates can extend beyond the fundamental box.
+`geometry['WholeGrains']` records paired translated interfaces and lattice vertex
+correspondence. Phase metadata and orientations retain original grain IDs.
+
+Set `periodic_images=False` in `generate_grains()` or `build_grain_geometry()`
+to retain box-clipped parent fragments. For that representation, `unwrap_grains()`
+joins periodic fragments and can split winding parents into compact entities,
+retaining parent IDs, phases, volumes, and orientation inheritance. Winding
+splits require at least three background cells per direction. Default explicit
+image reconstruction requires at least two.
+
+Reconstruction validates triangle degeneracy, duplicate faces, closed oriented
+per-grain shells, and positive volumes through `surface_validation.validate_surface`.
+This validation is independent of experimental surface regularization and does
+not certify geometric self-intersection.

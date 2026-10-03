@@ -453,7 +453,7 @@ class Microstructure(object):
             self.geometry['GBfaces'] = grain_facesDict
 
     def generate_grains(self, resolution=10, *, batch_size=8192,
-                        optimize=True, tolerance=1e-10, regularization=None,
+                        optimize=True, tolerance=1e-10,
                         periodic_images=None) -> None:
         """Generate grain boundaries or particle surfaces for matrix RVEs.
 
@@ -468,10 +468,6 @@ class Microstructure(object):
             Prune dominated local grains and shortcut uncut tetrahedra.
         tolerance : float, default=1e-10
             Numerical tolerance for local clipping and global assembly.
-        regularization : dict, optional
-            APD surface regularization options; stores a separate Regularized
-            result without changing the reference geometry. See regularize_grains.
-            Unsupported for particle/matrix geometry.
         periodic_images : bool or None, default=None
             For periodic APDs, reconstruct whole cells using explicit surrounding
             seed images before cost interpolation. None enables this for periodic
@@ -521,8 +517,6 @@ class Microstructure(object):
             raise ValueError('generate_grains does not support particles with inner structure.')
         if (getattr(self, 'precipit', None) is not None
                 or getattr(getattr(self, 'rve', None), 'matrix_phase', None) is not None):
-            if regularization is not None:
-                raise ValueError('Surface regularization currently requires APD geometry')
             simbox = getattr(self, 'simbox', None)
             origin = None if simbox is None else [simbox.left, simbox.top, simbox.front]
             geometry = build_particle_geometry(
@@ -559,17 +553,13 @@ class Microstructure(object):
                 phases[particle.id] = particle.phasenum
         geometry = build_grain_geometry(diagram, phases, resolution,
                                        batch_size=batch_size, optimize=optimize,
-                                       tolerance=tolerance, regularization=regularization,
+                                       tolerance=tolerance,
                                        periodic_images=periodic_images)
         if geometry.get('PeriodicImageGeometry'):
             from copy import deepcopy
             orientations = getattr(self.mesh, 'grain_ori_dict', None) or {}
             geometry['WholeGrains'].grain_orientations = {
                 g: deepcopy(orientations[g]) for g in geometry['Grains'] if g in orientations}
-            result = geometry.get('Regularized')
-            if result is not None and result.periodic_geometry is not None:
-                result.periodic_geometry.grain_orientations = deepcopy(
-                    geometry['WholeGrains'].grain_orientations)
         self.geometry = geometry
         self.rve_stats = None
         self.rve_stats_labels = None
@@ -601,51 +591,6 @@ class Microstructure(object):
         return result
 
 
-    def remesh_grains(self, mesh_size, **options):
-        """Remesh shared APD boundary surfaces with the optional Gmsh backend.
-
-        ``mesh_size`` is the target edge length in geometry coordinate units.
-        Additional options are documented in
-        :func:`kanapy.core.gmsh_remeshing.remesh_grain_surface`.
-        Stores and returns ``geometry['Remeshed']`` after validation; the
-        reference geometry and voxel mesh remain unchanged. Export with
-        ``write_stl(boundary=result.surface, include_exterior=True)``.
-        Install the backend with ``pip install 'kanapy[gmsh]'``.
-        """
-        from .gmsh_remeshing import remesh_grain_surface
-        if self.geometry is None:
-            raise ValueError('Run generate_grains before remesh_grains')
-        result = remesh_grain_surface(self.geometry, mesh_size, **options)
-        self.geometry['Remeshed'] = result
-        return result
-
-    def regularize_grains(self, **options):
-        """Prepare a separate shared APD surface for volume meshing.
-
-        Run ``generate_grains`` first. Options are those of
-        :func:`kanapy.core.surface_regularization.regularize_grain_surface`.
-        Stores and returns ``geometry['Regularized']`` only after successful
-        validation. Reference geometry/statistics and the voxel mesh are unchanged.
-        Export with ``write_stl(boundary=result.surface, include_exterior=True)``.
-        Periodic APDs automatically use whole grains with synchronized periodic
-        copies; pass periodic=False to retain the box-clipped path. Access the
-        lifted plotting/moment view with result.periodic_geometry.as_geometry().
-        This is a surface candidate, not an FEM volume mesh or a global
-        self-intersection certificate; inspect ``result.report``.
-        """
-        from .surface_regularization import regularize_grain_surface
-        if self.geometry is None:
-            raise ValueError('Run generate_grains before regularize_grains')
-        result = regularize_grain_surface(self.geometry, **options)
-        if result.periodic_geometry is not None:
-            from copy import deepcopy
-            orientations = getattr(getattr(self, 'mesh', None), 'grain_ori_dict', None) or {}
-            result.periodic_geometry.grain_orientations = {g: deepcopy(orientations[parent])
-                for g, parent in result.periodic_geometry.grain_parent_ids.items() if parent in orientations}
-        self.geometry['Regularized'] = result
-        return result
-
-    
     def generate_orientations(
             self,
             data: Any,
@@ -1107,9 +1052,7 @@ class Microstructure(object):
         if geometry is None:
             geometry = self.geometry
             if geometry is not None:
-                regularized = geometry.get('Regularized')
-                whole = (getattr(regularized, 'periodic_geometry', None) if regularized is not None
-                         else geometry.get('WholeGrains'))
+                whole = geometry.get('WholeGrains')
                 if whole is not None:
                     geometry = whole.as_geometry()
         if geometry is None:
@@ -2219,9 +2162,7 @@ class Microstructure(object):
         if boundary is None:
             if getattr(self, 'geometry', None) is None or 'Boundary' not in self.geometry:
                 raise ValueError('Run generate_grains() or supply an APD boundary for STL export')
-            regularized = self.geometry.get('Regularized')
-            whole = (getattr(regularized, 'periodic_geometry', None) if regularized is not None
-                     else self.geometry.get('WholeGrains'))
+            whole = self.geometry.get('WholeGrains')
             boundary = whole.surface if whole is not None else self.geometry['Boundary']
         if isinstance(boundary, APDBoundaryComplex):
             surface = boundary.triangulate(include_exterior=include_exterior)

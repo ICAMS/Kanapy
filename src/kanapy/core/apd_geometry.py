@@ -3,7 +3,7 @@ import numpy as np
 
 
 def build_grain_geometry(diagram, phase_by_grain, resolution=10, *, batch_size=8192,
-                         optimize=True, tolerance=1e-10, regularization=None,
+                         optimize=True, tolerance=1e-10,
                          periodic_images=None):
     """Build a polyhedral APD partition and per-grain geometry without voxel hulls.
 
@@ -14,14 +14,8 @@ def build_grain_geometry(diagram, phase_by_grain, resolution=10, *, batch_size=8
     ``periodic_images=False`` for legacy box-clipped parent geometry. The image
     partition retains temporary image IDs; ImageAPD maps them to parents, while
     Surface/Grains already use original IDs and whole-cell coordinates.
-    ``regularization`` optionally supplies keyword arguments to
-    ``regularize_grain_surface``; its separate result is stored as ``Regularized``.
     Reference Surface, moments and point labeling remain consistent and unchanged.
     No volume FE mesh is generated. Image geometry retains periodic face pairing.
-    For the adaptive pre-tetrahedral sampling stage, inspect
-    ``diagram.background_octree(...)`` separately. Its leaf boxes are not yet
-    a conforming tetrahedral background and are not consumed by this builder.
- 
     """
     missing = set(diagram.grain_ids) - set(phase_by_grain)
     if missing:
@@ -34,9 +28,6 @@ def build_grain_geometry(diagram, phase_by_grain, resolution=10, *, batch_size=8
         from .periodic_images import build_periodic_image_geometry
         geometry = build_periodic_image_geometry(diagram, phase_by_grain, resolution,
             batch_size=batch_size, optimize=optimize, tolerance=tolerance)
-        if regularization is not None:
-            from .surface_regularization import regularize_grain_surface
-            geometry['Regularized'] = regularize_grain_surface(geometry, **regularization)
         return geometry
     background = diagram.background_mesh(resolution, batch_size=batch_size)
     partition = background.assemble(tolerance=tolerance, optimize=optimize)
@@ -89,7 +80,7 @@ def build_grain_geometry(diagram, phase_by_grain, resolution=10, *, batch_size=8
 
 
 def label_geometry_points(geometry, points):
-    """Label points by the reconstructed APD partition or grown element labels.
+    """Label points by the reconstructed APD partition.
 
     Locate each point in the regular Freudenthal background using fractional
     cell coordinates. This avoids convexifying nonconvex or disconnected grains.
@@ -101,9 +92,6 @@ def label_geometry_points(geometry, points):
         raise ValueError('points must be finite with shape (n, 3)')
     if np.any(points < 0) or np.any(points > background.box_size):
         raise ValueError('Slice points must lie inside the APD box')
-    if 'ElementGrainIDs' in geometry:
-        from .grain_growth import locate_elements
-        return geometry['ElementGrainIDs'][locate_elements(background,points)]
     shape = np.asarray(background.resolution)
     scaled = points / background.box_size * shape
     cell = np.minimum(np.floor(scaled).astype(int), shape-1)

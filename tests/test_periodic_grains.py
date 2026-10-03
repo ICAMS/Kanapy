@@ -8,7 +8,7 @@ import pytest
 from kanapy.core.apd_geometry import build_grain_geometry as _build_grain_geometry
 from kanapy.core.power_diagram import AnisotropicPowerDiagram
 from kanapy.core.periodic_grains import unwrap_periodic_grains
-from kanapy.core.surface_regularization import regularize_grain_surface, _validate
+from kanapy.core.surface_validation import validate_surface
 from kanapy.core.api import Microstructure
 
 
@@ -31,7 +31,7 @@ def test_whole_grains_seams_and_exact_volumes(offset):
     w=unwrap_periodic_grains(g)
     assert not np.any(w.surface.boundary_ids)
     assert len(w.paired_faces)>0
-    _validate(w.surface.points,w.surface.triangles,w.surface.face_grains)
+    validate_surface(w.surface.points,w.surface.triangles,w.surface.face_grains)
     view=w.as_geometry()
     for grain in view['Grains'].values():
         assert grain['Volume'] == pytest.approx(.125)
@@ -52,25 +52,7 @@ def assert_pairs(w):
         assert np.dot(w.surface.area_vectors[a],w.surface.area_vectors[b])<0
 
 
-def test_auto_periodic_regularization_and_legacy_opt_out():
-    g=periodic_geometry(.15,2)
-    points=g['Surface'].points.copy()
-    result=regularize_grain_surface(g,iterations=2,patch_retriangulation=True,
-                                    simplify_junctions=True,target_angle=20)
-    assert result.report['periodic'] and result.report['whole_grains']
-    assert result.periodic_geometry is not None
-    assert not np.any(result.surface.boundary_ids)
-    assert_pairs(result.periodic_geometry)
-    assert sum(result.report['after']['grain_volumes'].values()) == pytest.approx(1)
-    assert result.report['max_vertex_displacement'] <= result.report['max_displacement']+1e-12
-    np.testing.assert_array_equal(points,g['Surface'].points)
-    legacy=regularize_grain_surface(g,iterations=1,periodic=False)
-    assert not legacy.report['periodic']
-    assert legacy.periodic_geometry is None
-    assert np.any(legacy.surface.boundary_ids)
-
-
-def test_api_export_and_atomic_failure(tmp_path, monkeypatch):
+def test_api_export(tmp_path, monkeypatch):
     ms=SimpleNamespace(geometry=periodic_geometry(.15,2),name='whole',
                        rve=SimpleNamespace(size=[1,1,1]))
     w=Microstructure.unwrap_grains(ms)
@@ -81,14 +63,68 @@ def test_api_export_and_atomic_failure(tmp_path, monkeypatch):
     monkeypatch.setattr('kanapy.core.api.plot_polygons_3D',lambda geometry, **kwargs: plotted.append(geometry))
     Microstructure.plot_grains(ms)
     assert plotted[-1]['Representation']=='PeriodicWholeGrains'
-    result=Microstructure.regularize_grains(ms,iterations=1,max_displacement=0)
-    Microstructure.write_stl(ms,file='regularized.stl',path=tmp_path)
-    assert (tmp_path/'regularized.stl').read_text().count('endfacet')==len(result.surface.triangles)
     Microstructure.plot_grains(ms,geometry=ms.geometry)
     assert plotted[-1] is ms.geometry
-    with pytest.raises(ValueError,match='does not meet'):
-        Microstructure.regularize_grains(ms,iterations=1,min_quality=1)
-    assert ms.geometry['Regularized'] is result
+
+
+def test_default_periodic_reconstruction_and_orientation_export(tmp_path, monkeypatch):
+    import json
+    reference = periodic_geometry(.15, 2)
+    apd = reference['APD']
+    phases = {g: data['Phase'] for g, data in reference['Grains'].items()}
+    orientations = {g: np.array([.1, .2, .3]) for g in phases}
+    mesh = SimpleNamespace(apd=apd, grain_phase_dict=phases, grain_ori_dict=orientations)
+    ms = SimpleNamespace(mesh=mesh, particles=[], geometry=None, nphases=2,
+                         name='images', rve=SimpleNamespace(size=[1, 1, 1],
+                         periodic=True, phase_names=['A', 'B']))
+    Microstructure.generate_grains(ms, resolution=2)
+    geometry = ms.geometry
+    assert geometry['PeriodicImageGeometry']
+    whole = geometry['WholeGrains']
+    assert_pairs(whole)
+    stats = validate_surface(whole.surface.points, whole.surface.triangles,
+                             whole.surface.face_grains)
+    assert stats['grain_volumes'] == pytest.approx({g: .125 for g in phases})
+    assert geometry['PhaseVolumes'] == pytest.approx({0: .5, 1: .5})
+    json.dumps(whole.report)
+    for gid in phases:
+        np.testing.assert_array_equal(whole.grain_orientations[gid], orientations[gid])
+        assert whole.grain_orientations[gid] is not orientations[gid]
+    Microstructure.write_stl(ms, file='images.stl', path=tmp_path)
+    assert (tmp_path / 'images.stl').read_text().count('endfacet') == len(whole.surface.triangles)
+    plotted = []
+    monkeypatch.setattr('kanapy.core.api.plot_polygons_3D',
+                        lambda geometry, **kwargs: plotted.append(geometry))
+    Microstructure.plot_grains(ms)
+    assert plotted[-1]['Representation'] == 'PeriodicWholeGrains'
+
+
+@pytest.mark.parametrize('damage, message', [
+    ('empty', 'nonempty'), ('nonfinite', 'finite'),
+    ('degenerate', 'Degenerate'), ('duplicate', 'Duplicate'),
+    ('open', 'closed'), ('flipped', 'oriented'), ('inverted', 'Nonpositive'),
+])
+def test_surface_validation_rejects_invalid_shells(damage, message):
+    # A unit tetrahedron with outward-oriented faces provides an independent
+    # fixture for validation, without relying on reconstruction to create it.
+    points = np.array([[0., 0., 0.], [1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
+    triangles = np.array([[0, 2, 1], [0, 1, 3], [0, 3, 2], [1, 2, 3]])
+    if damage == 'empty':
+        triangles = triangles[:0]
+    elif damage == 'nonfinite':
+        points[0, 0] = np.nan
+    elif damage == 'degenerate':
+        triangles[0] = [0, 0, 1]
+    elif damage == 'duplicate':
+        triangles = np.vstack([triangles, triangles[0]])
+    elif damage == 'open':
+        triangles = triangles[:-1]
+    elif damage == 'flipped':
+        triangles[0] = triangles[0, ::-1]
+    else:
+        triangles = triangles[:, ::-1]
+    with pytest.raises(ValueError, match=message):
+        validate_surface(points, triangles, ((7, None),) * len(triangles))
 
 
 def test_winding_grains_and_nonperiodic_rejected():
@@ -119,10 +155,6 @@ def test_winding_split_keeps_parent_volume_phase_and_orientation():
         np.testing.assert_array_equal(w.grain_orientations[entity],orientations[parent])
         assert w.grain_orientations[entity] is not orientations[parent]
     np.testing.assert_array_equal(labels,g['Partition'].region_grain_ids)
-    r=Microstructure.regularize_grains(ms,iterations=1,max_displacement=0)
-    assert_pairs(r.periodic_geometry)
-    assert r.report['parent_grain_volumes']==pytest.approx({1:.5,2:.5})
-    assert r.periodic_geometry.grain_orientations
 
 
 def test_single_periodic_grain_split_and_resolution_gate():
@@ -135,29 +167,3 @@ def test_single_periodic_grain_split_and_resolution_gate():
     assert_pairs(w)
     coarse=build_grain_geometry(apd,{1:0},2)
     with pytest.raises(ValueError,match='resolution >= 3'):unwrap_periodic_grains(coarse)
-
-
-def test_periodic_collision_guard_sees_translated_obstacle():
-    from kanapy.core.periodic_grains import _PeriodicCollisionGuard
-    from kanapy.core.apd_boundary import APDBoundaryTriangles
-    # Second triangle lies at x=1.95 but its translated copy intersects x=.95.
-    points=np.array([[.8,.1,.5],[1.1,.1,.5],[.8,.4,.5],
-                     [1.95,.15,.3],[1.95,.15,.7],[1.95,.35,.5]])
-    tri=np.array([[0,1,2],[3,4,5]])
-    surface=APDBoundaryTriangles(points,tri,np.array([-1,-1]),((1,2),(3,4)),np.zeros(2,int))
-    guard=_PeriodicCollisionGuard(surface,np.arange(6),np.zeros((6,3),int),np.ones(3),.1)
-    assert not guard.allows(np.array([0]),points[tri[:1]])
-    assert guard.rejections==1
-
-
-def test_nonperiodic_default_unchanged_and_periodic_report_serializable():
-    import json
-    g=periodic_geometry(.15,2)
-    g['APD'].periodic=False
-    auto=regularize_grain_surface(g,iterations=2)
-    explicit=regularize_grain_surface(g,iterations=2,periodic=False)
-    np.testing.assert_array_equal(auto.surface.points,explicit.surface.points)
-    np.testing.assert_array_equal(auto.surface.triangles,explicit.surface.triangles)
-    g['APD'].periodic=True
-    periodic=regularize_grain_surface(g,iterations=1)
-    json.dumps(periodic.report)

@@ -304,6 +304,19 @@ class TestEllipsoid():
 # Test functions for Class Octree
 class TestOctree():
 
+    def test_elongated_contact_survives_bounding_sphere_filter(self):
+        rotation = np.array([1., 0., 0., 0.])
+        first = Ellipsoid(1, 5., 5., 5., 3., .2, .2, rotation)
+        second = Ellipsoid(2, 10., 5., 5., 3., .2, .2, rotation)
+        distance = np.linalg.norm(first.get_pos() - second.get_pos())
+        old_cutoff = .5 * (first.get_volume() ** (1 / 3) +
+                           second.get_volume() ** (1 / 3))
+        assert distance > old_cutoff
+        tree = Octree(0, Cuboid(0, 0, 15, 15, 0, 15), [first, second])
+        tree.update()
+        assert tree.collisionsTest() == 1
+        assert first.ncollision == second.ncollision == 1
+
     def test_init(self):
 
         cbox = Cuboid(0, 0, 10, 10, 0, 10)              # Initialize the cuboid
@@ -420,4 +433,3 @@ class TestOctree():
         self.tree.update()
         self.tree.collisionsTest()
         assert self.tree.collisionsTest.call_count == 1
-
