@@ -96,3 +96,6 @@ PATHS.json
 *.log
 dump_files/ 
 libs/ 
+analysis/
+.vscode/
+
