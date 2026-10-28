@@ -1,34 +1,72 @@
+"""
+Utilities for resampling staggered hex EBSD maps to rectangular grids.
+"""
+
 import numpy as np
 from scipy.spatial import cKDTree
-from typing import Any, Optional
 
-def make_regular_grid(
-    xy: np.ndarray,
-    dx_out: Optional[float] = None,
-    dy_out: Optional[float] = None,
-    nx: Optional[int] = None,
-    ny: Optional[int] = None,
-    bounds: Optional[tuple[float, float, float, float]] = None) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+
+def get_equal_area_square_spacing(x_step, y_step):
     """
-    Create a regular Cartesian grid and return:
-      Xg, Yg : (ny, nx) meshgrid
-      pts_g  : (ny*nx, 2) flattened query points
+    Return square grid spacing that preserves hexagonal sample density.
+
+    A staggered hexagonal scan contributes one sample per rectangular area
+    ``x_step * y_step``. The returned square spacing gives each resampled
+    pixel the same physical area.
 
     Parameters
     ----------
-    xy : numpy.ndarray
-        Source x-y coordinates with shape ``(N, 2)``.
-    dx_out, dy_out : float or None, optional
-        Output grid spacing. Used when ``nx`` and ``ny`` are not both given.
-    nx, ny : int or None, optional
-        Number of output points along x and y.
-    bounds : tuple of float or None, optional
-        Explicit ``(x_min, x_max, y_min, y_max)`` bounds.
+    x_step : float
+        Source scan step along each staggered row.
+    y_step : float
+        Source scan step between neighboring rows.
 
     Returns
     -------
-    tuple of numpy.ndarray
-        The x/y mesh grids and flattened query points.
+    float
+        Isotropic square grid spacing in the source coordinate unit.
+
+    Raises
+    ------
+    ValueError
+        If either source step is not positive.
+    """
+    x_step = float(x_step)
+    y_step = float(y_step)
+
+    if x_step <= 0.0 or y_step <= 0.0:
+        raise ValueError("Hexagonal scan steps must be positive.")
+
+    return float(np.sqrt(x_step * y_step))
+
+
+def make_regular_grid(xy, dx_out=None, dy_out=None, nx=None, ny=None, bounds=None):
+    """
+    Create a regular Cartesian query grid.
+
+    Explicit spacing values are preserved exactly. The final coordinate may
+    stop short of the upper bound when the extent is not an integer multiple
+    of the requested spacing.
+
+    Parameters
+    ----------
+    xy : ndarray
+        Source coordinates with shape ``(N, 2)``.
+    dx_out : float, optional
+        Target grid spacing in the x direction.
+    dy_out : float, optional
+        Target grid spacing in the y direction.
+    nx : int, optional
+        Number of target grid points in the x direction.
+    ny : int, optional
+        Number of target grid points in the y direction.
+    bounds : tuple, optional
+        Bounds as ``(x_min, x_max, y_min, y_max)``.
+
+    Returns
+    -------
+    tuple
+        ``(x_grid, y_grid, query_points)`` for the regular grid.
     """
     if bounds is None:
         x_min, y_min = np.min(xy, axis=0)
@@ -42,218 +80,307 @@ def make_regular_grid(
     if nx is None or ny is None:
         nx = int(np.floor((x_max - x_min) / dx_out)) + 1
         ny = int(np.floor((y_max - y_min) / dy_out)) + 1
+        xg = x_min + np.arange(nx, dtype=float) * float(dx_out)
+        yg = y_min + np.arange(ny, dtype=float) * float(dy_out)
+    else:
+        xg = np.linspace(x_min, x_max, nx, dtype=float)
+        yg = np.linspace(y_min, y_max, ny, dtype=float)
 
-    xg = np.linspace(x_min, x_max, nx, dtype=float)
-    yg = np.linspace(y_min, y_max, ny, dtype=float)
-    Xg, Yg = np.meshgrid(xg, yg, indexing="xy")
-    pts_g = np.column_stack([Xg.ravel(), Yg.ravel()])
-    return Xg, Yg, pts_g
+    x_grid, y_grid = np.meshgrid(xg, yg, indexing="xy")
+    query_points = np.column_stack([x_grid.ravel(), y_grid.ravel()])
 
-
-def _idw_weights(dist: np.ndarray, p: float = 2.0, eps: float = 1e-12) -> np.ndarray:
-    # dist: (M, k)
-    # If a query point coincides with a source, handle separately outside.
-    w = 1.0 / np.maximum(dist, eps) ** p
-    w_sum = np.sum(w, axis=1, keepdims=True)
-    return w / w_sum
+    return x_grid, y_grid, query_points
 
 
-def resample_phase_majority(phase_src: np.ndarray, idx: np.ndarray) -> np.ndarray:
+def _idw_weights(dist, p=2.0, eps=1e-12):
     """
-    phase_src: (N,)
-    idx: (M, k) neighbor indices for each grid point
-    returns (M,) int
+    Compute inverse distance weights.
+
+    Parameters
+    ----------
+    dist : ndarray
+        Distance array with shape ``(M, k)``.
+    p : float, optional
+        Inverse distance power. Default is 2.0.
+    eps : float, optional
+        Minimum distance used to avoid division by zero.
+
+    Returns
+    -------
+    ndarray
+        Normalized weights with shape ``(M, k)``.
     """
-    neigh = phase_src[idx]  # (M, k)
-    # Majority vote without Python loops:
-    # For general labels, use per-row bincount via offset trick.
-    labels = neigh.astype(np.int64)
-    lab_min = labels.min()
-    labels0 = labels - lab_min
-    L = labels0.max() + 1
-    M, k = labels0.shape
-    # Build counts matrix (M, L) via flat bincount
-    flat = labels0 + (np.arange(M)[:, None] * L)
-    counts = np.bincount(flat.ravel(), minlength=M * L).reshape(M, L)
-    winner = counts.argmax(axis=1) + lab_min
+    weights = 1.0 / np.maximum(dist, eps) ** p
+    weights_sum = np.sum(weights, axis=1, keepdims=True)
+    return weights / weights_sum
+
+
+def resample_phase_majority(phase_src, idx):
+    """
+    Resample phase IDs by nearest-neighbor majority vote.
+
+    Parameters
+    ----------
+    phase_src : ndarray
+        Source phase IDs with shape ``(N,)``.
+    idx : ndarray
+        Neighbor indices for each target grid point with shape ``(M, k)``.
+
+    Returns
+    -------
+    ndarray
+        Resampled phase IDs with shape ``(M,)``.
+    """
+    neighbors = phase_src[idx]
+    labels = neighbors.astype(np.int64)
+    label_min = labels.min()
+    labels0 = labels - label_min
+    n_labels = labels0.max() + 1
+    n_points = labels0.shape[0]
+
+    flat = labels0 + (np.arange(n_points)[:, None] * n_labels)
+    counts = np.bincount(flat.ravel(), minlength=n_points * n_labels)
+    counts = counts.reshape(n_points, n_labels)
+    winner = counts.argmax(axis=1) + label_min
+
     return winner.astype(phase_src.dtype, copy=False)
 
 
-def resample_scalar_idw(
-    values_src: np.ndarray,
-    idx: np.ndarray,
-    dist: np.ndarray,
-    p: float = 2.0,
-    fill_value: float = np.nan) -> np.ndarray:
+def resample_scalar_idw(values_src, idx, dist, p=2.0, fill_value=np.nan):
     """
-    IDW resampling for scalars (IQ etc.)
-    values_src: (N,)
-    idx/dist: (M, k)
+    Resample scalar values by inverse distance weighting.
+
+    Parameters
+    ----------
+    values_src : ndarray
+        Source scalar values with shape ``(N,)``.
+    idx : ndarray
+        Neighbor indices for each target grid point.
+    dist : ndarray
+        Neighbor distances for each target grid point.
+    p : float, optional
+        Inverse distance power. Default is 2.0.
+    fill_value : float, optional
+        Retained for compatibility with earlier callers. All query points are
+        assigned an interpolated value, so this value is unused.
+
+    Returns
+    -------
+    ndarray
+        Resampled scalar values with shape ``(M,)``.
     """
-    v = values_src[idx]  # (M, k)
-    out = np.empty((idx.shape[0],), dtype=float)
+    values = values_src[idx]
+    output = np.empty((idx.shape[0],), dtype=float)
 
-    # If any dist == 0, take the exact source value (avoid inf weights)
-    zero = dist[:, 0] == 0.0
-    if np.any(zero):
-        out[zero] = v[zero, 0]
+    exact = dist[:, 0] == 0.0
+    if np.any(exact):
+        output[exact] = values[exact, 0]
 
-    nonzero = ~zero
-    if np.any(nonzero):
-        w = _idw_weights(dist[nonzero], p=p)
-        out[nonzero] = np.sum(w * v[nonzero], axis=1)
+    remaining = ~exact
+    if np.any(remaining):
+        weights = _idw_weights(dist[remaining], p=p)
+        output[remaining] = np.sum(weights * values[remaining], axis=1)
 
-    # Optional: could mask points too far away (outside convex hull)
-    # Here: leave as computed; user can apply max_dist filter if desired.
-    return out
+    return output
 
 
-def _normalize_quat(q: np.ndarray, eps: float = 1e-15) -> np.ndarray:
-    n = np.linalg.norm(q, axis=-1, keepdims=True)
-    return q / np.maximum(n, eps)
-
-
-def quat_markley_mean(quats: np.ndarray, weights: Optional[np.ndarray] = None) -> np.ndarray:
+def _normalize_quat(quat, eps=1e-15):
     """
-    Markley mean for unit quaternions.
-    quats: (k, 4) array, assumed roughly aligned in sign already.
-    weights: (k,) optional.
-    returns (4,)
+    Normalize quaternion data.
+
+    Parameters
+    ----------
+    quat : ndarray
+        Quaternion array with quaternion components on the last axis.
+    eps : float, optional
+        Minimum norm used to avoid division by zero.
+
+    Returns
+    -------
+    ndarray
+        Normalized quaternion array.
     """
-    Q = quats
+    norm = np.linalg.norm(quat, axis=-1, keepdims=True)
+    return quat / np.maximum(norm, eps)
+
+
+def quat_markley_mean(quats, weights=None):
+    """
+    Compute a weighted Markley mean quaternion.
+
+    Parameters
+    ----------
+    quats : ndarray
+        Unit quaternion array with shape ``(k, 4)``.
+    weights : ndarray, optional
+        Optional weights with shape ``(k,)``.
+
+    Returns
+    -------
+    ndarray
+        Mean quaternion with shape ``(4,)``.
+    """
     if weights is None:
-        w = np.ones((Q.shape[0],), dtype=float)
+        weights = np.ones((quats.shape[0],), dtype=float)
     else:
-        w = np.asarray(weights, dtype=float)
+        weights = np.asarray(weights, dtype=float)
 
-    # Accumulate symmetric 4x4 matrix
-    A = (Q * w[:, None]).T @ Q  # 4x4
-    # Largest eigenvector
-    evals, evecs = np.linalg.eigh(A)
-    q_mean = evecs[:, np.argmax(evals)]
-    # Ensure deterministic sign (optional): force scalar part >= 0
-    if q_mean[0] < 0:
-        q_mean = -q_mean
-    return q_mean
+    accumulator = (quats * weights[:, None]).T @ quats
+    _, eigvecs = np.linalg.eigh(accumulator)
+    mean_quat = eigvecs[:, -1]
+
+    if mean_quat[0] < 0.0:
+        mean_quat = -mean_quat
+
+    return mean_quat
 
 
-def resample_quat_knn_markley(
-    quat_src: np.ndarray,
-    idx: np.ndarray,
-    dist: np.ndarray,
-    p: float = 2.0) -> np.ndarray:
+def resample_quat_knn_markley(quat_src, idx, dist, p=2.0):
     """
-    Quaternion resampling using k-NN, IDW weights, and Markley mean.
+    Resample quaternion data by k-nearest neighbors and Markley averaging.
 
-    quat_src: (N, 4)
-    idx:      (M, k) or (M,)
-    dist:     (M, k) or (M,)
-    returns:  (M, 4)
+    Parameters
+    ----------
+    quat_src : ndarray
+        Source quaternions with shape ``(N, 4)``.
+    idx : ndarray
+        Neighbor indices for each target grid point.
+    dist : ndarray
+        Neighbor distances for each target grid point.
+    p : float, optional
+        Inverse distance power. Default is 2.0.
+
+    Returns
+    -------
+    ndarray
+        Resampled quaternions with shape ``(M, 4)``.
     """
-    Qs = _normalize_quat(np.asarray(quat_src, dtype=float))
-
+    quat_src = _normalize_quat(np.asarray(quat_src, dtype=float))
     idx = np.asarray(idx)
     dist = np.asarray(dist)
 
-    # Make sure idx/dist are always 2D: (M, k)
     if idx.ndim == 1:
         idx = idx[:, None]
     if dist.ndim == 1:
         dist = dist[:, None]
 
-    M, k = idx.shape
-    out = np.empty((M, 4), dtype=float)
+    output = np.empty((idx.shape[0], 4), dtype=float)
 
-    # Exact hits: take nearest neighbor quaternion
-    zero = dist[:, 0] == 0.0
-    if np.any(zero):
-        out[zero] = Qs[idx[zero, 0]]
+    exact = dist[:, 0] == 0.0
+    if np.any(exact):
+        output[exact] = quat_src[idx[exact, 0]]
 
-    nonzero = ~zero
-    if np.any(nonzero):
-        w = _idw_weights(dist[nonzero], p=p)      # (M', k)
-        neigh = Qs[idx[nonzero]]                  # (M', k, 4)
+    remaining = ~exact
+    if np.any(remaining):
+        weights = _idw_weights(dist[remaining], p=p)
+        neighbors = quat_src[idx[remaining]]
 
-        # Align signs to first neighbor
-        ref = neigh[:, :1, :]                     # (M', 1, 4)
-        sgn = np.sign(np.sum(neigh * ref, axis=2, keepdims=True))
-        sgn[sgn == 0] = 1.0
-        neigh_aligned = neigh * sgn
+        reference = neighbors[:, :1, :]
+        signs = np.sign(np.sum(neighbors * reference, axis=2, keepdims=True))
+        signs[signs == 0.0] = 1.0
+        aligned = neighbors * signs
 
-        # Markley mean per grid point: small loop over M' is OK (k is small)
-        # If M is huge (multi-million), consider numba or chunking.
-        out_non = np.empty((neigh_aligned.shape[0], 4), dtype=float)
-        for i in range(neigh_aligned.shape[0]):
-            out_non[i] = quat_markley_mean(neigh_aligned[i], weights=w[i])
+        # Vectorised Markley mean: build one (4,4) weighted outer-product
+        # accumulator per query point, then extract the leading eigenvector
+        # of all M matrices in a single batched eigh call instead of a loop.
+        # Sign is canonicalised so the w-component (index 0) is non-negative
+        # (q and -q encode the same rotation, but a consistent sign avoids
+        # downstream issues in misorientation calculations).
+        W = weights[:, :, None] * aligned
+        accumulators = np.einsum('mki,mkj->mij', W, aligned)
+        _, eigvecs = np.linalg.eigh(accumulators)
+        averaged = eigvecs[:, :, -1].copy()
+        averaged[averaged[:, 0] < 0.0] *= -1
 
-        out[nonzero] = _normalize_quat(out_non)
+        output[remaining] = _normalize_quat(averaged)
 
-    return out
+    return output
 
 
 def resample_ebsd_to_rect_grid(
-    xy: np.ndarray,
-    phase: np.ndarray,
-    quat: np.ndarray,
-    iq: np.ndarray,
-    dx_out: Optional[float] = None,
-    dy_out: Optional[float] = None,
-    nx: Optional[int] = None,
-    ny: Optional[int] = None,
-    bounds: Optional[tuple[float, float, float, float]] = None,
-    k_phase: int = 1,
-    k_iq: int = 1,
-    k_quat: int = 1,
-    p_iq: float = 2.0,
-    p_quat: float = 2.0
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    xy,
+    phase,
+    quat,
+    iq,
+    dx_out=None,
+    dy_out=None,
+    nx=None,
+    ny=None,
+    bounds=None,
+    k_phase=1,
+    k_iq=1,
+    k_quat=1,
+    p_iq=2.0,
+    p_quat=2.0,
+):
     """
-    Returns:
-      Xg, Yg: (ny, nx)
-      phase_g: (ny, nx)
-      iq_g: (ny, nx)
-      quat_g: (ny, nx, 4)
+    Resample staggered EBSD data to a regular rectangular grid.
 
     Parameters
     ----------
-    xy, phase, quat, iq : numpy.ndarray
-        Source coordinates, phase labels, quaternions, and scalar quality values.
-    dx_out, dy_out, nx, ny, bounds : optional
-        Output-grid configuration passed to :func:`make_regular_grid`.
-    k_phase, k_iq, k_quat : int, optional, default=1
-        Number of nearest neighbours used for each resampling operation.
-    p_iq, p_quat : float, optional, default=2.0
-        Inverse-distance weighting exponents.
+    xy : ndarray
+        Source coordinates with shape ``(N, 2)``.
+    phase : ndarray
+        Source phase IDs with shape ``(N,)``.
+    quat : ndarray
+        Source quaternions with shape ``(N, 4)``.
+    iq : ndarray
+        Source scalar image quality or confidence values with shape ``(N,)``.
+    dx_out : float, optional
+        Target grid spacing in the x direction.
+    dy_out : float, optional
+        Target grid spacing in the y direction.
+    nx : int, optional
+        Number of target grid points in the x direction.
+    ny : int, optional
+        Number of target grid points in the y direction.
+    bounds : tuple, optional
+        Bounds as ``(x_min, x_max, y_min, y_max)``.
+    k_phase : int, optional
+        Number of neighbors for phase resampling. Default is 1.
+    k_iq : int, optional
+        Number of neighbors for scalar resampling. Default is 1.
+    k_quat : int, optional
+        Number of neighbors for quaternion resampling. Default is 1.
+    p_iq : float, optional
+        Inverse distance power for scalar resampling. Default is 2.0.
+    p_quat : float, optional
+        Inverse distance power for quaternion resampling. Default is 2.0.
+
+    Returns
+    -------
+    tuple
+        ``(x_grid, y_grid, phase_grid, iq_grid, quat_grid)`` on the target grid.
     """
-    Xg, Yg, pts_g = make_regular_grid(xy, dx_out=dx_out, dy_out=dy_out, nx=nx, ny=ny, bounds=bounds)
+    x_grid, y_grid, query_points = make_regular_grid(
+        xy, dx_out=dx_out, dy_out=dy_out, nx=nx, ny=ny, bounds=bounds
+    )
 
     tree = cKDTree(xy)
 
-    # Phase: majority vote k-NN
-    dist_p, idx_p = tree.query(pts_g, k=k_phase, workers=-1)
+    dist_phase, idx_phase = tree.query(query_points, k=k_phase, workers=-1)
     if k_phase == 1:
-        phase_g = phase[idx_p]
+        phase_grid = phase[idx_phase]
     else:
-        phase_g = resample_phase_majority(phase, idx_p)
+        phase_grid = resample_phase_majority(phase, idx_phase)
 
-    # IQ: IDW k-NN
-    dist_i, idx_i = tree.query(pts_g, k=k_iq, workers=-1)
+    dist_iq, idx_iq = tree.query(query_points, k=k_iq, workers=-1)
     if k_iq == 1:
-        iq_g = iq[idx_i].astype(float)
+        iq_grid = iq[idx_iq].astype(float)
     else:
-        iq_g = resample_scalar_idw(iq.astype(float), idx_i, dist_i, p=p_iq)
+        iq_grid = resample_scalar_idw(iq.astype(float), idx_iq, dist_iq, p=p_iq)
 
-    # Quat: Markley mean with IDW weights
-    dist_q, idx_q = tree.query(pts_g, k=k_quat, workers=-1)
+    dist_quat, idx_quat = tree.query(query_points, k=k_quat, workers=-1)
     if k_quat == 1:
-        quat_g = _normalize_quat(quat[idx_q].astype(float))
+        quat_grid = _normalize_quat(quat[idx_quat].astype(float))
     else:
-        quat_g = resample_quat_knn_markley(quat, idx_q, dist_q, p=p_quat)
+        quat_grid = resample_quat_knn_markley(quat, idx_quat, dist_quat, p=p_quat)
 
-    ny_, nx_ = Xg.shape
+    ny_grid, nx_grid = x_grid.shape
     return (
-        Xg, Yg,
-        phase_g.reshape(ny_, nx_),
-        iq_g.reshape(ny_, nx_),
-        quat_g.reshape(ny_, nx_, 4),
+        x_grid,
+        y_grid,
+        phase_grid.reshape(ny_grid, nx_grid),
+        iq_grid.reshape(ny_grid, nx_grid),
+        quat_grid.reshape(ny_grid, nx_grid, 4),
     )

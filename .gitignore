@@ -99,3 +99,8 @@ libs/
 analysis/
 .vscode/
 
+# Generated EBSD example results
+/examples/EBSD_to_RVE/outputs/
+/examples/EBSD_to_RVE/*_voxels.json
+/examples/EBSD_analysis/outputs/
+/examples/EBSD_analysis/2D_graph_result/

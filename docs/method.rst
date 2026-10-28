@@ -127,73 +127,281 @@ The assignment algorithm begins by randomly assigning orientations obtained from
 EBSD reading
 ------------
 
-Kanapy can read two dimensional EBSD maps and convert the measured pixel orientations into a graph representation of the microstructure. The graph is intended to describe the grain structure on the EBSD map after region segmentation, graph cleanup, and node merging. It can also be plotted directly on the EBSD inverse pole figure map for visual inspection.
+Kanapy reads two dimensional EBSD maps and reconstructs their grains as graphs.
+The analysis is handled by :class:`kanapy.texture.EBSDmap`. ``ebsd.graph``
+contains all retained grains and their adjacency, including phase boundaries.
+Phase graphs, initial segmentation, and cleanup records remain available in
+``ebsd.ms_data`` for statistics and RVE generation. These objects can be used
+directly without writing intermediate files.
 
-The EBSD workflow is handled by :class:`kanapy.texture.EBSDmap`. During map reading, Kanapy stores the EBSD pixel orientations, separates the retained phases, and builds graph data for the selected phase. For each phase, the graph data contains the final graph, diagnostic information from the initial graph, and merge information from the cleanup procedure.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Phase selection and scan grids
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Phase fractions are calculated from the original phase pixel counts divided
+by the total number of input measurements. Unindexed measurements are not
+analyzed as a phase. The default ``vf_min=0.03`` retains phases occupying at
+least 3% of the input map, including phases exactly at that threshold.
+Original phase IDs are preserved even when some phases are filtered out.
+
+Rectangular scans use their existing pixel grid. Hexagonal scans have staggered
+measurement rows and are resampled onto a rectangular grid before segmentation.
+The resampling path depends on the number of phases remaining after filtering:
+
+* With one retained phase and no explicit target spacing, Kanapy keeps the
+  existing resampling from that phase's measurements. This path retains its
+  filling behavior and does not preserve masks for phases removed by the
+  fraction filter.
+* With multiple retained phases, Kanapy creates one grid for the complete map.
+  Phase labels, confidence indices, and orientations use the same nearest
+  measurement at each grid position. The retained phases are segmented together
+  on this grid, with connectivity restricted to pixels of the same phase.
+
+Setting ``hex_grid_target_spacing`` explicitly selects the shared grid path
+with the requested isotropic physical spacing, including for a single phase.
+Otherwise the rectangular shape reported by orix is retained.
+
+When confidence indices are available, the bad pixel repair step uses actual
+grid neighbors from the same phase. Both segmentation and graph construction
+use the resulting pixel orientations.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Initial region construction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Initial EBSD regions are identified by local pixel to pixel misorientation. The procedure is implemented in :func:`kanapy.texture.find_similar_regions_by_misorientation`. Starting from each unassigned pixel, a breadth first search grows a region by adding neighboring pixels whose local misorientation is below the selected threshold. The misorientation calculation uses the crystal symmetry of the current phase.
+Regions are formed by :func:`kanapy.texture.find_similar_regions_by_misorientation`.
+A pixel pair is connected when both pixels belong to the same retained phase and
+their symmetry reduced misorientation is at most the selected threshold.
+The default threshold is 5 degrees. The implementation evaluates neighboring
+pixel pairs in batches and labels the connected components of their sparse
+adjacency graph. This implements the same connectivity rule as breadth first
+region growing. Multiple retained phases share one component labeling pass,
+using each phase's own crystal symmetry for the orientation comparisons.
+With one retained phase, the existing segmentation path is preserved.
 
-For the two dimensional EBSD graph path, neighboring pixels are evaluated with 4-neighbor connectivity. This gives each pixel direct horizontal and vertical neighbors on the EBSD map. The resulting labeled regions form the initial graph nodes.
+The default ``connectivity=4`` uses horizontal and vertical pixel neighbors.
+Setting ``connectivity=8`` also includes diagonal neighbors. The chosen
+connectivity is used for segmentation, grain adjacency, and boundary analysis.
+For multiple retained phases, filtered and unindexed pixels remain background
+in the complete label map. Each phase's separate analysis map also masks out
+the other phases. The single phase hex filling behavior described above is unchanged.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Graph construction and node data
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Graph construction and phase data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The labeled EBSD regions are converted into graph nodes by :func:`kanapy.texture.build_graph_from_labeled_pixels`. Each graph node represents one connected labeled region. Node attributes include the pixel list, the node center, the number of pixels, the original pixel rotations, and the mean node orientation.
+:func:`kanapy.texture.build_graph_from_labeled_pixels` creates one node for
+each labeled region. Each node stores its pixel indices, pixel count
+(``npix``), mean orientation (``ori_av``), and orientation spread (``ori_std``).
+The graph stores the grain label map, pixel rotations used for reconstruction,
+crystal symmetry, and grid geometry. The complete multiphase graph stores
+symmetries keyed by phase ID. Every grain node has ``phase_id`` and
+``phase_name`` attributes; the individual phase graphs also carry these fields.
 
-The mean orientation of a node is computed by :func:`kanapy.texture.mean_orientation_data`. Pixel quaternions are normalized, symmetry equivalent orientations are aligned to a reference orientation, and the ``q`` versus ``-q`` quaternion ambiguity is handled before averaging. The final mean quaternion is obtained from the dominant eigenvector of the quaternion accumulator matrix.
+The mean orientation is computed by :func:`kanapy.texture.mean_orientation_data`.
+Pixel quaternions are normalized, symmetry equivalent orientations are aligned
+to a reference, and the ``q`` versus ``-q`` ambiguity is handled before
+averaging. The mean quaternion is the dominant eigenvector of the quaternion
+accumulator matrix.
 
-Graph edges are added between neighboring labeled regions. Label ``0`` is treated as background and is not used as a graph node.
+Edges connect adjacent labeled regions, including grains from different phases.
+Region label ``0`` denotes background and is not a grain node. Grain IDs are
+unique across the complete map. In a multiphase graph, edges carry an
+``is_phase_boundary`` flag. These edges record adjacency; they do not introduce
+a physical interface model. No additional phase nodes are created.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Boundary artifact cleanup
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Cleanup selects only neighbors in the same phase. A direct attempt to merge
+nodes tagged with different phases raises an error. Interface edges are kept
+when either endpoint merges with a neighbor of its own phase. Orientation
+comparisons and orientation averaging use the symmetry of the relevant phase;
+interface edges do not receive a same phase misorientation value.
 
-Some small regions can appear mainly along grain boundaries. Kanapy computes node boundary information with :func:`kanapy.texture.get_node_boundary_stats`. For each node, the function checks local neighboring pixels and reports boundary pixel fraction, neighboring labels, map edge contact, bounding box size, and bounding box fill fraction.
+^^^^^^^^^^^^^
+Graph cleanup
+^^^^^^^^^^^^^
 
-Small boundary artifact nodes can be merged with :func:`kanapy.texture.merge_boundary_artifact_nodes`. The merge target is chosen from neighboring nodes by comparing the node orientations. After node merging, the mean orientation of the merged node is recomputed from the original pixel orientations.
+Cleanup proceeds in the following order. Merge records retain the source
+grain, target grain, and the criterion used.
 
-^^^^^^^^^^^^^^
-Graph plotting
-^^^^^^^^^^^^^^
+1. **Boundary artifacts.**
+   :func:`kanapy.texture.get_node_boundary_stats` measures the boundary pixel
+   fraction and local geometry of each node.
+   :func:`kanapy.texture.merge_boundary_artifact_nodes` considers nodes with
+   at most ``max(int(boundary_artifact_size_factor * gs_min), 40)`` pixels
+   and a boundary fraction of at least ``boundary_artifact_fraction_min``.
+   The defaults are ``2.0`` and ``0.85``. A candidate is merged into its
+   crystallographically closest neighbor in the same phase, preserving the
+   target orientation. This pass is based on the boundary criterion and does
+   not impose the later 5 degree similarity threshold.
+2. **Invalid convex hulls.** Regions that cannot form a valid convex hull are
+   absorbed into their largest neighbor in the same phase when one exists.
+   The target orientation is preserved.
+3. **Similar orientations.** Adjacent grains with mean orientations differing
+   by at most ``similar_orientation_merge_degrees`` are merged; the default
+   is 5 degrees. Their mean orientation is recomputed from the combined
+   reconstruction pixel orientations. Neighbors are reconsidered after merges.
+4. **Small grains.** Nodes below ``gs_min`` are absorbed into their largest
+   neighbor in the same phase when one exists, preserving the target
+   orientation. The default ``gs_min`` is 10 pixels. The current size is
+   checked before each merge, so a queued grain that has already grown to
+   the threshold is retained.
 
-The final EBSD graph can be plotted on the EBSD inverse pole figure map by setting ``show_graph=True`` when creating an :class:`kanapy.texture.EBSDmap` object. The graph overlay is produced by :meth:`kanapy.texture.EBSDmap.plot_graph_overlay`. Node centers are shown as black points and graph edges are shown as black lines.
+The final validation requires every remaining grain to have a valid convex
+hull. The minimum number of points for a hull is controlled by
+``convex_hull_min_points``, whose default is 3.
 
-Example usage:
+^^^^^^^^^^^^^^^^
+Grain statistics
+^^^^^^^^^^^^^^^^
+
+With statistics enabled, Kanapy extracts equivalent diameters, aspect ratios,
+and tilt angles from the cleaned grains using its existing geometric
+conventions. For convex hull area :math:`A`, the equivalent diameter is
+:math:`d_{eq} = 2\sqrt{A / \pi}`. Aspect ratio is the ratio of the fitted
+major and minor ellipse axes. Tilt is :math:`\omega = \arccos(v_{a,0})`,
+where :math:`v_a` is the major axis direction in Kanapy's scaled row and
+column coordinates. This geometric angle is distinct from crystallographic
+misorientation.
+
+Diameter and aspect ratio use lognormal parameters. The tilt distribution
+uses a von Mises fit to :math:`2\omega - \pi`. Raw arrays, fitted
+parameters, and moments are kept in the phase data.
+
+Direct ``EBSDmap`` analysis includes these statistics unless
+``graph_only=True``. The :func:`kanapy.graph_workflow.build_ebsd_graph`
+interface skips statistics by default; pass ``include_statistics=True``
+when they are needed for RVE generation or further analysis.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Result objects and optional files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:func:`kanapy.graph_workflow.build_ebsd_graph` returns an
+:class:`kanapy.graph_workflow.EBSDGraphResult` instance. Reconstruction
+settings are supplied through :class:`kanapy.graph_workflow.EBSDGraphConfig`.
+For development, install the checkout with ``python -m pip install -e .``
+from the repository root before starting Python:
 
 .. code-block:: python
 
     import kanapy as knpy
 
-    ebsd = knpy.EBSDmap("p558_250x_1.ang", show_graph=True)
+    config = knpy.EBSDGraphConfig(
+        min_phase_pixel_fraction=0.03,
+        max_misorientation_degrees=5.0,
+        min_grain_size_pixels=10.0,
+        connectivity=4,
+        similar_orientation_merge_degrees=5.0,
+    )
+    result = knpy.build_ebsd_graph(
+        'examples/fixtures/ebsd_316L_500x500.ang',
+        config=config,
+    )
+    graph = result.graph
+    ebsd = result.ebsd
 
-The same plotting method can also save the graph image to file when an output path is provided.
+``result.graph`` and ``result.phase_data`` refer to the retained phase with
+the largest original pixel fraction. ``result.full_graph`` returns the complete
+graph from ``result.ebsd.graph``, including phase boundaries. With one retained
+phase, it is the same object as ``result.graph``. Individual phase graphs remain
+available through ``result.ebsd.ms_data``. The original phase ID is
+``result.phase_index``; ``result.selected_phase_position`` is its position
+in the retained phase list.
+
+No files are written by default. Supply an
+:class:`kanapy.graph_workflow.EBSDGraphOutputOptions` instance to enable
+pickle, JSON summary, graph overlay, IPF image, or diagnostic step figures.
+For multiple retained phases, the pickle payload adds ``full_graph`` and a
+``phases`` list containing every phase graph and its metadata. The JSON summary
+includes ``full_graph_node_count``, ``full_graph_edge_count``, and
+``phase_boundary_edge_count``, as well as counts for each phase. The original
+top level graph fields continue to describe the selected phase.
 
 ^^^^^^^^^^^^^^
-Example script
+Graph plotting
 ^^^^^^^^^^^^^^
 
-The graph workflow example is provided in ``examples/EBSD_graph_analysis``.
+:meth:`kanapy.texture.EBSDmap.plot_graph_overlay` draws the retained grain
+graphs on one EBSD inverse pole figure map. With one phase, the nodes and
+edges are black. With multiple phases, nodes and edges within each phase use
+phase colors. Edges across phase boundaries are gray and have a separate
+legend entry.
+Node positions come from stored centers or, when statistics are skipped,
+the mean image coordinates of their pixels.
 
-``run_ebsd_analysis_with_graph.py``
-    Builds an in memory :class:`kanapy.graph_workflow.EBSDGraphResult` object and writes only the explicitly enabled graph handoff files. This example uses the graph only path and does not run grain statistics extraction or the legacy interactive plotting workflow. The output is written to ``2D_graph_result``.
+The default ``iphase=None`` includes all retained phases. An integer selects
+a position in ``ebsd.ms_data``. The optional ``phase_colors`` mapping uses
+original phase IDs as keys. ``show_ids=True`` labels multiphase nodes as
+``phase_id:node_id``.
 
-The graph workflow can be called directly from Python by using :func:`kanapy.graph_workflow.build_ebsd_graph`. The main data transfer object is :class:`kanapy.graph_workflow.EBSDGraphResult`; PKL, JSON, and PNG files are written only when enabled through :class:`kanapy.graph_workflow.EBSDGraphOutputOptions`. Users who need the classic EBSD statistics and interactive Kanapy plots can still create :class:`kanapy.texture.EBSDmap` directly with the usual plotting flags.
+Using the result from the previous example, save a combined overlay without
+opening an interactive window:
 
-The example keeps graph step figures and local zoom diagnostics disabled by default. These outputs are mainly useful for debugging or preparing publication figures, while routine workflows usually need only the final graph handoff files.
+.. code-block:: python
 
-The graph workflow example produces:
+    ebsd.plot_graph_overlay(
+        iphase=None, save_path='graph_overlay.png', show=False,
+    )
 
-.. code-block:: text
+For direct analysis, ``EBSDmap(..., show_graph=True)`` displays the same
+combined overlay. ``plot_ipf_map(iphase=None)`` displays the retained phases
+together without the graph.
 
-    2D_graph_result/ebsd_graph.pkl
-    2D_graph_result/ebsd_graph_summary.json
-    2D_graph_result/graph_overlay.png
-    2D_graph_result/graph_ipf_map.png
+^^^^^^^^^^^^^^^^^
+Example workflows
+^^^^^^^^^^^^^^^^^
 
-The overlay image shows the final graph node centers and graph edges on the EBSD inverse pole figure map.
-         
+The examples keep experiment parameters and output choices in the scripts.
+
+``examples/EBSD_analysis/graph_based_analysis.py``
+    Runs complete two dimensional EBSD analysis without generating an RVE.
+    Graph files remain available in its ``2D_graph_result`` directory:
+    ``ebsd_graph.pkl``, ``ebsd_graph_summary.json``, ``00_graph_overlay.png``,
+    and ``graph_ipf_map.png``. ``statistics.json`` adds equivalent diameters,
+    aspect ratios, tilt angles, fitted parameters, and units. Its top level
+    statistics describe the selected phase; for multiple retained phases,
+    a ``phases`` list includes each phase's separate statistics. Histograms,
+    misorientation and IPF maps, segmentation images, pole figures, and IPF
+    projections are saved automatically. With multiple retained phases,
+    histogram filenames include the original phase ID. Statistics and plotting use Kanapy's
+    existing methods. Output switches are defined at the top of the script;
+    diagnostic step figures remain disabled by default. The example recreates
+    its result directory on each run and returns the complete result object.
+    The graph image sorts first by filename and is the first interactive
+    preview when ``show_figures=True``.
+
+``examples/EBSD_to_RVE/graph_to_rve.py``
+    Runs the complete workflow from EBSD input, graph reconstruction, and
+    grain statistics through descriptor construction, RVE initialization,
+    packing, voxelization, orientation generation, and voxel export. Result
+    and EBSD instances are passed directly between stages. Figures are saved
+    and closed automatically in the script's ``outputs`` directory. Matching
+    filenames are overwritten, unrelated files remain, and ``manifest.json``
+    lists the current run's outputs. ``--show`` enables interactive previews;
+    ``--extra-outputs`` enables additional polyhedral and Abaqus exports.
+    The graph overlay is saved and optionally displayed before the histograms
+    and remaining EBSD figures.
+
+``examples/EBSD_to_RVE/convert_ang2rve.py``
+    Preserves the original Kanapy example's complete EBSD to RVE computation
+    sequence, with updated comments and paths relative to the script. Its
+    plots remain interactive, with the grain graph displayed first: close each
+    window to continue. The single voxel JSON is written directly beside the
+    script in ``EBSD_to_RVE``, for example ``Iron fcc_voxels.json``. This example
+    retains its selection of the first phase in ``ebsd.ms_data`` for the RVE
+    statistics. The graph example's files remain in its ``outputs`` directory.
+
+The two graph examples default to four pixel neighbors, a 10 pixel small
+grain threshold, and a 3% phase fraction threshold. All three examples use
+the currently installed Kanapy implementation. Run them from the repository root:
+
+.. code-block:: console
+
+    python examples/EBSD_analysis/graph_based_analysis.py
+    python examples/EBSD_to_RVE/graph_to_rve.py
+    python examples/EBSD_to_RVE/convert_ang2rve.py
+
+Multiphase EBSD analysis and combined plotting do not change
+``graph_to_rve.py`` phase selection: it generates an RVE for the retained
+phase with the largest fraction. It does not construct a multiphase RVE from
+all measured phases.

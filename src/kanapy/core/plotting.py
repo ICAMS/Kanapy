@@ -8,6 +8,7 @@ Created on Mon Oct  4 07:52:55 2021
 """
 
 import logging
+from contextlib import contextmanager
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
@@ -40,6 +41,75 @@ from typing import Any, Dict, Tuple, Optional, Mapping
 #    dpi_scale = 100/system_dpi
 #    matplotlib_dpi = 100 * dpi_scale
 #    return matplotlib_dpi
+
+
+@contextmanager
+def capture_figures(output_dir, stage, paths, show=False):
+    """
+    Save and close figures created by one plotting stage.
+
+    The scoped display hook lets plotting routines call ``plt.show`` while
+    recording each new figure before an optional preview.
+
+    Parameters
+    ----------
+    output_dir : pathlib.Path or str
+        Directory for saved PNG images.
+    stage : str
+        Descriptive filename prefix.
+    paths : list of pathlib.Path
+        Files written during this run, extended as figures are saved.
+    show : bool, optional
+        Display saved figures interactively before closing them.
+
+    Yields
+    ------
+    None
+        Execute the plotting stage inside the context.
+
+    Notes
+    -----
+    The temporary ``plt.show`` hook is scoped to this context and is not
+    suitable for concurrent plotting stages.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    previous_show = plt.show
+    existing = set(plt.get_fignums())
+    counter = 0
+
+    def save_and_show(*args, **kwargs):
+        """
+        Save new figures before handing control to an optional preview.
+
+        Parameters
+        ----------
+        *args, **kwargs : object
+            Display arguments from plotting routines.
+        """
+        nonlocal counter
+        figures = [plt.figure(number) for number in plt.get_fignums() if number not in existing]
+        try:
+            for figure in figures:
+                counter += 1
+                path = output_dir / f"{stage}_{counter:02d}.png"
+                figure.savefig(path, dpi=160, bbox_inches="tight")
+                paths.append(path)
+            if show and figures:
+                previous_show(block=True)
+        finally:
+            for figure in figures:
+                plt.close(figure)
+
+    plt.show = save_and_show
+    try:
+        yield
+        save_and_show()
+    finally:
+        plt.show = previous_show
+        for number in set(plt.get_fignums()) - existing:
+            plt.close(number)
+
 
 def plot_voxels_3D(
     data: np.ndarray,

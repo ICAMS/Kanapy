@@ -8,14 +8,24 @@ import zipfile
 import requests
 import webbrowser
 from io import BytesIO
-from importlib.metadata import version
 from typing import Any
+from .. import __version__
 
     
 @click.group()
-@click.version_option(version=version('kanapy'))
+@click.version_option(version=__version__)
 @click.pass_context
 def main(ctx: Any) -> None:
+    """
+    Dispatch Kanapy command line operations.
+
+    The version option reports the version of the package providing these commands.
+
+    Parameters
+    ----------
+    ctx : click.Context
+        Command context supplied by Click.
+    """
     pass
 
 @main.command(name='gui')

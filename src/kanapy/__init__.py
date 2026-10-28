@@ -29,12 +29,23 @@ except ModuleNotFoundError:  # Python 3.10 compatibility
 
 
 def _get_version() -> str:
-    """Read the project version from pyproject.toml when running from source."""
+    """
+    Read the version of the loaded source tree or installed distribution.
+
+    The public package attribute and command line interface share this value.
+
+    Returns
+    -------
+    str
+        Version from the source project or installed package metadata.
+    """
     pyproject = Path(__file__).resolve().parents[2] / 'pyproject.toml'
     if pyproject.is_file():
         with pyproject.open('rb') as file:
             return tomllib.load(file)['project']['version']
     return distribution_version('kanapy')
+
+__version__ = _get_version()
 
 # Re-export shared core and texture modules for convenience
 from .core import Microstructure, set_stats, pickle2microstructure, import_voxels,\
@@ -57,7 +68,6 @@ poly_scale = 1.6
 __author__ = ('Mahesh R.G Prasad, Abhishek Biswas, Golsa Tolooei Eshlaghi, Ronak Shoghi, '
               'Napat Vajragupta, Yousef Rezek, Hrushikesh Uday Bhimavarapu, Alexander Hartmaier')
 __email__ = 'alexander.hartmaier@rub.de'
-__version__ = _get_version()
 __backend__ = "orix"
 __all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxels",
            "import_stats", "write_stats", "start", "EBSDmap", "ODF",  "createOriset",
