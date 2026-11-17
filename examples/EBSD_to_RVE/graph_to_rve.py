@@ -16,7 +16,8 @@ corresponding defaults below. Run with --help for the available options.
 
 The optional extra outputs include polyhedral figures and Abaqus files.
 With multiple retained phases, the EBSD IPF and graph figures show them together.
-Gray graph edges record contact between different phases, which cannot merge.
+Dashed gray graph edges record contact between different phases. Supplementary
+cleanup may absorb eligible isolated regions into a neighboring phase.
 RVE generation continues to use the retained phase with the largest fraction.
 
 Author: Jun Xue
@@ -124,6 +125,12 @@ def run_workflow(args):
     )
     files.extend(Path(path) for path in result.written_files.values())
     ebsd, phase = result.ebsd, result.phase_data
+    if not phase.get("statistics_available", True) or phase.get("gs_param") is None:
+        raise ValueError(
+            f"Selected EBSD phase #{phase['index']} ({phase['name']}) has no grain "
+            "shape statistics after graph cleanup; RVE generation requires a phase "
+            "with retained grain geometry."
+        )
     selected_index = result.selected_phase_position
     print(f"Selected EBSD phase #{phase['index']} ({phase['name']}), {phase['ngrains']} grains")
 

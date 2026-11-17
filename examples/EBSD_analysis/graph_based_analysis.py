@@ -3,11 +3,12 @@ Analyze an EBSD map through grain graphs and statistics, before 3D RVE generatio
 
 The workflow creates an ``EBSDGraphResult`` with equivalent diameters, aspect
 ratios, tilt angles, and their fitted distributions for every retained phase.
-By default, phases below 3% are skipped. Multiple retained phases are segmented
-together using four neighboring pixels, with each grain restricted to one phase.
-Grain nodes store their phase ID and name, and only grains from the same phase
-can be merged. All retained phases appear on one EBSD map, with nodes and edges
-colored by phase and gray edges between adjacent grains of different phases.
+By default, indexed phases below 3% are assigned to the nearest retained phase
+before each phase is segmented and cleaned. Grain nodes store their phase ID
+and name. Supplementary cleanup can merge eligible regions without same phase
+neighbors into another phase, or exclude them when no valid neighbor exists.
+All retained phases appear on one EBSD map, with nodes and edges colored by
+phase and dashed gray edges between adjacent grains of different phases.
 The full graph is available as result.full_graph and in the graph pickle.
 
 The output switches below enable graph files, statistics.json, histograms,
@@ -105,6 +106,9 @@ def print_graph_handoff_summary(result):
         graph = phase["graph"]
         print(f"Phase: #{phase['index']} ({phase['name']})")
         print(f"Graph nodes: {graph.number_of_nodes()}; edges: {graph.number_of_edges()}")
+        if not phase.get("statistics_available", True) or phase.get("gs_param") is None:
+            print("Grain shape statistics: unavailable after graph cleanup")
+            continue
         print(f"Equivalent diameter median: {np.median(phase['gs_data']):.3f} um")
         print(f"Aspect ratio median: {np.median(phase['ar_data']):.3f}")
         print(f"Tilt angle median: {np.degrees(np.median(phase['om_data'])):.3f} degrees")

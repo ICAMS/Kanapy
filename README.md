@@ -121,7 +121,17 @@ python examples/EBSD_to_RVE/graph_to_rve.py
 python examples/EBSD_to_RVE/convert_ang2rve.py
 ```
 
-All three examples use Kanapy installed in the active environment. For development, run `python -m pip install -e .` from the repository root to use this checkout. The two graph examples default to four neighboring pixels, a minimum grain size of 10 pixels, and a minimum phase pixel fraction of 3%. Multiple retained phases are segmented together, with each grain restricted to one phase. They appear on one EBSD map with nodes and edges colored by phase; gray edges record contact between different phases. The complete graph is available through `result.full_graph` and the pickle's `full_graph` field. Grain merges remain restricted to the same phase. Single phase analysis retains its existing path. `graph_to_rve.py` generates an RVE for the majority phase; the original `convert_ang2rve.py` selects the first retained phase.
+All three examples use Kanapy installed in the active environment. For development, run `python -m pip install -e .` from the repository root to use this checkout. Alternatively, prefix a command with `PYTHONPATH=src` when running from the repository root.
+
+The graph workflows use four neighboring pixels, a minimum grain size of 10 pixels, and a minimum phase fraction of 3% by default:
+
+- Phase fractions are measured before resampling. Pixels belonging to omitted indexed phases are assigned once to the nearest retained measurement. Equally near measurements vote by phase; tied phase counts use the smallest phase ID. Phase, orientation, and confidence come from the same donor. Unindexed pixels remain unindexed.
+- Hexagonal scans are resampled once over the full scan extent using all retained phases. Square scans keep their grid. Original measurements and phase fractions remain unchanged, with donor indices recorded for traceability.
+- Each phase completes its usual segmentation and cleanup first. Remaining regions without a same phase neighbor undergo the boundary fragment, invalid hull, and small region checks (Steps 3, 4, and 6). Step 3 chooses the longest shared boundary, then the largest neighbor; Steps 4 and 6 choose the largest neighbor. Cross phase absorption retains the receiving grain's phase and orientation. A qualifying region without any valid neighbor is excluded and recorded. A valid isolated grain that passes these checks remains.
+- A combined graph records contacts across actual shared pixel sides. The largest measured phase uses black nodes and solid edges; other phases use distinct colors. Cross phase edges are gray and dashed. The legend shows original measured fractions.
+
+`result.graph` remains the selected phase; `result.full_graph` / `result.overview_graph` provide the combined graph. Pickle exports preserve both, including cleanup records. Empty phases remain in the analysis metadata with `statistics_available=False` and no fitted parameters. `graph_to_rve.py` selects the largest original phase, while `convert_ang2rve.py` selects the first retained phase; either reports a clear error if that phase has no usable statistics after cleanup. The RVE generation algorithms are unchanged.
+
 
 
 ## Documentation

@@ -15,9 +15,13 @@ from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 from matplotlib.lines import Line2D
 from kanapy.core import get_grain_geom
 from kanapy.ebsd_io import EBSDDataLoader, LoadedEBSDData
-from kanapy.ebsd_hex_grid import resample_ebsd_to_rect_grid
+from kanapy.ebsd_hex_grid import make_regular_grid
+from kanapy.phase_assignment import nearest_phase_sources
+from kanapy.isolated_cleanup import cleanup_isolated_nodes
+from kanapy.multiphase_graph import build_multiphase_graph
+from kanapy.multiphase_plot import plot_multiphase_graph_overlay
 from scipy.stats import lognorm, vonmises
-from scipy.spatial import ConvexHull, KDTree
+from scipy.spatial import ConvexHull, KDTree, cKDTree
 from scipy.special import legendre, beta
 from scipy.optimize import fminbound, linear_sum_assignment
 from scipy.integrate import quad
@@ -2577,19 +2581,18 @@ class EBSDmap:
                 raise ValueError("Either 'fname' or 'ebsd_data' must be provided")
             ebsd_data = EBSDDataLoader().load(fname)
         self._load_from_data(ebsd_data)
+        self._prepare_analysis_grid()
         retained_phases = []
         for n_ph, ind in enumerate(self.emap.phases.ids):
             if ind == -1:
                 continue
             vf = np.count_nonzero(self.emap.phase_id == ind) / self.original_npx
-            if vf >= vf_min:
+            if vf > 0 and vf >= vf_min:
                 retained_phases.append((n_ph, ind, vf))
-
-        if self.hex_grid and (len(retained_phases) > 1 or self.hex_grid_target_spacing is not None):
-            self._prepare_hex_grid()
 
         print(f'Imported EBSD map with {len(self.emap.phases.ids)} phases.')
         phase_rows = []
+        self._next_grain_id = 0
         for n_ph, ind, vf in retained_phases:
             data = {
                 "vf": vf,
@@ -2601,65 +2604,35 @@ class EBSDmap:
                 "delta_y": self.dy,
                 "cs": self.emap.phases[ind].point_group.laue,
             }
-            if self.hex_grid:
-                self._compute_hex_phase_data(data, ind)
-            else:
-                self._compute_square_phase_data(data, ind)
+            self._compute_phase_grid_data(data, ind)
             self._handle_bad_pixels(data)
 
-            data['mo_map'] = np.zeros(self.npx)
-            data['mo_map'][data['idx']] = data['ori'].angle
-            rgb_values = np.zeros((self.npx, 3))
-            ipf_key = ox_plot.IPFColorKeyTSL(data['cs'])
-            rgb_values[data['idx']] = ipf_key.orientation2color(data['ori'])
-            data['rgb_im'] = rgb_values.reshape(self.sh_x, self.sh_y, 3)
+            self._compute_misorientation_and_ipf(data)
+            self._build_phase_graph(data)
             phase_rows.append(data)
 
-        if len(phase_rows) > 1:
-            self._build_multiphase_graph(phase_rows)
-
-        for data in phase_rows:
-            ind = data["index"]
-            if len(phase_rows) > 1:
-                ms_graph = data["graph"]
-                self.ngrains = len(ms_graph)
-            else:
-                graph_rotations = np.full((self.npx, 4), np.nan, dtype=float)
-                graph_rotations[data['idx']] = np.asarray(data['ori'].data)
-                orientation_map = graph_rotations.reshape(self.sh_x, self.sh_y, 4)
-                phase_mask = np.zeros(self.npx, dtype=bool)
-                phase_mask[data['idx']] = True
-                phase_mask = phase_mask.reshape(self.sh_x, self.sh_y)
-                labels, n_regions = find_similar_regions_by_misorientation(
-                    orientation_map, phase_mask, data['cs'],
-                    tolerance=self.max_angle, connectivity=self.connectivity,
-                )
-                ms_graph = build_graph_from_labeled_pixels(
-                    labels, graph_rotations, data['cs'], self.dx, self.dy,
-                    connectivity=self.connectivity,
-                )
-                print(f"Phase #{ind} ({data['name']}): Identified Grains: {n_regions}")
-                self._record_graph_grid_geometry(ms_graph)
-                ms_graph.graph.update(phase_id=int(ind), phase_name=data["name"])
-                nx.set_node_attributes(ms_graph, int(ind), "phase_id")
-                nx.set_node_attributes(ms_graph, data["name"], "phase_name")
-                ms_graph.name = 'Graph of microstructure'
-                data['initial_labels'] = labels.copy()
-                data['ori_map_debug'] = orientation_map.copy()
-                data['phase_mask_debug'] = phase_mask.copy()
-                data['graph_initial'] = copy.deepcopy(ms_graph)
-                data['merge_debug'] = []
-                self._prune_graph(ms_graph, data)
-                self.graph = ms_graph
-            data['ngrains'] = self.ngrains
-
+        self.ms_data = phase_rows
+        self._cleanup_isolated_phase_regions()
+        for data in self.ms_data:
+            ms_graph = data["graph"]
+            self._ensure_final_convex_hulls(ms_graph)
+            self.ngrains = len(ms_graph)
+            data["ngrains"] = self.ngrains
+            data["statistics_available"] = bool(ms_graph) and not graph_only
             if graph_only:
                 data['graph'] = ms_graph
-                self.ms_data.append(data)
                 print(
                     f"Built graph of phase #{data['index']} ({data['name']}) "
                     f"with {self.ngrains} grains."
                 )
+                continue
+
+            if not ms_graph:
+                data["grain_euler_angles"] = {}
+                for prefix in ("gs", "ar", "om"):
+                    data[f"{prefix}_param"] = None
+                    data[f"{prefix}_data"] = np.empty(0)
+                    data[f"{prefix}_moments"] = None
                 continue
 
             # Extract grain statistics and axes
@@ -2746,15 +2719,31 @@ class EBSDmap:
                   f'aspect ratio: {asig.round(3)}, ' +
                   f'tilt angle: {(std_om * 180 / np.pi).round(3)}°')
             data['graph'] = ms_graph
-            self.ms_data.append(data)
             if show_hist:
                 self._plot_phase_histograms(data)
 
-        if len(phase_rows) > 1:
+        if len(self.ms_data) == 1:
+            self.graph = self.ms_data[0]["graph"]
+        else:
+            overview = build_multiphase_graph(self.ms_data, (self.sh_x, self.sh_y))
+            grain_ids = {
+                node_id: node["source_grain_id"]
+                for node_id, node in overview.nodes(data=True)
+            }
+            label_ids = np.zeros(len(overview) + 1, dtype=int)
+            for node_id, source_id in grain_ids.items():
+                label_ids[node_id] = source_id
+            self.graph = nx.relabel_nodes(overview, grain_ids, copy=True)
+            self.graph.graph["label_map"] = label_ids[overview.graph["label_map"]]
+            self.graph.graph["symmetry"] = {
+                data["index"]: data["cs"] for data in self.ms_data
+            }
+            rotations = np.full((self.npx, 4), np.nan)
             for data in self.ms_data:
-                for node_id, node in data["graph"].nodes.items():
-                    self.graph.nodes[node_id].update(node)
-            self.ngrains = len(self.graph)
+                rotations[data["idx"]] = data["graph"].graph["rotations"][data["idx"]]
+            self.graph.graph["rotations"] = rotations
+        self.graph.graph["isolated_cleanup_records"] = self.isolated_cleanup_records
+        self.ngrains = len(self.graph)
 
         if show_plot:
             self.plot_mo_map()
@@ -2771,100 +2760,223 @@ class EBSDmap:
             self.plot_felsenszwalb()
         return
 
-    def _build_multiphase_graph(self, phase_rows):
+    def _build_phase_graph(self, data):
         """
-        Segment and clean all retained phases in one grain graph.
-
-        Pixel connectivity uses the symmetry of each phase before a single
-        component labeling pass. Grain adjacency includes phase boundaries,
-        while the existing cleanup passes reject merges across those boundaries.
+        Segment one phase and complete its original cleanup before shared passes.
 
         Parameters
         ----------
-        phase_rows : list of dict
-            Prepared phases receiving their graphs and cleanup snapshots.
+        data : dict
+            Phase metadata receiving graph snapshots and preprocessing provenance.
         """
         rotations = np.full((self.npx, 4), np.nan)
-        phase_map = np.full(self.npx, -1, dtype=int)
-        symmetries = {}
-        names = {}
-        for data in phase_rows:
-            phase = int(data["index"])
-            rotations[data["idx"]] = data["ori"].data
-            phase_map[data["idx"]] = phase
-            symmetries[phase] = data["cs"]
-            names[phase] = data["name"]
-        phase_map = phase_map.reshape(self.sh_x, self.sh_y)
-        orientations = rotations.reshape(self.sh_x, self.sh_y, 4)
+        rotations[data["idx"]] = data["ori"].data
+        orientation_map = rotations.reshape(self.sh_x, self.sh_y, 4)
+        mask = np.zeros(self.npx, dtype=bool)
+        mask[data["idx"]] = True
+        mask = mask.reshape(self.sh_x, self.sh_y)
         labels, count = find_similar_regions_by_misorientation(
-            orientations, phase_map != -1, symmetries, tolerance=self.max_angle,
-            connectivity=self.connectivity, phase_map=phase_map,
+            orientation_map, mask, data["cs"], tolerance=self.max_angle,
+            connectivity=self.connectivity,
         )
+        labels[labels > 0] += self._next_grain_id
+        self._next_grain_id += count
         graph = build_graph_from_labeled_pixels(
-            labels, rotations, symmetries, self.dx, self.dy,
-            connectivity=self.connectivity, phase_map=phase_map,
+            labels, rotations, data["cs"], self.dx, self.dy,
+            connectivity=self.connectivity,
         )
-        for node in graph.nodes.values():
-            node["phase_name"] = names[node["phase_id"]]
         self._record_graph_grid_geometry(graph)
+        graph.graph.update(phase_id=int(data["index"]), phase_name=data["name"])
+        nx.set_node_attributes(graph, int(data["index"]), "phase_id")
+        nx.set_node_attributes(graph, data["name"], "phase_name")
         graph.name = "Graph of microstructure"
-        print(f"All retained phases: Identified Grains: {count}")
-        initial = copy.deepcopy(graph)
-        cleanup = {"merge_debug": []}
-        self._prune_graph(graph, cleanup)
-        self.graph = graph
+        data["initial_labels"] = labels.copy()
+        data["ori_map_debug"] = orientation_map.copy()
+        data["phase_mask_debug"] = mask.copy()
+        data["graph_initial"] = copy.deepcopy(graph)
+        data["merge_debug"] = []
+        self._prune_graph(graph, data, defer_isolates=True)
+        graph.graph["phase_preprocessing"] = {
+            "original_pixel_fraction": data["vf"],
+            "processed_pixel_fraction": data["processed_pixel_fraction"],
+            "reassigned_pixels": data["reassigned_pixels"].tolist(),
+            "source_measurement_indices": data["reassigned_source_indices"].tolist(),
+            "original_phase_ids": self._analysis_original_phase_ids[
+                data["reassigned_pixels"]
+            ].tolist(),
+        }
+        data["graph"] = graph
+        print(f"Phase #{data['index']} ({data['name']}): Identified Grains: {count}")
 
-        for data in phase_rows:
-            mask = phase_map == data["index"]
-            initial_nodes = set(np.unique(labels[mask]))
-            data["graph"] = self._extract_phase_graph(graph, data, initial_nodes)
-            data["graph_initial"] = self._extract_phase_graph(initial, data, initial_nodes)
-            data["graph_boundary_merged"] = self._extract_phase_graph(
-                cleanup["graph_boundary_merged"], data, initial_nodes,
-            )
-            data["initial_labels"] = np.where(mask, labels, 0)
-            data["phase_mask_debug"] = mask
-            data["ori_map_debug"] = np.where(mask[..., None], orientations, np.nan)
-            data["merge_debug"] = [
-                record for record in cleanup["merge_debug"] if record["node"] in initial_nodes
-            ]
-
-    def _extract_phase_graph(self, graph, data, initial_nodes):
+    def _cleanup_isolated_phase_regions(self):
         """
-        Extract a phase graph for existing statistics and RVE consumers.
+        Resolve remaining isolated regions before fitting phase statistics.
 
-        Grain IDs remain global. Labels and cleanup records outside this phase
-        are excluded from its analysis view; the full graph retains all edges.
+        Cross phase absorption can create a new same phase contact. Those
+        contacts return to the existing Steps 3, 4 and 6 before the next shared
+        pass. Every action reduces the node count; Step 5 is not repeated.
+        """
+        all_records = []
+        cleanup_round = 0
+        while self.ms_data:
+            graph = build_multiphase_graph(self.ms_data, (self.sh_x, self.sh_y))
+            records = cleanup_isolated_nodes(
+                graph,
+                gs_min=self.gs_min,
+                boundary_size_factor=self.boundary_artifact_size_factor,
+                boundary_fraction_min=self.boundary_artifact_fraction_min,
+                convex_hull_min_points=self.convex_hull_min_points,
+                connectivity=self.connectivity,
+            )
+            if not records:
+                break
+            for record in records:
+                record["round"] = cleanup_round
+            all_records.extend(records)
+            followup_phases = self._synchronize_cleaned_phases(graph, records)
+            for data in self.ms_data:
+                if data["index"] in followup_phases:
+                    self._cleanup_new_same_phase_contacts(data["graph"])
+            cleanup_round += 1
+
+        self.isolated_cleanup_records = all_records
+        for data in self.ms_data:
+            phase_id = data["index"]
+            data["graph"].graph["isolated_cleanup_records"] = [
+                record for record in all_records
+                if record["source_phase_id"] == phase_id
+                or record.get("target_phase_id") == phase_id
+            ]
+        if all_records:
+            merged = [record for record in all_records if record["action"] == "merge"]
+            excluded = [record for record in all_records if record["action"] == "exclude"]
+            self.logger.info(
+                "Isolated region cleanup merged %d regions across phases and "
+                "excluded %d regions (%d pixels) without a valid neighbor.",
+                len(merged), len(excluded), sum(record["npix"] for record in excluded),
+            )
+
+    def _synchronize_cleaned_phases(self, combined_graph, records):
+        """
+        Transfer shared cleanup results back into phase graphs and pixel data.
+
+        Only absorbed pixels adopt the receiving grain's representative
+        orientation. Original measurements and phase fractions are unchanged.
+
+        Parameters
+        ----------
+        combined_graph : networkx.Graph
+            Shared graph after supplementary cleanup.
+        records : list of dict
+            Merge and exclusion records from this pass.
+
+        Returns
+        -------
+        set of int
+            Phases that gained same phase contacts and need local cleanup.
+        """
+        affected = set()
+        absorbed = np.zeros(self.npx, dtype=bool)
+        excluded = []
+        for record in records:
+            affected.add(record["source_phase_id"])
+            if record["action"] == "merge":
+                affected.add(record["target_phase_id"])
+                absorbed[record["pixels"]] = True
+            else:
+                excluded.extend(record["pixels"])
+
+        quaternions = self._analysis_quaternions.copy()
+        for data in self.ms_data:
+            quaternions[data["idx"]] = data["graph"].graph["rotations"][data["idx"]]
+            if data["index"] in affected:
+                self._analysis_phase_ids[data["idx"]] = -1
+        quaternions[excluded] = np.nan
+
+        followup_phases = set()
+        for data in self.ms_data:
+            phase_id = data["index"]
+            if phase_id not in affected:
+                continue
+            phase_graph = data["graph"]
+            global_nodes = [
+                node_id for node_id, node in combined_graph.nodes(data=True)
+                if node["phase_id"] == phase_id
+            ]
+            local_ids = {
+                node_id: combined_graph.nodes[node_id]["source_grain_id"]
+                for node_id in global_nodes
+            }
+            updated = nx.relabel_nodes(
+                combined_graph.subgraph(global_nodes), local_ids, copy=True,
+            )
+            if any(not phase_graph.has_edge(a, b) for a, b in updated.edges):
+                followup_phases.add(phase_id)
+
+            phase_graph.remove_nodes_from(list(phase_graph))
+            phase_graph.add_nodes_from(updated.nodes(data=True))
+            phase_graph.add_edges_from(updated.edges(data=True))
+            labels = np.zeros((self.sh_x, self.sh_y), dtype=int)
+            for node_id, node in phase_graph.nodes(data=True):
+                pixels = np.asarray(node["pixels"], dtype=int)
+                labels.flat[pixels] = node_id
+                self._analysis_phase_ids[pixels] = phase_id
+                reassigned = pixels[absorbed[pixels]]
+                quaternions[reassigned] = node["ori_av"]
+                node.pop("geometry_unavailable_reason", None)
+                node.pop("geometry_available", None)
+            phase_graph.graph["label_map"] = labels
+            selected = np.flatnonzero(labels.ravel())
+            rotations = np.full((self.npx, 4), np.nan)
+            rotations[selected] = quaternions[selected]
+            phase_graph.graph["rotations"] = rotations
+            for _, _, edge in phase_graph.edges(data=True):
+                edge.pop("misorientation", None)
+            _compute_all_edge_misorientations(
+                phase_graph, get_proper_symmetry_quaternions(data["cs"]),
+            )
+
+            data["idx"] = selected
+            data["ori"] = Orientation(rotations[selected], data["cs"])
+            data["processed_pixel_fraction"] = selected.size / self.npx
+            data["ngrains"] = len(phase_graph)
+            self._compute_misorientation_and_ipf(data)
+            preprocessing = phase_graph.graph["phase_preprocessing"]
+            preprocessing.setdefault(
+                "pre_cleanup_pixel_fraction", preprocessing["processed_pixel_fraction"],
+            )
+            preprocessing["processed_pixel_fraction"] = data["processed_pixel_fraction"]
+        self._analysis_quaternions = quaternions
+        return followup_phases
+
+    def _cleanup_new_same_phase_contacts(self, graph):
+        """
+        Apply existing local cleanup to contacts created by phase absorption.
 
         Parameters
         ----------
         graph : networkx.Graph
-            Shared graph at one stage of reconstruction.
-        data : dict
-            Phase metadata and pixel indices.
-        initial_nodes : set of int
-            Grain IDs belonging to the phase before cleanup.
-
-        Returns
-        -------
-        networkx.Graph
-            Graph containing this phase with its own symmetry and label map.
+            Phase graph that gained a same phase edge during shared cleanup.
         """
-        nodes = [node for node in graph if graph.nodes[node]["phase_id"] == data["index"]]
-        phase_graph = graph.subgraph(nodes).copy()
-        labels = np.zeros(self.npx, dtype=int)
-        labels[data["idx"]] = graph.graph["label_map"].ravel()[data["idx"]]
-        phase_graph.graph.update(
-            label_map=labels.reshape(self.sh_x, self.sh_y), symmetry=data["cs"],
-            phase_id=int(data["index"]), phase_name=data["name"],
+        records = merge_boundary_artifact_nodes(
+            graph,
+            self.gs_min,
+            connectivity=self.connectivity,
+            npix_factor=self.boundary_artifact_size_factor,
+            boundary_fraction_min=self.boundary_artifact_fraction_min,
         )
-        for key in ("boundary_artifact_merge_records", "invalid_hull_merge_records",
-                    "similar_orientation_merge_records", "small_node_merge_records"):
-            if key in graph.graph:
-                phase_graph.graph[key] = [
-                    record for record in graph.graph[key] if record["node"] in initial_nodes
-                ]
-        return phase_graph
+        graph.graph["boundary_artifact_merge_records"].extend(records)
+        previous_invalid = graph.graph["invalid_hull_merge_records"]
+        self._merge_invalid_hull_nodes(graph)
+        graph.graph["invalid_hull_merge_records"] = (
+            previous_invalid + graph.graph["invalid_hull_merge_records"]
+        )
+        previous_small = graph.graph["small_node_merge_records"]
+        self._merge_small_nodes(graph)
+        graph.graph["small_node_merge_records"] = (
+            previous_small + graph.graph["small_node_merge_records"]
+        )
+
 
     def _load_from_data(self, ebsd_data: LoadedEBSDData) -> None:
         """
@@ -2890,197 +3002,180 @@ class EBSDmap:
         self.source_xstep = getattr(ebsd_data, "source_xstep", None)
         self.source_ystep = getattr(ebsd_data, "source_ystep", None)
 
-    def _prepare_hex_grid(self):
+    def _prepare_analysis_grid(self):
         """
-        Resample all staggered hexagonal fields onto one rectangular grid.
+        Prepare one spatial assignment shared by all retained phases.
 
-        The operation is performed once for the complete map so phase labels,
-        confidence values, and orientations share the same grid. By default,
-        the output keeps the map shape reported by orix. Callers may request
-        an isotropic physical spacing explicitly.
+        Phase selection uses the original measured fractions. A single nearest
+        source supplies the phase, orientation, and confidence at each assigned
+        position. Equal distance donors vote by phase when filling omitted
+        phases. Unindexed regions retain their separate identity, and source
+        indices preserve the provenance of replaced minority phase pixels.
         """
-        target_spacing = self.hex_grid_target_spacing
-        if target_spacing is None:
-            grid_options = {
-                "nx": int(self.sh_y),
-                "ny": int(self.sh_x),
-            }
-            resampling_basis = "orix map shape"
-        else:
-            grid_options = {
-                "dx_out": target_spacing,
-                "dy_out": target_spacing,
-            }
-            resampling_basis = "requested physical spacing"
+        phase_ids = np.asarray(self.emap.phase_id).reshape(-1)
+        self._phase_fractions = {}
+        retained_ids = []
+        skipped_ids = []
+        for phase_id in self.emap.phases.ids:
+            if phase_id == -1:
+                continue
+            count = np.count_nonzero(phase_ids == phase_id)
+            fraction = count / self.original_npx
+            self._phase_fractions[phase_id] = fraction
+            if count > 0 and fraction >= self.vf_min:
+                retained_ids.append(phase_id)
+            elif count > 0:
+                skipped_ids.append(phase_id)
 
+        self._skipped_phase_ids = np.asarray(skipped_ids, dtype=int)
+        source_indices = np.arange(self.original_npx)
+        original_phase_ids = phase_ids.copy()
+        quaternions = np.asarray(self.emap.rotations.data).copy()
+        valid_rotations = np.isfinite(quaternions).all(axis=1)
+        valid_rotations &= np.linalg.norm(quaternions, axis=1) > 0.0
+        for phase_id in retained_ids:
+            selected = (phase_ids == phase_id) & valid_rotations
+            if np.any(selected):
+                euler_angles = self.emap[
+                    selected
+                ].orientations.in_euler_fundamental_region()
+                quaternions[selected] = Orientation.from_euler(euler_angles).data
+
+        confidence = None
+        if "ci" in self.emap.prop:
+            confidence = np.asarray(self.emap.prop["ci"]).reshape(-1)
+            if confidence.size != self.original_npx:
+                raise ValueError("Confidence indices must match the original map.")
+
+        self._analysis_source_indices = source_indices
+        self._analysis_original_phase_ids = original_phase_ids
+        self._analysis_phase_ids = phase_ids.copy()
+        self._analysis_quaternions = quaternions
+        self._analysis_confidence = confidence
+        if not retained_ids:
+            return
+
+        donors = np.flatnonzero(np.isin(phase_ids, retained_ids) & valid_rotations)
+        if donors.size == 0:
+            raise ValueError("Retained phases have no valid orientation measurements.")
         xy = np.column_stack([self.emap.x, self.emap.y])
-        phase_values = np.asarray(self.emap.phase_id)
-        quaternion_values = np.asarray(self.emap.rotations.data)
+        if self.hex_grid:
+            target_spacing = self.hex_grid_target_spacing
+            if target_spacing is None:
+                grid_options = {"nx": int(self.sh_y), "ny": int(self.sh_x)}
+            else:
+                grid_options = {"dx_out": target_spacing, "dy_out": target_spacing}
+            x_grid, y_grid, query_points = make_regular_grid(xy, **grid_options)
+            nearest = cKDTree(xy[donors]).query(query_points, k=1, workers=-1)[1]
+            source_indices = donors[nearest]
 
-        if "ci" in self.emap.prop.keys():
-            confidence_values = np.asarray(self.emap.prop["ci"])
+            if skipped_ids or np.any(phase_ids == -1):
+                original_indices = cKDTree(xy).query(
+                    query_points, k=1, workers=-1
+                )[1]
+                original_phase_ids = phase_ids[original_indices]
+                unindexed = original_phase_ids == -1
+                source_indices[unindexed] = original_indices[unindexed]
+                skipped = np.isin(original_phase_ids, skipped_ids)
+                if np.any(skipped):
+                    source_indices[skipped] = nearest_phase_sources(
+                        xy, phase_ids, donors, query_points[skipped],
+                    )
+            else:
+                original_phase_ids = phase_ids[source_indices]
+
+            self._hex_x_grid = x_grid
+            self._hex_y_grid = y_grid
+            self._hex_phase_grid = phase_ids[source_indices].reshape(x_grid.shape).copy()
+            self._hex_quat_grid = quaternions[source_indices].reshape(*x_grid.shape, 4).copy()
+            self._hex_ci_grid = (
+                confidence[source_indices].reshape(x_grid.shape).copy()
+                if confidence is not None else np.zeros(x_grid.shape)
+            )
+            self.sh_x, self.sh_y = x_grid.shape
+            self.npx = int(x_grid.size)
+            self.dx = (
+                float(x_grid[0, 1] - x_grid[0, 0])
+                if self.sh_y > 1 else float(target_spacing or self.dx)
+            )
+            self.dy = (
+                float(y_grid[1, 0] - y_grid[0, 0])
+                if self.sh_x > 1 else float(target_spacing or self.dy)
+            )
+            self.grid_origin_x = float(x_grid[0, 0])
+            self.grid_origin_y = float(y_grid[0, 0])
+            self.logger.info(
+                "Resampled retained phases together: x spacing %g, y spacing %g, "
+                "shape (%d, %d).", self.dx, self.dy, self.sh_x, self.sh_y,
+            )
         else:
-            confidence_values = np.zeros(self.original_npx)
+            skipped = np.isin(phase_ids, skipped_ids)
+            if np.any(skipped):
+                source_indices[skipped] = nearest_phase_sources(
+                    xy, phase_ids, donors, xy[skipped],
+                )
 
-        (
-            x_grid,
-            y_grid,
-            phase_grid,
-            confidence_grid,
-            quaternion_grid,
-        ) = resample_ebsd_to_rect_grid(
-            xy,
-            phase_values,
-            quaternion_values,
-            confidence_values,
-            **grid_options,
+        self._analysis_source_indices = source_indices
+        self._analysis_original_phase_ids = original_phase_ids
+        self._analysis_phase_ids = phase_ids[source_indices].copy()
+        self._analysis_quaternions = quaternions[source_indices].copy()
+        self._analysis_confidence = (
+            confidence[source_indices].copy() if confidence is not None else None
         )
 
-        self._hex_x_grid = x_grid
-        self._hex_y_grid = y_grid
-        self._hex_phase_grid = phase_grid
-        self._hex_ci_grid = confidence_grid
-        self._hex_quat_grid = quaternion_grid
-
-        self.sh_x, self.sh_y = phase_grid.shape
-        self.npx = int(phase_grid.size)
-        self.dx = (
-            float(x_grid[0, 1] - x_grid[0, 0])
-            if self.sh_y > 1
-            else float(target_spacing or self.dx)
-        )
-        self.dy = (
-            float(y_grid[1, 0] - y_grid[0, 0])
-            if self.sh_x > 1
-            else float(target_spacing or self.dy)
-        )
-        self.grid_origin_x = float(x_grid[0, 0])
-        self.grid_origin_y = float(y_grid[0, 0])
-
-        self.logger.info(
-            "Resampled staggered hexagonal EBSD map using "
-            f"{resampling_basis}: x spacing {self.dx:g}, y spacing "
-            f"{self.dy:g}, shape ({self.sh_x}, {self.sh_y})."
-        )
-
-    def _compute_square_phase_data(self, data, phase_id):
+    def _compute_phase_grid_data(self, data, phase_id):
         """
-        Prepare one phase on the measured square grid.
+        Select one phase from the common analysis grid.
 
-        Orientations are kept in the full map coordinate frame while low
-        confidence points are repaired. The selected phase is also retained
-        as a compact array for the later graph operations.
+        Each phase gets its own orientation workspace for confidence repair.
+        Pixel ownership and reassignment provenance remain fixed across all
+        phases, so their masks cannot overlap during graph construction.
 
         Parameters
         ----------
         data : dict
             Phase data dictionary being filled.
         phase_id : int
-            Phase ID to extract from the measured map.
-
-        Raises
-        ------
-        ValueError
-            If confidence index values cannot be aligned with either the full
-            map or the selected phase.
+            Phase ID to extract from the shared map.
         """
-        phase_flat = np.asarray(self.emap.phase_id).reshape(-1)
-        selected = phase_flat == phase_id
+        phase_flat = self._analysis_phase_ids
+        quaternions = self._analysis_quaternions
+        selected = (phase_flat == phase_id) & np.isfinite(quaternions).all(axis=1)
         selected_indices = np.flatnonzero(selected)
-
-        euler_angles = self.emap[
-            selected
-        ].orientations.in_euler_fundamental_region()
-        orientations = Orientation.from_euler(euler_angles, symmetry=data["cs"])
-
         quaternion_full = np.full((self.npx, 4), np.nan)
-        quaternion_full[selected_indices] = orientations.data
+        quaternion_full[selected_indices] = quaternions[selected_indices]
 
         data["idx"] = selected_indices
-        data["ori"] = orientations
+        data["ori"] = Orientation(quaternions[selected_indices], data["cs"])
         data["phase_id_flat"] = phase_flat
         data["quat_full"] = quaternion_full
-
-        if "ci" not in self.emap.prop.keys():
-            return
-
-        confidence_values = np.asarray(self.emap.prop["ci"]).reshape(-1)
-        if confidence_values.size == self.npx:
-            data["ci_values"] = confidence_values
-            return
-
-        if confidence_values.size == selected_indices.size:
-            confidence_full = np.full(self.npx, np.nan)
-            confidence_full[selected_indices] = confidence_values
-            data["ci_values"] = confidence_full
-            return
-
-        raise ValueError(
-            "Confidence index values do not match the full map or selected phase."
+        data["processed_pixel_fraction"] = selected_indices.size / self.npx
+        reassigned = selected & np.isin(
+            self._analysis_original_phase_ids, self._skipped_phase_ids
         )
+        data["reassigned_pixels"] = np.flatnonzero(reassigned)
+        data["reassigned_source_indices"] = self._analysis_source_indices[reassigned]
+        if self._analysis_confidence is not None:
+            data["ci_values"] = self._analysis_confidence
 
-    def _compute_hex_phase_data(self, data, phase_id):
+    def _compute_misorientation_and_ipf(self, data):
         """
-        Resample one phase onto the rectangular EBSD grid.
-
-        One retained phase keeps the existing default interpolation from its
-        own measurements. Multiple retained phases and explicit physical
-        spacing use a shared grid so their positions remain aligned.
+        Refresh compact colors and existing full map images for one phase.
 
         Parameters
         ----------
         data : dict
-            Phase data dictionary being filled.
-        phase_id : int
-            Phase ID to extract from the resampled map.
+            Phase record with current pixel membership and orientations.
         """
-        if not hasattr(self, "_hex_phase_grid"):
-            if "ci" in self.emap.prop.keys():
-                confidence_values = np.asarray(self.emap.prop["ci"])
-            else:
-                confidence_values = np.zeros(self.original_npx)
+        data["mo_map"] = np.zeros(self.npx)
+        data["mo_map"][data["idx"]] = data["ori"].angle
+        rgb_values = np.zeros((self.npx, 3))
+        if len(data["idx"]):
+            key = ox_plot.IPFColorKeyTSL(data["cs"])
+            rgb_values[data["idx"]] = key.orientation2color(data["ori"])
+        data["rgb_vals"] = (rgb_values[data["idx"]] * 255).astype(np.uint8)
+        data["rgb_im"] = rgb_values.reshape(self.sh_x, self.sh_y, 3)
 
-            phase_mask = self.emap.phase_id == phase_id
-            xy = np.column_stack([self.emap.x, self.emap.y])
-
-            euler_angles = self.emap[
-                phase_mask
-            ].orientations.in_euler_fundamental_region()
-            orientations = Orientation.from_euler(euler_angles)
-            quaternions = np.column_stack(
-                [
-                    orientations.a,
-                    orientations.b,
-                    orientations.c,
-                    orientations.d,
-                ]
-            )
-
-            _, _, phase_grid, confidence_grid, quaternion_grid = (
-                resample_ebsd_to_rect_grid(
-                    xy[phase_mask],
-                    self.emap.phase_id[phase_mask],
-                    quaternions,
-                    confidence_values[phase_mask],
-                    nx=self.sh_y,
-                    ny=self.sh_x,
-                )
-            )
-            phase_flat = phase_grid.ravel()
-            ci_flat = confidence_grid.ravel()
-            quat_flat = quaternion_grid.reshape(-1, 4)
-            valid = np.isfinite(quat_flat).all(axis=1)
-        else:
-            phase_flat = self._hex_phase_grid.ravel()
-            ci_flat = self._hex_ci_grid.ravel()
-            quat_flat = self._hex_quat_grid.reshape(-1, 4)
-            valid = (phase_flat == phase_id) & np.isfinite(quat_flat).all(axis=1)
-
-        data["idx"] = np.flatnonzero(valid)
-        data["ori"] = Orientation(quat_flat[valid], data["cs"])
-        data["phase_id_flat"] = phase_flat
-        data["ci_values"] = ci_flat
-        data["quat_full"] = quat_flat.copy()
 
     def _handle_bad_pixels(self, data):
         """
@@ -3524,7 +3619,7 @@ class EBSDmap:
                     f"Grain {grain_id} does not form a valid convex hull."
                 ) from exc
 
-    def _prune_graph(self, ms_graph, data=None):
+    def _prune_graph(self, ms_graph, data=None, defer_isolates=False):
         """
         Apply boundary, hull, orientation, and size cleanup in order.
 
@@ -3537,6 +3632,8 @@ class EBSDmap:
             Graph to simplify in place.
         data : dict, optional
             Phase metadata receiving compatibility snapshots and merge records.
+        defer_isolates : bool, optional
+            Delay final hull validation until all phases can supply neighbors.
         """
         boundary_records = merge_boundary_artifact_nodes(
             ms_graph, self.gs_min, connectivity=self.connectivity,
@@ -3550,7 +3647,8 @@ class EBSDmap:
         self._merge_invalid_hull_nodes(ms_graph)
         self._merge_similar_orientation_nodes(ms_graph)
         self._merge_small_nodes(ms_graph)
-        self._ensure_final_convex_hulls(ms_graph)
+        if not defer_isolates:
+            self._ensure_final_convex_hulls(ms_graph)
         if data is not None:
             for key in ('invalid_hull_merge_records',
                         'similar_orientation_merge_records', 'small_node_merge_records'):
@@ -3569,6 +3667,8 @@ class EBSDmap:
         data : dict
             Retained phase row containing raw distributions and fitted parameters.
         """
+        if data.get("statistics_available") is False:
+            return
         for prefix, title, xlabel in [
             ("gs", "Histogram of grain equivalent diameters", "Equivalent diameter (micron)"),
             ("ar", "Histogram of grain aspect ratios", "aspect ratio"),
@@ -3644,6 +3744,8 @@ class EBSDmap:
 
         """
         ms = self.ms_data[iphase]
+        if ms['ori'].size == 0:
+            raise ValueError(f"Phase {ms['index']} has no orientations after graph cleanup.")
         orired, odfred, ero, res = texture_reconstruction(Ng, orientations=ms['ori'],
                                                           res_low=res_low, res_high=res_high,
                                                           res_step=res_step, lim=lim, hw_init=hw_init,
@@ -3705,6 +3807,8 @@ class EBSDmap:
             vector = [0, 0, 1]
         for data in self.ms_data:
             orientations = data['ori']
+            if orientations.size == 0:
+                continue
             plot_pole_figure(orientations, self.emap.phases[data['index']], vector=vector)
             #t_ = Miller(uvw=vector, phase=self.emap.phases[ind]).symmetrise(unique=True)
             #t_all = orientations.inv().outer(t_)
@@ -3736,6 +3840,8 @@ class EBSDmap:
             vector = [0, 0, 1]
         for data in self.ms_data:
             orientations = data['ori']
+            if orientations.size == 0:
+                continue
             plot_pole_figure_proj(orientations, self.emap.phases[data['index']], vector=vector)
 
     def plot_grains_marked(self):
@@ -3753,10 +3859,13 @@ class EBSDmap:
         # plot grain with numbers and axes
         for data in self.ms_data:
             ngr = data['ngrains']
+            if ngr == 0:
+                continue
             cols = get_distinct_colormap(ngr)
             if len(self.ms_data) > 1:
                 labels = data['graph'].graph['label_map']
-                grain_ids, display_indices = np.unique(labels, return_inverse=True)
+                grain_ids = np.union1d([0], labels)
+                display_indices = np.searchsorted(grain_ids, labels)
                 cmap = ListedColormap(['white'] + cols)
                 plt.imshow(display_indices.reshape(labels.shape), cmap=cmap, vmin=0, vmax=ngr)
             else:
@@ -3815,7 +3924,7 @@ class EBSDmap:
 
         Grain nodes and edges use one color per phase. Single phase maps keep
         black markers and lines, and individual phases can still be selected.
-        Gray edges record adjacency between grains from different phases.
+        Dashed gray edges record shared boundaries between different phases.
 
         Parameters
         ----------
@@ -3834,17 +3943,31 @@ class EBSDmap:
             If True, show the figure with Matplotlib. Default is True.
         phase_colors : dict, optional
             Matplotlib colors keyed by original phase ID. Unspecified phases
-            use black followed by colors from the tab10 palette.
+            use black for the largest measured phase followed by distinct colors.
 
         Returns
         -------
         tuple
             Matplotlib figure and axes.
         """
+        if iphase is None and len(self.ms_data) > 1:
+            fig, ax = plot_multiphase_graph_overlay(
+                self.graph, self.get_ipf_image(), show=False, show_ids=show_ids,
+                marker_size=marker_size, line_width=line_width, phase_colors=phase_colors,
+            )
+            if save_path is not None:
+                save_path = Path(save_path)
+                save_path.parent.mkdir(parents=True, exist_ok=True)
+                fig.savefig(save_path, dpi=300)
+            if show:
+                plt.show()
+            else:
+                plt.close(fig)
+            return fig, ax
         phases = self.ms_data if iphase is None else [self.ms_data[iphase]]
         colors = {}
-        for index, data in enumerate(self.ms_data):
-            colors[data["index"]] = "black" if index == 0 else plt.get_cmap("tab10")((index - 1) % 10)
+        for data in phases:
+            colors[data["index"]] = "black"
         if phase_colors is not None:
             colors.update(phase_colors)
         fig, ax = plt.subplots(figsize=(12, 8))
@@ -4051,17 +4174,10 @@ class EBSDmap:
         # showing its pixels, the vertices of the convex hull and the convex hull itself
         # together with the principal axes of the grain
         for data in self.ms_data:
-            glist = [0]
-            slist = [0]
-            for num, node in data['graph'].nodes.items():
-                hs = node['equ_dia']
-                if hs > min(slist):
-                    glist.append(num)
-                    slist.append(hs)
-                    if len(glist) > N:
-                        i = np.argmin(slist)
-                        glist.pop(i)
-                        slist.pop(i)
+            glist = sorted(
+                data['graph'], key=lambda node_id: data['graph'].nodes[node_id]['equ_dia'],
+                reverse=True,
+            )[:max(0, N)]
             for num in glist:
                 pix_c = np.unravel_index(data['graph'].nodes[num]['pixels'], (self.sh_x, self.sh_y))
                 oh_grain = np.zeros((self.sh_x, self.sh_y))

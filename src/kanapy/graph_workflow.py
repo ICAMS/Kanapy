@@ -18,6 +18,7 @@ from typing import Any, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .multiphase_plot import plot_multiphase_graph_overlay
 from .texture import (
     DEFAULT_BOUNDARY_ARTIFACT_FRACTION_MIN,
     DEFAULT_BOUNDARY_ARTIFACT_SIZE_FACTOR,
@@ -204,6 +205,30 @@ class EBSDGraphResult:
     elapsed_time_seconds: Optional[float] = None
     ebsd: Optional[EBSDmap] = None
     written_files: dict[str, Path] = field(default_factory=dict)
+    overview_graph: Any = None
+    overview_rgb_image: Optional[np.ndarray] = None
+    phase_records: list[dict[str, Any]] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        """
+        Keep the full overview when callers construct a result directly.
+        """
+        if (self.ebsd is None or len(self.ebsd.ms_data) < 2
+                or getattr(self.ebsd, "graph", None) is None):
+            return
+        if self.overview_graph is None:
+            self.overview_graph = self.ebsd.graph
+        if self.overview_rgb_image is None:
+            image = np.zeros((self.npx, 3))
+            for data in self.ebsd.ms_data:
+                phase_image = _phase_rgb_image(data, self.npx, self.sh_x, self.sh_y).reshape(-1, 3)
+                image[data["idx"]] = phase_image[data["idx"]]
+            self.overview_rgb_image = image.reshape(self.sh_x, self.sh_y, 3)
+        if not self.phase_records:
+            self.phase_records = [{
+                "index": int(data["index"]), "name": data["name"],
+                "vf": float(data["vf"]), "graph": data["graph"],
+            } for data in self.ebsd.ms_data]
 
     @property
     def full_graph(self) -> Any:
@@ -218,6 +243,8 @@ class EBSDGraphResult:
         networkx.Graph
             Complete grain graph, or the selected graph when no map is attached.
         """
+        if self.overview_graph is not None:
+            return self.overview_graph
         graph = getattr(self.ebsd, "graph", None)
         return self.graph if graph is None else graph
 
@@ -311,14 +338,11 @@ class EBSDGraphResult:
             "graph_node_count": self.graph.number_of_nodes(),
             "graph_edge_count": self.graph.number_of_edges(),
         }
-        if self.ebsd is not None and len(self.ebsd.ms_data) > 1:
+        if self.overview_graph is not None:
             payload["full_graph"] = self.full_graph
-            payload["phases"] = []
-            for data in self.ebsd.ms_data:
-                payload["phases"].append({
-                    "index": int(data["index"]), "name": data["name"],
-                    "vf": float(data["vf"]), "graph": data["graph"],
-                })
+            payload["overview_graph"] = self.overview_graph
+            payload["overview_rgb_image"] = self.overview_rgb_image
+            payload["phases"] = self.phase_records
         return payload
 
     @property
@@ -376,6 +400,10 @@ class EBSDGraphResult:
                 "include_statistics=True. Missing fields: " + ", ".join(missing)
             )
         experimental = {key: self.phase_data[key] for key in keys}
+        if "statistics_available" in self.phase_data:
+            experimental["statistics_available"] = self.phase_data["statistics_available"]
+        if "stats_available" in self.phase_data:
+            experimental["stats_available"] = self.phase_data["stats_available"]
         units = {"length": "um", "tilt_angle": "rad", "aspect_ratio": "1"}
         if "grain_euler_angles" in self.phase_data:
             experimental["grain_euler_angles"] = self.phase_data["grain_euler_angles"]
@@ -420,7 +448,17 @@ class EBSDGraphResult:
             "elapsed_time_seconds": self.elapsed_time_seconds,
         }
 
-        if self.ebsd is not None and len(self.ebsd.ms_data) > 1:
+        cleanup_graph = self.full_graph
+        if "isolated_cleanup_records" in cleanup_graph.graph:
+            records = cleanup_graph.graph["isolated_cleanup_records"]
+            excluded = [record for record in records if record["action"] == "exclude"]
+            summary["isolated_cleanup"] = {
+                "merged_region_count": sum(record["action"] == "merge" for record in records),
+                "excluded_region_count": len(excluded),
+                "excluded_pixel_count": sum(record["npix"] for record in excluded),
+            }
+
+        if self.overview_graph is not None:
             full_graph = self.full_graph
             summary["full_graph_node_count"] = full_graph.number_of_nodes()
             summary["full_graph_edge_count"] = full_graph.number_of_edges()
@@ -429,7 +467,7 @@ class EBSDGraphResult:
                 for a, b in full_graph.edges
             )
             summary["phases"] = []
-            for data in self.ebsd.ms_data:
+            for data in self.phase_records:
                 summary["phases"].append({
                     "index": int(data["index"]), "name": data["name"],
                     "vf": float(data["vf"]),
@@ -665,8 +703,8 @@ def _write_ipf_map(result: EBSDGraphResult, output_path: Path) -> None:
         PNG output path.
     """
     rgb_image = result.rgb_image
-    if result.ebsd is not None and len(result.ebsd.ms_data) > 1:
-        rgb_image = result.ebsd.get_ipf_image()
+    if result.overview_rgb_image is not None:
+        rgb_image = result.overview_rgb_image
     fig, ax = plt.subplots(figsize=_figure_size_for_image(rgb_image.shape))
     ax.imshow(rgb_image, origin="upper")
     ax.set_title("EBSD map", fontsize=16, fontfamily="DejaVu Sans", pad=14)
@@ -690,9 +728,14 @@ def _write_graph_overlay(result: EBSDGraphResult, output_path: Path) -> None:
     output_path : pathlib.Path
         PNG output path.
     """
-    if result.ebsd is not None and len(result.ebsd.ms_data) > 1:
-        fig, _ = result.ebsd.plot_graph_overlay(iphase=None, show=False)
+    if result.overview_graph is not None:
+        if result.overview_rgb_image is None:
+            raise ValueError("The multiphase graph overview requires its RGB image.")
+        fig, _ = plot_multiphase_graph_overlay(
+            result.overview_graph, result.overview_rgb_image,
+        )
         _save_tight_figure(fig, output_path)
+        plt.close(fig)
         return
 
     graph = result.graph
@@ -748,6 +791,63 @@ def load_ebsd_graph(path: Union[str, Path]) -> dict[str, Any]:
     """
     with Path(path).open("rb") as file_handle:
         return pickle.load(file_handle)
+
+
+def load_graph_result(path: Union[str, Path]) -> EBSDGraphResult:
+    """
+    Restore a trusted graph handoff with its optional multiphase overview.
+
+    Parameters
+    ----------
+    path : str or pathlib.Path
+        Pickle file previously written by the graph workflow.
+
+    Returns
+    -------
+    EBSDGraphResult
+        Selected phase and any complete graph stored in the payload.
+
+    Raises
+    ------
+    ValueError
+        If RGB dimensions or selected phase metadata are missing.
+    """
+    payload = load_ebsd_graph(path)
+    image = np.asarray(payload["rgb_image"])
+    if image.ndim != 3 or image.shape[2] != 3:
+        raise ValueError("EBSD graph rgb_image must have shape (rows, columns, 3).")
+    phase = payload.get("phase", {})
+    if phase.get("index") is None:
+        raise ValueError("EBSD graph file is missing the selected phase index.")
+    thresholds = payload.get("thresholds", {})
+    config = EBSDGraphConfig(**{
+        name: thresholds[name] for name in EBSDGraphConfig.__dataclass_fields__
+        if name in thresholds
+    })
+    source = payload.get("source_input_file")
+    rows, columns = image.shape[:2]
+    overview = payload.get("overview_graph", payload.get("full_graph"))
+    overview_image = payload.get("overview_rgb_image")
+    phase_records = payload.get("phases", [])
+    if overview is not None and "phases" not in overview.graph:
+        overview.graph["phases"] = [
+            {"id": int(data["index"]), "name": data["name"], "vf": float(data["vf"])}
+            for data in phase_records
+        ]
+    # earlier multiphase exports kept each phase graph but omitted the RGB overview
+    if overview is not None and overview_image is None:
+        overview_image = image.copy()
+    return EBSDGraphResult(
+        graph=payload["graph"],
+        phase_data={"graph": payload["graph"], "index": int(phase["index"]),
+                    "name": str(phase.get("name", "")), "rgb_im": image},
+        phase_index=int(phase["index"]), phase_name=str(phase.get("name", "")),
+        rgb_image=image, npx=rows * columns, sh_x=rows, sh_y=columns,
+        source_input_file=Path(source) if source else None, config=config,
+        elapsed_time_seconds=payload.get("elapsed_time_seconds"),
+        overview_graph=overview, overview_rgb_image=overview_image,
+        phase_records=phase_records,
+    )
 
 
 def build_ebsd_graph(

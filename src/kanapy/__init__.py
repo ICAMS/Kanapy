@@ -60,6 +60,7 @@ from .graph_workflow import (
     EBSDGraphResult,
     build_ebsd_graph,
     load_ebsd_graph,
+    load_graph_result,
     write_graph_result_outputs,
 )
 
@@ -74,7 +75,7 @@ __all__ = ["Microstructure", "set_stats", "pickle2microstructure", "import_voxel
            "createOrisetRandom", "get_ipf_colors", "plot_pole_figure",
            "plot_pole_figure_proj", "plot_voxels_3D", "plot_polygons_3D", "plot_mean_ellipsoids_from_stats",
            "triple_surf", "EBSDGraphConfig", "EBSDGraphOutputOptions",
-           "EBSDGraphResult", "build_ebsd_graph", "load_ebsd_graph",
+           "EBSDGraphResult", "build_ebsd_graph", "load_ebsd_graph", "load_graph_result",
            "write_graph_result_outputs"]
 
 if triple_surf:

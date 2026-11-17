@@ -202,22 +202,23 @@ def test_multiphase_hex_uses_disjoint_masks_on_one_full_grid():
         np.testing.assert_allclose(np.abs(data["ori"].data @ quaternion), 1.)
 
 
-def test_hex_filter_leaving_one_phase_preserves_existing_resampling():
+def test_hex_filter_leaving_one_phase_preserves_full_scan_extent():
     """
-    Keep the old one phase grid and filling behavior after the other phase is excluded.
+    Use the full scan grid and retained donors when only one phase survives filtering.
     """
     ebsd = EBSDmap(ebsd_data=make_hex_data(), graph_only=True, gs_min=1, vf_min=0.49)
     assert len(ebsd.ms_data) == 1
     assert ebsd.ms_data[0]["index"] == 2
-    assert not hasattr(ebsd, "_hex_phase_grid")
+    np.testing.assert_array_equal(ebsd._hex_phase_grid, 2)
+    np.testing.assert_allclose(ebsd._hex_x_grid[0], np.arange(10., 18.))
     np.testing.assert_array_equal(ebsd.ms_data[0]["idx"], np.arange(48))
-    assert (ebsd.dx, ebsd.dy) == (1., np.sqrt(3.) / 2.)
+    np.testing.assert_allclose((ebsd.dx, ebsd.dy), (1., np.sqrt(3.) / 2.))
 
 
 @pytest.mark.parametrize("minor_pixels, expected_phases", [(2, [2]), (3, [2, 7])])
 def test_phase_fraction_cutoff_and_equal_orientation_boundaries(minor_pixels, expected_phases):
     """
-    Retain exactly three percent and separate touching phases with identical orientations.
+    Apply the measured three percent cutoff before later isolated fragment cleanup.
 
     Parameters
     ----------
@@ -237,10 +238,23 @@ def test_phase_fraction_cutoff_and_equal_orientation_boundaries(minor_pixels, ex
     loaded = SimpleNamespace(emap=emap, sh_x=10, sh_y=10, dx=1., dy=1., npx=100)
     ebsd = EBSDmap(ebsd_data=loaded, graph_only=True, gs_min=1)
     assert [data["index"] for data in ebsd.ms_data] == expected_phases
-    for data in ebsd.ms_data:
-        assert len(data["graph"]) == 1
-        for node in data["graph"].nodes.values():
-            np.testing.assert_array_equal(phases[node["pixels"]], data["index"])
+    major = ebsd.ms_data[0]
+    assert len(major["graph"]) == 1
+    np.testing.assert_array_equal(np.sort(major["idx"]), np.arange(100))
+    np.testing.assert_array_equal(ebsd.emap.phase_id, phases)
+    assert major["vf"] == pytest.approx((100 - minor_pixels) / 100)
+    if minor_pixels == 2:
+        assert major["reassigned_pixels"].size == 2
+        assert not ebsd.isolated_cleanup_records
+    else:
+        minor = ebsd.ms_data[1]
+        assert len(minor["graph_initial"]) == 1
+        assert len(minor["graph"]) == 0
+        assert minor["vf"] == pytest.approx(0.03)
+        record, = ebsd.isolated_cleanup_records
+        assert record["action"] == "merge"
+        assert record["source_phase_id"] == 7
+        assert record["target_phase_id"] == 2
 
 
 def test_combined_overlay_preserves_background_and_phase_colors(square_map):
@@ -266,9 +280,10 @@ def test_combined_overlay_preserves_background_and_phase_colors(square_map):
         assert markers[0].get_color() != markers[2].get_color()
         np.testing.assert_allclose([line.get_xdata()[0] for line in markers], [2., 7., 12., 17.])
         np.testing.assert_allclose(edges[2].get_xdata(), [7., 12.])
-        assert edges[2].get_color() == "gray"
+        assert edges[2].get_color() == "#555555"
+        assert edges[2].get_linestyle() == "--"
         assert [text.get_text() for text in ax.get_legend().get_texts()] == [
-            "A (phase 2)", "B (phase 7)", "Phase boundary",
+            "Phase #2 (A): 50.0%", "Phase #7 (B): 50.0%", "Cross phase boundary",
         ]
     finally:
         plt.close(fig)
@@ -358,9 +373,9 @@ def test_multiphase_segmenter_uses_each_crystal_symmetry():
     np.testing.assert_allclose(np.abs(graph.nodes[1]["ori_av"][0]), 1.)
 
 
-def test_multiphase_uses_one_component_labeling_pass(monkeypatch):
+def test_multiphase_labels_each_phase_on_the_common_grid(monkeypatch):
     """
-    Label all retained phases together on the common rectangular grid.
+    Label each retained phase independently while preserving the shared pixel grid.
 
     Parameters
     ----------
@@ -393,7 +408,7 @@ def test_multiphase_uses_one_component_labeling_pass(monkeypatch):
 
     monkeypatch.setattr(texture, "connected_components_csgraph", record_components)
     ebsd = EBSDmap(ebsd_data=make_hex_data(), graph_only=True, gs_min=1)
-    assert calls == [(48, 48)]
+    assert calls == [(48, 48), (48, 48)]
     assert len(ebsd.graph) == 2
     assert ebsd.graph.number_of_edges() == 1
 

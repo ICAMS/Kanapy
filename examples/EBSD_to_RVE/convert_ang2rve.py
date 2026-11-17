@@ -41,6 +41,13 @@ connectivity = 8  # reference setting; not passed to EBSDmap in the original exa
 # read EBSD map and evaluate statistics of microstructural features
 ebsd = knpy.EBSDmap(fname, vf_min=vf_min, gs_min=min_size,
                   show_plot=False, show_hist=False)
+ms_data = ebsd.ms_data[0]  # first retained phase; position 0 is not an original phase ID
+if not ms_data.get('statistics_available', True) or ms_data.get('gs_param') is None:
+    raise ValueError(
+        f"Selected EBSD phase #{ms_data['index']} ({ms_data['name']}) has no grain "
+        "shape statistics after graph cleanup; RVE generation requires a phase "
+        "with retained grain geometry."
+    )
 
 # show the graph before the measured distributions and remaining EBSD figures
 ebsd.plot_graph_overlay(iphase=None)
@@ -51,7 +58,6 @@ ebsd.plot_segmentation()
 ebsd.plot_pf()
 
 # ebsd.showIPF()
-ms_data = ebsd.ms_data[0]  # first retained phase; position 0 is not an original phase ID
 gs_param = ms_data['gs_param']  # lognormal grain size parameters: [sigma, location, scale]
 ar_param = ms_data['ar_param']  # lognormal aspect ratio parameters: [sigma, location, scale]
 om_param = ms_data['om_param']  # von Mises [kappa, location], fitted to 2 * tilt - pi
