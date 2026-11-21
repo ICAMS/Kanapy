@@ -6,6 +6,7 @@ import pytest
 from kanapy.ebsd_hex_grid import (
     _idw_weights,
     _normalize_quat,
+    get_equal_area_square_spacing,
     make_regular_grid,
     quat_markley_mean,
     resample_ebsd_to_rect_grid,
@@ -35,6 +36,33 @@ def test_make_regular_grid_from_spacing_requires_both_modes():
 
     with pytest.raises(ValueError, match="either"):
         make_regular_grid(xy)
+
+
+def test_regular_grid_preserves_explicit_physical_spacing():
+    """
+Keep requested spacing even when the extent is not divisible by it.
+
+    Cropped hex scans may end before the requested grid reaches a bound.
+    """
+    xy = np.array([[10.0, 20.0], [12.5, 22.5]])
+
+    x_grid, y_grid, _ = make_regular_grid(xy, dx_out=1.0, dy_out=1.0)
+
+    np.testing.assert_array_equal(x_grid[0], [10.0, 11.0, 12.0])
+    np.testing.assert_array_equal(y_grid[:, 0], [20.0, 21.0, 22.0])
+
+
+def test_equal_area_spacing_preserves_hex_sample_density():
+    """
+Choose a square spacing with the area of one source hex sample.
+
+    Nonpositive scan steps cannot describe a physical grid.
+    """
+    spacing = get_equal_area_square_spacing(2.0, 4.5)
+
+    assert spacing == pytest.approx(3.0)
+    with pytest.raises(ValueError, match="positive"):
+        get_equal_area_square_spacing(0.0, 4.5)
 
 
 def test_idw_weights_are_row_normalized():
@@ -111,3 +139,30 @@ def test_resample_ebsd_to_rect_grid_preserves_shapes_and_exact_samples():
     assert np.array_equal(phase_grid.ravel(), phase)
     assert np.allclose(iq_grid.ravel(), iq)
     assert np.allclose(quat_grid[..., 0], 1.0)
+
+
+def test_resample_uses_selected_phase_for_scalar_and_quaternion_neighbors():
+    """
+Interpolate only the source points supplied for one selected phase.
+
+    A high confidence value from another phase must not enter the mean.
+    """
+    xy = np.array([[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]])
+    phase = np.array([1, 2, 1])
+    iq = np.array([10.0, 1000.0, 20.0])
+    quat = np.array([
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [-1.0, 0.0, 0.0, 0.0],
+    ])
+    selected = phase == 1
+
+    _, _, phase_grid, iq_grid, quat_grid = resample_ebsd_to_rect_grid(
+        xy[selected], phase[selected], quat[selected], iq[selected],
+        nx=3, ny=1, bounds=(0.0, 2.0, 0.0, 0.0),
+        k_iq=2, k_quat=2,
+    )
+
+    np.testing.assert_array_equal(phase_grid[0], [1, 1, 1])
+    assert iq_grid[0, 1] == pytest.approx(15.0)
+    np.testing.assert_allclose(quat_grid[0, 1], [1.0, 0.0, 0.0, 0.0])

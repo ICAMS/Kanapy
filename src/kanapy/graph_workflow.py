@@ -18,6 +18,7 @@ from typing import Any, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .multiphase_plot import plot_multiphase_graph_overlay
 from .texture import (
     DEFAULT_BOUNDARY_ARTIFACT_FRACTION_MIN,
     DEFAULT_BOUNDARY_ARTIFACT_SIZE_FACTOR,
@@ -28,6 +29,7 @@ from .texture import (
     EBSDmap,
     CONVEX_HULL_MIN_POINTS,
     MIN_GRAIN_SIZE_PIXELS,
+    _graph_points_to_image,
 )
 
 
@@ -56,6 +58,7 @@ class EBSDGraphConfig:
     similar_orientation_merge_degrees: float = (
         DEFAULT_SIMILAR_ORIENTATION_MERGE_DEGREES
     )
+    hex_grid_target_spacing: Optional[float] = None
 
     def __post_init__(self) -> None:
         """
@@ -73,8 +76,10 @@ class EBSDGraphConfig:
             raise ValueError(
                 f"convex_hull_min_points must be at least {CONVEX_HULL_MIN_POINTS}"
             )
+        if self.hex_grid_target_spacing is not None and self.hex_grid_target_spacing <= 0.0:
+            raise ValueError("hex_grid_target_spacing must be positive")
 
-    def to_dict(self) -> dict[str, Union[float, int]]:
+    def to_dict(self) -> dict[str, Union[float, int, None]]:
         """
         Return graph construction thresholds as plain values.
 
@@ -99,6 +104,10 @@ class EBSDGraphConfig:
             "convex_hull_min_points": int(self.convex_hull_min_points),
             "similar_orientation_merge_degrees": float(
                 self.similar_orientation_merge_degrees
+            ),
+            "hex_grid_target_spacing": (
+                None if self.hex_grid_target_spacing is None
+                else float(self.hex_grid_target_spacing)
             ),
         }
 
@@ -196,6 +205,48 @@ class EBSDGraphResult:
     elapsed_time_seconds: Optional[float] = None
     ebsd: Optional[EBSDmap] = None
     written_files: dict[str, Path] = field(default_factory=dict)
+    overview_graph: Any = None
+    overview_rgb_image: Optional[np.ndarray] = None
+    phase_records: list[dict[str, Any]] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        """
+        Keep the full overview when callers construct a result directly.
+        """
+        if (self.ebsd is None or len(self.ebsd.ms_data) < 2
+                or getattr(self.ebsd, "graph", None) is None):
+            return
+        if self.overview_graph is None:
+            self.overview_graph = self.ebsd.graph
+        if self.overview_rgb_image is None:
+            image = np.zeros((self.npx, 3))
+            for data in self.ebsd.ms_data:
+                phase_image = _phase_rgb_image(data, self.npx, self.sh_x, self.sh_y).reshape(-1, 3)
+                image[data["idx"]] = phase_image[data["idx"]]
+            self.overview_rgb_image = image.reshape(self.sh_x, self.sh_y, 3)
+        if not self.phase_records:
+            self.phase_records = [{
+                "index": int(data["index"]), "name": data["name"],
+                "vf": float(data["vf"]), "graph": data["graph"],
+            } for data in self.ebsd.ms_data]
+
+    @property
+    def full_graph(self) -> Any:
+        """
+        Return all retained grains and their adjacency, including phase boundaries.
+
+        The existing ``graph`` field remains the selected phase for RVE code.
+        Results constructed without an EBSD map return their supplied graph.
+
+        Returns
+        -------
+        networkx.Graph
+            Complete grain graph, or the selected graph when no map is attached.
+        """
+        if self.overview_graph is not None:
+            return self.overview_graph
+        graph = getattr(self.ebsd, "graph", None)
+        return self.graph if graph is None else graph
 
     @classmethod
     def from_phase_data(
@@ -260,12 +311,16 @@ class EBSDGraphResult:
         """
         Return the full Python payload for optional pickle output.
 
+        The original graph fields retain the selected phase for downstream
+        RVE code. Multiphase maps additionally include every retained phase graph
+        and ``full_graph``, which preserves adjacency across phase boundaries.
+
         Returns
         -------
         dict
             Serializable handoff payload containing the graph object.
         """
-        return {
+        payload = {
             "graph": self.graph,
             "phase": {
                 "index": self.phase_index,
@@ -283,10 +338,95 @@ class EBSDGraphResult:
             "graph_node_count": self.graph.number_of_nodes(),
             "graph_edge_count": self.graph.number_of_edges(),
         }
+        if self.overview_graph is not None:
+            payload["full_graph"] = self.full_graph
+            payload["overview_graph"] = self.overview_graph
+            payload["overview_rgb_image"] = self.overview_rgb_image
+            payload["phases"] = self.phase_records
+        return payload
+
+    @property
+    def selected_phase_position(self) -> int:
+        """
+        Locate the selected phase within the originating map's retained phases.
+
+        Orientation generation uses a list position, whereas ``phase_index``
+        identifies the original phase in the experimental map.
+
+        Returns
+        -------
+        int
+            Position in ``ebsd.ms_data`` for downstream orientation generation.
+
+        Raises
+        ------
+        ValueError
+            If the originating map or its selected phase is unavailable.
+        """
+        if self.ebsd is None:
+            raise ValueError("The originating EBSD map is required to locate the selected phase.")
+        for position, phase in enumerate(self.ebsd.ms_data):
+            if phase["index"] == self.phase_index:
+                return position
+        raise ValueError("The selected phase is absent from the retained EBSD map.")
+
+    def to_statistics(self) -> dict[str, Any]:
+        """
+        Return experimental statistics with units and fitting conventions.
+
+        Raw NumPy arrays are retained for numerical consumers. Use
+        ``kanapy.write_stats`` to serialize this dictionary as JSON. Per-grain
+        Euler angles, when available, use degrees and sequential grain names
+        in graph node iteration order.
+
+        Returns
+        -------
+        dict
+            Phase metadata, raw distributions, fitted parameters and moments,
+            accompanied by their units and statistical definitions.
+
+        Raises
+        ------
+        ValueError
+            If the result was built without complete grain statistics.
+        """
+        keys = ["index", "name", "vf", "ngrains"]
+        for prefix in ("gs", "ar", "om"):
+            keys.extend([f"{prefix}_data", f"{prefix}_param", f"{prefix}_moments"])
+        missing = [key for key in keys if key not in self.phase_data]
+        if missing:
+            raise ValueError(
+                "Complete grain statistics are required; build the graph with "
+                "include_statistics=True. Missing fields: " + ", ".join(missing)
+            )
+        experimental = {key: self.phase_data[key] for key in keys}
+        if "statistics_available" in self.phase_data:
+            experimental["statistics_available"] = self.phase_data["statistics_available"]
+        if "stats_available" in self.phase_data:
+            experimental["stats_available"] = self.phase_data["stats_available"]
+        units = {"length": "um", "tilt_angle": "rad", "aspect_ratio": "1"}
+        if "grain_euler_angles" in self.phase_data:
+            experimental["grain_euler_angles"] = self.phase_data["grain_euler_angles"]
+            units["grain_euler_angles"] = "deg"
+        return {
+            "units": units,
+            "experimental": experimental,
+            "fit_conventions": {
+                "gs_param": "lognormal [sigma, location, scale]",
+                "ar_param": "lognormal [sigma, location, scale]",
+                "om_param": "von Mises [kappa, location] fitted to 2 * angle - pi",
+                "geometry_convention": self.graph.graph.get("geometry_convention"),
+                "gs_ar_moments": "[exp(median(log(data))), std(log(data))]",
+                "om_moments": "[von Mises median, von Mises standard deviation]",
+            },
+        }
 
     def to_summary(self) -> dict[str, Any]:
         """
         Return a compact JSON friendly graph summary.
+
+        Multiple retained phases are listed separately, while the original
+        top level fields continue to describe the selected RVE phase.
 
         Returns
         -------
@@ -299,12 +439,41 @@ class EBSDGraphResult:
             "graph_node_count": self.graph.number_of_nodes(),
             "graph_edge_count": self.graph.number_of_edges(),
             "connectivity": int(self.config.connectivity),
+            "grain_method": self.graph.graph.get("grain_method"),
+            "geometry_convention": self.graph.graph.get("geometry_convention"),
             "source_input_file": (
                 str(self.source_input_file) if self.source_input_file else None
             ),
             "thresholds": self.config.to_dict(),
             "elapsed_time_seconds": self.elapsed_time_seconds,
         }
+
+        cleanup_graph = self.full_graph
+        if "isolated_cleanup_records" in cleanup_graph.graph:
+            records = cleanup_graph.graph["isolated_cleanup_records"]
+            excluded = [record for record in records if record["action"] == "exclude"]
+            summary["isolated_cleanup"] = {
+                "merged_region_count": sum(record["action"] == "merge" for record in records),
+                "excluded_region_count": len(excluded),
+                "excluded_pixel_count": sum(record["npix"] for record in excluded),
+            }
+
+        if self.overview_graph is not None:
+            full_graph = self.full_graph
+            summary["full_graph_node_count"] = full_graph.number_of_nodes()
+            summary["full_graph_edge_count"] = full_graph.number_of_edges()
+            summary["phase_boundary_edge_count"] = sum(
+                full_graph.nodes[a]["phase_id"] != full_graph.nodes[b]["phase_id"]
+                for a, b in full_graph.edges
+            )
+            summary["phases"] = []
+            for data in self.phase_records:
+                summary["phases"].append({
+                    "index": int(data["index"]), "name": data["name"],
+                    "vf": float(data["vf"]),
+                    "graph_node_count": data["graph"].number_of_nodes(),
+                    "graph_edge_count": data["graph"].number_of_edges(),
+                })
 
         for key, path in self.written_files.items():
             summary[key] = Path(path).name
@@ -460,9 +629,8 @@ def _node_center(
     node = graph.nodes[node_id]
     center = node.get("center")
     if center is not None:
-        dx = graph.graph.get("dx", 1.0)
-        dy = graph.graph.get("dy", 1.0)
-        return float(center[1]) / dy, float(center[0]) / dx
+        column, row = _graph_points_to_image(graph, center)
+        return float(column), float(row)
 
     pixels = node.get("pixels")
     if pixels is None or len(pixels) == 0:
@@ -523,7 +691,9 @@ def _save_tight_figure(fig: Any, output_path: Path) -> None:
 
 def _write_ipf_map(result: EBSDGraphResult, output_path: Path) -> None:
     """
-    Write the EBSD IPF map PNG.
+    Write the EBSD IPF map PNG with all retained phases when available.
+
+    Single phase handoffs retain their existing image and formatting.
 
     Parameters
     ----------
@@ -532,8 +702,11 @@ def _write_ipf_map(result: EBSDGraphResult, output_path: Path) -> None:
     output_path : pathlib.Path
         PNG output path.
     """
-    fig, ax = plt.subplots(figsize=_figure_size_for_image(result.rgb_image.shape))
-    ax.imshow(result.rgb_image, origin="upper")
+    rgb_image = result.rgb_image
+    if result.overview_rgb_image is not None:
+        rgb_image = result.overview_rgb_image
+    fig, ax = plt.subplots(figsize=_figure_size_for_image(rgb_image.shape))
+    ax.imshow(rgb_image, origin="upper")
     ax.set_title("EBSD map", fontsize=16, fontfamily="DejaVu Sans", pad=14)
     _format_image_axes(ax, result.rgb_image.shape)
     fig.tight_layout(pad=0.3)
@@ -543,7 +716,10 @@ def _write_ipf_map(result: EBSDGraphResult, output_path: Path) -> None:
 
 def _write_graph_overlay(result: EBSDGraphResult, output_path: Path) -> None:
     """
-    Write the final graph overlay PNG.
+    Write the final graph overlay PNG with all retained phases when available.
+
+    Multiphase maps share the EBSD plotting method so colors, positions and
+    legend agree with the interactive display.
 
     Parameters
     ----------
@@ -552,6 +728,16 @@ def _write_graph_overlay(result: EBSDGraphResult, output_path: Path) -> None:
     output_path : pathlib.Path
         PNG output path.
     """
+    if result.overview_graph is not None:
+        if result.overview_rgb_image is None:
+            raise ValueError("The multiphase graph overview requires its RGB image.")
+        fig, _ = plot_multiphase_graph_overlay(
+            result.overview_graph, result.overview_rgb_image,
+        )
+        _save_tight_figure(fig, output_path)
+        plt.close(fig)
+        return
+
     graph = result.graph
     image_shape = result.rgb_image.shape[:2]
     fig, ax = plt.subplots(figsize=_figure_size_for_image(result.rgb_image.shape))
@@ -607,13 +793,75 @@ def load_ebsd_graph(path: Union[str, Path]) -> dict[str, Any]:
         return pickle.load(file_handle)
 
 
+def load_graph_result(path: Union[str, Path]) -> EBSDGraphResult:
+    """
+    Restore a trusted graph handoff with its optional multiphase overview.
+
+    Parameters
+    ----------
+    path : str or pathlib.Path
+        Pickle file previously written by the graph workflow.
+
+    Returns
+    -------
+    EBSDGraphResult
+        Selected phase and any complete graph stored in the payload.
+
+    Raises
+    ------
+    ValueError
+        If RGB dimensions or selected phase metadata are missing.
+    """
+    payload = load_ebsd_graph(path)
+    image = np.asarray(payload["rgb_image"])
+    if image.ndim != 3 or image.shape[2] != 3:
+        raise ValueError("EBSD graph rgb_image must have shape (rows, columns, 3).")
+    phase = payload.get("phase", {})
+    if phase.get("index") is None:
+        raise ValueError("EBSD graph file is missing the selected phase index.")
+    thresholds = payload.get("thresholds", {})
+    config = EBSDGraphConfig(**{
+        name: thresholds[name] for name in EBSDGraphConfig.__dataclass_fields__
+        if name in thresholds
+    })
+    source = payload.get("source_input_file")
+    rows, columns = image.shape[:2]
+    overview = payload.get("overview_graph", payload.get("full_graph"))
+    overview_image = payload.get("overview_rgb_image")
+    phase_records = payload.get("phases", [])
+    if overview is not None and "phases" not in overview.graph:
+        overview.graph["phases"] = [
+            {"id": int(data["index"]), "name": data["name"], "vf": float(data["vf"])}
+            for data in phase_records
+        ]
+    # earlier multiphase exports kept each phase graph but omitted the RGB overview
+    if overview is not None and overview_image is None:
+        overview_image = image.copy()
+    return EBSDGraphResult(
+        graph=payload["graph"],
+        phase_data={"graph": payload["graph"], "index": int(phase["index"]),
+                    "name": str(phase.get("name", "")), "rgb_im": image},
+        phase_index=int(phase["index"]), phase_name=str(phase.get("name", "")),
+        rgb_image=image, npx=rows * columns, sh_x=rows, sh_y=columns,
+        source_input_file=Path(source) if source else None, config=config,
+        elapsed_time_seconds=payload.get("elapsed_time_seconds"),
+        overview_graph=overview, overview_rgb_image=overview_image,
+        phase_records=phase_records,
+    )
+
+
 def build_ebsd_graph(
     input_file: Union[str, Path],
     config: Optional[EBSDGraphConfig] = None,
     output_options: Optional[EBSDGraphOutputOptions] = None,
+    *,
+    include_statistics: bool = False,
 ) -> EBSDGraphResult:
     """
     Build an EBSD graph and return an in memory result object.
+
+    Complete grain statistics can be included for downstream RVE generation.
+    The original EBSD map is retained for phase and crystallographic analysis.
 
     Parameters
     ----------
@@ -623,6 +871,10 @@ def build_ebsd_graph(
         Graph construction thresholds and connectivity.
     output_options : EBSDGraphOutputOptions, optional
         Optional file output settings.
+    include_statistics : bool, optional
+        If True, include grain size, aspect ratio and tilt angle arrays,
+        fitted parameters and moments in ``result.phase_data``. The full map
+        remains available as ``result.ebsd``. Default is False.
 
     Raises
     ------
@@ -660,11 +912,12 @@ def build_ebsd_graph(
         similar_orientation_merge_degrees=(
             graph_config.similar_orientation_merge_degrees
         ),
+        hex_grid_target_spacing=graph_config.hex_grid_target_spacing,
         show_plot=False,
         show_grains=False,
         show_hist=False,
         show_graph=False,
-        graph_only=True,
+        graph_only=not include_statistics,
     )
 
     _, selected_phase_data = select_major_phase(ebsd)

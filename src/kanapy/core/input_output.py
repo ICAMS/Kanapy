@@ -3,6 +3,7 @@ import re
 import logging
 import numpy as np
 from collections import defaultdict
+from pathlib import Path
 from .units import length_scale_from_um
 from .entities import Ellipsoid, Cuboid
 from .initializations import NodeSets, validate_matrix_mapping
@@ -1877,10 +1878,42 @@ def import_voxels(
     return ms
 
 
+def _scientific_json_default(value: Any) -> Any:
+    """
+    Convert supported scientific values for standard JSON encoding.
+
+    This callback keeps statistics files readable by normal JSON consumers.
+
+    Parameters
+    ----------
+    value : Any
+        Value that the standard JSON encoder cannot serialize.
+
+    Returns
+    -------
+    Any
+        A JSON compatible representation of the value.
+
+    Raises
+    ------
+    TypeError
+        If the value has no supported JSON representation.
+    """
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, Path):
+        return str(value)
+    raise TypeError(f'Object of type {type(value).__name__} is not JSON serializable')
+
+
 def write_stats(
     stats: Mapping[str, Any],
     file: Union[str, os.PathLike[str]],
-    path: Union[str, os.PathLike[str]] = './') -> None:
+    path: Union[str, os.PathLike[str]] = './',
+    *,
+    indent: Optional[int] = None) -> None:
     """
     Write microstructure statistical descriptors to a JSON file.
 
@@ -1893,11 +1926,13 @@ def write_stats(
     stats : dict
         Dictionary containing statistical descriptors of the microstructure
         (e.g., grain count, phase fractions, RVE size, or any other metadata).
-    file : str
+    file : str or pathlib.Path
         Output filename for the JSON file. The '.json' extension will be appended
         automatically if missing.
-    path : str, optional
+    path : str or pathlib.Path, optional
         Directory path where the JSON file will be written (default: './').
+    indent : int, optional
+        Spaces per level of JSON indentation. The default keeps compact output.
 
     Raises
     ------
@@ -1924,11 +1959,12 @@ def write_stats(
         raise ValueError('List or dict with microstructure descriptors must be given.')
     if file is None:
         raise ValueError('Name for json file with microstructure descriptors must be given.')
+    file = os.fspath(file)
     if file[-5:].lower() != '.json':
         file += '.json'
     file = os.path.join(path, file)
     with open(file, 'w') as fp:
-        json.dump(stats, fp)
+        json.dump(stats, fp, default=_scientific_json_default, indent=indent)
 
 
 def import_stats(
